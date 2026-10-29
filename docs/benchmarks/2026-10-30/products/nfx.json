@@ -1,0 +1,1499 @@
+{
+  "product": "midas NFX",
+  "version": "서로분리된 2024교육 / 2023·2025 HTML / 2026R1 KO release",
+  "sources": [
+    {
+      "id": "nfx-edu2024-D",
+      "url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "title": "midas NFX 구조해석 기본",
+      "evidence_type": "D",
+      "locator": "PDF 342p; selected p42,43,47,48,56,57,60-63,65-67,297; printed folio equals PDF page number1.",
+      "version": "2024 경로·2024-08-08 PDF metadata; p42 console=2024R1 (64bit); 나머지 화면 build 미확인",
+      "analysis_original": {
+        "sha256": "d86aa5ad5c2ef0a693bccef337028e76542c63a0c2b0d847af30ba71a491c6e5",
+        "bytes": 34366920,
+        "included_in_deliverable": false
+      }
+    },
+    {
+      "id": "nfx-edu2024-S",
+      "url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "title": "midas NFX 구조해석 기본 / UI 발췌",
+      "evidence_type": "S",
+      "locator": "PDF 342p; selected p42,43,47,48,56,57,60-63,65-67,297; printed folio equals PDF page number1.",
+      "version": "2024 경로·2024-08-08 PDF metadata; p42 console=2024R1 (64bit); 나머지 화면 build 미확인",
+      "analysis_original": {
+        "sha256": "d86aa5ad5c2ef0a693bccef337028e76542c63a0c2b0d847af30ba71a491c6e5",
+        "bytes": 34366920,
+        "included_in_deliverable": false
+      }
+    },
+    {
+      "id": "nfx-release2026-D",
+      "url": "https://support.midasuser.com/hc/ko/article_attachments/61820376920089",
+      "title": "midas NFX 2026R1 Release Note (KO)",
+      "evidence_type": "D",
+      "locator": "PDF 13p; p7-9 = index0 6-8; printed7-9. Official host article34285855210265 attachment25.",
+      "version": "2026R1; PDF metadata2026-03-11",
+      "analysis_original": {
+        "sha256": "247bcd872567ed6b6f73d53d25b3b9e06579615a519b0c5c641a2425299d949d",
+        "bytes": 3231806,
+        "included_in_deliverable": false
+      }
+    },
+    {
+      "id": "nfx-release2026-S",
+      "url": "https://support.midasuser.com/hc/ko/article_attachments/61820376920089",
+      "title": "midas NFX 2026R1 Release Note (KO) / UI 발췌",
+      "evidence_type": "S",
+      "locator": "PDF 13p; p7-9 = index0 6-8; printed7-9. Official host article34285855210265 attachment25.",
+      "version": "2026R1; PDF metadata2026-03-11",
+      "analysis_original": {
+        "sha256": "247bcd872567ed6b6f73d53d25b3b9e06579615a519b0c5c641a2425299d949d",
+        "bytes": 3231806,
+        "included_in_deliverable": false
+      }
+    },
+    {
+      "id": "nfx-plastic-D",
+      "url": "https://support.midasuser.com/hc/ko/articles/48342077471385",
+      "title": "NFX 비선형 재료 소성 함수 입력 방법",
+      "evidence_type": "D",
+      "locator": "HTML2025-06-27; sections1-3; image attachments48342060696985,48342077462169.",
+      "version": "article2025; screenshot build 미표시"
+    },
+    {
+      "id": "nfx-plastic-S",
+      "url": "https://support.midasuser.com/hc/ko/articles/48342077471385",
+      "title": "NFX 비선형 재료 소성 함수 입력 방법 / UI 발췌",
+      "evidence_type": "S",
+      "locator": "HTML2025-06-27; sections1-3; image attachments48342060696985,48342077462169.",
+      "version": "article2025; screenshot build 미표시"
+    },
+    {
+      "id": "nfx-filter-D",
+      "url": "https://support.midasuser.com/hc/ko/articles/18843088003865",
+      "title": "NFX 특정 요소만 선택해서 결과를 볼 수 있을까?",
+      "evidence_type": "D",
+      "locator": "HTML2023-05-24; property filtering paragraph; image18843034826649.",
+      "version": "article2023; screenshot build 미표시"
+    },
+    {
+      "id": "nfx-filter-S",
+      "url": "https://support.midasuser.com/hc/ko/articles/18843088003865",
+      "title": "NFX 특정 요소만 선택해서 결과를 볼 수 있을까? / UI 발췌",
+      "evidence_type": "S",
+      "locator": "HTML2023-05-24; property filtering paragraph; image18843034826649.",
+      "version": "article2023; screenshot build 미표시"
+    },
+    {
+      "id": "nfx-options-D",
+      "url": "https://support.midasuser.com/hc/ko/articles/18846931903897",
+      "title": "NFX 해석제어 위치변경 안내",
+      "evidence_type": "D",
+      "locator": "HTML2023-05-24; options persistence paragraph; image18846903797529.",
+      "version": "article2023; screenshot build 미표시"
+    },
+    {
+      "id": "nfx-options-S",
+      "url": "https://support.midasuser.com/hc/ko/articles/18846931903897",
+      "title": "NFX 해석제어 위치변경 안내 / UI 발췌",
+      "evidence_type": "S",
+      "locator": "HTML2023-05-24; options persistence paragraph; image18846903797529.",
+      "version": "article2023; screenshot build 미표시"
+    }
+  ],
+  "assets": [
+    {
+      "id": "nfx-edu2024-p042",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p042.png",
+      "width": 1414,
+      "height": 834,
+      "kind": "screen",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 42,
+        "pdf_page_index0": 41,
+        "printed_page": "42"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          38,
+          98,
+          745,
+          515
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "2f0743d92ee154d366bdc0e89721aad3180c3d58c85fb423041722dcc3842d5f",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p043",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p043.png",
+      "width": 1470,
+      "height": 660,
+      "kind": "screen",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 43,
+        "pdf_page_index0": 42,
+        "printed_page": "43"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          25,
+          100,
+          760,
+          430
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "727e7bb389b13db5415d97ef8888c32ec445ada0e28400c59ed9ff5757defb8f",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p047",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p047.png",
+      "width": 880,
+      "height": 810,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 47,
+        "pdf_page_index0": 46,
+        "printed_page": "47"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          315,
+          100,
+          755,
+          505
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "a9c1b3337a5bfc61bac58ebd1a5e112f201a496156824952bb482fdb4533b797",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p048",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p048.png",
+      "width": 840,
+      "height": 834,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 48,
+        "pdf_page_index0": 47,
+        "printed_page": "48"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          345,
+          93,
+          765,
+          510
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "9c062f16371ca202fecf1d59d4673188251fea359d736b5f0fff10b5bf4c792c",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p056",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p056.png",
+      "width": 1104,
+      "height": 880,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 56,
+        "pdf_page_index0": 55,
+        "printed_page": "56"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          218,
+          65,
+          770,
+          505
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "40afcfa8ffed2542c1ad72cf3ceb0b3733cf188671a3f03520b0db2de37004f8",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p057",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p057.png",
+      "width": 1104,
+      "height": 890,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 57,
+        "pdf_page_index0": 56,
+        "printed_page": "57"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          218,
+          63,
+          770,
+          508
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "debb8d4e634b651d410e2408090838efbbec15627f90ba9036ecbca80e90fdab",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p060",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p060.png",
+      "width": 1114,
+      "height": 886,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 60,
+        "pdf_page_index0": 59,
+        "printed_page": "60"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          218,
+          62,
+          775,
+          505
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "cb90c491bcb9b425a5c913f4398b432949daf32014c0d984972c2436b5736e86",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p061",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p061.png",
+      "width": 1114,
+      "height": 886,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 61,
+        "pdf_page_index0": 60,
+        "printed_page": "61"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          218,
+          62,
+          775,
+          505
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "f111ed42659c10e20a80749bc97b66f4d00f79bd4720b3b39aba6f9f8519e414",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p062",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p062.png",
+      "width": 1114,
+      "height": 886,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 62,
+        "pdf_page_index0": 61,
+        "printed_page": "62"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          218,
+          62,
+          775,
+          505
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "13547fac5b6e577e054328a472419b8ff8b678a6227ea9b6ad604f8563dec0ea",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p063",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p063.png",
+      "width": 1114,
+      "height": 886,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 63,
+        "pdf_page_index0": 62,
+        "printed_page": "63"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          218,
+          62,
+          775,
+          505
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "06e2b6c2e71649683efab608e876a4439b932cb311e57b0771d68d91ee65697e",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p065",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p065.png",
+      "width": 1114,
+      "height": 886,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 65,
+        "pdf_page_index0": 64,
+        "printed_page": "65"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          218,
+          62,
+          775,
+          505
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "c4d80697d2f6621f2df51516e1bdb0fa0015ba4dcbe6df45eea1316b132d5841",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p066",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p066.png",
+      "width": 1114,
+      "height": 886,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 66,
+        "pdf_page_index0": 65,
+        "printed_page": "66"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          218,
+          62,
+          775,
+          505
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "8b29d626d94f89c0be469e981f1a052561b1499f098f9190b591a2bccc76226b",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p067",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p067.png",
+      "width": 1114,
+      "height": 886,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 67,
+        "pdf_page_index0": 66,
+        "printed_page": "67"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          218,
+          62,
+          775,
+          505
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "a712b89f49807bd6c302d7b3826e30fe5b1e7909e754a4d6ace8970a1e02aee1",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-edu2024-p297",
+      "source_id": "nfx-edu2024-S",
+      "source_url": "https://patch.midasit.com/00_MODS/kr/03_TechnicalData/%EA%B8%B0%EA%B3%84/%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C/2024/midas%20NFX%20%EA%B5%AC%EC%A1%B0%ED%95%B4%EC%84%9D%20%EA%B8%B0%EB%B3%B8.pdf",
+      "file": "assets/nfx/edu2024-p297.png",
+      "width": 850,
+      "height": 840,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 297,
+        "pdf_page_index0": 296,
+        "printed_page": "297"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          345,
+          95,
+          770,
+          515
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "12a0c3e75135813ba57119612c654ea1ce4bad84e91e8cf5a279a0d4cd078666",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-release2026-p007",
+      "source_id": "nfx-release2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/61820376920089",
+      "file": "assets/nfx/release2026-p007.png",
+      "width": 956,
+      "height": 770,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 7,
+        "pdf_page_index0": 6,
+        "printed_page": "7"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          40,
+          280,
+          518,
+          665
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "bd4d9a011672e072ae00b573ad2d9c0d07bfbca6a05cb8f09a89be64cdafa325",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음.",
+      "ui_scope": "document composite: menu, dialog, arrows and explanatory text; not raw application capture"
+    },
+    {
+      "id": "nfx-release2026-p008",
+      "source_id": "nfx-release2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/61820376920089",
+      "file": "assets/nfx/release2026-p008.png",
+      "width": 250,
+      "height": 480,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 8,
+        "pdf_page_index0": 7,
+        "printed_page": "8"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          330,
+          398,
+          455,
+          638
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "0d193e2879735bfd26812f4926c9a49b1dfe952e4015f9e69be35ba628e173c8",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-release2026-p009",
+      "source_id": "nfx-release2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/61820376920089",
+      "file": "assets/nfx/release2026-p009.png",
+      "width": 956,
+      "height": 300,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 9,
+        "pdf_page_index0": 8,
+        "printed_page": "9"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          46,
+          493,
+          524,
+          643
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "ef2818e0e77b108e70435df1f1f5c41c05248241bff81e65469b42b8165b2980",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "nfx-html-plastic-table",
+      "source_id": "nfx-plastic-S",
+      "source_url": "https://support.midasuser.com/hc/article_attachments/48342060696985",
+      "file": "assets/nfx/html-plastic-table.png",
+      "width": 886,
+      "height": 194,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": "official HTML inline image attachment; native downloaded pixels",
+      "extraction": {
+        "method": "standalone inline image; no rescaling"
+      },
+      "rights": "공개 접근 이미지; 재배포 허가 미확인.",
+      "sha256": "3beb018b8566cc8c074263f5434e71c09e3f2ef714bfb9c6d628f0310cd81688"
+    },
+    {
+      "id": "nfx-html-plastic-curve",
+      "source_id": "nfx-plastic-S",
+      "source_url": "https://support.midasuser.com/hc/article_attachments/48342077462169",
+      "file": "assets/nfx/html-plastic-curve.png",
+      "width": 736,
+      "height": 653,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": "official HTML inline image attachment; native downloaded pixels",
+      "extraction": {
+        "method": "standalone inline image; no rescaling"
+      },
+      "rights": "공개 접근 이미지; 재배포 허가 미확인.",
+      "sha256": "0b69127c4c1ea91b55d3e1e23fe0583a1557bfff3f31cf225c27065acdbc0037"
+    },
+    {
+      "id": "nfx-html-selection-filter",
+      "source_id": "nfx-filter-S",
+      "source_url": "https://support.midasuser.com/hc/article_attachments/18843034826649",
+      "file": "assets/nfx/html-selection-filter.png",
+      "width": 1880,
+      "height": 646,
+      "kind": "screen",
+      "visual_review": true,
+      "locator": "official HTML inline image attachment; native downloaded pixels",
+      "extraction": {
+        "method": "standalone inline image; no rescaling"
+      },
+      "rights": "공개 접근 이미지; 재배포 허가 미확인.",
+      "sha256": "dd4ed585431868ed443abd3bbbc740264eb6d59aa9ff26010af43aab369b01ca"
+    },
+    {
+      "id": "nfx-html-analysis-options",
+      "source_id": "nfx-options-S",
+      "source_url": "https://support.midasuser.com/hc/article_attachments/18846903797529",
+      "file": "assets/nfx/html-analysis-options.png",
+      "width": 1091,
+      "height": 895,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": "official HTML inline image attachment; native downloaded pixels",
+      "extraction": {
+        "method": "standalone inline image; no rescaling"
+      },
+      "rights": "공개 접근 이미지; 재배포 허가 미확인.",
+      "sha256": "28c7a1bd8925e37bdbddc02eaa8ccdddabb674999f84bd1494f27b1d9abd3632"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "nfx-new",
+      "task": "T01",
+      "title": "시작·단위",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p056"
+      ],
+      "prerequisite": "앱시작",
+      "menu_path": "새로만들기",
+      "steps": [
+        "종류·단위선택; 확인"
+      ],
+      "fields": {
+        "모델": "3차원/일반",
+        "단위": "N-mm-J-sec"
+      },
+      "result": "D:새작업 후 메뉴활성 명시; S:조건설정 대화상자",
+      "error_cancel": "취소버튼 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "grounded",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          56
+        ],
+        "pdf_page_indices0": [
+          55
+        ],
+        "printed_pages": [
+          "56"
+        ],
+        "detail": "PDF p56/index0 55, 작업순서1-4 및 하단 메뉴활성 설명=D; 대화상자=S"
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_grounding": "좁은 문헌 성공경로의 필수 메뉴·선택·입력·결과가 연결됨. 전체과업 준비·동일입력 실행 검증과 별도.",
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-import",
+      "task": "T01",
+      "title": "CAD가져오기",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p057"
+      ],
+      "prerequisite": "새작업",
+      "menu_path": "형상>CAD파일>불러오기",
+      "steps": [
+        "파일선택; 열기"
+      ],
+      "fields": {
+        "파일_화면": "실습1-Pillow Box.x_t",
+        "파일_문서": "Pillow Box.x_t",
+        "형식_화면": "Parasolid(9 to33)",
+        "대상길이단위_화면": "mm"
+      },
+      "result": "기하형상표시",
+      "error_cancel": "취소버튼 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "grounded",
+      "unknowns": [
+        "화면 filename접두어와 D표기 차이; 형상수정옵션은 관측값이며 기본값 미확인",
+        "직접실행 없음; 취소·재열기 미확인",
+        "외부 입력모델은 파일명만 확인; 수집·동일입력 재현 없음"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          57
+        ],
+        "pdf_page_indices0": [
+          56
+        ],
+        "printed_pages": [
+          "57"
+        ],
+        "detail": "PDF p57/index0 56, 작업순서1-2=D; 오른쪽 선택파일·옵션=S"
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_grounding": "좁은 문헌 성공경로의 필수 메뉴·선택·입력·결과가 연결됨. 전체과업 준비·동일입력 실행 검증과 별도.",
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-workspace",
+      "task": "T02",
+      "title": "트리·속성영역",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p042",
+        "nfx-edu2024-p043"
+      ],
+      "prerequisite": "모델작업창",
+      "menu_path": "미확인",
+      "steps": [],
+      "fields": {},
+      "result": "모델/조건/결과트리·속성·출력영역",
+      "error_cancel": "미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "영역구성만 관측; 선택변경의 속성갱신순서 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          42,
+          43
+        ],
+        "pdf_page_indices0": [
+          41,
+          42
+        ],
+        "printed_pages": [
+          "42",
+          "43"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-property",
+      "task": "T02",
+      "title": "솔리드특성",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p061"
+      ],
+      "prerequisite": "재료정의완료",
+      "menu_path": "요소망>재료/특성>특성>생성>3D",
+      "steps": [
+        "3D생성; 확인"
+      ],
+      "fields": {
+        "번호": "1",
+        "재료": "2:Steel"
+      },
+      "result": "특성생성대화상자",
+      "error_cancel": "취소/닫기 컨트롤 관측; 효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          61
+        ],
+        "pdf_page_indices0": [
+          60
+        ],
+        "printed_pages": [
+          "61"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-query",
+      "task": "T03",
+      "title": "절점질의",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p047"
+      ],
+      "prerequisite": "요소망",
+      "menu_path": "도구>쿼리",
+      "steps": [
+        "절점지정"
+      ],
+      "fields": {
+        "번호": "8557"
+      },
+      "result": "좌표·연관요소출력",
+      "error_cancel": "취소버튼 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          47
+        ],
+        "pdf_page_indices0": [
+          46
+        ],
+        "printed_pages": [
+          "47"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-mesh",
+      "task": "T04",
+      "title": "체적메시",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p062"
+      ],
+      "prerequisite": "nfx-import 기하+nfx-property 특성; nfx-new 단위",
+      "menu_path": "요소망>생성>3D",
+      "steps": [
+        "모델선택; 확인"
+      ],
+      "fields": {
+        "대상": "1개",
+        "크기": "9",
+        "탭_화면": "자동-솔리드",
+        "생성기_화면": "고속 사면체 요소망 생성기",
+        "특성_화면": "1:Pillow Box",
+        "세트_화면": "자동요소망(3D)",
+        "길이문맥": "nfx-new N-mm 단위"
+      },
+      "result": "사면체망표시",
+      "error_cancel": "취소버튼 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "grounded",
+      "unknowns": [
+        "size9는 예제입력; 전역 기본값 아님",
+        "실제실행·생성오류·취소복원 미확인",
+        "외부 입력모델은 파일명만 확인; 수집·동일입력 재현 없음"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          62
+        ],
+        "pdf_page_indices0": [
+          61
+        ],
+        "printed_pages": [
+          "62"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_grounding": "좁은 문헌 성공경로의 필수 메뉴·선택·입력·결과가 연결됨. 전체과업 준비·동일입력 실행 검증과 별도.",
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-material",
+      "task": "T05",
+      "title": "등방성재료",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p060"
+      ],
+      "prerequisite": "요소망전처리",
+      "menu_path": "요소망>재료/특성>재료>생성>등방성",
+      "steps": [
+        "생성; 확인"
+      ],
+      "fields": {
+        "E": "2.1e5 N/mm²",
+        "nu": "0.3",
+        "이름": "Steel",
+        "번호": "2"
+      },
+      "result": "입력대화상자",
+      "error_cancel": "취소/닫기 컨트롤 관측; 효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          60
+        ],
+        "pdf_page_indices0": [
+          59
+        ],
+        "printed_pages": [
+          "60"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-symmetry",
+      "task": "T05",
+      "title": "대칭구속",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p063"
+      ],
+      "prerequisite": "메시완료",
+      "menu_path": "구속조건>고급",
+      "steps": [
+        "면선택; 적용"
+      ],
+      "fields": {
+        "면": "2개",
+        "대칭": "YZ"
+      },
+      "result": "선택면·구속표시",
+      "error_cancel": "미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          63
+        ],
+        "pdf_page_indices0": [
+          62
+        ],
+        "printed_pages": [
+          "63"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-force",
+      "task": "T05",
+      "title": "면하중",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p065"
+      ],
+      "prerequisite": "메시완료",
+      "menu_path": "정적하중>집중",
+      "steps": [
+        "면선택; 확인"
+      ],
+      "fields": {
+        "종류": "총합력",
+        "Y": "40000 N",
+        "선택": "면1개"
+      },
+      "result": "면선택·방향표시",
+      "error_cancel": "취소버튼 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          65
+        ],
+        "pdf_page_indices0": [
+          64
+        ],
+        "printed_pages": [
+          "65"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-case",
+      "task": "T05",
+      "title": "케이스",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p066"
+      ],
+      "prerequisite": "조건정의완료",
+      "menu_path": "해석>해석케이스>일반",
+      "steps": [
+        "종류선택; 확인"
+      ],
+      "fields": {
+        "이름": "Pillow Box",
+        "유형": "선형정적"
+      },
+      "result": "케이스포함항목표",
+      "error_cancel": "취소버튼 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          66
+        ],
+        "pdf_page_indices0": [
+          65
+        ],
+        "printed_pages": [
+          "66"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-quality",
+      "task": "T06",
+      "title": "품질검사",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p297"
+      ],
+      "prerequisite": "생성된메시",
+      "menu_path": "요소망>품질검사",
+      "steps": [
+        "항목설정; 적용"
+      ],
+      "fields": {
+        "종횡비": "8",
+        "기운각": "45",
+        "뒤틀림": "25"
+      },
+      "result": "불량요소색표시",
+      "error_cancel": "닫기버튼 관측; 상태변화 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "화면 임계값은 예시이며 기본값/권장값 아님; 실패복구 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          297
+        ],
+        "pdf_page_indices0": [
+          296
+        ],
+        "printed_pages": [
+          "297"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-save",
+      "task": "T07",
+      "title": "프로젝트저장",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p067"
+      ],
+      "prerequisite": "케이스완료",
+      "menu_path": "해석>실행",
+      "steps": [
+        "확인; 파일명입력; 저장"
+      ],
+      "fields": {
+        "이름": "Pillow Box",
+        "형식": "nfx"
+      },
+      "result": "저장창",
+      "error_cancel": "취소버튼 관측; 실행효과 미확인",
+      "persistence": "저장지시 문서근거; 재열기 미확인",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          67
+        ],
+        "pdf_page_indices0": [
+          66
+        ],
+        "printed_pages": [
+          "67"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-run",
+      "task": "T08",
+      "title": "솔버연결",
+      "source_ids": [
+        "nfx-edu2024-D",
+        "nfx-edu2024-S"
+      ],
+      "asset_ids": [
+        "nfx-edu2024-p067"
+      ],
+      "prerequisite": "저장단계",
+      "menu_path": "해석>실행",
+      "steps": [
+        "확인"
+      ],
+      "fields": {},
+      "result": "별도솔버창",
+      "error_cancel": "중지버튼 문서명시; 중지후상태 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          67
+        ],
+        "pdf_page_indices0": [
+          66
+        ],
+        "printed_pages": [
+          "67"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-filter",
+      "task": "T03",
+      "title": "특성별가시성",
+      "source_ids": [
+        "nfx-filter-D",
+        "nfx-filter-S"
+      ],
+      "asset_ids": [
+        "nfx-html-selection-filter"
+      ],
+      "prerequisite": "모든요소망활성; M12특성존재",
+      "menu_path": "특성트리 우클릭>할당된요소만보이기",
+      "steps": [
+        "M12선택; 메뉴실행"
+      ],
+      "fields": {
+        "필터": "M12(바)"
+      },
+      "result": "D:할당요소만표시 명시; S:선택메뉴와 모델 관측(전후실행 아님)",
+      "error_cancel": "복원경로: 모든요소보이기. 취소기능 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "grounded",
+      "unknowns": [
+        "숨김상태 저장·Undo 미확인"
+      ],
+      "source_locator": "HTML paragraphs35-45; image18843034826649",
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_grounding": "좁은 문헌 성공경로의 필수 메뉴·선택·입력·결과가 연결됨. 전체과업 준비·동일입력 실행 검증과 별도.",
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-options",
+      "task": "T08",
+      "title": "해석옵션·파일연결",
+      "source_ids": [
+        "nfx-options-D",
+        "nfx-options-S"
+      ],
+      "asset_ids": [
+        "nfx-html-analysis-options"
+      ],
+      "prerequisite": "STR/CFD분리옵션",
+      "menu_path": "각 해석리본>옵션",
+      "steps": [
+        "구조/유동옵션창열기"
+      ],
+      "fields": {
+        "화면예시_CPU": "STR4/CFD1"
+      },
+      "result": "분리옵션대화상자",
+      "error_cancel": "취소버튼 관측; 실행효과 미확인",
+      "persistence": "문서에 nfx파일 저장 명시; 재열기 직접검증없음",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": "HTML paragraphs35-43",
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-plastic",
+      "task": "T09",
+      "title": "소성표·곡선",
+      "source_ids": [
+        "nfx-plastic-D",
+        "nfx-plastic-S"
+      ],
+      "asset_ids": [
+        "nfx-html-plastic-table",
+        "nfx-html-plastic-curve"
+      ],
+      "prerequisite": "탄소성재료창",
+      "menu_path": "소성경화곡선>함수",
+      "steps": [
+        "행입력; 그래프확인"
+      ],
+      "fields": {
+        "첫행": "plastic strain=0; stress=yield",
+        "관측예시": "0,320.3 N/mm²"
+      },
+      "result": "표와곡선동시표시",
+      "error_cancel": "취소버튼 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "적용후 모델갱신·취소·행오류 미확인"
+      ],
+      "source_locator": "HTML section1; attachments48342060696985,48342077462169",
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-drag",
+      "task": "T05",
+      "title": "조건세트이동",
+      "source_ids": [
+        "nfx-release2026-D",
+        "nfx-release2026-S"
+      ],
+      "asset_ids": [
+        "nfx-release2026-p008"
+      ],
+      "prerequisite": "기존조건·목적세트",
+      "menu_path": "조건트리 우클릭>새세트",
+      "steps": [
+        "조건다중선택; 목적세트로드래그"
+      ],
+      "fields": {},
+      "result": "조건소속변경 문서명시",
+      "error_cancel": "미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "전후연속화면·Undo·이름충돌 미확인"
+      ],
+      "source_locator": {
+        "pdf_page_index0": 7,
+        "printed_page": "8"
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-values",
+      "task": "T03",
+      "title": "하중수치표시",
+      "source_ids": [
+        "nfx-release2026-D",
+        "nfx-release2026-S"
+      ],
+      "asset_ids": [
+        "nfx-release2026-p009"
+      ],
+      "prerequisite": "정적하중; 절점/요소직접적용",
+      "menu_path": "Options>Loads/B.C.>Display",
+      "steps": [
+        "표시값설정"
+      ],
+      "fields": {
+        "DisplayValue": "체크",
+        "ValueSize/Color": "편집가능"
+      },
+      "result": "모델위수치표시",
+      "error_cancel": "미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "기하조건 적용범위·단위변경후 표시·저장 미확인"
+      ],
+      "source_locator": {
+        "pdf_page_index0": 8,
+        "printed_page": "9"
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "nfx-summary",
+      "task": "T09",
+      "title": "결과요약입력",
+      "source_ids": [
+        "nfx-release2026-D",
+        "nfx-release2026-S"
+      ],
+      "asset_ids": [
+        "nfx-release2026-p007"
+      ],
+      "prerequisite": "자동망생성된면/솔리드; 해석결과",
+      "menu_path": "결과분석>기타기능>임의면/체적요약",
+      "steps": [
+        "케이스·스텝·대상선택; 계산"
+      ],
+      "fields": {
+        "집계": "평균/합/최대/최소"
+      },
+      "result": "집계입력창",
+      "error_cancel": "닫기버튼 관측; 상태변화 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "수치결과·잘못된선택·내보내기 미확인"
+      ],
+      "source_locator": {
+        "pdf_page_index0": 6,
+        "printed_page": "7"
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    }
+  ],
+  "gaps": [
+    {
+      "task": "T01..T09",
+      "gap": "모든근거 S/D만. V/R·동일입력 재현·제품실행·구현 없음."
+    },
+    {
+      "task": "T07",
+      "gap": "저장창과 저장지시만 확보. 파일생성·내보내기·재열기후 보존 검증 없음."
+    },
+    {
+      "task": "T08",
+      "gap": "대화상자/솔버연결만. 스크립트·API·배치파일 자동화 미확인."
+    },
+    {
+      "task": "T06",
+      "gap": "품질검사의 임계값은 특정 화면값. 실패·잘못된입력·취소복원·Undo 미확인."
+    },
+    {
+      "task": "version",
+      "gap": "2024교육화면/2023·2025 HTML/2026릴리스를 연속동작으로 합치지 않음. release EN16p의 p9-10과 현행KO13p의 p8-9는 다른 문서."
+    },
+    {
+      "task": "source",
+      "gap": "공식HTML교육목록 article23673650074905에서 NFXED URL 직접대조. 검색PDF열람은34MB크기제한; 기존로컬파일을 렌더. PDF전문 배포제외."
+    },
+    {
+      "task": "resolution",
+      "gap": "PDF crop은144dpi 렌더이며 UI 원본해상도 개선을 뜻하지 않음. HTML4개는886x194,736x653,1880x646,1091x895 native픽셀; 화면빌드는 미표시."
+    },
+    {
+      "task": "status",
+      "gap": "3축분리: design_path_grounded는 좁은 문헌경로 필수연결, full_workflow_ready는 전체과업 준비, reproduction_verified는 동일입력 검증. 후자2축은 모든장면false이며 grounded개수로 제품우열을 판단하지 않음."
+    }
+  ],
+  "key": "nfx",
+  "evidence_scope": "S/D 자료. 이번 동일 입력 직접 실행(R)·연속 영상(V) 검증 없음.",
+  "asset_path_scope": "file은 이 별도 자료집의 상대 경로. 공개 저장소에 이미지 원본이 있다는 뜻이 아님."
+}

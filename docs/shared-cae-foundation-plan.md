@@ -37,6 +37,8 @@ Abaqus와 COMSOL은 외관·정보 밀도·화면 구성·상호작용의 참조
 
 ## 3. 참조 화면과 디자인 결정
 
+[7제품 상세 벤치마크](benchmarks/2026-10-30/README.md)의 메뉴·입력·결과·취소/저장 근거와 [공용 자산 요구](benchmarks/2026-10-30/common-assets.md)를 사용한다. 자료 미확인을 구현자의 추정으로 채우거나 정적 그림을 실행 결과로 승격하지 않는다. 목표 화면/상태의 실제 선택은 P0에 남는다.
+
 참조 제품은 Abaqus·COMSOL에 한정하지 않는다. **HyperMesh·midas NFX·MIDAS MeshFree·Naksha·BeidPrep**를 함께 비교하고 관찰한 패턴을 공용 부품·데이터 계약으로 연결한다. 제품별 근거·확인 수준·채택할 설계 문제는 [참조 제품 비교](gui-reference-matrix.md)에 둔다. 단순히 제품 이름을 추가하거나 제품마다 GUI 구현을 복제하지 않는다.
 
 ### 두 가지 화면 프로필
@@ -283,5 +285,3 @@ COMSOL 계열 조합과 완전한 표/곡선 앱은 다음 묶음(P4–P5)이다
 - [FEBioStudio](https://github.com/febiosoftware/FEBioStudio), [BARAM](https://github.com/nextfoam/baram): 실제 공학 앱의 명령·속성·곡선·작업 구현 참고. 직접 편입은 의존성과 해당 소스의 라이선스를 확인한 뒤 결정.
 
 공식 문서·개발 브랜치·안정 릴리스는 버전이 다를 수 있다. 링크가 있다는 사실을 설치·실행·배포 호환성 확인으로 대신하지 않는다.
-
-

@@ -1,0 +1,381 @@
+{
+  "product": "Naksha",
+  "version": "0.5.07 화면 / 웹 기능 build 미표시",
+  "sources": [
+    {
+      "id": "naksha-image-01",
+      "url": "https://agentnaksha.com/assets/img/app/app-crash-model.webp",
+      "title": "app-crash-model.webp",
+      "evidence_type": "S",
+      "locator": "원본 이미지",
+      "version": "0.5.07(앱 전체 화면 표기)"
+    },
+    {
+      "id": "naksha-image-02",
+      "url": "https://agentnaksha.com/assets/img/app/app-crash-results.webp",
+      "title": "app-crash-results.webp",
+      "evidence_type": "S",
+      "locator": "원본 이미지",
+      "version": "0.5.07(앱 전체 화면 표기)"
+    },
+    {
+      "id": "naksha-image-03",
+      "url": "https://agentnaksha.com/assets/img/app/vp-hex-mesh.webp",
+      "title": "vp-hex-mesh.webp",
+      "evidence_type": "S",
+      "locator": "원본 이미지",
+      "version": "이미지 버전 미표시"
+    },
+    {
+      "id": "naksha-image-04",
+      "url": "https://agentnaksha.com/assets/img/material-library.webp",
+      "title": "material-library.webp",
+      "evidence_type": "S",
+      "locator": "원본 이미지",
+      "version": "이미지 버전 미표시"
+    },
+    {
+      "id": "naksha-product",
+      "url": "https://agentnaksha.com/product.html",
+      "title": "Naksha Product",
+      "evidence_type": "D",
+      "locator": "Pre / Meshing / Solvers / File formats / Agent link",
+      "version": "접근일 2026-10-30, 빌드 미표시"
+    },
+    {
+      "id": "naksha-page",
+      "url": "https://agentnaksha.com/",
+      "title": "Naksha 공식 소개",
+      "evidence_type": "D",
+      "locator": "앱 원본 이미지와 자료 연결",
+      "version": "빌드 미표시"
+    }
+  ],
+  "assets": [
+    {
+      "id": "naksha-image-01",
+      "source_id": "naksha-image-01",
+      "source_url": "https://agentnaksha.com/assets/img/app/app-crash-model.webp",
+      "file": "assets/naksha/app-crash-model.webp",
+      "width": 1600,
+      "height": 860,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "5767082d1c2f01fc46bd903260c93f087cd6f5b4c4c173ee342044e3840ac69c"
+    },
+    {
+      "id": "naksha-image-02",
+      "source_id": "naksha-image-02",
+      "source_url": "https://agentnaksha.com/assets/img/app/app-crash-results.webp",
+      "file": "assets/naksha/app-crash-results.webp",
+      "width": 1600,
+      "height": 802,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "62a197f6731c13d8680bc6fc83c26e6742164f50b76a64ec13943537641e78cf"
+    },
+    {
+      "id": "naksha-image-03",
+      "source_id": "naksha-image-03",
+      "source_url": "https://agentnaksha.com/assets/img/app/vp-hex-mesh.webp",
+      "file": "assets/naksha/vp-hex-mesh.webp",
+      "width": 820,
+      "height": 600,
+      "kind": "diagram",
+      "visual_review": true,
+      "sha256": "e5cc0f88657c3b1d27cb9cc814c451d1fa7e9a5b5776d0cce6f3b5d6d346cccd"
+    },
+    {
+      "id": "naksha-image-04",
+      "source_id": "naksha-image-04",
+      "source_url": "https://agentnaksha.com/assets/img/material-library.webp",
+      "file": "assets/naksha/material-library.webp",
+      "width": 1250,
+      "height": 720,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "281fc64d2dd809e584da9cbb63480f1859852af0f6f6b6594c504feca3dfe32b"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "NA-01",
+      "task": "T01",
+      "title": "작업공간과 CAD/덱 가져오기",
+      "source_ids": [
+        "naksha-product",
+        "naksha-page",
+        "naksha-image-01"
+      ],
+      "asset_ids": [
+        "naksha-image-01"
+      ],
+      "prerequisite": "다중 파트 모델이 열린 공식 화면",
+      "menu_path": "Home/Solver/Geometry 등 탭은 관찰; Import 진입 미확인",
+      "steps": [],
+      "fields": [
+        "검색 Ctrl+K 표기",
+        "Open/Save 아이콘"
+      ],
+      "result": "리본·선택 띠·Outline·Details·viewport·status의 배치 관찰",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "Import 대화상자/단위 변환/누락 참조 동작"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "NA-02",
+      "task": "T02",
+      "title": "Outline과 Details의 모델 탐색",
+      "source_ids": [
+        "naksha-image-01"
+      ],
+      "asset_ids": [
+        "naksha-image-01"
+      ],
+      "prerequisite": "Model(OpenRadioss)와 Materials 펼침",
+      "menu_path": "Outline",
+      "steps": [],
+      "fields": [
+        "Name",
+        "ID",
+        "색상",
+        "가시성"
+      ],
+      "result": "자료형 폴더와 이름/ID 열을 관찰",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "우클릭 메뉴",
+        "다중 선택 속성 충돌",
+        "실제 행 선택 후 Details"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "NA-03",
+      "task": "T03",
+      "title": "선택 종류와 표시 제어",
+      "source_ids": [
+        "naksha-image-01"
+      ],
+      "asset_ids": [
+        "naksha-image-01"
+      ],
+      "prerequisite": "Face 활성 표기",
+      "menu_path": "뷰포트 위 선택 띠",
+      "steps": [],
+      "fields": [
+        "Face/Surface/Element/Node",
+        "Feature angle 30.0°",
+        "Multiple",
+        "Box pick",
+        "Show all",
+        "Isolate"
+      ],
+      "result": "선택 필터와 표시 명령을 같은 띠에서 관찰",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "추가/제거 modifier",
+        "숨김 대상 선택 정책",
+        "실제 선택 변화"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "NA-04",
+      "task": "T04",
+      "title": "hex 생성의 입력/출력 범위",
+      "source_ids": [
+        "naksha-product",
+        "naksha-image-03"
+      ],
+      "asset_ids": [
+        "naksha-image-03"
+      ],
+      "prerequisite": "공식 collar 결과 그림",
+      "menu_path": "mesh 설정 메뉴 미확인",
+      "steps": [],
+      "fields": [],
+      "result": "all-hex 결과 그림; 설정 UI 근거 아님",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "recipe/seed/partition/실패 face",
+        "CAD 대응과 품질 전부"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "NA-05",
+      "task": "T05",
+      "title": "재료 라이브러리의 선택 상세",
+      "source_ids": [
+        "naksha-image-04"
+      ],
+      "asset_ids": [
+        "naksha-image-04"
+      ],
+      "prerequisite": "MAT-01584 행이 선택된 이미지",
+      "menu_path": "라이브러리 진입 메뉴 미확인",
+      "steps": [],
+      "fields": [
+        "검색",
+        "Family",
+        "Provider",
+        "Temperature",
+        "strain-rate 선택",
+        "E [MPa]",
+        "Yield [MPa]",
+        "Import selected"
+      ],
+      "result": "선택행·출처·계수·다중 속도 곡선이 한 화면에 있음",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "가져오기 후 native 카드 매핑",
+        "잘못된 단위 처리",
+        "조건/케이스 편집"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "NA-06",
+      "task": "T06",
+      "title": "메시 품질과 실패 진단",
+      "source_ids": [
+        "naksha-product"
+      ],
+      "asset_ids": [],
+      "prerequisite": "제작사 기능 설명",
+      "menu_path": "미확인",
+      "steps": [],
+      "fields": [],
+      "result": "local repair/quality 기능의 존재 설명",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "metric/불량 집합/오류 대화상자/rollback"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "NA-07",
+      "task": "T07",
+      "title": "작업 문서와 solver 교환",
+      "source_ids": [
+        "naksha-product"
+      ],
+      "asset_ids": [],
+      "prerequisite": "모델이 열린 상태",
+      "menu_path": "실제 저장 대화상자 미확인",
+      "steps": [],
+      "fields": [
+        ".cmb",
+        ".rad",
+        ".inp",
+        ".k",
+        ".pmx"
+      ],
+      "result": "작업 문서와 교환 형식의 목록 확인",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "Save As/dirty/닫기 취소/재열기 값 보존"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "NA-08",
+      "task": "T08",
+      "title": "agent link와 결과 표시",
+      "source_ids": [
+        "naksha-product",
+        "naksha-image-02"
+      ],
+      "asset_ids": [
+        "naksha-image-02"
+      ],
+      "prerequisite": "결과가 열린 정적 화면; 웹의 채팅 예시는 illustrative 명시",
+      "menu_path": "Results 탭; agent 설정 진입 미확인",
+      "steps": [],
+      "fields": [
+        "Field Displacement",
+        "Component Magnitude",
+        "Deformation ×1",
+        "State 34/45"
+      ],
+      "result": "결과·재생 컨트롤 관찰; MCP 시각 예시는 V/R 증거 아님",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "tool schema/권한 UI/취소/세션 연결/실제 실행"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "NA-09",
+      "task": "T09",
+      "title": "곡선 표시와 단위",
+      "source_ids": [
+        "naksha-image-04"
+      ],
+      "asset_ids": [
+        "naksha-image-04"
+      ],
+      "prerequisite": "재료 행 선택 이미지",
+      "menu_path": "라이브러리 화면",
+      "steps": [],
+      "fields": [
+        "True stress [MPa]",
+        "plastic strain",
+        "여러 strain-rate legend"
+      ],
+      "result": "표와 곡선의 동시 표현 관찰",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "표 편집/붙여넣기/곡선 drag/입력 초안/Undo"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    }
+  ],
+  "gaps": [
+    "공식 소개/제품/벤치마크/terms와 공개 이미지 확인. 접근 가능한 상세 GUI 매뉴얼·실제 build·동일 모델 입력을 이번에 확보하지 못함.",
+    "원본 이미지 0.5.07은 관측 빌드이며 현재 모든 기능과 일치한다고 보장하지 않음.",
+    "benchmark 수치나 illustrative 채팅을 실제 GUI/SDK 재현으로 사용하지 않음."
+  ],
+  "key": "naksha",
+  "evidence_scope": "S/D 자료. 이번 동일 입력 직접 실행(R)·연속 영상(V) 검증 없음.",
+  "asset_path_scope": "file은 이 별도 자료집의 상대 경로. 공개 저장소에 이미지 원본이 있다는 뜻이 아님."
+}

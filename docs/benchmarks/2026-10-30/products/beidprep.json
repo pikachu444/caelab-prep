@@ -1,0 +1,425 @@
+{
+  "product": "BeidPrep",
+  "version": "2.0 웹 소개 / 이미지 build 미표시",
+  "sources": [
+    {
+      "id": "beidprep-image-01",
+      "url": "https://beidersim.com/images/card-editor-law36.png",
+      "title": "card-editor-law36.png",
+      "evidence_type": "S",
+      "locator": "원본 이미지",
+      "version": "페이지 2.0 / 이미지 빌드 미표시"
+    },
+    {
+      "id": "beidprep-image-02",
+      "url": "https://beidersim.com/images/mesh-edit-nodes.png",
+      "title": "mesh-edit-nodes.png",
+      "evidence_type": "S",
+      "locator": "원본 이미지",
+      "version": "페이지 2.0 / 이미지 빌드 미표시"
+    },
+    {
+      "id": "beidprep-image-03",
+      "url": "https://beidersim.com/images/bolts-wing-bay.png",
+      "title": "bolts-wing-bay.png",
+      "evidence_type": "S",
+      "locator": "원본 이미지",
+      "version": "페이지 2.0 / 이미지 빌드 미표시"
+    },
+    {
+      "id": "beidprep-image-04",
+      "url": "https://beidersim.com/images/morphing-part.png",
+      "title": "morphing-part.png",
+      "evidence_type": "S",
+      "locator": "원본 이미지",
+      "version": "페이지 2.0 / 이미지 빌드 미표시"
+    },
+    {
+      "id": "beidprep-image-05",
+      "url": "https://beidersim.com/images/claude-chat.png",
+      "title": "claude-chat.png",
+      "evidence_type": "S",
+      "locator": "원본 이미지",
+      "version": "페이지 2.0 / 이미지 빌드 미표시"
+    },
+    {
+      "id": "beidprep-page",
+      "url": "https://beidersim.com/beidprep.html",
+      "title": "BeidPrep 2.0 공식 기능/도구 설명",
+      "evidence_type": "D",
+      "locator": "Free/Pro/Claude panels",
+      "version": "2.0 소개, 2026-10-30 접근"
+    },
+    {
+      "id": "beidprep-cards",
+      "url": "https://beidersim.com/validation-cards.html",
+      "title": "카드 저장/Starter 검증의 제작사 기록",
+      "evidence_type": "D",
+      "locator": "검사 단계와 한계",
+      "version": "제작사 build 6f106e86 / 2026-10-26"
+    },
+    {
+      "id": "beidprep-mid",
+      "url": "https://beidersim.com/validation-midsurface.html",
+      "title": "중립면/메셔 제작사 평가",
+      "evidence_type": "D",
+      "locator": "coverage와 잔여 불량",
+      "version": "8cefff4 / 2026-10-27 엔진(제작사 원문)"
+    }
+  ],
+  "assets": [
+    {
+      "id": "beidprep-image-01",
+      "source_id": "beidprep-image-01",
+      "source_url": "https://beidersim.com/images/card-editor-law36.png",
+      "file": "assets/beidprep/card-editor-law36.png",
+      "width": 1560,
+      "height": 1170,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "aa4410fee8143873aa9ea08d422c7a26a952765a3e4780eac2df6b3f2f1895b3"
+    },
+    {
+      "id": "beidprep-image-02",
+      "source_id": "beidprep-image-02",
+      "source_url": "https://beidersim.com/images/mesh-edit-nodes.png",
+      "file": "assets/beidprep/mesh-edit-nodes.png",
+      "width": 1560,
+      "height": 1170,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "d149d40fa56888122536f7f6474c2bbc7804b9bfdfb83c466dfbf6f5cbd2ef4f"
+    },
+    {
+      "id": "beidprep-image-03",
+      "source_id": "beidprep-image-03",
+      "source_url": "https://beidersim.com/images/bolts-wing-bay.png",
+      "file": "assets/beidprep/bolts-wing-bay.png",
+      "width": 1560,
+      "height": 1170,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "ca16b581136bc336a30216636251b04aa606ce55579906227f35ac9bea8ff44e"
+    },
+    {
+      "id": "beidprep-image-04",
+      "source_id": "beidprep-image-04",
+      "source_url": "https://beidersim.com/images/morphing-part.png",
+      "file": "assets/beidprep/morphing-part.png",
+      "width": 1560,
+      "height": 1170,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "5fed871d426b9c7f252ba5155dfa326316a1cedfe22993d3f340803a24c093b2"
+    },
+    {
+      "id": "beidprep-image-05",
+      "source_id": "beidprep-image-05",
+      "source_url": "https://beidersim.com/images/claude-chat.png",
+      "file": "assets/beidprep/claude-chat.png",
+      "width": 1560,
+      "height": 1170,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "31adf6fc6a7ef0c0303aa3f9e0aa3771f4ed8a4acc10ccddf99bf0d56290b9b5"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "BE-01",
+      "task": "T01",
+      "title": "작업공간과 입력 덱",
+      "source_ids": [
+        "beidprep-page",
+        "beidprep-image-01"
+      ],
+      "asset_ids": [
+        "beidprep-image-01"
+      ],
+      "prerequisite": "srail_law36_0000.rad가 열린 공식 화면",
+      "menu_path": "File 메뉴 항목 자체는 이미지에서 닫힘",
+      "steps": [],
+      "fields": [
+        "MODEL/MESH CONTROLS",
+        "검색",
+        "하단 선택 띠"
+      ],
+      "result": "트리·카드 폼·viewport의 동시 배치",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "Import/단위/INCLUDE/dirty 대화상자"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "BE-02",
+      "task": "T02",
+      "title": "조건과 파트의 계층",
+      "source_ids": [
+        "beidprep-image-03"
+      ],
+      "asset_ids": [
+        "beidprep-image-03"
+      ],
+      "prerequisite": "Components 18개 펼침",
+      "menu_path": "MODEL 트리",
+      "steps": [],
+      "fields": [
+        "가시성",
+        "색",
+        "Components",
+        "Parts",
+        "Constraints",
+        "Groups",
+        "Materials",
+        "Properties"
+      ],
+      "result": "형상 component와 solver part/조건 분류를 관찰",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "선택→폼 갱신",
+        "이름충돌",
+        "드래그 배정"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "BE-03",
+      "task": "T03",
+      "title": "Node Move의 선택과 preview",
+      "source_ids": [
+        "beidprep-image-02"
+      ],
+      "asset_ids": [
+        "beidprep-image-02"
+      ],
+      "prerequisite": "Node/Move 활성, mesh가 열린 상태",
+      "menu_path": "열린 Editing 패널 내부: MESH > Node > Move; 전역 메뉴 진입 미확인",
+      "steps": [
+        "선택 절점 drag라는 화면 안내"
+      ],
+      "fields": [
+        "Merge on release",
+        "at midpoint",
+        "Morph",
+        "Fade",
+        "Rings",
+        "Shape",
+        "Measured by"
+      ],
+      "result": "절점 이동 도구와 선택 지시, mesh preview 관찰",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "진입 상위 메뉴",
+        "commit/cancel key",
+        "저장 후 좌표"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "BE-04",
+      "task": "T04",
+      "title": "메시 편집과 morph 설정",
+      "source_ids": [
+        "beidprep-image-04"
+      ],
+      "asset_ids": [
+        "beidprep-image-04"
+      ],
+      "prerequisite": "Node Move에서 Morph 표시",
+      "menu_path": "열린 Editing 패널 내부: MESH > Node > Move; 전역 메뉴 진입 미확인",
+      "steps": [],
+      "fields": [
+        "Fade 1.25",
+        "Rings 5",
+        "Dome(smooth)",
+        "Distance"
+      ],
+      "result": "영향 ring preview와 Undo 메시지 관찰",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "실제 옵션 기본값",
+        "메셔 생성 recipe/seed",
+        "Jacobian/실패시 rollback"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "BE-05",
+      "task": "T05",
+      "title": "LAW36 폼과 native 카드",
+      "source_ids": [
+        "beidprep-page",
+        "beidprep-image-01"
+      ],
+      "asset_ids": [
+        "beidprep-image-01"
+      ],
+      "prerequisite": "LAW36 ID1 steel_4340_tabulated",
+      "menu_path": "FORM/TEXT 전환 탭 관찰",
+      "steps": [],
+      "fields": [
+        "Rho_I 7.83e-06",
+        "E 208.0",
+        "Nu 0.3",
+        "Nfunct 1",
+        "함수 참조 선택"
+      ],
+      "result": "필드 그룹과 참조 입력 관찰. 하단 APPLY는 선택 띠 소속이며 카드 확정 근거로 쓰지 않음",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "새 카드 생성 메뉴",
+        "입력 단위 문맥",
+        "card commit 동작",
+        "잘못된 값/참조의 실제 거부"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "BE-06",
+      "task": "T06",
+      "title": "지원되지 않은 카드와 품질 검사",
+      "source_ids": [
+        "beidprep-page",
+        "beidprep-cards",
+        "beidprep-mid"
+      ],
+      "asset_ids": [],
+      "prerequisite": "제작사 공개 검증 설명",
+      "menu_path": "검사 UI 미확인",
+      "steps": [],
+      "fields": [],
+      "result": "형식별 form/text 구분과 실패 영역 보고 설명",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "실제 오류 대화상자",
+        "불량 요소 선택/수정 순서",
+        "우리 독립 재현"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "BE-07",
+      "task": "T07",
+      "title": "저장과 native 내보내기",
+      "source_ids": [
+        "beidprep-page",
+        "beidprep-cards"
+      ],
+      "asset_ids": [],
+      "prerequisite": "편집 중인 모델",
+      "menu_path": "File > Save / File > Export (문서에 명시)",
+      "steps": [],
+      "fields": [
+        "작업 파일",
+        "Starter/Engine RAD"
+      ],
+      "result": "제작사 저장/readback 절차; 이번 R 증거 아님",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "확장자/저장창/닫기취소/재시작 동일값",
+        "원본 덮어쓰기 정책"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "BE-08",
+      "task": "T08",
+      "title": "Claude 권한과 action log",
+      "source_ids": [
+        "beidprep-image-05"
+      ],
+      "asset_ids": [
+        "beidprep-image-05"
+      ],
+      "prerequisite": "연결 ON이 표시된 공식 이미지",
+      "menu_path": "상위 진입 메뉴 미확인",
+      "steps": [],
+      "fields": [
+        "읽기: local/structure/full",
+        "변경: read-only/approve/free",
+        "folder",
+        "auto-connect",
+        "Disconnect",
+        "action log"
+      ],
+      "result": "읽기/변경 범위를 독립적으로 선택하는 설정 화면",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "실제 handshake/tool schema",
+        "동작 실패/취소와 Undo 보장",
+        "자동 시작 실제 결과"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "BE-09",
+      "task": "T09",
+      "title": "재료 곡선 입력",
+      "source_ids": [
+        "beidprep-page"
+      ],
+      "asset_ids": [],
+      "prerequisite": "카드 곡선 기능 소개",
+      "menu_path": "상세 진입 미확인",
+      "steps": [],
+      "fields": [
+        "spreadsheet paste",
+        "plot digitizer"
+      ],
+      "result": "두 입력 경로의 제작사 설명",
+      "error_cancel": "미확인",
+      "persistence": "미확인",
+      "status": "partial",
+      "unknowns": [
+        "실제 표/곡선 UI",
+        "단위/열 mapping",
+        "붙여넣기 오류/Undo"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    }
+  ],
+  "gaps": [
+    "2.0은 이번 직접 실행 없음. 과거1.0.1 시험과 혼합하지 않음.",
+    "공식 튜토리얼 링크 구역은 공개 HTML에서 greyed until launch라는 상태. 영상 시각 증거로 사용하지 않음.",
+    "정적 UI는 상세하나 입력 모델 파일·연속 조작·실패/취소/저장 재열기가 연결되지 않아 모든 장면을 partial로 기록.",
+    "MCP 도구 개수/벤더 검증 숫자를 우리 측 확인 결과로 인용하지 않음."
+  ],
+  "key": "beidprep",
+  "evidence_scope": "S/D 자료. 이번 동일 입력 직접 실행(R)·연속 영상(V) 검증 없음.",
+  "asset_path_scope": "file은 이 별도 자료집의 상대 경로. 공개 저장소에 이미지 원본이 있다는 뜻이 아님."
+}
