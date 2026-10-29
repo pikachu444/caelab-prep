@@ -1,0 +1,2413 @@
+{
+  "product": "Abaqus/CAE",
+  "version": "2025 documentation baseline; captured UI build/date unknown",
+  "sources": [
+    {
+      "id": "D01",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-c-absmaincaewindow.htm",
+      "title": "Components of the main window",
+      "evidence_type": "D",
+      "locator": "Figure 1; component descriptions",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D02",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-t-caebeampartmod.htm",
+      "title": "Creating a part",
+      "evidence_type": "D",
+      "locator": "Create Part → Sketcher → extrusion → first save; Figures 1–3",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D03",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-topmodeltreeoverview.htm",
+      "title": "The Model Tree",
+      "evidence_type": "D",
+      "locator": "Figures 1–4; tree hierarchy and tooltip descriptions",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D04",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-ftsmanagerconcept.htm",
+      "title": "Using the Model Tree to manage features",
+      "evidence_type": "D",
+      "locator": "Figure 1; feature context menu/status/Query",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D05",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-t-caebeammatmod.htm",
+      "title": "Creating a material",
+      "evidence_type": "D",
+      "locator": "Material tutorial steps; Figures 1–2",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D06",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-prpeditormatopt.htm",
+      "title": "Selecting material behaviors",
+      "evidence_type": "D",
+      "locator": "Figures 1–2; material-validation limits",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D07",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-prpeditormatdata.htm",
+      "title": "Specifying material parameters and data",
+      "evidence_type": "D",
+      "locator": "Figures 1–3; Type and data-table dependencies",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D08",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-t-prplibrarymanage.htm",
+      "title": "Managing material libraries",
+      "evidence_type": "D",
+      "locator": "Figure 1; creation/copying; final Save Changes paragraph",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D09",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-picfilters.htm",
+      "title": "Available selection options",
+      "evidence_type": "D",
+      "locator": "Figure 1; valid/disabled selection tools",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D10",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-picconcfilterstype.htm",
+      "title": "Filtering your selection based on the type of object",
+      "evidence_type": "D",
+      "locator": "Selection toolbar filters; Ctrl+A behavior",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D11",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-picselect1.htm",
+      "title": "Selecting and unselecting individual objects",
+      "evidence_type": "D",
+      "locator": "Individual selection/unselection procedure",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D12",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-piccycle.htm",
+      "title": "Cycling through valid selections",
+      "evidence_type": "D",
+      "locator": "Ambiguous selection; prompt buttons",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D13",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-t-dgphlpcreate.htm",
+      "title": "Creating or editing a display group",
+      "evidence_type": "D",
+      "locator": "Create/edit steps 1–7; session-only saved groups",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D14",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-t-caebeammeshcontrols.htm",
+      "title": "Assigning mesh controls",
+      "evidence_type": "D",
+      "locator": "Beam tutorial mesh controls procedure",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D15",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-t-mgnattributestechnique.htm",
+      "title": "Selecting a meshing technique",
+      "evidence_type": "D",
+      "locator": "Region selection; Mesh Controls; final existing-mesh warning",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D16",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-t-caebeammeshelement.htm",
+      "title": "Assigning an Abaqus element type",
+      "evidence_type": "D",
+      "locator": "Beam element-type assignment; C3D8I",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D17",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-t-mgnattributestype.htm",
+      "title": "Associating Abaqus elements with mesh regions",
+      "evidence_type": "D",
+      "locator": "Geometry/orphan selection constraints; element assignment steps",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D18",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-mgnconcelemassign.htm",
+      "title": "Element type assignment",
+      "evidence_type": "D",
+      "locator": "Figures 1–2; 2D shell Quad/Tri example",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D19",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-t-caebeammeshmodel.htm",
+      "title": "Creating the mesh",
+      "evidence_type": "D",
+      "locator": "Global Seeds 10.0; Mesh Part confirmation; Figures 1–2",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D20",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-t-mgnpartbtn.htm",
+      "title": "Defining seed density for an entire part or part instance",
+      "evidence_type": "D",
+      "locator": "Global Seeds parameters; Apply/OK; edge overrides",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D21",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-mgnenterexit.htm",
+      "title": "Entering and exiting the Mesh module",
+      "evidence_type": "D",
+      "locator": "Context changes; final model-save paragraph",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D22",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-mgnseederror.htm",
+      "title": "Relaxing constraints using the error dialog box",
+      "evidence_type": "D",
+      "locator": "Error screenshot; Yes/No outcomes",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D23",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-mgnattributesinvalid.htm",
+      "title": "Changing mesh controls for previously meshed regions",
+      "evidence_type": "D",
+      "locator": "Warning screenshot; Delete Meshes/Cancel; session checkbox",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D24",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-mgnreseed.htm",
+      "title": "Seeding previously meshed parts, part instances, or regions",
+      "evidence_type": "D",
+      "locator": "Warning screenshot; reseeding/mesh deletion branch",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D25",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-t-mgnverifybtn.htm",
+      "title": "Verifying element quality",
+      "evidence_type": "D",
+      "locator": "Verify selected elements and Verify a part/instance/region subsections",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D26",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-t-caebeamsectionmoddefine.htm",
+      "title": "Defining a homogeneous solid section",
+      "evidence_type": "D",
+      "locator": "Solid homogeneous section tutorial",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D27",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-t-ceabeamsectionmodassign.htm",
+      "title": "Assigning the section to the cantilever beam",
+      "evidence_type": "D",
+      "locator": "Beam section-selection and assignment tutorial",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D28",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-t-caebeamsimmodstep.htm",
+      "title": "Creating an analysis step",
+      "evidence_type": "D",
+      "locator": "BeamLoad general-static step tutorial",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D29",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-t-caebeamloadmodbc.htm",
+      "title": "Applying a boundary condition to one end of the cantilever beam",
+      "evidence_type": "D",
+      "locator": "Fixed/Initial/ENCASTRE; region Figure 1; manager outcome",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D30",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-t-caebeamloadmodload.htm",
+      "title": "Applying a load to the top of the cantilever beam",
+      "evidence_type": "D",
+      "locator": "Pressure/BeamLoad/0.5; region Figure 1; arrows and manager",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D31",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-lbieditmanager.htm",
+      "title": "Managing prescribed conditions",
+      "evidence_type": "D",
+      "locator": "Figure 1; step-dependent condition manager controls",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D32",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-intmgrwhatis.htm",
+      "title": "What are basic managers?",
+      "evidence_type": "D",
+      "locator": "Figures 1–3; Material/Job Manager and corresponding menu",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D33",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-t-caebeamanamod.htm",
+      "title": "Creating and submitting an analysis job",
+      "evidence_type": "D",
+      "locator": "Deform creation/submission; Submitted/Running/Completed/Aborted; Results",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D34",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-anaconcmonitor.htm",
+      "title": "Monitoring the progress of an analysis job",
+      "evidence_type": "D",
+      "locator": "Figure 1; monitor tabs/search/failure/Kill; remote limitations",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D35",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-anajobmandatacheckbtn.htm",
+      "title": "Performing a data check on a model",
+      "evidence_type": "D",
+      "locator": "Data Check entry and result inspection",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D36",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-anajobmankillbtn.htm",
+      "title": "Terminating an analysis job",
+      "evidence_type": "D",
+      "locator": "Kill entry; terminated status behavior",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D37",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-dbsmdbsave.htm",
+      "title": "Saving the current model database",
+      "evidence_type": "D",
+      "locator": "First/subsequent save; title bar; no timer autosave",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D38",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-dbsmdbsaveas.htm",
+      "title": "Saving the current model database to a new file with a different name",
+      "evidence_type": "D",
+      "locator": "Save As procedure; reserved name note",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D39",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-t-dbsmdbopen.htm",
+      "title": "Opening a model database or an output database",
+      "evidence_type": "D",
+      "locator": "File filters; read-only; opening outcomes and unsaved changes",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D40",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-intdialogselection.htm",
+      "title": "Using file selection dialog boxes",
+      "evidence_type": "D",
+      "locator": "Figure 1; file filtering/directory/file selection",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D41",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-t-dbsimportpart.htm",
+      "title": "Importing parts",
+      "evidence_type": "D",
+      "locator": "File Import Part; formats; generic import result",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D42",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-t-dbsimportpartstep.htm",
+      "title": "Importing a part from a STEP-format file",
+      "evidence_type": "D",
+      "locator": "STEP import procedure and options",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D43",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-anajobmanwritebtn.htm",
+      "title": "Writing the input file only",
+      "evidence_type": "D",
+      "locator": "Write Input; .inp path; external-edit warning",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D44",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-dbsfilesjournal.htm",
+      "title": "Recreating a saved model database",
+      "evidence_type": "D",
+      "locator": "Explicit save creates .jnl; recover command; recorded/omitted operations",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D45",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-dbsfilesrecover.htm",
+      "title": "Recreating an unsaved model database",
+      "evidence_type": "D",
+      "locator": "Recovery .rec/.jnl lifecycle; Table 1",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D46",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-gststart.htm",
+      "title": "Starting Abaqus/CAE (or Abaqus/Viewer)",
+      "evidence_type": "D",
+      "locator": "script/noGUI/replay/recover options; Start Session choices",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D47",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-intdialogspreadsheet.htm",
+      "title": "Entering tabular data",
+      "evidence_type": "D",
+      "locator": "Figure 1; numeric editing, ASCII import, XY data and session persistence",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D48",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-intdialogexpression.htm",
+      "title": "Entering expressions",
+      "evidence_type": "D",
+      "locator": "Figure 1; expression evaluation/reopen; legacy semantic caveat",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D49",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEGSARefMap/simagsa-c-absunits.htm",
+      "title": "Units",
+      "evidence_type": "D",
+      "locator": "Opening unit-convention paragraph; Table 1",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "D50",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-intdialogok.htm",
+      "title": "Understanding the OK, Apply, Defaults, Continue, Cancel, and Dismiss buttons",
+      "evidence_type": "D",
+      "locator": "OK/Apply/Defaults/Cancel/Continue/Dismiss definitions",
+      "version": "Abaqus 2025 documentation on Virginia Tech mirror; mirror freshness/build unverified; runtime not executed"
+    },
+    {
+      "id": "S01",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-main-window-nls.png",
+      "title": "gst-main-window-nls.png",
+      "evidence_type": "S",
+      "locator": "D01의 이미지. 직접 view_image 시각검사: 주석이 붙은 주창. 앱 자체의 원래 창 해상도를 의미하지 않음.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S02",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-prompt-area-nls.png",
+      "title": "gst-prompt-area-nls.png",
+      "evidence_type": "S",
+      "locator": "D02의 이미지. 직접 view_image 시각검사: Previous/Cancel/Done 프롬프트 확대 발췌.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S03",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-sketch-rect.png",
+      "title": "gst-sketch-rect.png",
+      "evidence_type": "S",
+      "locator": "D02의 이미지. 직접 view_image 시각검사: 200×20 스케치 형상 발췌; 대화상자 아님.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S04",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-part.png",
+      "title": "gst-part.png",
+      "evidence_type": "S",
+      "locator": "D02의 이미지. 직접 view_image 시각검사: Beam 생성 결과 형상 발췌; 전체 UI 아님.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S05",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/uss-int-tree-nls.png",
+      "title": "uss-int-tree-nls.png",
+      "evidence_type": "S",
+      "locator": "D03의 이미지. 직접 view_image 시각검사: 모델 트리 계층.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S06",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/uss-int-tree-steps-expanded-nls.png",
+      "title": "uss-int-tree-steps-expanded-nls.png",
+      "evidence_type": "S",
+      "locator": "D03의 이미지. 직접 view_image 시각검사: BeamLoad 확장 상태.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S07",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/uss-int-tree-tooltip-nls.png",
+      "title": "uss-int-tree-tooltip-nls.png",
+      "evidence_type": "S",
+      "locator": "D03의 이미지. 직접 view_image 시각검사: Beam/BeamLoad 툴팁 두 상태 병치.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S08",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/adv-conn-featuremanager-nls.png",
+      "title": "adv-conn-featuremanager-nls.png",
+      "evidence_type": "S",
+      "locator": "D04의 이미지. 직접 view_image 시각검사: feature 우클릭 메뉴, Edit 선택.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S09",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-buttons-nls.png",
+      "title": "prp-buttons-nls.png",
+      "evidence_type": "S",
+      "locator": "D05의 이미지. 직접 view_image 시각검사: Mechanical→Elasticity 펼침 메뉴.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S10",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-material-editor-nls.png",
+      "title": "gst-material-editor-nls.png",
+      "evidence_type": "S",
+      "locator": "D05의 이미지. 직접 view_image 시각검사: 209.E3, 0.3 데이터 표 발췌. 전체 Edit Material 대화상자가 아님.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S11",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-list-nls.png",
+      "title": "prp-list-nls.png",
+      "evidence_type": "S",
+      "locator": "D06의 이미지. 직접 view_image 시각검사: Material Behaviors 목록 발췌.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S12",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-type-nls.png",
+      "title": "prp-type-nls.png",
+      "evidence_type": "S",
+      "locator": "D07의 이미지. 직접 view_image 시각검사: Isotropic/Lamina Type 두 상태 병치.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S13",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-tabdata-nls.png",
+      "title": "prp-tabdata-nls.png",
+      "evidence_type": "S",
+      "locator": "D07의 이미지. 직접 view_image 시각검사: 등방성 빈 데이터 표 발췌.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S14",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-lamina-nls.png",
+      "title": "prp-lamina-nls.png",
+      "evidence_type": "S",
+      "locator": "D07의 이미지. 직접 view_image 시각검사: Lamina의 E1/E2/Nu12/G12/G13/G23 입력부 발췌.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S15",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-matlibrary-manager-nls.png",
+      "title": "prp-matlibrary-manager-nls.png",
+      "evidence_type": "S",
+      "locator": "D08의 이미지. 직접 view_image 시각검사: Material Library Manager.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S16",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/obj-selection-toolbar-nls.png",
+      "title": "obj-selection-toolbar-nls.png",
+      "evidence_type": "S",
+      "locator": "D09의 이미지. 직접 view_image 시각검사: Edges 필터가 보이는 선택 툴바 발췌.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S17",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/pic-next-feature-nls.png",
+      "title": "pic-next-feature-nls.png",
+      "evidence_type": "S",
+      "locator": "D12의 이미지. 직접 view_image 시각검사: 모호한 선택 Next/Previous/OK 프롬프트.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S18",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/mgn-assign1-nls.png",
+      "title": "mgn-assign1-nls.png",
+      "evidence_type": "S",
+      "locator": "D18의 이미지. 직접 view_image 시각검사: 2D Shell Element Type의 Quad 상태. Beam C3D8I 화면이 아님.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S19",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/mgn-assign2-nls.png",
+      "title": "mgn-assign2-nls.png",
+      "evidence_type": "S",
+      "locator": "D18의 이미지. 직접 view_image 시각검사: 동일 2D 예제의 Tri 탭 발췌.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S20",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-mesh.png",
+      "title": "gst-mesh.png",
+      "evidence_type": "S",
+      "locator": "D19의 이미지. 직접 view_image 시각검사: seed 배치 결과 형상 발췌; 대화상자 아님.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S21",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-meshdone.png",
+      "title": "gst-meshdone.png",
+      "evidence_type": "S",
+      "locator": "D19의 이미지. 직접 view_image 시각검사: 생성 메시 형상 발췌; UI 조작부 없음.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S22",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/mgn-error-nls.png",
+      "title": "mgn-error-nls.png",
+      "evidence_type": "S",
+      "locator": "D22의 이미지. 직접 view_image 시각검사: 고정 seed 과구속 오류 Yes/No.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S23",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/mgn-controlwarn-nls.png",
+      "title": "mgn-controlwarn-nls.png",
+      "evidence_type": "S",
+      "locator": "D23의 이미지. 직접 view_image 시각검사: mesh controls 변경 시 기존 메시 무효화 경고.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S24",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/mgn-delete-mesh-nls.png",
+      "title": "mgn-delete-mesh-nls.png",
+      "evidence_type": "S",
+      "locator": "D24의 이미지. 직접 view_image 시각검사: reseed 시 기존 메시 무효화 경고.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S25",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-ambig2.png",
+      "title": "gst-ambig2.png",
+      "evidence_type": "S",
+      "locator": "D29의 이미지. 직접 view_image 시각검사: BC 대상 face 하이라이트 형상 발췌.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S26",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-load.png",
+      "title": "gst-load.png",
+      "evidence_type": "S",
+      "locator": "D30의 이미지. 직접 view_image 시각검사: 상면 압력/고정단 표시 형상 발췌.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S27",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/lbi-loadmanager-nls.png",
+      "title": "lbi-loadmanager-nls.png",
+      "evidence_type": "S",
+      "locator": "D31의 이미지. 직접 view_image 시각검사: 단계별 Created/Propagated/Deactivated 상태표.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S28",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/int-manager-nls.png",
+      "title": "int-manager-nls.png",
+      "evidence_type": "S",
+      "locator": "D32의 이미지. 직접 view_image 시각검사: Material Manager.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S29",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/ana-jobman-nls.png",
+      "title": "ana-jobman-nls.png",
+      "evidence_type": "S",
+      "locator": "D32의 이미지. 직접 view_image 시각검사: Deform Completed 상태의 Job Manager.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S30",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/int-menu-nls.png",
+      "title": "int-menu-nls.png",
+      "evidence_type": "S",
+      "locator": "D32의 이미지. 직접 view_image 시각검사: Job 메뉴 펼침과 Submit 하위메뉴.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S31",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/ana-monitorjob-nls.png",
+      "title": "ana-monitorjob-nls.png",
+      "evidence_type": "S",
+      "locator": "D34의 이미지. 직접 view_image 시각검사: Job-1 Monitor, Status None의 빈 표. 오류 발생 후 화면이 아님.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S32",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/int-selectbox-nls.png",
+      "title": "int-selectbox-nls.png",
+      "evidence_type": "S",
+      "locator": "D40의 이미지. 직접 view_image 시각검사: 주석 달린 Open Database, viewer_tutorial.odb 선택, Read-only 켬.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S33",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/int-spreadsheet-nls.png",
+      "title": "int-spreadsheet-nls.png",
+      "evidence_type": "S",
+      "locator": "D47의 이미지. 직접 view_image 시각검사: XY Data From Keyboard의 값 입력 상태.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    },
+    {
+      "id": "S34",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/int-expression-nls.png",
+      "title": "int-expression-nls.png",
+      "evidence_type": "S",
+      "locator": "D48의 이미지. 직접 view_image 시각검사: Pinned chassis Edit Boundary Condition 수식 입력. Beam 예제와 별개.",
+      "version": "2025 documentation image on Virginia Tech mirror; mirror freshness and captured application build/date unknown"
+    }
+  ],
+  "assets": [
+    {
+      "id": "A01",
+      "source_id": "S01",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-main-window-nls.png",
+      "file": "assets/abaqus/gst-main-window-nls.png",
+      "width": 700,
+      "height": 701,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "b4d344909e16263a090ec4da5e65848063bb94021b4717c3834fedd1b6d8e266"
+    },
+    {
+      "id": "A02",
+      "source_id": "S02",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-prompt-area-nls.png",
+      "file": "assets/abaqus/gst-prompt-area-nls.png",
+      "width": 332,
+      "height": 116,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "cbec811a54cab89fb6c551b3d70f5cdce6c8c85eb4c76aa630c014f27557d23e"
+    },
+    {
+      "id": "A03",
+      "source_id": "S03",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-sketch-rect.png",
+      "file": "assets/abaqus/gst-sketch-rect.png",
+      "width": 543,
+      "height": 178,
+      "kind": "diagram",
+      "visual_review": true,
+      "sha256": "f7f63f497ad4b78a66c689e98719f612ba037af740f08c52a1acf77ae7a3c10f"
+    },
+    {
+      "id": "A04",
+      "source_id": "S04",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-part.png",
+      "file": "assets/abaqus/gst-part.png",
+      "width": 303,
+      "height": 236,
+      "kind": "diagram",
+      "visual_review": true,
+      "sha256": "f865ef58a098ea008400f99747cb9afa563971d6190e17644c52bfbd98325df1"
+    },
+    {
+      "id": "A05",
+      "source_id": "S05",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/uss-int-tree-nls.png",
+      "file": "assets/abaqus/uss-int-tree-nls.png",
+      "width": 239,
+      "height": 582,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "a476b519cd1053869f9ed1ce89d6982e1ff06b949c4a57412ac4d636da5e81ca"
+    },
+    {
+      "id": "A06",
+      "source_id": "S06",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/uss-int-tree-steps-expanded-nls.png",
+      "file": "assets/abaqus/uss-int-tree-steps-expanded-nls.png",
+      "width": 220,
+      "height": 188,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "dab7fdcc44f737be8add23eb2614fab859e3cf360697ec75d69f01896e7ee11d"
+    },
+    {
+      "id": "A07",
+      "source_id": "S07",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/uss-int-tree-tooltip-nls.png",
+      "file": "assets/abaqus/uss-int-tree-tooltip-nls.png",
+      "width": 359,
+      "height": 207,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "6af9a8f63cc961736cd1d216dd9c324be858fc7983df870a103b9e82cbfb15b8"
+    },
+    {
+      "id": "A08",
+      "source_id": "S08",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/adv-conn-featuremanager-nls.png",
+      "file": "assets/abaqus/adv-conn-featuremanager-nls.png",
+      "width": 314,
+      "height": 494,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "3586a7bfd043d3476647c29df2876bdb089388c5f0e43b407b95fe852098132b"
+    },
+    {
+      "id": "A09",
+      "source_id": "S09",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-buttons-nls.png",
+      "file": "assets/abaqus/prp-buttons-nls.png",
+      "width": 475,
+      "height": 303,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "8eafde5d0a313ea45abc30c772366136cf03c4a1697d1b4e9286d79f95eda234"
+    },
+    {
+      "id": "A10",
+      "source_id": "S10",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-material-editor-nls.png",
+      "file": "assets/abaqus/gst-material-editor-nls.png",
+      "width": 233,
+      "height": 80,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "96bb69b16a3142d892027337bdafdb14f88fc03d5339beb9b2fac4433887c1f7"
+    },
+    {
+      "id": "A11",
+      "source_id": "S11",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-list-nls.png",
+      "file": "assets/abaqus/prp-list-nls.png",
+      "width": 134,
+      "height": 80,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "e3d5b3783f26771ef55f1f19f6a9ae67e8d8f78e70e3771fa20b64a471d25736"
+    },
+    {
+      "id": "A12",
+      "source_id": "S12",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-type-nls.png",
+      "file": "assets/abaqus/prp-type-nls.png",
+      "width": 396,
+      "height": 144,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "6509e0f38dd5202d15011d7a3c1ab85336caf8143030994953a0a760b438f67b"
+    },
+    {
+      "id": "A13",
+      "source_id": "S13",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-tabdata-nls.png",
+      "file": "assets/abaqus/prp-tabdata-nls.png",
+      "width": 239,
+      "height": 79,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "5bb95386f5b04f794ea6c2e0bfbaf04ddd7cbd2b6ca0c9ca292e44ecfd622b79"
+    },
+    {
+      "id": "A14",
+      "source_id": "S14",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-lamina-nls.png",
+      "file": "assets/abaqus/prp-lamina-nls.png",
+      "width": 643,
+      "height": 208,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "5be0dd518c68482ce730b323e949067812a34b92b078781f82e46e08d371c318"
+    },
+    {
+      "id": "A15",
+      "source_id": "S15",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/prp-matlibrary-manager-nls.png",
+      "file": "assets/abaqus/prp-matlibrary-manager-nls.png",
+      "width": 584,
+      "height": 317,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "3f6482cd37029e871b12ab90c99acbe30709c72525332de0bf9c6ac784fd15ae"
+    },
+    {
+      "id": "A16",
+      "source_id": "S16",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/obj-selection-toolbar-nls.png",
+      "file": "assets/abaqus/obj-selection-toolbar-nls.png",
+      "width": 271,
+      "height": 30,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "ede0db9e5430d6a1fba63ea87f396b4c8da9702a8506a0ee54f563971ebb0019"
+    },
+    {
+      "id": "A17",
+      "source_id": "S17",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/pic-next-feature-nls.png",
+      "file": "assets/abaqus/pic-next-feature-nls.png",
+      "width": 416,
+      "height": 32,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "85a61c043ee0f81f9f46df0857de851f83e05e89b8476b84a9e56c891963e4bd"
+    },
+    {
+      "id": "A18",
+      "source_id": "S18",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/mgn-assign1-nls.png",
+      "file": "assets/abaqus/mgn-assign1-nls.png",
+      "width": 667,
+      "height": 695,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "bfa5efdf42fa9cfd9370f9839e04fe95695bf9f7013501c7d096872979a1d82f"
+    },
+    {
+      "id": "A19",
+      "source_id": "S19",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/mgn-assign2-nls.png",
+      "file": "assets/abaqus/mgn-assign2-nls.png",
+      "width": 367,
+      "height": 128,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "4f8413e5518018be9b20b3a1d1113d65956a5342f3614c16ef412cb2b9991331"
+    },
+    {
+      "id": "A20",
+      "source_id": "S20",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-mesh.png",
+      "file": "assets/abaqus/gst-mesh.png",
+      "width": 442,
+      "height": 358,
+      "kind": "diagram",
+      "visual_review": true,
+      "sha256": "1ffcd558aa89b0d4620912222c40b1d34865dc149a7750497ad4eab166bf9bf1"
+    },
+    {
+      "id": "A21",
+      "source_id": "S21",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-meshdone.png",
+      "file": "assets/abaqus/gst-meshdone.png",
+      "width": 442,
+      "height": 358,
+      "kind": "diagram",
+      "visual_review": true,
+      "sha256": "ec3c8169c29c87f91b1c05f83a47f882af9b65b2b981e8ef371815404eef6694"
+    },
+    {
+      "id": "A22",
+      "source_id": "S22",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/mgn-error-nls.png",
+      "file": "assets/abaqus/mgn-error-nls.png",
+      "width": 394,
+      "height": 120,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "b26ae9bfcd4e5ec2176790381f56be7f06611f4235133b7f86a397f76eea5ad2"
+    },
+    {
+      "id": "A23",
+      "source_id": "S23",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/mgn-controlwarn-nls.png",
+      "file": "assets/abaqus/mgn-controlwarn-nls.png",
+      "width": 388,
+      "height": 180,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "8bd61e94c1abc1eedf5f6d6287ee12337f9f4ed7157d9ebe7e59f2f2f2157c87"
+    },
+    {
+      "id": "A24",
+      "source_id": "S24",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/mgn-delete-mesh-nls.png",
+      "file": "assets/abaqus/mgn-delete-mesh-nls.png",
+      "width": 406,
+      "height": 167,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "7516a73b11af25e8a0261ef4a4b67b15fd43bccf45187281392a6ecf21807dcb"
+    },
+    {
+      "id": "A25",
+      "source_id": "S25",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-ambig2.png",
+      "file": "assets/abaqus/gst-ambig2.png",
+      "width": 391,
+      "height": 318,
+      "kind": "diagram",
+      "visual_review": true,
+      "sha256": "30b8358d87d3fc3dad3f47790f0cd4ac37874950d0f1468547afba6189f6a2d6"
+    },
+    {
+      "id": "A26",
+      "source_id": "S26",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/gst-load.png",
+      "file": "assets/abaqus/gst-load.png",
+      "width": 390,
+      "height": 321,
+      "kind": "diagram",
+      "visual_review": true,
+      "sha256": "676dc5e2fca68d96b2f44f4f8b4d53dd1711ac31d846cf339f2d843e5e85f65d"
+    },
+    {
+      "id": "A27",
+      "source_id": "S27",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/lbi-loadmanager-nls.png",
+      "file": "assets/abaqus/lbi-loadmanager-nls.png",
+      "width": 437,
+      "height": 267,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "e2adfbe690cb1b07c07417e16013cd83b7c561fa3c8137d6fd6c08c3ba563e60"
+    },
+    {
+      "id": "A28",
+      "source_id": "S28",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/int-manager-nls.png",
+      "file": "assets/abaqus/int-manager-nls.png",
+      "width": 310,
+      "height": 206,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "eb2dc09d5ec88cb616395c95fc86534e8e0f671d9fe83f8b8187bb25f932bffa"
+    },
+    {
+      "id": "A29",
+      "source_id": "S29",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/ana-jobman-nls.png",
+      "file": "assets/abaqus/ana-jobman-nls.png",
+      "width": 507,
+      "height": 235,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "84ce6188bf8da5af9e73a600e4907cc10ccb29c448895ec2b97fc8319a544412"
+    },
+    {
+      "id": "A30",
+      "source_id": "S30",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/int-menu-nls.png",
+      "file": "assets/abaqus/int-menu-nls.png",
+      "width": 173,
+      "height": 277,
+      "kind": "screen",
+      "visual_review": true,
+      "sha256": "6743909f843dc0c03a2f6b4af463f8c690160a9841ab4bfed52d19a39b0797ef"
+    },
+    {
+      "id": "A31",
+      "source_id": "S31",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/ana-monitorjob-nls.png",
+      "file": "assets/abaqus/ana-monitorjob-nls.png",
+      "width": 624,
+      "height": 385,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "3f0b0aabe35c2dfb9e985b12dd178ff2ef4103a38b8bddeb2776e8d0f461a1fb"
+    },
+    {
+      "id": "A32",
+      "source_id": "S32",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/int-selectbox-nls.png",
+      "file": "assets/abaqus/int-selectbox-nls.png",
+      "width": 568,
+      "height": 406,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "163bb1f21481b6099e97fefa2cf622865276aa675066169b4387477dc273e6f6"
+    },
+    {
+      "id": "A33",
+      "source_id": "S33",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/int-spreadsheet-nls.png",
+      "file": "assets/abaqus/int-spreadsheet-nls.png",
+      "width": 265,
+      "height": 342,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "5b7190ac36cc1315f5758dffae0003558a5f9378fa80b70ff74c3b5341194f68"
+    },
+    {
+      "id": "A34",
+      "source_id": "S34",
+      "source_url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAERefImages/int-expression-nls.png",
+      "file": "assets/abaqus/int-expression-nls.png",
+      "width": 251,
+      "height": 446,
+      "kind": "dialog",
+      "visual_review": true,
+      "sha256": "d15b58b1a3f32990b7c2257dd8e617dd63ed088d3fdbbb6d9a8d775e06c98a44"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "AB01",
+      "task": "T01",
+      "title": "초기 작업공간의 영역과 모듈 맥락",
+      "source_ids": [
+        "D01",
+        "D21",
+        "S01"
+      ],
+      "asset_ids": [
+        "A01"
+      ],
+      "prerequisite": "D01 그림은 빈 Part 모듈 예시; 실제 실행 세션 아님.",
+      "menu_path": [
+        "Module 목록"
+      ],
+      "steps": [
+        "모듈을 바꾸면 문맥바·툴박스·메뉴가 달라짐."
+      ],
+      "fields": [],
+      "result": "[D21] Mesh 진입 시 Object에서 Part/Assembly를 고름.",
+      "error_cancel": "초기화 실패/취소는 unknown.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "partial",
+      "unknowns": [
+        "시작 대화상자 실제 이미지",
+        "실제 2025 앱 배율/레이아웃",
+        "창 크기별 동작"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB02",
+      "task": "T01",
+      "title": "튜토리얼 Beam 생성과 첫 저장",
+      "source_ids": [
+        "D02",
+        "D50",
+        "D37",
+        "S02",
+        "S03",
+        "S04"
+      ],
+      "asset_ids": [
+        "A02",
+        "A03",
+        "A04"
+      ],
+      "prerequisite": "Standard/Explicit 새 모델.",
+      "menu_path": [
+        "File→New Model Database→With Standard/Explicit Model",
+        "Model Tree→Parts 더블클릭"
+      ],
+      "steps": [
+        "이름/타입/크기를 입력하고 Continue.",
+        "사각형을 그린 뒤 치수를 지정. Done 후 extrusion 깊이를 입력."
+      ],
+      "fields": [
+        {
+          "name": "Part / Approximate size",
+          "value": "Beam / 300"
+        },
+        {
+          "name": "모델/기본 형상",
+          "value": "3D, deformable, solid extruded"
+        },
+        {
+          "name": "직사각형 / Depth",
+          "value": "200×20 / 25.0 (문서 길이 mm 체계)"
+        }
+      ],
+      "result": "[D02] Beam 등각 형상으로 돌아옴.",
+      "error_cancel": "[D02] 프롬프트 Cancel은 과업 취소, Previous는 이전 단계. Sketcher에는 Undo/Redo가 있으나 뒤 절차까지 일반화하지 않음.",
+      "persistence": "[D02] File→Save, File Name 입력, OK; .cae 자동 부가, 제목줄에 경로.",
+      "status": "grounded",
+      "unknowns": [
+        "R 실행/실제 저장 파일 없음",
+        "취소 후 잔존 스케치 상태"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB03",
+      "task": "T01",
+      "title": "STEP 파트 가져오기",
+      "source_ids": [
+        "D41",
+        "D42",
+        "D40",
+        "D37",
+        "D50",
+        "S32"
+      ],
+      "asset_ids": [
+        "A32"
+      ],
+      "prerequisite": "현재 모델과 사용자가 제공한 STEP 파일 필요; 예제 파일 미보유.",
+      "menu_path": [
+        "File→Import→Part"
+      ],
+      "steps": [
+        "File Filter에서 STEP 형식을 고르고 파일 선택.",
+        "Create Part from STEP File의 Name-Repair/Part Attributes/Scale을 확인하고 OK."
+      ],
+      "fields": [
+        {
+          "name": "File Filter",
+          "value": "STEP (*.stp*, *.step*)"
+        },
+        {
+          "name": "Name-Repair",
+          "value": "파일 이름 사용/사용자 이름; Part Filter 전체/단일 번호; combine 시 stitching tolerance"
+        },
+        {
+          "name": "Part Attributes",
+          "value": "modeling space 스캔; type은 deformable 기본, rigid/Eulerian 대안"
+        },
+        {
+          "name": "Scale",
+          "value": "No scale / 파일 transform / Multiply all lengths by + scale factor; 이 수집은 선택값 미확정"
+        }
+      ],
+      "result": "[D41] Part 모듈로 이동하여 파트를 생성. [D42] 단일 파트는 validity/precision 문제 메시지, 다중 파트는 Part Manager에서 확인. 이미지 S32는 공용 Open Database 선택기이며 STEP 화면이 아님.",
+      "error_cancel": "[D42] Import 중 Stop으로 취소 가능. 취소 후 부분 생성 상태는 unknown.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "partial",
+      "unknowns": [
+        "실제 STEP 표본",
+        "가져오기 옵션 선택값",
+        "결과 트리·형상",
+        "손상/단위오류 분기"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB04",
+      "task": "T02",
+      "title": "트리의 컨테이너·단계 확장·툴팁",
+      "source_ids": [
+        "D03",
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "asset_ids": [
+        "A05",
+        "A06",
+        "A07"
+      ],
+      "prerequisite": "Model-1 및 Beam/BeamLoad가 있는 각각의 설명용 정적 상태.",
+      "menu_path": [
+        "Model Tree→Steps→BeamLoad"
+      ],
+      "steps": [
+        "더하기/빼기로 계층 확장·축소.",
+        "객체에 포인터를 놓아 툴팁 확인."
+      ],
+      "fields": [],
+      "result": "[D03] Steps 아래 객체를 단계 기준으로 볼 수 있으며 툴팁에 타입/설명 등의 정보가 보임.",
+      "error_cancel": "편집/취소는 이 개요에서 증명하지 않음.",
+      "persistence": "트리 확장/포인터 상태의 세션 간 보존은 unknown.",
+      "status": "partial",
+      "unknowns": [
+        "이 화면만으로 속성 편집 변화나 저장 증명 불가"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB05",
+      "task": "T02",
+      "title": "Feature 우클릭 편집·조회·실패 상태",
+      "source_ids": [
+        "D04",
+        "D50",
+        "D37",
+        "S08"
+      ],
+      "asset_ids": [
+        "A08"
+      ],
+      "prerequisite": "파트의 feature를 트리에서 선택; 예시 largeDiskRefPt.",
+      "menu_path": [
+        "Model Tree→feature 우클릭→Edit / Query"
+      ],
+      "steps": [
+        "선택 feature는 보이면 뷰포트에서 강조.",
+        "Query는 메시지 영역에 정보 출력."
+      ],
+      "fields": [],
+      "result": "[D04] yellow check=미재생성 수정, red X=억제, red !=재생성 실패. 그림은 Edit 메뉴 선택 상태.",
+      "error_cancel": "[D50] 일반 Cancel 정의 참조; 도구별 후속 상태 unknown.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "partial",
+      "unknowns": [
+        "Edit에서 어떤 속성값이 바뀌는지",
+        "실패를 일으키는 구체 입력",
+        "편집 적용/취소 후 비교 화면"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB06",
+      "task": "T02",
+      "title": "Steel 탄성 재료 속성 입력",
+      "source_ids": [
+        "D05",
+        "D06",
+        "D07",
+        "D37",
+        "D50",
+        "S09",
+        "S10",
+        "S11"
+      ],
+      "asset_ids": [
+        "A09",
+        "A10",
+        "A11"
+      ],
+      "prerequisite": "Beam 튜토리얼 모델; 아직 Steel 없음.",
+      "menu_path": [
+        "Model Tree→Materials 더블클릭",
+        "Mechanical→Elasticity→Elastic"
+      ],
+      "steps": [
+        "Steel 이름 지정.",
+        "표 두 칸에 값을 넣고 Tab으로 이동, OK."
+      ],
+      "fields": [
+        {
+          "name": "Name",
+          "value": "Steel"
+        },
+        {
+          "name": "Young’s Modulus / Poisson’s Ratio",
+          "value": "209.E3 / 0.3 (문서 MPa 체계; 단위문자 입력 아님)"
+        }
+      ],
+      "result": "[D05] Property 모듈의 재료 편집을 마침. [D07] Type 변경은 필요한 표 열을 바꿈.",
+      "error_cancel": "[D06] 재료 조합의 물리적 유효성은 이 편집기에서 완전 검증하지 않음. [D50] 일반 Cancel 정의 참조; 도구별 후속 상태 unknown.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "grounded",
+      "unknowns": [
+        "재료 적용 단면 연결은 AB13",
+        "실제 저장/재열기 검증 없음"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB07",
+      "task": "T03",
+      "title": "엔티티 필터와 모호한 선택 순환",
+      "source_ids": [
+        "D09",
+        "D10",
+        "D11",
+        "D12",
+        "S16",
+        "S17"
+      ],
+      "asset_ids": [
+        "A16",
+        "A17"
+      ],
+      "prerequisite": "뷰포트에 선택 가능한 형상; 현재 절차가 허용하는 객체만 대상.",
+      "menu_path": [
+        "Selection toolbar→entity filter",
+        "뷰포트 클릭→ambiguous selection prompt"
+      ],
+      "steps": [
+        "필터를 Edges 등으로 제한.",
+        "일반 클릭은 기존 선택 해제 후 한 객체 선택, Shift+Click 추가, Ctrl+Click 제거; 빈 곳 클릭은 전부 해제.",
+        "겹친 후보는 Next/Previous로 강조 대상을 순환하고 OK 또는 중간버튼으로 확정."
+      ],
+      "fields": [
+        {
+          "name": "filter 예시",
+          "value": "Edges (S16)"
+        },
+        {
+          "name": "수정키",
+          "value": "추가/제거 동작은 D11; Ctrl+A는 활성 필터의 뷰포트 객체 선택(D10)"
+        }
+      ],
+      "result": "[D12] 후보 하나씩 강조, 확정한 객체 선택. 정적 이미지에는 선택 개수 없음.",
+      "error_cancel": "프롬프트에는 취소 아이콘이 보이나 취소 후 정확한 선택집합은 unknown.",
+      "persistence": "선택집합의 파일 저장은 unknown.",
+      "status": "grounded",
+      "unknowns": [
+        "후보 순서 우선순위",
+        "가려진 객체 tie-break",
+        "선택 수 표시",
+        "숨김/복원은 AB08"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB08",
+      "task": "T03",
+      "title": "Display Group 생성과 가시영역 저장",
+      "source_ids": [
+        "D13"
+      ],
+      "asset_ids": [],
+      "prerequisite": "현재 모듈에서 지원하는 엔티티가 있는 모델.",
+      "menu_path": [
+        "Tools→Display Group→Create"
+      ],
+      "steps": [
+        "Item/Method와 대상 선택.",
+        "Boolean 연산으로 뷰포트 부분집합 변경.",
+        "Save As는 현재 뷰포트, Save Selection As는 선택 성분을 이름으로 저장."
+      ],
+      "fields": [
+        {
+          "name": "Item/Method/name",
+          "value": "사용자 선택; 재현용 구체 엔티티 집합 미확정"
+        }
+      ],
+      "result": "[D13] 선택과 현재 뷰포트의 Boolean 결과 표시; 편집 종료 시 연결 뷰포트 갱신.",
+      "error_cancel": "Create는 Dismiss, Edit는 OK로 닫음.",
+      "persistence": "[D13] 저장 group은 해당 모듈 종류의 현재 세션 범위; 모델 변경 뒤 자동 갱신되지 않음.",
+      "status": "partial",
+      "unknowns": [
+        "Create Display Group 실제 이미지",
+        "숨기기→복원 연속 상태",
+        "Boolean 조작별 표본"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB09",
+      "task": "T04",
+      "title": "Beam Hex/Structured mesh controls",
+      "source_ids": [
+        "D14",
+        "D15",
+        "D21",
+        "D23",
+        "D50",
+        "D37"
+      ],
+      "asset_ids": [],
+      "prerequisite": "Beam 형상; Parts→Beam→Mesh 더블클릭으로 Mesh 모듈.",
+      "menu_path": [
+        "Mesh→Controls"
+      ],
+      "steps": [
+        "Hex/Structured 선택 확인 후 OK."
+      ],
+      "fields": [
+        {
+          "name": "Element Shape / Technique",
+          "value": "Hex / Structured (해당 beam 튜토리얼 기본 선택)"
+        }
+      ],
+      "result": "[D14] beam은 structured 가능 색인 녹색; 이후 hex 메시 기법 사용.",
+      "error_cancel": "[D15] 이미 메시가 있으면 삭제/취소 확인; AB19 참조.",
+      "persistence": "[D21] Mesh 종료 자체 저장 불필요; 전체 model File Save에 메시 저장.",
+      "status": "grounded",
+      "unknowns": [
+        "Mesh Controls 실제 대화상자 이미지",
+        "같은 입력의 실행 확인",
+        "다른 형상 기본값"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB10",
+      "task": "T04",
+      "title": "Beam에 C3D8I 지정",
+      "source_ids": [
+        "D16",
+        "D17",
+        "D21",
+        "D50",
+        "D37"
+      ],
+      "asset_ids": [],
+      "prerequisite": "Beam의 3D solid 영역; 동일 타입/차원 영역만 묶어 선택 가능.",
+      "menu_path": [
+        "Mesh→Element Type"
+      ],
+      "steps": [
+        "영역을 골라 중간버튼으로 완료(다중영역).",
+        "Standard/Linear/3D Stress 확인. Hex의 Incompatible modes 선택 후 OK."
+      ],
+      "fields": [
+        {
+          "name": "library/order/family",
+          "value": "Standard / Linear / 3D Stress"
+        },
+        {
+          "name": "Hex formulation",
+          "value": "Incompatible modes → C3D8I"
+        }
+      ],
+      "result": "[D16] 이후 mesh element에 C3D8I 연결. 2D shell 이미지(S18/S19)는 별도 AB11이며 이 상태의 화면 대용이 아님.",
+      "error_cancel": "[D50] 일반 Cancel 정의 참조; 도구별 후속 상태 unknown.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "grounded",
+      "unknowns": [
+        "3D Hex 대화상자 이미지",
+        "직접 할당 확인"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB11",
+      "task": "T04",
+      "title": "2D shell의 Quad/Tri 요소형 분기",
+      "source_ids": [
+        "D18",
+        "D17",
+        "D50",
+        "D37",
+        "S18",
+        "S19"
+      ],
+      "asset_ids": [
+        "A18",
+        "A19"
+      ],
+      "prerequisite": "2D structural shell 영역; Beam 예제와 다른 모델.",
+      "menu_path": [
+        "Mesh→Element Type"
+      ],
+      "steps": [
+        "영역 선택 후 Standard/Linear/Shell.",
+        "Quad에서 reduced integration, finite strains를 설정; Tri 탭 확인; OK."
+      ],
+      "fields": [
+        {
+          "name": "Quad / Tri",
+          "value": "S4R / S3"
+        },
+        {
+          "name": "selected controls",
+          "value": "Reduced integration, Finite membrane strains (S18)"
+        }
+      ],
+      "result": "[D18] 혼합 영역이면 quad=S4R, tri=S3; quad만 있으면 S4R만 할당.",
+      "error_cancel": "[D50] 일반 Cancel 정의 참조; 도구별 후속 상태 unknown.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "grounded",
+      "unknowns": [
+        "해당 2D 형상 입력 파일",
+        "결과 요소별 query 화면"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB12",
+      "task": "T04",
+      "title": "Global Seeds 10.0 → Beam 메시 생성",
+      "source_ids": [
+        "D19",
+        "D20",
+        "D21",
+        "D24",
+        "D22",
+        "D37",
+        "S20",
+        "S21"
+      ],
+      "asset_ids": [
+        "A20",
+        "A21"
+      ],
+      "prerequisite": "Beam 200×20×25, controls=Hex/Structured, 요소형=C3D8I인 튜토리얼 연속 단계.",
+      "menu_path": [
+        "Seed→Part",
+        "Mesh→Part"
+      ],
+      "steps": [
+        "Approximate global size=10.0, OK 후 Done.",
+        "Mesh Part에서 Yes로 생성 확인."
+      ],
+      "fields": [
+        {
+          "name": "global size",
+          "value": "10.0 (길이 체계 mm)"
+        }
+      ],
+      "result": "[D19] S20의 white seeds에서 S21의 생성 mesh로 진행; 요소/노드 총수는 원문에 없음.",
+      "error_cancel": "[D24] 기존 메시 reseed는 AB20. [D22] 고정 seed 과구속은 AB18.",
+      "persistence": "[D21] 전체 .cae 명시 저장에 포함.",
+      "status": "grounded",
+      "unknowns": [
+        "Global Seeds 실제 대화상자",
+        "요소수/품질검사 실측",
+        "실제 계산 재현"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB13",
+      "task": "T05",
+      "title": "Solid homogeneous 단면 정의와 Beam 할당",
+      "source_ids": [
+        "D26",
+        "D27",
+        "D37",
+        "D50"
+      ],
+      "asset_ids": [],
+      "prerequisite": "Steel 재료/Beam 파트 존재.",
+      "menu_path": [
+        "Model Tree→Sections 더블클릭",
+        "Parts→Beam→Section Assignments 더블클릭"
+      ],
+      "steps": [
+        "단면 category/type/name을 정하고 Steel 지정.",
+        "Beam 전체 선택 후 Done, 단면 선택, OK."
+      ],
+      "fields": [
+        {
+          "name": "section",
+          "value": "BeamSection; Solid / Homogeneous; Steel"
+        }
+      ],
+      "result": "[D27] 할당된 Beam 색이 aqua로 바뀌며 Steel 물성을 갖는 단면이 연결됨.",
+      "error_cancel": "[D50] 일반 Cancel 정의 참조; 도구별 후속 상태 unknown.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "grounded",
+      "unknowns": [
+        "단면 editor/assignment 실제 이미지",
+        "잘못된 선택/중복단면 검증"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB14",
+      "task": "T05",
+      "title": "BeamLoad 정적 해석 단계",
+      "source_ids": [
+        "D28",
+        "D37",
+        "D50"
+      ],
+      "asset_ids": [],
+      "prerequisite": "Initial 단계가 있는 모델.",
+      "menu_path": [
+        "Model Tree→Steps 더블클릭"
+      ],
+      "steps": [
+        "BeamLoad/Static, General을 골라 Continue.",
+        "Basic 설명 입력, Incrementation/Other 기본값 확인 후 OK."
+      ],
+      "fields": [
+        {
+          "name": "Name / procedure",
+          "value": "BeamLoad / Static, General"
+        },
+        {
+          "name": "Description",
+          "value": "Load the top of the beam"
+        }
+      ],
+      "result": "[D28] Initial 다음의 general static step 생성.",
+      "error_cancel": "[D50] 일반 Cancel 정의 참조; 도구별 후속 상태 unknown.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "grounded",
+      "unknowns": [
+        "Edit Step 실제 이미지",
+        "기본 증분 수치 미수집",
+        "solver 검증 없음"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB15",
+      "task": "T05",
+      "title": "Fixed/Initial ENCASTRE 경계조건",
+      "source_ids": [
+        "D29",
+        "D28",
+        "D37",
+        "D50",
+        "S25"
+      ],
+      "asset_ids": [
+        "A25"
+      ],
+      "prerequisite": "Assembly에 Beam 인스턴스가 이미 존재하고 Initial/BeamLoad 단계가 있음. 인스턴스 생성·배치 장면은 미수집.",
+      "menu_path": [
+        "Model Tree→BCs 더블클릭"
+      ],
+      "steps": [
+        "Name=Fixed, Step=Initial, Category=Mechanical, Type=Symmetry/Antisymmetry/Encastre 선택 후 Continue.",
+        "왼쪽 끝 face 선택·확정·Done.",
+        "ENCASTRE 켜고 OK; BCs 우클릭 Manager 확인."
+      ],
+      "fields": [
+        {
+          "name": "Name / Step",
+          "value": "Fixed / Initial"
+        },
+        {
+          "name": "Category / Type",
+          "value": "Mechanical / Symmetry/Antisymmetry/Encastre"
+        },
+        {
+          "name": "condition",
+          "value": "ENCASTRE: 사용 가능한 자유도 구속"
+        }
+      ],
+      "result": "[D29] 선택 face에 구속 화살표; Initial=Created, BeamLoad=Propagated.",
+      "error_cancel": "[D50] 일반 Cancel 정의 참조; 도구별 후속 상태 unknown.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "grounded",
+      "unknowns": [
+        "Create/Edit Boundary Condition 실제 이미지",
+        "좌표 기반 face 식별 파일",
+        "취소 후 기호 비교"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB16",
+      "task": "T05",
+      "title": "BeamLoad 상면 0.5 압력",
+      "source_ids": [
+        "D30",
+        "D28",
+        "D37",
+        "D50",
+        "S26"
+      ],
+      "asset_ids": [
+        "A26"
+      ],
+      "prerequisite": "Assembly의 Beam 인스턴스에 Fixed BC 및 BeamLoad 단계가 있음. 인스턴스 생성·배치 장면은 미수집.",
+      "menu_path": [
+        "Model Tree→Loads 더블클릭"
+      ],
+      "steps": [
+        "Pressure/BeamLoad/Mechanical/Pressure 선택 후 Continue.",
+        "상면 선택 후 Done; magnitude 입력 후 OK.",
+        "Load Manager에서 Created 확인."
+      ],
+      "fields": [
+        {
+          "name": "Magnitude",
+          "value": "0.5 (문서 MPa 체계)"
+        },
+        {
+          "name": "Distribution / Amplitude",
+          "value": "튜토리얼 기본 Uniform / Ramp"
+        }
+      ],
+      "result": "[D30] 상면에 음의 2방향 하향 화살표, BeamLoad에서 활성.",
+      "error_cancel": "[D50] 일반 Cancel 정의 참조; 도구별 후속 상태 unknown.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "grounded",
+      "unknowns": [
+        "Edit Load 실제 이미지",
+        "실제 하중 벡터 수치 query"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB17",
+      "task": "T05",
+      "title": "Load Manager 단계별 이력 표",
+      "source_ids": [
+        "D31",
+        "S27"
+      ],
+      "asset_ids": [
+        "A27"
+      ],
+      "prerequisite": "Deform/Force/Pressure와 Step-1~3이 있는 별도 설명 모델; BeamLoad 모델과 병합하지 않음.",
+      "menu_path": [
+        "Load module→Load→Manager"
+      ],
+      "steps": [
+        "객체행/단계열 셀 선택.",
+        "Edit/Move Left/Move Right 등으로 단계 이력 조작 가능."
+      ],
+      "fields": [
+        {
+          "name": "보이는 셀",
+          "value": "Pressure: Step-2 Created, Step-3 Propagated; Deform: Step-3 Deactivated"
+        }
+      ],
+      "result": "[D31] 표가 생성/전파/비활성 상태를 구분. 구체 변경 전후는 수집 안 됨.",
+      "error_cancel": "Dismiss로 관리자 닫음.",
+      "persistence": "이력 변경을 실제 수행/저장한 증거 없음.",
+      "status": "partial",
+      "unknowns": [
+        "Move/Deactivate 전후 화면",
+        "억제/재개 실제 분기"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB18",
+      "task": "T06",
+      "title": "fixed seed 과구속에 의한 메시 실패",
+      "source_ids": [
+        "D22",
+        "D37",
+        "S22"
+      ],
+      "asset_ids": [
+        "A22"
+      ],
+      "prerequisite": "고정 seed constraints를 동시에 만족할 수 없어 생성 실패한 파트; 구체 형상/seed 수치는 미제공.",
+      "menu_path": [
+        "mesh generation→overconstraint error"
+      ],
+      "steps": [
+        "뷰포트의 과구속 seed 강조를 확인.",
+        "Yes 또는 No 선택."
+      ],
+      "fields": [
+        {
+          "name": "Yes / No",
+          "value": "제약 완화 후 계속 / 제약 유지 후 메시 절차 취소"
+        }
+      ],
+      "result": "[D22] 두 응답의 결과가 명시됨; 성공한 mesh의 실제 화면은 없음.",
+      "error_cancel": "[D22] No는 seed 제약을 보존하고 생성만 취소.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "partial",
+      "unknowns": [
+        "실패 유발 입력 파일/수치",
+        "문제 seed가 강조된 화면",
+        "Yes 후 성공 결과"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB19",
+      "task": "T06",
+      "title": "mesh controls 변경으로 기존 메시 무효화",
+      "source_ids": [
+        "D23",
+        "D14",
+        "D37",
+        "S23"
+      ],
+      "asset_ids": [
+        "A23"
+      ],
+      "prerequisite": "이미 메시가 있는 영역에서 기존 mesh controls를 바꾸고 OK.",
+      "menu_path": [
+        "Mesh→Controls→OK→warning"
+      ],
+      "steps": [
+        "Delete Meshes 또는 Cancel.",
+        "선택적으로 자동 삭제 경고생략 checkbox 사용."
+      ],
+      "fields": [
+        {
+          "name": "삭제/취소",
+          "value": "기존 mesh 삭제 / 기존 mesh 유지하고 새 controls 취소"
+        },
+        {
+          "name": "checkbox",
+          "value": "현재 세션의 다음 무효화부터 경고 없이 자동 삭제"
+        }
+      ],
+      "result": "[D23] 취소는 기존 메시를 보존. 어떤 controls 변경이 이 예에서 무효화를 일으켰는지는 미제공.",
+      "error_cancel": "[D23] Cancel이 새 mesh control assignment를 취소.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "partial",
+      "unknowns": [
+        "구체 변경 전/후 설정값",
+        "삭제 후 mesh/tree 상태"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB20",
+      "task": "T06",
+      "title": "기존 메시 파트의 reseed 경고",
+      "source_ids": [
+        "D24",
+        "D20",
+        "D37",
+        "S24"
+      ],
+      "asset_ids": [
+        "A24"
+      ],
+      "prerequisite": "이미 메시가 있는 part/instance/region을 reseed하려고 대상 선택.",
+      "menu_path": [
+        "Seed→Part/Instance 또는 edge seeding→warning"
+      ],
+      "steps": [
+        "Delete Meshes 또는 Cancel.",
+        "자동삭제 checkbox는 현재 세션 범위."
+      ],
+      "fields": [
+        {
+          "name": "Delete Meshes / Cancel",
+          "value": "해당 mesh 제거 후 reseed / mesh 유지·seeding 종료"
+        }
+      ],
+      "result": "[D24] 대상 선택 즉시 경고가 나타남. 다음 생성 결과는 미제공.",
+      "error_cancel": "[D24] Cancel은 기존 mesh를 지키고 reseed를 끝냄.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "partial",
+      "unknowns": [
+        "구체 reseed 값",
+        "삭제/취소 뒤 비교 화면"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB21",
+      "task": "T06",
+      "title": "mesh 품질 검사와 문제집합 저장",
+      "source_ids": [
+        "D25",
+        "D37"
+      ],
+      "asset_ids": [],
+      "prerequisite": "Mesh 모듈, Object=Part 또는 Assembly의 생성된 mesh.",
+      "menu_path": [
+        "Mesh→Verify"
+      ],
+      "steps": [
+        "Part/Instances/Geometric Regions를 선택하고 중간버튼.",
+        "Shape metrics/Size metrics/Analysis checks 설정; Create set과 이름을 정하고 Highlight.",
+        "Reselect/Defaults/Dismiss로 관리."
+      ],
+      "fields": [
+        {
+          "name": "검사",
+          "value": "aspect ratio 등 수치/Errors/Warnings; 구체 임계값은 사용자 지정"
+        },
+        {
+          "name": "Create set",
+          "value": "강조 결과가 있으면 Highlight 때 집합 생성"
+        }
+      ],
+      "result": "[D25] 불합격 요소 강조, 메시지에 총수/강조수/평균·최악값; 모든 검사 결과 수치는 미수집.",
+      "error_cancel": "[D25] 개별 요소 모드는 중간버튼/다른 도구/프롬프트 cancel로 종료. Beam/gasket/cohesive analysis checks 미지원.",
+      "persistence": "[D25] 검사 기준은 다음 세션에도 저장됨. 생성 set은 모델 명시저장에 연결.",
+      "status": "partial",
+      "unknowns": [
+        "Verify Mesh 대화상자 이미지",
+        "임계값·불량 mesh 표본",
+        "Highlight 결과/수치",
+        "집합 재열기"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB22",
+      "task": "T06",
+      "title": "Job Monitor 오류·로그·중단",
+      "source_ids": [
+        "D34",
+        "D35",
+        "D36",
+        "S31"
+      ],
+      "asset_ids": [
+        "A31"
+      ],
+      "prerequisite": "제출된 job; S31은 빈 Job-1/Status None 예시로 실제 실패 상태가 아님.",
+      "menu_path": [
+        "Job→Monitor→job",
+        "Job Manager→Monitor"
+      ],
+      "steps": [
+        "Log/Errors/Warnings 및 파일 탭으로 진단.",
+        "Text to find/Next/Previous/Match case로 검색.",
+        "필요시 Kill; 또는 Data Check 후 오류 검토."
+      ],
+      "fields": [
+        {
+          "name": "검색",
+          "value": "사용자 문자열; 실제 오류 메시지 미수집"
+        }
+      ],
+      "result": "[D34] 실패하면 Errors 탭 전면; 문제영역 set 이름을 메시지에 제공할 수 있음.",
+      "error_cancel": "[D36] Kill은 확인을 요청한 뒤 종료하며 Job Manager 상태를 Terminated로 갱신. 확인 대화상자의 버튼/정확한 문구·종료 지연은 unknown.",
+      "persistence": "[D34] 파일 탭은 local 분석만; 앱/DB를 닫아도 job은 계속되나 monitor 갱신 중단.",
+      "status": "partial",
+      "unknowns": [
+        "실패 입력·오류 메시지 실례",
+        "Kill 확인·종료 후 상태 화면",
+        "로그 파일 보유 없음"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB23",
+      "task": "T07",
+      "title": "native .cae 명시 저장 및 재열기",
+      "source_ids": [
+        "D37",
+        "D38",
+        "D39",
+        "D40",
+        "D44",
+        "D50",
+        "S32"
+      ],
+      "asset_ids": [
+        "A32"
+      ],
+      "prerequisite": "현재 모델의 변경사항과 쓰기 가능한 경로; 재열 파일은 사용자가 지정.",
+      "menu_path": [
+        "File→Save / Save As",
+        "File→Open"
+      ],
+      "steps": [
+        "처음에는 File Name 입력 후 OK; 이후 Save는 같은 파일에 추가 변경 반영.",
+        "Open에서 Model Database 필터와 .cae 파일을 고르고 OK."
+      ],
+      "fields": [
+        {
+          "name": "확장자 / 예약 이름",
+          "value": ".cae 자동 부가; Save As 이름 abaqus는 불가"
+        },
+        {
+          "name": "경로",
+          "value": "사용자 지정; 이 수집에는 실제 .cae 없음"
+        }
+      ],
+      "result": "[D37] 제목줄에 DB 이름; timer 자동저장은 없고 명시 Save가 필요. [D39] 새 DB가 현재 DB가 되고 모든 조작이 그 DB를 참조.",
+      "error_cancel": "[D39] 현재 DB가 수정됐으면 열기 전에 저장 여부 질문. [D50] 일반 Cancel은 미적용 입력을 버리며, 절차 도중에는 전체 취소 또는 이전 단계 복귀일 수 있음. 이 파일선택기의 별도 후속 상태는 미확인.",
+      "persistence": "[D44] 저장할 때 .jnl도 기록; DB 명시저장만으로 뷰포트 조작/모든 세션객체 저장을 주장하지 않음.",
+      "status": "grounded",
+      "unknowns": [
+        "Save dialog 실제 이미지",
+        "쓰기실패/덮어쓰기 확인",
+        "native 파일 재열 동등성 R검증"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB24",
+      "task": "T07",
+      "title": "solver .inp 파일 쓰기",
+      "source_ids": [
+        "D43",
+        "D32",
+        "S29",
+        "S30"
+      ],
+      "asset_ids": [
+        "A29",
+        "A30"
+      ],
+      "prerequisite": "모델과 연결된 선택 job.",
+      "menu_path": [
+        "Job→Write Input→job",
+        "Job Manager→Write Input"
+      ],
+      "steps": [
+        "job을 고른 뒤 입력파일만 생성."
+      ],
+      "fields": [
+        {
+          "name": "출력",
+          "value": "job-name.inp; 시작 디렉터리; ASCII"
+        }
+      ],
+      "result": "[D43] 해석 즉시 실행 없이 solver 입력파일 생성. native .cae 저장과 다름.",
+      "error_cancel": "[D43] 외부 편집 .inp를 모델 job으로 다시 제출하면 덮어써짐; 변경본은 Input file source의 새 job으로 제출해야 함.",
+      "persistence": "내보낸 입력파일의 native 역변환 동일성은 주장하지 않음.",
+      "status": "grounded",
+      "unknowns": [
+        "실제 .inp 출력/재가져오기",
+        "쓰기실패 처리"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB25",
+      "task": "T08",
+      "title": "Deform job 생성·제출·결과 연결",
+      "source_ids": [
+        "D33",
+        "D32",
+        "D34",
+        "D37",
+        "D50",
+        "S29",
+        "S30"
+      ],
+      "asset_ids": [
+        "A29",
+        "A30"
+      ],
+      "prerequisite": "Assembly에 Beam 인스턴스가 이미 있고 재료/단면/단계/BC/압력/mesh를 정의한 모델. 인스턴스 생성·배치 장면은 미수집.",
+      "menu_path": [
+        "Model Tree→Jobs 더블클릭",
+        "Jobs→Deform 우클릭→Submit / Results"
+      ],
+      "steps": [
+        "Deform 이름→Continue; 설명을 넣고 기본 job 설정 OK.",
+        "Submit 후 상태 확인. 완료 후 Results."
+      ],
+      "fields": [
+        {
+          "name": "name / description",
+          "value": "Deform / Cantilever beam tutorial"
+        },
+        {
+          "name": "solver 설정",
+          "value": "튜토리얼은 기본 job 설정 수용; 세부 processor/memory 값 미수집"
+        }
+      ],
+      "result": "[D33] Submitted→Running→Completed 또는 Aborted. Results는 생성 .odb를 Visualization에서 undeformed 표시.",
+      "error_cancel": "[D33] Aborted이면 문제를 메시지 영역에 보고; 실제 오류는 AB22 결손.",
+      "persistence": "native 저장 규칙은 AB23([D37]) 참조; 실제 파일은 없음.",
+      "status": "grounded",
+      "unknowns": [
+        "solver 실행 R 없음",
+        "job editor 실제 이미지",
+        "결과 .odb 파일·성공 로그 없음"
+      ],
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB26",
+      "task": "T08",
+      "title": "스크립트/저널/복구 진입",
+      "source_ids": [
+        "D46",
+        "D44",
+        "D45"
+      ],
+      "asset_ids": [],
+      "prerequisite": "Abaqus 명령 환경과 입력 Python/journal 파일 필요.",
+      "menu_path": [
+        "File→Run Script",
+        "abaqus cae noGUI=script.py",
+        "abaqus cae recover=model_database_name.jnl"
+      ],
+      "steps": [
+        "noGUI 스크립트는 UI 없이 실행 후 종료.",
+        "recover는 저장 때 갱신된 journal 명령으로 DB 재구성."
+      ],
+      "fields": [
+        {
+          "name": "입력",
+          "value": "사용자 script.py / saved .jnl; 실제 스크립트 미보유"
+        }
+      ],
+      "result": "[D46] noGUI에 대화형 입력을 넣을 수 없음. [D44] journal은 DB 변경명령만 기록.",
+      "error_cancel": "[D45] .rec 기록은 save 시 .jnl에 합쳐진 뒤 삭제; crash 복구를 실행한 증거는 없음.",
+      "persistence": "저장된 journal은 명시 save 시 갱신, viewport 조작은 포함하지 않음.",
+      "status": "partial",
+      "unknowns": [
+        "스크립트 내용/파일/인자",
+        "실행 로그·종료코드",
+        "실제 복구 DB"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB27",
+      "task": "T09",
+      "title": "수치 표 입력·ASCII 읽기·XY 연결",
+      "source_ids": [
+        "D47",
+        "S33"
+      ],
+      "asset_ids": [
+        "A33"
+      ],
+      "prerequisite": "XY Data From Keyboard 또는 재료의 수치 데이터 표; 두 editor를 같은 장면으로 합치지 않음.",
+      "menu_path": [
+        "수치 table→우클릭→Read From File / Create XY Data",
+        "Visualization→Tools→XY Data→Plot"
+      ],
+      "steps": [
+        "셀값 입력 후 Enter; Tab/Shift+Tab으로 이동.",
+        "ASCII 파일과 시작 행·열을 지정해 OK.",
+        "재료표에서는 X/Y 열과 이름으로 XY data 생성."
+      ],
+      "fields": [
+        {
+          "name": "S33의 예시 (X,Y)",
+          "value": "(2E8,0), (3E8,0.0085), (4E8,0.0170)"
+        },
+        {
+          "name": "Quantity Types",
+          "value": "Stress / Strain (이미지); 단위변환 증거 아님"
+        }
+      ],
+      "result": "[D47] ASCII 값이 표에 입력되고 XY data를 Visualization에서 그릴 수 있음; 실제 plot 결과 미수집.",
+      "error_cancel": "[D47] 숫자 칸에 문자를 넣으면 beep; 과학표기 E 예외. 이미지에는 Cancel.",
+      "persistence": "[D47] session XY data는 현재 세션까지만 유지; 파일 영구저장 절차는 수집 안 됨.",
+      "status": "partial",
+      "unknowns": [
+        "Keyboard editor 진입 메뉴",
+        "ASCII 표본 파일/읽기 결과",
+        "곡선 결과",
+        "영구저장"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB28",
+      "task": "T09",
+      "title": "수식 필드의 평가와 재열기 의미",
+      "source_ids": [
+        "D48",
+        "D50",
+        "S34"
+      ],
+      "asset_ids": [
+        "A34"
+      ],
+      "prerequisite": "별도 Pinned chassis 변위/회전 BC editor; Beam Fixed와 무관.",
+      "menu_path": [
+        "Edit Boundary Condition의 수치 field"
+      ],
+      "steps": [
+        "부동소수/복소 수치 field에 Python 수식 입력.",
+        "적용 뒤 다시 열면 식 대신 계산값만 남는다고 문서에 명시."
+      ],
+      "fields": [
+        {
+          "name": "S34 U1 예시",
+          "value": "2.37/(1.74**2)"
+        },
+        {
+          "name": "표시 단위",
+          "value": "회전 field 옆 radians; 전체 단위계 자동처리 의미 아님"
+        }
+      ],
+      "result": "[D48] expression은 내장 Python으로 평가. 문서의 정수나눗셈·octal 설명은 legacy 가능성이 있어 현행 계산 규칙으로 채택하지 않음.",
+      "error_cancel": "[D50] 일반 Cancel 정의 참조; 도구별 후속 상태 unknown.",
+      "persistence": "수식 원문은 재열기 시 보존되지 않는다고 명시.",
+      "status": "partial",
+      "unknowns": [
+        "이 BC editor의 진입/대상 정의",
+        "평가 후 화면",
+        "2025 Python 런타임 의미 검증"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB29",
+      "task": "T09",
+      "title": "일관 단위계와 숫자 입력",
+      "source_ids": [
+        "D49",
+        "D05",
+        "D19",
+        "D30"
+      ],
+      "asset_ids": [],
+      "prerequisite": "모델 입력 전에 사용 단위계를 결정.",
+      "menu_path": [
+        "모델 수치 입력 전 단위체계 결정"
+      ],
+      "steps": [
+        "단위 이름/라벨을 수치 칸에 함께 쓰지 않음.",
+        "길이·응력·밀도 등을 일관 체계로 맞춤."
+      ],
+      "fields": [
+        {
+          "name": "beam tutorial 체계",
+          "value": "길이 mm, 재료·압력 MPa; 이 데이터셋에서 자동 단위변환은 주장하지 않음"
+        }
+      ],
+      "result": "[D49] 내장 단위계가 없는 모델링 규약. 단위 selector UI로 해석하지 않음.",
+      "error_cancel": "불일치 단위를 자동 검출한다는 근거 없음.",
+      "persistence": "단위 metadata를 .cae에 별도 저장하는지는 unknown.",
+      "status": "partial",
+      "unknowns": [
+        "실제 단위오류 진단",
+        "수치표와 물리량 단위 연결 저장"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "AB30",
+      "task": "T05",
+      "title": "Material Library Manager의 복사·저장 경계",
+      "source_ids": [
+        "D08",
+        "S15"
+      ],
+      "asset_ids": [
+        "A15"
+      ],
+      "prerequisite": "설치된 라이브러리와 모델 재료; 그림은 Metal/Model-1.",
+      "menu_path": [
+        "Material Library tab→Material Library Manager icon"
+      ],
+      "steps": [
+        "library/model을 고르고 재료 선택 후 방향 화살표로 복사.",
+        "수정은 Save Changes로 .lib에 반영, Dismiss 뒤 주창 library 갱신."
+      ],
+      "fields": [
+        {
+          "name": "S15 상태",
+          "value": "Library Alloy1100-H14와 Model Copper-annealed 선택; 복사 전후를 나타내지 않음"
+        }
+      ],
+      "result": "[D08] manager에서 변경은 즉시 보이지만 Save Changes 전에는 library file 미반영. editor는 재료를 model에 추가한 뒤 열어야 함.",
+      "error_cancel": "Dismiss만으로 미저장 변경을 버리는지 질문하는지 이 수집에서 unknown.",
+      "persistence": "Save Changes의 .lib 저장과 native model .cae save를 구별.",
+      "status": "partial",
+      "unknowns": [
+        "Create Library 실제 대화상자",
+        "복사 전후",
+        "Dismiss 미저장 확인"
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    }
+  ],
+  "gaps": [
+    {
+      "id": "G01",
+      "tasks": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08",
+        "T09"
+      ],
+      "detail": "R=0, V=0. 출처는 vendor-origin Abaqus 문서를 수록한 Virginia Tech 호스팅 미러이며 벤더 직접 호스팅이 아니다. 미러 갱신시점/build는 미확인. 문서/이미지 다운로드와 시각검사는 앱 실행이 아니다. 2025 URL의 이미지들은 캡처 당시 build/date 미확인. 실제 Windows 2025 appearance를 증명하지 않는다."
+    },
+    {
+      "id": "G02",
+      "tasks": [
+        "T01"
+      ],
+      "detail": "STEP 원문 절차 확보, 입력 CAD와 옵션 선택·출력 트리/실패 이미지 없음. 다른 Open Database 공용 선택기 그림을 Import Part 실제 화면으로 세지 않는다."
+    },
+    {
+      "id": "G03",
+      "tasks": [
+        "T04",
+        "T06"
+      ],
+      "detail": "Mesh Controls/Global Seeds/Verify Mesh 실물 대화상자와 동일 모델의 품질검사 결과 미확보. Element Type은 2D Shell 화면만 확보, Beam 3D C3D8I는 D근거."
+    },
+    {
+      "id": "G04",
+      "tasks": [
+        "T02",
+        "T03"
+      ],
+      "detail": "feature 편집값의 적용/취소 비교, 선택 수·가림 tie-break, display group 숨김/복원 연속 화면 없음."
+    },
+    {
+      "id": "G05",
+      "tasks": [
+        "T05"
+      ],
+      "detail": "Assembly 인스턴스 생성·배치 단계가 미수집이며 BC/하중은 인스턴스가 이미 있다고 전제한다. 단면·Step·BC·압력의 editor 전체 화면 없음. BeamLoad는 analysis step이며 독립 load-case 관리와 동치로 두지 않는다. 해당 튜토리얼은 각 필드·선택·결과를 D로 명시하나 실제 모델 검증/케이스 오류 미수집."
+    },
+    {
+      "id": "G06",
+      "tasks": [
+        "T06"
+      ],
+      "detail": "과구속/메시무효화 오류화면과 응답의 문서 결과는 확보했지만 실패 입력 재현파일·문제 seed 하이라이트·수정 후 메시 없음. 따라서 오류 세 장면은 partial."
+    },
+    {
+      "id": "G07",
+      "tasks": [
+        "T07"
+      ],
+      "detail": "Save Model Database As 실제 이미지, overwrite/write-failure 분기, native/solver 파일과 재열 동등성 검증 없음. .cae 저장이 모든 session객체를 보존한다고 주장하지 않음."
+    },
+    {
+      "id": "G08",
+      "tasks": [
+        "T08"
+      ],
+      "detail": "Assembly 인스턴스 생성·배치 단계가 미수집이라 Beam 전체 워크플로 완료가 아니다. 실제 script/job 로그·종료코드·.odb 없음. Monitor 그림은 Status None의 빈 상태로 오류 진단 화면이 아니다."
+    },
+    {
+      "id": "G09",
+      "tasks": [
+        "T09"
+      ],
+      "detail": "XY editor 진입 메뉴/결과 curve/영구저장과 ASCII 입력표본 없음. expression 문서에는 legacy Python 정수나눗셈 설명이 남아 있어 2025 런타임 규칙으로 채택하지 않음."
+    },
+    {
+      "id": "G10",
+      "tasks": [],
+      "detail": "추측 URL 404를 source/asset으로 세지 않음: simacae-c-mgnattributes.htm, simacae-c-intselectionoptions.htm, simacae-c-dbsopen.htm, simacae-m-IntSelection-sb.htm, simacae-c-mgndisplay.htm, simacae-c-mgnattributeselementtype.htm, simacae-c-dgpoverview.htm, simacae-c-intdialogfile.htm, simacae-c-intdialogfilebrowser.htm, simacae-c-gensavingattributes.htm, simacae-c-dbsflatten.htm, simacae-c-dbsruncae.htm. 올바른 페이지를 링크에서 재발견했으며 다른 실패 URL은 기능 부재가 아니다."
+    }
+  ],
+  "key": "abaqus",
+  "evidence_scope": "S/D 자료. 이번 동일 입력 직접 실행(R)·연속 영상(V) 검증 없음.",
+  "asset_path_scope": "file은 이 별도 자료집의 상대 경로. 공개 저장소에 이미지 원본이 있다는 뜻이 아님."
+}

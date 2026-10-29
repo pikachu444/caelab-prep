@@ -1,0 +1,1352 @@
+{
+  "product": "MIDAS MeshFree",
+  "version": "2026 filename 교육(화면빌드미표시) / 2026R1 release 별도",
+  "sources": [
+    {
+      "id": "meshfree-edu2026-D",
+      "url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "title": "MeshFree 기초과정_2026",
+      "evidence_type": "D",
+      "locator": "PDF218p; p17,18,20,28,30,32,38,39,41-45,83,132; printed folio equals PDF page number1; official host article25256554452377 attachment26.",
+      "version": "2026 filename; PDFmetadata2026-06-12; screenshot build 미표시",
+      "analysis_original": {
+        "sha256": "42d8cbf3dd665371225eef80fd32419ce7b3ff5f1975f842f9fd85ba331f0c55",
+        "bytes": 12676307,
+        "included_in_deliverable": false
+      }
+    },
+    {
+      "id": "meshfree-edu2026-S",
+      "url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "title": "MeshFree 기초과정_2026 / UI 발췌",
+      "evidence_type": "S",
+      "locator": "PDF218p; p17,18,20,28,30,32,38,39,41-45,83,132; printed folio equals PDF page number1; official host article25256554452377 attachment26.",
+      "version": "2026 filename; PDFmetadata2026-06-12; screenshot build 미표시",
+      "analysis_original": {
+        "sha256": "42d8cbf3dd665371225eef80fd32419ce7b3ff5f1975f842f9fd85ba331f0c55",
+        "bytes": 12676307,
+        "included_in_deliverable": false
+      }
+    },
+    {
+      "id": "meshfree-release2026-D",
+      "url": "https://support.midasuser.com/hc/ko/article_attachments/61820525205913",
+      "title": "MeshFree 2026R1 Release Note",
+      "evidence_type": "D",
+      "locator": "PDF13p; p7,9,12,13; official host article34285656928921 attachment25.",
+      "version": "2026R1 attachment; PDFmetadata2026-03-11; introduction contains stale2025 wording",
+      "analysis_original": {
+        "sha256": "26da7d4477a8ae5bf624036cf01d4d69d9b42f418eb381da323ad60af9e8735b",
+        "bytes": 2543811,
+        "included_in_deliverable": false
+      }
+    },
+    {
+      "id": "meshfree-release2026-S",
+      "url": "https://support.midasuser.com/hc/ko/article_attachments/61820525205913",
+      "title": "MeshFree 2026R1 Release Note / UI 발췌",
+      "evidence_type": "S",
+      "locator": "PDF13p; p7,9,12,13; official host article34285656928921 attachment25.",
+      "version": "2026R1 attachment; PDFmetadata2026-03-11; introduction contains stale2025 wording",
+      "analysis_original": {
+        "sha256": "26da7d4477a8ae5bf624036cf01d4d69d9b42f418eb381da323ad60af9e8735b",
+        "bytes": 2543811,
+        "included_in_deliverable": false
+      }
+    }
+  ],
+  "assets": [
+    {
+      "id": "meshfree-edu2026-p017",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p017.png",
+      "width": 1492,
+      "height": 778,
+      "kind": "screen",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 17,
+        "pdf_page_index0": 16,
+        "printed_page": "17"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          17,
+          125,
+          763,
+          514
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "2afe190f26d43fbd787a4bc80134dbf8b5b95f573475f28c2e95e3dfefd7d426",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p018",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p018.png",
+      "width": 1416,
+      "height": 776,
+      "kind": "screen",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 18,
+        "pdf_page_index0": 17,
+        "printed_page": "18"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          39,
+          111,
+          747,
+          499
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "41efd7fe982de948b59a23e694456e41fd31d0df27a4096de4bf283577bc5116",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p020",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p020.png",
+      "width": 716,
+      "height": 408,
+      "kind": "screen",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 20,
+        "pdf_page_index0": 19,
+        "printed_page": "20"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          195,
+          312,
+          553,
+          516
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "0b8ef7a80c09b43759649491d156f287cb8bb8fb7dae60a9a0b2bb360465fe22",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p028",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p028.png",
+      "width": 914,
+      "height": 580,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 28,
+        "pdf_page_index0": 27,
+        "printed_page": "28"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          160,
+          180,
+          617,
+          470
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "22c722a65c0cdee870fe82a17636f48c7eaf9683ef11cdf03e2a01a28dbb1e7c",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p030",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p030.png",
+      "width": 826,
+      "height": 636,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 30,
+        "pdf_page_index0": 29,
+        "printed_page": "30"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          174,
+          195,
+          587,
+          513
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "5ee49cd3818cb28b5a30291544032a55ea30503ad8b58949ff1afd2935c6d3ab",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p032",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p032.png",
+      "width": 1070,
+      "height": 476,
+      "kind": "screen",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 32,
+        "pdf_page_index0": 31,
+        "printed_page": "32"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          80,
+          255,
+          615,
+          493
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "860261aabf9160134bcec250524566f2370bafd43ec2cc4b29647c1f1b5735fd",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p038",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p038.png",
+      "width": 420,
+      "height": 706,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 38,
+        "pdf_page_index0": 37,
+        "printed_page": "38"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          230,
+          137,
+          440,
+          490
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "239b178233fe3162e384f58e4145e7aabcc721b23d97257ba4c1b94aa477a99a",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p039",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p039.png",
+      "width": 1030,
+      "height": 630,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 39,
+        "pdf_page_index0": 38,
+        "printed_page": "39"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          255,
+          130,
+          770,
+          445
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "b21e9e664ff2e9205b6033481573315ce2b67513914beb5965adc3b89804812a",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p041",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p041.png",
+      "width": 970,
+      "height": 780,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 41,
+        "pdf_page_index0": 40,
+        "printed_page": "41"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          245,
+          98,
+          730,
+          488
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "5f5929d015f142f3f031321fe4e1570dfc51fc7294d48e3a4da801171555ceab",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p042",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p042.png",
+      "width": 880,
+      "height": 516,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 42,
+        "pdf_page_index0": 41,
+        "printed_page": "42"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          270,
+          177,
+          710,
+          435
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "0e370623644d334228221fbf23ec94676f5f001aa0afa51ef9014722948e0d5f",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p043",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p043.png",
+      "width": 1000,
+      "height": 776,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 43,
+        "pdf_page_index0": 42,
+        "printed_page": "43"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          250,
+          130,
+          750,
+          518
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "10615b365aa5d8a879b45902a2d548941bddb9a4c8e7b4c04c0da6213adbc9a0",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p044",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p044.png",
+      "width": 956,
+      "height": 736,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 44,
+        "pdf_page_index0": 43,
+        "printed_page": "44"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          260,
+          130,
+          738,
+          498
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "9f3575a3070f1f0bbc3a16d63d3d58c24ff10057e632c08fc23cdcca93250453",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p045",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p045.png",
+      "width": 1054,
+      "height": 394,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 45,
+        "pdf_page_index0": 44,
+        "printed_page": "45"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          225,
+          186,
+          752,
+          383
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "0ec5d7263d38dd4c97c5ed4d44ae1f3aaf6acab37e883284227d5ae50d6f9ea3",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p083",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p083.png",
+      "width": 800,
+      "height": 554,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 83,
+        "pdf_page_index0": 82,
+        "printed_page": "83"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          45,
+          198,
+          445,
+          475
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "b096b45c418f291a6f21cb1d80148f9a61f09c8ab57cccb4957893b1048a1b52",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-edu2026-p132",
+      "source_id": "meshfree-edu2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/58998223066393",
+      "file": "assets/meshfree/edu2026-p132.png",
+      "width": 1040,
+      "height": 908,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 132,
+        "pdf_page_index0": 131,
+        "printed_page": "132"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          225,
+          62,
+          745,
+          516
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "cf3e7aa9e56af8d8f38909390f89ebc61b346a47cdfd12867d776b85e632be5c",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-release2026-p007",
+      "source_id": "meshfree-release2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/61820525205913",
+      "file": "assets/meshfree/release2026-p007.png",
+      "width": 954,
+      "height": 480,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 7,
+        "pdf_page_index0": 6,
+        "printed_page": "7"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          70,
+          125,
+          547,
+          365
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "e6a7b041f984577e73853838082bee941b531e5a29691cd24cd0f3bb6a4dce96",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-release2026-p009",
+      "source_id": "meshfree-release2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/61820525205913",
+      "file": "assets/meshfree/release2026-p009.png",
+      "width": 750,
+      "height": 530,
+      "kind": "dialog",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 9,
+        "pdf_page_index0": 8,
+        "printed_page": "9"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          110,
+          475,
+          485,
+          740
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "ace00376bb560fc3615de5b72d690f3a0013d6d39f23115f8b2355702f9625c2",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    },
+    {
+      "id": "meshfree-release2026-p013",
+      "source_id": "meshfree-release2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/61820525205913",
+      "file": "assets/meshfree/release2026-p013.png",
+      "width": 950,
+      "height": 558,
+      "kind": "diagram",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 13,
+        "pdf_page_index0": 12,
+        "printed_page": "13"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          70,
+          203,
+          545,
+          482
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "8664dad7362dce3b9f5dfcaccb188eaf59a00cc56ad675a37cae20548859c18a",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음.",
+      "ui_scope": "model-view-only / viewport render; menus and controls absent"
+    },
+    {
+      "id": "meshfree-release2026-p009-menu",
+      "source_id": "meshfree-release2026-S",
+      "source_url": "https://support.midasuser.com/hc/ko/article_attachments/61820525205913",
+      "file": "assets/meshfree/release2026-p009-menu.png",
+      "width": 320,
+      "height": 426,
+      "kind": "screen",
+      "visual_review": true,
+      "locator": {
+        "pdf_page_number1": 9,
+        "pdf_page_index0": 8,
+        "printed_page": "9"
+      },
+      "extraction": {
+        "method": "PDF page rendered then clipped; no UI reconstruction",
+        "clip_pdf_points": [
+          110,
+          220,
+          270,
+          433
+        ],
+        "render_scale": 2,
+        "dpi": 144
+      },
+      "rights": "분석용 화면 발췌. 공개 재배포 허가 미확인; 벤더 PDF 전문은 제외.",
+      "sha256": "eefb6d1b9d6dd340aae4fe0a22cd65bb41452c749bf98ecc3f25609743d42d13",
+      "capture_context": "document_excerpt",
+      "measurement_scope": "문서 렌더 발췌 픽셀. 앱 DPI·native UI 치수·UI 토큰을 뜻하지 않음."
+    }
+  ],
+  "scenes": [
+    {
+      "id": "meshfree-start",
+      "task": "T01",
+      "title": "시작페이지",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p017",
+        "meshfree-edu2026-p018"
+      ],
+      "prerequisite": "앱시작",
+      "menu_path": "새파일/기존파일열기",
+      "steps": [
+        "작업선택"
+      ],
+      "fields": {},
+      "result": "모델창·해석창",
+      "error_cancel": "미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "시작파일·상태전환 전후 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          17,
+          18
+        ],
+        "pdf_page_indices0": [
+          16,
+          17
+        ],
+        "printed_pages": [
+          "17",
+          "18"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-import",
+      "task": "T01",
+      "title": "형상가져오기",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p039"
+      ],
+      "prerequisite": "케이스정의",
+      "menu_path": "시작>형상불러오기",
+      "steps": [
+        "파일선택; 열기"
+      ],
+      "fields": {
+        "파일": "origin.X_T"
+      },
+      "result": "S:기하형상 예시; D:파일선택·열기 지시",
+      "error_cancel": "취소버튼 관측; 효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "grounded",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인",
+        "외부 입력모델은 파일명만 확인; 수집·동일입력 재현 없음"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          39
+        ],
+        "pdf_page_indices0": [
+          38
+        ],
+        "printed_pages": [
+          "39"
+        ],
+        "detail": "PDF p39/index0 38 Bracket STEP02, 작업순서1=형상불러오기,2=origin.X_T,3=열기=D; 메뉴버튼은 본 crop상단 밖"
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_grounding": "좁은 문헌 성공경로의 필수 메뉴·선택·입력·결과가 연결됨. 전체과업 준비·동일입력 실행 검증과 별도.",
+      "design_path_grounded": true,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-trees",
+      "task": "T02",
+      "title": "전체·케이스트리",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p020"
+      ],
+      "prerequisite": "모델조건존재",
+      "menu_path": "미확인",
+      "steps": [],
+      "fields": {
+        "전체": "파트3/접촉2/구속2/하중3",
+        "케이스": "파트1/구속1/하중2"
+      },
+      "result": "전체조건과활성부분집합",
+      "error_cancel": "미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "표현구성만 관측; 전후조작 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          20
+        ],
+        "pdf_page_indices0": [
+          19
+        ],
+        "printed_pages": [
+          "20"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-assign",
+      "task": "T02",
+      "title": "재료배정",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p032",
+        "meshfree-edu2026-p042"
+      ],
+      "prerequisite": "재료정의완료",
+      "menu_path": "파트우클릭>재료할당",
+      "steps": [
+        "파트선택; 재료지정"
+      ],
+      "fields": {
+        "재료": "SUS304",
+        "파트": "part-1"
+      },
+      "result": "배정창",
+      "error_cancel": "닫기(X)컨트롤 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "p32트리경로와 p42대화상자는 별도 방식; 적용후트리 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          32,
+          42
+        ],
+        "pdf_page_indices0": [
+          31,
+          41
+        ],
+        "printed_pages": [
+          "32",
+          "42"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-select",
+      "task": "T03",
+      "title": "면선택",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p043"
+      ],
+      "prerequisite": "Bracket형상",
+      "menu_path": "구속조건",
+      "steps": [
+        "인접면선택; 확인"
+      ],
+      "fields": {
+        "선택": "원통면16개"
+      },
+      "result": "선택면 강조",
+      "error_cancel": "닫기(X)컨트롤 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "선택필터·피처각도값·해제후상태 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          43
+        ],
+        "pdf_page_indices0": [
+          42
+        ],
+        "printed_pages": [
+          "43"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-material",
+      "task": "T05",
+      "title": "재료물성",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p028",
+        "meshfree-edu2026-p041"
+      ],
+      "prerequisite": "해석조건단계",
+      "menu_path": "재료>생성",
+      "steps": [
+        "재질선택; 확인"
+      ],
+      "fields": {
+        "재질": "SUS304",
+        "E": "195000 N/mm²",
+        "nu": "0.27"
+      },
+      "result": "물성입력창",
+      "error_cancel": "닫기(X)컨트롤 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "교재p28 비선형지원설명과 p29 내용 상충; 기능제한 추정안함"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          28,
+          41
+        ],
+        "pdf_page_indices0": [
+          27,
+          40
+        ],
+        "printed_pages": [
+          "28",
+          "41"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-case",
+      "task": "T05",
+      "title": "해석종류",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p038"
+      ],
+      "prerequisite": "시작단계",
+      "menu_path": "해석케이스",
+      "steps": [
+        "종류선택; 확인"
+      ],
+      "fields": {
+        "종류": "선형정적"
+      },
+      "result": "케이스선택창",
+      "error_cancel": "닫기(X)컨트롤 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          38
+        ],
+        "pdf_page_indices0": [
+          37
+        ],
+        "printed_pages": [
+          "38"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-force",
+      "task": "T05",
+      "title": "면하중",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p044"
+      ],
+      "prerequisite": "형상·구속설정",
+      "menu_path": "집중하중",
+      "steps": [
+        "4개면선택; 확인"
+      ],
+      "fields": {
+        "X": "250 N",
+        "Y": "-250 N",
+        "Z": "0 N"
+      },
+      "result": "선택면하중기호",
+      "error_cancel": "닫기(X)컨트롤 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          44
+        ],
+        "pdf_page_indices0": [
+          43
+        ],
+        "printed_pages": [
+          "44"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-energy",
+      "task": "T06",
+      "title": "오차검토",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p083"
+      ],
+      "prerequisite": "해석결과",
+      "menu_path": "미확인",
+      "steps": [],
+      "fields": {
+        "관측총오차": "7.51%"
+      },
+      "result": "에너지오차표",
+      "error_cancel": "닫기(X)컨트롤 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "호출메뉴·선행모델·적정판정·재계산 연결 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          83
+        ],
+        "pdf_page_indices0": [
+          82
+        ],
+        "printed_pages": [
+          "83"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-cancel",
+      "task": "T06",
+      "title": "진행취소",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p045"
+      ],
+      "prerequisite": "실행요청",
+      "menu_path": "해석실행",
+      "steps": [
+        "케이스선택; 확인"
+      ],
+      "fields": {
+        "진행": "80%"
+      },
+      "result": "진행창·취소버튼",
+      "error_cancel": "문서에 중지기능 명시; 완료전 취소효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "본문 Bracket선형 설명과 솔버목록 비선형정적 표시 불일치"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          45
+        ],
+        "pdf_page_indices0": [
+          44
+        ],
+        "printed_pages": [
+          "45"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-save",
+      "task": "T07",
+      "title": "다른이름저장",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p132"
+      ],
+      "prerequisite": "Hitch작업",
+      "menu_path": "파일>다른이름으로저장",
+      "steps": [
+        "파일명입력; 저장"
+      ],
+      "fields": {
+        "파일명": "양방향미끄러짐",
+        "확장자": "mef"
+      },
+      "result": "저장대화상자",
+      "error_cancel": "취소버튼 관측; 효과 미확인",
+      "persistence": "저장지시 근거; 파일생성·재열기 미확인",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          132
+        ],
+        "pdf_page_indices0": [
+          131
+        ],
+        "printed_pages": [
+          "132"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-batch",
+      "task": "T08",
+      "title": "솔버연결",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p045"
+      ],
+      "prerequisite": "해석케이스존재",
+      "menu_path": "해석실행",
+      "steps": [
+        "케이스체크; 확인"
+      ],
+      "fields": {},
+      "result": "배치목록·진행창",
+      "error_cancel": "진행창 취소버튼 관측; 중지후상태 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "동일장면 케이스종류불일치; 실제실행·자동화 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          45
+        ],
+        "pdf_page_indices0": [
+          44
+        ],
+        "printed_pages": [
+          "45"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-table",
+      "task": "T09",
+      "title": "재료DB표",
+      "source_ids": [
+        "meshfree-edu2026-D",
+        "meshfree-edu2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-edu2026-p030"
+      ],
+      "prerequisite": "재료정의창",
+      "menu_path": "편집>시트우클릭",
+      "steps": [
+        "시트추가; 값편집; 저장"
+      ],
+      "fields": {
+        "파일": "IBM_Matl.mat"
+      },
+      "result": "행열입력표",
+      "error_cancel": "미확인",
+      "persistence": "재료DB파일 저장·공유 문서명시; 재불러오기 미검증",
+      "status": "partial",
+      "unknowns": [
+        "직접실행 없음; 정확한 실패분기·취소복원·재열기 미확인"
+      ],
+      "source_locator": {
+        "pdf_pages_number1": [
+          30
+        ],
+        "pdf_page_indices0": [
+          29
+        ],
+        "printed_pages": [
+          "30"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-grid",
+      "task": "T04",
+      "title": "격자예비검사",
+      "source_ids": [
+        "meshfree-release2026-D",
+        "meshfree-release2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-release2026-p009-menu",
+        "meshfree-release2026-p009"
+      ],
+      "prerequisite": "케이스·재료·구속·하중정의완료",
+      "menu_path": "케이스우클릭>자동-상대조밀도예비검사",
+      "steps": [
+        "예비검사; 파트더블클릭"
+      ],
+      "fields": {
+        "관측모드": "자동-상대조밀도"
+      },
+      "result": "녹색격자미리보기",
+      "error_cancel": "미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "메모리값·격자수·오류·취소복원 미확인"
+      ],
+      "source_locator": {
+        "pdf_page_index0": 8,
+        "printed_page": "9"
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-display",
+      "task": "T03",
+      "title": "파트가시성",
+      "source_ids": [
+        "meshfree-release2026-D",
+        "meshfree-release2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-release2026-p013"
+      ],
+      "prerequisite": "조립체; 관심파트선택",
+      "menu_path": "파트우클릭>표시모드/투명도",
+      "steps": [
+        "모드·투명도선택"
+      ],
+      "fields": {
+        "투명도": "1..9"
+      },
+      "result": "투명·쉐이딩·선보기예시",
+      "error_cancel": "미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "우클릭메뉴 화면미확보; 상태지속·선택관통 미확인"
+      ],
+      "source_locator": {
+        "pdf_page_indices0": [
+          11,
+          12
+        ],
+        "printed_pages": [
+          "12",
+          "13"
+        ]
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "meshfree-transient",
+      "task": "T08",
+      "title": "과도제어입력",
+      "source_ids": [
+        "meshfree-release2026-D",
+        "meshfree-release2026-S"
+      ],
+      "asset_ids": [
+        "meshfree-release2026-p007"
+      ],
+      "prerequisite": "과도열응력케이스",
+      "menu_path": "해석창>해석제어 더블클릭",
+      "steps": [
+        "시간·수렴조건설정"
+      ],
+      "fields": {
+        "열시간": "10 sec",
+        "시간스텝": "10",
+        "구조증분": "20"
+      },
+      "result": "제어입력창",
+      "error_cancel": "닫기(X)컨트롤 관측; 실행효과 미확인",
+      "persistence": "재열기·지속 여부 미확인",
+      "status": "partial",
+      "unknowns": [
+        "적용후해석·오류범위·취소·저장 미확인"
+      ],
+      "source_locator": {
+        "pdf_page_index0": 6,
+        "printed_page": "7"
+      },
+      "evidence_interpretation": "S=화면 관측; D=문서 지시. 동일 입력 실행 검증 아님.",
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    }
+  ],
+  "gaps": [
+    {
+      "task": "T01..T09",
+      "gap": "모든근거 S/D만. 제품실행·구현·연속영상 없음. 교육파일명2026은 각 스크린샷빌드 보증이 아님."
+    },
+    {
+      "task": "T04",
+      "gap": "일반FEM 메시생성 UI로 간주하지 않음. 2026R1 AutoGrid사전검사는 확보하되 입력메모리·해석결과까지 연속검증 없음."
+    },
+    {
+      "task": "T06",
+      "gap": "교육p45 선형예제 본문과 비선형솔버표기 불일치. 취소버튼 관측으로 롤백·부분결과보존을 추정하지 않음."
+    },
+    {
+      "task": "T07",
+      "gap": "mef저장창 확보; 이미지/중립형식 내보내기·기존파일 덮어쓰기·재열기 상태 미확인."
+    },
+    {
+      "task": "T08",
+      "gap": "배치선택·솔버진행·과도제어만. API/스크립트 자동화 연결 미확인."
+    },
+    {
+      "task": "T09",
+      "gap": "재료DB표 확보. 단위계변경의 수치변환·파싱·부적합단위 오류 미확인."
+    },
+    {
+      "task": "version",
+      "gap": "구2020메타데이터328p 교재는 최종자산으로 사용하지 않음. 2026교재218p와2026R1릴리스13p를 별도근거로 유지."
+    },
+    {
+      "task": "resolution",
+      "gap": "교육/릴리스 crop은144dpi렌더. native standalone공개화면은 이번수집없음. 교육화면의 현재빌드·실제앱픽셀 크기는 미확인."
+    },
+    {
+      "task": "source",
+      "gap": "공식Support교재페이지 첨부URL 직접대조·다운로드200확인. 검색도구는12MB교재 크기제한; 로컬 렌더로 확인. PDF전문 배포제외."
+    },
+    {
+      "task": "status",
+      "gap": "3축분리: design_path_grounded는 좁은 문헌경로 필수연결, full_workflow_ready는 전체과업 준비, reproduction_verified는 동일입력 검증. 후자2축은 모든장면false이며 grounded개수로 제품우열을 판단하지 않음."
+    }
+  ],
+  "key": "meshfree",
+  "evidence_scope": "S/D 자료. 이번 동일 입력 직접 실행(R)·연속 영상(V) 검증 없음.",
+  "asset_path_scope": "file은 이 별도 자료집의 상대 경로. 공개 저장소에 이미지 원본이 있다는 뜻이 아님."
+}

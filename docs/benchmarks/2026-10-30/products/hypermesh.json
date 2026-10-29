@@ -1,0 +1,2003 @@
+{
+  "product": "Altair HyperMesh",
+  "version": {
+    "primary": "2025",
+    "supplemental": "2025.1",
+    "ui_family": "현재 ribbon/browser/Entity Editor 기반; legacy Classic panel 제외"
+  },
+  "sources": [
+    {
+      "id": "hm-src-entity-editor",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/user_interface/entity_editor_overview_r.htm",
+      "title": "Entity Editor",
+      "evidence_type": "D",
+      "locator": "Entity Editor overview; Figure 1",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-part-browser",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/pre_processing/model_build_and_assembly/part_browser_open_t.htm",
+      "title": "Part Browser",
+      "evidence_type": "D",
+      "locator": "Part Browser / View Modes / Entity Editor / Abaqus Parts and Instances; Figures 5,8,9,12,13",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-coffee-lid",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/linear_static_with_thermal_load_coffee_pot_lid_intro_r.htm",
+      "title": "OS-HM-T: 1010 Linear Static Analysis with Thermal Loading of a Coffee Pot Lid",
+      "evidence_type": "D",
+      "locator": "Launch/Open; Create Material; Properties; Loads; Subcase; Submit Job; Figures 1,2,4–12",
+      "version": "2025",
+      "scope": "HyperMesh / OptiStruct profile",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-tetra",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/tutorials/hwx/tetrameshing_t.htm",
+      "title": "Tetra Meshing",
+      "evidence_type": "D",
+      "locator": "Fix Topology; Create Tetra Mesh; Representation Controls; Detect Features; Mesh Controls; Figures 3,4,6,7,9,13,34,36,38,43,45",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-recording",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/pythonapi/hypermesh/hm_recording.html",
+      "title": "Python API Recording — HyperMesh Python API 2025 documentation",
+      "evidence_type": "D",
+      "locator": "User Interface; Output Settings; Generate Python Code; Limitations; Figures 3–11",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-export",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/file_management/fe_export_t.htm",
+      "title": "Export Files",
+      "evidence_type": "D",
+      "locator": "Export Files, steps 1–3",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-selection",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/user_interface/selection_advanced_t.htm",
+      "title": "Perform Extended Entity Selection",
+      "evidence_type": "D",
+      "locator": "Extended selection; Attribute Columns; Filtering and Search; Figures 1–3",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-solver-data",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/user_interface/entity_editor_edit_solver_specific_data_r.htm",
+      "title": "Edit Solver Specific Data (Template Data)",
+      "evidence_type": "D",
+      "locator": "Assign Card Image; Import/Export; Assign Entities; Resolve Unresolved Entities; Keyboard Shortcuts; Figures 1,2,11–13",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-sketch-units",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/inspire_source/topics/shared/parametric/sketching/sketch_units_c.htm",
+      "title": "Sketch Units",
+      "evidence_type": "D",
+      "locator": "Sketch Units; Grid Spacing",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-mesh-controls",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/pre_processing/meshing/mesh_controls_c.htm",
+      "title": "Mesh Controls",
+      "evidence_type": "D",
+      "locator": "Model/local controls; database and XML storage",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-mesh-controls-edit",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/pre_processing/meshing/mesh_controls_create_and_edit_t.htm",
+      "title": "Create and Edit Mesh Controls",
+      "evidence_type": "D",
+      "locator": "Selection prerequisites; create/edit steps; Figure 1",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-mesh-controls-mesh",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/pre_processing/meshing/mesh_control_mesh_create_t.htm",
+      "title": "Create Mesh",
+      "evidence_type": "D",
+      "locator": "Generation command; restriction; Figure 1",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-auto-quality",
+      "url": "https://2025.help.altair.com/2025.1/hwdesktop/hwx/topics/pre_processing/meshing/element_quality_auto_fix_t.htm",
+      "title": "Automatically Fix 2D Element Quality",
+      "evidence_type": "D",
+      "locator": "Steps 1–6",
+      "version": "2025.1",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-assembly-save",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/pre_processing/model_build_and_assembly/assembly_save_as_hypermesh_binary_file_t.htm",
+      "title": "Save Assemblies as HyperMesh Binary Files",
+      "evidence_type": "D",
+      "locator": "Steps 1–2; Figures 1–2",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-finger",
+      "url": "https://2025.help.altair.com/2025.1/hwsolvers/os/topics/solvers/os/arthritic_finger_tutorial_r.htm",
+      "title": "OS-HM-T: 3010 Arthritic Finger, Nonlinear Static Analysis",
+      "evidence_type": "D",
+      "locator": "Import Model; Create Curves; Figure 3–4; Table 1; other tutorial sections excluded",
+      "version": "2025.1",
+      "scope": "HyperMesh / OptiStruct profile",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-help-finder",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/panels/tool_finder_r.htm",
+      "title": "Tool Finder",
+      "evidence_type": "D",
+      "locator": "HyperMesh deprecated panels → current workflows table",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-save-open",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/pre_processing/model_build_and_assembly/teamcenter_hm_integration.htm",
+      "title": "Teamcenter - HyperMesh Integration",
+      "evidence_type": "D",
+      "locator": "Save and Open HyperMesh Models subsection only",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-undo",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/user_interface/undo_redo_t.htm",
+      "title": "Undo-Redo",
+      "evidence_type": "D",
+      "locator": "General section before HyperView-only subsection; Figure 1",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-quality",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/pre_processing/meshing/2d_element_quality_review_t.htm",
+      "title": "Review Element Quality",
+      "evidence_type": "D",
+      "locator": "Manual activation and quality legend; Figure 1",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-quality-criteria",
+      "url": "https://2025.help.altair.com/2025.1/hwdesktop/hwx/topics/pre_processing/meshing/2d_element_quality_by_criteria_review_t.htm",
+      "title": "Review Elements by Element Criteria",
+      "evidence_type": "D",
+      "locator": "Criteria selection; slider; close/reset; Figures 1,2,4",
+      "version": "2025.1",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-curves",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/pre_processing/mvd/create_curves_t.htm",
+      "title": "Create and Edit Curves",
+      "evidence_type": "D",
+      "locator": "Create/plot; Import CSV; Export CSV; Figure 2",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-midmesh-repair",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/pre_processing/meshing/midmesh_repair_elements_or_fill_face_t.htm",
+      "title": "Repair Midmesh Elements or Fill Faces",
+      "evidence_type": "D",
+      "locator": "Steps 1–6; Figure 2",
+      "version": "2025",
+      "scope": "HyperMesh",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "해당 버전 도움말에 수록. 이미지 내부의 독립적인 빌드 번호는 미확인."
+    },
+    {
+      "id": "hm-src-visibility",
+      "url": "https://2025.help.altair.com/2025/hwdesktop/hwx/topics/user_interface/view_show_hide_isolate_t.htm",
+      "title": "Show, Hide, and Isolate Entities",
+      "evidence_type": "D",
+      "locator": "Context menus; Browser icons; Show/Hide tool, HyperMesh/HyperView subsection; Figures 1,3",
+      "version": "2025",
+      "scope": "HyperMesh; other-client subsections excluded",
+      "retrieved_utc": "2026-10-29",
+      "screenshot_version_note": "2025 도움말 수록. 이미지 내부 독립 build 번호 미확인."
+    }
+  ],
+  "assets": [
+    {
+      "id": "hm-entity-editor-1",
+      "source_id": "hm-src-entity-editor",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/entity_editor_unity.png",
+      "file": "assets/hypermesh/entity-editor-01-entity_editor_unity.png",
+      "width": 381,
+      "height": 466,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "PSHELL_2, T=1.25의 예시 상태. coffee-lid의 T=2.5와 별개.",
+      "sha256": "8383d8d1ea8e627c11707e62dd412f6cfe3f3090b2c2816e4061216d8358dea0",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-part-browser-5",
+      "source_id": "hm-src-part-browser",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/heirarchical_part_view.png",
+      "file": "assets/hypermesh/part-browser-05-heirarchical_part_view.png",
+      "width": 199,
+      "height": 119,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Model→Part Assembly→Part→Component의 작은 트리 crop.",
+      "sha256": "c9ca0ee841916323e3071f1ebae995d112290e70cfa9b86188f8182ac2de272d",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-part-browser-8",
+      "source_id": "hm-src-part-browser",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/part_browser_dialog_abaqus_preferences.png",
+      "file": "assets/hypermesh/part-browser-08-part_browser_dialog_abaqus_preferences.png",
+      "width": 744,
+      "height": 537,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "c240016d9146ad18e78571767faca320c97abd63ce25503fee294354b2850990",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-part-browser-9",
+      "source_id": "hm-src-part-browser",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/part_browser_abaqus_geom_import.png",
+      "file": "assets/hypermesh/part-browser-09-part_browser_abaqus_geom_import.png",
+      "width": 842,
+      "height": 389,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Part 탭, assembly tree, active 체크 및 여러 색의 CAD 형상.",
+      "sha256": "f3927a445c94a8fb6697ebed9f85620a77ec4657eb3dc6a2060b56b688a0a73c",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-part-browser-12",
+      "source_id": "hm-src-part-browser",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/part_browser_abaqus_part_edit_mode.png",
+      "file": "assets/hypermesh/part-browser-12-part_browser_abaqus_part_edit_mode.png",
+      "width": 627,
+      "height": 329,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Abaqus part edit mode: 단일 part hierarchy와 붉은 mesh.",
+      "sha256": "fb17454decca5ba7b9f551f98513a7ead457dc4a78cf662ee7c6d6900c46a128",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-part-browser-13",
+      "source_id": "hm-src-part-browser",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/part_browser_dialog_abaqus_export.png",
+      "file": "assets/hypermesh/part-browser-13-part_browser_dialog_abaqus_export.png",
+      "width": 681,
+      "height": 809,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Parts and Instances 체크, Part Per Include, Export/Cancel.",
+      "sha256": "14c9af5291aa93243b15b66ad569804532414d5c4d27b2051fede2977248e6de",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-coffee-lid-1",
+      "source_id": "hm-src-coffee-lid",
+      "source_url": "https://2025.help.altair.com/2025/hwsolvers/os/images/solvers/launch_hw_create_session.png",
+      "file": "assets/hypermesh/coffee-lid-01-launch_hw_create_session.png",
+      "width": 182,
+      "height": 329,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "f069f500ab7e6932bb7f231c1e07478ae9d67d7e295ef2205b6928e644737aa0",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-coffee-lid-2",
+      "source_id": "hm-src-coffee-lid",
+      "source_url": "https://2025.help.altair.com/2025/hwsolvers/os/images/solvers/open_model_file_import_options.png",
+      "file": "assets/hypermesh/coffee-lid-02-open_model_file_import_options.png",
+      "width": 432,
+      "height": 426,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "b414d2c6dd82e388849323be94caf5ea7618ae70bacc21b47eea0e4ab88b8ca3",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-coffee-lid-4",
+      "source_id": "hm-src-coffee-lid",
+      "source_url": "https://2025.help.altair.com/2025/hwsolvers/os/images/solvers/linear_static_thermal_loading_create_material.png",
+      "file": "assets/hypermesh/coffee-lid-04-linear_static_thermal_loading_create_material.png",
+      "width": 412,
+      "height": 449,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "2764aec7e79655c333fc6b1d95d2a1267f2a2bd23724f270061f5b76a35f2e98",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-coffee-lid-5",
+      "source_id": "hm-src-coffee-lid",
+      "source_url": "https://2025.help.altair.com/2025/hwsolvers/os/images/solvers/linear_static_thermal_loading_select_material_plastic_for_prop_pshell.png",
+      "file": "assets/hypermesh/coffee-lid-05-linear_static_thermal_loading_select_material_plastic_for_prop_pshell.png",
+      "width": 298,
+      "height": 359,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Material entity selector가 활성화되며 작은 search/ellipsis/확인/지우기 도구 표시.",
+      "sha256": "6fca9821902a869dff7dba15bbe376ff9f9510b82396c383eccf627a479a0868",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-coffee-lid-6",
+      "source_id": "hm-src-coffee-lid",
+      "source_url": "https://2025.help.altair.com/2025/hwsolvers/os/images/solvers/linear_static_thermal_loading_pshell_prop_entry_fields_in_entity_editor.png",
+      "file": "assets/hypermesh/coffee-lid-06-linear_static_thermal_loading_pshell_prop_entry_fields_in_entity_editor.png",
+      "width": 294,
+      "height": 341,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "c52261e2ddff4a240bbfd22e23e31b744fdf5c676661b5513875df8dd5293c83",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-coffee-lid-7",
+      "source_id": "hm-src-coffee-lid",
+      "source_url": "https://2025.help.altair.com/2025/hwsolvers/os/images/solvers/linear_static_thermal_loading_temp_initial_load_collector_creation.png",
+      "file": "assets/hypermesh/coffee-lid-07-linear_static_thermal_loading_temp_initial_load_collector_creation.png",
+      "width": 330,
+      "height": 222,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "c8db50d7086db514de9b34695fe8d7d7cda5ea143ab43e9341959e54897984a2",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-coffee-lid-9",
+      "source_id": "hm-src-coffee-lid",
+      "source_url": "https://2025.help.altair.com/2025/hwsolvers/os/images/solvers/linear_static_thermal_loading_temp_load_create.png",
+      "file": "assets/hypermesh/coffee-lid-09-linear_static_thermal_loading_temp_load_create.png",
+      "width": 361,
+      "height": 209,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "e78d85d20252b26b1c982b30e2fae9a99902fde48034ed67da0d1adde4662c1b",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-coffee-lid-10",
+      "source_id": "hm-src-coffee-lid",
+      "source_url": "https://2025.help.altair.com/2025/hwsolvers/os/images/solvers/linear_static_thermal_loading_select_constraints.png",
+      "file": "assets/hypermesh/coffee-lid-10-linear_static_thermal_loading_select_constraints.png",
+      "width": 340,
+      "height": 377,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "4c151826444538cf7075791d3a4a31638d4e50c46d99632af6811f6db4117036",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-coffee-lid-11",
+      "source_id": "hm-src-coffee-lid",
+      "source_url": "https://2025.help.altair.com/2025/hwsolvers/os/images/solvers/linear_static_thermal_loading_brew_cycle_loadstep_create.png",
+      "file": "assets/hypermesh/coffee-lid-11-linear_static_thermal_loading_brew_cycle_loadstep_create.png",
+      "width": 405,
+      "height": 512,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "f8574d55b6f79947ec35fb612da2fcfb695392c763eeca233d404bc7f529698f",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-coffee-lid-12",
+      "source_id": "hm-src-coffee-lid",
+      "source_url": "https://2025.help.altair.com/2025/hwsolvers/os/images/solvers/run_os_initiate_os_analysis_run.png",
+      "file": "assets/hypermesh/coffee-lid-12-run_os_initiate_os_analysis_run.png",
+      "width": 317,
+      "height": 176,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "toolbar-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "24bc6bb1b8a9a6afecf51773dc8e9edfd16b5e7bb44f57fa465365f85fbbf0ca",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-tetra-3",
+      "source_id": "hm-src-tetra",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tutorials/hwx/tetramesh_validate_result.png",
+      "file": "assets/hypermesh/tetra-03-tetramesh_validate_result.png",
+      "width": 314,
+      "height": 250,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "model-view-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "03ec0c82678c712412fc5399aa3775b441f46266a09b4d820ae90d14213a466d",
+      "count_as_ui_reference": false
+    },
+    {
+      "id": "hm-tetra-6",
+      "source_id": "hm-src-tetra",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tutorials/hwx/tetramesh_legend_free_edges.png",
+      "file": "assets/hypermesh/tetra-06-tetramesh_legend_free_edges.png",
+      "width": 280,
+      "height": 204,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Free edges(3), 나머지 checks(0) 범례 crop.",
+      "sha256": "e481cb94beddfc94cb870db1543a5eee3111c7fac5f7a6ed2ea59b6a3e9b6c23",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-tetra-11",
+      "source_id": "hm-src-tetra",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tutorials/hwx/tetramesh_hole_patch.png",
+      "file": "assets/hypermesh/tetra-11-tetramesh_hole_patch.png",
+      "width": 726,
+      "height": 546,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "모델뷰에 Patch 관련 미세대화상자와 Fix 표시.",
+      "sha256": "9b33ede7bc78c5aab21c26a6ea8fc5ab967c9bef32b831bce02efb7fefe8acd4",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-tetra-14",
+      "source_id": "hm-src-tetra",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tutorials/hwx/tetramesh_stich_intersect_second_edge.png",
+      "file": "assets/hypermesh/tetra-14-tetramesh_stich_intersect_second_edge.png",
+      "width": 736,
+      "height": 554,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "미세대화상자의 tolerance 0.50과 Fix 표시.",
+      "sha256": "f6edcff9f14fdc5ec8d9e703cbfa5f91b7d12265c903afdbe454413ff192bb26",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-tetra-16",
+      "source_id": "hm-src-tetra",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tutorials/hwx/tetramesh_edges_stitch_result.png",
+      "file": "assets/hypermesh/tetra-16-tetramesh_edges_stitch_result.png",
+      "width": 443,
+      "height": 346,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "model-view-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "30234e839ed53ae242a56236ce3755667506a74d35d119c72095bbfc90b83240",
+      "count_as_ui_reference": false
+    },
+    {
+      "id": "hm-tetra-22",
+      "source_id": "hm-src-tetra",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tutorials/hwx/tetramesh_tetramesh_create_result.png",
+      "file": "assets/hypermesh/tetra-22-tetramesh_tetramesh_create_result.png",
+      "width": 517,
+      "height": 456,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "model-view-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "4412f1e234485d650452eeae871b7bc313b816efb2fe669b1c485d7b5af89e3b",
+      "count_as_ui_reference": false
+    },
+    {
+      "id": "hm-tetra-58",
+      "source_id": "hm-src-tetra",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tutorials/hwx/tetramesh_create_representation_control.png",
+      "file": "assets/hypermesh/tetra-58-tetramesh_create_representation_control.png",
+      "width": 867,
+      "height": 537,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "044500efc97b7fea86fecec5445c65b061766418d2dab7b03a8ca25ee5b8360c",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-tetra-61",
+      "source_id": "hm-src-tetra",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tutorials/hwx/tetramesh_feature_detection_parameters.png",
+      "file": "assets/hypermesh/tetra-61-tetramesh_feature_detection_parameters.png",
+      "width": 522,
+      "height": 344,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "ad934d69739c199943ce4d2cc6cce128baeafdce34f70105b0244edb929f0095",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-tetra-65",
+      "source_id": "hm-src-tetra",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tutorials/hwx/tetramesh_select_surfaces_holes.png",
+      "file": "assets/hypermesh/tetra-65-tetramesh_select_surfaces_holes.png",
+      "width": 1125,
+      "height": 716,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "By Feature 목록에서 Hole3d 항목들이 선택됨; Apply/OK/Cancel.",
+      "sha256": "6fbf911e2433e6c77fb6267beb4f426ecf407b38bd294612c72e3e2d387b4479",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-tetra-73",
+      "source_id": "hm-src-tetra",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tutorials/hwx/tetramesh_top_surface_select.png",
+      "file": "assets/hypermesh/tetra-73-tetramesh_top_surface_select.png",
+      "width": 279,
+      "height": 245,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "model-view-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "5c839fbae9e434d791d2c10ff49c32230da006c8c92ed8ad33a87d573cfe6c98",
+      "count_as_ui_reference": false
+    },
+    {
+      "id": "hm-tetra-75",
+      "source_id": "hm-src-tetra",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tutorials/hwx/tetramesh_mesh_controls_result.png",
+      "file": "assets/hypermesh/tetra-75-tetramesh_mesh_controls_result.png",
+      "width": 512,
+      "height": 472,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "model-view-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "3d92852f75791998815cff2d73df3c08b60d0a4d3031defa86fdda7c1418b376",
+      "count_as_ui_reference": false
+    },
+    {
+      "id": "hm-recording-4",
+      "source_id": "hm-src-recording",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/pythonapi/_images/recording_toolbar.png",
+      "file": "assets/hypermesh/recording-04-recording_toolbar.png",
+      "width": 250,
+      "height": 36,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "toolbar-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "89694edf1bb691eb33e2cdf7ca064067cf806b07d8024ce1bdf8335b90973d0d",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-recording-5",
+      "source_id": "hm-src-recording",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/pythonapi/_images/recording_toolbar_recordingON.png",
+      "file": "assets/hypermesh/recording-05-recording_toolbar_recordingON.png",
+      "width": 250,
+      "height": 36,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "toolbar-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "c53a181971da05003a6b1e8ba7f226f94fa91fdc4640406224d6d716cf96fd44",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-recording-6",
+      "source_id": "hm-src-recording",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/pythonapi/_images/recording_dialog_functions_tab.png",
+      "file": "assets/hypermesh/recording-06-recording_dialog_functions_tab.png",
+      "width": 825,
+      "height": 423,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "27eef7ef5d186279db9f8fde6322ba1d5d801c0a5d18f0fd74eee80acb6517ec",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-recording-8",
+      "source_id": "hm-src-recording",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/pythonapi/_images/create_parameter_dialog.png",
+      "file": "assets/hypermesh/recording-08-create_parameter_dialog.png",
+      "width": 280,
+      "height": 164,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "c3c52d2e3c094b97888ddc4fe3ad26ae7610cf559eac708cfabe757da8f8b9d5",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-recording-10",
+      "source_id": "hm-src-recording",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/pythonapi/_images/output_settings.png",
+      "file": "assets/hypermesh/recording-10-output_settings.png",
+      "width": 259,
+      "height": 343,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "67d927b33151ed0be78e174272c85733892067bdfbe11ccf8a55c4e4335a2863",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-recording-13",
+      "source_id": "hm-src-recording",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/pythonapi/_images/advanced_selection.png",
+      "file": "assets/hypermesh/recording-13-advanced_selection.png",
+      "width": 682,
+      "height": 215,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Move guide bar와 Select Elements: By Property→By ID=6 예시.",
+      "sha256": "09b4adad5b966a39de4ebb4db7f26ea1cd4e3e5de32715fbaf950ac207907e1d",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-selection-4",
+      "source_id": "hm-src-selection",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/advanced_selection_attributes_hwx.png",
+      "file": "assets/hypermesh/selection-04-advanced_selection_attributes_hwx.png",
+      "width": 947,
+      "height": 516,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "4b85c895b984fe8623b16b1e9f24cbb9ff88faedfba4637df29fba82af252905",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-selection-5",
+      "source_id": "hm-src-selection",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/advanced_selection_search.png",
+      "file": "assets/hypermesh/selection-05-advanced_selection_search.png",
+      "width": 575,
+      "height": 301,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "6b1bdbfbfb46a33db04989a3256703e43d413eee5c9ee22ecad90ad919834ba6",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-selection-6",
+      "source_id": "hm-src-selection",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/advanced_selection_filter_hwx.png",
+      "file": "assets/hypermesh/selection-06-advanced_selection_filter_hwx.png",
+      "width": 1092,
+      "height": 511,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "308b0cbf2cb542d055b93fc05400055ab3a2d4a7a141651009ea7489b31d2cf2",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-solver-data-1",
+      "source_id": "hm-src-solver-data",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/density_info_abaqus_material.png",
+      "file": "assets/hypermesh/solver-data-01-density_info_abaqus_material.png",
+      "width": 513,
+      "height": 101,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "90f6b9f7ee840c567e0b931ef2a88d2a5b9e616e6d1e27279d898613157ffe96",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-solver-data-2",
+      "source_id": "hm-src-solver-data",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/entity_editor_array_data_unstructured_table.png",
+      "file": "assets/hypermesh/solver-data-02-entity_editor_array_data_unstructured_table.png",
+      "width": 397,
+      "height": 419,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "94684df0bc7c3d633b26c6e59604db592ba9748f704b8f742ad45de15b807d2a",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-solver-data-11",
+      "source_id": "hm-src-solver-data",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/ee_table_status_fields_unity.png",
+      "file": "assets/hypermesh/solver-data-11-ee_table_status_fields_unity.png",
+      "width": 526,
+      "height": 541,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "1e68ef01b0666dd647e0cfa866f65f7e99695e5e38157fe18c682fef8f7a5652",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-solver-data-12",
+      "source_id": "hm-src-solver-data",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/entity_selection_ee_unity.png",
+      "file": "assets/hypermesh/solver-data-12-entity_selection_ee_unity.png",
+      "width": 409,
+      "height": 271,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "b7d86adf6522180ea059e945501d225c306e6c9b0c4a2e20e7a673e7cb912597",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-solver-data-18",
+      "source_id": "hm-src-solver-data",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/ee_unresolved_unity.png",
+      "file": "assets/hypermesh/solver-data-18-ee_unresolved_unity.png",
+      "width": 434,
+      "height": 578,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "70058afda23027f39797ba0dbc0489c2fe49044e52842f5c56f5a58f5b17efe3",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-mesh-controls-edit-1",
+      "source_id": "hm-src-mesh-controls-edit",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/mesh_controls_modify.png",
+      "file": "assets/hypermesh/mesh-controls-edit-01-mesh_controls_modify.png",
+      "width": 396,
+      "height": 384,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "e9d3aa72ec3a707cc6ca584ab49ffe0af3d46cfb6ef941b75430365a21fbb253",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-mesh-controls-mesh-1",
+      "source_id": "hm-src-mesh-controls-mesh",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/mesh_controls_mesh_generation.png",
+      "file": "assets/hypermesh/mesh-controls-mesh-01-mesh_controls_mesh_generation.png",
+      "width": 396,
+      "height": 322,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "ff8e3b0abc7a9ce3f20e190e31978e658801f308dfb1c4a2e3595016154e79a7",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-assembly-save-1",
+      "source_id": "hm-src-assembly-save",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/part_assembly_save_assembly_as.png",
+      "file": "assets/hypermesh/assembly-save-01-part_assembly_save_assembly_as.png",
+      "width": 627,
+      "height": 319,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "df15b73d8fb9ce73550704bda3da5fdf97c1bcfb1006136671c3c150e6ac6d56",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-assembly-save-2",
+      "source_id": "hm-src-assembly-save",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/part_assembly_save_assembly_as_2.png",
+      "file": "assets/hypermesh/assembly-save-02-part_assembly_save_assembly_as_2.png",
+      "width": 684,
+      "height": 174,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "e8e1b9d72b8433e1d817d780e98ddebdac000120cf7eaed7d942473101c05ef8",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-finger-3",
+      "source_id": "hm-src-finger",
+      "source_url": "https://2025.help.altair.com/2025.1/hwsolvers/os/images/solvers/model_import_solver_deck_solver_import_options.png",
+      "file": "assets/hypermesh/finger-03-model_import_solver_deck_solver_import_options.png",
+      "width": 617,
+      "height": 532,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "0a1a2acdf42e35c6e4baa8b07820a6a07eb68c5557bd5d23559c293d434f6790",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-finger-4",
+      "source_id": "hm-src-finger",
+      "source_url": "https://2025.help.altair.com/2025.1/hwsolvers/os/images/solvers/arthritic_finger_simple_tension_compression_curve.png",
+      "file": "assets/hypermesh/finger-04-arthritic_finger_simple_tension_compression_curve.png",
+      "width": 780,
+      "height": 600,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "TABLES1100 표와 blue XY curve. 축의 물리 의미를 재해석하지 않음.",
+      "sha256": "81b30a12e09b0a4c4c8fe6d862274882dda9afc73531dc9e88ae52541e4cf186",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-quality-2",
+      "source_id": "hm-src-quality",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/view_element_quality_hm.png",
+      "file": "assets/hypermesh/quality-02-view_element_quality_hm.png",
+      "width": 730,
+      "height": 293,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "1D/2D/3D, QI Range/Criteria 범례 및 실패 통계. 예시 통계이며 계산 검증 아님.",
+      "sha256": "7cc9867b589220ee937fa9e76055f2de904df8df1c089f05d35f0a99e41ef179",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-quality-criteria-1",
+      "source_id": "hm-src-quality-criteria",
+      "source_url": "https://2025.help.altair.com/2025.1/hwdesktop/hwx/images/view_element_quality_legend_criteria_hm.png",
+      "file": "assets/hypermesh/quality-criteria-01-view_element_quality_legend_criteria_hm.png",
+      "width": 586,
+      "height": 364,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "739c75d799d28958a6c99ceea9f6c07c5d906acd032512bcf8ba69dcb1227a79",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-quality-criteria-2",
+      "source_id": "hm-src-quality-criteria",
+      "source_url": "https://2025.help.altair.com/2025.1/hwdesktop/hwx/images/view_element_quality_legend_criteria_divergent_option_hm.png",
+      "file": "assets/hypermesh/quality-criteria-02-view_element_quality_legend_criteria_divergent_option_hm.png",
+      "width": 795,
+      "height": 353,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Min Size legend의 우클릭 메뉴와 Divergent 체크.",
+      "sha256": "84eb9a4eda12f625b246e322b706adbe6fa682b3d3a61a7e54f54afa59e33b1d",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-quality-criteria-4",
+      "source_id": "hm-src-quality-criteria",
+      "source_url": "https://2025.help.altair.com/2025.1/hwdesktop/hwx/images/view_element_quality_legend_criteria_double_slider_hm.png",
+      "file": "assets/hypermesh/quality-criteria-04-view_element_quality_legend_criteria_double_slider_hm.png",
+      "width": 790,
+      "height": 324,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Double Slider 체크 및 범위 선택 상태.",
+      "sha256": "f96c29afe474df5cd925e47bdcecfe75e36b7d371d7bb2992a6fac199f8e529b",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-curves-2",
+      "source_id": "hm-src-curves",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/curve_editor_dialog.png",
+      "file": "assets/hypermesh/curves-02-curve_editor_dialog.png",
+      "width": 767,
+      "height": 525,
+      "kind": "dialog",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "공식 문서의 실제 UI 발췌를 직접 확인. 텍스트 설명과 이미지의 필드는 구분해 사용.",
+      "sha256": "82d24fd460da1c87a57135a3e2a2f753b9e1d132bd651444dde16764f4d93417",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-undo-1",
+      "source_id": "hm-src-undo",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/redo_multiple_actions_unity.png",
+      "file": "assets/hypermesh/undo-01-redo_multiple_actions_unity.png",
+      "width": 335,
+      "height": 126,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Edit→Redo 하위메뉴의 Created Line/Created solid sphere/Stitched surfaces 목록.",
+      "sha256": "e50ba3e6b06223b6d0af6232043c9c1ec2656f77b066df1a7cd98adb241ce095",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-midmesh-repair-3",
+      "source_id": "hm-src-midmesh-repair",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/element_sets.png",
+      "file": "assets/hypermesh/midmesh-repair-03-element_sets.png",
+      "width": 674,
+      "height": 367,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Sets browser의 ^Midmesh_IntxnCluster-1…-9 element sets 목록. 수리 성공 후상태는 아님.",
+      "sha256": "c312ed087e91a46d30e60a3ca13ed4203656dc7ef17602659a99a6aff28e4ccc",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-visibility-1",
+      "source_id": "hm-src-visibility",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/show_hide_isolate_browser_context_menu.png",
+      "file": "assets/hypermesh/visibility-01-show_hide_isolate_browser_context_menu.png",
+      "width": 359,
+      "height": 423,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "browser의 Properties folder context menu: Reverse/Hide/Isolate/Show.",
+      "sha256": "4eb35d09e1a14f326c36f24261437d2559d7662f307a0ae4bfafac7fc8972a42",
+      "count_as_ui_reference": true
+    },
+    {
+      "id": "hm-visibility-6",
+      "source_id": "hm-src-visibility",
+      "source_url": "https://2025.help.altair.com/2025/hwdesktop/hwx/images/tool_show_hide.png",
+      "file": "assets/hypermesh/visibility-06-tool_show_hide.png",
+      "width": 375,
+      "height": 425,
+      "kind": "screen",
+      "visual_review": "viewed",
+      "evidence_type": "S",
+      "ui_scope": "UI-crop",
+      "observed": "Show/Hide microdialog: Elements/Contacts/Systems checked, Loads 일부표시, Geometry/Connectors 미표시; All/None/Only.",
+      "sha256": "cb7640aa98752e8dc69d2b2803f8a52aafd365e22cfbb4c53d314269da209777",
+      "count_as_ui_reference": true
+    }
+  ],
+  "scenes": [
+    {
+      "id": "HM01",
+      "task": "T01",
+      "title": "프로필 선택과 HM 데이터베이스 열기",
+      "source_ids": [
+        "hm-src-coffee-lid"
+      ],
+      "asset_ids": [
+        "hm-coffee-lid-1",
+        "hm-coffee-lid-2"
+      ],
+      "prerequisite": "coffee_lid.hm 준비.",
+      "menu_path": "New Session; File > Open > HyperMesh Model",
+      "steps": [
+        "HyperMesh/OptiStruct→Create Session.",
+        "coffee_lid.hm→Open."
+      ],
+      "fields": {
+        "Profile": "OptiStruct",
+        "file": "coffee_lid.hm"
+      },
+      "result": "기존 session data를 대체하여 모델을 읽음.",
+      "error_cancel": "오류·취소 효과 미확인.",
+      "persistence": "저장·재열기 미확인.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM02",
+      "task": "T01",
+      "title": "Solver Deck 가져오기 옵션",
+      "source_ids": [
+        "hm-src-finger"
+      ],
+      "asset_ids": [
+        "hm-finger-3"
+      ],
+      "prerequisite": "Arthritis_Finger.fem 준비; OptiStruct profile.",
+      "menu_path": "File > Import > Solver Deck",
+      "steps": [
+        "파일 선택→Open.",
+        "Reader 확인→Import."
+      ],
+      "fields": {
+        "Reader": "OptiStruct",
+        "file": "Arthritis_Finger.fem"
+      },
+      "result": "튜토리얼은 모델 import 후 곡선 생성으로 이어짐.",
+      "error_cancel": "Cancel 버튼은 S에 관찰. 오류 메시지/취소 효과 미확인.",
+      "persistence": "미확인: 이 장면 변경의 저장·재열기 결과.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM03",
+      "task": "T02",
+      "title": "Part Browser 계층과 속성 열",
+      "source_ids": [
+        "hm-src-part-browser"
+      ],
+      "asset_ids": [
+        "hm-part-browser-5",
+        "hm-part-browser-9",
+        "hm-part-browser-12"
+      ],
+      "prerequisite": "part/assembly 구조가 있는 모델.",
+      "menu_path": "Assembly > Parts",
+      "steps": [
+        "계층 view를 열어 part/component를 확인.",
+        "열 제목 우클릭으로 표시 열을 선택."
+      ],
+      "fields": {
+        "hierarchy": "Model→Part Assembly→Part→Component",
+        "columns": "UID, Revision, Representation, Active, CID/PID/MID, Material, Thickness"
+      },
+      "result": "browser 구조와 형상 선택 문맥을 함께 표시. Abaqus Part Edit mode 화면은 별도 상태.",
+      "error_cancel": "미확인: 이 장면의 오류 발생 및 취소 뒤 상태.",
+      "persistence": "미확인: 이 장면 변경의 저장·재열기 결과.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM04",
+      "task": "T02",
+      "title": "Entity Editor와 solver 필드/선택 미세도구",
+      "source_ids": [
+        "hm-src-entity-editor",
+        "hm-src-solver-data"
+      ],
+      "asset_ids": [
+        "hm-entity-editor-1",
+        "hm-solver-data-12"
+      ],
+      "prerequisite": "browser 또는 modeling window에 entity 선택.",
+      "menu_path": "View > Entity Editor; entity double-click",
+      "steps": [
+        "Name/Value 열에서 활성 필드 편집.",
+        "Card Image 변경 시 solver 필드 갱신."
+      ],
+      "fields": {
+        "read_only": "gray fields",
+        "example": "PSHELL_2; T=1.25 (S 예시)"
+      },
+      "result": "편집은 모델에 즉시 적용. 새 entity 생성 시 floating editor.",
+      "error_cancel": "Enter 적용/Esc 필드변경 취소는 D. entity 배정에는 확인/지우기/종료 조작. 이후 상태 미확인.",
+      "persistence": "미확인: 이 장면 변경의 저장·재열기 결과.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM05",
+      "task": "T03",
+      "title": "Advanced Selection의 모드·검색·열 필터",
+      "source_ids": [
+        "hm-src-selection"
+      ],
+      "asset_ids": [
+        "hm-selection-4",
+        "hm-selection-5",
+        "hm-selection-6"
+      ],
+      "prerequisite": "entity selector type를 먼저 지정.",
+      "menu_path": "selector ellipsis; \".\"; RMB > Select > Advanced",
+      "steps": [
+        "Add/Remove/Intersect 및 선택 방법 설정.",
+        "열 제목 More로 속성 추가; 검색/열필터로 subset 제한."
+      ],
+      "fields": {
+        "methods": "By Material/By Property/By ID 등 현재 type에 유효한 방법",
+        "By ID": "다중 ID는 comma 구분",
+        "sync": "Sync with Quick Selection (Alt)"
+      },
+      "result": "기존 선택에 추가/제거/교집합. S의 search 문자열은 입력 도중 상태이며 완료 결과가 아님.",
+      "error_cancel": "OK/Cancel 관찰(S). 선택 없는 경우/취소 효과 미확인.",
+      "persistence": "Save Selection/Retrieve Selection은 user mark 대상(D); HM 저장 후 유지 여부 미확인.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM06",
+      "task": "T04",
+      "title": "Mesh Controls 트리→Editor→Mesh 명령",
+      "source_ids": [
+        "hm-src-mesh-controls",
+        "hm-src-mesh-controls-edit",
+        "hm-src-mesh-controls-mesh"
+      ],
+      "asset_ids": [
+        "hm-mesh-controls-edit-1",
+        "hm-mesh-controls-mesh-1"
+      ],
+      "prerequisite": "model control 1개 이상 활성. Local entities는 model 선택의 부분집합이어야 함.",
+      "menu_path": "Mesh > Mesh Controls; Browser RMB > Create; folder RMB > Mesh",
+      "steps": [
+        "Name/Entities와 설정을 Editor에서 지정.",
+        "Surface Mesh/Volume Mesh 등 폴더에서 Mesh."
+      ],
+      "fields": {
+        "precedence": "enabled local > model",
+        "selection": "model 미지정 시 on-the-fly; local은 필수",
+        "S_state": "local meshcontrol2, Element Size=10.0, 0 Surfaces"
+      },
+      "result": "설정 entity가 생성되어 Editor에 표시. Refinement Zone 단독 mesh는 지원하지 않음.",
+      "error_cancel": "model 선택 밖 local entity는 무시(D). 빈 선택의 오류/취소 미확인.",
+      "persistence": "controls는 database entity이며 외부 XML template 재사용 가능(D). XML 저장 메뉴는 미수집.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM07",
+      "task": "T04",
+      "title": "Cylinder feature control과 Select Surfaces",
+      "source_ids": [
+        "hm-src-tetra"
+      ],
+      "asset_ids": [
+        "hm-tetra-61",
+        "hm-tetra-65"
+      ],
+      "prerequisite": "VOLUME-TETRA-MESH.hm. Features에서 Holes 3D/Fillets 탐지.",
+      "menu_path": "Topology > Mesh Controls; Surface Mesh RMB > Create > Feature > Cylinder",
+      "steps": [
+        "Entities ellipsis→Hole3d surface 선택→OK.",
+        "feature control 입력."
+      ],
+      "fields": {
+        "Axial Mesh Size": 1,
+        "Divisions": 20
+      },
+      "result": "Cylinder control로 mesh 대상 특징을 지정. S는 선택 dialog 상태.",
+      "error_cancel": "Apply/OK/Cancel 관찰(S); 취소 결과 미확인.",
+      "persistence": "미확인: 이 장면 변경의 저장·재열기 결과.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM08",
+      "task": "T04",
+      "title": "Tetra 생성과 Representation Control 설정",
+      "source_ids": [
+        "hm-src-tetra"
+      ],
+      "asset_ids": [
+        "hm-tetra-22",
+        "hm-tetra-58",
+        "hm-tetra-75"
+      ],
+      "prerequisite": "위 튜토리얼의 정리된 solid; 다른 mesh 경로의 결과를 동일 실행으로 간주하지 않음.",
+      "menu_path": "3D > Tet > Create; 별도 Assembly > Controls",
+      "steps": [
+        "대안 경로 A: Tet에서 Solids 선택→Mesh.",
+        "대안 경로 B: 별도 Representation Control Manager에서 Tetra_tutorial 입력→OK. A/B는 연속실행이 아님."
+      ],
+      "fields": {
+        "Tet": "Average size 4; Second; Original component",
+        "representation": "Tetra_tutorial / SMT / size 2 / Second / layers 4"
+      },
+      "result": "Fig13은 Tet 결과; Fig34는 representation 설정; Fig45는 별도 controls 경로 결과.",
+      "error_cancel": "manager OK/Cancel 관찰. 중단/mesher 실패 미확인.",
+      "persistence": "미확인: 이 장면 변경의 저장·재열기 결과.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM09",
+      "task": "T05",
+      "title": "MAT1 생성과 PSHELL에 배정",
+      "source_ids": [
+        "hm-src-coffee-lid"
+      ],
+      "asset_ids": [
+        "hm-coffee-lid-4",
+        "hm-coffee-lid-5",
+        "hm-coffee-lid-6"
+      ],
+      "prerequisite": "coffee_lid.hm; PSHELL/PSHELL1 재료 미지정.",
+      "menu_path": "Model Browser RMB > Create > Material",
+      "steps": [
+        "plastic 생성→두 PSHELL에 배정."
+      ],
+      "fields": {
+        "MAT1": "plastic; E=1137; NU=0.26; A=8.1e-05",
+        "PSHELL.T": 2.5
+      },
+      "result": "Material=(1) plastic으로 표시(S).",
+      "error_cancel": "오류·취소 효과 미확인.",
+      "persistence": "저장·재열기 미확인.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM10",
+      "task": "T05",
+      "title": "온도 하중과 subcase 연결",
+      "source_ids": [
+        "hm-src-coffee-lid"
+      ],
+      "asset_ids": [
+        "hm-coffee-lid-7",
+        "hm-coffee-lid-9",
+        "hm-coffee-lid-10",
+        "hm-coffee-lid-11"
+      ],
+      "prerequisite": "기존 constraints; 재료배정 완료.",
+      "menu_path": "Browser Create > Load Collector; Analyze > Temperatures; Browser Create > Load Step",
+      "steps": [
+        "TEMPD→온도 Nodes→Create and Close→SUBCASE 참조."
+      ],
+      "fields": {
+        "Temperature": "PSHELL/PSHELL1 nodes; Value=200",
+        "SUBCASE": "brew cycle; Linear Static; SPC=constraints; TEMP=temp_initial; TEMP_LOAD=thermal_loading",
+        "temp_initial": {
+          "Card Image": "TEMPD",
+          "T1": 70,
+          "evidence": "D: Create Load Collector 1–5; S: hm-coffee-lid-7"
+        },
+        "thermal_loading": {
+          "Card Image": "TEMPD",
+          "T1": 70,
+          "evidence": "D: Create Load Collector 6–9; 개별S 미보유"
+        }
+      },
+      "result": "S:2995 Nodes; 하중/참조 입력상태.",
+      "error_cancel": "오류·취소 효과 미확인.",
+      "persistence": "저장·재열기 미확인.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM11",
+      "task": "T06",
+      "title": "Element Quality 범례와 criterion 범위",
+      "source_ids": [
+        "hm-src-quality",
+        "hm-src-quality-criteria"
+      ],
+      "asset_ids": [
+        "hm-quality-2",
+        "hm-quality-criteria-1",
+        "hm-quality-criteria-2",
+        "hm-quality-criteria-4"
+      ],
+      "prerequisite": "criteria file과 검토할 mesh.",
+      "menu_path": "View Controls face color > Element Quality; legend > Criteria",
+      "steps": [
+        "criterion 선택→slider 조절.",
+        "RMB Double Slider로 범위 제한."
+      ],
+      "fields": {
+        "display": "best blue/worst red (single-criterion legend)",
+        "threshold": "legend threshold 편집은 criteria file 자체를 변경하지 않음"
+      },
+      "result": "quality 색상, Compound QI, failed 수/비율을 함께 표시. S의 수치는 예시 모델 결과.",
+      "error_cancel": "Close 또는 <로 single legend 종료. threshold 숫자 삭제+Enter로 default 복원(D).",
+      "persistence": "criteria file 변경은 view에 반영; 반대방향 threshold 변경은 file에 미반영(D).",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM12",
+      "task": "T06",
+      "title": "Geometry Surface Repair의 오류→미세대화상자→정상 edges",
+      "source_ids": [
+        "hm-src-tetra"
+      ],
+      "asset_ids": [
+        "hm-tetra-3",
+        "hm-tetra-6",
+        "hm-tetra-11",
+        "hm-tetra-14",
+        "hm-tetra-16"
+      ],
+      "prerequisite": "튜토리얼 geometry surface; mesh repair와 구분.",
+      "menu_path": "2D > Surface Repair > Validate; Edges",
+      "steps": [
+        "all surfaces Find/Fix.",
+        "잔여 edge Patch 및 Stitch/Intersect."
+      ],
+      "fields": {
+        "Stitch Tolerance": 0.1,
+        "remaining": "Free edges 3",
+        "edge Tolerance": 0.5
+      },
+      "result": "red free edges를 순회 후 green edges가 된 정적 결과.",
+      "error_cancel": "수정할 geometry 문제는 D/S로 근거. 취소/불가 사례 미확인.",
+      "persistence": "미확인: 이 장면 변경의 저장·재열기 결과.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM13",
+      "task": "T06",
+      "title": "2D Auto Quality 수정과 보존 노드",
+      "source_ids": [
+        "hm-src-auto-quality"
+      ],
+      "asset_ids": [],
+      "prerequisite": "수정할 2D elements.",
+      "menu_path": "2D > Auto Quality",
+      "steps": [
+        "elements 선택.",
+        "필요시 Anchors 지정; Review 영역 확인.",
+        "Auto Quality 실행."
+      ],
+      "fields": {
+        "options": "parameter/criteria files",
+        "review": "영역 layers +/-; review 종료"
+      },
+      "result": "자동 quality 수정 기능(D). 실제 수치 전후/성공 UI는 미수집.",
+      "error_cancel": "미확인: 이 장면의 오류 발생 및 취소 뒤 상태.",
+      "persistence": "미확인: 이 장면 변경의 저장·재열기 결과.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM14",
+      "task": "T06",
+      "title": "Midmesh Repair/Fill의 오류집합과 수리",
+      "source_ids": [
+        "hm-src-midmesh-repair"
+      ],
+      "asset_ids": [
+        "hm-midmesh-repair-3"
+      ],
+      "prerequisite": "midmesh face/edge; loop는 1D topology/free edge를 참조.",
+      "menu_path": "2D > Midmesh > Repair/Fill",
+      "steps": [
+        "elements/edges→Find.",
+        "문제집합 순회→Repair Face, Ignore Gap 또는 Fill Face."
+      ],
+      "fields": {
+        "Find": "intersection/gap elements 및 gap edges",
+        "optional": "Suppress edges on fill"
+      },
+      "result": "교차 요소가 Elements selector에 추가. face 수리 후 관련 intersection set 제거(D).",
+      "error_cancel": "Ignore Gap은 gap 표지만 해제(D). 문제 색 비활성화는 순회에 영향 없음. 취소/실패복구 미확인.",
+      "persistence": "미확인: 이 장면 변경의 저장·재열기 결과.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM15",
+      "task": "T06",
+      "title": "Unresolved reference 표시와 교체",
+      "source_ids": [
+        "hm-src-solver-data"
+      ],
+      "asset_ids": [
+        "hm-solver-data-18"
+      ],
+      "prerequisite": "Fatigue load collector가 unresolved id14를 참조한 예시.",
+      "menu_path": "Entity Editor > unresolved field RMB > Clear unresolved entity",
+      "steps": [
+        "Value field 선택→새 entity 지정."
+      ],
+      "fields": {
+        "S_state": "TLOAD1/EXCITEID=14 [Unresolved Entity]"
+      },
+      "result": "미해결 참조의 표시와 재배정 경로(D/S). 완료 후화면 미수집.",
+      "error_cancel": "Unresolved ID import/export는 제한 지원(D). Esc는 field edit 취소; 미해결 해제의 복구효과 미확인.",
+      "persistence": "미확인: 이 장면 변경의 저장·재열기 결과.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM16",
+      "task": "T07",
+      "title": "Part assembly Save As와 새 session 재열기",
+      "source_ids": [
+        "hm-src-assembly-save"
+      ],
+      "asset_ids": [
+        "hm-assembly-save-1",
+        "hm-assembly-save-2"
+      ],
+      "prerequisite": "Part Browser의 part assembly 선택.",
+      "menu_path": "Part assembly RMB > Save As",
+      "steps": [
+        "representation directory에 binary 저장.",
+        "새 HyperMesh session에서 binary 열기."
+      ],
+      "fields": {
+        "example": "LeftRail_A_000433_Safety"
+      },
+      "result": "계층/components/properties/materials를 포함하는 독립 binary. Fig2는 재열린 subtree.",
+      "error_cancel": "Save dialog/overwrite/Cancel 동작 미수집.",
+      "persistence": "보존 대상과 새 session 결과가 D/S로 연결; 모든 entity 값의 개별 동일성은 미검증.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM17",
+      "task": "T07",
+      "title": "HM Model Save As→Open",
+      "source_ids": [
+        "hm-src-save-open"
+      ],
+      "asset_ids": [],
+      "prerequisite": "Teamcenter integration 문서의 BOM 계층/representations가 있는 HM session.",
+      "menu_path": "File > Save As > HyperMesh Model; File > Open > HyperMesh Model",
+      "steps": [
+        "작업 폴더에 저장.",
+        "저장한 model 선택하여 열기."
+      ],
+      "fields": {
+        "dialogs": "Save Model As / Open Model"
+      },
+      "result": "BOM 정보 및 마지막 loaded representations 보존이라고 D에 명시.",
+      "error_cancel": "overwrite/저장실패/취소는 미확인.",
+      "persistence": "동일 문서의 Save/Open subsection에서 보존 약속 확인. Teamcenter 연결없이 같은 결과를 직접 검증하지 않음.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM18",
+      "task": "T07",
+      "title": "Abaqus Parts and Instances solver export",
+      "source_ids": [
+        "hm-src-export",
+        "hm-src-part-browser"
+      ],
+      "asset_ids": [
+        "hm-part-browser-13"
+      ],
+      "prerequisite": "Abaqus parts/instances 구조 모델.",
+      "menu_path": "File > Export > file type; Export Options",
+      "steps": [
+        "file name/path 지정.",
+        "Parts and Instances 확인→Export."
+      ],
+      "fields": {
+        "Parts and Instances": "켜면 해당 형식; 끄면 flat Abaqus input",
+        "Part Per Include": "별도 선택지"
+      },
+      "result": "solver input file 작성 경로(D). 실제 생성 deck은 미보유.",
+      "error_cancel": "S에 overwrite/invalid element/ID overflow 경고 설정과 Cancel. 실제 경고 dialog/취소 후 file 상태 미확인.",
+      "persistence": "Export path와 옵션은 D/S; 다시 import한 deck 비교는 미검증.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM19",
+      "task": "T08",
+      "title": "OptiStruct job 제출과 로그 확인",
+      "source_ids": [
+        "hm-src-coffee-lid"
+      ],
+      "asset_ids": [
+        "hm-coffee-lid-12"
+      ],
+      "prerequisite": "앞 thermal subcase 구성.",
+      "menu_path": "Analyze > Run OptiStruct Solver",
+      "steps": [
+        "lid_complete.fem Save/Export→Compute Console Run."
+      ],
+      "fields": {
+        "export": "all",
+        "run": "analysis optimization",
+        "memory": "default"
+      },
+      "result": "문서 성공표시: ANALYSIS COMPLETED; .out 오류조사. 실행하지 않음.",
+      "error_cancel": "실패 메시지·Cancel UI 미수집.",
+      "persistence": "결과 파일은 입력 deck directory에 생성(D); 실제 파일 미보유.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM20",
+      "task": "T08",
+      "title": "Python API Recording 상태와 parameter/code output",
+      "source_ids": [
+        "hm-src-recording"
+      ],
+      "asset_ids": [
+        "hm-recording-4",
+        "hm-recording-5",
+        "hm-recording-6",
+        "hm-recording-8",
+        "hm-recording-10",
+        "hm-recording-13"
+      ],
+      "prerequisite": "View > Ribbons > Developer 활성.",
+      "menu_path": "Developer > Recording",
+      "steps": [
+        "Start→interactive action→Stop.",
+        "Recorded Functions/Parameters 편집→Generate."
+      ],
+      "fields": {
+        "parameter": "Name/Type/Default Value",
+        "output": "Code Destination; Include all functions; Ignore popups 등"
+      },
+      "result": "Stop 후 dialog; 함수/인수/값과 parameter mapping을 표시.",
+      "error_cancel": "Cancel 버튼(S). 중복 parameter명 불가(D). 다중 selector/Editor selector 및 reverse/attached/adjacent/face 기록은 제한(D).",
+      "persistence": "code는 console 출력/파일 저장 가능(D); 실제 생성 script는 미보유.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM21",
+      "task": "T09",
+      "title": "Curve Editor XY 표와 CSV 입출력",
+      "source_ids": [
+        "hm-src-curves",
+        "hm-src-finger"
+      ],
+      "asset_ids": [
+        "hm-curves-2",
+        "hm-finger-4"
+      ],
+      "prerequisite": "Model Browser에서 Curve 생성. TABLES1100 수치 예는 2025.1 OptiStruct tutorial.",
+      "menu_path": "Model > Curves 또는 Browser RMB > Create > Curve; Table cell RMB",
+      "steps": [
+        "X1/Y 입력→Tab 다음행.",
+        "CSV Import 또는 Export to CSV→경로/이름→Save."
+      ],
+      "fields": {
+        "sample": "TABLES1100: (1.1338,1.5506), (1.2675,2.4367)",
+        "CSV": "정렬된 numeric 2 columns"
+      },
+      "result": "표 데이터로 plot 표시. 튜토리얼은 Close 후 Card Image=TABLES1 지정.",
+      "error_cancel": "blank/alphanumeric row, duplicate X, 추가열은 import에서 빠질 수 있음(D). 취소 효과 미확인.",
+      "persistence": "CSV 생성이 D로 명시. 실제 CSV roundtrip/모델 재열기 미검증.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM22",
+      "task": "T09",
+      "title": "Entity Editor 배열 표의 CSV 및 지원제한",
+      "source_ids": [
+        "hm-src-solver-data"
+      ],
+      "asset_ids": [
+        "hm-solver-data-1",
+        "hm-solver-data-2",
+        "hm-solver-data-11"
+      ],
+      "prerequisite": "1D array를 갖는 entity field.",
+      "menu_path": "1D array field RMB > Import from file / Append from file / Export to file",
+      "steps": [
+        "CSV로 1D array table read/write.",
+        "TSTEP table에서 disabled header RMB Status로 활성."
+      ],
+      "fields": {
+        "restriction": "2D/mixed arrays, unstructured control table은 CSV 기능 미지원"
+      },
+      "result": "entity별 table 입력/출력 지원범위를 구별.",
+      "error_cancel": "미지원 table에서는 기능 불가(D). invalid CSV/취소 처리 미확인.",
+      "persistence": "CSV file save 경로 UI/재import 결과 미수집.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM23",
+      "task": "T09",
+      "title": "Sketch units와 scaling 제한",
+      "source_ids": [
+        "hm-src-sketch-units"
+      ],
+      "asset_ids": [],
+      "prerequisite": "sketch 작업 중이 아닌 session.",
+      "menu_path": "Preferences > Sketching > Units / Scale sketch data / Grid Spacing",
+      "steps": [
+        "units와 scaling 옵션 지정."
+      ],
+      "fields": {
+        "default": "MMKS (mm kg N s)",
+        "scope": "sketch/dimension/parameter 데이터; 해석모델 전체 단위 보장 아님"
+      },
+      "result": "단위변경 시 sketch/parameter 및 실현 lines/surfaces scaling 규칙(D).",
+      "error_cancel": "sketching 진행 중 unit 변경 불가. 혼합단위 모델은 별도 session에서 일치시킨 뒤 import 권고(D).",
+      "persistence": "consistent units로 저장 후 import 지침. preference dialog UI와 실제 변환 예는 미수집.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM24",
+      "task": "T06",
+      "title": "Undo/Redo 메뉴와 history 경계",
+      "source_ids": [
+        "hm-src-undo"
+      ],
+      "asset_ids": [
+        "hm-undo-1"
+      ],
+      "prerequisite": "undo 가능한 이전작업이 있는 session.",
+      "menu_path": "Edit > Undo / Redo; Ctrl+Z / Ctrl+Y",
+      "steps": [
+        "단일 또는 history menu 복수 action 선택."
+      ],
+      "fields": {
+        "defaults": "100 actions / 2500 MB; File > Preferences > Performance"
+      },
+      "result": "history 목록에서 일괄 되돌리기/재적용(D/S).",
+      "error_cancel": "미지원 operation 또는 macro/Tcl 실행 시 history reset. memory limit 초과는 오래된 action 제거(D).",
+      "persistence": "Undo history의 HM 저장/재열기 유지 여부 미확인.",
+      "status": "partial",
+      "unknowns": [
+        "직접 앱 실행 및 동일 입력 재현검증 없음.",
+        "문서에 없는 실패·취소·저장 후 상태를 추정하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    },
+    {
+      "id": "HM25",
+      "task": "T03",
+      "title": "Show/Hide 미세대화상자의 삼상태 가시성",
+      "source_ids": [
+        "hm-src-visibility"
+      ],
+      "asset_ids": [
+        "hm-visibility-1",
+        "hm-visibility-6"
+      ],
+      "prerequisite": "표시할 entity가 있는 모델; selector type와 기존 selection 상태를 구별.",
+      "menu_path": "View Controls > Show/Hide; browser/graphics context menu",
+      "steps": [
+        "entity type checkbox 또는 All/None/Only 조작.",
+        "guide bar type 지정; click 숨기기/Shift+click 보이기."
+      ],
+      "fields": {
+        "checkbox": "checked=모두표시; line=일부표시; empty=미표시",
+        "scope": "Isolate는 모든 다른 entity type도 숨김; Isolate Entity는 같은type만 대상"
+      },
+      "result": "entity 표시전환의 명시 동작(D); S는 browser menu와 checkbox 표시상태.",
+      "error_cancel": "D 키 tool 진입/종료. selection 유무에 따른 명령범위는 D에 설명; 취소/실패 상태 미확인.",
+      "persistence": "가시성의 HM 저장/재열기 유지 여부 미확인.",
+      "status": "partial",
+      "unknowns": [
+        "동일 모델에서 조작 전후의 연속 검증 없음.",
+        "다른 client(HyperGraph/MotionView) 동작을 HyperMesh에 전용하지 않음."
+      ],
+      "design_path_grounded": false,
+      "full_workflow_ready": false,
+      "reproduction_verified": false
+    }
+  ],
+  "gaps": [
+    {
+      "id": "HM-G01",
+      "scope": "all",
+      "detail": "R=0,V=0. 실제 앱·solver 실행/영상 시간표시/동일 데이터 재현검증은 수행하지 않음."
+    },
+    {
+      "id": "HM-G02",
+      "scope": "versions",
+      "detail": "2025/2025.1 help 경로를 분리. 스크린샷의 독립 빌드 번호는 확인되지 않아 도움말 수록 버전만 기록."
+    },
+    {
+      "id": "HM-G03",
+      "scope": "legacy",
+      "detail": "공식 Tool Finder에서 legacy panels→현행 ribbon/browser/Editor 대체를 확인. finger tutorial의 다른 SPC/panel 절차는 이 명세에 사용하지 않음. HyperMesh CFD/HyperGraph 자료를 현행 structural HyperMesh 근거로 대체하지 않음."
+    },
+    {
+      "id": "HM-G04",
+      "scope": "T01,T05,T07",
+      "detail": "coffee_lid.hm/Arthritis_Finger.fem/VOLUME-TETRA-MESH.hm 원본 모델 및 solver deck/결과파일 미보유. 상태는 독립 공식 예시이며 한 모델의 연속실행으로 합치지 않음."
+    },
+    {
+      "id": "HM-G05",
+      "scope": "T04,T06",
+      "detail": "Auto Quality의 실제 guide bar/성공 전후, mesher 실패/중단/복구, mesh control XML 저장 메뉴 미수집. Geometry Surface Repair와 mesh repair를 구별."
+    },
+    {
+      "id": "HM-G06",
+      "scope": "T07",
+      "detail": "Export된 file의 내용/재import 동일성, overwrite dialog, 저장실패, Cancel 뒤 disk/session 상태 미확인."
+    },
+    {
+      "id": "HM-G07",
+      "scope": "T09",
+      "detail": "Sketch units dialog 및 numeric 변환 screenshot 부재. Curve CSV invalid-input message/roundtrip은 문서 설명만 있으며 직접검증 없음."
+    },
+    {
+      "id": "HM-G08",
+      "scope": "completeness",
+      "detail": "성공경로의 메뉴/입력/정적결과가 있어도 오류·취소·저장 연결이 닫히지 않아 모든 scene을 partial로 보수 분류. 수집 종료는 전체 재현준비 완료가 아님."
+    }
+  ],
+  "evidence_policy": {
+    "D": "공식 세부문서",
+    "S": "문서에서 다운로드하고 실제 시각검사한 UI 발췌",
+    "V": 0,
+    "R": 0,
+    "grounded_rule": "오류/취소/저장 경계까지 충분히 연결되지 않아 모두 partial; 직접 재현검증을 주장하지 않음.",
+    "source_summary_limit_words": 200,
+    "verbatim_policy": "25단어 초과 원문 인용 없음. 메뉴/필드명·수치만 필요한 범위에서 유지."
+  },
+  "asset_counts": {
+    "total": 56,
+    "ui_reference": 51,
+    "model_view_only": 5,
+    "count_rule": "kind만으로 UI 합계 금지; count_as_ui_reference 또는 ui_scope를 사용."
+  },
+  "key": "hypermesh",
+  "evidence_scope": "S/D 자료. 이번 동일 입력 직접 실행(R)·연속 영상(V) 검증 없음.",
+  "asset_path_scope": "file은 이 별도 자료집의 상대 경로. 공개 저장소에 이미지 원본이 있다는 뜻이 아님."
+}
