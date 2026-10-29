@@ -70,9 +70,10 @@ caelab-prep mesh part.step --output mesh-assets --size 2.0
 - 공용 자산은 이 저장소에서 관리합니다. 기존 외부 자산은 소유 위치·의존 관계·라이선스를 확인해 연결하고, 같은 부품을 갤러리와 앱에서 따로 구현하지 않습니다. 별도 패키지 배포 여부는 재사용 방식에 맞춰 결정합니다.
 - 공개 소스의 재사용, 공개 규격과 정상 실행 동작을 바탕으로 한 독립 구현을 우선합니다. 외부 프로그램의 분석·재배포는 해당 허가 조건을 확인합니다.
 
-공용 기반의 목표·후보 비교·개발 순서는 [DESIGN.md](DESIGN.md), 현재 실행 코드와 목표 구조의 경계는 [ARCHITECTURE.md](ARCHITECTURE.md), 공개 SDK 사용은 [THIRD_PARTY.md](THIRD_PARTY.md)에 둡니다. 현재 Qt/VTK·자체 문서 코어·Gmsh 조합은 첫 원문 편집 흐름에 대한 구현 결정입니다. SMTK/CMB·FEBioStudio·SALOME와 전체 CAD→조건→솔버 흐름을 빌드·실행 비교해 최선이라고 선정한 결과는 아닙니다.
+공용 기반의 목표·후보 비교는 [DESIGN.md](DESIGN.md), **구체적인 자산·계약·코드 이행·갤러리 장면·작업 순서·첫 납품 범위는 [공용 CAE 자산·기반 실행 계획](docs/shared-cae-foundation-plan.md)**에 둡니다. 현재 실행 코드와 목표 구조의 경계는 [ARCHITECTURE.md](ARCHITECTURE.md), 공개 SDK 사용은 [THIRD_PARTY.md](THIRD_PARTY.md)를 따릅니다. 현재 Qt/VTK·자체 문서 코어·Gmsh 조합은 첫 원문 편집 흐름에 대한 구현 결정입니다. SMTK/CMB·FEBioStudio·SALOME와 전체 CAD→조건→솔버 흐름을 빌드·실행 비교해 최선이라고 선정한 결과는 아닙니다.
 
 ## 확보한 개발 자산
 
 [BeidPrep 1.0.1 시험 기록](docs/beidprep-evaluation.md)에 실제 수행·미수행 범위와 저장 오류를 기록했습니다. 소형 입력·저장본, Windows GUI 시험 스크립트, 수동 실행 전용 GitHub Actions를 함께 보관합니다. 실행 파일과 솔버 배포본은 Git에 포함하지 않습니다.
+
 
