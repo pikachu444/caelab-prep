@@ -74,6 +74,9 @@ caelab-prep mesh part.step --output mesh-assets --size 2.0
 
 ## 확보한 개발 자산
 
+계획의 구체적인 범위는 [실행 계획과 완료 조건](docs/shared-cae-foundation-plan.md), [참조 제품 비교](docs/gui-reference-matrix.md), [다중 파트·자유도·데이터 설계](docs/cae-model-data-design.md)에 둡니다. 공용 GUI/기반의 첫 묶음 A와 다중 파트 데이터 기반 B는 각 조건을 통과하면 완료로 기록하며 후속 요구와 구분합니다.
+
 [BeidPrep 1.0.1 시험 기록](docs/beidprep-evaluation.md)에 실제 수행·미수행 범위와 저장 오류를 기록했습니다. 소형 입력·저장본, Windows GUI 시험 스크립트, 수동 실행 전용 GitHub Actions를 함께 보관합니다. 실행 파일과 솔버 배포본은 Git에 포함하지 않습니다.
+
 
 
