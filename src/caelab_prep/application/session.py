@@ -329,7 +329,8 @@ class PrepSession:
                     archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
                     for resource in document.resources.values():
                         archive.writestr(f"raw/{resource.id}.rad", resource.raw)
-                with open(temp, "rb") as stream:
+                # Windows' _commit/FlushFileBuffers requires a writable handle.
+                with open(temp, "r+b") as stream:
                     os.fsync(stream.fileno())
                 os.replace(temp, target)
             except (OSError, zipfile.BadZipFile) as exc:

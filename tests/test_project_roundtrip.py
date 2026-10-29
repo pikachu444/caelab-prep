@@ -6,6 +6,7 @@ import zipfile
 import pytest
 
 from caelab_prep.application import PrepSession
+from caelab_prep.application import session as session_module
 from caelab_prep.cae_core import PrepError
 
 
@@ -140,3 +141,26 @@ def test_casefold_include_collisions_are_diagnosed_before_save(tmp_path):
     destination = tmp_path / "collision.caeprep"
     with pytest.raises(PrepError) as error: session.save_project(str(destination))
     assert error.value.code == "project_path_collision" and not destination.exists()
+
+
+def test_failed_project_sync_preserves_saved_file_and_unsaved_model(tmp_path, monkeypatch):
+    session = PrepSession(); session.open_rad(str(FIXTURE))
+    project = tmp_path / "a.caeprep"; session.save_project(str(project))
+    saved_bytes = project.read_bytes()
+    material = next(c for c in session.list_cards() if c["keyword"] == "/MAT/PLAS_TAB/1")
+    session.set_field(material["id"], "young_modulus", 205000)
+    before = session.describe()
+    events = []; session.subscribe(events.append)
+
+    def fail_sync(_descriptor):
+        raise OSError("simulated storage sync failure")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(session_module.os, "fsync", fail_sync)
+        with pytest.raises(PrepError) as error: session.save_project(str(project))
+    assert error.value.code == "project_write_error"
+    assert project.read_bytes() == saved_bytes
+    assert session.describe() == before and session.describe()["dirty"]
+    assert events == [] and list(tmp_path.glob(".caeprep-*")) == []
+    reopened = PrepSession(); reopened.open_project(str(project))
+    assert reopened.card_fields(material["id"])[1]["value"] == 210000

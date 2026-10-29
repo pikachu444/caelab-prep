@@ -46,7 +46,7 @@ caelab-prep mesh part.step --output mesh-assets --size 2.0
 
 `--card`는 해당 파일의 실제 고유 헤더 또는 작업 문서의 카드 ID를 받습니다. 값은 덱의 단위계를 따릅니다. Gmsh는 시스템에 맞는 공유 라이브러리도 필요할 수 있습니다.
 
-검사에는 `python -m pip install -e ".[gui,cad,dev]"`와 테스트 입력 생성용 `cadquery-ocp`를 설치한 뒤 `python -m pytest`를 사용합니다. OCP는 제품 의존성이 아닙니다. CI의 Qt 검사는 실제 폼·문서 연결을 확인하며 3D 렌더링이나 Windows GUI 검증을 대신하지 않습니다.
+개발 검사는 CI와 같이 환경을 나눕니다. 코어/CLI는 `.[dev]`, Qt 문서 검사는 `.[gui,dev]`, CAD worker 검사는 별도 가상환경에 `.[cad,dev]`와 `cadquery-ocp==7.8.1.1.post1`을 설치합니다. 해당 OCP는 테스트 입력 생성용이며 VTK 9.3.1을 요구하므로 GUI 환경의 VTK 9.4 이상과 분리합니다. OCP는 제품 의존성이 아닙니다. CI의 Qt 검사는 실제 폼·문서 연결을 확인하며 3D 렌더링이나 Windows GUI 검증을 대신하지 않습니다.
 
 ## 저장소의 역할
 

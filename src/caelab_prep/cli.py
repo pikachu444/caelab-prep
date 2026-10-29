@@ -23,7 +23,8 @@ def _session(path: str):
 
 
 def _print(value):
-    print(json.dumps(value, ensure_ascii=False, indent=2, default=str))
+    # JSON escapes keep machine output valid on legacy Windows pipe encodings.
+    print(json.dumps(value, ensure_ascii=True, indent=2, default=str))
 
 
 def _resolve_card(session, identifier):

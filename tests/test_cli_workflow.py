@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -36,4 +37,19 @@ def test_cli_invalid_edit_does_not_write_a_project(tmp_path):
     code, result = call("edit", source, "--card", "/not/a/card", "--field", "young_modulus",
                         "--value", "0", "--output", output)
     assert code != 0 and "error" in result
+    assert not output.exists()
+
+
+def test_cli_structured_error_survives_ascii_stdout(tmp_path):
+    source = Path(__file__).parents[1] / "scripts/evaluation/models/two_shell_plates_0000.rad"
+    output = tmp_path / "invalid.caeprep"
+    result = subprocess.run(
+        [sys.executable, "-m", "caelab_prep", "edit", str(source),
+         "--card", "/MAT/PLAS_TAB/1", "--field", "young_modulus", "--value", "0",
+         "--output", str(output)], capture_output=True, text=True,
+        env={**os.environ, "PYTHONIOENCODING": "ascii"},
+    )
+    assert result.returncode == 1
+    error = json.loads(result.stdout)["error"]
+    assert error["code"] == "invalid_value" and error["message"]
     assert not output.exists()
