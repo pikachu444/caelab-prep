@@ -2,6 +2,8 @@
 
 기준: `caelab-prep` main `5d16e81c7ec7c92499401d63208039424bf73cc9`, 2026-10-29. 본 문서는 **후속 구현의 작업서**다. Astra의 독립 설계와 별도 Workbench 소비자 검토를 통합했다. 이번에는 제품 코드를 변경하거나 아래 구현 검증을 실행하지 않았다. [공용 기반 설계](shared-cae-foundation-plan.md)의 P0–P9/A1–A8과 [모델·데이터 설계](cae-model-data-design.md)의 B1–B6을 유지하며 실행 경계를 구체화한다. Workbench의 실제 재사용 단위·코드 근거·W1–W3 종료 조건은 [재사용 계획](workbench-reuse-plan.md)을 따른다.
 
+2026-10-30 보완: 고급 메셔는 이 표에 있다고 구현 가능성이 입증된 것이 아니다. 실제 공개 코드·상용 매뉴얼·알고리즘 조사와 별도 SDK 실험은 [메셔 실현 가능성 로드맵](mesher-feasibility-roadmap.md)에 둔다. P7c의 후보 선택 뒤 바로 제품 구현을 확정하지 않고 F0–F2 실증을 선행한다. 아래 앱/파일 검증과 그 별도 SDK 실험을 혼동하지 않는다.
+
 ## 1. 검토 결론과 수정할 선행 관계
 
 공용 CAE 자산·기반을 개발한다는 저장소 목적과 현재 Qt/VTK·RAD 원문 보존의 출발점은 유지한다. 공용 GUI, 문서/명령, 모델·관계, CAD/메시, 자동화와 배포를 각각 납품 가능한 묶음으로 끝낸다. 모든 솔버 물리와 모든 메시 생성법을 갖출 때까지 첫 산출물을 미루지 않는다.
@@ -25,7 +27,8 @@
 | 3. P2 → P3/A | 공용 자산·부품 갤러리·실제 작업 화면 | 같은 코드 사용과 A1–A8의 편집/재열기/Windows 외관 통과 |
 | 4. P6a → P7a/C | 최소 자원 채택과 첫 CAD/메시 | 세 CAD의 tri/tet 생성·품질·조건·Undo·재열기·Starter 읽기 |
 | 5. P6b → P6c/B | 조립·혼합 자유도·관계·대용량 | B1–B6와 고정 시간/메모리 예산 통과 |
-| 독립 확장 | P4 곡선 앱, P5 두 번째 배치, P7b 수정/재메시, P7c-S/M/H | 아래 각 카드의 기능·자료·파일 조건으로 따로 종료 |
+| 독립 확장 | P4 곡선 앱, P5 두 번째 배치, P7b 수정/재메시 | 아래 각 카드의 기능·자료·파일 조건으로 따로 종료 |
+| 조건부 메시 확장 | P7c-S/M/H와 자동 커널 연구 | 실제 코드/API → 독립 재현 → 지원 형상군 실증 뒤에만 제품 연결. 평가 no-go와 기능 완료 구분 |
 | 실제 소비 | Workbench W1 공용 입력, W2 독립 Prep, W3 RAD 실행 | 각 소비자의 실제 작업 통과. 하나의 성공으로 나머지를 완료 처리하지 않음 |
 | 점진 적용 | P8의 API/CLI/IPC/MCP, P9의 각 묶음 배포 | 선택한 전달 방식과 배포 묶음별로 종료 |
 
@@ -181,6 +184,8 @@ P0 종료 뒤에는 계획서를 새로 늘리는 작업 대신 P1의 실제 계
 
 **선행/입력:** P6a, 기존 worker, C의 고정 CAD/단위/메시 크기/element 범위, 고정 OpenCourant Starter 버전. C는 열린 CAD surface의 tri3 shell과 closed solid의 tet4를 구별한다.
 
+기존 uniform tri/tet의 재현 근거는 재사용한다. 새 face/volume local sizing과 conformal/independent interface는 [F1/F2](mesher-feasibility-roadmap.md)를 통과한 recipe만 제품에 연결한다. 준비된 mesh를 다루는 P6a와 공용 GUI/문서 기반은 이 실증과 병행할 수 있다. 해당 새 동작이 미실증이면 C 전체 완료로 세지 않는다.
+
 **작업/산출물:**
 
 1. GUI에서 CAD import와 dimension/전역 mesh-size/명시 길이단위를 선택하고 Gmsh worker로 후보를 생성한다. C에서 선택한 face/volume에 국소 size를 지정하는 최소 조절도 추가한다. 현재 worker의 uniform min/max보다 확장되는 기능이며, geometry UUID에 속하는 meshing recipe로 저장하고 preview·재생성에 반영한다. edge UUID/1D seed와 자동 adaptive sizing은 후속이다. XAO/MSH/metadata를 한 candidate 묶음으로 다룬다. 후보 생성은 문서 변경이 아니다.
@@ -195,7 +200,7 @@ P0 종료 뒤에는 계획서를 새로 늘리는 작업 대신 P1의 실제 계
 
 **지정 확인:** 새 `tests/test_candidate_adoption.py`, `tests/test_mesh_quality.py`, `tests/test_radioss_generation.py`와 기존 `test_gmsh_adapter.py`/project/GUI 관련 검사. 실제 SDK 초기화 후 고정 CAD 3개를 생성하고 품질·채택·Undo·save/reopen을 수행한다. 실제 Windows 3D에서 CAD와 mesh를 구분해 선택하고 문제 요소를 표시한다. 삼각 셸과 tetra 각각 native export를 Starter로 읽혀 node/element/part/material/property/구속의 값·개수를 확인한다. 사용자 파일 로딩 경로를 그대로 쓰며 입력 이름별 특별 처리를 금지한다.
 
-**종료:** C의 두 topology 흐름과 세 입력에서 후보·정본·파일·native 경계가 모두 연결되고 지정 품질을 통과한다. 실제 Starter가 없으면 native 플랫폼 확인 보류이며 C 완료가 아니다. 대용량/일반 재메시가 남았어도 C를 무한 확장하지 않는다.
+**종료:** C의 두 topology 흐름과 세 입력에서 후보·정본·파일·native 경계가 모두 연결되고 지정 품질을 통과한다. 전체 생성 cell inventory와 SDK 오류를 확인하며 return code 0·일부 요소의 양의 quality만으로 통과시키지 않는다. local size·공유/독립 경계 조건도 실제 충족해야 한다. 실제 Starter가 없으면 native 플랫폼 확인 보류이며 C 완료가 아니다. 대용량/일반 재메시가 남았어도 C를 무한 확장하지 않는다. 세 입력은 첫 연결 검증이며 상용 수준의 robustness 증명이 아니다.
 
 **이번에 안 함:** 모든 CAD 치유, 자동 중립면, hex/sweep, 고차/quad meshing, 일반 mesh 수술, 무제한 contact 생성, 전체 RAD 카드, Engine 자동 작성/solver 실행·후처리.
 
@@ -237,9 +242,11 @@ P0 종료 뒤에는 계획서를 새로 늘리는 작업 대신 P1의 실제 계
 
 **이번에 안 함:** 임의 mesh 수술 전체, 모든 CAD topology 변경 추적, 모든 손상 geometry 치유.
 
-## 15. P7c — 선/준비면, 중립면, quad/sweep/혼합 mesh의 후속 기능
+## 15. P7c — 실증 후 착수할 메시 확장과 별도 연구
 
 P7c는 하나의 무기한 연구 과제가 아니다. `P7c-S`, `P7c-M`, `P7c-H`를 독립적으로 착수/종료한다. P7c-S는 자동 중립면 구현을 기다리지 않고 준비된 선/면을 사용해 먼저 끝낼 수 있다. 한 기능이 실패해도 C/B나 다른 P7c 기능 완료를 취소하지 않는다.
+
+다음 표는 **제품 연결을 진행할 수 있을 때의 목표 조건**이며 모두 구현 가능한 것으로 확정한 backlog가 아니다. [F0–F2 실증](mesher-feasibility-roadmap.md)을 기능별로 통과해야 착수한다. 복잡 rib/boss·가변두께 중립면과 일반 CAD 자동 all-hex는 현재 확정 구현/납기에 포함하지 않으며 연구·SDK·외부 프로그램 평가로 분류한다.
 
 | 작업 | 고정 첫 입력/기능 | 산출물과 지정 확인 | 종료 조건 / 제외 |
 |---|---|---|---|
@@ -249,7 +256,7 @@ P7c는 하나의 무기한 연구 과제가 아니다. `P7c-S`, `P7c-M`, `P7c-H`
 
 H-T는 **중립 생성·편집 완료**와 **RAD native 완료**를 분리한다. 중립 완료에는 고정한 전이 fixture의 연결성·품질·채택·Undo·저장/재열기가 필요하다. RAD native 완료에는 모든 요소 family가 실제 지원되는 전이 모델 최소 한 개의 native 출력·Starter 읽기를 추가로 통과해야 한다. 지원되는 전이 모델이 없으면 native 단계는 차단/미구현으로 남는다. 중립 표현과 export 차단만으로 H-T 전체 완료 또는 RAD hybrid 지원을 선언하지 않는다.
 
-각 backend 선택은 **최대 3개 집중 작업일** 안에 작은 입력으로 기능·license·배포·API 결과를 확인한다. 지원하면 선택 버전/공차/quality 목표를 고정하고 구현한다. 지원하지 않으면 `현재 후보에서 요구 기능 불가`와 가능한 제한/외부 도구 연결/다음 후보 하나를 결정한다. 조사 기한이 끝났다는 이유로 기능 완료라고 쓰지 않는다. 결정 이후 새 후보를 계속 추가하지 않는다. 처음부터 CAD kernel이나 범용 mesh generator를 직접 작성하지 않는다.
+backend 조사 **최대 3개 집중 작업일**은 F0의 실제 source/API·접근성·도입 경로 판정에만 적용한다. F1의 독립 재현과 F2의 고정 형상군·품질/기하/연결 검사를 통과하기 전에는 “지원하므로 구현 가능”으로 바꾸지 않는다. 통과한 버전/recipe/지원 범위를 고정한 뒤 제품 연결을 한다. 실패하면 원인과 제한/SDK/외부 도구/연구 중 다음 경로 하나를 남기고 평가를 닫는다. 조사 기한 종료나 문서 정합성 검토를 기능 완료로 쓰지 않는다. 처음부터 CAD kernel이나 범용 mesh generator를 직접 작성하는 계획으로 자동 전환하지 않는다.
 
 ## 16. P8 — 작업·자동화와 Workbench 경계
 

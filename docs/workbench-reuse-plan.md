@@ -68,6 +68,8 @@ WB `native/adapter.py`는 OpenRadioss/OpenCourant adapter를 등록하지만 등
 
 동일 값을 두 문서에 쓰지 않는다. W1은 existing MDO service를 owner로 두고 공용 widget의 buffer를 입력 초안으로만 취급한다. WB adapter가 service revision을 확인하고 기존 configure 호출에 전달한다. Prep Document/Dispatcher/SaveState를 그 값에 새로 만들지 않는다. Prep가 소유한 모델을 WB에서 바꾸어야 한다면 향후 같은 Prep command API에 expected_revision을 포함해 요청한다.
 
+메셔 기능은 [실현 가능성 로드맵](mesher-feasibility-roadmap.md)의 지원/미실증 상태를 그대로 전달한다. Workbench의 연구/MDO·자동화가 모든 CAD의 자동 재메시 성공을 가정하지 않게 한다. 실패/부분 결과·미지원 cell·수동 준비면/외부 메셔 입력을 명시하며, Workbench에서 연결했다고 Prep의 실증되지 않은 커널 기능이 생긴 것으로 표시하지 않는다.
+
 WB의 current-design INP 적용/Undo는 기존 서비스의 파일 transaction이다. 이를 Prep modeldoc 편집 Undo로 재해석하지 않는다. Prep 문서와 export deck은 서로 다른 자료이며 INP/RAD 외부 변경을 자동 역동기화하지 않는다. 저장된 문서/출력의 개정 변화는 WB가 감지해 하류 결과를 invalidation하고 사용자에게 재export/재등록 경로를 제공한다.
 
 ## 5. 런타임·binary·패키징·라이선스 판정
