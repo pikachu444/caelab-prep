@@ -1,0 +1,181 @@
+[build-system]
+requires = ["scikit-build-core>=0.11", "pybind11>=2.11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "meshioplusplus"
+version = "17.23.0"
+description = "meshio++: I/O for many mesh formats (C++20 core + Python bindings)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT AND (LGPL-2.1-only WITH OCCT-exception-1.0)"
+keywords = [
+  "mesh",
+  "file formats",
+  "scientific",
+  "engineering",
+  "fem",
+  "finite elements"
+]
+authors = [
+  {email = "tote1989@gmail.com"},
+  {name = "Vicente Mataix Ferrándiz"}
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Utilities",
+]
+dependencies = [
+  "importlib_metadata; python_version<'3.8'",
+  "numpy>=1.20.0",
+  "rich",
+]
+
+[project.optional-dependencies]
+# Pure-Python readers/writers for the optional VTK XML block codecs. Not a
+# default dependency: a build with the C++ codecs needs neither.
+codecs = ["lz4", "zstandard"]
+# The KaHIP Python wheel (MIT): gives the pure-Python fallback the quality
+# partition path when the C++ core was built without MESHIOPLUSPLUS_WITH_KAHIP.
+kahip = ["kahip"]
+# Polyscope (MIT): the desktop backend of `view()` and all of `screenshot()`.
+# Python-only and strictly optional -- it never reaches the C++/WASM/C/Fortran
+# core, and the browser backend of `view()` needs nothing from this extra.
+# It is also part of `[all]`.
+viewer = ["polyscope>=2.4"]
+# In-memory interoperability (src/python/meshioplusplus/_interop.py). Python-only
+# and strictly optional: none of these reaches the C++/WASM/C/Fortran core, and
+# every import is lazy, so the package works exactly as before without them.
+# Deliberately NOT in `all`, which holds the format runtime dependencies (h5py,
+# netCDF4) and the desktop viewer backend (polyscope). Quietly adding a
+# PyVista-sized dependency there would surprise people, so `kahip`, `codecs`
+# and the interop extras stand apart.
+pyvista = ["pyvista>=0.44"]
+trimesh = ["trimesh>=4.0"]
+arrow = ["pyarrow>=14"]
+# pandas 2.x needs Python >= 3.9 while the package floor stays 3.8 -- the mcp
+# extra's precedent: the pure payload layer works everywhere, only the frame
+# entry points need the extra.
+pandas = ["pandas>=2.0"]
+polars = ["polars>=1.0"]
+# The `write_dataset(format="zarr")` chunked-dataset backend (parquet rides
+# [arrow]; hdf5 rides h5py from [all]). Works with zarr-python 2.x and 3.x.
+# There is deliberately NO extra for torch/jax (to_torch/to_jax): torch's
+# default Linux wheel bundles CUDA at ~900 MB and JAX's accelerator variants
+# live in its own extras -- the CuPy no-extra precedent (see doc/ml.md).
+zarr = ["zarr>=2.16"]
+interop = [
+    "pyvista>=0.44",
+    "trimesh>=4.0",
+    "pyarrow>=14",
+    "pandas>=2.0",
+    "polars>=1.0",
+]
+# The MCP server (src/python/meshioplusplus/mcp/): exposes every operation to
+# AI agents over the Model Context Protocol. Python-only, lazy import, and NOT
+# in `all` for the same reason as the interop extras. Note the `mcp` SDK
+# itself requires Python >= 3.10 while the package floor stays 3.8 -- the pure
+# tool layer works everywhere, only running the server needs this extra.
+#
+# Both SDK majors are supported: 1.x serves through `mcp.server.fastmcp.FastMCP`
+# and 2.x, which removed that module, through `mcp.server.mcpserver.MCPServer`
+# (`_server.py` imports whichever exists). The bound is `<3` so the next major
+# is not picked up before it has been tested; CI runs both majors. The pure
+# tool layer (`_tools.py`) imports no SDK and is unaffected.
+mcp = ["mcp>=1.2,<3"]
+# The companion process (`meshioplusplus-mcp --http`, src/python/meshioplusplus/
+# mcp/_http.py): the JSON API the browser dataset manager talks to, plus MCP
+# over HTTP. Starlette/uvicorn arrive transitively with the mcp SDK today, but
+# _http.py imports them directly, so they are declared here rather than
+# borrowed from the SDK's own dependency list. Same Python floor and same
+# NOT-in-`all` reasoning as [mcp].
+dashboard = ["mcp>=1.2,<3", "starlette>=0.27", "uvicorn>=0.31"]
+# OpenUSD, for the `usd` format (src/python/meshioplusplus/usd/). `usd-core` is
+# Pixar's self-contained PyPI build of USD -- no Omniverse install -- and it is
+# a ~30 MB wheel, so it stays out of `all` like every other interop-sized
+# extra. Its own floor is Python 3.9 while the package's is 3.8, hence the
+# marker: on 3.8 the extra resolves to nothing and the format raises its named
+# install error, which is the honest outcome either way.
+usd = ["usd-core>=24; python_version >= '3.9'"]
+# ADIOS2's Python bindings, for the `vtx` format (DOLFINx VTXWriter `.bp`
+# directories, src/python/meshioplusplus/vtx/) when the core was built without
+# MESHIOPLUSPLUS_WITH_ADIOS2. A heavy dependency for one consumer, so it stays
+# out of `all`.
+adios2 = ["adios2>=2.10; python_version >= '3.9'"]
+all = [
+    "netCDF4",
+    "h5py",  # CGNS, H5M, MED, XDMF formats
+    "polyscope>=2.4"  # the desktop viewer backend
+]
+
+[project.urls]
+homepage = "https://github.com/loumalouomega/meshioplusplus"
+code = "https://github.com/loumalouomega/meshioplusplus"
+issues = "https://github.com/loumalouomega/meshioplusplus/issues"
+
+[project.scripts]
+meshioplusplus = "meshioplusplus._cli:main"
+# Entry goes through meshioplusplus.mcp (not ._server directly) so a missing
+# [mcp] extra prints the named `pip install meshioplusplus[mcp]` error instead
+# of an ImportError traceback.
+meshioplusplus-mcp = "meshioplusplus.mcp:main"
+
+[tool.scikit-build]
+# scikit-build-core drives the CMake build of the meshioplusplus._core
+# extension and bundles it next to the pure-Python package (src layout).
+minimum-version = "0.11"
+build-dir = "build/{wheel_tag}"
+wheel.packages = ["src/python/meshioplusplus"]
+# The wheels link OpenCASCADE statically, so their licence is the combined
+# expression in [project]. LICENSE-BINARIES.md states it, and the notices and
+# OpenCASCADE's licence texts (build/build-occt.sh) ship in .dist-info/licenses.
+# This is wheel.license-files, not project.license-files: scikit-build-core
+# requires every project.license-files pattern to match, and a source build
+# without OpenCASCADE has no OCCT texts, so the metadata gets no License-File
+# lines.
+wheel.license-files = [
+  "LICENSE",
+  "LICENSE-BINARIES.md",
+  "THIRD_PARTY_NOTICES.md",
+  "build/occt/share/licenses/opencascade/*.txt",
+]
+cmake.version = ">=3.15"
+cmake.build-type = "Release"
+
+# The version, written into the package at build time so `import
+# meshioplusplus` need not ask importlib.metadata (~22 ms; roadmap §3).
+[[tool.scikit-build.generate]]
+path = "meshioplusplus/_version.py"
+template = '''
+"""Generated at build time by scikit-build-core from pyproject.toml."""
+
+__version__ = "${version}"
+'''
+
+[tool.scikit-build.editable]
+# Rebuild the extension automatically on import during development.
+rebuild = true
+verbose = false
+
+[tool.coverage.run]
+# The `coverage` CI job measures the installed package through an editable
+# install, so coverage.py would otherwise record absolute
+# .../src/python/meshioplusplus/... paths that Codecov's `python` flag
+# (paths: src/python/meshioplusplus/) can't match. `relative_files` rewrites them to
+# repo-relative paths; `source` scopes measurement to the package.
+source = ["meshioplusplus"]
+relative_files = true
+
+[tool.isort]
+profile = "black"

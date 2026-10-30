@@ -629,7 +629,7 @@
         "nastran-R11"
       ],
       "status": "partial",
-      "missing": "공식 예제 취득 결과는 별도 manifest. 의도적 오류 입력·실행 oracle 미확보."
+      "missing": "공식 완전 입력 listing/raw는 후속 guide에서 확보.2024.2설치raw·실행결과동일판쌍과 solver실행·의도적오류 corpus는 미확보/미수행."
     },
     {
       "question_id": "Q12",
@@ -656,13 +656,23 @@
   ],
   "gaps": [
     "QRG 원본 확보와 전수 field schema는 별개.",
-    "공식 완전 example/의도적 오류 deck 확보 상태는 별도 manifest;solver read/run 없음.",
     "전체 appendix/options/sequence별 의미는 전수 검토하지 않았다.",
     "MSC2024.2 문서를 다른 Nastran dialect나 최신판 지원으로 부르지 않는다.",
     "상용 QRG 원문/스크린샷은 배포하지 않는다.",
-    "NASA95 완전 사례와 archival output 확보는 MSC2024.2 공식 완전 사례 확보나 실행 검증을 대체하지 않는다."
+    "후속에서2024.2공식완전listing과2026.1.1문서연결완전raw모델을확보했다.2024.2설치raw·실행결과의동일판쌍은아니다.",
+    "PyNastran pin의 일부 MSC contact카드는todo이며 새 공식덱전체를생성지원한다고보지않는다."
   ],
   "runtime_verified": false,
   "collected_on": "2026-10-30",
-  "supplementary_examples_manifest": "catalogues/nastran-examples.json"
+  "supplementary_examples_manifest": "catalogues/nastran-examples.json",
+  "followup": {
+    "guide": "followup/msc/README.md",
+    "download": "followup/msc/download_msc_examples.py",
+    "available_assets": [
+      "MSC2024.2 LinearStatic complete input listings TRUSS1/BEAM2/ROTATE",
+      "Official SOL400 dynamic impact, large-sliding contact and engine gasket raw model families linked by2026.1.1 documentation",
+      "PyNastran object creation and native card field/write_card sources"
+    ],
+    "solver_executed": false
+  }
 }
