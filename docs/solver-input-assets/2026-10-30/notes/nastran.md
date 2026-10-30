@@ -1,5 +1,7 @@
 # MSC Nastran 2024.2 입력 생성 자료
 
+> **후속 보완:** [MSC 공식 완전 입력과 생성 코드](../followup/msc/README.md)를 추가 확보했다. 2024.2 문서에는 완전한 TRUSS1/BEAM2/ROTATE listing이 있고, 현행 2026.1.1 문서가 직접 제공하는 SOL400 충돌·접촉·가스켓 raw 덱도 취득했다. 따라서 아래 초기 조사의 “MSC 완전 예제 미확보”는 현재 상태가 아니다. 2024.2 설치 raw·실행 결과의 동일판 쌍과는 구별한다.
+
 2026-10-30 조사. MSC 2024.2를 고정했다. NX/Autodesk/NASA Nastran 또는 최신 MSC 판의 지원으로 일반화하지 않는다.
 
 ## 실제 확보와 목록 분모
@@ -35,3 +37,4 @@ BSD-3-Clause PyNastran의 실제 writer/formatter와 reader/solid 작성 시험 
 공식 완전 예제 취득의 성공/실패와 의존 파일은 `catalogues/nastran-examples.json`을 따른다. 원문이 공개되어 있어도 재배포 허용으로 단정하지 않는다. QRG 전문과 렌더링 이미지는 배포하지 않는다.
 
 전체 필드·조건부·기본값 schema, 모든 해석별 restart/state bundle, 의도적 오류 예제, 최신판 차이와 solver read/run은 미완료다. 이 작업은 자료 취득과 관련 규칙의 문서 검토이며, 새 solver 지원 구현은 아니다.
+

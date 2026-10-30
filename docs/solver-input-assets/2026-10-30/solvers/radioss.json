@@ -2333,11 +2333,23 @@
     "복합재·assembly·MPC·rigid·SPH/ALE 등 전체 객체 매핑 schema 미완성.",
     "모든 하중/접촉/재료/센서·curve 참조의 조건과 activation 전수 미완성.",
     "전체 explicit/implicit/restart/output 조합·실제 중단 복구 의미 runtime 미검증.",
-    "의도된 오류 fixture/expected diagnostic corpus 미분류; 배포 가능한 NC-free 완전 모델 시험쌍 미확보; official NC deck은 내부 취득.",
+    "의도된 오류 fixture/expected diagnostic corpus 미분류; 다양한 실무 reference 쌍은 부족하나 후속 MIT column 완전 입력쌍은 확보; official NC deck은 내부 취득.",
     "target OpenCourant의 2024/2026 keyword/field별 support 매핑과 binary read/run false; 제한 CFG 권리 미해소.",
     "문서 edition·/BEGIN Invers·Engine VERS·source release·binary build는 별도 축이다. source reader의 기본 profile2026과 converter 기본2025를2024 catalogue와 동일하게 보지 않는다.",
     "공식2024 /VERS mandatory와 일부 QA/Tools의 생략 사례가 불일치해 target runtime 검증 전 판단을 유보한다.",
     "현재 작업은 실제 수집과 근거 분류이며 caelab-prep에 신규 RAD generator나 전 keyword editor를 구현한 작업이 아니다."
   ],
-  "runtime_verified": false
+  "runtime_verified": false,
+  "followup": {
+    "guide": "followup/rad/GUIDE.md",
+    "mesh_writer": "followup/gmsh/README.md",
+    "available_assets": [
+      "meshio++ native RAD writer and MIT complete column Starter/Engine pair",
+      "k2rad actual Starter/Engine writer and conversion source",
+      "OpenCourant semantic readers/default/unit source",
+      "Gmsh4.15.2 actual native RAD mesh writer"
+    ],
+    "clarification": "Official field rules already acquired. Product-wide machine schema/writer implementation is a separate task.",
+    "solver_executed": false
+  }
 }

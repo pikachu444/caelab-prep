@@ -1,5 +1,7 @@
 # Radioss / OpenRadioss / OpenCourant 입력 생성 자산 조사
 
+> **후속 보완:** [새 RAD 생성 자산](../followup/rad/GUIDE.md)과 [Gmsh native mesh writer](../followup/gmsh/README.md)를 추가 확보했다. 공식 카드 필드 규격은 이미 보유하고 있으며 실제 reader/default·writer·MIT 자작 완전 모델까지 연결했다. 아래의 초기 조사 한계 중 “NC-free 완전 작은 모델 미확보”는 column 입력쌍 범위에서 해소됐다. 우리 제품의 전수 생성 구현과는 구분한다.
+
 2026-10-30. 이 기록은 실제 자료 수집과 관련 규칙 독해의 결과다. `caelab-prep`에 신규 RAD 생성기 또는 전 keyword 편집기를 구현했다는 뜻이 아니다. 공용 CAE 자산의 첫 적용 대상으로 OpenRadioss/OpenCourant를 조사했으며, 다른 solver에 같은 default·ID·node 순서를 강제하지 않는다.
 
 ## 확보 범위와 판 고정
@@ -76,3 +78,4 @@
 공식 전체 색인 추출·분모 대조, 해당 상세 원문 취득, Q01–Q12 관련 근거/부분/공백 분리, 실제 예제와 코드 역할·판·권리·해시 기록을 마쳤다. LS-DYNA 담당과 default·connectivity·include/transform의 반례를 교환했고 `discussion/dyna-rad-review.md`에 대조했다.
 
 **전체 field 검토, 생성 schema 완성, 모든 keyword 구현, target Starter read/run은 모두 미완료다.** 고차 요소 전체/face 번호, ID namespace와 상한, 전체 property/material/contact/implicit/output 조합, NC-free 오류 시험 corpus와 runtime 호환성은 후속 구현 전 별도 완료 기준이 필요하다. 이 기록은 이전의 일부 기존-card patch metadata와 fixture를 전체 입력 생성 자산으로 혼동한 판단을 정정한다.
+

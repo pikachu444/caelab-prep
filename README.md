@@ -76,6 +76,8 @@ caelab-prep mesh part.step --output mesh-assets --size 2.0
 
 [7개 솔버의 입력 생성 자료](docs/solver-input-assets/2026-10-30/README.md)에 Radioss/OpenCourant·LS-DYNA·Abaqus·CalculiX·Code_Aster·OptiStruct·MSC Nastran의 실제 입력 매뉴얼·필드 정의·writer 코드·해석 예제와 활용 범위를 정리했습니다. 기존 RAD field patch 메타데이터·회귀 입력은 새 모델의 전수 생성 명세가 아닙니다. 목록/원문 취득·관련 절 독해·전수 field schema·생성기 구현·실제 solver 실행을 구분하며, 이번 자료 수집으로 제품의 지원 범위가 늘어난 것은 아닙니다.
 
+후속 확보에서는 [RAD 실제 writer·필드 규칙·MIT 완전 모델](docs/solver-input-assets/2026-10-30/followup/rad/GUIDE.md), [Gmsh RAD 출력 소스](docs/solver-input-assets/2026-10-30/followup/gmsh/README.md), [MSC 공식 완전 입력 예제와 생성 API](docs/solver-input-assets/2026-10-30/followup/msc/README.md)를 추가했습니다. 허용된 참고 소스·예제는 저장소에 직접 보존하고, 상용 원본은 공식 다운로드 경로로 연결합니다.
+
 [상용 CAE GUI 상세 벤치마크 자료](docs/benchmarks/2026-10-30/README.md)에 7제품의 메뉴·선택·입력·결과·실패/취소·저장 근거와 화면 locator를 연결했습니다. 대표 화면 모음과 동작 재현 근거를 구분하고, 이번에 직접 실행하지 않은 제품을 실행 검증으로 표시하지 않습니다.
 
 계획의 구체적인 범위는 [공용 기반 설계](docs/shared-cae-foundation-plan.md), [단계별 작업·종료 조건](docs/execution-stages.md), [Workbench 재사용 계획](docs/workbench-reuse-plan.md), [참조 제품 비교](docs/gui-reference-matrix.md), [다중 파트·자유도·데이터 설계](docs/cae-model-data-design.md)에 둡니다. 공용 GUI/기반 A, 다중 파트 데이터 B, 첫 CAD/메시 흐름 C와 Workbench 적용은 각각 정한 조건을 통과하면 완료로 닫습니다. 작업서는 선행 조건·산출물·필수 확인·후속 범위와 검사를 끝내는 규칙을 명시하며, 계획한 기능을 현재 지원 기능으로 표시하지 않습니다.
@@ -83,4 +85,5 @@ caelab-prep mesh part.step --output mesh-assets --size 2.0
 [메셔 구현 가능성·도입 로드맵](docs/mesher-feasibility-roadmap.md)은 공개 kernel과 wrapper/유료 SDK·연구 코드를 구분하고, 알고리즘/상용 매뉴얼 조사·제한된 실제 SDK 실험·기능별 실증과 중지 조건을 기록합니다. 복잡 자동 중립면·범용 all-hex·robust hybrid를 모델의 능력만으로 구현 가능하다고 확정하지 않습니다.
 
 [BeidPrep 1.0.1 시험 기록](docs/beidprep-evaluation.md)에 실제 수행·미수행 범위와 저장 오류를 기록했습니다. 소형 입력·저장본, Windows GUI 시험 스크립트, 수동 실행 전용 GitHub Actions를 함께 보관합니다. 실행 파일과 솔버 배포본은 Git에 포함하지 않습니다.
+
 
