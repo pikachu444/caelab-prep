@@ -1,0 +1,962 @@
+{
+  "key": "selection",
+  "title": "선택·가시성·표/트리/viewport 연결",
+  "scope": "QGIS3.40·ParaView5.13.3 사용자 문서/API/소스, Blender4.5.3 공식 소스, Rhino8의 ambiguous-pick 보완 문서. 일시 선택·표시만 조사하며 영속 모델/DB/GUI 구현은 제외.",
+  "sources": [
+    {
+      "id": "selection-D01",
+      "url": "https://docs.qgis.org/3.40/en/docs/user_manual/introduction/general_tools.html",
+      "title": "General Tools: panels, selecting and identifying features",
+      "product": "QGIS",
+      "version": "3.40 manual; screenshot app build unknown",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "§8.2.1, §8.2.3, §8.4.1",
+      "read_status": "full-relevant-sections",
+      "summary": "활성 layer 범위의 수동·조건 선택과 선택 수정, preview flash, layer 가시성을 구분한다."
+    },
+    {
+      "id": "selection-D02",
+      "url": "https://docs.qgis.org/3.40/en/docs/user_manual/working_with_vector/attribute_table.html",
+      "title": "Working with the Attribute Table",
+      "product": "QGIS",
+      "version": "3.40 manual; screenshot app build unknown",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "§12.2.3.1–2, §12.2.4.4",
+      "read_status": "full-relevant-sections",
+      "summary": "표/지도 선택을 연결하며 표 필터를 layer 필터와 구분한다. 다중 편집은 mixed·same·changed 상태와 단일 Undo를 설명한다."
+    },
+    {
+      "id": "selection-D03",
+      "url": "https://api.qgis.org/api/3.40/classQgsVectorLayer.html",
+      "title": "QgsVectorLayer API",
+      "product": "QGIS",
+      "version": "3.40.0 b56115d8743",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "selectByIds; selectByRect; selectionChanged; selectedFeatureIds; selectedFeatures; featureDeleted",
+      "read_status": "full-relevant-sections",
+      "summary": "선택 ID·동작 방식·변경 통지를 제공한다. 전체 객체 복사 대신 ID/개수 또는 iterator 사용을 안내한다."
+    },
+    {
+      "id": "selection-D04",
+      "url": "https://api.qgis.org/api/3.40/classQgsFeatureSelectionModel.html",
+      "title": "QgsFeatureSelectionModel API",
+      "product": "QGIS",
+      "version": "3.40.0 b56115d8743",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "enableSync; selectFeatures; requestRepaint",
+      "read_status": "full-relevant-sections",
+      "summary": "행 인덱스를 feature 선택에 연결하며 동기화 변경을 버퍼링할 수 있다."
+    },
+    {
+      "id": "selection-D05",
+      "url": "https://api.qgis.org/api/3.40/classQgsMapTool.html",
+      "title": "QgsMapTool API",
+      "product": "QGIS",
+      "version": "3.40.0 b56115d8743",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "activate/deactivate; setAction; toMapCoordinates; searchRadiusMM/MU",
+      "read_status": "full-relevant-sections",
+      "summary": "활성 도구와 QAction 연결, 화면/지도 좌표 변환, 선택 탐색 반경의 단위를 제공한다."
+    },
+    {
+      "id": "selection-D06",
+      "url": "https://api.qgis.org/api/3.40/classQgsAttributeTableModel.html",
+      "title": "QgsAttributeTableModel API",
+      "product": "QGIS",
+      "version": "3.40.0 b56115d8743",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "CustomRole::FeatureId; rowToId/idToRow; setRequest; prefetchSortData; progress",
+      "read_status": "full-relevant-sections",
+      "summary": "표의 행과 feature ID를 매핑한다. request와 정렬 cache는 무제한 lazy loading 보장이 아니다."
+    },
+    {
+      "id": "selection-D07",
+      "url": "https://api.qgis.org/api/3.40/classQgsAttributeTableFilterModel.html",
+      "title": "QgsAttributeTableFilterModel API",
+      "product": "QGIS",
+      "version": "3.40.0 b56115d8743",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "FilterMode; fidToIndex; filterError; constructor precondition",
+      "read_status": "full-relevant-sections",
+      "summary": "선택/가시/편집/오류 행 필터와 ID→표 인덱스 연결을 제공한다."
+    },
+    {
+      "id": "selection-D08",
+      "url": "https://api.qgis.org/api/3.40/classQgsVectorLayerCache.html",
+      "title": "QgsVectorLayerCache API",
+      "product": "QGIS",
+      "version": "3.40.0 b56115d8743",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "cacheSize; setCacheGeometry; setCacheSubsetOfAttributes; invalidated; cachedLayerDeleted",
+      "read_status": "full-relevant-sections",
+      "summary": "cache 범위와 geometry/attribute 보관을 제어하며 삭제·무효화 신호를 제공한다."
+    },
+    {
+      "id": "selection-D09",
+      "url": "https://api.qgis.org/api/3.40/classQgsCoordinateTransform.html",
+      "title": "QgsCoordinateTransform API",
+      "product": "QGIS",
+      "version": "3.40.0 b56115d8743",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "transform; transformCoords; QgsCsException; allowFallbackTransforms",
+      "read_status": "full-relevant-sections",
+      "summary": "source/destination 좌표계를 명시하고 변환 실패와 fallback 정책을 노출한다."
+    },
+    {
+      "id": "selection-D10",
+      "url": "https://docs.qgis.org/3.40/en/docs/user_manual/working_with_projections/working_with_projections.html",
+      "title": "Working with Projections",
+      "product": "QGIS",
+      "version": "3.40 manual; screenshot app build unknown",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "§6.2–6.3",
+      "read_status": "full-relevant-sections",
+      "summary": "좌표계 지정은 원본 수치 변환과 다르며 project 표시 변환도 별개다."
+    },
+    {
+      "id": "selection-D11",
+      "url": "https://api.qgis.org/api/3.40/classQgsAttributeForm.html",
+      "title": "QgsAttributeForm API",
+      "product": "QGIS",
+      "version": "3.40.0 b56115d8743",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "setMultiEditFeatureIds; currentFormFeature; saveWithDetails; resetValues; setEditCommandMessage",
+      "read_status": "full-relevant-sections",
+      "summary": "form draft·대상 ID·저장 오류·Undo 이름을 연결할 API가 있다."
+    },
+    {
+      "id": "selection-D12",
+      "url": "https://github.com/qgis/QGIS/blob/final-3_40_0/src/gui/attributetable/qgsfeatureselectionmodel.cpp",
+      "title": "QgsFeatureSelectionModel implementation",
+      "product": "QGIS",
+      "version": "final-3_40_0 tag",
+      "kind": "code",
+      "evidence_type": "D",
+      "locator": "enableSync lines31–50; selectFeatures; layerSelectionChanged",
+      "read_status": "full-relevant-sections",
+      "summary": "표 인덱스의 FeatureId role을 읽고 변경을 선택 관리자에 전달한다. 선택 변경 루프를 끊고 필요한 행 repaint를 요청한다."
+    },
+    {
+      "id": "selection-D13",
+      "url": "https://docs.paraview.org/en/v5.13.3/UsersGuide/selectingData.html",
+      "title": "Selecting Data",
+      "product": "ParaView",
+      "version": "5.13.3 documentation",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "§6.1–6.4, §6.6–6.8",
+      "read_status": "full-relevant-sections",
+      "summary": "visible/through 선택·수정·linked view와 ID/query 선택의 차이를 설명한다. transient 선택과 추출 조건·Selection Editor의 범위를 분리해야 한다."
+    },
+    {
+      "id": "selection-D14",
+      "url": "https://docs.paraview.org/en/v5.13.3/UsersGuide/displayingData.html",
+      "title": "Displaying Data",
+      "product": "ParaView",
+      "version": "5.13.3 documentation",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "§4.1.1 active view; §4.4.2 advanced display/Shift Scale",
+      "read_status": "full-relevant-sections",
+      "summary": "가시성은 active view의 표시 상태이며, GPU 좌표 표시 정밀도는 shift/scale로 보완할 수 있다."
+    },
+    {
+      "id": "selection-D15",
+      "url": "https://github.com/Kitware/ParaView/blob/v5.13.3/Wrapping/Python/paraview/selection.py",
+      "title": "ParaView selection Python implementation",
+      "product": "ParaView",
+      "version": "v5.13.3 tag",
+      "kind": "code",
+      "evidence_type": "D",
+      "locator": "_collectSelectionPorts lines82–150; _select; SelectSurfacePoints/Cells; _selectIDsHelper lines315–359",
+      "read_status": "full-relevant-sections",
+      "summary": "representation 입력의 source/output port를 찾아 selection을 연결하고 surface/frustum·ID와 ADD/SUBTRACT/TOGGLE을 구분한다."
+    },
+    {
+      "id": "selection-D16",
+      "url": "https://github.com/blender/blender/blob/v4.5.3/source/blender/makesrna/intern/rna_object_api.cc",
+      "title": "Object selection/visibility RNA implementation",
+      "product": "Blender",
+      "version": "v4.5.3 tag",
+      "kind": "code",
+      "evidence_type": "D",
+      "locator": "rna_Object_select_set/get lines98–132; hide/visible lines134–190; local_view_get/set; API registration lines810–910",
+      "read_status": "full-relevant-sections",
+      "summary": "선택과 숨김은 view layer 범위를 가지며 visible 결과와 local-view 상태는 별도 조회다."
+    },
+    {
+      "id": "selection-D17",
+      "url": "https://github.com/blender/blender/blob/v4.5.3/source/blender/editors/space_outliner/outliner_select.cc",
+      "title": "Outliner selection and activation implementation",
+      "product": "Blender",
+      "version": "v4.5.3 tag",
+      "kind": "code",
+      "evidence_type": "D",
+      "locator": "outliner_item_mode_toggle lines186–219; outliner_sync_to_properties_editors; do_outliner_item_activate_tree_element",
+      "read_status": "full-relevant-sections",
+      "summary": "Outliner의 mode·activation·properties 동기화는 context와 대상 종류에 따라 분기한다."
+    },
+    {
+      "id": "selection-D18",
+      "url": "https://github.com/blender/blender/blob/v4.5.3/source/blender/makesrna/intern/rna_layer.cc",
+      "title": "Layer active object RNA implementation",
+      "product": "Blender",
+      "version": "v4.5.3 tag",
+      "kind": "code",
+      "evidence_type": "D",
+      "locator": "rna_LayerObjects_active_object_get/set lines72–106; LayerCollection flags",
+      "read_status": "full-relevant-sections",
+      "summary": "active object는 view layer의 별도 참조이고 그 layer에 없는 대상을 설정하면 오류를 보고한다."
+    },
+    {
+      "id": "selection-D19",
+      "url": "https://docs.mcneel.com/rhino/8/help/en-us/commands/selection_commands.htm",
+      "title": "Selection commands: ambiguous selection",
+      "product": "Rhino",
+      "version": "8 help; retrieved 2026-10-30",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Selection menu; Select sub-parts; SelRectangular; SelVisible",
+      "read_status": "full-relevant-sections",
+      "summary": "겹친 후보의 순환/확정/취소를 명시한다. through 선택과 visible 선택을 구분하며 block instance 제약도 설명한다."
+    },
+    {
+      "id": "selection-D20",
+      "url": "https://docs.mcneel.com/rhino/8/help/en-us/options/selection_menu.htm",
+      "title": "Selection Menu options",
+      "product": "Rhino",
+      "version": "8 help, footer 20-Oct-2026",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Dialog placement/height; Items; Highlight",
+      "read_status": "full-relevant-sections",
+      "summary": "후보 목록의 이름·type/layer/color·높이와 hover highlight를 설정할 수 있다."
+    },
+    {
+      "id": "selection-D21",
+      "url": "https://developer.rhino3d.com/en/guides/rhinocommon/object-selection-options/",
+      "title": "Object Selection with Options",
+      "product": "RhinoCommon",
+      "version": "guide updated 2018-12-05; exact runtime version unspecified",
+      "kind": "example",
+      "evidence_type": "D",
+      "locator": "C# GetObject/GetMultiple loop",
+      "read_status": "full-relevant-sections",
+      "summary": "pre/post selection과 명령 옵션을 함께 받는 예제이며 옵션 변경 후 preselection을 끄는 이유를 설명한다."
+    },
+    {
+      "id": "selection-D22",
+      "url": "https://mcneel.github.io/rhinocommon-api-docs/api/RhinoCommon/html/P_Rhino_Input_Custom_GetObject_ChooseOneQuestion.htm",
+      "title": "GetObject.ChooseOneQuestion",
+      "product": "RhinoCommon",
+      "version": "9.0.26258.12300 API; Since5.0; not Rhino8 runtime verification",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "ChooseOneQuestion property",
+      "read_status": "full-relevant-sections",
+      "summary": "객체와 subobject 후보가 겹칠 때 choose-one 질문을 활성화하는 API다."
+    },
+    {
+      "id": "selection-D23",
+      "url": "https://mcneel.github.io/rhinocommon-api-docs/api/RhinoCommon/html/M_Rhino_Input_Custom_GetObject_Get.htm",
+      "title": "GetObject.Get",
+      "product": "RhinoCommon",
+      "version": "9.0.26279.06300 API; Since5.0; not Rhino8 runtime verification",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Return Value",
+      "read_status": "full-relevant-sections",
+      "summary": "단일 선택에서 Object와 Esc에 따른 Cancel 등의 결과를 구분한다."
+    }
+  ],
+  "assets": [
+    {
+      "id": "selection-S01",
+      "source_ids": [
+        "selection-D02"
+      ],
+      "source_url": "https://docs.qgis.org/3.40/en/_images/vectorAttributeTable.png",
+      "file": "assets/selection/qgis-attribute-table.png",
+      "width": 635,
+      "height": 392,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "표 제목은 total26/filtered26/selected4를 구분하고, 선택 행의 파란 배경과 current cell의 초록 경계를 동시에 보여 준다.",
+      "original_url": "https://github.com/qgis/QGIS-Documentation/blob/3d80e314bc11bd3d79e4959fd66f93ac59f2bd2a/docs/user_manual/working_with_vector/img/vectorAttributeTable.png",
+      "document_version": "3.40",
+      "captured_application_build": "unknown; image in versioned manual is not proof of app build/DPI",
+      "redistribution_scope": "research reference excerpt; not a product icon/theme asset",
+      "sha256": "8ee84fd80b55c4dbc651648d37493cecb68b7ca4247db31d1fd7d39cbbfb6450"
+    },
+    {
+      "id": "selection-S02",
+      "source_ids": [
+        "selection-D02"
+      ],
+      "source_url": "https://docs.qgis.org/3.40/en/_images/attribute_table_views.png",
+      "file": "assets/selection/qgis-table-form-views.png",
+      "width": 643,
+      "height": 600,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "같은 airports 표의 table/form 두 화면이다. form 왼쪽의 선택 사각형과 오른쪽 현재 feature 속성 표시가 구분된다.",
+      "original_url": "https://github.com/qgis/QGIS-Documentation/blob/3d80e314bc11bd3d79e4959fd66f93ac59f2bd2a/docs/user_manual/working_with_vector/img/attribute_table_views.png",
+      "document_version": "3.40",
+      "captured_application_build": "unknown; image in versioned manual is not proof of app build/DPI",
+      "redistribution_scope": "research reference excerpt; not a product icon/theme asset",
+      "sha256": "f152f56dc6b14492bff4b554079e8f5842f8cad9ee07158f9ab4f08e12f430d7"
+    },
+    {
+      "id": "selection-S03",
+      "source_ids": [
+        "selection-D02"
+      ],
+      "source_url": "https://docs.qgis.org/3.40/en/_images/attribute_multiedit.png",
+      "file": "assets/selection/qgis-attribute-multiedit.png",
+      "width": 850,
+      "height": 538,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "선택3개, 노란 미적용 변경 안내, 필드별 상태 아이콘과 apply/reset 링크를 볼 수 있다. 상태 아이콘의 의미는 문서 D02와 연결한다.",
+      "original_url": "https://github.com/qgis/QGIS-Documentation/blob/3d80e314bc11bd3d79e4959fd66f93ac59f2bd2a/docs/user_manual/working_with_vector/img/attribute_multiedit.png",
+      "document_version": "3.40",
+      "captured_application_build": "unknown; image in versioned manual is not proof of app build/DPI",
+      "redistribution_scope": "research reference excerpt; not a product icon/theme asset",
+      "sha256": "d4c5975ce406eb554175c184c8815b399572e99b0e799a2da3a10ffaccae0814"
+    },
+    {
+      "id": "selection-S04",
+      "source_ids": [
+        "selection-D01"
+      ],
+      "source_url": "https://docs.qgis.org/3.40/en/_images/select_by_value.png",
+      "file": "assets/selection/qgis-selection-form.png",
+      "width": 569,
+      "height": 303,
+      "kind": "dialog",
+      "visual_review": true,
+      "observations": "검색 필드 옆 연산자, 자동완성 목록, Reset/Flash/Zoom/Select/Close가 별도 버튼으로 배치돼 있다.",
+      "original_url": "https://github.com/qgis/QGIS-Documentation/blob/3d80e314bc11bd3d79e4959fd66f93ac59f2bd2a/docs/user_manual/introduction/img/select_by_value.png",
+      "document_version": "3.40",
+      "captured_application_build": "unknown; image in versioned manual is not proof of app build/DPI",
+      "redistribution_scope": "research reference excerpt; not a product icon/theme asset",
+      "sha256": "e320e503774a25147b10af906889b48412946b53265ca3dee6b65d5d7c632b12"
+    },
+    {
+      "id": "selection-S05",
+      "source_ids": [
+        "selection-D01"
+      ],
+      "source_url": "https://docs.qgis.org/3.40/en/_images/layer_order.png",
+      "file": "assets/selection/qgis-layer-order.png",
+      "width": 813,
+      "height": 524,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "상단 Layers Panel과 별도의 Layer Order Panel, 오른쪽 지도. visibility 체크와 별도 rendering order 설정을 함께 보여 준다.",
+      "original_url": "https://github.com/qgis/QGIS-Documentation/blob/3d80e314bc11bd3d79e4959fd66f93ac59f2bd2a/docs/user_manual/introduction/img/layer_order.png",
+      "document_version": "3.40",
+      "captured_application_build": "unknown; image in versioned manual is not proof of app build/DPI",
+      "redistribution_scope": "research reference excerpt; not a product icon/theme asset",
+      "sha256": "0ad28c3f6ba9f7ebc3d16e2407e154554272ce0cc676b5c4fe40ccf4e80b02ea"
+    },
+    {
+      "id": "selection-S06",
+      "source_ids": [
+        "selection-D10"
+      ],
+      "source_url": "https://docs.qgis.org/3.40/en/_images/crs_selector.png",
+      "file": "assets/selection/qgis-crs-selector.png",
+      "width": 492,
+      "height": 505,
+      "kind": "dialog",
+      "visual_review": true,
+      "observations": "검색·최근 좌표계·authority ID·사전 정의 목록·속성·영역 preview와 OK/Cancel이 보인다.",
+      "original_url": "https://github.com/qgis/QGIS-Documentation/blob/3d80e314bc11bd3d79e4959fd66f93ac59f2bd2a/docs/user_manual/working_with_projections/img/crs_selector.png",
+      "document_version": "3.40",
+      "captured_application_build": "unknown; image in versioned manual is not proof of app build/DPI",
+      "redistribution_scope": "research reference excerpt; not a product icon/theme asset",
+      "sha256": "ffad5f9115542e5140360891fe4ba41c0e50011e07afc9c612ceb074f76fe5f2"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "selection-P01",
+      "requirement": "선택 대상과 활성 컨텍스트의 범위",
+      "products": [
+        "QGIS 3.40",
+        "Blender v4.5.3 source"
+      ],
+      "prerequisite": "QGIS에 현재 활성 vector layer가 있고 선택 도구를 사용하는 경우. Blender 비교는 별도 view-layer API 문맥.",
+      "actions": [
+        "QGIS Edit > Select에서 선택 도구를 사용한다.",
+        "API에서는 layer와 선택 ID를 명시한다."
+      ],
+      "documented_result": "QGIS 수동 선택은 활성 layer 범위다. Blender select_set/get은 view layer를 받으며 그 안에 없는 객체 선택은 오류를 보고한다.",
+      "implementation_locator": "QgsVectorLayer::selectByIds/selectByRect; rna_Object_select_set/get lines98–132",
+      "failure_cancel_undo_save": "layer 부재 오류는 Blender 소스로 확인. mode 전환 중 draft·문서 busy·Undo·재열기 선택 보존은 미확인.",
+      "transferable": "선택 상태를 대상 자원·entity 종류·컨텍스트와 함께 해석하는 원리.",
+      "non_transferable": "GIS layer나 Blender view layer를 CAE part/solver entity/해석 활성 상태와 같은 타입으로 취급하지 않는다.",
+      "unknowns": [
+        "Blender 사용자 UI 경로는 접근 실패로 검증하지 못함",
+        "문서 busy와 선택 변경의 결합"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D01",
+        "selection-D03",
+        "selection-D16"
+      ],
+      "asset_ids": [],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P02",
+      "requirement": "가려진 요소와 화면에 보이는 요소 선택의 차이",
+      "products": [
+        "ParaView 5.13.3"
+      ],
+      "prerequisite": "Render View에 데이터가 표시된 상태.",
+      "actions": [
+        "view toolbar의 visible cell/point 또는 through/frustum cell/point 선택을 구분한다.",
+        "상자 영역을 끌어 선택한다."
+      ],
+      "documented_result": "surface 선택은 실제 보이는 요소를, frustum은 가림 여부와 관계없이 3D 선택 공간과 교차하는 요소를 찾는다. Polygon은 surface 범위다.",
+      "implementation_locator": "selection.py _select: SelectSurfacePoints/Cells, SelectFrustumPoints/Cells, SelectPolygonPoints/Cells",
+      "failure_cancel_undo_save": "interactive 선택 mode는 Esc로 종료한다. 저장/재열기와 Undo는 이 조작으로 보장되지 않는다.",
+      "transferable": "선택 도구에서 entity association과 visible/through 범위를 명확히 노출할 근거.",
+      "non_transferable": "보이는 표면 triangle ID가 원본 volume element ID와 같다는 보장은 아니다.",
+      "unknowns": [
+        "정확한 원본/표시 요소 ID 매핑",
+        "당사 GPU/DPI 환경의 hit 검증"
+      ],
+      "status": "supported",
+      "source_ids": [
+        "selection-D13",
+        "selection-D15"
+      ],
+      "asset_ids": [],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P03",
+      "requirement": "추가·제거·교집합·toggle과 조건 preview",
+      "products": [
+        "QGIS 3.40",
+        "ParaView 5.13.3"
+      ],
+      "prerequisite": "같은 layer/dataset의 기존 선택이 있는 상태.",
+      "actions": [
+        "QGIS Select Features by Value에서 조건과 Select/Add/Remove/Filter current selection을 선택한다.",
+        "Flash로 확정 선택 없이 후보를 확인한다.",
+        "ParaView의 modifier 동작을 별도로 비교한다."
+      ],
+      "documented_result": "두 제품은 선택 조합을 제공하지만 modifier 키 의미가 다르다. ParaView는 다른 dataset에 대한 새 선택이면 이전 선택을 교체한다.",
+      "implementation_locator": "QgsVectorLayer::selectByIds(behavior); selection.py _collectSelectionPorts Modifier ADD/SUBTRACT/TOGGLE",
+      "failure_cancel_undo_save": "QGIS Reset form은 검색 입력을 초기화한다. 검색 취소가 기존 선택까지 복원하는지 미확인.",
+      "transferable": "preview·확정 선택과 조합 연산을 구분하는 원리.",
+      "non_transferable": "제품별 Ctrl/Shift 동작을 섞어 하나의 공통 단축키 사양이라고 주장하지 않는다.",
+      "unknowns": [
+        "조건 식 오류 때 이전 선택 보존",
+        "preview 도중 문서 변경"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D01",
+        "selection-D03",
+        "selection-D13",
+        "selection-D15"
+      ],
+      "asset_ids": [
+        "selection-S04"
+      ],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P04",
+      "requirement": "표·트리·viewport 사이의 선택 동기화",
+      "products": [
+        "QGIS 3.40",
+        "Blender v4.5.3 source"
+      ],
+      "prerequisite": "QGIS 표와 지도에서 같은 layer를 보고 있으며 표 master model을 로드한 상태.",
+      "actions": [
+        "표의 행 헤더에서 feature를 선택한다.",
+        "지도에서 선택을 바꾼다."
+      ],
+      "documented_result": "QGIS는 양쪽 선택을 연결한다. 소스는 행의 FeatureId를 선택 관리자에 전달하고 repaint를 요청한다. Blender Outliner 비교는 context별 분기만 소스로 확인했다.",
+      "implementation_locator": "QgsFeatureSelectionModel::selectFeatures/enableSync/layerSelectionChanged; QgsAttributeTableFilterModel constructor; outliner_select.cc",
+      "failure_cancel_undo_save": "필터·정렬 후 ID 매핑 API는 확인. layer 삭제 중 repaint·property draft의 일관성은 미검증.",
+      "transferable": "view 인덱스 대신 domain ID를 거쳐 선택을 연결하고 변경 폭을 묶는 접근.",
+      "non_transferable": "선택 관리자 연결만으로 문서 transaction·CAE 참조의 영속성이 확보되지는 않는다.",
+      "unknowns": [
+        "수백만 행 repaint/선택 지연",
+        "대상 삭제와 Undo 시 선택 복원"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D02",
+        "selection-D04",
+        "selection-D07",
+        "selection-D12",
+        "selection-D17"
+      ],
+      "asset_ids": [
+        "selection-S01",
+        "selection-S02"
+      ],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P05",
+      "requirement": "active 객체·current cell·selected 집합 구별",
+      "products": [
+        "QGIS 3.40",
+        "Blender v4.5.3 source"
+      ],
+      "prerequisite": "여러 대상이 선택되어 있고 속성 표시 기준이 필요한 상태.",
+      "actions": [
+        "QGIS 표에서 셀 cursor와 행 선택을 구분해 조작한다.",
+        "Blender 비교는 LayerObjects.active 및 Object.select_get을 별도 조회한다."
+      ],
+      "documented_result": "QGIS 셀 cursor 이동은 행 선택을 바꾸지 않는다. Blender active object는 별도 view-layer 참조로 설정하며 layer에 없는 대상을 거절한다.",
+      "implementation_locator": "rna_LayerObjects_active_object_get/set lines72–106; rna_Object_select_get",
+      "failure_cancel_undo_save": "active 대상 삭제·Undo 뒤 active와 selected 복원은 미확인.",
+      "transferable": "여러 선택 중 속성 기준/명령 기준 대상이 따로 있을 수 있다는 구별.",
+      "non_transferable": "active 객체 하나를 실제 조건 적용 대상 전체로 자동 간주하지 않는다.",
+      "unknowns": [
+        "Blender 사용자 UI와 소스의 대응 검증",
+        "mixed 속성의 active-only 변경 정책"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D02",
+        "selection-D16",
+        "selection-D18"
+      ],
+      "asset_ids": [
+        "selection-S01",
+        "selection-S02"
+      ],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P06",
+      "requirement": "숨김·격리·트리 필터·선택 필터의 의미 차이",
+      "products": [
+        "QGIS 3.40",
+        "ParaView 5.13.3",
+        "Blender v4.5.3 source"
+      ],
+      "prerequisite": "여러 layer/source가 표시되고 표·tree 필터를 사용할 수 있는 상태.",
+      "actions": [
+        "QGIS의 layer visibility와 표 Show Selected/Show Visible를 따로 비교한다.",
+        "ParaView active view의 eyeball/Show/Hide 및 Pickable을 구분한다.",
+        "Blender local_view와 hide API를 비교한다."
+      ],
+      "documented_result": "표의 행 필터는 지도 layer의 feature를 숨기지 않는다. ParaView 표시와 pickability는 별도 속성이다. Blender hide와 local view API도 별개다.",
+      "implementation_locator": "QgsAttributeTableFilterModel::FilterMode; ParaView Show(source,view)/Hide(source); Object.hide_set/local_view_set",
+      "failure_cancel_undo_save": "가려진 기존 선택의 처리, local-view 종료 시 선택 복원, 저장 지속 범위는 이번에 미확인.",
+      "transferable": "표시·탐색·pick 가능 여부를 같은 체크박스 의미로 합치지 않는 근거.",
+      "non_transferable": "hide/isolate를 solver에서 part·condition 제외로 번역하지 않는다.",
+      "unknowns": [
+        "숨김 후 선택 집합 보존 규칙",
+        "CAE 선택 필터와 분석 활성 상태 교차"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D01",
+        "selection-D02",
+        "selection-D07",
+        "selection-D14",
+        "selection-D16"
+      ],
+      "asset_ids": [
+        "selection-S05"
+      ],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P07",
+      "requirement": "여러 선택의 mixed 속성·변경분·단일 Undo",
+      "products": [
+        "QGIS 3.40"
+      ],
+      "prerequisite": "편집 가능한 layer에서 지원 form으로 여러 feature를 편집.",
+      "actions": [
+        "대상을 선택하고 Toggle multi edit mode를 연다.",
+        "mixed/same/changed 상태를 구별하고 변경한 필드만 Apply changes한다.",
+        "같은 form 왼쪽 패널의 다른 feature 클릭도 원문이 명시한 적용 trigger다(D02 §12.2.4.4 step5)."
+      ],
+      "documented_result": "mixed는 기존 값을 유지하고 변경 필드는 대상 전체에 적용된다. 문서는 한 edit command로 Undo됨을 명시한다. 선택이 없으면 전체 표 적용이므로 주의가 필요하다.",
+      "implementation_locator": "QgsAttributeForm::setMultiEditFeatureIds, currentFormFeature, resetValues, saveWithDetails, setEditCommandMessage",
+      "failure_cancel_undo_save": "필드별 reset과 Undo는 문서 확인. 일부 대상의 validation 실패 시 원자성·저장/재열기는 미확인.",
+      "transferable": "값 불일치와 사용자가 변경한 draft를 구별하고 bulk 변경의 Undo 단위를 명시하는 접근.",
+      "non_transferable": "QGIS의 빈 선택→전체 적용을 CAE에 자동 채택하지 않는다. mixed 빈칸을 0이나 null로 치환하지 않는다. 해당 form의 다른 feature 클릭 trigger를 모든 선택 변경의 자동확정으로 일반화하지 않는다.",
+      "unknowns": [
+        "일부 invalid 대상의 전체 rollback 여부",
+        "viewport에서 선택을 변경하거나 대상이 삭제된 경우의 미적용 draft 처리"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D02",
+        "selection-D11"
+      ],
+      "asset_ids": [
+        "selection-S03"
+      ],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P08",
+      "requirement": "일시 선택과 저장된 집합·query의 수명",
+      "products": [
+        "ParaView 5.13.3"
+      ],
+      "prerequisite": "active selection을 만든 뒤 후속 분석 또는 시간 변화에 사용하려는 상태.",
+      "actions": [
+        "Extract Selection 또는 Plot Selection Over Time에 선택을 복사한다.",
+        "query/frustum을 Freeze Selection으로 ID 조건화하는 절을 비교한다.",
+        "Selection Editor의 저장된 선택 범위를 별도로 읽는다."
+      ],
+      "documented_result": "active 선택·추출 조건·Selection Editor는 같은 수명이 아니다. query/frustum은 입력·시간 변화에 재평가되고 Freeze는 현재 ID 조건으로 바꾼다. Editor는 producer/type 변경에 제한이 있다.",
+      "implementation_locator": "selection.py _selectIDsHelper, SelectGlobalIDs; manual §6.6–6.8",
+      "failure_cancel_undo_save": "매뉴얼 §6.1의 transient 설명과 §6.8의 saved selection을 구분한다. Editor 목록의 state-file 재열기 보존은 이번 근거로 단정하지 않는다.",
+      "transferable": "일시 선택·명시 집합·동적 조건식의 지속 의미를 분리할 참고.",
+      "non_transferable": "Freeze를 remesh 이후 같은 물리 부위의 영속 추적으로 해석하지 않는다.",
+      "unknowns": [
+        "Editor 목록의 state save/reopen",
+        "topology/partition 변경 뒤 ID 안정성"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D13",
+        "selection-D15"
+      ],
+      "asset_ids": [],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P09",
+      "requirement": "dataset index·partition ID·global ID와 native ID",
+      "products": [
+        "ParaView 5.13.3"
+      ],
+      "prerequisite": "point/cell 또는 multiblock/병렬 dataset을 ID로 선택.",
+      "actions": [
+        "SelectIDs, SelectCompositeDataIDs, SelectGlobalIDs의 인자를 비교한다.",
+        "대상 source/output port와 field association을 지정한다."
+      ],
+      "documented_result": "선택 ID 종류별 source가 다르며 representation에서 source/output port로 선택을 연결한다. global IDs는 해당 배열이 있어야 해석될 수 있는 선택 방식이다.",
+      "implementation_locator": "selection.py _collectSelectionPorts lines82–150; _selectIDsHelper lines315–359; SelectCompositeDataIDs",
+      "failure_cancel_undo_save": "누락 global-ID 배열이나 partition 재배치 뒤 선택 복원 결과는 직접 확인하지 않았다.",
+      "transferable": "표시 index와 원본 식별자 사이의 명시 매핑을 조사해야 한다는 근거.",
+      "non_transferable": "VTK/PV cell index·global ID를 solver card/node/element 번호로 바로 사용하지 않는다.",
+      "unknowns": [
+        "repartition/remesh 뒤 native 참조 보존",
+        "부재/중복 ID 진단"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D13",
+        "selection-D15"
+      ],
+      "asset_ids": [],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P10",
+      "requirement": "대량 선택과 표 cache·가상화의 실제 범위",
+      "products": [
+        "QGIS 3.40"
+      ],
+      "prerequisite": "큰 layer에서 선택 수·ID 또는 일부 행만 필요한 경우.",
+      "actions": [
+        "selectedFeatureIds/count와 selectedFeatures를 비교한다.",
+        "cacheSize, geometry/attribute subset, table request와 sort cache를 확인한다."
+      ],
+      "documented_result": "전체 selectedFeatures는 geometry·attribute 복사를 유발할 수 있다. cache 범위를 제한할 API는 있지만 표 전체를 무제한 lazy 처리한다는 보장은 아니다.",
+      "implementation_locator": "QgsVectorLayer selectedFeatures warning; QgsVectorLayerCache::setCacheSize/setCacheGeometry/setCacheSubsetOfAttributes; table rowToId/idToRow",
+      "failure_cancel_undo_save": "cache invalidated/deleted 신호는 확인. 실제 million-element 메모리·FPS·취소 응답은 측정하지 않았다.",
+      "transferable": "필요한 ID·개수만 얻고 표시 cache의 보관 범위를 제한하는 접근.",
+      "non_transferable": "GIS feature cache를 CAE 전체 배열 정본이나 성능 완료의 증거로 삼지 않는다.",
+      "unknowns": [
+        "CAE 1M/100parts 성능",
+        "large-selection repaint·정렬 비용",
+        "Python binding별 취소 지원"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D03",
+        "selection-D04",
+        "selection-D06",
+        "selection-D08"
+      ],
+      "asset_ids": [
+        "selection-S01"
+      ],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P11",
+      "requirement": "좌표계 지정·표시 변환·수치 변환 구별",
+      "products": [
+        "QGIS 3.40",
+        "ParaView 5.13.3"
+      ],
+      "prerequisite": "다른 좌표계를 가진 source를 함께 표시하거나 화면에서 대상을 고르는 경우.",
+      "actions": [
+        "QGIS layer CRS 지정과 project 표시 변환을 구분한다.",
+        "QgsCoordinateTransform과 map-tool 화면 좌표 변환을 확인한다.",
+        "ParaView display Transforming과 Transform filter를 비교한다."
+      ],
+      "documented_result": "CRS 지정과 display transform은 원본 수치 변경과 다르다. QGIS 변환 API는 source/destination 및 실패 예외를 명시한다.",
+      "implementation_locator": "QgsCoordinateTransform::transform/transformCoords; QgsMapTool::toMapCoordinates; ParaView manual Transforming vs Transform filter",
+      "failure_cancel_undo_save": "QgsCsException과 fallback 선택은 확인. CAE instance 변환·하중 방향·반사 시 법선 처리는 미확인.",
+      "transferable": "좌표 metadata·원본 좌표·표시 변환을 분리해서 해석할 참고.",
+      "non_transferable": "지리 CRS 변환을 FE local coordinate system/단위계/DOF 변환과 동치로 삼지 않는다.",
+      "unknowns": [
+        "조립체 instance matrix와 pick 역변환",
+        "CAE 단위·벡터·텐서 변환"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D05",
+        "selection-D09",
+        "selection-D10",
+        "selection-D14"
+      ],
+      "asset_ids": [
+        "selection-S06"
+      ],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P12",
+      "requirement": "큰 좌표에서 표시 정밀도와 선택 정확도",
+      "products": [
+        "ParaView 5.13.3"
+      ],
+      "prerequisite": "큰 offset의 mesh를 GPU로 표시하는 경우.",
+      "actions": [
+        "advanced Display의 Coordinate Shift Scale Method 설명을 읽는다.",
+        "Auto Shift/Scale과 카메라 기반 방법의 재전송 비용을 비교한다."
+      ],
+      "documented_result": "GPU로 보내는 point의 단정밀도 문제를 shift/scale로 보완한다. 재정규화는 GPU 재업로드 비용을 만들 수 있다.",
+      "implementation_locator": "Displaying data §4.4.2 Coordinate Shift Scale Method; backend 대응 소스는 이번 조사에서 확인하지 않음",
+      "failure_cancel_undo_save": "표시 설명은 확보했으나 hit-test·정밀도 수치·회전/zoom 회귀는 미검증.",
+      "transferable": "표시 정밀도 예산을 원본 모델 수치 정밀도와 별도로 검증할 근거.",
+      "non_transferable": "선명한 화면이 solver 좌표·pick 정확도나 native ID 보존을 증명하지 않는다.",
+      "unknowns": [
+        "정확한 backend API/version 대응",
+        "수치 오차와 pick 허용 오차"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D14"
+      ],
+      "asset_ids": [],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P13",
+      "requirement": "선택 대상 삭제·필터 변경 때 속성 draft와 명령 활성화",
+      "products": [
+        "QGIS 3.40",
+        "Blender v4.5.3 source"
+      ],
+      "prerequisite": "속성 form을 열어 draft를 가진 채 대상이 바뀌거나 삭제되는 교차 상황.",
+      "actions": [
+        "selectionChanged/featureDeleted/cache invalidation 신호와 form reset/save API를 확인한다.",
+        "active tool/action 및 Outliner properties 동기화 분기를 조사한다."
+      ],
+      "documented_result": "필요한 변경 통지와 form API는 있다. 이들을 사용하면 모든 삭제/Undo/draft 충돌이 안전하게 해결된다는 근거는 확보하지 못했다.",
+      "implementation_locator": "QgsVectorLayer::featureDeleted/selectionChanged; QgsVectorLayerCache::cachedLayerDeleted/invalidated; QgsAttributeForm::resetValues/saveWithDetails; QgsMapTool::setAction",
+      "failure_cancel_undo_save": "대상 삭제 후 미적용 draft 처리·Undo 복귀·busy 전환은 공백으로 남긴다.",
+      "transferable": "교차 상태를 구현 전에 별도 시나리오로 고정해야 한다는 질문 목록.",
+      "non_transferable": "신호 존재를 완성된 상태 기계나 자동 conflict resolution으로 과장하지 않는다.",
+      "unknowns": [
+        "선택 삭제 후 draft 폐기/보존/적용 정책",
+        "Undo로 객체가 돌아왔을 때 편집 대상",
+        "action enablement 시점"
+      ],
+      "status": "gap",
+      "source_ids": [
+        "selection-D03",
+        "selection-D05",
+        "selection-D08",
+        "selection-D11",
+        "selection-D17"
+      ],
+      "asset_ids": [],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "selection-P14",
+      "requirement": "겹친 pick 후보의 목록·preview·순환·확정·취소",
+      "products": [
+        "Rhino 8 help",
+        "RhinoCommon 9 API reference",
+        "RhinoCommon 2018 guide"
+      ],
+      "prerequisite": "Rhino8의 pick 영역에 여러 객체가 겹친 경우. API/예제는 버전이 다른 독립 참고.",
+      "actions": [
+        "후보 목록에서 이름을 고르거나 원래 지점 클릭/휠로 후보를 순환한다.",
+        "highlight 후보를 우클릭으로 확정하거나 None/다른 곳 클릭으로 취소한다.",
+        "Selection Menu options에서 이름/type/layer 및 dynamic highlight 설정을 확인한다."
+      ],
+      "documented_result": "겹친 후보를 명시해 고르는 사용자 경로가 있다. SelVisible은 block instance 제약이 있으며 through 옵션과 구분된다. 공개 API는 ChooseOneQuestion과 Get 결과/Cancel을 제공한다.",
+      "implementation_locator": "RhinoCommon GetObject.ChooseOneQuestion (API9, Since5.0); GetObject.Get; 2018 GetMultiple/EnablePreSelect example",
+      "failure_cancel_undo_save": "선택 과정 취소는 Rhino8 문서 확인. 후보 정렬 알고리즘·8 API 실제 일치·Undo/state save는 미확인.",
+      "transferable": "ambiguous pick에서 후보 설명·hover preview·확정과 취소를 분리하는 접근.",
+      "non_transferable": "상용 Rhino의 hit backend 구현이나 후보 정렬을 확보했다고 주장하지 않는다. API9 문서를 Rhino8 직접 재현으로 세지 않는다.",
+      "unknowns": [
+        "후보 depth/tolerance 정렬 규칙",
+        "Rhino8와 API9 정확한 대응",
+        "millions of elements 후보 지연"
+      ],
+      "status": "partial",
+      "source_ids": [
+        "selection-D19",
+        "selection-D20",
+        "selection-D21",
+        "selection-D22",
+        "selection-D23"
+      ],
+      "asset_ids": [],
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    }
+  ],
+  "coverage": [
+    {
+      "requirement": "entity 범위·mode·선택 filter",
+      "pattern_ids": [
+        "selection-P01",
+        "selection-P05"
+      ],
+      "status": "partial",
+      "gap_reason": "QGIS 사용자 경로/API와 Blender 소스는 확보. Blender UI 접근 실패·busy 전환은 미확인."
+    },
+    {
+      "requirement": "add/remove/box/lasso/through/occlusion cycle",
+      "pattern_ids": [
+        "selection-P02",
+        "selection-P03",
+        "selection-P14"
+      ],
+      "status": "partial",
+      "gap_reason": "surface/frustum과 ambiguous 후보 순환 자료 확보. 후보 정렬 커널·정확도·동일버전 실행 미확인."
+    },
+    {
+      "requirement": "tree·viewport 동기화와 active/selected 구별",
+      "pattern_ids": [
+        "selection-P04",
+        "selection-P05"
+      ],
+      "status": "partial",
+      "gap_reason": "QGIS ID↔row/동기화 소스 확보. Blender 사용자 화면 및 삭제/Undo 교차 재현 미확인."
+    },
+    {
+      "requirement": "hide/isolate/filter와 선택",
+      "pattern_ids": [
+        "selection-P06",
+        "selection-P08"
+      ],
+      "status": "partial",
+      "gap_reason": "표·layer·view·pickable 구별 근거 확보. 격리 종료와 숨김 이후 기존 선택 지속은 미확인."
+    },
+    {
+      "requirement": "multiobject mixed 속성과 부분 적용",
+      "pattern_ids": [
+        "selection-P07"
+      ],
+      "status": "partial",
+      "gap_reason": "mixed/changed/단일 Undo는 문서/API/화면 확보. 일부 invalid 대상 rollback은 미확인."
+    },
+    {
+      "requirement": "model instance 좌표변환과 표시 정밀도",
+      "pattern_ids": [
+        "selection-P11",
+        "selection-P12"
+      ],
+      "status": "partial",
+      "gap_reason": "표시/원본 변환·GPU shift/scale 근거. 조립체 instance·CAE 벡터/DOF·pick 역변환 실증 없음."
+    },
+    {
+      "requirement": "대용량 lazy UI와 선택 ID↔원본 data",
+      "pattern_ids": [
+        "selection-P09",
+        "selection-P10"
+      ],
+      "status": "partial",
+      "gap_reason": "ID/행/port/cache 접근은 확보. 1M 실제 성능 및 remesh mapping 미검증."
+    },
+    {
+      "requirement": "선택 삭제→property draft/Undo→action enablement",
+      "pattern_ids": [
+        "selection-P13"
+      ],
+      "status": "gap",
+      "gap_reason": "API 조각은 있으나 완결된 교차 정책의 명시/실행 근거 없음."
+    }
+  ],
+  "search_log": [
+    {
+      "query": "Blender4.5 selection/outliner/local view 공식 사용자 문서 및 Object API",
+      "outcome": "공식 en4.5/4.4 및 다른 locale 원문 open은402, 직접 HTTP403. 검색 cache의 내용은 후보로만 두고 source 수에서 제외. 공식 blender/blender v4.5.3 소스3개를 읽어 API/분기만 기록했다."
+    },
+    {
+      "query": "QGIS3.40 manual/API 선택 동기화·filter·mixed multiedit·cache",
+      "outcome": "공식 web 원문과3.40 API 관련 절을 읽었다. 직접HTTP403인 이미지의 대안으로 공식 QGIS-Documentation release3.40 commit 원본PNG6개를 확보·시각 확인했다."
+    },
+    {
+      "query": "ParaView5.13.3 selectingData, display, selection.py 대안·제약",
+      "outcome": "surface와frustum, transient와extract조건, producer/type변경, 원본/표시변환을 비교했다. 매뉴얼 §6.1과§6.8의 saved selection 표현은 분리했고 state-reopen은 미확인으로 남겼다."
+    },
+    {
+      "query": "겹침/가림 후보순환 보완: Rhino8 Selection menu / Selection commands",
+      "outcome": "공식 사용자 문서2개와개발자예제1개·API2개를 읽었다. UI8과API9의버전차이는별도표시. hit정렬 구현이나block지원 일반화 금지."
+    },
+    {
+      "query": "공식 ParaView 문서 이미지 원본 공개 repo 대안",
+      "outcome": "Kitware/ParaView의Documentation 경로와여러문서repo명을확인했으나 본매뉴얼 이미지 원본을 확보하지 못함. 없는이미지를assets로등록하지않았다."
+    }
+  ],
+  "gaps": [
+    "실제 앱 실행·연속 영상 관찰은 수행하지 않아 모든 runtime_verified=false다.",
+    "필수범위는 전부 coverage에 연결했지만 complete workflow readiness를 충족한 것은 아니다.",
+    "Blender 사용자 문서 접근 실패는 기능 부재를 뜻하지 않는다. 소스만으로 UI 단축키/기본정책을 복원하지 않았다.",
+    "이번 offline 보유 이미지는 QGIS6개뿐이다. Blender/ParaView/Rhino의 세부 화면 파일은 추가 확보하지 못했다.",
+    "형상/메시 정본과 native ID·재메시 참조·수백만 요소 성능·삭제 중 draft/Undo·한글/IME/혼합DPI는 미검증이다."
+  ],
+  "runtime_verified": false,
+  "full_workflow_ready": false,
+  "source_count_rule": "23 canonical document/API/code URLs; alternate image-repository URLs are retrieval locators, not extra independent sources.",
+  "collected_on": "2026-10-30",
+  "asset_path_scope": "file is relative to the separate downloadable reference pack; public repository contains metadata and source_url, not these image bytes"
+}

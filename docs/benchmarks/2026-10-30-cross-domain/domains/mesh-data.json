@@ -1,0 +1,793 @@
+{
+  "key": "mesh-data",
+  "title": "메시·표시 데이터와 기술 계약",
+  "scope": "비 CAE/기술 라이브러리의 필요한 데이터·변환·품질 계약 조사. 엔진 선정, 신규 모델/DB 설계, SDK 재현, GUI 구현은 제외.",
+  "sources": [
+    {
+      "id": "mesh-data-D01",
+      "url": "https://gmsh.info/doc/texinfo/gmsh.html",
+      "title": "Gmsh reference manual",
+      "product": "Gmsh",
+      "version": "4.15.2",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "§1.2.2–1.2.3; t10/t16/x1; model.mesh.getElements/getElementProperties/getElementQualities; model.occ.fragment; MSH/Node ordering",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "기하 entity·physical group·node/element tag는 다른 범위다. 크기장, fragment 대응표, 요소별 연결·품질 API와 출력 시 집합 정보 손실 조건을 확인했다."
+    },
+    {
+      "id": "mesh-data-D02",
+      "url": "https://vtk.org/doc/nightly/release/9.4/html/classvtkCellArray.html",
+      "title": "vtkCellArray class reference",
+      "product": "VTK",
+      "version": "문서 표기 9.4.2",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Detailed Description; SetData; IsValid; storage conversion; NewIterator",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "연결은 offsets와 connectivity로 저장한다. 정수 폭·iterator·구형 포맷 변환에는 메모리와 수명상의 제약이 있다."
+    },
+    {
+      "id": "mesh-data-D03",
+      "url": "https://docs.vtk.org/en/v9.7.0/api/python/vtkmodules/vtkmodules.util.numpy_support.html",
+      "title": "numpy_support Python API",
+      "product": "VTK",
+      "version": "9.7.0 문서 경로; 제품 채택 버전 아님",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Caveats; numpy_to_vtk; vtk_to_numpy; numpy_to_vtkIdTypeArray",
+      "read_status": "full-relevant-sections",
+      "read_route": "web-open-and-find; direct-download-403",
+      "summary": "NumPy와 VTK 사이 공유 배열은 소유자의 수명과 dtype 제약을 따른다. 이 문서의 새 SOA helper를 9.4 지원으로 간주하지 않는다."
+    },
+    {
+      "id": "mesh-data-D04",
+      "url": "https://docs.vtk.org/en/v9.6.1/vtk_file_formats/vtkxml_file_format.html",
+      "title": "XML file formats",
+      "product": "VTK",
+      "version": "9.6.1 문서 경로",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Serial/Parallel XML File Formats; UnstructuredGrid; DataArray",
+      "read_status": "full-relevant-sections",
+      "read_route": "web-open-and-find; direct-download-403",
+      "summary": "직렬 데이터 조각과 병렬 파일의 조각 참조, connectivity/offsets/types, point/cell data를 구분한다. 규격은 앱의 실제 부분 로딩을 보장하지 않는다."
+    },
+    {
+      "id": "mesh-data-D05",
+      "url": "https://docs.pyvista.org/api/core/_autosummary/pyvista.datasetfilters.extract_cells",
+      "title": "DataSetFilters.extract_cells",
+      "product": "PyVista",
+      "version": "다운로드 원문 표기 0.49.2",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "extract_cells signature; pass_cell_ids/pass_point_ids; 0.49 index validation; Examples",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "셀 부분집합의 출력 타입과 원본 ID 배열 옵션을 명시한다. 0.49부터 음수·범위 밖 인덱스는 IndexError다."
+    },
+    {
+      "id": "mesh-data-D06",
+      "url": "https://docs.pyvista.org/api/core/_autosummary/pyvista.dataobjectfilters.extract_surface",
+      "title": "DataObjectFilters.extract_surface",
+      "product": "PyVista",
+      "version": "다운로드 원문 표기 0.49.2",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "pass_pointid/pass_cellid; nonlinear_subdivision; Warning; Examples",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "체적→표면은 원본 cell과 다대일로 연결될 수 있다. 비선형 subdivision은 표현을 바꾸며 후속 연산은 원본 ID 추적에 영향을 줄 수 있다."
+    },
+    {
+      "id": "mesh-data-D07",
+      "url": "https://docs.pyvista.org/api/core/_autosummary/pyvista.dataobject.copy",
+      "title": "DataObject.copy",
+      "product": "PyVista",
+      "version": "다운로드 원문 표기 0.49.2",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "deep parameter; Examples",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "deep copy와 points/cells/data 배열을 공유하는 shallow copy를 구분한다."
+    },
+    {
+      "id": "mesh-data-D08",
+      "url": "https://docs.pyvista.org/api/core/_autosummary/pyvista.dataobjectfilters.cell_quality",
+      "title": "DataObjectFilters.cell_quality",
+      "product": "PyVista",
+      "version": "다운로드 원문 표기 0.49.2",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Cell Quality Measures table; null_value; all_valid; Returns",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "지원 요소와 지표 조합이 다르다. 미정의 품질의 기본 sentinel은 -1이며 각 지표는 별도 cell array에 기록된다."
+    },
+    {
+      "id": "mesh-data-D09",
+      "url": "https://docs.pyvista.org/api/core/_autosummary/pyvista.cell_quality_info",
+      "title": "cell_quality_info",
+      "product": "PyVista",
+      "version": "다운로드 원문 표기 0.49.2; 검색 캐시에는 0.49.1도 있음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "acceptable_range/normal_range/full_range/unit_cell_value; triangle/quad/tet tables",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "같은 지표라도 family별 정상·허용·퇴화 범위를 구분한다. 이 값은 개별 솔버의 합격 기준을 대신하지 않는다."
+    },
+    {
+      "id": "mesh-data-D10",
+      "url": "https://docs.pyvista.org/examples/01-filter/mesh_quality.html",
+      "title": "Computing Mesh Quality",
+      "product": "PyVista",
+      "version": "다운로드 원문 표기 0.49.2",
+      "kind": "example",
+      "evidence_type": "D",
+      "locator": "Triangle Cell Quality; Visualize Acceptable Range; Tetrahedron Cell Quality",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "품질 배열을 색칠한 뒤 허용 범위 밖 셀만 추출해 원본 wireframe 위에 강조하는 별도 예제다."
+    },
+    {
+      "id": "mesh-data-D11",
+      "url": "https://web.cels.anl.gov/projects/sigma/docs/moab/userguide.html",
+      "title": "MOAB User's Guide",
+      "product": "MOAB",
+      "version": "5.6.0",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "§2.2–2.5; §4.2; adjacency/set/tag API",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "entity handle·집합·tag를 구분한다. 보조 edge/face와 상향 adjacency는 필요할 때 생성하며 집합의 삭제 추적은 설정에 따른다."
+    },
+    {
+      "id": "mesh-data-D12",
+      "url": "https://web.cels.anl.gov/projects/sigma/docs/moab/metadata.html",
+      "title": "MOAB I/O and Meta-Data Storage Conventions",
+      "product": "MOAB",
+      "version": "5.6.0",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Global Identifier; Geometric Model Information; Material/Boundary sets; Tables 1–2",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "GLOBAL_ID와 handle은 다르며 geometry·material·boundary·partition은 tag 관례로 나타낸다. 포맷별 메타데이터 보존 범위를 확인해야 한다."
+    },
+    {
+      "id": "mesh-data-D13",
+      "url": "https://doc.cgal.org/latest/Mesh_3/index.html",
+      "title": "3D Mesh Generation User Manual",
+      "product": "CGAL",
+      "version": "원문 표기 6.2.1; /6.2.1 경로도 latest로 redirect",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Input Domain/Output Mesh; Meshing Criteria; sharp features; edge_distance example",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "Mesh_3는 하위영역·표면·feature를 가진 3D 영역의 단체 메시를 만든다. 입력 domain과 출력 vertex/edge/facet/cell을 구분하며 feature 기준에 따른 차이를 보여 준다."
+    },
+    {
+      "id": "mesh-data-D14",
+      "url": "https://doc.cgal.org/latest/Mesh_3/group__PkgMesh3Functions.html",
+      "title": "Mesh Generation Functions",
+      "product": "CGAL",
+      "version": "6.2.1; latest 경로",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "make_mesh_3/refine_mesh_3; exude_mesh_3 warning; optimizer order/time_limit",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "생성·세분화·최적화는 별도 함수다. exude 뒤 다시 refine하면 개선이 사라지며 최적화 순서와 함수별 시간 제한을 구분해야 한다."
+    },
+    {
+      "id": "mesh-data-D15",
+      "url": "https://docs.pyvista.org/user-guide/data_model.html",
+      "title": "PyVista Data Model",
+      "product": "PyVista",
+      "version": "다운로드 원문 표기 0.49.2",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "The PyVista DataSet; points/arrays; Cell Data/Point Data/Field Data; Active Scalars",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "형상·연결·point/cell/field 배열과 active 표시 배열을 분리한다. dataset 유형에 따라 저장량이 다르다."
+    },
+    {
+      "id": "mesh-data-D16",
+      "url": "https://docs.pyvista.org/examples/00-load/create_unstructured_surface.html",
+      "title": "Creating an Unstructured Grid",
+      "product": "PyVista",
+      "version": "다운로드 원문 표기 0.49.2",
+      "kind": "example",
+      "evidence_type": "D",
+      "locator": "NumPy cells/celltypes/points example; UnstructuredGrid With Shared Points; Tetrahedral Grid",
+      "read_status": "full-relevant-sections",
+      "read_route": "downloaded-html-relevant-sections",
+      "summary": "명시 cell type과 연결 배열로 grid를 만드는 예제이며 동일 좌표의 별도 점과 실제 공유 점을 구분해 설명한다."
+    },
+    {
+      "id": "mesh-data-D17",
+      "url": "https://github.com/Kitware/VTK/blob/v9.4.2/Wrapping/Python/vtkmodules/util/numpy_support.py",
+      "title": "numpy_support.py at v9.4.2",
+      "product": "VTK",
+      "version": "v9.4.2 tag; blob 1ecfacc554a0abd0cc35502c18ced82cb8de2d69",
+      "kind": "code",
+      "evidence_type": "D",
+      "locator": "numpy_to_vtk: contiguous conversion, dtype cast/deep=1, _numpy_reference; vtk_to_numpy",
+      "read_status": "full-relevant-sections",
+      "read_route": "github-connector-source-read",
+      "summary": "실제 구현은 비연속 입력을 연속 복사하고 dtype 변환 시 deep copy를 강제한다. shallow 경로는 NumPy 참조를 유지한다."
+    },
+    {
+      "id": "mesh-data-D18",
+      "url": "https://github.com/Kitware/VTK/blob/v9.4.2/Common/DataModel/vtkCellArray.h",
+      "title": "vtkCellArray.h at v9.4.2",
+      "product": "VTK",
+      "version": "v9.4.2 tag",
+      "kind": "code",
+      "evidence_type": "D",
+      "locator": "class documentation lines 3–130; storage/iterator comments; InputArrayList",
+      "read_status": "full-relevant-sections",
+      "read_route": "github-connector-source-read-lines-1-230",
+      "summary": "고정 버전 소스의 offsets/연결 표현, 32/64bit 저장, API 변환과 iterator 무효화 주석을 직접 대조했다."
+    }
+  ],
+  "assets": [
+    {
+      "id": "mesh-data-S01",
+      "source_ids": [
+        "mesh-data-D01"
+      ],
+      "source_url": "https://gmsh.info/doc/texinfo/images/t10.png",
+      "file": "assets/mesh-data/gmsh-t10.png",
+      "width": 1024,
+      "height": 576,
+      "kind": "diagram",
+      "visual_review": true,
+      "ui_reference": false,
+      "observations": "회전된 평면 삼각형 메시의 여러 위치에서 밀도가 달라진다. 메뉴·필드·오류 상태는 보이지 않는다.",
+      "sha256": "5c1c47de2321d5dd2e91a285b3ff1710382070340f684d27494a3dfcbed63873"
+    },
+    {
+      "id": "mesh-data-S02",
+      "source_ids": [
+        "mesh-data-D01"
+      ],
+      "source_url": "https://gmsh.info/doc/texinfo/images/t16.png",
+      "file": "assets/mesh-data/gmsh-t16.png",
+      "width": 1024,
+      "height": 576,
+      "kind": "diagram",
+      "visual_review": true,
+      "ui_reference": false,
+      "observations": "절개·내부 부분이 있는 블록의 표면 메시가 색으로 구분된다. 이 그림만으로 interface node 공유를 증명하지 않는다.",
+      "sha256": "20b8a779eef65e55c8ae6619ffa135a90eecf1477547a0e0092b3938cd25b70c"
+    },
+    {
+      "id": "mesh-data-S03",
+      "source_ids": [
+        "mesh-data-D10"
+      ],
+      "source_url": "https://docs.pyvista.org/_images/sphx_glr_mesh_quality_002.png",
+      "file": "assets/mesh-data/pyvista-quality-range.png",
+      "width": 1024,
+      "height": 768,
+      "kind": "diagram",
+      "visual_review": true,
+      "ui_reference": false,
+      "observations": "삼각형 표면 모델의 shape 값과 0.250~1.00 colorbar, below/above 색이 보인다.",
+      "sha256": "fef6d1b7c2777e0245ae7ec8ff601439c03688ee336930b6884225d2175703a6"
+    },
+    {
+      "id": "mesh-data-S04",
+      "source_ids": [
+        "mesh-data-D10"
+      ],
+      "source_url": "https://docs.pyvista.org/_images/sphx_glr_mesh_quality_003.png",
+      "file": "assets/mesh-data/pyvista-quality-bad-cells.png",
+      "width": 1024,
+      "height": 768,
+      "kind": "diagram",
+      "visual_review": true,
+      "ui_reference": false,
+      "observations": "원본 wireframe 위에 일부 삼각형이 녹색으로 강조되어 있다. 직접 수리한 결과가 아니다.",
+      "sha256": "2e48f391422acbed8292a17cebace73c827e99872b2e15ef6cdd27af82c87d82"
+    },
+    {
+      "id": "mesh-data-S05",
+      "source_ids": [
+        "mesh-data-D10"
+      ],
+      "source_url": "https://docs.pyvista.org/_images/sphx_glr_mesh_quality_004.png",
+      "file": "assets/mesh-data/pyvista-quality-tetra.png",
+      "width": 1024,
+      "height": 768,
+      "kind": "diagram",
+      "visual_review": true,
+      "ui_reference": false,
+      "observations": "동일 형상의 volume/collapse_ratio/jacobian/scaled_jacobian 네 그림이다. 제목·colorbar가 겹쳐 보여 외관 모범으로 채택하지 않는다.",
+      "sha256": "bf4fa1ed7c218f17cd91e799c8a84ec3684ab360c8ee9e54ac9d66c4435a077c"
+    },
+    {
+      "id": "mesh-data-S06",
+      "source_ids": [
+        "mesh-data-D05"
+      ],
+      "source_url": "https://docs.pyvista.org/_images/pyvista-DataSetFilters-extract_cells-9b91e5b42e33a981_00_00.png",
+      "file": "assets/mesh-data/pyvista-extract-cells.png",
+      "width": 1024,
+      "height": 768,
+      "kind": "diagram",
+      "visual_review": true,
+      "ui_reference": false,
+      "observations": "기둥 전체 wireframe과 아래쪽 셀 부분집합의 음영이 같이 보인다. 원본 ID 숫자는 화면에 표시되지 않는다.",
+      "sha256": "7adfa0938ee656d77c55e52e4c5050dbc4fbff01a357505057a3178155fb3f02"
+    },
+    {
+      "id": "mesh-data-S07",
+      "source_ids": [
+        "mesh-data-D13"
+      ],
+      "source_url": "https://doc.cgal.org/latest/Mesh_3/u_arch_no_edge_distance.png",
+      "file": "assets/mesh-data/cgal-feature-no-distance.png",
+      "width": 376,
+      "height": 458,
+      "kind": "diagram",
+      "visual_review": true,
+      "ui_reference": false,
+      "observations": "아치 형상의 외부·내부 면에 삼각형 메시와 색 구분이 보인다. 쌍 그림의 첫 번째다.",
+      "sha256": "0ee232ca8f77921aff0da286ecccc8baacb4d6c3ba11ec353fc78d83632106a3"
+    },
+    {
+      "id": "mesh-data-S08",
+      "source_ids": [
+        "mesh-data-D13"
+      ],
+      "source_url": "https://doc.cgal.org/latest/Mesh_3/u_arch_with_edge_distance.png",
+      "file": "assets/mesh-data/cgal-feature-with-distance.png",
+      "width": 376,
+      "height": 458,
+      "kind": "diagram",
+      "visual_review": true,
+      "ui_reference": false,
+      "observations": "같은 아치에 다른 세분화가 보이는 쌍 그림이다. edge_distance 차이의 의미는 원문 설명으로 연결한다.",
+      "sha256": "efeef0f601cc1fb4775bd01276981d336237cfd76a4090d579e078f2a871e911"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "mesh-data-P01",
+      "requirement": "entity·집합·native ID·partition의 범위 구분",
+      "products": [
+        "Gmsh",
+        "MOAB"
+      ],
+      "source_ids": [
+        "mesh-data-D01",
+        "mesh-data-D11",
+        "mesh-data-D12"
+      ],
+      "asset_ids": [],
+      "prerequisite": "모델 또는 mesh instance가 구별되어 있다.",
+      "actions": [
+        "entity/physical group/partition을 별도로 조회",
+        "MOAB handle과 GLOBAL_ID·집합 tag를 비교"
+      ],
+      "documented_result": "Gmsh group은 기하 entity의 묶음이고 MOAB handle은 tag 값과 다르다.",
+      "implementation_locator": "Gmsh getEntities/getPhysicalGroups/getPartitions; MOAB get_entities_by_type_and_tag/tag_get_data",
+      "failure_cancel_undo_save": "Gmsh physical group 출력 선택과 MSH2 SaveAll의 손실 조건은 문서화됨. import 간 ID 충돌/Undo는 미확인.",
+      "transferable": "번호를 사용할 때 소속과 범위를 확인하는 책임.",
+      "non_transferable": "physical group·partition·material tag를 solver card/part ID와 동치화할 수 없다.",
+      "unknowns": [
+        "다중 파일의 native 번호 충돌 해결",
+        "저장·재열기 후 application identity 보존"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "mesh-data-P02",
+      "requirement": "cell family·차수·연결 순서와 DOF 구분",
+      "products": [
+        "Gmsh",
+        "PyVista"
+      ],
+      "source_ids": [
+        "mesh-data-D01",
+        "mesh-data-D16"
+      ],
+      "asset_ids": [],
+      "prerequisite": "요소 type과 node 목록을 얻을 수 있다.",
+      "actions": [
+        "getElementProperties로 차수와 노드 수 확인",
+        "명시 celltype·연결 배열로 grid 구성"
+      ],
+      "documented_result": "기하 차수·primary node 수·연결은 조회 가능하다. 공유 점 예제는 별도 좌표 중복과 실제 연결을 구별한다.",
+      "implementation_locator": "Gmsh model.mesh.getElementProperties/getElements; PyVista UnstructuredGrid(cells,celltypes,points)",
+      "failure_cancel_undo_save": "소스별 node permutation·고차 midside 보존과 native 출력은 실제 교환 확인이 필요하다.",
+      "transferable": "요소 family별 변환을 명시하고 순서를 확인하는 방식.",
+      "non_transferable": "기하 고차 node 수가 solver 자유도/formulation을 결정하지 않는다.",
+      "unknowns": [
+        "대상 solver별 고차 node 순서 표",
+        "좌표계·integration/formulation·DOF 매핑"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "mesh-data-P03",
+      "requirement": "대형 연결 배열과 보조 adjacency의 생성 비용",
+      "products": [
+        "VTK",
+        "MOAB"
+      ],
+      "source_ids": [
+        "mesh-data-D02",
+        "mesh-data-D11",
+        "mesh-data-D18"
+      ],
+      "asset_ids": [],
+      "prerequisite": "연결 배열의 정수 범위와 node index가 알려져 있다.",
+      "actions": [
+        "offsets/connectivity 구조 확인",
+        "보조 edge/face와 상향 adjacency가 생성되는 시점 확인"
+      ],
+      "documented_result": "VTK는 offset+연결 배열, MOAB는 최소 연결과 필요 시 보조 entity/adjacency 생성이라는 다른 접근을 쓴다.",
+      "implementation_locator": "vtkCellArray SetData/IsValid/CanConvertTo32BitStorage/NewIterator; MOAB get_adjacencies(create_if_missing)",
+      "failure_cancel_undo_save": "VTK 저장 변경은 iterator를 무효화할 수 있다. MOAB entity는 명시 생성 전 tag/집합 배정할 수 없다.",
+      "transferable": "필요한 표현과 캐시 비용을 구분해 측정하는 기준.",
+      "non_transferable": "compact API 존재를 100만 요소 편집·Undo·병렬 안전의 실측 근거로 쓸 수 없다.",
+      "unknowns": [
+        "실제 peak RSS와 두 표현의 동시 보유 비용",
+        "GUI lazy tree와 연결한 성능"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "mesh-data-P04",
+      "requirement": "shallow/deep copy와 배열 소유·수명",
+      "products": [
+        "VTK",
+        "PyVista"
+      ],
+      "source_ids": [
+        "mesh-data-D03",
+        "mesh-data-D07",
+        "mesh-data-D17"
+      ],
+      "asset_ids": [],
+      "prerequisite": "NumPy/VTK 배열의 dtype·연속성·소유자를 알 수 있다.",
+      "actions": [
+        "numpy_to_vtk(deep=0/1)의 구현 분기 확인",
+        "DataObject.copy(deep=False/True) 정책 비교"
+      ],
+      "documented_result": "deep=0이어도 비연속 입력이나 dtype 변환에는 복사가 생긴다. shallow dataset copy는 배열을 공유한다.",
+      "implementation_locator": "VTK v9.4.2 numpy_support.py numpy_to_vtk/vtk_to_numpy; PyVista DataObject.copy",
+      "failure_cancel_undo_save": "공유 배열의 수명·동시 수정이 중요하다. 이 API는 문서 transaction, worker 종료 후 안전, rollback을 보장하지 않는다.",
+      "transferable": "무복사 여부와 소유자를 명시적으로 확인할 기준.",
+      "non_transferable": "shallow copy를 독립 편집 문서나 취소 가능한 snapshot으로 취급할 수 없다.",
+      "unknowns": [
+        "앱 문서/renderer/worker 사이 수명 계약",
+        "수정 알림·동시 읽기/쓰기 검증"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "mesh-data-P05",
+      "requirement": "필터 뒤 선택 ID와 원본 entity 대응",
+      "products": [
+        "PyVista"
+      ],
+      "source_ids": [
+        "mesh-data-D05",
+        "mesh-data-D06"
+      ],
+      "asset_ids": [
+        "mesh-data-S06"
+      ],
+      "prerequisite": "원본 grid에서 cell subset 또는 surface를 추출한다.",
+      "actions": [
+        "extract_cells에 원본 ID 전달 옵션 사용",
+        "extract_surface의 cell/point ID와 subdivision 확인"
+      ],
+      "documented_result": "subset은 원본 ID 배열을 만들 수 있다. surface face 여러 개가 같은 volume cell을 가리킬 수 있고 후속 VTK 연산은 추적 배열에 영향을 줄 수 있다.",
+      "implementation_locator": "extract_cells(pass_cell_ids,pass_point_ids); extract_surface(pass_cellid,pass_pointid,nonlinear_subdivision)",
+      "failure_cancel_undo_save": "0.49 extract_cells의 범위 밖 index 오류는 명시됨. 연속 필터·원본 교체 뒤 참조 안정은 미검증.",
+      "transferable": "표시 primitive와 편집 대상 사이의 변환 경계를 유지하는 기준.",
+      "non_transferable": "vtkOriginalCellIds는 source document 전체에서 영속 고유한 solver ID가 아니다.",
+      "unknowns": [
+        "분할·병합·decimate 후 many-to-many 대응",
+        "오래된 pick 결과의 문서 revision 검사"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "mesh-data-P06",
+      "requirement": "품질 미정의·미지원과 실제 불량 셀을 구별",
+      "products": [
+        "PyVista"
+      ],
+      "source_ids": [
+        "mesh-data-D08",
+        "mesh-data-D09"
+      ],
+      "asset_ids": [
+        "mesh-data-S05"
+      ],
+      "prerequisite": "cell family와 요청 metric이 정해져 있다.",
+      "actions": [
+        "family별 metric 지원표 확인",
+        "cell_quality와 cell_quality_info 결과 의미 비교"
+      ],
+      "documented_result": "미정의 기본값 -1과 metric별 full/normal/acceptable 범위를 따로 확인해야 한다.",
+      "implementation_locator": "DataObjectFilters.cell_quality(null_value,quality_measure); cell_quality_info(cell_type,quality_measure)",
+      "failure_cancel_undo_save": "미정의 sentinel을 음의 Jacobian과 일괄 분류하면 의미가 섞인다. inverse/high-order 판단은 metric별 추가 확인이 필요하다.",
+      "transferable": "지원 여부·수치·판정 기준을 분리하는 표시/검사 책임.",
+      "non_transferable": "문서의 acceptable_range가 solver별 해석 합격이나 요소 formulation 적합성을 보장하지 않는다.",
+      "unknowns": [
+        "실제 채택할 family별 inversion 판정",
+        "solver/사내 기준의 threshold 출처"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "mesh-data-P07",
+      "requirement": "품질 색칠·문제집합 추출과 수리 구분",
+      "products": [
+        "PyVista"
+      ],
+      "source_ids": [
+        "mesh-data-D10"
+      ],
+      "asset_ids": [
+        "mesh-data-S03",
+        "mesh-data-S04"
+      ],
+      "prerequisite": "공식 triangle quality 예제의 shape 배열을 사용한다.",
+      "actions": [
+        "허용 범위를 색상 범위로 표시",
+        "범위 밖 셀을 추출해 원본 wireframe과 함께 표시"
+      ],
+      "documented_result": "수치 분포와 문제 위치를 별도로 볼 수 있다. tet의 다른 metric 비교는 별도 예제다.",
+      "implementation_locator": "mesh_quality.py Visualize Acceptable Range: cell_quality_info/extract_values; Plotter.add_mesh",
+      "failure_cancel_undo_save": "예제는 불량 셀의 수리·Undo·품질 보고서 저장을 수행하지 않는다.",
+      "transferable": "검사 결과를 대상 집합과 문맥 강조로 연결하는 흐름.",
+      "non_transferable": "보이는 셀만으로 전체 검사의 완료나 수리 성공을 판단할 수 없다.",
+      "unknowns": [
+        "문제집합 저장/재열기",
+        "수리 전후 비교와 실패 rollback"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "mesh-data-P08",
+      "requirement": "local sizing recipe와 conformal geometry 대응",
+      "products": [
+        "Gmsh"
+      ],
+      "source_ids": [
+        "mesh-data-D01"
+      ],
+      "asset_ids": [
+        "mesh-data-S01",
+        "mesh-data-S02"
+      ],
+      "prerequisite": "공식 t10과 t16은 서로 다른 예제다.",
+      "actions": [
+        "size field 예제와 fragment API를 각각 읽음",
+        "fragment 입력→결과 mapping과 tag 변화 제약 확인"
+      ],
+      "documented_result": "크기장은 여러 제한의 조합이다. fragment는 conformal interface와 entity 대응표를 반환하지만 경계 번호는 바뀔 수 있다.",
+      "implementation_locator": "t10; t16; model.mesh.field; model.occ.fragment(outDimTags,outDimTagsMap)",
+      "failure_cancel_undo_save": "두 예제는 하나의 검증된 recipe가 아니다. 실패 rollback·조건 집합 복구는 미확인.",
+      "transferable": "recipe 설정과 topology 변경의 결과 mapping을 함께 확인하는 기준.",
+      "non_transferable": "기하 entity 대응표는 remesh 뒤 모든 node/element 조건의 자동 보존을 뜻하지 않는다.",
+      "unknowns": [
+        "실제 local/conformal 입력군 재현",
+        "입력조건·집합의 채택과 topology 변화 처리"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "mesh-data-P09",
+      "requirement": "feature/domain 기준과 생성·후처리 순서",
+      "products": [
+        "CGAL"
+      ],
+      "source_ids": [
+        "mesh-data-D13",
+        "mesh-data-D14"
+      ],
+      "asset_ids": [
+        "mesh-data-S07",
+        "mesh-data-S08"
+      ],
+      "prerequisite": "Mesh_3가 요구하는 bounded 3D domain/oracle과 feature가 준비된다.",
+      "actions": [
+        "feature 기준의 유무가 다른 공식 예제 비교",
+        "make/refine과 optimizer 순서·반환/시간 제한 읽기"
+      ],
+      "documented_result": "영역 feature와 출력 단체 mesh는 구별된다. exude는 마지막 optimizer여야 하며 이후 refine은 개선을 잃는다.",
+      "implementation_locator": "Mesh_3 User Manual Input Domain/Meshing Criteria; make_mesh_3/refine_mesh_3/exude_mesh_3",
+      "failure_cancel_undo_save": "함수별 time_limit은 전체 job 취소나 문서 rollback 보장이 아니다.",
+      "transferable": "recipe를 생성·세분화·최적화 단계와 전제조건으로 구분할 기준.",
+      "non_transferable": "이 tetrahedral domain API에서 범용 CAD/hexa/midsurface 생산성을 추론할 수 없다.",
+      "unknowns": [
+        "실제 CAD 어댑터와 domain 입력 적합성",
+        "앱 취소·부분 결과 채택 정책"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "mesh-data-P10",
+      "requirement": "piece 입출력·표시 배열과 권위 있는 문서 경계",
+      "products": [
+        "VTK",
+        "PyVista",
+        "MOAB"
+      ],
+      "source_ids": [
+        "mesh-data-D04",
+        "mesh-data-D12",
+        "mesh-data-D15"
+      ],
+      "asset_ids": [],
+      "prerequisite": "piece 파일과 point/cell/field 배열의 소속이 알려져 있다.",
+      "actions": [
+        "VTK serial/parallel 파일과 배열 구조 비교",
+        "active scalar와 geometry/material 메타데이터 역할 비교"
+      ],
+      "documented_result": "병렬 XML 파일은 piece 데이터의 참조를 담는다. active 표시 배열은 실제 point/cell/field 데이터와 구별된다.",
+      "implementation_locator": "VTK XML UnstructuredGrid/PUnstructuredGrid/DataArray; PyVista point_data/cell_data/field_data/active_scalars_name; MOAB metadata conventions",
+      "failure_cancel_undo_save": "파일 규격의 streaming 지원이 앱 lazy load나 모든 솔버 의미의 save/reopen을 보장하지 않는다.",
+      "transferable": "외부 후보·시각화 표현·도메인 문서의 역할을 구분해 확인하는 기준.",
+      "non_transferable": "렌더러 dataset·field array만으로 재료·접촉·step/case·DOF가 있는 편집 원본을 대체할 수 없다.",
+      "unknowns": [
+        "후보 채택의 원자성·stale 처리",
+        "외부 참조 누락·부분 로딩 실패의 문서 동작"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    }
+  ],
+  "coverage": [
+    {
+      "requirement": "entitytag/physicalgroup/nativeID/partition 구별",
+      "pattern_ids": [
+        "mesh-data-P01"
+      ],
+      "status": "partial",
+      "gap_reason": "도구 내 범위는 확인. 다중 파일/native 충돌과 persistence identity는 미검증."
+    },
+    {
+      "requirement": "connectivity/cellfamily/ordering/highorder/DOF 구별",
+      "pattern_ids": [
+        "mesh-data-P02"
+      ],
+      "status": "partial",
+      "gap_reason": "배열과 type 조회는 확인. solver별 node 순서와 DOF 의미는 별도 원문 필요."
+    },
+    {
+      "requirement": "compactarrays/lazyIO/copyzero-copy 소유수명",
+      "pattern_ids": [
+        "mesh-data-P03",
+        "mesh-data-P04",
+        "mesh-data-P10"
+      ],
+      "status": "partial",
+      "gap_reason": "API와 표현 제약 확인. 앱 규모의 lazy 동작·성능/메모리 실측 없음."
+    },
+    {
+      "requirement": "recipe/localsizing/conformal mapping과 분리후처리",
+      "pattern_ids": [
+        "mesh-data-P08",
+        "mesh-data-P09"
+      ],
+      "status": "partial",
+      "gap_reason": "기술 계약과 반례 확보. 기존 로드맵의 실제 형상군 실증을 대체하지 않음."
+    },
+    {
+      "requirement": "qualitymetric/invertedcell/threshold 선택",
+      "pattern_ids": [
+        "mesh-data-P06",
+        "mesh-data-P07"
+      ],
+      "status": "partial",
+      "gap_reason": "미지원 sentinel과 family별 metric은 확인. inversion/threshold를 실제 채택 버전과 solver별로 고정해야 함."
+    },
+    {
+      "requirement": "pipeline/filter 후 originalID 보존/집합/변환",
+      "pattern_ids": [
+        "mesh-data-P05"
+      ],
+      "status": "partial",
+      "gap_reason": "공식 문서가 경고하는 한계까지 확인. 연속 필터의 대응 보존 실험 없음."
+    },
+    {
+      "requirement": "candidate채택/dataset정본/renderer 표현 경계",
+      "pattern_ids": [
+        "mesh-data-P10"
+      ],
+      "status": "partial",
+      "gap_reason": "외부 데이터 역할은 구별. 새 CAE 문서/채택 구현은 이번 범위 밖."
+    }
+  ],
+  "search_log": [
+    {
+      "query": "site.gmsh.info doc texinfo physical groups getNodes getElements getElementQualities partition entity tags",
+      "outcome": "4.15.2 공식 매뉴얼과 5.0 개발 문서가 혼재하여 4.15.2 원문을 사용. SaveAll/MSH2의 집합 손실 반례 확인."
+    },
+    {
+      "query": "site.docs.vtk.org numpy shallow copy memory vtkCellArray offsets connectivity",
+      "outcome": "공식 문서와 v9.4.2 소스를 대조. deep=0도 복사할 수 있고 9.7 새 helper는 9.4로 소급하지 않음."
+    },
+    {
+      "query": "site.docs.pyvista.org extract_cells vtkOriginalCellIds compute_cell_quality scaled_jacobian",
+      "outcome": "부분집합/표면 추출의 ID 옵션과 quality 미정의 sentinel 확인. 옛 compute_cell_quality와 새 cell_quality API 차이를 혼용하지 않음."
+    },
+    {
+      "query": "site.doc.cgal.org Mesh_3 features sharp edges subdomain indices tetrahedral mesh",
+      "outcome": "6.2.1 Mesh_3 domain/feature·생성·refine·optimizer 전제와 한계 확인. all-hex 근거로 사용하지 않음."
+    },
+    {
+      "query": "site.sigma.mcs.anl.gov moab user guide entity handles sets tags GLOBAL_ID",
+      "outcome": "공식 5.6.0 사용자·metadata 문서 확보. mesh library의 handle/tag 의미만 조사했고 자료 관리 DB 설계는 하지 않음."
+    },
+    {
+      "query": "site.docs.vtk.org file formats vtkxml numberofpieces appended data unstructuredgrid",
+      "outcome": "공식 piece/array 규격 확보. 직접 HTML 다운로드 403은 web 원문 읽기로 대체; 포맷 기능과 제품 lazy 구현을 분리."
+    },
+    {
+      "query": "site.docs.pyvista.org data model shallow deep copy extract_surface vtkOriginalCellIds warning",
+      "outcome": "surface의 many-to-one mapping과 후속 연산에 의한 ID 추적 손상 경고 확인."
+    },
+    {
+      "query": "site.doc.cgal.org latest Mesh_3 optimizers sliver exuder time_limit",
+      "outcome": "exude 뒤 refine시 개선 손실 및 optimizer별 시간 제한 확인. job cancel/rollback과 동치화하지 않음."
+    }
+  ],
+  "gaps": [
+    "S/D 기술 자료 조사만 수행. SDK·앱 실행, 영상 연속 관찰, 실제 사용자 입력의 R/V 근거는 없다.",
+    "8개 이미지는 모두 예제 model/quality 그림이며 UI menu/dialog 참고 화면으로 세지 않는다.",
+    "VTK 9.4.2 소스, VTK 9.6.1 XML 규격, VTK 9.7 문서, PyVista 0.49.2를 하나의 실행환경으로 검증한 적 없다.",
+    "CGAL /6.2.1 경로가 latest로 redirect되어 고정 URL로 안정성이 확보된 것은 아니다. 표기 버전과 조회일을 기록한다.",
+    "native ID/다중 DOF/solver formulation과 CAD topology 변경 후 조건 보존은 이 문서군만으로 채울 수 없다.",
+    "고차/비정상/혼합 family별 변환 및 inversion 판정, 저장/재열기, 채택의 원자성·stale 처리는 후속 실제 구현 단계의 실증 사항이다.",
+    "공식 문서의 공개 열람은 코드·예제·이미지·라이브러리 전체의 제품 배포 허가로 일반화하지 않는다. 도입 시 채택 버전의 조건을 별도 확인한다."
+  ],
+  "runtime_verified": false,
+  "collection_finished": true,
+  "status_meaning": "supported는 좁은 기술 계약의 문서 근거 충족이며 앱 workflow/구현/성능 준비 완료가 아니다.",
+  "counts": {
+    "unique_source_urls": 18,
+    "images": 8,
+    "ui_images": 0,
+    "patterns": 10,
+    "coverage_groups": 7
+  },
+  "collected_on": "2026-10-30",
+  "asset_path_scope": "file is relative to the separate downloadable reference pack; public repository contains metadata and source_url, not these image bytes"
+}

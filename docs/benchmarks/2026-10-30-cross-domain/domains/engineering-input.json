@@ -1,0 +1,855 @@
+{
+  "key": "engineering-input",
+  "title": "공학 수치·표·곡선·단위 입력",
+  "scope": "비 CAE 및 과학 데이터 편집 프로그램/공식 API의 기능 단위 비교. 도입·구현·런타임 검증·DB 설계는 제외.",
+  "sources": [
+    {
+      "id": "engineering-input-D01",
+      "url": "https://doc.qt.io/qt-6/qvalidator.html",
+      "title": "QValidator",
+      "product": "Qt",
+      "version": "6.12.0 문서",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Detailed Description; State; validate/fixup",
+      "read_status": "full-relevant-sections",
+      "summary": "편집 중간 상태와 최종 수용 상태를 구분하는 입력 검사 계약."
+    },
+    {
+      "id": "engineering-input-D02",
+      "url": "https://doc.qt.io/qt-6/qdoublevalidator.html",
+      "title": "QDoubleValidator",
+      "product": "Qt",
+      "version": "6.12.0 문서",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Detailed Description; Notation; validate; fixup",
+      "read_status": "full-relevant-sections",
+      "summary": "범위·표기·locale·자리수에 따른 검사. 그룹 구분자 정책과 표시 정규화를 명시한다."
+    },
+    {
+      "id": "engineering-input-D03",
+      "url": "https://doc.qt.io/qt-6/qlineedit.html",
+      "title": "QLineEdit",
+      "product": "Qt",
+      "version": "6.12.0 문서",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Editing Text; text property; editingFinished; textEdited; Default Key Bindings",
+      "read_status": "full-relevant-sections",
+      "summary": "입력 신호, 위젯 내부 Undo, 프로그램에 의한 setText의 차이를 확인했다."
+    },
+    {
+      "id": "engineering-input-D04",
+      "url": "https://doc.qt.io/qt-6/qtwidgets-widgets-lineedits-example.html",
+      "title": "Line Edits Example",
+      "product": "Qt",
+      "version": "6.12.0 문서",
+      "kind": "example",
+      "evidence_type": "D",
+      "locator": "Window constructor; validatorChanged; images/lineedits-example.png",
+      "read_status": "full-relevant-sections",
+      "summary": "입력 제약을 바꾸며 비교하는 공식 위젯 예제와 화면."
+    },
+    {
+      "id": "engineering-input-D05",
+      "url": "https://doc.qt.io/qt-6/qlocale.html",
+      "title": "QLocale",
+      "product": "Qt",
+      "version": "6.12.0 문서",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "NumberOption; toDouble(QString,bool*); toInt",
+      "read_status": "full-relevant-sections",
+      "summary": "문자열 파싱 결과와 성공 여부를 별도로 검사해야 한다. 실패·overflow 반환 계약을 확인했다."
+    },
+    {
+      "id": "engineering-input-D06",
+      "url": "https://doc.qt.io/qt-6/qinputmethodevent.html",
+      "title": "QInputMethodEvent",
+      "product": "Qt",
+      "version": "6.12.0 문서",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Detailed Description: composition, commit/preedit and undo steps",
+      "read_status": "full-relevant-sections",
+      "summary": "IME 조합과 확정 텍스트를 구분하며, 조합 중 표시와 Undo 처리 의무를 설명한다."
+    },
+    {
+      "id": "engineering-input-D07",
+      "url": "https://help.libreoffice.org/latest/en-US/text/shared/00/00000208.html",
+      "title": "Text Import",
+      "product": "LibreOffice Calc",
+      "version": "26.8 Help; latest 가변 URL",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Import; Other options; Fields/Preview",
+      "read_status": "full-relevant-sections",
+      "summary": "분리 문자·locale·열 유형·빈칸·수식 해석을 사용자가 조절하는 가져오기 문서."
+    },
+    {
+      "id": "engineering-input-D08",
+      "url": "https://help.libreoffice.org/latest/en-US/text/scalc/01/12120300.html",
+      "title": "Error Alert",
+      "product": "LibreOffice Calc",
+      "version": "26.8 Help; latest 가변 URL",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Show error message; Action",
+      "read_status": "full-relevant-sections",
+      "summary": "Stop, Warning/Information, Reject Silently의 거부 정책이 다르다."
+    },
+    {
+      "id": "engineering-input-D09",
+      "url": "https://books.libreoffice.org/en/CG71/CG7102-EnterEditFormatData.html",
+      "title": "Calc Guide 7.1 Chapter 2",
+      "product": "LibreOffice Calc",
+      "version": "7.1 Community; May 2021",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Defining validation; Error Alert; Paste Special; Figures 12,14,17",
+      "read_status": "full-relevant-sections",
+      "summary": "검증·입력 도움말·붙여넣기 설정의 상세 화면을 제공한다. 최신 도움말과 버전이 다르다."
+    },
+    {
+      "id": "engineering-input-D10",
+      "url": "https://docs.labplot.org/en/getting_started/quick_start.html",
+      "title": "Quick Start",
+      "product": "LabPlot",
+      "version": "2.12 문서; 캡처 앱 build 미표시",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Import data; Visualize data; import/preview/plot dialog images",
+      "read_status": "full-relevant-sections",
+      "summary": "파일 미리보기에서 열을 확인하고 X/Y 데이터를 선택해 곡선을 생성하는 사용자 흐름."
+    },
+    {
+      "id": "engineering-input-D11",
+      "url": "https://docs.labplot.org/en/data_containers/data_containers_spreadsheet.html",
+      "title": "Spreadsheet",
+      "product": "LabPlot",
+      "version": "2.12 문서",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Basic Concepts; Manipulate Data; Mask Data; Keyboard Shortcuts",
+      "read_status": "full-relevant-sections",
+      "summary": "열 타입·plot designation·다중 열 조작·mask와 삭제·키보드 입력을 구분한다."
+    },
+    {
+      "id": "engineering-input-D12",
+      "url": "https://raw.githubusercontent.com/KDE/labplot/f9fcda1a11f4cdae07d8e2202f3f2d55cccd8ff6/src/frontend/spreadsheet/SpreadsheetView.cpp",
+      "title": "SpreadsheetView::pasteIntoSelection",
+      "product": "LabPlot",
+      "version": "master snapshot f9fcda1a11f4cdae07d8e2202f3f2d55cccd8ff6",
+      "kind": "code",
+      "evidence_type": "D",
+      "locator": "pasteIntoSelection, lines 1836–2125; exact pinned bytes matched inspected master",
+      "read_status": "full-relevant-sections",
+      "summary": "붙여넣기의 형 추정·확장·locale 변환·빈칸·Undo macro·메모리 예외 경로를 읽었다."
+    },
+    {
+      "id": "engineering-input-D13",
+      "url": "https://doc.qt.io/qt-6/qundostack.html",
+      "title": "QUndoStack",
+      "product": "Qt",
+      "version": "6.12.0 문서",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Command Macros; beginMacro/endMacro; push",
+      "read_status": "full-relevant-sections",
+      "summary": "여러 명령을 하나의 Undo 단위로 묶는 계약이며 검증·rollback 엔진은 아니다."
+    },
+    {
+      "id": "engineering-input-D14",
+      "url": "https://pint.readthedocs.io/en/0.25.2/getting/tutorial.html",
+      "title": "Pint Tutorial",
+      "product": "Pint",
+      "version": "0.25.2",
+      "kind": "example",
+      "evidence_type": "D",
+      "locator": "Defining a Quantity; Converting to different units",
+      "read_status": "full-relevant-sections",
+      "summary": "물리량·차원·단위 변환 및 원본을 유지하는 to와 변경하는 ito의 차이를 확인했다."
+    },
+    {
+      "id": "engineering-input-D15",
+      "url": "https://pint.readthedocs.io/en/0.25.2/user/nonmult.html",
+      "title": "Temperature conversion",
+      "product": "Pint",
+      "version": "0.25.2",
+      "kind": "example",
+      "evidence_type": "D",
+      "locator": "Temperature conversion; delta counterparts; OffsetUnitCalculusError",
+      "read_status": "full-relevant-sections",
+      "summary": "절대 온도와 온도 차이, 오프셋 단위 계산의 제한을 보여준다."
+    },
+    {
+      "id": "engineering-input-D16",
+      "url": "https://pint.readthedocs.io/en/0.25.2/user/numpy.html",
+      "title": "NumPy Support",
+      "product": "Pint",
+      "version": "0.25.2",
+      "kind": "example",
+      "evidence_type": "D",
+      "locator": "Array quantities; DimensionalityError; Function/Method Support",
+      "read_status": "full-relevant-sections",
+      "summary": "배열 물리량의 단위 변환과 차원 오류를 설명한다. 지원하지 않는 연산까지 보장하지 않는다."
+    },
+    {
+      "id": "engineering-input-D17",
+      "url": "https://pyqtgraph.readthedocs.io/en/pyqtgraph-0.14.0/api_reference/graphicsItems/plotdataitem.html",
+      "title": "PlotDataItem",
+      "product": "pyqtgraph",
+      "version": "0.14.0",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "setData; setLogMode; setDownsampling; setSkipFiniteCheck",
+      "read_status": "full-relevant-sections",
+      "summary": "표시 데이터 변환·다운샘플링·비유한값 처리 옵션과 제한을 확인했다."
+    },
+    {
+      "id": "engineering-input-D18",
+      "url": "https://pyqtgraph.readthedocs.io/en/pyqtgraph-0.14.0/api_reference/graphicsItems/axisitem.html",
+      "title": "AxisItem",
+      "product": "pyqtgraph",
+      "version": "0.14.0",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "enableAutoSIPrefix; setLabel",
+      "read_status": "full-relevant-sections",
+      "summary": "축 단위 문자열과 SI 접두사 표시를 조절하는 표시 API."
+    },
+    {
+      "id": "engineering-input-D19",
+      "url": "https://doc.qt.io/qt-6/qabstractitemmodel.html",
+      "title": "QAbstractItemModel",
+      "product": "Qt",
+      "version": "6.12.0 문서",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Subclassing; fetchMore/canFetchMore; insert/remove; Thread safety",
+      "read_status": "full-relevant-sections",
+      "summary": "표시 모델의 증분 갱신과 소유 스레드 규칙. 영속 CAE 객체 모델을 대신하지 않는다."
+    },
+    {
+      "id": "engineering-input-D20",
+      "url": "https://doc.qt.io/qt-6/qtwidgets-itemviews-fetchmore-example.html",
+      "title": "Fetch More Example",
+      "product": "Qt",
+      "version": "6.12.0 문서",
+      "kind": "example",
+      "evidence_type": "D",
+      "locator": "FileListModel::canFetchMore/fetchMore; data population log",
+      "read_status": "full-relevant-sections",
+      "summary": "화면에 필요한 항목을 배치로 노출하는 공식 예제. 파일 목록 예제이며 대형 공학 표 성능 실증은 아니다."
+    },
+    {
+      "id": "engineering-input-D21",
+      "url": "https://docs.labplot.org/en/sdk/cpp/api/plots/XYCurve.html",
+      "title": "XYCurve API",
+      "product": "LabPlot",
+      "version": "2.12 문서",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "column(dim); usingColumn; recalc; save/load; isSourceDataChangedSinceLastRecalc",
+      "read_status": "full-relevant-sections",
+      "summary": "곡선의 열 의존성·재계산·XML 저장 API를 확인했다. 사용자 흐름 전체 성공은 증명하지 않는다."
+    },
+    {
+      "id": "engineering-input-D22",
+      "url": "https://docs.kde.org/trunk_kf6/en/labplot/labplot/spreadsheetplot.html",
+      "title": "Building a graph from spreadsheet data",
+      "product": "LabPlot",
+      "version": "trunk_kf6 문서; 캡처 앱 버전 미표시",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Steps 8–10: x-data/y-data and spreadsheet sort",
+      "read_status": "full-relevant-sections",
+      "summary": "열 선택과 원본 표 정렬 이후 그래프 결과를 설명하는 별도 예제. 2.12 quick start와 한 실행으로 합치지 않는다."
+    }
+  ],
+  "assets": [
+    {
+      "id": "engineering-input-S01",
+      "source_ids": [
+        "engineering-input-D04"
+      ],
+      "source_url": "https://doc.qt.io/qt-6/images/lineedits-example.png",
+      "file": "assets/engineering-input/qt-line-edits.png",
+      "width": 428,
+      "height": 304,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "Echo, Validator, Alignment, Input mask, Access의 작은 그룹과 콤보·입력창이 함께 보인다. 원문 이미지의 실제 캡처 Qt/app build는 미표시다.",
+      "sha256": "0f4fc5961e4bed80fbef82eb278c1cfb829edcf15fbb30073235b5363e4bd6f7"
+    },
+    {
+      "id": "engineering-input-S02",
+      "source_ids": [
+        "engineering-input-D20"
+      ],
+      "source_url": "https://doc.qt.io/qt-6/images/fetchmore-example.png",
+      "file": "assets/engineering-input/qt-fetch-more.png",
+      "width": 361,
+      "height": 478,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "목록 아래 로그 창에 /bin 항목을 100개 범위씩 추가한 메시지가 보인다. 원문 이미지의 실제 캡처 Qt/app build는 미표시다.",
+      "sha256": "0c43a9ac0fd875cdda18fd732a697666d697b9c0ed1de07dafc34b0559f4d344"
+    },
+    {
+      "id": "engineering-input-S03",
+      "source_ids": [
+        "engineering-input-D10"
+      ],
+      "source_url": "https://docs.labplot.org/en/_images/LabPlot_Getting_Started_Import_Dialog.png",
+      "file": "assets/engineering-input/labplot-import-dialog.png",
+      "width": 1341,
+      "height": 1225,
+      "kind": "dialog",
+      "visual_review": true,
+      "observations": "Data format 탭에 TAB 구분자·소수점·NaN 변환·빈 부분 생략과 대상/Append·OK/Cancel이 보인다.",
+      "sha256": "4a124e49bb0c8d01b48c5219f4e378970d1becca4d83491c13e2e380db96fa55"
+    },
+    {
+      "id": "engineering-input-S04",
+      "source_ids": [
+        "engineering-input-D10"
+      ],
+      "source_url": "https://docs.labplot.org/en/_images/LabPlot_Getting_Started_Import_Dialog_Preview.png",
+      "file": "assets/engineering-input/labplot-import-preview.png",
+      "width": 1341,
+      "height": 1225,
+      "kind": "dialog",
+      "visual_review": true,
+      "observations": "Preview 탭에 미리볼 행 수 100, 열별 추정 타입, 수평 스크롤과 Refresh가 보인다.",
+      "sha256": "53a55670769c3cdea6d13b7f0888e7c045013a792f50a54e074000aa59b7ac5c"
+    },
+    {
+      "id": "engineering-input-S05",
+      "source_ids": [
+        "engineering-input-D10"
+      ],
+      "source_url": "https://docs.labplot.org/en/_images/LabPlot_Getting_Started_Plot_Data_Dialog.png",
+      "file": "assets/engineering-input/labplot-plot-data-dialog.png",
+      "width": 957,
+      "height": 673,
+      "kind": "dialog",
+      "visual_review": true,
+      "observations": "X-data=time, Y-data=multikopter_signals.acx, 기존/새 plot 대상과 Plot/Cancel이 보인다.",
+      "sha256": "298b398fbdc30de676a6059873ccdf6d935389da582d6b52f3ae70be6779ee3e"
+    },
+    {
+      "id": "engineering-input-S06",
+      "source_ids": [
+        "engineering-input-D10"
+      ],
+      "source_url": "https://docs.labplot.org/en/_images/LabPlot_Getting_Started_Worksheet.png",
+      "file": "assets/engineering-input/labplot-worksheet.png",
+      "width": 2444,
+      "height": 1419,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "왼쪽 Project Explorer의 긴 열 이름·Worksheet/Plot/Axis 계층, 중앙 곡선, 오른쪽 속성 패널이 보인다.",
+      "sha256": "a699481d79e02c6b2d243a1ff571cd9d4f75db8b95f4569386dc158c2b6f40f5"
+    },
+    {
+      "id": "engineering-input-S07",
+      "source_ids": [
+        "engineering-input-D09"
+      ],
+      "source_url": "https://books.libreoffice.org/en/CG71/CG7102-EnterEditFormatData-img/CG7102-EnterEditFormatData-img013.png",
+      "file": "assets/engineering-input/calc-validity-criteria.png",
+      "width": 395,
+      "height": 359,
+      "kind": "dialog",
+      "visual_review": true,
+      "observations": "Criteria/Input Help/Error Alert 탭과 Allow empty cells, Source, Reset/OK/Cancel이 보인다.",
+      "sha256": "762d8697034e81e3737bf082e7f4c9cc21c5aa2ad9a3b5784ff106804938400c"
+    },
+    {
+      "id": "engineering-input-S08",
+      "source_ids": [
+        "engineering-input-D09"
+      ],
+      "source_url": "https://books.libreoffice.org/en/CG71/CG7102-EnterEditFormatData-img/CG7102-EnterEditFormatData-img015.png",
+      "file": "assets/engineering-input/calc-error-alert.png",
+      "width": 394,
+      "height": 364,
+      "kind": "dialog",
+      "visual_review": true,
+      "observations": "오류 표시 체크, Action=Stop, Title/Error message, Reset/OK/Cancel이 보인다.",
+      "sha256": "36a6fc47a619ad842d4330473685e9dd2ba47b7c7b01a13db5ee80370b60b4af"
+    },
+    {
+      "id": "engineering-input-S09",
+      "source_ids": [
+        "engineering-input-D09"
+      ],
+      "source_url": "https://books.libreoffice.org/en/CG71/CG7102-EnterEditFormatData-img/CG7102-EnterEditFormatData-img018.png",
+      "file": "assets/engineering-input/calc-paste-special.png",
+      "width": 300,
+      "height": 442,
+      "kind": "dialog",
+      "visual_review": true,
+      "observations": "붙여넣을 값/형식, 연산, 빈칸 생략·전치·링크, 셀 밀기 설정이 분리돼 있다.",
+      "sha256": "66b84b7b9c2dbc4f4504e63ef56fc8de693a9f5f01a9b60088341d9f6ecd4374"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "engineering-input-P01",
+      "requirement": "수치 draft와 최종 확정·locale 검사",
+      "products": [
+        "Qt"
+      ],
+      "source_ids": [
+        "engineering-input-D01",
+        "engineering-input-D02",
+        "engineering-input-D03",
+        "engineering-input-D04",
+        "engineering-input-D05"
+      ],
+      "asset_ids": [
+        "engineering-input-S01"
+      ],
+      "prerequisite": "QLineEdit에 수치 validator를 설정한 입력 예제. CAE 문서 적용 예제는 아님.",
+      "actions": [
+        "범위·표기·locale을 정한다.",
+        "입력 중 상태와 최종 허용 상태를 구별한다."
+      ],
+      "documented_result": "Qt는 Intermediate/Acceptable을 구별하며, validator와 locale 파싱 계약을 제공한다. setText는 검사 없이 텍스트를 바꾸고 내부 Undo를 비운다.",
+      "implementation_locator": "QValidator::validate; QDoubleValidator::validate/fixup; QLineEdit::editingFinished/textEdited; QLocale::toDouble(&ok)",
+      "failure_cancel_undo_save": "위젯 내부 Undo와 문서 Undo는 다르다. 선택 변경 뒤 미확정 draft 보존·취소·저장은 이 예제에서 확인하지 못했다.",
+      "transferable": "입력 중 문자열과 실제 모델 값의 연결 지점을 구분하는 데 참고한다.",
+      "non_transferable": "Acceptable을 단위·물성·solver 지원까지 통과한 값으로 취급하지 않는다.",
+      "unknowns": [
+        "한글 IME와 수치 validator의 실제 조합 시험",
+        "포커스 이탈·객체 삭제 때 draft 정책"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "engineering-input-P02",
+      "requirement": "IME 조합과 키보드·Undo 경계",
+      "products": [
+        "Qt"
+      ],
+      "source_ids": [
+        "engineering-input-D03",
+        "engineering-input-D06"
+      ],
+      "asset_ids": [],
+      "prerequisite": "입력 방법을 지원하는 텍스트 위젯 또는 사용자 정의 편집기.",
+      "actions": [
+        "preedit 표시를 유지한다.",
+        "commitString으로 텍스트를 확정한다."
+      ],
+      "documented_result": "Qt IME 문서는 조합 중 문자열과 확정 문자열을 분리한다. Undo/Redo를 구현한 위젯에서는 preedit가 Undo 기록을 바꾸지 않도록 요구한다.",
+      "implementation_locator": "QInputMethodEvent::preeditString/commitString/replacementStart; QWidget::inputMethodEvent/inputMethodQuery",
+      "failure_cancel_undo_save": "IME 확정 텍스트의 위젯 Undo는 문서 모델 transaction과 별개다. Windows 한글 입력·Enter와 Apply 충돌은 미확인이다.",
+      "transferable": "직접 그린 수치 셀에서도 조합과 확정 이벤트를 구별해야 할 이유를 제공한다.",
+      "non_transferable": "API 존재를 한글·모든 OS 입력기 동작 검증으로 보고하지 않는다.",
+      "unknowns": [
+        "수치 셀·단위 문자열·물체 이름의 실제 IME/키보드 동작"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "engineering-input-P03",
+      "requirement": "단위·차원·배열과 표시/원본 값",
+      "products": [
+        "Pint"
+      ],
+      "source_ids": [
+        "engineering-input-D14",
+        "engineering-input-D16"
+      ],
+      "asset_ids": [],
+      "prerequisite": "같은 registry의 Quantity와 필요 시 NumPy 배열.",
+      "actions": [
+        "단위가 있는 물리량을 만든다.",
+        "to로 변환된 값을 얻고 차원을 확인한다."
+      ],
+      "documented_result": "Pint 예제는 to가 새 값을 만들고 ito가 원본을 변경하며, 맞지 않는 차원 변환은 오류가 된다고 설명한다. 배열 물리량도 예시가 있다.",
+      "implementation_locator": "UnitRegistry; Quantity.to/ito/dimensionality; NumPy array-function/ufunc support",
+      "failure_cancel_undo_save": "GUI draft·Undo·파일 저장은 제공되지 않는다. 지원되지 않는 배열 연산까지 일반화할 수 없다.",
+      "transferable": "표시 단위 변경과 문서 수치 변경을 별개로 다룰 때 참고한다.",
+      "non_transferable": "같은 차원이라고 압력/에너지밀도, 회전/무차원량의 CAE 의미가 같지는 않다. 벡터의 좌표계·DOF 순서는 Pint 책임이 아니다.",
+      "unknowns": [
+        "solver 단위계·필드 의미·오프셋 정책과 실제 연결"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "engineering-input-P04",
+      "requirement": "절대 온도와 온도 차이 입력",
+      "products": [
+        "Pint"
+      ],
+      "source_ids": [
+        "engineering-input-D15"
+      ],
+      "asset_ids": [],
+      "prerequisite": "오프셋 온도 단위와 delta 온도 단위를 사용하는 공식 Python 예제.",
+      "actions": [
+        "절대 온도를 변환한다.",
+        "온도 차이는 delta 단위로 구별한다."
+      ],
+      "documented_result": "비곱셈 단위에는 오프셋이 있고 온도 차이에는 별도 단위가 사용된다. 모호한 계산은 OffsetUnitCalculusError의 대상이다.",
+      "implementation_locator": "Quantity.to; delta_degC/delta_degF; OffsetUnitCalculusError; autoconvert_offset_to_baseunit",
+      "failure_cancel_undo_save": "자동 변환 옵션은 명시 설정이다. 이 문서에는 GUI 오류 표시·저장·Undo 예제가 없다.",
+      "transferable": "온도·열팽창·증분 입력을 구별할 필요의 근거로 사용한다.",
+      "non_transferable": "모든 단위 변환을 공통 배율 하나로 처리하지 않는다.",
+      "unknowns": [
+        "실제 재료/경계조건 카드에서 절대·차이 의미와 재열기"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "engineering-input-P05",
+      "requirement": "CSV/표 가져오기 미리보기와 타입·빈칸 정책",
+      "products": [
+        "LibreOffice Calc",
+        "LabPlot"
+      ],
+      "source_ids": [
+        "engineering-input-D07",
+        "engineering-input-D10",
+        "engineering-input-D12"
+      ],
+      "asset_ids": [
+        "engineering-input-S03",
+        "engineering-input-S04"
+      ],
+      "prerequisite": "Calc CSV/Paste Special 문서와 LabPlot 파일 import 예제는 별도 사용자 흐름이다.",
+      "actions": [
+        "분리 문자·locale·열 해석을 설정한다.",
+        "미리보기에서 열과 타입을 확인한 뒤 가져온다."
+      ],
+      "documented_result": "두 제품 모두 해석 설정을 사용자에게 노출한다. Calc의 숫자/날짜·수식 인식과 LabPlot의 타입·NaN 옵션은 서로 다른 정책이다.",
+      "implementation_locator": "LabPlot SpreadsheetView::pasteIntoSelection의 locale/columnMode 경로는 clipboard 구현 예이며 파일 import와 동일 경로라는 증거는 아님.",
+      "failure_cancel_undo_save": "미리보기 버튼/Cancel 존재는 보인다. 파일 import 중 실패·부분 반영·Undo·재열기 전체는 미확인이다.",
+      "transferable": "입력 원문→열별 해석→적용 전 확인의 구조를 참고한다.",
+      "non_transferable": "날짜 추정·수식 실행·빈칸 제거·NaN→0을 solver 데이터의 기본 동작으로 가져오지 않는다.",
+      "unknowns": [
+        "한 셀 invalid일 때 전체 적용 정책",
+        "인코딩·ragged rows·NaN/Inf·실패 시 원문 보존"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "engineering-input-P06",
+      "requirement": "검증 오류의 거부/경고/복원 정책 비교",
+      "products": [
+        "LibreOffice Calc",
+        "Qt"
+      ],
+      "source_ids": [
+        "engineering-input-D08",
+        "engineering-input-D09",
+        "engineering-input-D01"
+      ],
+      "asset_ids": [
+        "engineering-input-S07",
+        "engineering-input-S08"
+      ],
+      "prerequisite": "Calc Data > Validity > Error Alert. Qt validator는 별도 API 비교다.",
+      "actions": [
+        "셀 또는 범위에 검사 규칙을 둔다.",
+        "오류 때 Stop 또는 Warning/Information 정책을 사용한다."
+      ],
+      "documented_result": "Calc 도움말에서 Stop은 invalid 입력을 거부하지만 Warning/Information은 OK로 invalid 값을 유지할 수 있다.",
+      "implementation_locator": "Calc 정책 문서와 Qt QValidator::State는 서로 다른 책임을 보여주며 같은 구현의 증거는 아니다.",
+      "failure_cancel_undo_save": "Cancel/Stop으로 이전 셀 값을 복원하는 정책은 문서화돼 있다. 여러 셀 paste 전체의 원자성·Undo는 여기서 확인하지 못했다.",
+      "transferable": "오류 메시지와 실제 반영 여부를 따로 정의해야 할 사례다.",
+      "non_transferable": "경고창을 띄운다는 사실을 유효성 강제 보장으로 취급하지 않는다.",
+      "unknowns": [
+        "복수 셀에 하나만 오류일 때 처리",
+        "CAE 필드의 hard/soft 검증 구분"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "engineering-input-P07",
+      "requirement": "다중 셀 붙여넣기·Undo와 원자 적용의 차이",
+      "products": [
+        "LabPlot",
+        "Qt"
+      ],
+      "source_ids": [
+        "engineering-input-D11",
+        "engineering-input-D12",
+        "engineering-input-D13",
+        "engineering-input-D09"
+      ],
+      "asset_ids": [
+        "engineering-input-S09"
+      ],
+      "prerequisite": "LabPlot의 clipboard paste 구현, Qt Undo macro API, Calc 7.1의 다른 붙여넣기 화면 비교.",
+      "actions": [
+        "선택 영역에 텍스트를 붙여넣는다.",
+        "명령들을 macro로 묶어 Undo 단위를 만든다."
+      ],
+      "documented_result": "LabPlot 소스는 macro 안에서 형 추정·행열 확장·값 변경을 수행한다. Qt macro는 묶인 Undo/Redo를 설명한다.",
+      "implementation_locator": "LabPlot f9fcda1a11f4cdae07d8e2202f3f2d55cccd8ff6 SpreadsheetView.cpp:1836–2125; QUndoStack::beginMacro/endMacro",
+      "failure_cancel_undo_save": "소스의 메모리 부족 처리에서 오류 표시는 확인했다. 검증 전 전체 준비·실패 시 자동 rollback 보장은 찾지 못했다.",
+      "transferable": "배치 변경의 Undo 이름과 사용자 복구 단위를 검토하는 근거다.",
+      "non_transferable": "macro라는 이름만으로 ACID식 원자 적용이나 실패 rollback을 보장하지 않는다. Calc 화면을 LabPlot 실행 근거로 쓰지 않는다.",
+      "unknowns": [
+        "중간 실패 전후 실제 문서 값",
+        "타깃 삭제·revision 변경·Undo 후 참조 보존"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "engineering-input-P08",
+      "requirement": "빈칸·변환 실패·NaN/Inf를 값과 구별",
+      "products": [
+        "LabPlot",
+        "Qt",
+        "pyqtgraph"
+      ],
+      "source_ids": [
+        "engineering-input-D12",
+        "engineering-input-D05",
+        "engineering-input-D17"
+      ],
+      "asset_ids": [],
+      "prerequisite": "선택된 기존 숫자 열에 붙여넣는 코드 경로와 숫자 파싱 API.",
+      "actions": [
+        "빈 문자열·숫자가 아닌 값·큰 지수를 포함한 입력을 검토한다.",
+        "파싱 성공 여부와 유한값 여부를 확인한다."
+      ],
+      "documented_result": "읽은 LabPlot 부분에는 빈 Double 셀을 NaN, Integer 셀을 0으로 쓰는 분기가 있다. Qt 파싱은 별도 성공 flag와 실패/overflow 반환을 제공한다.",
+      "implementation_locator": "SpreadsheetView.cpp Double/Integer branches; QLocale::toDouble/toInt; PlotDataItem::setSkipFiniteCheck",
+      "failure_cancel_undo_save": "코드의 모든 분기나 앱 결과를 실행 검증하지 않았다. 표시 라이브러리의 finite check는 solver 입력 검사를 대신하지 못한다.",
+      "transferable": "누락·0·invalid·비유한값을 따로 다뤄야 하는 반례로 활용한다.",
+      "non_transferable": "과학데이터 분석용 NaN 허용과 solver 카드 허용 범위를 혼동하지 않는다.",
+      "unknowns": [
+        "예외값별 실제 사용자 오류 표시",
+        "파일 출력·재열기 때 누락 값 의미"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "inferences": [
+        "읽은 파싱 호출에서 ok flag를 전달하지 않는 경로가 있어, 변환 실패를 일반 숫자와 혼동할 가능성을 CAE 이식 위험으로 판단했다. 실제 앱 결함 재현 주장은 아니다."
+      ],
+      "full_workflow_ready": false
+    },
+    {
+      "id": "engineering-input-P09",
+      "requirement": "원본 열과 곡선·참조·표시의 연결",
+      "products": [
+        "LabPlot"
+      ],
+      "source_ids": [
+        "engineering-input-D10",
+        "engineering-input-D21",
+        "engineering-input-D22"
+      ],
+      "asset_ids": [
+        "engineering-input-S05",
+        "engineering-input-S06"
+      ],
+      "prerequisite": "2.12 Quick Start의 import/plot 예제와 trunk_kf6의 수동 열 선택 예제는 서로 다른 자료다.",
+      "actions": [
+        "X/Y 열과 새/기존 plot 대상을 선택한다.",
+        "원본 열에 의존하는 곡선을 표시한다."
+      ],
+      "documented_result": "사용자 문서는 열을 곡선에 연결하고 표 정렬 결과를 그래프에서 확인하는 예제를 제공한다. API에는 열 참조·재계산·save/load가 있다.",
+      "implementation_locator": "XYCurve::column/usingColumn/recalc/isSourceDataChangedSinceLastRecalc/save/load",
+      "failure_cancel_undo_save": "API 존재가 사용자 예제의 실패·Undo·재열기 검증은 아니다. 열 삭제·교체 뒤 참조 복구는 미확인이다.",
+      "transferable": "표와 plot의 공통 값·의존성 연결, 긴 이름/계층/속성 패널을 참고한다.",
+      "non_transferable": "LabPlot 분석 곡선의 정책을 CAE 재료법칙의 단조성·보간·외삽 규칙으로 사용하지 않는다.",
+      "unknowns": [
+        "곡선 point 선택과 표 행 선택의 양방향 동기화",
+        "열 삭제/교체·저장 재열기",
+        "비단조/중복 X 규칙"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "engineering-input-P10",
+      "requirement": "축 단위·log·다운샘플링과 실제 데이터",
+      "products": [
+        "pyqtgraph"
+      ],
+      "source_ids": [
+        "engineering-input-D17",
+        "engineering-input-D18"
+      ],
+      "asset_ids": [],
+      "prerequisite": "0.14.0 PlotDataItem/AxisItem API. 사용자 GUI 전체 예제는 아니다.",
+      "actions": [
+        "축 단위 라벨·SI 접두사 표시를 설정한다.",
+        "log 표시와 렌더링 다운샘플링 옵션을 검토한다."
+      ],
+      "documented_result": "SI 접두사는 축 표시를 조절하며, log에서 0 이하 값은 NaN 매핑된다. 다운샘플링은 그릴 표본 수를 줄인다.",
+      "implementation_locator": "AxisItem::enableAutoSIPrefix/setLabel; PlotDataItem::setLogMode/setDownsampling/setClipToView",
+      "failure_cancel_undo_save": "모델의 값을 바꾸거나 Undo/저장하는 계약은 아니다. 실제 데이터 크기별 지연·정확도는 미측정이다.",
+      "transferable": "단위 표시·성능 최적화와 원본 수치의 책임을 구분하는 근거다.",
+      "non_transferable": "표시용 decimation 결과를 재료 곡선 원본이나 solver 출력으로 채택하지 않는다.",
+      "unknowns": [
+        "단위 변환 시 plot/table 동일 값 유지",
+        "정밀도·확대 시 표본 선택·오류 표시"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "engineering-input-P11",
+      "requirement": "대형 표의 증분 모델·키보드와 mixed 값 공백",
+      "products": [
+        "Qt",
+        "LabPlot"
+      ],
+      "source_ids": [
+        "engineering-input-D19",
+        "engineering-input-D20",
+        "engineering-input-D11"
+      ],
+      "asset_ids": [
+        "engineering-input-S02"
+      ],
+      "prerequisite": "Qt는 파일 목록을 배치 노출하는 예제, LabPlot은 spreadsheet 키보드 문서다.",
+      "actions": [
+        "필요할 때 모델 항목을 더 노출한다.",
+        "표의 선택/복사/붙여넣기·Enter 이동을 검토한다."
+      ],
+      "documented_result": "Qt는 fetchMore와 삽입 알림·소유 스레드 규칙을 명시한다. LabPlot 문서는 여러 열 조작과 기본 키 입력을 설명한다.",
+      "implementation_locator": "QAbstractItemModel::canFetchMore/fetchMore/beginInsertRows/endInsertRows; FileListModel example",
+      "failure_cancel_undo_save": "백그라운드에서 view 모델 API를 직접 바꾸면 안 된다. 수백만 공학 셀의 편집·Undo·저장 성능은 이 예제로 입증되지 않는다.",
+      "transferable": "대형 배열에 위젯을 셀마다 만들지 않는 표시 모델 구조와 입력 동작 비교에 참고한다.",
+      "non_transferable": "여러 열 조작 지원을 이종 객체의 mixed 속성·부분 적용 보장으로 확대하지 않는다.",
+      "unknowns": [
+        "여러 객체의 mixed 값 표시/부분 적용",
+        "실제 대형 표·한글·포커스·Undo·저장 성능"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    }
+  ],
+  "coverage": [
+    {
+      "requirement": "1 수치 draft/validator/locale/IME",
+      "pattern_ids": [
+        "engineering-input-P01",
+        "engineering-input-P02"
+      ],
+      "status": "partial",
+      "gap_reason": "API와 예제는 확보. CAE 객체 선택 변경·Windows IME·문서 적용은 미실증."
+    },
+    {
+      "requirement": "2 단위·표시·변환·차원·벡터",
+      "pattern_ids": [
+        "engineering-input-P03",
+        "engineering-input-P04",
+        "engineering-input-P10"
+      ],
+      "status": "partial",
+      "gap_reason": "단위/배열·오프셋 계약 확보. solver 의미·좌표계·DOF·GUI 저장 연결은 별도."
+    },
+    {
+      "requirement": "3 matrix paste/CSV preview/invalid/blank/NaN/Inf",
+      "pattern_ids": [
+        "engineering-input-P05",
+        "engineering-input-P06",
+        "engineering-input-P08"
+      ],
+      "status": "partial",
+      "gap_reason": "사용자 옵션과 실제 코드의 차이는 확인. 한 입력의 예외 전 경로는 미재현."
+    },
+    {
+      "requirement": "4 multi-cell atomic apply/Undo/partial policy",
+      "pattern_ids": [
+        "engineering-input-P07",
+        "engineering-input-P08"
+      ],
+      "status": "partial",
+      "gap_reason": "macro/변환/예외 경로 읽기. invalid 하나 또는 메모리 실패 시 원자 rollback 증거 없음."
+    },
+    {
+      "requirement": "5 curve X/Y/scale/units/table-plot",
+      "pattern_ids": [
+        "engineering-input-P09",
+        "engineering-input-P10"
+      ],
+      "status": "partial",
+      "gap_reason": "열 연결·표시 API 확보. 양방향 point/행 선택, 재료법칙·Undo·재열기는 미확인."
+    },
+    {
+      "requirement": "6 large/lazy table/mixed values/focus/keyboard",
+      "pattern_ids": [
+        "engineering-input-P11",
+        "engineering-input-P02"
+      ],
+      "status": "partial",
+      "gap_reason": "lazy 표시와 키 문서 확보. 이종 객체 mixed 값 정책·대형 공학 표 실증은 없음."
+    }
+  ],
+  "search_log": [
+    {
+      "query": "site.help.libreoffice.org Text Import Detect special numbers Evaluate formulas Skip empty cells",
+      "outcome": "최신 Text Import의 자동 형 변환·빈칸·수식 옵션 확보. 자동변환은 CAE에 이식 금지로 기록."
+    },
+    {
+      "query": "site.help.libreoffice.org Validity Error Alert invalid copy paste",
+      "outcome": "Stop과 Warning/Information의 실제 거부 차이 확보. 다중 paste 전체 rollback 보장은 못 찾음."
+    },
+    {
+      "query": "LabPlot SpreadsheetView.cpp pasteIntoSelection beginMacro",
+      "outcome": "KDE 공식 mirror pinned 소스 확보. 형 추정·빈칸·메모리 예외와 macro 읽기, 실행하지 않음."
+    },
+    {
+      "query": "site.pint.readthedocs.io nonmultiplicative delta temperature NumPy DimensionalityError",
+      "outcome": "0.25.2 고정 문서로 단위·차원·오프셋·배열 계약 확보."
+    },
+    {
+      "query": "site.pyqtgraph.readthedocs.io PlotDataItem skipFiniteCheck autoDownsample log mode AxisItem SI prefix",
+      "outcome": "0.14.0 문서 확보. 최신 dev 문서와 혼합하지 않음."
+    },
+    {
+      "query": "Qt QInputMethodEvent preedit undo QLineEdit validator setText",
+      "outcome": "IME와 위젯 Undo 경계 확보. 한국어 실제 입력기 시험은 수행하지 않음."
+    },
+    {
+      "query": "LabPlot XYCurve spreadsheet sort mixed values large table fetchMore",
+      "outcome": "열 의존성·사용 예제·증분 표시 API 확보. 이종 객체 mixed값/CAE 원자 적용은 공개 근거 부족으로 남김."
+    },
+    {
+      "query": "docs.labplot.org/en/visualization/plots/xy-curve.html 및 /en/plotting_2D/xy-curve.html",
+      "outcome": "후보 경로 접근 실패. 실제 확보한 SDK XYCurve와 KDE 사용자 예제로 대체하고 실패 URL은 sources 수에 포함하지 않음."
+    }
+  ],
+  "gaps": [
+    "R/V 없음. 상세 정적 화면 9장과 문서/API/코드 근거만 확보했다.",
+    "한국어 IME·Windows DPI·키보드 포커스 경로는 실행 검증하지 않았다.",
+    "한 셀 invalid인 복수 셀 paste의 검증 전 전체 준비·실패 원자 rollback을 증명하는 종단 자료는 없다.",
+    "이종 CAE 객체의 mixed 속성 표시·부분 적용과 대상 삭제 후 draft 처리의 근거는 부족하다.",
+    "수백만 데이터 편집·메모리·저장 성능은 측정하지 않았다.",
+    "참조 열 삭제/교체·Undo·save/reopen 뒤 표/곡선/단위 의미 보존은 별도 실증이 필요하다.",
+    "본체/바인딩/문서/이미지 라이선스를 채택 전에 별도로 확인해야 하며 이번 조사는 의존성 도입 승인이 아니다."
+  ],
+  "runtime_verified": false,
+  "collected_on": "2026-10-30",
+  "asset_path_scope": "file is relative to the separate downloadable reference pack; public repository contains metadata and source_url, not these image bytes"
+}

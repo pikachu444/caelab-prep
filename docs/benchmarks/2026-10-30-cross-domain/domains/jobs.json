@@ -1,0 +1,620 @@
+{
+  "key": "jobs",
+  "title": "긴 작업·취소·산출물 수명",
+  "scope": "root가 직접 읽은 Qt/Python/QGIS/VS Code/Win32 공식 문서 비교. 제품 설치/실행, job 구현이나 기존 소유권 변경 없음.",
+  "sources": [
+    {
+      "id": "jobs-D01",
+      "title": "QProcess",
+      "url": "https://doc.qt.io/qt-6.8/qprocess.html",
+      "product": "Qt",
+      "version": "6.8.9",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Synchronous Process API; start(program, arguments); finished/errorOccurred; terminate/kill",
+      "read_status": "full-relevant-sections",
+      "summary": "시작·종료·출력 신호와 OS별 중단 차이를 제공한다. 동기 대기는 GUI를 막을 수 있다."
+    },
+    {
+      "id": "jobs-D02",
+      "title": "QProgressDialog",
+      "url": "https://doc.qt.io/qt-6.8/qprogressdialog.html",
+      "product": "Qt",
+      "version": "6.8.9",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Detailed Description; canceled; value property",
+      "read_status": "full-relevant-sections",
+      "summary": "진행 표시와 취소 신호를 제공한다. 모달 setValue의 이벤트 처리는 재진입 가능성을 만든다."
+    },
+    {
+      "id": "jobs-D03",
+      "title": "QThread",
+      "url": "https://doc.qt.io/qt-6.8/qthread.html",
+      "product": "Qt",
+      "version": "6.8.9",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "worker-object example; requestInterruption; quit",
+      "read_status": "full-relevant-sections",
+      "summary": "worker-object 연결 예와 권고형 중단을 설명한다. quit는 event loop 없는 계산을 끝내지 않는다."
+    },
+    {
+      "id": "jobs-D04",
+      "title": "QFuture",
+      "url": "https://doc.qt.io/qt-6.8/qfuture.html",
+      "product": "Qt",
+      "version": "6.8.9",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "cancel; onCanceled; then(context); onFailed(context)",
+      "read_status": "full-relevant-sections",
+      "summary": "비동기 취소와 continuation 문맥·수명 조건을 명시한다. 모든 계산이 취소 가능한 것은 아니다."
+    },
+    {
+      "id": "jobs-D05",
+      "title": "QSaveFile",
+      "url": "https://doc.qt.io/qt-6.8/qsavefile.html",
+      "product": "Qt",
+      "version": "6.8.9",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "commit; cancelWriting; setDirectWriteFallback",
+      "read_status": "full-relevant-sections",
+      "summary": "임시 파일과 최종 이름 교체를 제공한다. 직접 쓰기 fallback에서는 원자성과 취소 보호가 사라진다."
+    },
+    {
+      "id": "jobs-D06",
+      "title": "subprocess",
+      "url": "https://docs.python.org/3.11/library/subprocess.html",
+      "product": "Python",
+      "version": "3.11.18",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "run timeout; Popen.communicate/wait/send_signal/terminate/kill; Security Considerations",
+      "read_status": "full-relevant-sections",
+      "summary": "run과 communicate의 timeout 정리가 다르다. 파이프 교착·무제한 메모리와 Windows 신호 차이를 명시한다."
+    },
+    {
+      "id": "jobs-D07",
+      "title": "Tasks - background work",
+      "url": "https://docs.qgis.org/3.40/en/docs/pyqgis_developer_cookbook/tasks.html",
+      "product": "QGIS",
+      "version": "3.40 (문서 EOL 안내 있음)",
+      "kind": "example",
+      "evidence_type": "D",
+      "locator": "Introduction warnings; Extending QgsTask; processing algorithm example",
+      "read_status": "full-relevant-sections",
+      "summary": "작업용 입력·QObject 수명, 관리자 소유권, 예제의 협조적 취소와 완료 처리를 설명한다. 원문은 web open으로 확인; 직접 다운로드403."
+    },
+    {
+      "id": "jobs-D08",
+      "title": "VS Code API",
+      "url": "https://code.visualstudio.com/api/references/vscode-api",
+      "product": "VS Code",
+      "version": "조회일 2026-10-30의 rolling API; 앱 빌드 미확인",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "window.withProgress; CancellationToken; tasks.executeTask; TaskExecution.terminate",
+      "read_status": "full-relevant-sections",
+      "summary": "진행 알림의 취소 토큰과 실제 task 실행 handle은 별개다. API 자체가 외부 작업의 rollback을 약속하지 않는다."
+    },
+    {
+      "id": "jobs-D09",
+      "title": "External Tools via Tasks",
+      "url": "https://code.visualstudio.com/docs/debugtest/tasks",
+      "product": "VS Code",
+      "version": "조회일 2026-10-30 rolling manual; 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Run Build Task; task type; problem matchers; Background/watching tasks",
+      "read_status": "full-relevant-sections",
+      "summary": "구조화한 실행 설정·출력 진단과 watch 작업의 busy/done 표현을 설명한다. 컴파일 작업의 예이며 CAE 성공 기준은 아니다."
+    },
+    {
+      "id": "jobs-D10",
+      "title": "Job Objects",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects",
+      "product": "Win32",
+      "version": "현재 Win32 문서; 선택한 OS 빌드 실증 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Managing Processes in Jobs; Managing Job Objects; Managing a Process Tree",
+      "read_status": "full-relevant-sections",
+      "summary": "프로세스를 job 단위로 관리한다. 자식 포함에는 breakaway·중첩 조건이 있고 모든 트리의 자동 포함은 보장하지 않는다."
+    },
+    {
+      "id": "jobs-D11",
+      "title": "TerminateJobObject",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/jobapi2/nf-jobapi2-terminatejobobject",
+      "product": "Win32",
+      "version": "현재 Win32 API 문서; 실제 실행 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Parameters; Remarks",
+      "read_status": "full-relevant-sections",
+      "summary": "연결된 프로세스와 중첩 job을 종료한다. 대상 프로세스는 종료를 연기하거나 정리 handler로 처리할 수 없다."
+    },
+    {
+      "id": "jobs-D12",
+      "title": "Concurrent Run",
+      "url": "https://doc.qt.io/qt-6.8/qtconcurrentrun.html",
+      "product": "Qt",
+      "version": "6.8.9",
+      "kind": "example",
+      "evidence_type": "D",
+      "locator": "Concurrent Run With Promise; Suspending and canceling execution",
+      "read_status": "full-relevant-sections",
+      "summary": "basic run과 promise mode를 구분한다. promise 예제는 worker가 취소 상태를 확인하고 반환한다."
+    },
+    {
+      "id": "jobs-D13",
+      "title": "QgsTask API",
+      "url": "https://api.qgis.org/api/3.40/classQgsTask.html",
+      "product": "QGIS",
+      "version": "3.40.0-Bratislava b56115d8743",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "cancel; finished; setDependentLayers; TaskStatus; qgstaskmanager.h/.cpp links",
+      "read_status": "full-relevant-sections",
+      "summary": "취소는 flag 통지이고 의존 layer 제거 시 취소한다. finished는 주 스레드이며 긴 완료 처리는 GUI를 막는다."
+    },
+    {
+      "id": "jobs-D14",
+      "title": "Processing Toolbox",
+      "url": "https://docs.qgis.org/3.40/en/docs/user_manual/processing/toolbox.html",
+      "product": "QGIS",
+      "version": "3.40 (문서 EOL 안내 있음)",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "The algorithm dialog; Logging the execution; Data objects generated by algorithms",
+      "read_status": "full-relevant-sections",
+      "summary": "provider별 알고리즘 설정·로그·출력 경로와 in-place 지원 구분을 설명한다. 개별 알고리즘의 안전한 취소는 별도 확인 대상이다."
+    }
+  ],
+  "assets": [
+    {
+      "id": "jobs-S01",
+      "source_ids": [
+        "jobs-D02"
+      ],
+      "source_url": "https://doc.qt.io/qt-6.8/images/fusion-progressdialog.png",
+      "file": "assets/jobs/qt-progress.png",
+      "width": 202,
+      "height": 122,
+      "kind": "dialog",
+      "visual_review": true,
+      "observations": "Import Contacts 제목, 진행 막대 64%, Cancel 버튼. 문서의 Fusion 스타일 예시이며 worker 중단 동작은 그림에 없다.",
+      "sha256": "f012621e8e298e149ded547f9d53b6cc7fefdf3a70ebc232bdb0f56bfc6c99cf"
+    },
+    {
+      "id": "jobs-S02",
+      "source_ids": [
+        "jobs-D09"
+      ],
+      "source_url": "https://code.visualstudio.com/assets/docs/debugtest/tasks/command-palette.png",
+      "file": "assets/jobs/vscode-task-palette.png",
+      "width": 1206,
+      "height": 670,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "Command Palette에 Run Task, Show Running Tasks, Show Task Log, Terminate Task 명령이 보인다. 실행/중단 결과는 그림에 없다.",
+      "sha256": "729b5792c2b72f41655e32efc5a79810ca2b2e5d008d235b25f60451e8ca3789"
+    },
+    {
+      "id": "jobs-S03",
+      "source_ids": [
+        "jobs-D09"
+      ],
+      "source_url": "https://code.visualstudio.com/assets/docs/debugtest/tasks/eslint-problem.png",
+      "file": "assets/jobs/vscode-task-problems.png",
+      "width": 669,
+      "height": 87,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "문서의 Problems 진단 예시. 코드 위치와 오류 문구가 보이며 솔버 검사 사례가 아니다.",
+      "sha256": "746a2ba66d6def684b8564550c70657e6c0d9de783bc91f745f473a43cbe22e4"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "jobs-P01",
+      "requirement": "진행 표시와 취소 요청",
+      "products": [
+        "Qt",
+        "VS Code"
+      ],
+      "source_ids": [
+        "jobs-D02",
+        "jobs-D08"
+      ],
+      "asset_ids": [
+        "jobs-S01"
+      ],
+      "prerequisite": "오래 걸리는 사용자 명령; 각각 독립 API 예",
+      "actions": [
+        "진행 신호/콜백 연결",
+        "취소 신호 또는 토큰을 worker에 전달"
+      ],
+      "documented_result": "표시와 요청 API가 구분된다. Qt 모달 갱신은 재진입에 주의한다.",
+      "implementation_locator": "QProgressDialog::canceled/value; window.withProgress/CancellationToken",
+      "failure_cancel_undo_save": "취소 버튼만으로 worker 종료·문서 Undo·외부 파일 정리를 보장하지 않는다.",
+      "transferable": "표시·요청·종료 확인의 책임을 구분하는 근거",
+      "non_transferable": "알림 닫기/100%를 메시 채택 성공으로 처리할 수 없다.",
+      "unknowns": [
+        "CAE cancel 응답 시간과 재진입 방지의 실제 정책"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "jobs-P02",
+      "requirement": "GUI 응답성과 worker 입력 수명",
+      "products": [
+        "Qt",
+        "QGIS"
+      ],
+      "source_ids": [
+        "jobs-D03",
+        "jobs-D07",
+        "jobs-D13"
+      ],
+      "asset_ids": [],
+      "prerequisite": "각 제품의 worker 예제; 같은 프로그램의 연속 흐름 아님",
+      "actions": [
+        "QObject worker의 thread 이동 예를 읽는다.",
+        "QGIS 작업 전 입력과 context/feedback 수명을 분리한다."
+      ],
+      "documented_result": "Qt의 interruption은 권고다. QGIS는 worker에서 주 스레드 QObject 접근을 금하고 finished는 주 스레드에서 실행한다.",
+      "implementation_locator": "QThread worker-object example/requestInterruption; QgsTask.run/finished; cookbook warnings",
+      "failure_cancel_undo_save": "주 스레드 완료 콜백도 길면 GUI를 막는다. 기존 문서 변경의 자동 rollback 근거는 없다.",
+      "transferable": "작업 입력의 스냅샷·객체 수명·짧은 완료 처리 검토",
+      "non_transferable": "모든 VTK/Gmsh/Python 호출이 thread-safe라는 보장은 아니다.",
+      "unknowns": [
+        "실제 backend의 GIL/thread 안전성·입력 비용·문서 닫기 처리"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "jobs-P03",
+      "requirement": "취소 가능한 계산의 capability",
+      "products": [
+        "Qt",
+        "QGIS"
+      ],
+      "source_ids": [
+        "jobs-D04",
+        "jobs-D12",
+        "jobs-D13"
+      ],
+      "asset_ids": [],
+      "prerequisite": "basic/promise mode와 QgsTask를 각각 비교",
+      "actions": [
+        "사용한 실행 모드 확인",
+        "실제 worker의 취소 검사 지점 확인"
+      ],
+      "documented_result": "Qt promise 예제는 취소 상태를 검사하고 반환한다. QgsTask.cancel도 즉시 중단이 아닌 flag 통지다.",
+      "implementation_locator": "QtConcurrent::run promise/QPromise::isCanceled; QgsTask::cancel/isCanceled",
+      "failure_cancel_undo_save": "QFuture 일반 설명의 run 제한을 promise mode 전체로 확대하면 안 된다.",
+      "transferable": "backend별 실제 취소 지원을 확인할 질문",
+      "non_transferable": "generic future.cancel API 존재가 임의 커널 선점 중단을 뜻하지 않는다.",
+      "unknowns": [
+        "모델의 실제 PySide6 바인딩 버전과 SDK 호출 중 취소 가능성"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "jobs-P04",
+      "requirement": "프로세스 시작·완료·실패·로그",
+      "products": [
+        "Qt",
+        "VS Code"
+      ],
+      "source_ids": [
+        "jobs-D01",
+        "jobs-D09"
+      ],
+      "asset_ids": [
+        "jobs-S02",
+        "jobs-S03"
+      ],
+      "prerequisite": "실행 파일과 명시 arguments/cwd; 문서는 별도 예제",
+      "actions": [
+        "실행 설정을 구조화",
+        "시작/출력/종료/오류를 각각 처리",
+        "작업 결과 파일의 별도 유효성 질문"
+      ],
+      "documented_result": "QProcess는 상태·출력·exit 신호를 제공한다. VS Code problem matcher는 텍스트를 진단으로 바꾼다.",
+      "implementation_locator": "QProcess::start/errorOccurred/finished/readyReadStandardOutput; tasks.json/problemMatcher",
+      "failure_cancel_undo_save": "프로세스 시작과 정상 exit만으로 CAE 모델·결과의 유효성을 판정할 수 없다.",
+      "transferable": "실행과 도메인 결과 검사를 분리하는 근거",
+      "non_transferable": "컴파일 오류 정규식을 솔버의 모든 경고/수렴 기준으로 사용할 수 없다.",
+      "unknowns": [
+        "출력 덱/메시 검사기와 로그의 실제 스키마"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "jobs-P05",
+      "requirement": "Windows에서 중단·강제 종료·프로세스 트리",
+      "products": [
+        "Qt",
+        "Python",
+        "Win32"
+      ],
+      "source_ids": [
+        "jobs-D01",
+        "jobs-D06",
+        "jobs-D10",
+        "jobs-D11"
+      ],
+      "asset_ids": [],
+      "prerequisite": "Windows 프로세스이며 console/event-loop/child job 조건 확인",
+      "actions": [
+        "cooperative 종료 지원 확인",
+        "timeout 뒤 직접 프로세스와 자식 집합을 구분",
+        "job 할당·중첩·breakaway 조건 확인"
+      ],
+      "documented_result": "QProcess.terminate는 WM_CLOSE, Python Popen.terminate는 TerminateProcess다. Job Objects는 연결된 프로세스 집합을 관리한다.",
+      "implementation_locator": "QProcess::terminate/kill; Popen.terminate/kill; AssignProcessToJobObject/TerminateJobObject",
+      "failure_cancel_undo_save": "동명 API의 의미가 다르다. 강제 종료는 정리나 솔버 stop 의미를 보장하지 않는다.",
+      "transferable": "플랫폼별 cancel 단계와 프로세스 소유 범위를 확인할 근거",
+      "non_transferable": "root PID kill을 모든 하위 프로세스의 안전한 중단으로 취급할 수 없다.",
+      "unknowns": [
+        "Windows 실제 worker·launcher·MPI 자식 종료 및 job 할당 실증"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "jobs-P06",
+      "requirement": "시간 제한과 출력 파이프",
+      "products": [
+        "Python",
+        "Qt"
+      ],
+      "source_ids": [
+        "jobs-D06",
+        "jobs-D01"
+      ],
+      "asset_ids": [],
+      "prerequisite": "stdout/stderr가 지속 발생하는 subprocess",
+      "actions": [
+        "대기와 출력 소비를 분리",
+        "run timeout과 communicate timeout 차이 확인"
+      ],
+      "documented_result": "Python wait+가득 찬 PIPE는 교착 위험; communicate는 메모리에 모으고 timeout만으로 child를 종료하지 않는다.",
+      "implementation_locator": "Popen.wait/communicate; run(timeout); QProcess asynchronous signals",
+      "failure_cancel_undo_save": "무제한 로그를 통째로 메모리에 모으면 안 된다. GUI의 blocking wait도 응답성을 막는다.",
+      "transferable": "로그 크기·출력 소비·종료 뒤 잔여 출력 처리 질문",
+      "non_transferable": "timeout 예외가 자동 cleanup 완료와 같지는 않다.",
+      "unknowns": [
+        "최대 로그량·디스크 저장·오류 시 tail 유지 정책"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "jobs-P07",
+      "requirement": "출력 파일의 최종 교체와 취소",
+      "products": [
+        "Qt",
+        "QGIS"
+      ],
+      "source_ids": [
+        "jobs-D05",
+        "jobs-D14"
+      ],
+      "asset_ids": [],
+      "prerequisite": "전체 파일 출력과 알고리즘 output 경로를 각각 비교",
+      "actions": [
+        "임시 파일 쓰기",
+        "명시 commit 또는 cancelWriting",
+        "복수 파일과 문서 채택을 별도 검증"
+      ],
+      "documented_result": "QSaveFile은 기본 임시 파일 교체 경로를 제공하지만 direct-write fallback에서 원자성·취소 보호가 사라진다.",
+      "implementation_locator": "QSaveFile::commit/cancelWriting/setDirectWriteFallback; QGIS algorithm output manual",
+      "failure_cancel_undo_save": "단일 파일 교체의 원자성이 여러 파일·문서 transaction의 원자성을 보장하지 않는다.",
+      "transferable": "출력 완료와 문서 채택을 분리해 확인하는 근거",
+      "non_transferable": "QSaveFile 성공을 solver deck 전체의 참조 정합성으로 간주할 수 없다.",
+      "unknowns": [
+        "다중 산출물·참조의 원자적 채택과 crash 복구"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "jobs-P08",
+      "requirement": "입력 변경·삭제·문서 닫기 뒤 결과",
+      "products": [
+        "QGIS",
+        "Qt"
+      ],
+      "source_ids": [
+        "jobs-D13",
+        "jobs-D07",
+        "jobs-D04"
+      ],
+      "asset_ids": [],
+      "prerequisite": "실행 중 대상 layer/문맥의 수명이 바뀜",
+      "actions": [
+        "QGIS dependentLayers 취소와 context 수명 확인",
+        "Qt continuation의 context 수명 확인",
+        "개정 충돌 질문을 별도로 남김"
+      ],
+      "documented_result": "의존 layer 제거 시 QGIS는 task를 취소한다. Qt context 소멸도 continuation 취소와 관련된다.",
+      "implementation_locator": "QgsTask::setDependentLayers/finished; QFuture::then(context)/onFailed(context)",
+      "failure_cancel_undo_save": "QFuture then(context)는 context 소멸 시 해당 continuation을 취소하지만 앞선 future들은 취소하지 않고 완료까지 실행한다. 원문의 수명 처리로 CAD/CAE 입력 개정 비교나 stale 결과 거부까지 보장하지 않는다.",
+      "transferable": "수명·결과 전달 문맥을 명시할 필요의 근거",
+      "non_transferable": "자동 취소 통지를 문서 rollback·새 모델에 대한 결과 유효성으로 취급할 수 없다.",
+      "unknowns": [
+        "입력 수정 revision, 대상 재생성, 닫기 뒤 late result 채택 정책"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "jobs-P09",
+      "requirement": "작업 소유권과 GUI/script 실행 연결",
+      "products": [
+        "QGIS",
+        "VS Code"
+      ],
+      "source_ids": [
+        "jobs-D07",
+        "jobs-D08",
+        "jobs-D09",
+        "jobs-D13",
+        "jobs-D14"
+      ],
+      "asset_ids": [],
+      "prerequisite": "host가 작업 관리자를 소유하는 사례",
+      "actions": [
+        "관리자를 통해 작업 등록",
+        "실행 handle과 callback 수명 확인",
+        "사용자 경로와 API의 지원 범위 비교"
+      ],
+      "documented_result": "QGIS manager는 등록한 task를 소유·정리한다. VS Code는 task 실행 handle을 반환한다.",
+      "implementation_locator": "QgsApplication.taskManager/addTask; tasks.executeTask/TaskExecution",
+      "failure_cancel_undo_save": "GUI 경로와 API를 찾았어도 동일 예제의 Undo·저장·취소 전부가 입증되는 것은 아니다.",
+      "transferable": "Prep 독립 작업과 WB 소유 작업의 경계를 유지하며 참고",
+      "non_transferable": "별도 host 작업 관리자를 Prep에 새로 중복 도입하라는 결론은 아니다.",
+      "unknowns": [
+        "현재 WB/Prep에서 실제 handle·문서 전달을 확인하는 범위"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "jobs-P10",
+      "requirement": "watch 작업의 완료 표시와 진단 위치",
+      "products": [
+        "VS Code"
+      ],
+      "source_ids": [
+        "jobs-D09"
+      ],
+      "asset_ids": [],
+      "prerequisite": "종료하지 않고 반복 실행하는 compiler watch 예제",
+      "actions": [
+        "background begin/end pattern 설정",
+        "출력 진단과 원본 파일 위치 연결"
+      ],
+      "documented_result": "watch task의 한 회 busy/done과 프로세스 생존은 별개다.",
+      "implementation_locator": "tasks.json isBackground/problemMatcher.background; problem location",
+      "failure_cancel_undo_save": "이 예제의 done 패턴이 CAE iteration/convergence 의미를 제공하지 않는다.",
+      "transferable": "실행 상태와 도메인 진행 단계를 구분할 비교 사례",
+      "non_transferable": "컴파일러 watch 완료를 solver 성공으로 전용할 수 없다.",
+      "unknowns": [
+        "CAE 단계별 진척 데이터가 없을 때 불확정 진행 표시"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    }
+  ],
+  "coverage": [
+    {
+      "requirement": "진행·취소 UI와 실제 worker 중단",
+      "pattern_ids": [
+        "jobs-P01",
+        "jobs-P03"
+      ],
+      "status": "supported",
+      "gap_reason": "narrow API contract; 실응답시간 미확인"
+    },
+    {
+      "requirement": "thread/process·입력 수명과 GUI 응답",
+      "pattern_ids": [
+        "jobs-P02",
+        "jobs-P06"
+      ],
+      "status": "supported",
+      "gap_reason": "backend thread 안전성 실증 없음"
+    },
+    {
+      "requirement": "프로세스 start/exit/log와 도메인 성공",
+      "pattern_ids": [
+        "jobs-P04",
+        "jobs-P10"
+      ],
+      "status": "supported",
+      "gap_reason": "CAE 성공 판정은 별도"
+    },
+    {
+      "requirement": "Windows 중단·자식 프로세스",
+      "pattern_ids": [
+        "jobs-P05"
+      ],
+      "status": "supported",
+      "gap_reason": "실제 launcher/MPI/job 할당 미확인"
+    },
+    {
+      "requirement": "임시 산출물·파일 commit·문서 채택",
+      "pattern_ids": [
+        "jobs-P07"
+      ],
+      "status": "partial",
+      "gap_reason": "여러 파일과 모델 변경의 통합 원자성 미확인"
+    },
+    {
+      "requirement": "입력 수정/삭제·문서 닫기·stale 결과",
+      "pattern_ids": [
+        "jobs-P08"
+      ],
+      "status": "partial",
+      "gap_reason": "revision·undo·새 대상 충돌 미확인"
+    },
+    {
+      "requirement": "GUI/script와 host 작업 소유권",
+      "pattern_ids": [
+        "jobs-P09"
+      ],
+      "status": "partial",
+      "gap_reason": "현 저장소 실제 통합을 조사한 것이 아님"
+    }
+  ],
+  "search_log": [
+    {
+      "query": "Qt QFuture cancel QtConcurrent run promise; QThread quit computation",
+      "outcome": "basic run과 promise mode 반례 확인; quit/interruption을 커널 중단으로 일반화 금지"
+    },
+    {
+      "query": "QProcess terminate Windows Python Popen terminate kill Job Objects breakaway",
+      "outcome": "동명 API의 Windows 의미와 하위 프로세스 관리 조건 차이 확인"
+    },
+    {
+      "query": "QGIS task cancel dependent layer project close result stale",
+      "outcome": "layer 제거 취소 근거 확보; 입력 개정 충돌과 CAE 문서 채택은 공백"
+    },
+    {
+      "query": "QSaveFile atomic cancelWriting direct write fallback",
+      "outcome": "direct write fallback에서는 보호가 사라지는 반례 확보"
+    },
+    {
+      "query": "VS Code withProgress cancellation task terminate problem matcher watching",
+      "outcome": "UI 취소토큰과 프로세스 실행 handle, watch busy/done 차이 확인"
+    }
+  ],
+  "gaps": [
+    "동일 앱의 시작→입력 편집→취소/종료→문서 채택→Undo→재열기 연속 재현 없음",
+    "모든 실제 V/R=0; 플랫폼 실행·성능·취소 지연 미측정",
+    "원본 입력 개정과 결과 stale 판정, 다중 파일/문서 채택의 원자성은 별도 제품 정책과 실증 필요",
+    "Qt C++ 예제와 현 PySide6 Python 바인딩에서의 동일 지원을 실증하지 않음"
+  ],
+  "runtime_verified": false,
+  "collected_on": "2026-10-30",
+  "asset_path_scope": "file is relative to the separate downloadable reference pack; public repository contains metadata and source_url, not these image bytes"
+}
