@@ -1,0 +1,428 @@
+{
+  "key": "bdf-example-acquisition",
+  "scope": "Bounded supplementary OptiStruct2025 official complete analysis deck acquisition; no MSC-specific example claim",
+  "collected_on": "2026-10-30",
+  "url_resolution": {
+    "rule": "Official offlinecheck.js: .wh_version=2025; majorVersion=first4; substitute majorv/minorv/http as online page does",
+    "source": {
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/altair-resources/js/offlinecheck.js?02012025",
+      "local_file": "tmp/opti-nastran/examples/offlinecheck.js",
+      "size_bytes": 16033,
+      "sha256": "15dd21e4b945d9d664153e29448a900b410b9a6a7cbd358bc336d3b11d7c2645",
+      "locator": "setupOfflineCheck lines25–43",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only"
+    }
+  },
+  "raw_acquisitions": [
+    {
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_test_problem_t3_r.htm",
+      "final_url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_test_problem_t3_r.htm",
+      "local_file": "tmp/opti-nastran/examples/nafems_test_problem_t3_r.htm",
+      "size_bytes": 46121,
+      "sha256": "79499fff1932824169fd90ca63661addc5ebfea70c06eb979aabfcb637c84f61",
+      "links": [
+        "http://majorv.help.altair.com/minorv/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_a.zip",
+        "http://majorv.help.altair.com/minorv/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_b.zip"
+      ],
+      "access": "downloaded"
+    },
+    {
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/piezoelectric_analysis_cantilevered_bar_example_r.htm",
+      "final_url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/piezoelectric_analysis_cantilevered_bar_example_r.htm",
+      "local_file": "tmp/opti-nastran/examples/piezoelectric_analysis_cantilevered_bar_example_r.htm",
+      "size_bytes": 65381,
+      "sha256": "058f692f7a77972083275aaff98699911db6ca34656f01f4d3cbe8f686b0eed7",
+      "links": [
+        "http://majorv.help.altair.com/minorv/simulation/demos/hwsolvers/optistruct/examples/OS-E-9000/piezoelectric_analysis_bar.zip"
+      ],
+      "access": "downloaded"
+    },
+    {
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_linear_elastic_test_problem_r_2.htm",
+      "final_url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_linear_elastic_test_problem_r_2.htm",
+      "local_file": "tmp/opti-nastran/examples/nafems_linear_elastic_test_problem_r_2.htm",
+      "size_bytes": 46181,
+      "sha256": "005279139046845c93b4a460e42394c8822e31478753901cef9827b996f1da87",
+      "links": [],
+      "access": "downloaded"
+    },
+    {
+      "source_page": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_test_problem_t3_r.htm",
+      "original_link": "http://majorv.help.altair.com/minorv/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_a.zip",
+      "url": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_a.zip",
+      "resolution": "Official offlinecheck.js setupOfflineCheck replaces majorv with .wh_version first4, minorv with version, http with https; page version=2025",
+      "final_url": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_a.zip",
+      "content_type": null,
+      "access": "downloaded",
+      "local_file": "tmp/opti-nastran/examples/T3_a.zip",
+      "size_bytes": 3918,
+      "sha256": "490bd02d9e0e87d21ccf19d6c0c4d7724913574d5a34e24a23a431bb69aa3fad",
+      "magic": "504b0304"
+    },
+    {
+      "source_page": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_test_problem_t3_r.htm",
+      "original_link": "http://majorv.help.altair.com/minorv/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_b.zip",
+      "url": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_b.zip",
+      "resolution": "Official offlinecheck.js setupOfflineCheck replaces majorv with .wh_version first4, minorv with version, http with https; page version=2025",
+      "final_url": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_b.zip",
+      "content_type": null,
+      "access": "downloaded",
+      "local_file": "tmp/opti-nastran/examples/T3_b.zip",
+      "size_bytes": 4410,
+      "sha256": "5b31725b9d9875dd4c607c318907bae4917d8709db694253879ed9b0172fd1bf",
+      "magic": "504b0304"
+    },
+    {
+      "source_page": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/piezoelectric_analysis_cantilevered_bar_example_r.htm",
+      "original_link": "http://majorv.help.altair.com/minorv/simulation/demos/hwsolvers/optistruct/examples/OS-E-9000/piezoelectric_analysis_bar.zip",
+      "url": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/examples/OS-E-9000/piezoelectric_analysis_bar.zip",
+      "resolution": "Official offlinecheck.js setupOfflineCheck replaces majorv with .wh_version first4, minorv with version, http with https; page version=2025",
+      "final_url": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/examples/OS-E-9000/piezoelectric_analysis_bar.zip",
+      "content_type": null,
+      "access": "downloaded",
+      "local_file": "tmp/opti-nastran/examples/piezoelectric_analysis_bar.zip",
+      "size_bytes": 103269,
+      "sha256": "8160c9c3f1d5f8827716f44310c6ffa753fe96a5db61fb645ad19ee7629d0de1",
+      "magic": "504b0304"
+    },
+    {
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/altair-resources/js/offlinecheck.js?02012025",
+      "local_file": "tmp/opti-nastran/examples/offlinecheck.js",
+      "size_bytes": 16033,
+      "sha256": "15dd21e4b945d9d664153e29448a900b410b9a6a7cbd358bc336d3b11d7c2645",
+      "locator": "setupOfflineCheck lines25–43",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only"
+    }
+  ],
+  "examples": [
+    {
+      "id": "opti-E-native-T3",
+      "title": "OS-V:0110 One Dimensional Transient Heat Transfer",
+      "version": "Documentation/package URL2025; .fem headers HyperMesh2017.1.0.19/template2017.1",
+      "source_page": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_test_problem_t3_r.htm",
+      "locator": "Model Files; Model Description/Benchmark Model; Results",
+      "archive_names": [
+        "T3_a.zip",
+        "T3_b.zip"
+      ],
+      "deck_members": [
+        {
+          "archive": "T3_a.zip",
+          "archive_member": "T3CbeamC.fem",
+          "size_bytes": 5286,
+          "sha256": "1b9e591acd90f9600498e771aa6881c394e68dcfc90dddf6d0f51fdfc9f3bf92",
+          "local_file": "tmp/opti-nastran/examples/T3_a/T3CbeamC.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CBEAM",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PBEAML",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        },
+        {
+          "archive": "T3_a.zip",
+          "archive_member": "T3CbeamF.fem",
+          "size_bytes": 5956,
+          "sha256": "61a3fee122548f160b6d6458467cbaa36e084548ff7c67ca9552506462315673",
+          "local_file": "tmp/opti-nastran/examples/T3_a/T3CbeamF.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CBEAM",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PBEAM",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        },
+        {
+          "archive": "T3_a.zip",
+          "archive_member": "T3Quad4C.fem",
+          "size_bytes": 5062,
+          "sha256": "8457cb089b408c0ef5708aad5c30a16053261efa521a3c95d0aadc83b1ebcd55",
+          "local_file": "tmp/opti-nastran/examples/T3_a/T3Quad4C.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CQUAD4",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PSHELL",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        },
+        {
+          "archive": "T3_b.zip",
+          "archive_member": "T3Quad4F.fem",
+          "size_bytes": 5828,
+          "sha256": "2dca5a78834507902bdd386afff69016e32bd69ae6288c7476e4fd3711946c69",
+          "local_file": "tmp/opti-nastran/examples/T3_b/T3Quad4F.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CQUAD4",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PSHELL",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        },
+        {
+          "archive": "T3_b.zip",
+          "archive_member": "T3Quad8C.fem",
+          "size_bytes": 6438,
+          "sha256": "061269c2ac76acda6c6d773a1d524cfde13040e60fc8b52f9e8551c7433b9457",
+          "local_file": "tmp/opti-nastran/examples/T3_b/T3Quad8C.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CQUAD8",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PSHELL",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        },
+        {
+          "archive": "T3_b.zip",
+          "archive_member": "T3Quad8F.fem",
+          "size_bytes": 8442,
+          "sha256": "170a8ba7433a828afdbe13450745b8dd49d207eb8547f04baad89cab41f8e916",
+          "local_file": "tmp/opti-nastran/examples/T3_b/T3Quad8F.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CQUAD8",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PSHELL",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        }
+      ],
+      "purpose": "CBEAM/Quad4/Quad8 coarse/fine transient heat transfer",
+      "expected": "Official page: point C at t32s, target36.60°C; upstream result, not reproduced here. Upstream results heading says Linear Static although this is transient.",
+      "dependency_review": "Six decks contain SUBCASE, ANALYSIS HEAT, complete mesh/material/property/BC/load/time definitions, BEGIN BULK and ENDDATA. No external input file request observed. Text/dependency review only, not complete parser/solver acceptance.",
+      "required_external_files_observed": [],
+      "rights": "No LICENSE/NOTICE in ZIP; official HTML copyright/all rights reserved. Public download is not redistribution permission; originals remain tmp only.",
+      "redistribution": "locator-only",
+      "complete_input_observed": true,
+      "solver_executed": false
+    },
+    {
+      "id": "opti-E-native-piezo",
+      "title": "OS-E:9000 Piezoelectric Analysis of a Cantilevered Bar",
+      "version": "Documentation/package URL2025; deck solver version not independently pinned",
+      "source_page": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/piezoelectric_analysis_cantilevered_bar_example_r.htm",
+      "locator": "Model Files; Model Description/Benchmark Model; Results",
+      "archive_names": [
+        "piezoelectric_analysis_bar.zip"
+      ],
+      "deck_members": [
+        {
+          "archive": "piezoelectric_analysis_bar.zip",
+          "archive_member": "piezoelectric_analysis_bar.fem",
+          "size_bytes": 826388,
+          "sha256": "8ab45cc19f24c374de84f30b57e2aa523d4f4f620bbd76dc02485d2aca93cba1",
+          "local_file": "tmp/opti-nastran/examples/piezoelectric_analysis_bar/piezoelectric_analysis_bar.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1",
+            "2"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CHEXA",
+            "DLOAD",
+            "ENDDATA",
+            "GRID",
+            "LABEL AP",
+            "MAT2PT",
+            "MAT9OR",
+            "MATPZO",
+            "MPC",
+            "MPC\t10\t6",
+            "PSOLID",
+            "SPC",
+            "SPCADD",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        }
+      ],
+      "purpose": "Two direct-transient subcases for voltage and reverse piezoelectric displacement",
+      "expected": "Official plots show sinusoidal deformation and reverse voltage matching first applied voltage. No numeric tolerance or result reproduced.",
+      "dependency_review": "Deck contains two SUBCASE/ANALYSIS DTRAN, solid mesh, MAT2PT/MATPZO/MAT9OR/PSOLID/MPC/load/table/time definitions, BEGIN BULK and ENDDATA. Documentation describes reverse displacement origin; table data are provided in deck. No external input file request observed. Text/dependency review only, not complete parser/solver acceptance.",
+      "required_external_files_observed": [],
+      "rights": "No LICENSE/NOTICE in ZIP; official HTML copyright/all rights reserved. Public download is not redistribution permission; originals remain tmp only.",
+      "redistribution": "locator-only",
+      "complete_input_observed": true,
+      "solver_executed": false
+    }
+  ],
+  "counts": {
+    "zip_archives": 3,
+    "actual_fem_decks": 7,
+    "uncompressed_fem_bytes": 863400,
+    "example_bundles": 2,
+    "solver_runs": 0
+  },
+  "acquisition_log": [
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_test_problem_t3_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/piezoelectric_analysis_cantilevered_bar_example_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_linear_elastic_test_problem_r_2.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_a.zip",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_b.zip",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/examples/OS-E-9000/piezoelectric_analysis_bar.zip",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "nafems_linear_elastic_test_problem_r_2.htm",
+      "outcome": "Official category acquired; no direct ZIP link; followed T3 verification and piezoelectric examples instead"
+    },
+    {
+      "target": "ZIP member review",
+      "outcome": "7 actual .fem acquired; all BEGIN BULK/ENDDATA; no observed noncomment INCLUDE/ASSIGN/LOADLIB/RESTART external dependency; no solver run"
+    }
+  ],
+  "gaps": [
+    "No solver executable/license installed or used; syntax/numerical acceptance not demonstrated.",
+    "2025 distribution version differs from legacy2017.1 generation headers in T3.",
+    "OptiStruct .fem examples are not MSC Nastran compatibility evidence.",
+    "No original-deck redistribution license established; originals tmp only.",
+    "No deliberately invalid/expected-failure deck acquired."
+  ],
+  "runtime_verified": false
+}

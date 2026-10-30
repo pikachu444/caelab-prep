@@ -1,0 +1,57 @@
+{
+  "starter": {
+    "2024_index_rows": 590,
+    "2026_index_rows": 614,
+    "added_labels": [
+      "/ALE/GRID/FLOW-TRACKING",
+      "/ALE/GRID/LAGRANGE",
+      "/BCS/WALL",
+      "/DAMP/FREQUENCY_RANGE",
+      "/DAMP/FUNCT",
+      "/DFS/DETPOINT/SET",
+      "/EOS/COMPACTION2",
+      "/EOS/COMPACTION_TAB",
+      "/EOS/EXPONENTIAL",
+      "/FAIL/COMPOSITE",
+      "/FAIL/FRACTAL_DMG",
+      "/FAIL/LEMAITRE",
+      "/FUNCT_PYTHON",
+      "/INISPHCEL/FULL",
+      "/MAT/LAW126 (JOHNSON_HOLMQUIST_CONCRETE)",
+      "/MAT/LAW127 (ENHANCED_COMPOSITE)",
+      "/MAT/LAW133 (GRANULAR)",
+      "/MAT/LAW134 (VISCOUS_FOAM)",
+      "/MAT/LAW163 (CRUSHABLE_FOAM)",
+      "/MAT/LAW169 (ARUP_ADHESIVE)",
+      "/PRELOAD/AXIAL",
+      "/SENSOR/PYTHON",
+      "/SENSOR/USER1, /SENSOR/USER2 or /SENSOR/USER3",
+      "/VISC/PLAS"
+    ],
+    "removed_labels": [],
+    "comparison_scope": "index labels only; no claim of target OpenCourant support"
+  },
+  "engine": {
+    "2024_index_rows": 235,
+    "2026_index_rows": 241,
+    "added_labels": [
+      "/ADYREL/1",
+      "/ALE/GRID/FLOW-TRACKING",
+      "/ALE/GRID/LAGRANGE",
+      "/ALE/GRID/LAPLACIAN",
+      "/ALE/GRID/VOLUME",
+      "/DEL/PART",
+      "/DEL/PART/1",
+      "/IMPL/MUMPS/AUTOCORE",
+      "/IMPL/MUMPS/OUTCORE",
+      "/STATE/SPHCEL/FULL"
+    ],
+    "removed_labels": [
+      "/IMPL/SBCS/MSGLV",
+      "/IMPL/SBCS/ORDER",
+      "/IMPL/SBCS/OUTCORE",
+      "FTFILE"
+    ],
+    "comparison_scope": "index labels only; no claim of target OpenCourant support"
+  }
+}

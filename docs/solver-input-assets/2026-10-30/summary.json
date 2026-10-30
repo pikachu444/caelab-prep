@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-30",
+  "solver_families": 7,
+  "source_records": 251,
+  "unique_source_record_urls": 243,
+  "source_url_count_scope": "central source records only; not all detailed-page catalogue URLs or archive members",
+  "rules": 120,
+  "example_records": 33,
+  "example_count_unit": "mixed selected bundle/fixture/case records, not count of standalone complete decks",
+  "catalogue_rows_sum": 6596,
+  "catalogue_sum_warning": "mixed keyword/command/helper/options/bookmark rows; not unique keywords or implemented support",
+  "solver_runs": 0,
+  "full_field_reviews_complete": 0,
+  "solvers": [
+    {
+      "key": "radioss",
+      "documentation": "Primary Radioss2024 online; historical Reference Guide2022 PDF; comparator current online banner2026 acquired2026-10-30",
+      "source_records": 59,
+      "source_urls": 59,
+      "catalogue_rows": 825,
+      "catalogue_unit": "原文索引行: keyword/family/option/alias labels mixed, not canonical unique supported keywords",
+      "rules": 32,
+      "example_records": 6,
+      "runtime_verified": false,
+      "full_field_review_complete": false
+    },
+    {
+      "key": "dyna",
+      "documentation": "R17@e8334f9fb (06/11/26)",
+      "source_records": 24,
+      "source_urls": 24,
+      "catalogue_rows": 1773,
+      "catalogue_unit": "starred official TOC rows, including 58 family headings and 23 duplicate literal-name rows",
+      "rules": 12,
+      "example_records": 7,
+      "runtime_verified": false,
+      "full_field_review_complete": false
+    },
+    {
+      "key": "abaqus",
+      "documentation": "2025, docs.software.vt.edu vendor-origin mirror (not direct Dassault hosting)",
+      "source_records": 45,
+      "source_urls": 45,
+      "catalogue_rows": 600,
+      "catalogue_unit": "unique keyword name/detail locator pairs",
+      "rules": 22,
+      "example_records": 6,
+      "runtime_verified": false,
+      "full_field_review_complete": false
+    },
+    {
+      "key": "calculix",
+      "documentation": "CCX2.23 manual 2025-10-19;835PDFpages",
+      "source_records": 13,
+      "source_urls": 13,
+      "catalogue_rows": 143,
+      "catalogue_unit": "unique official starred keyword subsection",
+      "rules": 16,
+      "example_records": 6,
+      "runtime_verified": false,
+      "full_field_review_complete": false
+    },
+    {
+      "key": "aster",
+      "documentation": "official documentation branch v17, retrieved 2026-10-30; no exact minor build advertised",
+      "source_records": 57,
+      "source_urls": 57,
+      "catalogue_rows": 269,
+      "catalogue_unit": "268 Command definitions +1 non-Command VARIABLE helper; 270 manual-document rows separately",
+      "rules": 14,
+      "example_records": 5,
+      "runtime_verified": false,
+      "full_field_review_complete": false
+    },
+    {
+      "key": "optistruct",
+      "documentation": "2025",
+      "source_records": 36,
+      "source_urls": 36,
+      "catalogue_rows": 1107,
+      "catalogue_unit": "서로 다른 종류의 공식 child-link 행",
+      "rules": 12,
+      "example_records": 2,
+      "runtime_verified": false,
+      "full_field_review_complete": false
+    },
+    {
+      "key": "nastran",
+      "documentation": "MSC Nastran2024.2 QRG;PDF creation2024-11-21",
+      "source_records": 17,
+      "source_urls": 17,
+      "catalogue_rows": 1879,
+      "catalogue_unit": "설정·entry·option topic 혼합 bookmark 행;고유 keyword 수 아님",
+      "rules": 12,
+      "example_records": 1,
+      "runtime_verified": false,
+      "full_field_review_complete": false
+    }
+  ]
+}

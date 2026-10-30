@@ -1,0 +1,478 @@
+{
+  "validation_kind": "research-metadata-and-retained-file-integrity",
+  "checked_at": "2026-10-30T02:47:12.209044+00:00",
+  "root": "/workspace/scratch/e06cabc44b00/solver-input-research",
+  "passed": true,
+  "solver_count": 7,
+  "global_unique_source_ids": 251,
+  "global_unique_rule_ids": 120,
+  "global_unique_example_ids": 33,
+  "solvers": {
+    "abaqus": {
+      "sources": 45,
+      "rules": 22,
+      "examples": 6,
+      "code_assets": 2,
+      "coverage_questions": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "Q06",
+        "Q07",
+        "Q08",
+        "Q09",
+        "Q10",
+        "Q11",
+        "Q12"
+      ],
+      "expected_primary_catalogue_rows": 600,
+      "canonical_errors": 0,
+      "primary_catalogue_rows": 600
+    },
+    "aster": {
+      "sources": 57,
+      "rules": 14,
+      "examples": 5,
+      "code_assets": 4,
+      "coverage_questions": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "Q06",
+        "Q07",
+        "Q08",
+        "Q09",
+        "Q10",
+        "Q11",
+        "Q12"
+      ],
+      "expected_primary_catalogue_rows": 269,
+      "canonical_errors": 0,
+      "primary_catalogue_rows": 269
+    },
+    "calculix": {
+      "sources": 13,
+      "rules": 16,
+      "examples": 6,
+      "code_assets": 4,
+      "coverage_questions": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "Q06",
+        "Q07",
+        "Q08",
+        "Q09",
+        "Q10",
+        "Q11",
+        "Q12"
+      ],
+      "expected_primary_catalogue_rows": 143,
+      "canonical_errors": 0,
+      "primary_catalogue_rows": 143
+    },
+    "dyna": {
+      "sources": 24,
+      "rules": 12,
+      "examples": 7,
+      "code_assets": 3,
+      "coverage_questions": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "Q06",
+        "Q07",
+        "Q08",
+        "Q09",
+        "Q10",
+        "Q11",
+        "Q12"
+      ],
+      "expected_primary_catalogue_rows": 1773,
+      "canonical_errors": 0,
+      "primary_catalogue_rows": 1773
+    },
+    "nastran": {
+      "sources": 17,
+      "rules": 12,
+      "examples": 1,
+      "code_assets": 1,
+      "coverage_questions": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "Q06",
+        "Q07",
+        "Q08",
+        "Q09",
+        "Q10",
+        "Q11",
+        "Q12"
+      ],
+      "expected_primary_catalogue_rows": 1879,
+      "canonical_errors": 0,
+      "primary_catalogue_rows": 1879
+    },
+    "optistruct": {
+      "sources": 36,
+      "rules": 12,
+      "examples": 2,
+      "code_assets": 1,
+      "coverage_questions": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "Q06",
+        "Q07",
+        "Q08",
+        "Q09",
+        "Q10",
+        "Q11",
+        "Q12"
+      ],
+      "expected_primary_catalogue_rows": 1107,
+      "canonical_errors": 0,
+      "primary_catalogue_rows": 1107
+    },
+    "radioss": {
+      "sources": 59,
+      "rules": 32,
+      "examples": 6,
+      "code_assets": 5,
+      "coverage_questions": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "Q06",
+        "Q07",
+        "Q08",
+        "Q09",
+        "Q10",
+        "Q11",
+        "Q12"
+      ],
+      "expected_primary_catalogue_rows": 825,
+      "canonical_errors": 0,
+      "primary_catalogue_rows": 825
+    }
+  },
+  "catalogue_row_counts": {
+    "catalogues/abaqus-source-acquisition.jsonl": 602,
+    "catalogues/abaqus.csv": 600,
+    "catalogues/aster-manual-index.csv": 270,
+    "catalogues/aster.csv": 269,
+    "catalogues/calculix-mit-assets.csv": 11,
+    "catalogues/calculix-test-assets.csv": 1511,
+    "catalogues/calculix.csv": 143,
+    "catalogues/calculix.jsonl": 143,
+    "catalogues/dyna-material-aliases.csv": 362,
+    "catalogues/dyna-official-examples.csv": 82,
+    "catalogues/dyna-pydyna-schema.csv": 3685,
+    "catalogues/dyna-toc-all.csv": 2030,
+    "catalogues/dyna-toc-schema-differences.csv": 229,
+    "catalogues/dyna.csv": 1773,
+    "catalogues/nastran-outline.csv": 2196,
+    "catalogues/nastran.csv": 1879,
+    "catalogues/optistruct.csv": 1107,
+    "catalogues/pynastran-reader-cards.csv": 429,
+    "catalogues/radioss-current.csv": 855,
+    "catalogues/radioss.csv": 825,
+    "catalogues/radioss.jsonl": 825
+  },
+  "checks": {
+    "question_reference_assertions": 159,
+    "example_reference_assertions": 31,
+    "false_execution_flag_assertions": 7862,
+    "local_file_references": 3271,
+    "size_assertions": 2839,
+    "sha256_assertions": 2872,
+    "source_reference_assertions": 17072,
+    "rule_reference_assertions": 158
+  },
+  "unique_local_files_checked": 3107,
+  "unique_files_sha256_read": 2848,
+  "errors": [],
+  "input_documents": [
+    {
+      "file": "solvers/abaqus.json",
+      "size_bytes": 61156,
+      "sha256": "0b3d8bcc0cf812d0c132183642ab52fc5cdd0c4e0654d0d5190bf94fafafd7dc"
+    },
+    {
+      "file": "solvers/aster.json",
+      "size_bytes": 68878,
+      "sha256": "d97550fff5dd4a3521e4d43a1a84ffb0f27f1b60869df208d47c4c238e32cfec"
+    },
+    {
+      "file": "solvers/calculix.json",
+      "size_bytes": 44887,
+      "sha256": "dc034a98e883db50a6cba6a04e1a37c92f0e135ee211c0821580766462beab32"
+    },
+    {
+      "file": "solvers/dyna.json",
+      "size_bytes": 51292,
+      "sha256": "a4fc4f1858514d30ebb7cf51198092a6d24daf2e0254e847c7747c0a1f5313f4"
+    },
+    {
+      "file": "solvers/nastran.json",
+      "size_bytes": 26628,
+      "sha256": "e5b39c06a5b20606741bbbe3aad2a34e0b6abc7306056cc98b08291d0b95a451"
+    },
+    {
+      "file": "solvers/optistruct.json",
+      "size_bytes": 51828,
+      "sha256": "0732c7d48c3ba057951d1bbd33da8b591ab9c881d52dad230c6ebf7e3356146a"
+    },
+    {
+      "file": "solvers/radioss.json",
+      "size_bytes": 108714,
+      "sha256": "590b4de525869d59bb80bedb159450e152c9ccb40c72f7a4b6b913daa64e41be"
+    },
+    {
+      "file": "catalogues/abaqus-reconciliation.json",
+      "size_bytes": 307,
+      "sha256": "9d82c26b2249dfcff700b7822dd08ef2b8e728650600f81ebe9534720edb0db8"
+    },
+    {
+      "file": "catalogues/abaqus-source-acquisition.jsonl",
+      "size_bytes": 240256,
+      "sha256": "88e120635b32ec078bcf006d4c4f6705fef1eb3cba3e77b32b5bdd0664459d70"
+    },
+    {
+      "file": "catalogues/abaqus-validation.json",
+      "size_bytes": 300,
+      "sha256": "468048513432a73bb4084409ab40b3b9fcab269458484f8a1a0cc0c17c4e140c"
+    },
+    {
+      "file": "catalogues/abaqus.csv",
+      "size_bytes": 169382,
+      "sha256": "c0d8d37fe398405a9450e5cea2af92261a6bc4dd17bc7ede6b6ab88c9c05f5da"
+    },
+    {
+      "file": "catalogues/aster-index-reconciliation.json",
+      "size_bytes": 373,
+      "sha256": "3f656a5732773e8179de2ecd830d59ec60a89968e6d75fd0a22176c23998ecc4"
+    },
+    {
+      "file": "catalogues/aster-manual-index.csv",
+      "size_bytes": 60679,
+      "sha256": "fc63d0eb4bf58bbfcf99d44e1e395934f55fa753af2f987857e99ad2a2e2a0d3"
+    },
+    {
+      "file": "catalogues/aster-structure.json",
+      "size_bytes": 1086,
+      "sha256": "d820a7d0dbf74777428002a160c2e2e1a66f58fe273462fb972c11805abc4b22"
+    },
+    {
+      "file": "catalogues/aster.csv",
+      "size_bytes": 94874,
+      "sha256": "34e1435fdd54d792893bc9b1009da1beb5e65c4cdb6564a4bcd6e1bbee79d6a3"
+    },
+    {
+      "file": "catalogues/bdf-examples.json",
+      "size_bytes": 17597,
+      "sha256": "79db728860dc10cea44c4beebcf7d5450bb0e2686f1a7fa656530a88428e3439"
+    },
+    {
+      "file": "catalogues/calculix-mit-assets.csv",
+      "size_bytes": 3879,
+      "sha256": "1ffcf635139c95707348a508d4f94e7d09d14db5246f652cc2c64b0a0bd99dc2"
+    },
+    {
+      "file": "catalogues/calculix-reconciliation.json",
+      "size_bytes": 578,
+      "sha256": "87acc853d916f356cc5d26a85f951981483f4e700b26a5b2c90778000576c2e8"
+    },
+    {
+      "file": "catalogues/calculix-test-assets.csv",
+      "size_bytes": 287856,
+      "sha256": "0083ea47691053e197c7c6e3fadbffd98d7009cf2cd40c8740b96eecadd26080"
+    },
+    {
+      "file": "catalogues/calculix.csv",
+      "size_bytes": 35924,
+      "sha256": "dfdbff7b6ce8d7a41bd25a65d8c87d2a14a80a60a0d50d2ac6605072eb26d988"
+    },
+    {
+      "file": "catalogues/calculix.jsonl",
+      "size_bytes": 66375,
+      "sha256": "0a0f5ad2216f6ab2e64e523df29850fac31370fc56c2c00b2ac0671bf79e197f"
+    },
+    {
+      "file": "catalogues/dyna-material-aliases.csv",
+      "size_bytes": 70630,
+      "sha256": "caac7b7a92dbcd143c0d30fbd6cfdb05ccf8d483b41c06871e04186ec630d180"
+    },
+    {
+      "file": "catalogues/dyna-official-examples.csv",
+      "size_bytes": 52502,
+      "sha256": "eba4aa0ad159e39972d1befef4a9fb97aa4e6a553c9b5033ec56a17eaf372632"
+    },
+    {
+      "file": "catalogues/dyna-pydyna-schema.csv",
+      "size_bytes": 737883,
+      "sha256": "5cb289d2456c2e0aa0ee94c2d5f81a4b2e6c5cc23829d2a9182c083b6ab3e979"
+    },
+    {
+      "file": "catalogues/dyna-read-sections.json",
+      "size_bytes": 1219,
+      "sha256": "b8e62fcea3d641af587a38c130c50e3eb83dcf8219fb240817ccc7832e1cf76e"
+    },
+    {
+      "file": "catalogues/dyna-reconciliation.json",
+      "size_bytes": 2982,
+      "sha256": "2c3e09697751eaf3d40501211923cbdf362e03ff5fff3aa6bdecd86ce8f6d3a0"
+    },
+    {
+      "file": "catalogues/dyna-toc-all.csv",
+      "size_bytes": 456563,
+      "sha256": "6c8c28784ad301d4ea72e112da565bc36c062a6f984b797312948af425267058"
+    },
+    {
+      "file": "catalogues/dyna-toc-schema-differences.csv",
+      "size_bytes": 64635,
+      "sha256": "ed9eb843d787c7c7b3094cc16b8dcce71eb7f58ccb25e03871896f06d084f868"
+    },
+    {
+      "file": "catalogues/dyna-validation.json",
+      "size_bytes": 781,
+      "sha256": "e36126645c69f546a959101e3f3486495dd9d0703220cee19c06706a7c5fe511"
+    },
+    {
+      "file": "catalogues/dyna.csv",
+      "size_bytes": 487627,
+      "sha256": "108dbae9f8ed4e547d9bdcbc18407349db0984ccb4e452cd368fa484f1e5966a"
+    },
+    {
+      "file": "catalogues/nastran-examples.json",
+      "size_bytes": 6692,
+      "sha256": "03d7b883a6b7c89da678cebaecedb29ca62efe14027070912f5b09bb466c8a41"
+    },
+    {
+      "file": "catalogues/nastran-outline.csv",
+      "size_bytes": 534181,
+      "sha256": "9c0431ea35ff714fb15fb26d13e4932112669bea1065b7118dc6127b1608e5bb"
+    },
+    {
+      "file": "catalogues/nastran.csv",
+      "size_bytes": 416147,
+      "sha256": "796bab39a1081fd348b41e07e4cd90f4153585d38c0cf3bbdbea52ab1d9de665"
+    },
+    {
+      "file": "catalogues/optistruct-pages.json",
+      "size_bytes": 407798,
+      "sha256": "693a92745db374af663e4942bbd8d1fe169656266855540efc1ac2e991636eba"
+    },
+    {
+      "file": "catalogues/optistruct.csv",
+      "size_bytes": 154697,
+      "sha256": "ac9b3a7691852eace3b9b8118f55e99774cfcbb6f8f28d5a03c1a94b1110cfaa"
+    },
+    {
+      "file": "catalogues/pynastran-reader-cards.csv",
+      "size_bytes": 50517,
+      "sha256": "5f7951cc63ee9dc9c27933e63f4e868038823091e983e2982fc33132ece8e2fa"
+    },
+    {
+      "file": "catalogues/radioss-cfg-inventory.json",
+      "size_bytes": 867559,
+      "sha256": "f2546c02789494b22a9f7de4895a2e87e34cd934f8addc4520a69640531eb7a3"
+    },
+    {
+      "file": "catalogues/radioss-current.csv",
+      "size_bytes": 227812,
+      "sha256": "c2c91ccb5ab7a6c1556434c8bad1ac29b8322686135c4f58a647edde0faf8822"
+    },
+    {
+      "file": "catalogues/radioss-detail-acquisition.json",
+      "size_bytes": 420757,
+      "sha256": "943b559b1db4a8f720162df12a47f8714d88621491aac50fab9e031aef6cf843"
+    },
+    {
+      "file": "catalogues/radioss-inp2rad-functions.json",
+      "size_bytes": 10201,
+      "sha256": "ef1c5d8305917bc2b2a07c41d8e11c6c560183e19e531bf4cf981b6f8ce2459e"
+    },
+    {
+      "file": "catalogues/radioss-qa-inventory.json",
+      "size_bytes": 166350,
+      "sha256": "dc2131164e2fa2d46a944b60a906dccdaaf8622598108206de2ddee4150371fc"
+    },
+    {
+      "file": "catalogues/radioss-reconciliation.json",
+      "size_bytes": 941,
+      "sha256": "c2285704519645cb9f25531460ee1172042837cbfeb32b09984abb50881a4694"
+    },
+    {
+      "file": "catalogues/radioss-validation.json",
+      "size_bytes": 4255,
+      "sha256": "2d5aa23447660276b06818df7f82547b309f9317551e514f2a1caa0ae678dd56"
+    },
+    {
+      "file": "catalogues/radioss-version-index-diff.json",
+      "size_bytes": 1514,
+      "sha256": "6805ac056227112c2de7a7e6774729fd43a49eaeec542c9657f637a691b29013"
+    },
+    {
+      "file": "catalogues/radioss.csv",
+      "size_bytes": 211727,
+      "sha256": "a3865838788575196f721236a5fdf027a6bbd772fb223a9b7915a6542f5bb1f0"
+    },
+    {
+      "file": "catalogues/radioss.jsonl",
+      "size_bytes": 381534,
+      "sha256": "1f41d2ea77d8cddb26e8b57cccc8af24c475041eb7d90a9a46e34e45d8a6c926"
+    }
+  ],
+  "execution": {
+    "product_code_executed": false,
+    "solver_executed": false,
+    "code_assets_executed": false,
+    "validator_only": true
+  },
+  "policy": {
+    "explicit_local_fields": [
+      "analysis_file",
+      "analysis_local_file",
+      "internal_file",
+      "local_file"
+    ],
+    "explicit_local_lists": [
+      "analysis_local_files",
+      "companion_files",
+      "local_files"
+    ],
+    "ignored_nonlocal_fields": [
+      "paths",
+      "path",
+      "source_path",
+      "upstream_path",
+      "archive_member",
+      "url",
+      "prose",
+      "rejected_candidates.file"
+    ],
+    "generic_file": "Only explicit research local roots/absolute path, excluding rejected candidates",
+    "primary_list_hash": "Single SHA on analysis_local_files-only example applies to first primary input; named file_hashes maps by basename",
+    "catalogue": "Every CSV/JSONL parses and source references resolve; primary <solver>.csv count equals declared entry_count; available CSV/JSONL mirror counts equal"
+  },
+  "limits": [
+    "This validator checks declared metadata and retained file bytes only; it does not validate complete keyword field schemas or solver syntax/numerical behavior.",
+    "Archive-member-only inventories without explicit retained local paths are not guessed as extracted files; their archive acquisition is verified through declared sources.",
+    "No upstream code was imported, solver installed, generated deck written, or product executed."
+  ]
+}

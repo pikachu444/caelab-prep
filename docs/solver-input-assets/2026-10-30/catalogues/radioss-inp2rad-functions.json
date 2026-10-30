@@ -1,0 +1,523 @@
+{
+  "source_revision": "1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1",
+  "path": "input_converters/inp2rad/inp2rad/inp2rad.py",
+  "analysis": "Python AST static inventory; not executed; string fragments do not establish full keyword support",
+  "functions": [
+    {
+      "name": "convert_transforms",
+      "start_line": 53,
+      "end_line": 116
+    },
+    {
+      "name": "read_nodes",
+      "start_line": 122,
+      "end_line": 168
+    },
+    {
+      "name": "convert_nodes",
+      "start_line": 174,
+      "end_line": 186
+    },
+    {
+      "name": "convert_distcoup",
+      "start_line": 192,
+      "end_line": 320
+    },
+    {
+      "name": "convert_nsets",
+      "start_line": 326,
+      "end_line": 596
+    },
+    {
+      "name": "create_nblocks",
+      "start_line": 602,
+      "end_line": 630
+    },
+    {
+      "name": "convert_materials",
+      "start_line": 636,
+      "end_line": 1395
+    },
+    {
+      "name": "check_if_mass",
+      "start_line": 1403,
+      "end_line": 1407
+    },
+    {
+      "name": "check_if_elast",
+      "start_line": 1409,
+      "end_line": 1413
+    },
+    {
+      "name": "check_if_cohesive",
+      "start_line": 1416,
+      "end_line": 1420
+    },
+    {
+      "name": "check_if_plast",
+      "start_line": 1423,
+      "end_line": 1427
+    },
+    {
+      "name": "check_if_neohooke",
+      "start_line": 1430,
+      "end_line": 1434
+    },
+    {
+      "name": "check_if_marlow",
+      "start_line": 1437,
+      "end_line": 1441
+    },
+    {
+      "name": "check_if_ogden",
+      "start_line": 1444,
+      "end_line": 1448
+    },
+    {
+      "name": "check_if_ogden_c",
+      "start_line": 1451,
+      "end_line": 1455
+    },
+    {
+      "name": "check_if_mr",
+      "start_line": 1458,
+      "end_line": 1462
+    },
+    {
+      "name": "check_if_poly",
+      "start_line": 1465,
+      "end_line": 1472
+    },
+    {
+      "name": "check_if_se",
+      "start_line": 1475,
+      "end_line": 1480
+    },
+    {
+      "name": "check_if_hypfua",
+      "start_line": 1483,
+      "end_line": 1487
+    },
+    {
+      "name": "check_if_hypfmua",
+      "start_line": 1490,
+      "end_line": 1495
+    },
+    {
+      "name": "check_if_rigid",
+      "start_line": 1498,
+      "end_line": 1502
+    },
+    {
+      "name": "check_if_prony",
+      "start_line": 1505,
+      "end_line": 1509
+    },
+    {
+      "name": "check_if_jcdi",
+      "start_line": 1512,
+      "end_line": 1516
+    },
+    {
+      "name": "check_if_damping",
+      "start_line": 1519,
+      "end_line": 1523
+    },
+    {
+      "name": "write_elastic_material",
+      "start_line": 1531,
+      "end_line": 1540
+    },
+    {
+      "name": "write_plastic_material",
+      "start_line": 1544,
+      "end_line": 1590
+    },
+    {
+      "name": "write_neohooke_material",
+      "start_line": 1594,
+      "end_line": 1612
+    },
+    {
+      "name": "write_mr_material",
+      "start_line": 1616,
+      "end_line": 1635
+    },
+    {
+      "name": "write_coh_material",
+      "start_line": 1639,
+      "end_line": 1652
+    },
+    {
+      "name": "write_hypfmua_material",
+      "start_line": 1656,
+      "end_line": 1682
+    },
+    {
+      "name": "write_ogden_c_material",
+      "start_line": 1686,
+      "end_line": 1709
+    },
+    {
+      "name": "write_hypfua_material",
+      "start_line": 1713,
+      "end_line": 1751
+    },
+    {
+      "name": "write_supere_material",
+      "start_line": 1755,
+      "end_line": 1778
+    },
+    {
+      "name": "write_ogden_material",
+      "start_line": 1782,
+      "end_line": 1797
+    },
+    {
+      "name": "write_poly_material",
+      "start_line": 1801,
+      "end_line": 1818
+    },
+    {
+      "name": "write_marlow_material",
+      "start_line": 1822,
+      "end_line": 1843
+    },
+    {
+      "name": "write_prony_series",
+      "start_line": 1847,
+      "end_line": 1862
+    },
+    {
+      "name": "write_jcdi",
+      "start_line": 1866,
+      "end_line": 1897
+    },
+    {
+      "name": "write_damping",
+      "start_line": 1901,
+      "end_line": 1914
+    },
+    {
+      "name": "write_rigid_material",
+      "start_line": 1918,
+      "end_line": 1927
+    },
+    {
+      "name": "write_admas",
+      "start_line": 1931,
+      "end_line": 1941
+    },
+    {
+      "name": "convert_props",
+      "start_line": 1963,
+      "end_line": 2349
+    },
+    {
+      "name": "write_parts",
+      "start_line": 2355,
+      "end_line": 2373
+    },
+    {
+      "name": "write_props",
+      "start_line": 2379,
+      "end_line": 2478
+    },
+    {
+      "name": "convert_connbeams",
+      "start_line": 2484,
+      "end_line": 2613
+    },
+    {
+      "name": "prepare_elsets",
+      "start_line": 2621,
+      "end_line": 2705
+    },
+    {
+      "name": "parse_element_data",
+      "start_line": 2712,
+      "end_line": 2858
+    },
+    {
+      "name": "process_element_block",
+      "start_line": 2864,
+      "end_line": 2941
+    },
+    {
+      "name": "convert_elements",
+      "start_line": 2947,
+      "end_line": 3215
+    },
+    {
+      "name": "write_element_groups",
+      "start_line": 3222,
+      "end_line": 3439
+    },
+    {
+      "name": "convert_segments",
+      "start_line": 3445,
+      "end_line": 3538
+    },
+    {
+      "name": "parse_surface_data",
+      "start_line": 3544,
+      "end_line": 3776
+    },
+    {
+      "name": "parse_surface_interaction_data",
+      "start_line": 3782,
+      "end_line": 3818
+    },
+    {
+      "name": "convert_contacts",
+      "start_line": 3824,
+      "end_line": 4003
+    },
+    {
+      "name": "convert_ties",
+      "start_line": 4009,
+      "end_line": 4120
+    },
+    {
+      "name": "read_amplitudes",
+      "start_line": 4126,
+      "end_line": 4181
+    },
+    {
+      "name": "convert_boundary",
+      "start_line": 4187,
+      "end_line": 4683
+    },
+    {
+      "name": "write_functions",
+      "start_line": 4689,
+      "end_line": 4711
+    },
+    {
+      "name": "convert_initial",
+      "start_line": 4717,
+      "end_line": 4836
+    },
+    {
+      "name": "convert_dloads",
+      "start_line": 4842,
+      "end_line": 5011
+    },
+    {
+      "name": "convert_pload",
+      "start_line": 5016,
+      "end_line": 5164
+    },
+    {
+      "name": "convert_rigids",
+      "start_line": 5171,
+      "end_line": 5372
+    },
+    {
+      "name": "convert_coupling",
+      "start_line": 5379,
+      "end_line": 5498
+    },
+    {
+      "name": "convert_discoup",
+      "start_line": 5504,
+      "end_line": 5602
+    },
+    {
+      "name": "parse_control_data",
+      "start_line": 5608,
+      "end_line": 5772
+    },
+    {
+      "name": "convert_mpc_ties",
+      "start_line": 5778,
+      "end_line": 5888
+    },
+    {
+      "name": "build_elset_element_type_mapping",
+      "start_line": 5894,
+      "end_line": 5938
+    },
+    {
+      "name": "convert_elements_at",
+      "start_line": 5948,
+      "end_line": 6010
+    },
+    {
+      "name": "main_conversion_sp",
+      "start_line": 6019,
+      "end_line": 6196
+    },
+    {
+      "name": "write_output",
+      "start_line": 6202,
+      "end_line": 6721
+    },
+    {
+      "name": "input_read",
+      "start_line": 6727,
+      "end_line": 6794
+    },
+    {
+      "name": "preprocess_lines",
+      "start_line": 6800,
+      "end_line": 6853
+    },
+    {
+      "name": "expand_elset_ranges",
+      "start_line": 6859,
+      "end_line": 6909
+    },
+    {
+      "name": "create_part_elsets",
+      "start_line": 6915,
+      "end_line": 7168
+    },
+    {
+      "name": "create_rigid_elsets",
+      "start_line": 7174,
+      "end_line": 7411
+    },
+    {
+      "name": "ppm_rigids",
+      "start_line": 7417,
+      "end_line": 7540
+    },
+    {
+      "name": "find_referenced_elsets",
+      "start_line": 7546,
+      "end_line": 7608
+    },
+    {
+      "name": "find_referenced_nsets",
+      "start_line": 7614,
+      "end_line": 7649
+    },
+    {
+      "name": "replace_elsets_in_sections",
+      "start_line": 7655,
+      "end_line": 7678
+    },
+    {
+      "name": "start",
+      "start_line": 7687,
+      "end_line": 7751
+    },
+    {
+      "name": "execute_gui",
+      "start_line": 7754,
+      "end_line": 7764
+    },
+    {
+      "name": "as_real",
+      "start_line": 1869,
+      "end_line": 1874
+    },
+    {
+      "name": "format_real",
+      "start_line": 1883,
+      "end_line": 1886
+    },
+    {
+      "name": "resolve_elset",
+      "start_line": 7583,
+      "end_line": 7600
+    },
+    {
+      "name": "assign_property_to_elsets",
+      "start_line": 2117,
+      "end_line": 2248
+    }
+  ],
+  "literal_keyword_fragments": [
+    "//ENDSUB",
+    "//SUBMODEL/",
+    "/1",
+    "/ADMAS/0/",
+    "/ANIM/BRICK/TENS/STRESS",
+    "/ANIM/DT",
+    "/ANIM/ELEM/ENER",
+    "/ANIM/ELEM/EPSP",
+    "/ANIM/ELEM/VONM",
+    "/ANIM/NODA/DMAS",
+    "/ANIM/NODA/DT",
+    "/ANIM/SHELL/EPSP/LOWER",
+    "/ANIM/SHELL/EPSP/UPPER",
+    "/ANIM/SHELL/TENS/STRESS/LOWER",
+    "/ANIM/SHELL/TENS/STRESS/UPPER",
+    "/ANIM/VECT/ACC",
+    "/ANIM/VECT/CONT",
+    "/ANIM/VECT/CONT2",
+    "/ANIM/VECT/DISP",
+    "/ANIM/VECT/PCONT",
+    "/ANIM/VECT/VEL",
+    "/BCS/",
+    "/BEGIN",
+    "/BRICK/",
+    "/CLOAD/",
+    "/DAMP/",
+    "/DT/NODA/CST/0",
+    "/DT1TET10",
+    "/END",
+    "/FAIL/JOHNSON/",
+    "/FUNCT/",
+    "/GRAV/",
+    "/GRBRIC/BRIC/",
+    "/GRNOD/GRBRIC/",
+    "/GRNOD/GRNOD/",
+    "/GRNOD/GRSH3N/",
+    "/GRNOD/GRSHEL/",
+    "/GRNOD/MAT/",
+    "/GRNOD/NODE/",
+    "/GRNOD/PART/",
+    "/GRNOD/SURF/",
+    "/GRSH3N/SH3N/",
+    "/GRSHEL/SHEL/",
+    "/IMPDISP/",
+    "/IMPVEL/",
+    "/INIVEL/TRA/",
+    "/INTER/TYPE2/",
+    "/INTER/TYPE24/",
+    "/MAT/ELAST/",
+    "/MAT/LAW111/",
+    "/MAT/LAW42/",
+    "/MAT/LAW59/",
+    "/MAT/LAW62/",
+    "/MAT/LAW69/",
+    "/MAT/LAW70/",
+    "/MAT/LAW71/",
+    "/MAT/LAW82/",
+    "/MAT/LAW95/",
+    "/MAT/PLAS_TAB/",
+    "/MAT/VOID/",
+    "/NODE",
+    "/PARITH/OFF",
+    "/PART/",
+    "/PLOAD/",
+    "/PRINT/-100/50",
+    "/PROP/SHELL/",
+    "/PROP/SOLID/",
+    "/PROP/TYPE11/",
+    "/PROP/TYPE13/",
+    "/PROP/TYPE20/",
+    "/PROP/TYPE43/",
+    "/PROP/VOID/",
+    "/RBE3/",
+    "/RBODY/",
+    "/RUN/",
+    "/SH3N/",
+    "/SHELL/",
+    "/SKEW/FIX/",
+    "/SPRING/",
+    "/STOP",
+    "/SURF/PART/EXT/",
+    "/SURF/SEG/",
+    "/TETRA10/",
+    "/TETRA4/",
+    "/TFILE/4",
+    "/TH/NODE/",
+    "/TH/TITLE",
+    "/TRANSFORM/POSITION/",
+    "/VISC/PRONY/"
+  ]
+}

@@ -96,6 +96,12 @@ PrePoMax 3.0의 공식 Python/API·MCP·journal 문서와 FreeCAD MCP의 실제 
 
 기능·라이선스·의존성은 위 공개 원문과 실제 채택 버전을 대조한다. 본체의 MIT/BSD/LGPL/GPL 조건을 바인딩·아이콘·메셔·플러그인 전체의 조건으로 일반화하지 않는다.
 
+## 네이티브 입력 생성 자산
+
+[7개 솔버 입력 생성 자료](docs/solver-input-assets/2026-10-30/README.md)는 공식 목록·구문·기본값·참조·단위·요소 순서·include/실행 파일 묶음, 실제 예제와 공개 writer/schema의 범위 및 한계를 기록한다. 현재 RAD 코드는 기존 일부 필드 patch 시제품이며, 새 Starter/Engine 전체 생성이나 모든 keyword 지원은 아니다. 기존 메타데이터/회귀 입력만으로 생성 자료 확보가 끝났다고 판단하지 않는다.
+
+공용 기반은 stable identity·참조 그래프·단위·선택·명령·파일 묶음과 값의 생략/명시0/기본값/상속 상태를 보존한다. 구문·조건부 필드·기본값·namespace·지원 해석·파일 탐색은 고정 solver/version profile이 소유한다. 같은 `.inp`·BDF·card 이름은 의미·default가 같다는 근거가 아니다. 조사 결과는 이 경계의 근거이며 기존 실행 단계의 고정 완료 범위를 확대하지 않는다. 전수 field schema·새 생성기·solver read/run은 실제 지원 범위별 후속 구현/확인이다.
+
 ## 첫 적용 대상의 파일·편집 계약
 
 아래는 현재 Radioss 적용 앱의 계약이다. 공용 기반이 모든 파일 형식과 솔버에 이 저장 형식·카드 규칙을 강제하는 것은 아니다.
@@ -121,6 +127,7 @@ PrePoMax 3.0의 공식 Python/API·MCP·journal 문서와 FreeCAD MCP의 실제 
 ## 검증에 반영할 경험
 
 BeidPrep 1.0.1은 소형 모델을 열고 저장할 수 있었지만 저장본의 구속과 IPLAS 옵션이 달라졌다. 따라서 원본 보존, 미지원 카드, INCLUDE, 참조, 고정 폭 필드, 편집 값의 재열기를 확인한다. 솔버 정상 종료와 모델 조건 보존·해석 정확도는 각각 판단한다. 시험 범위는 [기록](docs/beidprep-evaluation.md)을 따른다.
+
 
 
 

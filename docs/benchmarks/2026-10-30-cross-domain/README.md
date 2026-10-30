@@ -35,3 +35,8 @@
 특히 선택 대상 삭제 중 편집 draft, 실행 중 입력 개정과 stale 결과, 여러 파일/문서의 원자적 채택, 복잡 형상 교체/재메시의 참조 유지, 백만 요소 편집, 실제 한글 IME·혼합 DPI는 남아 있다. 이 공백을 새로운 자체 정책이나 동작 추정으로 채우지 않았다.
 
 [사전 합의](discussion/protocol.md) · [독립 감사 기준](discussion/astra-checklist.md) · [독립 감사 결과](discussion/astra-findings.md) · [통합 검증](audit.md)
+
+## 네이티브 생성 자료의 후속 확보
+
+공용 GUI/API 근거만으로 솔버 입력 생성 규격을 대신하지 않는다. [7개 솔버 입력 생성 자료](../../solver-input-assets/2026-10-30/README.md)에 공식 목록·관련 필드/default·namespace·파일 묶음·실제 예제/코드·취득 해시를 별도로 확보했다. 기존 RAD patch 메타데이터·회귀 fixture는 모든 카드의 새 모델 생성 자료가 아니며, 이번 취득도 전수 field schema나 solver 실행 완료는 아니다.
+

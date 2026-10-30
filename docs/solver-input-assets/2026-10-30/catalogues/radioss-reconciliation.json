@@ -1,0 +1,24 @@
+{
+  "starter": {
+    "source_links_in_supported_section": 590,
+    "extracted_index_rows": 590,
+    "unparsed_links": [],
+    "duplicate_name_url_rows": 0,
+    "unique_name_url_pairs": 590,
+    "unique_detail_pages": 577,
+    "shared_detail_page_count": 11,
+    "aliases_and_variants": "index labels preserved; semantic alias/variant inventory not exhaustively classified",
+    "source_html_sha256": "0b0731faf8fec8a6a225c2a89363d927424eeb16a4c403dd62e6077a00421aa2"
+  },
+  "engine": {
+    "source_links_in_supported_section": 235,
+    "extracted_index_rows": 235,
+    "unparsed_links": [],
+    "duplicate_name_url_rows": 0,
+    "unique_name_url_pairs": 235,
+    "unique_detail_pages": 227,
+    "shared_detail_page_count": 1,
+    "aliases_and_variants": "index labels preserved; semantic alias/variant inventory not exhaustively classified",
+    "source_html_sha256": "28dcd4adfcfe5a4cbcd8d80ec791b842ed13bdb043e521fd6d2b327160d0a7ca"
+  }
+}

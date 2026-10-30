@@ -1,0 +1,11 @@
+{
+  "source_entry_count": 269,
+  "source_entry_with_exact_name_in_manual_index_title": 266,
+  "source_entries_without_exact_title_match": [
+    "IMPR_CORR_HOMO",
+    "LIRE_CORR_HOMO",
+    "VARIABLE"
+  ],
+  "manual_documents_containing_multiple_source_names": 4,
+  "method": "Exact uppercase command token matching in titles only; no semantic support equivalence inferred"
+}

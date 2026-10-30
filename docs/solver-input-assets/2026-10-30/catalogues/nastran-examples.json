@@ -1,0 +1,142 @@
+{
+  "scope": "Time-bounded NASA official NASTRAN-95 example supplement; not MSC Nastran2024.2 acceptance evidence",
+  "repository": "https://github.com/nasa/NASTRAN-95",
+  "revision": "65e29e9db7b21a02bb42e723afa74fa7635ed765",
+  "version": "NASA NASTRAN 1995 edition; reference output SUN SOLARIS MAY17,1995",
+  "sources": [
+    {
+      "upstream_path": "README.md",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/README.md",
+      "local_file": "tmp/opti-nastran/nastran-examples/README.md",
+      "sha256": "87d1aef2368d2562ae44094464ddffefd715fed7bb28f0da7e25fe57d0619b02",
+      "size_bytes": 859,
+      "acquisition": "downloaded",
+      "redistribution": "analysis-only pending complete NOSA1.3 obligations review",
+      "solver_executed": false
+    },
+    {
+      "upstream_path": "NASA Open Source Agreement-NASTRAN 95.doc",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/NASA%20Open%20Source%20Agreement-NASTRAN%2095.doc",
+      "local_file": "tmp/opti-nastran/nastran-examples/NASA Open Source Agreement-NASTRAN 95.doc",
+      "sha256": "e847d55f3c948c7aad92351cf8907e634a155afb416e140ad19b89011f283813",
+      "size_bytes": 49152,
+      "acquisition": "downloaded",
+      "redistribution": "analysis-only pending complete NOSA1.3 obligations review",
+      "solver_executed": false
+    },
+    {
+      "upstream_path": "inp/d05011a.inp",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/inp/d05011a.inp",
+      "local_file": "tmp/opti-nastran/nastran-examples/inp/d05011a.inp",
+      "sha256": "a507606d63899993e1768044237e10c24b17d34ea4179e3e4bb10eb3b989ce53",
+      "size_bytes": 18368,
+      "acquisition": "downloaded",
+      "redistribution": "analysis-only pending complete NOSA1.3 obligations review",
+      "solver_executed": false
+    },
+    {
+      "upstream_path": "inp/d05011a.txt",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/inp/d05011a.txt",
+      "local_file": "tmp/opti-nastran/nastran-examples/inp/d05011a.txt",
+      "sha256": "6e596b34dc11de6ee515643d7230fa1caf4efc4a17e3195befbb47e4086c7ca5",
+      "size_bytes": 4594,
+      "acquisition": "downloaded",
+      "redistribution": "analysis-only pending complete NOSA1.3 obligations review",
+      "solver_executed": false
+    },
+    {
+      "upstream_path": "demoout/d05011a.out",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/demoout/d05011a.out",
+      "local_file": "tmp/opti-nastran/nastran-examples/demoout/d05011a.out",
+      "sha256": "2b6e6647744d9d964996dd22a23d35312b1f81be68a7710a42218b051e65b124",
+      "size_bytes": 184687,
+      "acquisition": "downloaded",
+      "redistribution": "analysis-only pending complete NOSA1.3 obligations review",
+      "solver_executed": false
+    },
+    {
+      "upstream_path": "inp/d01001a.inp",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/inp/d01001a.inp",
+      "local_file": "tmp/opti-nastran/nastran-examples/inp/d01001a.inp",
+      "sha256": "91f72620847f670a3f001e19625d358f02dabeefaf84557588276fa0eff5511b",
+      "size_bytes": 1230,
+      "acquisition": "downloaded",
+      "redistribution": "analysis-only pending complete NOSA1.3 obligations review",
+      "solver_executed": false
+    },
+    {
+      "upstream_path": "inp/d01021b.inp",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/inp/d01021b.inp",
+      "local_file": "tmp/opti-nastran/nastran-examples/inp/d01021b.inp",
+      "sha256": "bbe39041527320e33db33647c54fb72d1636f36609354c4c064b85faba3f3e62",
+      "size_bytes": 1558,
+      "acquisition": "downloaded",
+      "redistribution": "analysis-only pending complete NOSA1.3 obligations review",
+      "solver_executed": false
+    }
+  ],
+  "selected_examples": [
+    {
+      "id": "nasa95-d05011a",
+      "input": "tmp/opti-nastran/nastran-examples/inp/d05011a.inp",
+      "description": "tmp/opti-nastran/nastran-examples/inp/d05011a.txt",
+      "reference_output": "tmp/opti-nastran/nastran-examples/demoout/d05011a.out",
+      "purpose": "Symmetric buckling cylinder SOL5,1; static preload and buckling subcases",
+      "dependencies": {
+        "external_deck_files": [],
+        "runtime": "NASA NASTRAN95 with supported rigid formats and plot runtime (PLOTTER NASTPLT requested)",
+        "limits": "No external READFILE/INCLUDE/ASSIGN observed; not a full graph or solver acceptance validation"
+      },
+      "structural_checks": {
+        "cend": true,
+        "bulk": true,
+        "enddata": true,
+        "solve": true,
+        "grid": true,
+        "elements": true,
+        "property": true,
+        "material": true,
+        "loads": true,
+        "constraints": true,
+        "method": true,
+        "external_input_directives": []
+      },
+      "expected": "Description lists four buckling factors and analytical comparison; archival output belongs to NASA1995 run, not our execution",
+      "rights": "README explicitly says NOSA1.3; license DOC acquired. No public redistribution here pending full obligations review; locator+hash only.",
+      "solver_executed": false,
+      "msc2024_2_verified": false,
+      "reference_observation": {
+        "locator": "demoout/d05011a.out:18–27 (version), 698 (4 eigenvalues), 1577–1580 (plot mode summary), 1630 (END OF JOB); inp/d05011a.txt:105–115 (comparison table)",
+        "archival_eigenvalues": [
+          0.9942567,
+          1.274364,
+          2.006962,
+          2.288906
+        ],
+        "meaning": "Observed only in NASA archived output; not reproduced or asserted as MSC2024.2 baseline"
+      }
+    }
+  ],
+  "rejected_candidates": [
+    {
+      "file": "inp/d01001a.inp",
+      "reason": "DIAG48 diagnostic stop, empty bulk deck; not complete structural analysis"
+    },
+    {
+      "file": "inp/d01021b.inp",
+      "reason": "restart READFILE RSCARDS and empty bulk; external restart state required"
+    }
+  ],
+  "acquisition_log": [
+    {
+      "target": "Hexagon official MSC examples",
+      "outcome": "Search found2022.1 LinearStatic manual Listing4-7 and installation locator MSC_DOC_DIR/doc/linstat/beam2.dat; no raw standalone official MSC2024.2 deck acquired in bounded search"
+    },
+    {
+      "target": "NASA official repository",
+      "outcome": "One full1995 native analysis input + description + archival output + rights document acquired at pinned commit"
+    }
+  ],
+  "solver_executed": false,
+  "time_bounded_complete": true
+}

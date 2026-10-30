@@ -1,0 +1,1410 @@
+{
+  "key": "abaqus",
+  "title": "Abaqus",
+  "scope": "Abaqus 2025 keyword browser/reader A–Z 600 keyword entries; vendor-origin Virginia Tech mirror; selected input-generation sections and actual examples",
+  "versions": {
+    "documentation": "2025, docs.software.vt.edu vendor-origin mirror (not direct Dassault hosting)",
+    "solver": "Abaqus/Standard and Abaqus/Explicit 2025 documented; no binary installed/tested",
+    "source": {
+      "meshio": "b2ee99842e119901349fdeee06b5bf61e01f450a",
+      "abqpy_2025_branch": "3088e9fc3b77da615a586524c0cb407b3d0acc48"
+    },
+    "examples": "2025 official documentation resources; code examples at pinned commits",
+    "binary_tested": null
+  },
+  "sources": [
+    {
+      "id": "abaqus-D01",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-c-ov.htm",
+      "title": "Abaqus Keywords Guide",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Using Abaqus Keywords; Using the Keywords Guide",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/keyword-guide.html",
+      "sha256": "d9450feb5ab6fde271b08e8d2aa4ab47767ca34a78b54220091be6d367a0356b",
+      "size_bytes": 5574,
+      "redistribution": "locator-only",
+      "summary": "제품별 지원과 CAE 지원은 개별 옵션에서 확인한다. 전체 목록은 field schema 완성과 다르다."
+    },
+    {
+      "id": "abaqus-D02",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-gen-kwbrowser.htm",
+      "title": "Keyword browser table",
+      "kind": "index",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "All 600 keyword rows and linked keyword pages",
+      "access": "read",
+      "read_depth": "index-parsed",
+      "local_file": "tmp/abaqus/keyword-browser.html",
+      "sha256": "f20603442b402880236f578692e6e2286a7e7e2b4e73e589e88ec89780eaf743",
+      "size_bytes": 510095,
+      "redistribution": "locator-only",
+      "summary": "600개의 고유 keyword 이름과 상세 URL을 추출했다. CAE GUI 지원 표시는 solver 지원과 다르다."
+    },
+    {
+      "id": "abaqus-D03",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAECAERefMap/simacae-c-gen-kwinpfilereader.htm",
+      "title": "Input file reader keyword support",
+      "kind": "index",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "All 600 keyword links",
+      "access": "read",
+      "read_depth": "index-parsed",
+      "local_file": "tmp/abaqus/keyword-reader.html",
+      "sha256": "b8b9adb4533ed97f5908e63ccda7b25ce470295668a6e1a7e7f5c8204a563a45",
+      "size_bytes": 245716,
+      "redistribution": "locator-only",
+      "summary": "두 번째 전체 목록과 이름·URL 집합을 대조했다. reader가 모든 옵션을 보존한다는 의미는 아니다."
+    },
+    {
+      "id": "abaqus-D04",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEMODRefMap/simamod-c-inputsyntax.htm",
+      "title": "Input syntax",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Keyword lines; Data lines; Input syntax rules",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/syntax.html",
+      "sha256": "1dbee1257898fde739c9e5802866522a1bd07f5555ab295988c49c83e4f4d363",
+      "size_bytes": 39012,
+      "redistribution": "locator-only",
+      "summary": "ASCII, 줄 길이, 연속, 이름, blank/default 및 외부 파일명 규칙을 읽었다."
+    },
+    {
+      "id": "abaqus-D05",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEMODRefMap/simamod-c-model.htm",
+      "title": "Defining a model",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Model data; History data; Including Model or History Data from an External File",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/model.html",
+      "sha256": "f9c6f1c2803c426f4fcac7d2a0f43899749bd718152b2bb1dfc57e3e3636c371",
+      "size_bytes": 32559,
+      "redistribution": "locator-only",
+      "summary": "모델/이력 분리, 동일 분석 제품의 절차, 외부 참조 처리와 최대 5단계 중첩을 읽었다."
+    },
+    {
+      "id": "abaqus-D06",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEMODRefMap/simamod-c-conventions.htm",
+      "title": "Conventions",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Degrees of Freedom; Units; Rotation and Angle Measures; Unit System Definition",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/conventions.html",
+      "sha256": "67123eebcd8665801099199bc9e8417cdcd6916eb227d3aae6156e3aea5fa1ea",
+      "size_bytes": 204460,
+      "redistribution": "locator-only",
+      "summary": "활성 자유도, 일관 단위, 각도 예외, 변환용 UNIT SYSTEM의 한계를 읽었다."
+    },
+    {
+      "id": "abaqus-D07",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEMODRefMap/simamod-c-partassy.htm",
+      "title": "Assembly definition",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Parts; Instances; Assembly; Naming conventions; Defining nodes/elements/sets",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/assembly.html",
+      "sha256": "b177cf13c1c1bc1ae7ffecc95255ef47ed940dc79783d2a7d894b901b39b13c4",
+      "size_bytes": 102668,
+      "redistribution": "locator-only",
+      "summary": "part/instance/assembly 구조와 로컬 식별자·완전 한정 참조를 읽었다."
+    },
+    {
+      "id": "abaqus-D08",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEMODRefMap/simamod-c-node.htm",
+      "title": "Node definition",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Defining nodes; Node numbering; Node sets; Local coordinate systems",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/node.html",
+      "sha256": "1a7962cbe71c37f93b3ce8506fe9d1f8032687ad7cc1b51d9045cdd7346ee2b5",
+      "size_bytes": 138497,
+      "redistribution": "locator-only",
+      "summary": "양의 정수 ID, 중복 마지막 정의, 로컬 scope와 정렬/비정렬 node set을 읽었다."
+    },
+    {
+      "id": "abaqus-D09",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEMODRefMap/simamod-c-element.htm",
+      "title": "Element definition",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Defining elements; Element numbering; Node ordering; Element sets",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/element.html",
+      "sha256": "a570507b57c823e99d6730aa7c9c66a0adb547c47b3fdae42ad642d29903612b",
+      "size_bytes": 62577,
+      "redistribution": "locator-only",
+      "summary": "연결·타입·set의 매핑 및 native element 정의와 메시 형식의 경계를 읽었다."
+    },
+    {
+      "id": "abaqus-D10",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEELMRefMap/simaelm-r-3delem.htm",
+      "title": "Three-dimensional solid element library",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Element types; Node ordering and face numbering on elements; Variable-node elements",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/solid-library.html",
+      "sha256": "59d53dae2d018254d92405919b30e09665e8a7967aeb7397395f29d57b388b1e",
+      "size_bytes": 230881,
+      "redistribution": "locator-only",
+      "summary": "tetra/wedge/brick의 native 연결·face 표와 일부 가변 노드 조건을 읽었다."
+    },
+    {
+      "id": "abaqus-D11",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEMODRefMap/simamod-c-parinput.htm",
+      "title": "Parametric modeling",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Parameter Names; Parameter Definitions; Parameter Usage; Parameter dependence",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/parameter.html",
+      "sha256": "3a046718831874b8f6491b5539b8fbdf5cb4716a9534d074cc1c4b42d63b4faf",
+      "size_bytes": 64927,
+      "redistribution": "locator-only",
+      "summary": "대소문자 구분 변수·대입·치환과 선행 테이블 정의 조건을 읽었다."
+    },
+    {
+      "id": "abaqus-D12",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEANLRefMap/simaanl-c-restart.htm",
+      "title": "Restarting an analysis",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Writing restart information; Reading restart information; Standard/Explicit procedures",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/restart-guide.html",
+      "sha256": "e81a9ee774257a075689a5601ad90c1ec1340b2f0345c600bd982e8719326ddf",
+      "size_bytes": 113406,
+      "redistribution": "locator-only",
+      "summary": "restart 저장 요청·제품별 상태 파일과 재시작 조건을 읽었다."
+    },
+    {
+      "id": "abaqus-D13",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEEXCRefMap/simaexc-c-analysisproc.htm",
+      "title": "Abaqus/Standard and Abaqus/Explicit execution",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "syntaxcheck; datacheck; continue; recover; parallel options",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/analysis-execution.html",
+      "sha256": "d613f4a4ff6393e1cfbfbb4163a4856d9adfe4e8adb54c3df02b527e15a345a3",
+      "size_bytes": 75334,
+      "redistribution": "locator-only",
+      "summary": "구문 검사·모델 검사·계속/복구의 차이를 읽었다. 문서 조사만 했으며 명령을 실행하지 않았다."
+    },
+    {
+      "id": "abaqus-D14",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEEXCRefMap/simaexc-c-fetchproc.htm",
+      "title": "Fetching sample input files",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Input file and user subroutine archive files; fetch command",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/fetch-example.html",
+      "sha256": "93155a08255cb9d4237534bc191e16707553318ff98fa6e4fcb41c649edac55a",
+      "size_bytes": 8248,
+      "redistribution": "locator-only",
+      "summary": "설치된 release 예제와 의존 파일을 fetch하는 방법을 읽었다."
+    },
+    {
+      "id": "abaqus-D15",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEEXCRefMap/simaexc-c-keywordproc.htm",
+      "title": "Querying the keyword/problem database",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "findkeyword utility; problem database lookup",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/query-examples.html",
+      "sha256": "8a9990c65066dc1fcaea8c7e011332cadc2a47c69fe415376215b32eb42af3f8",
+      "size_bytes": 10788,
+      "redistribution": "locator-only",
+      "summary": "공식 예제에 사용한 keyword로 모델과 관련 파일을 찾는 방법을 읽었다."
+    },
+    {
+      "id": "abaqus-D16",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-modeljobpyc.htm",
+      "title": "ModelJob API",
+      "kind": "api",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "writeInput method; consistencyChecking",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/job-writeinput.html",
+      "sha256": "275f4c7f2a699d863f5440ef1e5fa1830463a48e5a3eaa945322dfebd3664aa9",
+      "size_bytes": 33143,
+      "redistribution": "locator-only",
+      "summary": "writeInput은 Abaqus 런타임의 모델/job API이며 독립 공개 writer의 구현을 뜻하지 않는다."
+    },
+    {
+      "id": "abaqus-D17",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-surface.htm",
+      "title": "*SURFACE",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Type/Level; TYPE-dependent data lines",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/surface.html",
+      "sha256": "58772446936da1a799d72fdecc252d52df0f1dd1bf09eb075949d10b334843e7",
+      "size_bytes": 53544,
+      "redistribution": "locator-only",
+      "summary": "element/node/analytical surface 종류와 필요한 side·방향 데이터가 다르다."
+    },
+    {
+      "id": "abaqus-D18",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-include.htm",
+      "title": "*INCLUDE",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "INPUT; PASSWORD; Data lines",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/include.html",
+      "sha256": "9ae1f46ff201d02a8d376292e6691553e6198678c944129292623c2b306a8846",
+      "size_bytes": 5389,
+      "redistribution": "locator-only",
+      "summary": "외부 파일 이름은 필수이며 암호화 데이터는 별도 조건을 갖는다."
+    },
+    {
+      "id": "abaqus-D19",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-elastic.htm",
+      "title": "*ELASTIC",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "TYPE; dependencies; data lines",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/elastic.html",
+      "sha256": "0597543d1728a921f3029e7d543a234b489eb6c264f72d48e744c42d6d229344",
+      "size_bytes": 95980,
+      "redistribution": "locator-only",
+      "summary": "탄성 TYPE과 온도/장 변수에 따라 필드 개수와 반복 행이 달라진다."
+    },
+    {
+      "id": "abaqus-D20",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-solidsection.htm",
+      "title": "*SOLID SECTION",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Required parameters; MATERIAL/COMPOSITE; Data lines",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/solidsection.html",
+      "sha256": "412dccfae2ab29d26a011b2bf3baa0da21cf8a9abe2b22fcb1dc3cc7d9289d42",
+      "size_bytes": 17693,
+      "redistribution": "locator-only",
+      "summary": "ELSET·재료/복합체·방향의 조건부 참조를 읽었다."
+    },
+    {
+      "id": "abaqus-D21",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-shellsection.htm",
+      "title": "*SHELL SECTION",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Required and mutually exclusive parameters; data lines",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/shellsection.html",
+      "sha256": "2bfa2560333fd8f539376310fd58532ccad14ad067c2164230f00c9928dd41aa",
+      "size_bytes": 29703,
+      "redistribution": "locator-only",
+      "summary": "ELSET·두께·재료/적층과 방향 조건을 읽었다."
+    },
+    {
+      "id": "abaqus-D22",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-boundary.htm",
+      "title": "*BOUNDARY",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Type/Level; AMPLITUDE; OP; data lines",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/boundary.html",
+      "sha256": "0d841ab2f4f583389fab77cb725e941031a107f893557e27afd775b0cb8d22e1",
+      "size_bytes": 51928,
+      "redistribution": "locator-only",
+      "summary": "model/history 조건, 기존 구속 유지·제거 및 amplitude 기본값은 절차별로 다르다."
+    },
+    {
+      "id": "abaqus-D23",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-contactpair.htm",
+      "title": "*CONTACT PAIR",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Type/Level; INTERACTION; data lines",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/contactpair.html",
+      "sha256": "cdc90546e91b0b1550cb22d9dc3ab1dc8c78a74bd347c1d7b28925fca67b901d",
+      "size_bytes": 26756,
+      "redistribution": "locator-only",
+      "summary": "제품별 model/history 문맥, 상호작용 속성과 surface 쌍 참조를 읽었다."
+    },
+    {
+      "id": "abaqus-D24",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-contact.htm",
+      "title": "*CONTACT",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "General contact; Type/Level; data lines",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/contact.html",
+      "sha256": "4e393bb96b91e0f6993452d53258528d900c3e3245bcc1af262d14b98cfd1b70",
+      "size_bytes": 5355,
+      "redistribution": "locator-only",
+      "summary": "general contact 시작 옵션만으로 접촉 정의 전체가 완성되지는 않는다."
+    },
+    {
+      "id": "abaqus-D25",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-amplitude.htm",
+      "title": "*AMPLITUDE",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "DEFINITION; TIME; mutually exclusive parameters; data lines",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/amplitude.html",
+      "sha256": "0fc24832e8acb5cb9904e9cdbc3fb2a9844c9560c98abd726f8e979fd935cb51",
+      "size_bytes": 44439,
+      "redistribution": "locator-only",
+      "summary": "곡선 정의 방식·시간 기준별 조건과 데이터 형식을 읽었다."
+    },
+    {
+      "id": "abaqus-D26",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-step.htm",
+      "title": "*STEP",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Products; NLGEOM; PERTURBATION; AMPLITUDE",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/step.html",
+      "sha256": "68dff069f202f17ed28ae561326c55742934e31dbc62d1694249f6aa8c531455",
+      "size_bytes": 21843,
+      "redistribution": "locator-only",
+      "summary": "step별 절차와 비선형/섭동·하중 시간 변화 조건을 읽었다."
+    },
+    {
+      "id": "abaqus-D27",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-dynamic.htm",
+      "title": "*DYNAMIC",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Implicit dynamic analysis; Explicit dynamic analysis; data lines",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/dynamic.html",
+      "sha256": "5a6b4dbd2ff5ae15acb821bba0fdc57311ad32c6d4b4d96dad30d5bc575a36a1",
+      "size_bytes": 55061,
+      "redistribution": "locator-only",
+      "summary": "implicit와 EXPLICIT의 파라미터/행 규칙은 서로 다르다."
+    },
+    {
+      "id": "abaqus-D28",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-output.htm",
+      "title": "*OUTPUT",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "FIELD/HISTORY; frequency/time controls; associated output requests",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/output.html",
+      "sha256": "e51a441421e1ee05e9e68c57a002d33cdeb16624edf651eb14c26ef15b5821c4",
+      "size_bytes": 38296,
+      "redistribution": "locator-only",
+      "summary": "출력 문맥과 제어·하위 출력 요청을 읽었다."
+    },
+    {
+      "id": "abaqus-D29",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-initialconditions.htm",
+      "title": "*INITIAL CONDITIONS",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Required TYPE; FILE/USER/EXTERNAL FIELD alternatives; data-line branches",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/keywords/simakey-r-initialconditions.htm",
+      "sha256": "f13be3d863e1bfd18fbbf7d470d48a1b2bdc09b01f5f654f7381b9bd28eb8543",
+      "size_bytes": 188495,
+      "redistribution": "locator-only",
+      "summary": "TYPE별 행 분기와 파일/사용자 루틴으로 초기 조건을 주는 경우를 읽었다."
+    },
+    {
+      "id": "abaqus-D30",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-transform.htm",
+      "title": "*TRANSFORM",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "NSET; TYPE; coordinate data line",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/keywords/simakey-r-transform.htm",
+      "sha256": "ec0ec254bb8ff9e9ec29647140f39e78c49764d3918b541b55e0dbfacf7cf479",
+      "size_bytes": 8173,
+      "redistribution": "locator-only",
+      "summary": "노드 자유도용 변환과 좌표/재료 방향은 별도 객체다."
+    },
+    {
+      "id": "abaqus-D31",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKEYRefMap/simakey-r-cload.htm",
+      "title": "*CLOAD",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Type/Level; AMPLITUDE; OP; FILE; FOLLOWER",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/keywords/simakey-r-cload.htm",
+      "sha256": "636724158cc03b90f0029e7145a4135c301509d6c096c314e668696440c9a933",
+      "size_bytes": 34023,
+      "redistribution": "locator-only",
+      "summary": "절차별 amplitude 기본값과 기존 하중·회전 추종 조건을 읽었다."
+    },
+    {
+      "id": "abaqus-D32",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEVERRefMap/simaver-c-3delem.htm",
+      "title": "Verification: solid elements",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Stress/displacement tests; files ec34sfs2.inp and ec38sfs2.inp; expected solution",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/simaver-c-3delem.htm",
+      "sha256": "009c2437c3fdf40c9cc8076ca79aa238dbe92d5af8ad5e9e4c84d1607cdd34e5",
+      "size_bytes": 31849,
+      "redistribution": "locator-only",
+      "summary": "문서가 제공하는 응력·변형률·section force 기준을 확인했다. 당사 실행 결과가 아니다."
+    },
+    {
+      "id": "abaqus-D33",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEVERRefMap/simaver-c-contsmslcont.htm",
+      "title": "Verification: small-sliding contact",
+      "kind": "manual",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Three-dimensional solid elements; interference/perturbation/friction; ei33sisc_surf.inp",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/simaver-c-contsmslcont.htm",
+      "sha256": "01f5c176e1365bb89bff1eea551932d1212649b8c37744e141ef58d126bf868c",
+      "size_bytes": 61857,
+      "redistribution": "locator-only",
+      "summary": "초기 overclosure 제거·섭동·마찰 변경 예의 검증 목적을 확인했다."
+    },
+    {
+      "id": "abaqus-X01",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/c2.inp",
+      "title": "Official sample input c2.inp",
+      "kind": "example",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Whole input text",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/c2.inp",
+      "sha256": "ea4ea5e3d1e6a8dfcef589c3136095f967fc5b43654e95321d1585aed3c63b48",
+      "size_bytes": 645,
+      "redistribution": "locator-only",
+      "summary": "자족 B21 beam 대변형 static 예"
+    },
+    {
+      "id": "abaqus-X02",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/ec34sfs2.inp",
+      "title": "Official sample input ec34sfs2.inp",
+      "kind": "example",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Whole input text",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/ec34sfs2.inp",
+      "sha256": "a996e60be7b8514c5da6a39557f0e7429c886e422ceefae50fb9c0270c0e87a3",
+      "size_bytes": 1531,
+      "redistribution": "locator-only",
+      "summary": "자족 8-node/5-C3D4 solid 검증 예"
+    },
+    {
+      "id": "abaqus-X03",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/ec38sfs2.inp",
+      "title": "Official sample input ec38sfs2.inp",
+      "kind": "example",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Whole input text",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/ec38sfs2.inp",
+      "sha256": "dbc060be0e6e6b4a30c4b6f3c88c1c0faab9473f7238368673801d39195a6cd4",
+      "size_bytes": 1542,
+      "redistribution": "locator-only",
+      "summary": "자족 8-node/1-C3D8 solid 검증 예"
+    },
+    {
+      "id": "abaqus-X04",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/ei33sisc_surf.inp",
+      "title": "Official sample input ei33sisc_surf.inp",
+      "kind": "example",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Whole input text",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/abaqus/ei33sisc_surf.inp",
+      "sha256": "265e138f8982ad2bc064b1487258cdd2e0c678004e92e9fdb37d6f597810af09",
+      "size_bytes": 3562,
+      "redistribution": "locator-only",
+      "summary": "자족 C3D4 small-sliding contact 검증 예"
+    },
+    {
+      "id": "abaqus-X05",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/block_c3d4_b_std_gcont.inp",
+      "title": "Official sample input block_c3d4_b_std_gcont.inp",
+      "kind": "example",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Header and external references only",
+      "access": "downloaded",
+      "read_depth": "metadata-only",
+      "local_file": "tmp/abaqus/block_c3d4_b_std_gcont.inp",
+      "sha256": "f20d3302ba65fb63b0e54fb8586b942fc6f23db4356563b611265bd13ad17513",
+      "size_bytes": 416890,
+      "redistribution": "locator-only",
+      "summary": "자족 참조처럼 보이는 Standard general-contact 대형 덱"
+    },
+    {
+      "id": "abaqus-X06",
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/boltpipeflange_3d_cyclsym.inp",
+      "title": "Official sample input boltpipeflange_3d_cyclsym.inp",
+      "kind": "example",
+      "version": "Abaqus 2025; vendor-origin manual at Virginia Tech mirror",
+      "locator": "Header and external references only",
+      "access": "downloaded",
+      "read_depth": "metadata-only",
+      "local_file": "tmp/abaqus/boltpipeflange_3d_cyclsym.inp",
+      "sha256": "953286ee0f03437f13ff23142b85531e628b1d5cc67303c028a08426b73a0df7",
+      "size_bytes": 127135,
+      "redistribution": "locator-only",
+      "summary": "외부 의존이 있는 flange/bolt assembly 예"
+    },
+    {
+      "id": "abaqus-C01",
+      "url": "https://github.com/nschloe/meshio/blob/b2ee99842e119901349fdeee06b5bf61e01f450a/src/meshio/abaqus/_abaqus.py",
+      "title": "meshio src/meshio/abaqus/_abaqus.py",
+      "kind": "code",
+      "version": "b2ee99842e119901349fdeee06b5bf61e01f450a",
+      "locator": "read_buffer; write; abaqus_to_meshio_type",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/abaqus/meshio/_abaqus.py",
+      "sha256": "d6021656777734fd88817d1b24e4bad8c298cf8212f34bb7ddaff1459eac46b5",
+      "size_bytes": 13602,
+      "redistribution": "permitted-with-notice",
+      "summary": "mesh、NSET、ELSET、INCLUDE parser 및 mesh/set writer. 재료·step·접촉 생성기는 아님."
+    },
+    {
+      "id": "abaqus-C02",
+      "url": "https://github.com/nschloe/meshio/blob/b2ee99842e119901349fdeee06b5bf61e01f450a/tests/test_abaqus.py",
+      "title": "meshio tests/test_abaqus.py",
+      "kind": "code",
+      "version": "b2ee99842e119901349fdeee06b5bf61e01f450a",
+      "locator": "roundtrip tests; mesh sets",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/abaqus/meshio/test_abaqus.py",
+      "sha256": "95d42a95d784f438a935f5e8b236e8dd5bf7a751e8f55919a3080b2e2fbce66e",
+      "size_bytes": 2247,
+      "redistribution": "permitted-with-notice",
+      "summary": "시험 코드만 취득. vendor-origin test mesh 원본은 포함하지 않았다."
+    },
+    {
+      "id": "abaqus-C03",
+      "url": "https://github.com/nschloe/meshio/blob/b2ee99842e119901349fdeee06b5bf61e01f450a/LICENSE.txt",
+      "title": "meshio LICENSE.txt",
+      "kind": "license",
+      "version": "b2ee99842e119901349fdeee06b5bf61e01f450a",
+      "locator": "MIT license",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/abaqus/meshio/LICENSE.txt",
+      "sha256": "3152e464fdd307cac91bf9668c66f86cb8e02cd40d5b48a8da1a241ae1264e79",
+      "size_bytes": 1093,
+      "redistribution": "permitted-with-notice",
+      "summary": "MIT 권리·고지를 동봉했다. upstream test mesh의 별도 권리는 해당 README와 구분한다."
+    },
+    {
+      "id": "abaqus-C04",
+      "url": "https://github.com/haiiliin/abqpy/blob/3088e9fc3b77da615a586524c0cb407b3d0acc48/examples/Compression/compression.py",
+      "title": "abqpy examples/Compression/compression.py",
+      "kind": "example",
+      "version": "3088e9fc3b77da615a586524c0cb407b3d0acc48",
+      "locator": "Model; mesh; Job.writeInput; job.submit; waitForCompletion",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/abaqus/abqpy/compression.py",
+      "sha256": "a0e04c8507dac0a3840c21ac624bd54289babe52c26f9fdb1fdadbcca942e1b0",
+      "size_bytes": 2654,
+      "redistribution": "permitted-with-notice",
+      "summary": "full CAE workflow 예이나 Abaqus 런타임 API에 위임하며 실행 시 job 제출을 포함한다."
+    },
+    {
+      "id": "abaqus-C05",
+      "url": "https://github.com/haiiliin/abqpy/blob/3088e9fc3b77da615a586524c0cb407b3d0acc48/LICENSE",
+      "title": "abqpy LICENSE",
+      "kind": "license",
+      "version": "3088e9fc3b77da615a586524c0cb407b3d0acc48",
+      "locator": "MIT license",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/abaqus/abqpy/LICENSE",
+      "sha256": "873f60226768015f0f58a056f01157bb3a1ffe3e594c75279e113b8fd58b6625",
+      "size_bytes": 1073,
+      "redistribution": "permitted-with-notice",
+      "summary": "MIT 권리·고지를 동봉했다."
+    },
+    {
+      "id": "abaqus-C06",
+      "url": "https://github.com/haiiliin/abqpy/blob/3088e9fc3b77da615a586524c0cb407b3d0acc48/src/abaqus/Job/ModelJob.py#L295-L305",
+      "title": "abqpy ModelJob type/documentation stub",
+      "kind": "code",
+      "version": "3088e9fc3b77da615a586524c0cb407b3d0acc48",
+      "locator": "src/abaqus/Job/ModelJob.py:295 signature; 296–304 documentation; 305 ellipsis body",
+      "access": "read",
+      "read_depth": "relevant-sections",
+      "local_file": null,
+      "sha256": null,
+      "size_bytes": null,
+      "redistribution": "locator-only",
+      "summary": "GitHub connector fetch_file로 고정 commit 전체 파일을 읽고 288–310행을 재확인했다. 공개 함수 본체는 ...다. 실제 inp를 생성하는 독립 구현이 아니다.",
+      "acquisition_route": "GitHub connector fetch_file(repository_full_name=haiiliin/abqpy, ref=3088e9fc3b77da615a586524c0cb407b3d0acc48, path=src/abaqus/Job/ModelJob.py); audit recheck lines 288–310",
+      "upstream_git_blob_sha": "e385552a40915d24d97015c860ad47f32d522e38"
+    }
+  ],
+  "catalogue": {
+    "files": [
+      "catalogues/abaqus.csv",
+      "catalogues/abaqus-source-acquisition.jsonl",
+      "catalogues/abaqus-reconciliation.json"
+    ],
+    "source_ids": [
+      "abaqus-D02",
+      "abaqus-D03"
+    ],
+    "scope": "2025 keyword browser/reader complete name+detail-URL index; parameters/aliases within keywords are not separate denominator entries",
+    "entry_count": 600,
+    "count_unit": "unique keyword name/detail locator pairs",
+    "completeness": "complete-index",
+    "reconciliation": {
+      "index_entries": 600,
+      "unique_names": 600,
+      "unique_keyword_pages": 600,
+      "reader_index_entries": 600,
+      "browser_not_in_reader": [],
+      "reader_not_in_browser": [],
+      "downloaded_keyword_pages": 600,
+      "failed_keyword_pages": [],
+      "full_field_review_complete": false,
+      "runtime_verified": false
+    },
+    "full_field_review_complete": false
+  },
+  "rules": [
+    {
+      "id": "abaqus-R01",
+      "question_ids": [
+        "Q01"
+      ],
+      "source_ids": [
+        "abaqus-D05"
+      ],
+      "statement": "*.inp는 model data와 *STEP 이후 history data로 나뉜다. 한 job의 procedure는 같은 Standard 또는 Explicit 제품에 속해야 한다.",
+      "locator": "Model data; History data",
+      "examples": [
+        "abaqus-E01",
+        "abaqus-E02"
+      ],
+      "limits": "import/restart·사용자 루틴·co-simulation은 별도 파일 의존이 가능하다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R02",
+      "question_ids": [
+        "Q02"
+      ],
+      "source_ids": [
+        "abaqus-D04"
+      ],
+      "statement": "일반 keyword/data는 7-bit ASCII이며 줄 끝 개행이 필요하다. keyword 첫 유효 문자는 *이고 **는 주석이다. keyword/data line은 최대 256자다.",
+      "locator": "Keyword lines; Data lines",
+      "examples": [],
+      "limits": "비 ASCII GUI label을 native deck에 무검증 직렬화하지 않는다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R03",
+      "question_ids": [
+        "Q02",
+        "Q04"
+      ],
+      "source_ids": [
+        "abaqus-D04"
+      ],
+      "statement": "keyword는 쉼표 구분 parameter와 끝 쉼표 연속을 쓴다. data 연속은 허용된 옵션에서만 쓴다. 생략 numeric은 별도 default가 없으면 0이며 초과 data 항목은 경고 없이 무시될 수 있다.",
+      "locator": "Keyword lines; Data lines",
+      "examples": [],
+      "limits": "blank=0 규칙을 필수/조건부 행 생략과 혼동하면 안 된다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R04",
+      "question_ids": [
+        "Q02",
+        "Q06"
+      ],
+      "source_ids": [
+        "abaqus-D04"
+      ],
+      "statement": "일반 keyword/parameter는 대소문자를 구분하지 않으며 유일한 축약을 허용하지만 파일명·수치는 축약하지 않는다. label 인용·길이·허용 문자 제약이 있다.",
+      "locator": "Input syntax rules",
+      "examples": [],
+      "limits": "중복 parameter 결과나 축약을 안정적인 writer 전략으로 삼지 않는다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R05",
+      "question_ids": [
+        "Q03"
+      ],
+      "source_ids": [
+        "abaqus-D06"
+      ],
+      "statement": "기본 물리 단위는 자기 일관성이 필요하다. 회전 자유도는 radian, 다른 각도는 degree다. UNIT SYSTEM은 일부 전송/행렬·substructure 정보에 쓰이며 해석값 자동 환산을 보장하지 않는다.",
+      "locator": "Units; Rotation and Angle Measures; Unit System Definition",
+      "examples": [],
+      "limits": "",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R06",
+      "question_ids": [
+        "Q05"
+      ],
+      "source_ids": [
+        "abaqus-D04",
+        "abaqus-D05",
+        "abaqus-D18"
+      ],
+      "statement": "INCLUDE는 즉시 외부 내용을 읽고 EOF 후 복귀한다. 최대 5단계 중첩이다. 상대 외부 파일명은 job 제출 디렉터리 기준이고 INPUT과 FILE 확장자 규칙은 다르다.",
+      "locator": "Including Model or History Data from an External File; Input syntax rules",
+      "examples": [
+        "abaqus-E06"
+      ],
+      "limits": "단순 including-file parent-directory 재귀로 구현하면 원문 규칙과 다를 수 있다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R07",
+      "question_ids": [
+        "Q02",
+        "Q05"
+      ],
+      "source_ids": [
+        "abaqus-D11"
+      ],
+      "statement": "PARAMETER의 변수 이름은 대소문자를 구분하고 <name> 치환을 한다. 의존 테이블은 사용 전에 정의하며 # parameter 주석과 일반 ** 주석의 문맥이 다르다.",
+      "locator": "Parameter Names; Parameter Usage; Parameter dependence",
+      "examples": [],
+      "limits": "모든 Python 기능을 허용하는 문법으로 일반화하지 않는다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R08",
+      "question_ids": [
+        "Q06",
+        "Q08"
+      ],
+      "source_ids": [
+        "abaqus-D07",
+        "abaqus-D08"
+      ],
+      "statement": "part/instance/assembly는 로컬 node/element ID와 set/surface namespace를 갖는다. instance 이름과 참조 part를 보존하고 필요한 완전 한정 이름을 쓴다. 같은 숫자 ID를 전역 충돌로 처리하면 안 된다.",
+      "locator": "Assembly definition; Node numbering",
+      "examples": [],
+      "limits": "개별 keyword별 forward-reference 허용표는 전수 검토하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R09",
+      "question_ids": [
+        "Q06",
+        "Q08"
+      ],
+      "source_ids": [
+        "abaqus-D08",
+        "abaqus-D09"
+      ],
+      "statement": "node ID는 양의 정수 최대 999999999이며 비연속 허용·중복 마지막 정의 규칙이 있다. 기본 NSET 정렬·중복 제거와 UNSORTED 순서 보존이 구속식 의미에 영향을 준다.",
+      "locator": "Node numbering; Node sets; Defining elements",
+      "examples": [],
+      "limits": "전체 entity 중복 규칙을 node의 마지막 정의 규칙으로 확장하지 않는다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R10",
+      "question_ids": [
+        "Q07"
+      ],
+      "source_ids": [
+        "abaqus-D10",
+        "abaqus-D17"
+      ],
+      "statement": "native element TYPE과 순서·face를 보존해야 한다. 예: C3D8 face1=1,2,3,4; face2=5,8,7,6이며 tetra/wedge는 별도 표다. element surface의 S번호도 native face 표와 연결한다.",
+      "locator": "Node ordering and face numbering on elements; *SURFACE TYPE=ELEMENT",
+      "examples": [],
+      "limits": "모든 element type·고차/퇴화/가변 node 조건의 검토는 미완료다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R11",
+      "question_ids": [
+        "Q07",
+        "Q09"
+      ],
+      "source_ids": [
+        "abaqus-D06",
+        "abaqus-D08",
+        "abaqus-D30"
+      ],
+      "statement": "활성 DOF는 element 종류가 요구하는 envelope에서 온다. node 생성 좌표계, node DOF TRANSFORM, material ORIENTATION은 별도다. TRANSFORM은 NSET과 R/C/S 형식별 점 정의를 참조한다.",
+      "locator": "Degrees of Freedom; *TRANSFORM required parameters/data",
+      "examples": [],
+      "limits": "모든 노드에 항상 6 DOF가 있다는 모델은 부적합하다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R12",
+      "question_ids": [
+        "Q04",
+        "Q08"
+      ],
+      "source_ids": [
+        "abaqus-D04",
+        "abaqus-D19",
+        "abaqus-D20",
+        "abaqus-D21"
+      ],
+      "statement": "material 관련 하위 옵션은 연속 블록을 이룬다. solid/shell section은 ELSET와 material/composite 조건을 참조하며 thickness·orientation·elastic TYPE/온도 의존에 따라 행 schema가 달라진다.",
+      "locator": "Related keyword grouping; section required/mutually exclusive parameters; *ELASTIC data lines",
+      "examples": [
+        "abaqus-E02",
+        "abaqus-E03"
+      ],
+      "limits": "전체 material/section keyword 필드를 schema로 전환한 것은 아니다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R13",
+      "question_ids": [
+        "Q04",
+        "Q09"
+      ],
+      "source_ids": [
+        "abaqus-D22",
+        "abaqus-D25",
+        "abaqus-D31"
+      ],
+      "statement": "BOUNDARY/CLOAD의 OP=MOD/NEW, AMPLITUDE와 절차별 기본 시간 변화는 step 전이를 반영해야 한다. FOLLOWER 등 선택 조건은 활성 회전 DOF·절차와 연동된다.",
+      "locator": "*BOUNDARY/*CLOAD OP, AMPLITUDE, FOLLOWER; *AMPLITUDE DEFINITION/TIME",
+      "examples": [],
+      "limits": "전체 하중·초기조건·다중물리 옵션 표는 아직 완성하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R14",
+      "question_ids": [
+        "Q04",
+        "Q08",
+        "Q09"
+      ],
+      "source_ids": [
+        "abaqus-D17",
+        "abaqus-D23",
+        "abaqus-D24"
+      ],
+      "statement": "CONTACT PAIR은 surface 쌍·INTERACTION 속성이 필요하고 Standard/Explicit의 model/history 문맥이 다르다. CONTACT 하나만 써서 general contact 전체를 생성할 수 없다.",
+      "locator": "*CONTACT PAIR Products/Type/Level and data lines; *CONTACT",
+      "examples": [
+        "abaqus-E04"
+      ],
+      "limits": "접촉 property/include/exclude/activation 전 옵션 schema는 미완성이다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R15",
+      "question_ids": [
+        "Q04",
+        "Q09"
+      ],
+      "source_ids": [
+        "abaqus-D29"
+      ],
+      "statement": "INITIAL CONDITIONS는 TYPE에 따라 행이 분기하며 FILE/USER/EXTERNAL FIELD 경로는 일반 직접 data와 다르다. FILE 사용 시 DRIVING ELSETS 등 예외를 별도로 읽어야 한다.",
+      "locator": "Required TYPE; no-data conditions; TYPE-specific data lines",
+      "examples": [],
+      "limits": "관련 분기 구조를 읽었으나 모든 TYPE의 필드·단위·기본값을 표로 만들지는 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R16",
+      "question_ids": [
+        "Q01",
+        "Q10"
+      ],
+      "source_ids": [
+        "abaqus-D05",
+        "abaqus-D26",
+        "abaqus-D27"
+      ],
+      "statement": "STEP는 절차와 NLGEOM/PERTURBATION 문맥을 갖고 DYNAMIC implicit와 EXPLICIT의 필드·제어가 다르다. 일반 step과 섭동 step의 상태 전달 의미도 다르다.",
+      "locator": "History data; *STEP parameters; *DYNAMIC implicit/explicit branches",
+      "examples": [],
+      "limits": "CalculiX 유사 철자와 절차/옵션 의미를 동치로 가정하지 않는다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R17",
+      "question_ids": [
+        "Q10"
+      ],
+      "source_ids": [
+        "abaqus-D12",
+        "abaqus-D13",
+        "abaqus-D28"
+      ],
+      "statement": "restart는 사전 상태 저장과 제품별 파일·제약이 필요하다. OUTPUT FIELD/HISTORY와 하위 요청은 별도다. 외부 process cancel을 restart/recover로 취급하면 안 된다.",
+      "locator": "Restart guide; recover/continue; *OUTPUT",
+      "examples": [],
+      "limits": "ODB만으로 모든 restart 상태가 보존된다고 가정하지 않는다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R18",
+      "question_ids": [
+        "Q10",
+        "Q12"
+      ],
+      "source_ids": [
+        "abaqus-D13"
+      ],
+      "statement": "syntaxcheck는 syntax만 검사하고 datacheck는 모델 검사 및 계속 실행용 파일을 작성한다. 문서는 syntaxcheck가 license token을 소비하지 않는다고 명시하지만 설치된 Abaqus 실행기가 필요하다.",
+      "locator": "syntaxcheck; datacheck; continue",
+      "examples": [],
+      "limits": "실행기가 없어 문서상의 명령만 확보했다. syntax 성공은 의미/수치 검증이 아니다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R19",
+      "question_ids": [
+        "Q11"
+      ],
+      "source_ids": [
+        "abaqus-D14",
+        "abaqus-D15",
+        "abaqus-D32",
+        "abaqus-D33"
+      ],
+      "statement": "공식 fetch/findkeyword 경로와 실제 2025 inp 원본을 취득했다. 완전 자족 4개 예를 직접 읽었고, 큰 general contact는 헤더만 읽었다. flange 예는 외부 node/library 의존이 있다.",
+      "locator": "fetch; findkeyword; verification Input files",
+      "examples": [
+        "abaqus-E01",
+        "abaqus-E02",
+        "abaqus-E03",
+        "abaqus-E04",
+        "abaqus-E05",
+        "abaqus-E06"
+      ],
+      "limits": "공식 오류 입력/정답 로그와 회귀 실행 결과는 미확보다.",
+      "status": "partial"
+    },
+    {
+      "id": "abaqus-R20",
+      "question_ids": [
+        "Q07",
+        "Q11"
+      ],
+      "source_ids": [
+        "abaqus-C01",
+        "abaqus-C02"
+      ],
+      "statement": "meshio writer는 NODE/ELEMENT/NSET/ELSET와 heading을 출력하고 parser는 INCLUDE를 읽지만 full model block은 처리하지 않는다. element variant→공통 cell type 병합은 역변환에서 세부 formulation 손실 위험이 있다.",
+      "locator": "_abaqus.py read_buffer:111+, mappings:17–101, write:402+",
+      "examples": [],
+      "limits": "단일 파일은 상대 import가 있어 독립 실행 파일이 아니고 mesh roundtrip도 solver 검증이 아니다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R21",
+      "question_ids": [
+        "Q11",
+        "Q12"
+      ],
+      "source_ids": [
+        "abaqus-C04",
+        "abaqus-C06",
+        "abaqus-D16"
+      ],
+      "statement": "abqpy 공개 ModelJob.writeInput의 본체는 ...다. Compression script는 Abaqus API로 모델을 만들고 writeInput/submit을 호출한다. MIT 공개 예제와 실제 licensed runtime 의존을 구분해야 한다.",
+      "locator": "ModelJob.writeInput; examples/Compression/compression.py",
+      "examples": [],
+      "limits": "독립 무료 full Abaqus generator가 아니며 이 예제는 실행하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "abaqus-R22",
+      "question_ids": [
+        "Q12"
+      ],
+      "source_ids": [
+        "abaqus-D01",
+        "abaqus-D02",
+        "abaqus-D03",
+        "abaqus-C03",
+        "abaqus-C05"
+      ],
+      "statement": "문서 버전은 2025로 고정했다. CAE GUI/reader 지원과 solver keyword 존재는 다른 축이다. vendor mirror 접근은 재배포 허가를 뜻하지 않아 원본은 tmp로 제한하고 MIT 예제만 고지와 동봉한다.",
+      "locator": "Keyword guide/browser/reader; MIT licenses",
+      "examples": [],
+      "limits": "600개 전체 index/페이지 확보와 모든 필드 검토·실제 제품 지원·solver 실행은 별개다.",
+      "status": "documented"
+    }
+  ],
+  "examples": [
+    {
+      "id": "abaqus-E01",
+      "source_ids": [
+        "abaqus-X01",
+        "abaqus-D14"
+      ],
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/c2.inp",
+      "file": null,
+      "analysis_file": "tmp/abaqus/c2.inp",
+      "sha256": "ea4ea5e3d1e6a8dfcef589c3136095f967fc5b43654e95321d1585aed3c63b48",
+      "version": "Abaqus 2025 documentation archive",
+      "kind": "official-deck",
+      "purpose": "자족 B21 beam 대변형 static 예",
+      "expected": "공식 fetch 문서가 예로 드는 파일. 수치 결과 정답은 여기서 확보하지 않았음.",
+      "license": "Vendor-origin example; republication permission not verified",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "id": "abaqus-E02",
+      "source_ids": [
+        "abaqus-X02",
+        "abaqus-D32"
+      ],
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/ec34sfs2.inp",
+      "file": null,
+      "analysis_file": "tmp/abaqus/ec34sfs2.inp",
+      "sha256": "a996e60be7b8514c5da6a39557f0e7429c886e422ceefae50fb9c0270c0e87a3",
+      "version": "Abaqus 2025 documentation archive",
+      "kind": "official-deck",
+      "purpose": "자족 8-node/5-C3D4 solid 검증 예",
+      "expected": "D32가 응력 6성분 -1000, normal strain -1.3333e-5, shear strain -8.6667e-5 및 section force 기준을 제공. 여기서는 미실행.",
+      "license": "Vendor-origin example; republication permission not verified",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "id": "abaqus-E03",
+      "source_ids": [
+        "abaqus-X03",
+        "abaqus-D32"
+      ],
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/ec38sfs2.inp",
+      "file": null,
+      "analysis_file": "tmp/abaqus/ec38sfs2.inp",
+      "sha256": "dbc060be0e6e6b4a30c4b6f3c88c1c0faab9473f7238368673801d39195a6cd4",
+      "version": "Abaqus 2025 documentation archive",
+      "kind": "official-deck",
+      "purpose": "자족 8-node/1-C3D8 solid 검증 예",
+      "expected": "D32의 동일 solid verification 기준과 연결. 실제 실행/오차 비교는 하지 않았음.",
+      "license": "Vendor-origin example; republication permission not verified",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "id": "abaqus-E04",
+      "source_ids": [
+        "abaqus-X04",
+        "abaqus-D33"
+      ],
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/ei33sisc_surf.inp",
+      "file": null,
+      "analysis_file": "tmp/abaqus/ei33sisc_surf.inp",
+      "sha256": "265e138f8982ad2bc064b1487258cdd2e0c678004e92e9fdb37d6f597810af09",
+      "version": "Abaqus 2025 documentation archive",
+      "kind": "official-deck",
+      "purpose": "자족 C3D4 small-sliding contact 검증 예",
+      "expected": "D33가 간섭 제거 후 접촉 traction과 해석해의 일치를 설명. 수치 비교는 미수행.",
+      "license": "Vendor-origin example; republication permission not verified",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "id": "abaqus-E05",
+      "source_ids": [
+        "abaqus-X05",
+        "abaqus-D01"
+      ],
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/block_c3d4_b_std_gcont.inp",
+      "file": null,
+      "analysis_file": "tmp/abaqus/block_c3d4_b_std_gcont.inp",
+      "sha256": "f20d3302ba65fb63b0e54fb8586b942fc6f23db4356563b611265bd13ad17513",
+      "version": "Abaqus 2025 documentation archive",
+      "kind": "official-deck",
+      "purpose": "자족 참조처럼 보이는 Standard general-contact 대형 덱",
+      "expected": "헤더와 외부 참조 유무만 조사. 전체 모델/검증 결과는 독해하지 않았음.",
+      "license": "Vendor-origin example; republication permission not verified",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "id": "abaqus-E06",
+      "source_ids": [
+        "abaqus-X06",
+        "abaqus-D01"
+      ],
+      "url": "https://docs.software.vt.edu/abaqusv2025/English/SIMAINPRefResources/boltpipeflange_3d_cyclsym.inp",
+      "file": null,
+      "analysis_file": "tmp/abaqus/boltpipeflange_3d_cyclsym.inp",
+      "sha256": "953286ee0f03437f13ff23142b85531e628b1d5cc67303c028a08426b73a0df7",
+      "version": "Abaqus 2025 documentation archive",
+      "kind": "official-deck",
+      "purpose": "외부 의존이 있는 flange/bolt assembly 예",
+      "expected": "node INPUT 및 substructure library 참조가 있어 단일 파일 완전 덱으로 쓰지 못함. 해석 결과 미확인.",
+      "license": "Vendor-origin example; republication permission not verified",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    }
+  ],
+  "code_assets": [
+    {
+      "id": "abaqus-A01",
+      "source_ids": [
+        "abaqus-C01",
+        "abaqus-C02",
+        "abaqus-C03"
+      ],
+      "role": "writer",
+      "repository": "https://github.com/nschloe/meshio",
+      "revision": "b2ee99842e119901349fdeee06b5bf61e01f450a",
+      "paths": [
+        "src/meshio/abaqus/_abaqus.py",
+        "tests/test_abaqus.py",
+        "LICENSE.txt"
+      ],
+      "scope": "Mesh reader/converter plus mesh/set writer only",
+      "limits": "재료·section·step·BC·load·contact·output 생성 없음. formulation/type alias 손실 가능. package dependencies 필요.",
+      "license": "MIT; LICENSE.txt included; third-party test meshes excluded",
+      "local_files": [
+        "examples/abaqus/meshio/_abaqus.py",
+        "examples/abaqus/meshio/test_abaqus.py",
+        "examples/abaqus/meshio/LICENSE.txt"
+      ],
+      "executed": false
+    },
+    {
+      "id": "abaqus-A02",
+      "source_ids": [
+        "abaqus-C04",
+        "abaqus-C05",
+        "abaqus-C06",
+        "abaqus-D16"
+      ],
+      "role": "generator",
+      "repository": "https://github.com/haiiliin/abqpy",
+      "revision": "3088e9fc3b77da615a586524c0cb407b3d0acc48",
+      "paths": [
+        "examples/Compression/compression.py",
+        "src/abaqus/Job/ModelJob.py",
+        "LICENSE"
+      ],
+      "scope": "Abaqus/CAE runtime modeling script example and API type stubs; no independent native writer implementation",
+      "limits": "Abaqus installation/runtime required; writeInput is ... stub. example also calls job.submit/waitForCompletion.",
+      "license": "MIT; LICENSE included",
+      "local_files": [
+        "examples/abaqus/abqpy/compression.py",
+        "examples/abaqus/abqpy/LICENSE"
+      ],
+      "executed": false
+    }
+  ],
+  "coverage": [
+    {
+      "question_id": "Q01",
+      "rule_ids": [
+        "abaqus-R01",
+        "abaqus-R16"
+      ],
+      "status": "partial",
+      "missing": "추가 procedure·import·co-simulation 최소 유효 덱은 아직 전수 도출하지 않았다."
+    },
+    {
+      "question_id": "Q02",
+      "rule_ids": [
+        "abaqus-R02",
+        "abaqus-R03",
+        "abaqus-R04",
+        "abaqus-R07"
+      ],
+      "status": "partial",
+      "missing": "외부 binary·사용자 루틴의 인코딩/IO는 이 text deck 조사 범위 밖이다."
+    },
+    {
+      "question_id": "Q03",
+      "rule_ids": [
+        "abaqus-R05"
+      ],
+      "status": "partial",
+      "missing": "모든 다중물리 property의 단위 차원 dictionary를 구축하지 않았다."
+    },
+    {
+      "question_id": "Q04",
+      "rule_ids": [
+        "abaqus-R03",
+        "abaqus-R12",
+        "abaqus-R13",
+        "abaqus-R14",
+        "abaqus-R15"
+      ],
+      "status": "partial",
+      "missing": "600개 keyword 전 필드·분기·기본값·필수 참조 schema는 미완성이다."
+    },
+    {
+      "question_id": "Q05",
+      "rule_ids": [
+        "abaqus-R06",
+        "abaqus-R07"
+      ],
+      "status": "partial",
+      "missing": "모든 FILE/INPUT 옵션과 암호화·특수 외부 형식의 dependency resolver는 없다."
+    },
+    {
+      "question_id": "Q06",
+      "rule_ids": [
+        "abaqus-R04",
+        "abaqus-R08",
+        "abaqus-R09"
+      ],
+      "status": "partial",
+      "missing": "모든 entity/keyword의 선후 참조·중복 정책 전수표는 없다."
+    },
+    {
+      "question_id": "Q07",
+      "rule_ids": [
+        "abaqus-R10",
+        "abaqus-R11",
+        "abaqus-R20"
+      ],
+      "status": "partial",
+      "missing": "모든 element family의 고차·퇴화·가변노드·face/DOF 전수표는 없다."
+    },
+    {
+      "question_id": "Q08",
+      "rule_ids": [
+        "abaqus-R08",
+        "abaqus-R09",
+        "abaqus-R12",
+        "abaqus-R14"
+      ],
+      "status": "partial",
+      "missing": "모든 property/section·재료·assembly keyword 객체 매핑이 구현/완료되지 않았다."
+    },
+    {
+      "question_id": "Q09",
+      "rule_ids": [
+        "abaqus-R11",
+        "abaqus-R13",
+        "abaqus-R14",
+        "abaqus-R15"
+      ],
+      "status": "partial",
+      "missing": "모든 하중·초기조건·접촉 옵션과 단계 간 활성화 schema는 미완성이다."
+    },
+    {
+      "question_id": "Q10",
+      "rule_ids": [
+        "abaqus-R16",
+        "abaqus-R17",
+        "abaqus-R18"
+      ],
+      "status": "partial",
+      "missing": "실제 중단·restart·recover와 output 회귀는 실행하지 않았다."
+    },
+    {
+      "question_id": "Q11",
+      "rule_ids": [
+        "abaqus-R19",
+        "abaqus-R20",
+        "abaqus-R21"
+      ],
+      "status": "partial",
+      "missing": "공식 malformed/error deck 및 정답 로그 미확보; full standalone writer 미발견."
+    },
+    {
+      "question_id": "Q12",
+      "rule_ids": [
+        "abaqus-R18",
+        "abaqus-R21",
+        "abaqus-R22"
+      ],
+      "status": "partial",
+      "missing": "직접 vendor portal의 동일판 원본 교차 비교·실행기 검증·전수 field 의미 검증 미수행."
+    }
+  ],
+  "acquisition_log": [
+    {
+      "target": "2025 keyword browser and input-reader indexes",
+      "outcome": "600/600 unique names and locators agree exactly; no unmatched rows; all 600 linked keyword pages acquired and have non-error HTML titles"
+    },
+    {
+      "target": "Direct Dassault documentation portal",
+      "outcome": "Public documentation portal located; versioned full reference was acquired at clearly labeled Virginia Tech mirror, not independently vendor-hosted crosschecked"
+    },
+    {
+      "target": "2025 official input resources",
+      "outcome": "6 actual inp files acquired; 4 small complete examples read; 1 large deck headers only; flange has external dependencies; guessed ec3d8.inp/pframe.inp returned 404"
+    },
+    {
+      "target": "Public generator/parser candidates",
+      "outcome": "Pinned MIT meshio adapter/test/license and abqpy compression example/license acquired. Limited mesh writer and runtime-dependent script classified separately; no solver execution"
+    }
+  ],
+  "gaps": [
+    "추가 procedure·import·co-simulation 최소 유효 덱은 아직 전수 도출하지 않았다.",
+    "외부 binary·사용자 루틴의 인코딩/IO는 이 text deck 조사 범위 밖이다.",
+    "모든 다중물리 property의 단위 차원 dictionary를 구축하지 않았다.",
+    "600개 keyword 전 필드·분기·기본값·필수 참조 schema는 미완성이다.",
+    "모든 FILE/INPUT 옵션과 암호화·특수 외부 형식의 dependency resolver는 없다.",
+    "모든 entity/keyword의 선후 참조·중복 정책 전수표는 없다.",
+    "모든 element family의 고차·퇴화·가변노드·face/DOF 전수표는 없다.",
+    "모든 property/section·재료·assembly keyword 객체 매핑이 구현/완료되지 않았다.",
+    "모든 하중·초기조건·접촉 옵션과 단계 간 활성화 schema는 미완성이다.",
+    "실제 중단·restart·recover와 output 회귀는 실행하지 않았다.",
+    "공식 malformed/error deck 및 정답 로그 미확보; full standalone writer 미발견.",
+    "직접 vendor portal의 동일판 원본 교차 비교·실행기 검증·전수 field 의미 검증 미수행."
+  ],
+  "runtime_verified": false
+}

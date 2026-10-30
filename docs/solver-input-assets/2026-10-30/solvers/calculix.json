@@ -1,0 +1,1025 @@
+{
+  "key": "calculix",
+  "title": "CalculiX CrunchiX/GraphiX 입력 생성 자료",
+  "scope": "Official CCX/CGX2.23 distributions; all 143 manual keyword subsections, generation rules and selected source/examples. Not all-fields implementation or binary verification.",
+  "versions": {
+    "documentation": "CCX2.23 manual 2025-10-19;835PDFpages",
+    "solver": "CCX2.23 source; no binary executed",
+    "source": "official2.23 source archives by SHA; MIT examples316273e9105e44ce7e3ee05059dac1bc3f256a69; PrePoMax unverified pin snapshot noted",
+    "examples": "Official2.23 test archive plus MIT author-example commit; example runtime version differs/unspecified",
+    "binary_tested": null
+  },
+  "sources": [
+    {
+      "id": "calculix-D01",
+      "url": "https://www.dhondt.de/",
+      "title": "Official author downloads",
+      "kind": "index",
+      "version": "live 2026-10-30: 2.23 advertised",
+      "locator": "CCX/CGX download list",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/calculix/dhondt.html",
+      "sha256": "ad1013fb4e194e3019d449c6c9b8d1f8407e47f1edd693d43577e92ea0fdfef1",
+      "size_bytes": 12381,
+      "redistribution": "locator-only",
+      "summary": "공식 배포 원본과 버전을 연결했다."
+    },
+    {
+      "id": "calculix-D02",
+      "url": "https://www.dhondt.de/ccx_2.23.htm.tar.bz2",
+      "title": "CCX 2.23 HTML manual",
+      "kind": "manual",
+      "version": "2.23",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node223.html; 143 keyword pages; selected related sections",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/calculix/ccx_2.23.htm.tar.bz2",
+      "sha256": "ed14b31b51972d5492209a42fcd52a062e36cbc7843bcd358617cb3aee0da736",
+      "size_bytes": 3082645,
+      "redistribution": "locator-only",
+      "summary": "실제 원본을 취득하고 해당 범위만 확인했다."
+    },
+    {
+      "id": "calculix-D03",
+      "url": "https://www.dhondt.de/ccx_2.23.doc.tar.bz2",
+      "title": "CCX 2.23 TeX manual source",
+      "kind": "manual",
+      "version": "2.23",
+      "locator": "CalculiX/ccx_2.23/doc/ccx.tex:18897–30826; starred subsections",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "local_file": "tmp/calculix/ccx_2.23.doc.tar.bz2",
+      "sha256": "0fcaf2de8cec51853c4a68b32f7b5a9f277e48c0fece7b8ed4b45320908679b6",
+      "size_bytes": 3595214,
+      "redistribution": "locator-only",
+      "summary": "실제 원본을 취득하고 해당 범위만 확인했다."
+    },
+    {
+      "id": "calculix-D04",
+      "url": "https://www.dhondt.de/ccx_2.23.pdf",
+      "title": "CCX 2.23 PDF manual",
+      "kind": "manual",
+      "version": "2.23",
+      "locator": "835 PDF pages; cover 2025-10-19; contents",
+      "access": "downloaded",
+      "read_depth": "metadata-only",
+      "local_file": "tmp/calculix/ccx_2.23.pdf",
+      "sha256": "a0bf3fc03f374912ff2bf28da3f7dfb6a61428dd7f41b281a2e7e1fdb318f330",
+      "size_bytes": 6281257,
+      "redistribution": "locator-only",
+      "summary": "실제 원본을 취득하고 해당 범위만 확인했다."
+    },
+    {
+      "id": "calculix-D05",
+      "url": "https://www.dhondt.de/ccx_2.23.src.tar.bz2",
+      "title": "CCX 2.23 source",
+      "kind": "code",
+      "version": "2.23",
+      "locator": "src/readinput.c; calinput.f; keystart.f; gpl-2.0.txt",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/calculix/ccx_2.23.src.tar.bz2",
+      "sha256": "9c88385c10fb04f5dc6c4e98027a51bebdd8aee3920e05190d6c1dd08357d6e7",
+      "size_bytes": 1551289,
+      "redistribution": "locator-only",
+      "summary": "실제 원본을 취득하고 해당 범위만 확인했다."
+    },
+    {
+      "id": "calculix-D06",
+      "url": "https://www.dhondt.de/ccx_2.23.test.tar.bz2",
+      "title": "CCX 2.23 official tests",
+      "kind": "example",
+      "version": "2.23",
+      "locator": "test/:638 .inp;855 .ref; selected complete decks and restart pair",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/calculix/ccx_2.23.test.tar.bz2",
+      "sha256": "be2259fd9a7b990d0453b30708e1b05f2cd4b6df4a90fa96f0e4abd1ae7beaa0",
+      "size_bytes": 13468187,
+      "redistribution": "locator-only",
+      "summary": "실제 원본을 취득하고 해당 범위만 확인했다."
+    },
+    {
+      "id": "calculix-D07",
+      "url": "https://www.dhondt.de/cgx_2.23.all.tar.bz2",
+      "title": "CGX 2.23 source/documentation/examples",
+      "kind": "code",
+      "version": "2.23",
+      "locator": "src/write2aba.c; COPYING; examples/",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/calculix/cgx_2.23.all.tar.bz2",
+      "sha256": "04abbe0d2bac6a7bff018238b409568c189ede25589880e8cdd947f56ebd67c7",
+      "size_bytes": 5810509,
+      "redistribution": "locator-only",
+      "summary": "실제 원본을 취득하고 해당 범위만 확인했다."
+    },
+    {
+      "id": "calculix-D08",
+      "url": "https://www.dhondt.de/gpl-2.0.txt",
+      "title": "GNU GPL v2 linked by official site",
+      "kind": "license",
+      "version": "GPL-2.0",
+      "locator": "whole notice; exact source-file headers also inspected",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/calculix/gpl-2.0.txt",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+      "size_bytes": 18092,
+      "redistribution": "permitted-with-notice",
+      "summary": "선택한 CCX/CGX source 파일의 GPL v2 고지와 대조했다."
+    },
+    {
+      "id": "calculix-D09",
+      "url": "https://github.com/calculix/CalculiX-Examples/tree/316273e9105e44ce7e3ee05059dac1bc3f256a69",
+      "title": "Martin Kraska parametric examples",
+      "kind": "example",
+      "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+      "locator": "Elements/Solid/{solid.inp,solid.fbd,test.py,README.md}; Elements/Shell equivalents; Scripts/README.md,param.py; LICENSE",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "catalogues/calculix-mit-assets.csv",
+      "sha256": "1ffcf635139c95707348a508d4f94e7d09d14db5246f652cc2c64b0a0bd99dc2",
+      "size_bytes": 3879,
+      "redistribution": "permitted-with-notice",
+      "summary": "MIT 허용 원본 11파일을 실제 취득했다. local_file은 원본별 URL·크기·SHA를 연결한 취득 manifest이며 source 원문 자체의 단일 합본이 아니다.",
+      "local_file_kind": "acquisition-manifest",
+      "downloaded_file_count": 11,
+      "downloaded_size_bytes": 33763,
+      "downloaded_files": [
+        {
+          "source_id": "calculix-D09",
+          "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+          "repository_path": "Elements/Shell/README.md",
+          "source_url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/Elements/Shell/README.md",
+          "local_file": "examples/calculix/mit-parametric/Elements/Shell/README.md",
+          "size_bytes": 3535,
+          "sha256": "e1736632e3bddc42ca45bda127865130ac1bf5cf62d251a88d975e8cb33b5c4f",
+          "redistribution": "permitted-with-notice",
+          "solver_executed": false
+        },
+        {
+          "source_id": "calculix-D09",
+          "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+          "repository_path": "Elements/Shell/shell.fbd",
+          "source_url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/Elements/Shell/shell.fbd",
+          "local_file": "examples/calculix/mit-parametric/Elements/Shell/shell.fbd",
+          "size_bytes": 944,
+          "sha256": "e61c2bb0b74ed4cbfafa106dba71131722a914f36323db51b11e10b9737049cc",
+          "redistribution": "permitted-with-notice",
+          "solver_executed": false
+        },
+        {
+          "source_id": "calculix-D09",
+          "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+          "repository_path": "Elements/Shell/shell.inp",
+          "source_url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/Elements/Shell/shell.inp",
+          "local_file": "examples/calculix/mit-parametric/Elements/Shell/shell.inp",
+          "size_bytes": 371,
+          "sha256": "808f20f0bac625a0e577020a8d9996efa6c85702f6a0dd9741f4d573347a379d",
+          "redistribution": "permitted-with-notice",
+          "solver_executed": false
+        },
+        {
+          "source_id": "calculix-D09",
+          "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+          "repository_path": "Elements/Shell/test.py",
+          "source_url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/Elements/Shell/test.py",
+          "local_file": "examples/calculix/mit-parametric/Elements/Shell/test.py",
+          "size_bytes": 4957,
+          "sha256": "759063f1310f37f627e104203bec381936a61d20e3cdee363dce6a470a8cfeaf",
+          "redistribution": "permitted-with-notice",
+          "solver_executed": false
+        },
+        {
+          "source_id": "calculix-D09",
+          "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+          "repository_path": "Elements/Solid/README.md",
+          "source_url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/Elements/Solid/README.md",
+          "local_file": "examples/calculix/mit-parametric/Elements/Solid/README.md",
+          "size_bytes": 1783,
+          "sha256": "dbfb8887d91fa9460e2aa004663112d8a8bc94f1a3a666fdbbfb72aecd5ea35b",
+          "redistribution": "permitted-with-notice",
+          "solver_executed": false
+        },
+        {
+          "source_id": "calculix-D09",
+          "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+          "repository_path": "Elements/Solid/solid.fbd",
+          "source_url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/Elements/Solid/solid.fbd",
+          "local_file": "examples/calculix/mit-parametric/Elements/Solid/solid.fbd",
+          "size_bytes": 1072,
+          "sha256": "3d2d2a7f2c998bd4ff4c88fe20024f4a3c93586b6a93656fa2a90fdc568375e4",
+          "redistribution": "permitted-with-notice",
+          "solver_executed": false
+        },
+        {
+          "source_id": "calculix-D09",
+          "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+          "repository_path": "Elements/Solid/solid.inp",
+          "source_url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/Elements/Solid/solid.inp",
+          "local_file": "examples/calculix/mit-parametric/Elements/Solid/solid.inp",
+          "size_bytes": 367,
+          "sha256": "c3206f8993f5062a05b4ac012d11f49f3997b4a79848157472df709295f97977",
+          "redistribution": "permitted-with-notice",
+          "solver_executed": false
+        },
+        {
+          "source_id": "calculix-D09",
+          "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+          "repository_path": "Elements/Solid/test.py",
+          "source_url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/Elements/Solid/test.py",
+          "local_file": "examples/calculix/mit-parametric/Elements/Solid/test.py",
+          "size_bytes": 5026,
+          "sha256": "c77db62668b10fd725ca431a670e61efa1a75a40baa7a48f2b83684c7faa2096",
+          "redistribution": "permitted-with-notice",
+          "solver_executed": false
+        },
+        {
+          "source_id": "calculix-D09",
+          "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+          "repository_path": "LICENSE",
+          "source_url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/LICENSE",
+          "local_file": "examples/calculix/mit-parametric/LICENSE",
+          "size_bytes": 1071,
+          "sha256": "4a61e6c58098cc6bf66e0c11f41cd79d57e62aff26386e9d31458bbddeea893c",
+          "redistribution": "permitted-with-notice",
+          "solver_executed": false
+        },
+        {
+          "source_id": "calculix-D09",
+          "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+          "repository_path": "Scripts/README.md",
+          "source_url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/Scripts/README.md",
+          "local_file": "examples/calculix/mit-parametric/Scripts/README.md",
+          "size_bytes": 10384,
+          "sha256": "ccd39eae79553043ea800aa2aa503c892a1f1ac216a5865edbe411079cd9be45",
+          "redistribution": "permitted-with-notice",
+          "solver_executed": false
+        },
+        {
+          "source_id": "calculix-D09",
+          "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+          "repository_path": "Scripts/param.py",
+          "source_url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/Scripts/param.py",
+          "local_file": "examples/calculix/mit-parametric/Scripts/param.py",
+          "size_bytes": 4253,
+          "sha256": "49cb4bc486bea97de606d898c793b370d595bf6fb45546da6b3f418132aac8a7",
+          "redistribution": "permitted-with-notice",
+          "solver_executed": false
+        }
+      ]
+    },
+    {
+      "id": "calculix-D10",
+      "url": "https://github.com/calculix/CalculiX-Examples/blob/316273e9105e44ce7e3ee05059dac1bc3f256a69/LICENSE",
+      "title": "Parametric examples MIT license",
+      "kind": "license",
+      "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+      "locator": "LICENSE whole",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/calculix/mit-parametric/LICENSE",
+      "sha256": "4a61e6c58098cc6bf66e0c11f41cd79d57e62aff26386e9d31458bbddeea893c",
+      "size_bytes": 1071,
+      "redistribution": "permitted-with-notice",
+      "summary": "선택한 예제 파일에 다른 고지가 없는지 확인했다."
+    },
+    {
+      "id": "calculix-D11",
+      "url": "https://gitlab.com/api/v4/projects/MatejB%2FPrePoMax/repository/branches/master",
+      "title": "PrePoMax branch snapshot",
+      "kind": "api",
+      "version": "2a25db82896aa0aa51666eb550df19d3950a8630",
+      "locator": "branch commit; 2026-10-20",
+      "access": "downloaded",
+      "read_depth": "metadata-only",
+      "local_file": "tmp/calculix/prepomax-branch.json",
+      "sha256": "ba9c7ccee9f2ec1ecbea74701f762b294d5af1ae41f612b6efe7c050bec7417f",
+      "size_bytes": 1650,
+      "redistribution": "locator-only",
+      "summary": "branch 응답을 고정했으나 pinned 파일 대조는 막혔다."
+    },
+    {
+      "id": "calculix-D12",
+      "url": "https://gitlab.com/MatejB/PrePoMax/-/raw/master/CaeModel/FileInOut/Output/Calculix/CalculixFileWriter.cs",
+      "title": "PrePoMax CalculixFileWriter snapshot",
+      "kind": "code",
+      "version": "master snapshot after D11; exact commit-byte equivalence unverified",
+      "locator": "Write:42–70; GetAllKeywords:140–159; GetModelKeywords:160–310; unsupported exceptions/user keywords",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/calculix/prepomax-writer.cs",
+      "sha256": "c16c01b75be852c5c83d7b59f50e8d1cd495c92259b3066b07ace73de3d92518",
+      "size_bytes": 178228,
+      "redistribution": "unknown",
+      "summary": "모델→keyword tree→문자열 writer의 일부 경로를 읽었다."
+    },
+    {
+      "id": "calculix-D13",
+      "url": "https://gitlab.com/MatejB/PrePoMax/-/raw/2a25db82896aa0aa51666eb550df19d3950a8630/LICENSE",
+      "title": "PrePoMax pinned LICENSE attempt",
+      "kind": "license",
+      "version": "2a25db82896aa0aa51666eb550df19d3950a8630",
+      "locator": "HTTP429; other pinned raw files also rate-limited",
+      "access": "blocked",
+      "read_depth": "not-read",
+      "local_file": null,
+      "sha256": null,
+      "size_bytes": null,
+      "redistribution": "unknown",
+      "summary": "재배포/편입 판정 미완료."
+    }
+  ],
+  "catalogue": {
+    "files": [
+      "catalogues/calculix.csv",
+      "catalogues/calculix.jsonl",
+      "catalogues/calculix-reconciliation.json",
+      "catalogues/calculix-test-assets.csv"
+    ],
+    "source_ids": [
+      "calculix-D02",
+      "calculix-D03"
+    ],
+    "scope": "Official CCX2.23 Input deck format all starred keyword subsections; parameters/options/element types not counted as extra keywords",
+    "entry_count": 143,
+    "count_unit": "unique official starred keyword subsection",
+    "completeness": "complete-index",
+    "reconciliation": "HTML145starred anchors minus2navigation duplicates=143; TeX143subsections name-set equality, missing0; extracted local page for every entry",
+    "full_field_review_complete": false
+  },
+  "rules": [
+    {
+      "id": "calculix-R01",
+      "question_ids": [
+        "Q01"
+      ],
+      "source_ids": [
+        "calculix-D02"
+      ],
+      "statement": "jobname.inp의 모델 정의 뒤 STEP/END STEP로 해석을 구성하며 dat/frd 등 출력 역할을 구분한다.",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node223.html; node352.html",
+      "examples": [],
+      "limits": "실행 명령과 결과는 이번에 재현하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "calculix-R02",
+      "question_ids": [
+        "Q02"
+      ],
+      "source_ids": [
+        "calculix-D02"
+      ],
+      "statement": "쉼표 구분·대소문자 비구분이며 고정 폭 입력으로 일반화하지 않는다. 요소가 15절점을 넘으면 행을 이어 최대16항목/행을 따른다.",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node223.html; node277.html",
+      "examples": [],
+      "limits": "문자 인코딩·모든 행의 길이/이어쓰기 예외 전수 검증 없음.",
+      "status": "partial"
+    },
+    {
+      "id": "calculix-R03",
+      "question_ids": [
+        "Q03"
+      ],
+      "source_ids": [
+        "calculix-D02"
+      ],
+      "statement": "수치 단위의 일관성은 사용자가 유지하며 요소·재료·하중 값을 묵시적으로 SI로 변환하지 않는다.",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node4.html; node223.html",
+      "examples": [],
+      "limits": "원문 수식 그림의 모든 수치 단위표를 기계 schema로 변환하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "calculix-R04",
+      "question_ids": [
+        "Q04"
+      ],
+      "source_ids": [
+        "calculix-D02"
+      ],
+      "statement": "필수/선택·기본값·반복행은 카드별이다. SHELL SECTION의 COMPOSITE/MATERIAL·NODAL THICKNESS 조합은 같은 행 규칙이 아니다.",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node345.html; node274.html; node333.html",
+      "examples": [],
+      "limits": "143개 keyword의 모든 조건부 필드를 전수 schema화하지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "calculix-R05",
+      "question_ids": [
+        "Q05"
+      ],
+      "source_ids": [
+        "calculix-D02",
+        "calculix-D05"
+      ],
+      "statement": "INCLUDE INPUT과 따옴표 파일명을 확인했다. 2.23 reader는 포함 깊이9 초과를 거부하고 경로를 fopen에 직접 전달한다.",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node303.html; src/readinput.c:171–186",
+      "examples": [],
+      "limits": "상대 경로는 source fopen 동작에 근거한 process working-directory 해석이며 실제 플랫폼 실행 미확인.",
+      "status": "documented"
+    },
+    {
+      "id": "calculix-R06",
+      "question_ids": [
+        "Q06"
+      ],
+      "source_ids": [
+        "calculix-D02",
+        "calculix-D05"
+      ],
+      "statement": "node/element set은 같은 이름을 쓸 수 있고 대소문자 비구분이다. set 재정의는 확장되며 참조 처리 순서는 reader가 조정한다.",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node223.html; node281.html; node328.html; node408.html",
+      "examples": [],
+      "limits": "native 번호 전체 범위/중복 처리와 모든 keyword namespace 전수 대조 없음.",
+      "status": "partial"
+    },
+    {
+      "id": "calculix-R07",
+      "question_ids": [
+        "Q07"
+      ],
+      "source_ids": [
+        "calculix-D02"
+      ],
+      "statement": "연결 순서와 면 번호는 요소형별이다. tetra 면·shell POS/NEG와 내부 확장 면 번호를 분리해 확인했다.",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node33.html Figure62; node277.html; node356.html",
+      "examples": [],
+      "limits": "Gmsh→CCX의 실제 permutation·orientation 테스트 미수행.",
+      "status": "documented"
+    },
+    {
+      "id": "calculix-R08",
+      "question_ids": [
+        "Q08"
+      ],
+      "source_ids": [
+        "calculix-D02"
+      ],
+      "statement": "요소 ELSET·MATERIAL 이름·SOLID/SHELL SECTION의 참조로 물성을 연결한다. 재료 블록의 뒤따르는 카드 문맥을 유지한다.",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node277.html; node311.html; node345.html; node346.html",
+      "examples": [],
+      "limits": "Abaqus PART/INSTANCE/ASSEMBLY 전체를 CalculiX가 동일 지원한다고 보지 않는다.",
+      "status": "documented"
+    },
+    {
+      "id": "calculix-R09",
+      "question_ids": [
+        "Q09"
+      ],
+      "source_ids": [
+        "calculix-D02"
+      ],
+      "statement": "BOUNDARY의 OP·AMPLITUDE와 시간 문맥을 구분한다. CONTACT PAIR는 surface/interaction 참조와 접촉형 혼합 제한을 갖는다.",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node227.html; node224.html; node249.html; node356.html",
+      "examples": [],
+      "limits": "모든 접촉 알고리즘·하중 조합의 수치 적합성은 검증하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "calculix-R10",
+      "question_ids": [
+        "Q10"
+      ],
+      "source_ids": [
+        "calculix-D02"
+      ],
+      "statement": "DYNAMIC의 EXPLICIT은 parameter 부재·값 생략이 다르다. restart READ는 선행, WRITE는 step 내부이며 rin/rout 역할이 다르다.",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node273.html; node338.html; node350.html",
+      "examples": [],
+      "limits": "process cancel/rollback과 입력 restart는 별개다.",
+      "status": "documented"
+    },
+    {
+      "id": "calculix-R11",
+      "question_ids": [
+        "Q10"
+      ],
+      "source_ids": [
+        "calculix-D02"
+      ],
+      "statement": "OUTPUT은 Abaqus 호환용 제한 카드다. FREQUENCY와 FREQUENCYF의 적용 대상·step간 유지 조건을 구분한다.",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node331.html",
+      "examples": [],
+      "limits": "Abaqus OUTPUT 하위 구조 전체 지원을 뜻하지 않는다.",
+      "status": "documented"
+    },
+    {
+      "id": "calculix-R12",
+      "question_ids": [
+        "Q11"
+      ],
+      "source_ids": [
+        "calculix-D06"
+      ],
+      "statement": "공식 2.23 test archive의 입력·참조 결과를 전수 파일 manifest로 확보하고 정상·contact·restart 예제를 골라 읽었다. 재실행은 하지 않았다.",
+      "locator": "test/beam10p.inp,.dat.ref; shell1.inp,.dat.ref; contact1.inp,.dat.ref; beamwrite/beamread pair",
+      "examples": [
+        "calculix-E01",
+        "calculix-E02",
+        "calculix-E03",
+        "calculix-E04"
+      ],
+      "limits": "공식 test archive의 개별 예제 재배포 조건은 별도 명확하지 않아 locator/해시만 배포. 오류 입력 또는 expected-failure 예제는 선정·검토하지 않았으며 전수 test 취득을 음성 시험 확보로 세지 않는다. beamperror는 error estimator 예제로, 의도적 실패 입력으로 분류하지 않는다.",
+      "status": "partial"
+    },
+    {
+      "id": "calculix-R13",
+      "question_ids": [
+        "Q11"
+      ],
+      "source_ids": [
+        "calculix-D09",
+        "calculix-D10"
+      ],
+      "statement": "MIT solid/shell 템플릿은 CGX가 mesh/경계 파일을 먼저 생성한 뒤 CCX에 전달하는 예다. 단일 inp만으로 자립하지 않는다.",
+      "locator": "Elements/Solid,Elements/Shell; .fbd send; test.py reference values",
+      "examples": [
+        "calculix-E05",
+        "calculix-E06"
+      ],
+      "limits": "cgx/ccx/Unix shell·NumPy/Matplotlib 환경을 이번에 실행하지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "calculix-R14",
+      "question_ids": [
+        "Q11"
+      ],
+      "source_ids": [
+        "calculix-D05",
+        "calculix-D07",
+        "calculix-D08"
+      ],
+      "statement": "CGX write2aba는 요소별 mesh 출력과 제한된 dataset 제어를 구현한다. CCX readinput은 include/전처리 reader이고 새 모델 writer가 아니다.",
+      "locator": "CGX src/write2aba.c:26–249; CCX src/readinput.c:27–499",
+      "examples": [],
+      "limits": "독립 빌드/전체 카드 생성 지원은 검증하지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "calculix-R15",
+      "question_ids": [
+        "Q11",
+        "Q12"
+      ],
+      "source_ids": [
+        "calculix-D11",
+        "calculix-D12",
+        "calculix-D13"
+      ],
+      "statement": "PrePoMax는 모델별 keyword tree와 user keyword를 출력한다. 소스 snapshot은 읽었으나 pin-byte 대조·LICENSE 확보가429로 막혔다.",
+      "locator": "CalculixFileWriter.cs:42–70,140–310,1452–1547",
+      "examples": [],
+      "limits": "root LICENSE·선택 파일의 정확한 commit 대조 전 편입 자산으로 확정하지 않는다.",
+      "status": "partial"
+    },
+    {
+      "id": "calculix-R16",
+      "question_ids": [
+        "Q12"
+      ],
+      "source_ids": [
+        "calculix-D01",
+        "calculix-D02",
+        "calculix-D03",
+        "calculix-D05"
+      ],
+      "statement": "공식 2.23의 143개 키워드 절을 HTML/TeX로 전수 대조했다. 개별 parser·exporter·solver의 전체 지원은 별도 축이다.",
+      "locator": "catalogues/calculix-reconciliation.json; source distributions",
+      "examples": [],
+      "limits": "모든 parameter/element alias·실행 binary 검증과 전수 field schema는 미완료.",
+      "status": "partial"
+    }
+  ],
+  "examples": [
+    {
+      "id": "calculix-E01",
+      "source_ids": [
+        "calculix-D06"
+      ],
+      "url": "https://www.dhondt.de/ccx_2.23.test.tar.bz2",
+      "file": null,
+      "analysis_local_files": [
+        "tmp/calculix/extract-ccx_2.23.test/CalculiX/ccx_2.23/test/beam10p.inp",
+        "tmp/calculix/extract-ccx_2.23.test/CalculiX/ccx_2.23/test/beam10p.dat.ref"
+      ],
+      "file_hashes": {
+        "beam10p.inp": "a5d21bd2aa8970c0bfc042355e7c49e8d0ee91cb0187685a6a2c6762151673b4",
+        "beam10p.dat.ref": "56baf8023edc48a09ef27fcadfa05495b32e10f4d485983905c2aebfca3c49bf"
+      },
+      "sha256": null,
+      "version": "CCX2.23 official test archive",
+      "kind": "official-deck",
+      "purpose": "C3D10 cantilever pressure",
+      "expected": "archive .dat.ref/.frd.ref retained as original reference; not reproduced in this collection",
+      "license": "No per-example notice confirmed; program GPL notice is not used as automatic permission for separate test data",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "id": "calculix-E02",
+      "source_ids": [
+        "calculix-D06"
+      ],
+      "url": "https://www.dhondt.de/ccx_2.23.test.tar.bz2",
+      "file": null,
+      "analysis_local_files": [
+        "tmp/calculix/extract-ccx_2.23.test/CalculiX/ccx_2.23/test/shell1.inp",
+        "tmp/calculix/extract-ccx_2.23.test/CalculiX/ccx_2.23/test/shell1.dat.ref",
+        "tmp/calculix/extract-ccx_2.23.test/CalculiX/ccx_2.23/test/shell1.frd.ref"
+      ],
+      "file_hashes": {
+        "shell1.inp": "bf04a8e874b97edfcc45e3e8ef1e9446f19211b9d793dbb7dafec857235d5ab8",
+        "shell1.dat.ref": "473a61e34b11f8a71ff29c86d49034faa1cd271c6142ca21d0fcc699f70c111b",
+        "shell1.frd.ref": "64bd49e1baa1f10f21808d9c48a92782e66103acf86c3c603643b70e178356a5"
+      },
+      "sha256": null,
+      "version": "CCX2.23 official test archive",
+      "kind": "official-deck",
+      "purpose": "S8R shell/nodal thickness/temperature gradient",
+      "expected": "archive .dat.ref/.frd.ref retained as original reference; not reproduced in this collection",
+      "license": "No per-example notice confirmed; program GPL notice is not used as automatic permission for separate test data",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "id": "calculix-E03",
+      "source_ids": [
+        "calculix-D06"
+      ],
+      "url": "https://www.dhondt.de/ccx_2.23.test.tar.bz2",
+      "file": null,
+      "analysis_local_files": [
+        "tmp/calculix/extract-ccx_2.23.test/CalculiX/ccx_2.23/test/contact1.inp",
+        "tmp/calculix/extract-ccx_2.23.test/CalculiX/ccx_2.23/test/contact1.dat.ref"
+      ],
+      "file_hashes": {
+        "contact1.inp": "486e4be5a4d33adbbbb3b80bf53cc3b0243f2137665dbb100fd0671bbb02dda3",
+        "contact1.dat.ref": "cecb855f07aaad4785c1b31ee9f1cc9d3d07ce29f99fc7e303b488107a2a0c12"
+      },
+      "sha256": null,
+      "version": "CCX2.23 official test archive",
+      "kind": "official-deck",
+      "purpose": "two cubes contact",
+      "expected": "archive .dat.ref/.frd.ref retained as original reference; not reproduced in this collection",
+      "license": "No per-example notice confirmed; program GPL notice is not used as automatic permission for separate test data",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "id": "calculix-E04",
+      "source_ids": [
+        "calculix-D06"
+      ],
+      "url": "https://www.dhondt.de/ccx_2.23.test.tar.bz2",
+      "file": null,
+      "analysis_local_files": [
+        "tmp/calculix/extract-ccx_2.23.test/CalculiX/ccx_2.23/test/beamwrite.inp",
+        "tmp/calculix/extract-ccx_2.23.test/CalculiX/ccx_2.23/test/beamwrite.dat.ref",
+        "tmp/calculix/extract-ccx_2.23.test/CalculiX/ccx_2.23/test/beamread.inp",
+        "tmp/calculix/extract-ccx_2.23.test/CalculiX/ccx_2.23/test/beamread.dat.ref"
+      ],
+      "file_hashes": {
+        "beamwrite.inp": "4e5f2c11f2e16a6e864d9091e9eb94d65dc0b769cd4ccb98dc2af061e42efddb",
+        "beamwrite.dat.ref": "9afdb63e6cc8d20c7a71e5b963f0245a22ccbf755a02479692ee1699faa7cfc1",
+        "beamread.inp": "e220d6481ea73e82cae815c29a15ab0aa7563b3adeb213ec0a5bc005a488fa54",
+        "beamread.dat.ref": "83be01a19712b6fefa98d357ad8b77722f36266a64dfc9c30da139e1a229314f"
+      },
+      "sha256": null,
+      "version": "CCX2.23 official test archive",
+      "kind": "official-deck",
+      "purpose": "restart write/read pair; rout→rin copy required",
+      "expected": "archive .dat.ref/.frd.ref retained as original reference; not reproduced in this collection",
+      "license": "No per-example notice confirmed; program GPL notice is not used as automatic permission for separate test data",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "id": "calculix-E05",
+      "source_ids": [
+        "calculix-D09",
+        "calculix-D10"
+      ],
+      "url": "https://github.com/calculix/CalculiX-Examples/tree/316273e9105e44ce7e3ee05059dac1bc3f256a69/Elements/Solid",
+      "file": "examples/calculix/mit-parametric/Elements/Solid/solid.inp",
+      "sha256": "c3206f8993f5062a05b4ac012d11f49f3997b4a79848157472df709295f97977",
+      "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69; CCX/CGX binary version not pinned by this collection",
+      "kind": "source-example",
+      "purpose": "Solid parametric CGX geometry/mesh→CCX input→reference comparison",
+      "expected": "test.py/README reference values; not executed here",
+      "license": "MIT LICENSE(c)2017 Martin Kraska; selected files have no conflicting notice",
+      "redistribution": "permitted-with-notice",
+      "solver_executed": false,
+      "companion_files": [
+        "examples/calculix/mit-parametric/Elements/Solid/solid.fbd",
+        "examples/calculix/mit-parametric/Elements/Solid/test.py",
+        "examples/calculix/mit-parametric/Elements/Solid/solid.inp",
+        "examples/calculix/mit-parametric/Elements/Solid/README.md"
+      ],
+      "standalone_input": false
+    },
+    {
+      "id": "calculix-E06",
+      "source_ids": [
+        "calculix-D09",
+        "calculix-D10"
+      ],
+      "url": "https://github.com/calculix/CalculiX-Examples/tree/316273e9105e44ce7e3ee05059dac1bc3f256a69/Elements/Shell",
+      "file": "examples/calculix/mit-parametric/Elements/Shell/shell.inp",
+      "sha256": "808f20f0bac625a0e577020a8d9996efa6c85702f6a0dd9741f4d573347a379d",
+      "version": "316273e9105e44ce7e3ee05059dac1bc3f256a69; CCX/CGX binary version not pinned by this collection",
+      "kind": "source-example",
+      "purpose": "Shell parametric CGX geometry/mesh→CCX input→reference comparison",
+      "expected": "test.py/README reference values; not executed here",
+      "license": "MIT LICENSE(c)2017 Martin Kraska; selected files have no conflicting notice",
+      "redistribution": "permitted-with-notice",
+      "solver_executed": false,
+      "companion_files": [
+        "examples/calculix/mit-parametric/Elements/Shell/test.py",
+        "examples/calculix/mit-parametric/Elements/Shell/shell.fbd",
+        "examples/calculix/mit-parametric/Elements/Shell/README.md",
+        "examples/calculix/mit-parametric/Elements/Shell/shell.inp"
+      ],
+      "standalone_input": false
+    }
+  ],
+  "code_assets": [
+    {
+      "id": "calculix-C01",
+      "source_ids": [
+        "calculix-D07",
+        "calculix-D08"
+      ],
+      "role": "writer",
+      "repository": "https://www.dhondt.de/",
+      "revision": "official cgx_2.23.all.tar.bz2; SHA in D07",
+      "paths": [
+        "CalculiX/cgx_2.23/src/write2aba.c"
+      ],
+      "scope": "Node/element mesh export and supported dataset/amplitude/control cases; explicit element mapping",
+      "limits": "Not a complete 143-keyword model writer; unknown element type warns; standalone source requires CGX dependencies",
+      "license": "GPL-2.0 per file header and package COPYING",
+      "local_files": [
+        "examples/calculix/official-code/cgx-2.23-write2aba.c",
+        "examples/calculix/official-code/CGX-COPYING"
+      ],
+      "executed": false
+    },
+    {
+      "id": "calculix-C02",
+      "source_ids": [
+        "calculix-D05",
+        "calculix-D08"
+      ],
+      "role": "solver-reader",
+      "repository": "https://www.dhondt.de/",
+      "revision": "official ccx_2.23.src.tar.bz2; SHA in D05",
+      "paths": [
+        "CalculiX/ccx_2.23/src/readinput.c",
+        "CalculiX/ccx_2.23/src/calinput.f",
+        "CalculiX/ccx_2.23/src/keystart.f"
+      ],
+      "scope": "Input preprocessing/include/name normalization and category ordering; semantic keyword dispatch in calinput",
+      "limits": "Reader is not generator; only readinput.c redistributed here; remaining full source internally acquired",
+      "license": "GPL-2.0 per copied file header and gpl-2.0.txt",
+      "local_files": [
+        "examples/calculix/official-code/ccx-2.23-readinput.c",
+        "examples/calculix/official-code/CCX-GPL-2.0.txt"
+      ],
+      "executed": false
+    },
+    {
+      "id": "calculix-C03",
+      "source_ids": [
+        "calculix-D09",
+        "calculix-D10"
+      ],
+      "role": "generator",
+      "repository": "https://github.com/calculix/CalculiX-Examples",
+      "revision": "316273e9105e44ce7e3ee05059dac1bc3f256a69",
+      "paths": [
+        "Elements/Solid/solid.fbd",
+        "Elements/Shell/shell.fbd",
+        "Elements/Solid/test.py",
+        "Elements/Shell/test.py"
+      ],
+      "scope": "Parametric examples for two selected benchmark geometries and element family sweeps",
+      "limits": "Not generic CAD/CAE model generation; external CGX/CCX/shell+libraries required; source scripts not executed",
+      "license": "MIT, LICENSE included",
+      "local_files": [
+        "examples/calculix/mit-parametric/LICENSE",
+        "examples/calculix/mit-parametric/Scripts/param.py",
+        "examples/calculix/mit-parametric/Scripts/README.md",
+        "examples/calculix/mit-parametric/Elements/Shell/test.py",
+        "examples/calculix/mit-parametric/Elements/Shell/shell.fbd",
+        "examples/calculix/mit-parametric/Elements/Shell/README.md",
+        "examples/calculix/mit-parametric/Elements/Shell/shell.inp",
+        "examples/calculix/mit-parametric/Elements/Solid/solid.fbd",
+        "examples/calculix/mit-parametric/Elements/Solid/test.py",
+        "examples/calculix/mit-parametric/Elements/Solid/solid.inp",
+        "examples/calculix/mit-parametric/Elements/Solid/README.md"
+      ],
+      "executed": false
+    },
+    {
+      "id": "calculix-C04",
+      "source_ids": [
+        "calculix-D11",
+        "calculix-D12",
+        "calculix-D13"
+      ],
+      "role": "writer",
+      "repository": "https://gitlab.com/MatejB/PrePoMax",
+      "revision": "master snapshot; 2a25db82896aa0aa51666eb550df19d3950a8630 branch metadata, pinned-file equivalence unverified",
+      "paths": [
+        "CaeModel/FileInOut/Output/Calculix/CalculixFileWriter.cs"
+      ],
+      "scope": "Observed model keyword-tree assembly, materials/sections/conditions/steps and user-keyword emission",
+      "limits": "Only master source snapshot read; pinned source and license requests429; full dependencies and output coverage untested",
+      "license": "Unknown pending root LICENSE fetch; source header refers to it",
+      "local_files": [],
+      "analysis_local_files": [
+        "tmp/calculix/prepomax-writer.cs"
+      ],
+      "executed": false
+    }
+  ],
+  "coverage": [
+    {
+      "question_id": "Q01",
+      "rule_ids": [
+        "calculix-R01"
+      ],
+      "status": "documented",
+      "missing": "실행 명령과 결과는 이번에 재현하지 않았다."
+    },
+    {
+      "question_id": "Q02",
+      "rule_ids": [
+        "calculix-R02"
+      ],
+      "status": "partial",
+      "missing": "문자 인코딩·모든 행의 길이/이어쓰기 예외 전수 검증 없음."
+    },
+    {
+      "question_id": "Q03",
+      "rule_ids": [
+        "calculix-R03"
+      ],
+      "status": "documented",
+      "missing": "원문 수식 그림의 모든 수치 단위표를 기계 schema로 변환하지 않았다."
+    },
+    {
+      "question_id": "Q04",
+      "rule_ids": [
+        "calculix-R04"
+      ],
+      "status": "partial",
+      "missing": "143개 keyword의 모든 조건부 필드를 전수 schema화하지 않았다."
+    },
+    {
+      "question_id": "Q05",
+      "rule_ids": [
+        "calculix-R05"
+      ],
+      "status": "documented",
+      "missing": "상대 경로는 source fopen 동작에 근거한 process working-directory 해석이며 실제 플랫폼 실행 미확인."
+    },
+    {
+      "question_id": "Q06",
+      "rule_ids": [
+        "calculix-R06"
+      ],
+      "status": "partial",
+      "missing": "native 번호 전체 범위/중복 처리와 모든 keyword namespace 전수 대조 없음."
+    },
+    {
+      "question_id": "Q07",
+      "rule_ids": [
+        "calculix-R07"
+      ],
+      "status": "documented",
+      "missing": "Gmsh→CCX의 실제 permutation·orientation 테스트 미수행."
+    },
+    {
+      "question_id": "Q08",
+      "rule_ids": [
+        "calculix-R08"
+      ],
+      "status": "documented",
+      "missing": "Abaqus PART/INSTANCE/ASSEMBLY 전체를 CalculiX가 동일 지원한다고 보지 않는다."
+    },
+    {
+      "question_id": "Q09",
+      "rule_ids": [
+        "calculix-R09"
+      ],
+      "status": "documented",
+      "missing": "모든 접촉 알고리즘·하중 조합의 수치 적합성은 검증하지 않았다."
+    },
+    {
+      "question_id": "Q10",
+      "rule_ids": [
+        "calculix-R10",
+        "calculix-R11"
+      ],
+      "status": "documented",
+      "missing": "process cancel/rollback과 입력 restart는 별개다. / Abaqus OUTPUT 하위 구조 전체 지원을 뜻하지 않는다."
+    },
+    {
+      "question_id": "Q11",
+      "rule_ids": [
+        "calculix-R12",
+        "calculix-R13",
+        "calculix-R14",
+        "calculix-R15"
+      ],
+      "status": "partial",
+      "missing": "공식 test archive의 개별 예제 재배포 조건은 별도 명확하지 않아 locator/해시만 배포. 오류 입력 또는 expected-failure 예제는 선정·검토하지 않았으며 전수 test 취득을 음성 시험 확보로 세지 않는다. beamperror는 error estimator 예제로, 의도적 실패 입력으로 분류하지 않는다. / cgx/ccx/Unix shell·NumPy/Matplotlib 환경을 이번에 실행하지 않았다. / 독립 빌드/전체 카드 생성 지원은 검증하지 않았다. / root LICENSE·선택 파일의 정확한 commit 대조 전 편입 자산으로 확정하지 않는다."
+    },
+    {
+      "question_id": "Q12",
+      "rule_ids": [
+        "calculix-R16"
+      ],
+      "status": "partial",
+      "missing": "모든 parameter/element alias·실행 binary 검증과 전수 field schema는 미완료."
+    }
+  ],
+  "acquisition_log": [
+    {
+      "target": "https://www.dhondt.de/ccx_2.23.src.tar.bz2",
+      "outcome": "downloaded; bytes=1551289; sha256=9c88385c10fb04f5dc6c4e98027a51bebdd8aee3920e05190d6c1dd08357d6e7"
+    },
+    {
+      "target": "https://www.dhondt.de/ccx_2.23.doc.tar.bz2",
+      "outcome": "downloaded; bytes=3595214; sha256=0fcaf2de8cec51853c4a68b32f7b5a9f277e48c0fece7b8ed4b45320908679b6"
+    },
+    {
+      "target": "https://www.dhondt.de/ccx_2.23.htm.tar.bz2",
+      "outcome": "downloaded; bytes=3082645; sha256=ed14b31b51972d5492209a42fcd52a062e36cbc7843bcd358617cb3aee0da736"
+    },
+    {
+      "target": "https://www.dhondt.de/ccx_2.23.pdf",
+      "outcome": "downloaded; bytes=6281257; sha256=a0bf3fc03f374912ff2bf28da3f7dfb6a61428dd7f41b281a2e7e1fdb318f330"
+    },
+    {
+      "target": "https://www.dhondt.de/ccx_2.23.test.tar.bz2",
+      "outcome": "downloaded; bytes=13468187; sha256=be2259fd9a7b990d0453b30708e1b05f2cd4b6df4a90fa96f0e4abd1ae7beaa0"
+    },
+    {
+      "target": "https://www.dhondt.de/cgx_2.23.all.tar.bz2",
+      "outcome": "downloaded; bytes=5810509; sha256=04abbe0d2bac6a7bff018238b409568c189ede25589880e8cdd947f56ebd67c7"
+    },
+    {
+      "target": "https://www.dhondt.de/gpl-2.0.txt",
+      "outcome": "downloaded; bytes=18092; sha256=8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+    },
+    {
+      "target": "PrePoMax pinned raw files/LICENSE",
+      "outcome": "HTTP429 all6; no bypass or repeated retries; master source retained analysis-only"
+    },
+    {
+      "target": "CCX official HTML/TeX index",
+      "outcome": "Full extraction and independent name-set reconciliation; script retained"
+    },
+    {
+      "target": "MIT examples source files",
+      "outcome": "11 files acquired with original bytes and MIT LICENSE, no execution"
+    }
+  ],
+  "gaps": [
+    "143keyword list completeness is not full-field/dependency metadata review or any product support claim",
+    "No CCX/CGX/PrePoMax binaries executed; no new output deck generated or solver result validated",
+    "All official test archive files acquired internally, but per-test redistribution remains unclear; final bundle contains manifest/locators, not those decks/reference originals",
+    "PrePoMax pinned-file equivalence and redistribution license not confirmed due429",
+    "All Abaqus keywords/options/part-instance semantics cannot be assumed supported by CCX",
+    "Encoding edge cases, complete ID ranges/duplicate semantics and each keyword conditional default still require targeted implementation review",
+    "No deliberately invalid input/expected-failure example was selected or reviewed. The complete test archive manifest does not establish negative-case coverage; beamperror is an error-estimator case, not a failure fixture."
+  ],
+  "runtime_verified": false,
+  "visual_checks": [
+    {
+      "source_id": "calculix-D02",
+      "locator": "CalculiX/ccx_2.23/doc/ccx/node33.html Figure62/img299.png",
+      "purpose": "tetra node ordering diagram viewed; no runtime orientation proof",
+      "reviewed": true
+    }
+  ],
+  "collected_on": "2026-10-30",
+  "acquisition_manifests": [
+    {
+      "file": "catalogues/calculix-mit-assets.csv",
+      "source_id": "calculix-D09",
+      "file_count": 11,
+      "size_bytes": 3879,
+      "downloaded_size_bytes": 33763,
+      "sha256": "1ffcf635139c95707348a508d4f94e7d09d14db5246f652cc2c64b0a0bd99dc2",
+      "scope": "Manifest size/SHA describe the manifest file; downloaded_size_bytes is the selected MIT original-file byte total, not additional solver keyword entries"
+    }
+  ]
+}
