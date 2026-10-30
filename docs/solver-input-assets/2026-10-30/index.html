@@ -2,15 +2,15 @@
 <title>CAE 솔버 입력 생성 자료</title><style>body{font:15px/1.55 system-ui,sans-serif;margin:32px auto;max-width:1220px;padding:0 20px;color:#17202b}h1{font-size:25px}table{width:100%;border-collapse:collapse}td,th{text-align:left;border-bottom:1px solid #d7dde4;padding:8px;vertical-align:top}th{background:#edf1f5}input{font:inherit;padding:9px;width:min(94%,650px);margin:12px 0}a{color:#164fa0}small{color:#526170}.warning{padding:14px;background:#fff5d9}#list td:nth-child(3){font-size:13px}</style>
 <h1>CAE 솔버 입력 생성 자료 · 2026-10-30</h1>
 <p class="warning">자료 취득·목록 추출·관련 규칙 검토 결과입니다. 전수 필드 schema·신규 생성기·solver 실행 완료가 아닙니다. 원문 판본·조사 깊이·권리와 누락을 함께 확인하십시오.</p>
-<p><a href="README.md">전체 안내</a> · <a href="summary.json">정확한 집계</a> · <a href="discussion/astra-findings.md">독립 감사</a> · <a href="validation.json">자료 검증</a></p>
-<table><thead><tr><th>솔버</th><th>문서 판본</th><th>목록 행</th><th>상세</th></tr></thead><tbody>
-<tr><td>radioss</td><td>Primary Radioss2024 online; historical Reference Guide2022 PDF; comparator current online banner2026 acquired2026-10-30</td><td>825</td><td><a href="notes/radioss.md">노트</a> · <a href="solvers/radioss.json">근거/Q01–Q12</a> · <a href="catalogues/radioss.csv">전체 목록</a></td></tr>
-<tr><td>dyna</td><td>R17@e8334f9fb (06/11/26)</td><td>1773</td><td><a href="notes/dyna.md">노트</a> · <a href="solvers/dyna.json">근거/Q01–Q12</a> · <a href="catalogues/dyna.csv">전체 목록</a></td></tr>
-<tr><td>abaqus</td><td>2025, docs.software.vt.edu vendor-origin mirror (not direct Dassault hosting)</td><td>600</td><td><a href="notes/abaqus.md">노트</a> · <a href="solvers/abaqus.json">근거/Q01–Q12</a> · <a href="catalogues/abaqus.csv">전체 목록</a></td></tr>
-<tr><td>calculix</td><td>CCX2.23 manual 2025-10-19;835PDFpages</td><td>143</td><td><a href="notes/calculix.md">노트</a> · <a href="solvers/calculix.json">근거/Q01–Q12</a> · <a href="catalogues/calculix.csv">전체 목록</a></td></tr>
-<tr><td>aster</td><td>official documentation branch v17, retrieved 2026-10-30; no exact minor build advertised</td><td>269</td><td><a href="notes/aster.md">노트</a> · <a href="solvers/aster.json">근거/Q01–Q12</a> · <a href="catalogues/aster.csv">전체 목록</a></td></tr>
-<tr><td>optistruct</td><td>2025</td><td>1107</td><td><a href="notes/optistruct.md">노트</a> · <a href="solvers/optistruct.json">근거/Q01–Q12</a> · <a href="catalogues/optistruct.csv">전체 목록</a></td></tr>
-<tr><td>nastran</td><td>MSC Nastran2024.2 QRG;PDF creation2024-11-21</td><td>1879</td><td><a href="notes/nastran.md">노트</a> · <a href="solvers/nastran.json">근거/Q01–Q12</a> · <a href="catalogues/nastran.csv">전체 목록</a></td></tr>
+<p><a href="README.md">기능별 개발 자산과 사용 범위</a> · <a href="notes/radioss.md">첫 대상: RAD 생성 자료</a></p>
+<table><thead><tr><th>솔버</th><th>개발에 참고할 실제 자산</th><th>찾아보기</th></tr></thead><tbody>
+<tr><td>radioss</td><td>Starter/Engine 입력 규칙 · inp2rad 실제 출력/매핑 코드 · QA 모델</td><td><a href="notes/radioss.md">코드·예제·사용 범위</a> · <a href="catalogues/radioss.csv">키워드 설명 찾기</a></td></tr>
+<tr><td>dyna</td><td>전체 PyDYNA 필드 정의 · Deck/field writer · R17 매뉴얼 · 실제 .k</td><td><a href="notes/dyna.md">코드·예제·사용 범위</a> · <a href="catalogues/dyna.csv">키워드 설명 찾기</a></td></tr>
+<tr><td>abaqus</td><td>전체 keyword 설명 · 실제 .inp · mesh/set writer · Abaqus 연동 예제</td><td><a href="notes/abaqus.md">코드·예제·사용 범위</a> · <a href="catalogues/abaqus.csv">키워드 설명 찾기</a></td></tr>
+<tr><td>calculix</td><td>CGX writer · 공식 해석 덱/결과 · parametric 예제</td><td><a href="notes/calculix.md">코드·예제·사용 범위</a> · <a href="catalogues/calculix.csv">키워드 설명 찾기</a></td></tr>
+<tr><td>aster</td><td>Cata 명령 정의 · AsterStudy .comm serializer · .export writer · MED 모델</td><td><a href="notes/aster.md">코드·예제·사용 범위</a> · <a href="catalogues/aster.csv">키워드 설명 찾기</a></td></tr>
+<tr><td>optistruct</td><td>BDF writer/formatter · 공식 .fem 해석 예제 · 카드 매뉴얼</td><td><a href="notes/optistruct.md">코드·예제·사용 범위</a> · <a href="catalogues/optistruct.csv">키워드 설명 찾기</a></td></tr>
+<tr><td>nastran</td><td>BDF writer/formatter · MSC QRG · NASA95 보조 모델; 현행 완전 예제 부족</td><td><a href="notes/nastran.md">코드·예제·사용 범위</a> · <a href="catalogues/nastran.csv">키워드 설명 찾기</a></td></tr>
 </tbody></table><h2>전체 목록에서 이름 찾기</h2><p><small>단순 파일 내 필터입니다. 공식 원문 전문은 포함하지 않습니다. 종류가 다른 행과 다른 버전을 합쳐 지원 수로 세지 않습니다.</small></p>
 <input id="q" placeholder="솔버, keyword/command 이름, 종류 검색" aria-label="목록 필터"><span id="n"></span>
 <table id="list"><thead><tr><th>솔버</th><th>이름</th><th>종류 · 조사 깊이</th><th>공식 locator</th></tr></thead><tbody>

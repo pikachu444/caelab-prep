@@ -4,7 +4,22 @@
 
 **자료 취득·목록 추출·관련 규칙 검토를 수행했다. 모든 필드의 생성 schema, 제품의 전수 keyword 지원, 상용 전처리기 동등성, solver 실행 검증은 완료하지 않았다.**
 
-## 확보 범위
+## 개발할 기능별로 볼 자산
+
+| 만들려는 기능 | 실제로 확보한 자료·코드 | 바로 쓸 수 있는 범위와 부족한 부분 |
+|---|---|---|
+| 새 RAD Starter/Engine 작성 | [공식 Starter 입력 규칙](https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/starter_input_r.htm), [Engine 입력 규칙](https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/engine_input_r.htm), MIT `inp2rad.py`, 실제 QA 모델 | 파일 구조·카드 구문·변환/요소 매핑을 읽을 수 있다. 모든 RAD 카드를 생성하는 독립 writer나 완성된 필드 정의는 아직 없다. [RAD 노트](notes/radioss.md) |
+| LS-DYNA 카드 입력 폼과 `.k` 출력 | PyDYNA `codegen/kwd.json` 전체, 보정 manifest, `Deck.write`와 field writer, 공식 R17 매뉴얼·실제 `.k` | 확보한 것 중 필드 정의와 실제 writer가 가장 직접적으로 연결된 자산이다. 전체 PyDYNA 패키지와 의존성을 사용해야 하며 R17 전체 의미 지원은 별도다. [DYNA 노트](notes/dyna.md) |
+| Abaqus `.inp` 작성/연동 | 전체 keyword 설명, 실제 해석 `.inp`, meshio Abaqus writer, abqpy 실행 예제 | meshio는 메시/집합 출력용이다. abqpy 예제는 Abaqus 실행 환경 연동용이다. 독립적인 전체 해석 writer는 확보했다고 말할 수 없다. [Abaqus 노트](notes/abaqus.md) |
+| CalculiX 메시/조건 출력 | 공식 입력 매뉴얼과 실제 시험 덱·결과, CGX `write2aba.c`, MIT parametric 예제, PrePoMax writer 구조 | CGX의 출력 방법과 완전한 해석 예제를 읽고 재사용을 검토할 수 있다. 모든 조건을 다루는 독립 writer 편입은 아직 정하지 않았다. [CalculiX 노트](notes/calculix.md) |
+| Code_Aster 명령 폼·`.comm/.export` 생성 | Cata Commands/Language/Commons, AsterStudy `study2comm.py`, `run_aster/export.py`, 실제 MED 포함 모델 | 명령의 조건/타입 정의, 명령 직렬화, 실행 파일 묶음의 실제 코드가 있다. 소스 일부만으로 독립 실행되는 SDK는 아니다. [Aster 노트](notes/aster.md) |
+| OptiStruct/Nastran BDF 출력 | PyNastran `write_mesh.py`와 8/16/double formatter, 공식 입력 매뉴얼, OptiStruct 완전 `.fem` 예제 | BDF 출력의 출발점으로 읽고 도입할 수 있다. 두 솔버의 카드/default를 별도로 처리해야 한다. MSC2024.2 완전 예제는 아직 부족하다. [OptiStruct](notes/optistruct.md) · [Nastran](notes/nastran.md) |
+
+실제 참고 소스는 다운로드 ZIP의 `assets/dyna/pydyna/`, `assets/bdf/pynastran/`, `examples/aster/`, `examples/calculix/`, `examples/abaqus/`, `examples/radioss/code/`에 있다. 제품 의존성으로 자동 추가한 것은 아니다. **이번 결과에서 바로 개발에 유용한 중심은 이 소스·schema·실제 입력 예제와 매뉴얼이다.** 목록과 해시는 이 자료를 다시 찾는 보조 정보다.
+
+RAD를 먼저 개발할 때는 위 Starter/Engine 규칙과 `inp2rad.py`의 실제 출력부·요소/재료 매핑, 대응 QA 모델을 함께 읽으면 된다. 기존 앱의 필드 patch 코드만 확장해서 모든 신규 모델 생성을 해결할 수 있다고 가정하지 않는다. 다른 솔버의 writer 구조는 참고하되 그 솔버의 default와 ID 규칙을 RAD에 가져오지 않는다.
+
+## 상세 확보 범위
 
 | 솔버/고정판 | 전체 목록과 분모 | 실제 취득 자산 | 상세 |
 |---|---|---|---|
@@ -18,13 +33,9 @@
 
 각 수량은 서로 다른 단위이므로 합쳐서 ‘전 솔버 keyword 수’라고 쓰지 않는다. 별칭·변형·옵션·명령·schema card를 구별했다. PyDYNA schema와 R17 TOC의 불일치는 별칭/그룹/버전 차이가 섞여 있어 전부 미지원으로 분류하지 않는다. PyNastran reader whitelist429개도 writer나 두 상용 솔버의 지원표가 아니다.
 
-## 찾아보는 순서
+## 필요한 자료 찾기
 
-1. 위 표의 해당 솔버 노트를 읽는다.
-2. `solvers/<key>.json`의 Q01–Q12 coverage에서 필요한 질문과 rule ID를 찾는다. 질문은 파일 역할, 구문, 단위, 조건부/default, include, namespace, 연결순서, 객체 매핑, 하중/접촉, 해석 제어, 예제/코드, 버전/검증이다.
-3. 연결된 source ID의 공식 URL·판본·절/쪽/함수·read_depth를 확인한다. `catalogues/`는 전체 이름·locator와 추출/취득 대조 기록이다.
-4. 다운로드 묶음의 `assets/`·`examples/`는 허용된 참고 원문 소스이며 제품 코드에 편입한 의존성이 아니다. 실행/이식 완료로 취급하지 않는다.
-5. 구현 시에는 필요한 카드의 실제 필드/조건부/의존 규칙을 원문에서 확인하고, 기존 실행 단계에서 정한 범위·종료 조건으로 개발한다. 이 자료조사 때문에 완료한 다른 범위를 다시 열지 않는다.
+위 기능 표에서 해당 솔버 노트로 들어가면 입력 규칙, 실제 예제, writer/schema의 경로와 부족한 부분을 볼 수 있다. 특정 키워드는 `index.html`에서 이름으로 찾거나 `catalogues/<solver>.csv`에서 공식 설명으로 이동한다. 세부 근거가 필요할 때만 `solvers/<solver>.json`을 본다.
 
 `tmp/` 경로는 수집 시 분석용 원본 위치다. 공개 Git과 다운로드 ZIP에는 상용 매뉴얼·재배포 불명 예제 전문을 넣지 않는다. URL·고정 버전·locator·크기·SHA·취득 manifest를 보존해 다시 찾을 수 있게 했다. HTML 원본 전체를 영구 오프라인 배포했다고 표현하지 않는다.
 

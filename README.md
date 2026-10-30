@@ -74,7 +74,7 @@ caelab-prep mesh part.step --output mesh-assets --size 2.0
 
 ## 확보한 개발 자산
 
-[7개 솔버의 입력 생성 자료](docs/solver-input-assets/2026-10-30/README.md)에 Radioss/OpenCourant·LS-DYNA·Abaqus·CalculiX·Code_Aster·OptiStruct·MSC Nastran의 공식 전체 목록, 관련 생성 규칙, 실제 예제·공개 코드의 역할과 버전·출처·취득 해시를 정리했습니다. 기존 RAD field patch 메타데이터·회귀 입력은 새 모델의 전수 생성 명세가 아닙니다. 목록/원문 취득·관련 절 독해·전수 field schema·생성기 구현·실제 solver 실행을 구분하며, 이번 자료 수집으로 제품의 지원 범위가 늘어난 것은 아닙니다.
+[7개 솔버의 입력 생성 자료](docs/solver-input-assets/2026-10-30/README.md)에 Radioss/OpenCourant·LS-DYNA·Abaqus·CalculiX·Code_Aster·OptiStruct·MSC Nastran의 실제 입력 매뉴얼·필드 정의·writer 코드·해석 예제와 활용 범위를 정리했습니다. 기존 RAD field patch 메타데이터·회귀 입력은 새 모델의 전수 생성 명세가 아닙니다. 목록/원문 취득·관련 절 독해·전수 field schema·생성기 구현·실제 solver 실행을 구분하며, 이번 자료 수집으로 제품의 지원 범위가 늘어난 것은 아닙니다.
 
 [상용 CAE GUI 상세 벤치마크 자료](docs/benchmarks/2026-10-30/README.md)에 7제품의 메뉴·선택·입력·결과·실패/취소·저장 근거와 화면 locator를 연결했습니다. 대표 화면 모음과 동작 재현 근거를 구분하고, 이번에 직접 실행하지 않은 제품을 실행 검증으로 표시하지 않습니다.
 
