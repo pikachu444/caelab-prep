@@ -1,0 +1,78 @@
+{
+  "scope": "2026-10-30 CAE GUI corpus plus this cross-domain supplement; excludes earlier mesher/planning literature not in those catalogues",
+  "domains": [
+    {
+      "key": "shell",
+      "title": "명령·셸·도킹·고밀도 표시·아이콘·입력 접근성",
+      "source_records": 23,
+      "unique_source_urls": 23,
+      "asset_records": 11,
+      "distinct_images": 11,
+      "patterns": 12,
+      "coverage_rows": 6
+    },
+    {
+      "key": "selection",
+      "title": "선택·가시성·표/트리/viewport 연결",
+      "source_records": 23,
+      "unique_source_urls": 23,
+      "asset_records": 6,
+      "distinct_images": 6,
+      "patterns": 14,
+      "coverage_rows": 8
+    },
+    {
+      "key": "document",
+      "title": "문서·객체 정체성·참조·변경·저장",
+      "source_records": 25,
+      "unique_source_urls": 25,
+      "asset_records": 14,
+      "distinct_images": 14,
+      "patterns": 11,
+      "coverage_rows": 7
+    },
+    {
+      "key": "engineering-input",
+      "title": "공학 수치·표·곡선·단위 입력",
+      "source_records": 22,
+      "unique_source_urls": 22,
+      "asset_records": 9,
+      "distinct_images": 9,
+      "patterns": 11,
+      "coverage_rows": 6
+    },
+    {
+      "key": "mesh-data",
+      "title": "메시·표시 데이터와 기술 계약",
+      "source_records": 18,
+      "unique_source_urls": 18,
+      "asset_records": 8,
+      "distinct_images": 8,
+      "patterns": 10,
+      "coverage_rows": 7
+    },
+    {
+      "key": "jobs",
+      "title": "긴 작업·취소·산출물 수명",
+      "source_records": 14,
+      "unique_source_urls": 14,
+      "asset_records": 3,
+      "distinct_images": 3,
+      "patterns": 10,
+      "coverage_rows": 7
+    }
+  ],
+  "source_records": 125,
+  "unique_source_urls": 124,
+  "distinct_images": 51,
+  "asset_records": 51,
+  "patterns": 68,
+  "overlap_source_urls_with_prior_cae_gui": [],
+  "overlap_image_hashes_with_prior_cae_gui": [],
+  "new_source_urls_over_prior_cae_gui": 124,
+  "new_distinct_images_over_prior_cae_gui": 51,
+  "combined_unique_source_urls": 234,
+  "combined_distinct_images": 207,
+  "runtime_verified": false,
+  "count_rule": "Unique URL: remove anchor and trailing slash, normalize raw GitHub file URLs to blob; retain version/language/query differences. Different URLs do not imply independent authors or full documents stored offline. Image count uses byte SHA256. Pattern records are not additional sources."
+}

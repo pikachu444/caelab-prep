@@ -1,0 +1,998 @@
+{
+  "key": "document",
+  "title": "문서·객체 정체성·참조·변경·저장",
+  "scope": "FreeCAD 사용자 조작과 고정 소스, OCCT OCAF/XDE API·문서, AutoCAD 취소 범위 반례를 조사한다. 새 DB/FE 모델 설계, 코드 도입, 제품 실행은 하지 않는다.",
+  "sources": [
+    {
+      "id": "document-D01",
+      "url": "https://github.com/FreeCAD/FreeCAD-documentation/blob/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/Object_name.md",
+      "title": "FreeCAD 객체 Name과 Label",
+      "product": "FreeCAD",
+      "version": "공식 문서 snapshot 0499378a238ce4c77c643b9cc4a03d0947381e45 (2025-01-15); 각 화면의 실제 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Names; Labels; Scripting",
+      "read_status": "full-relevant-sections",
+      "summary": "이름은 문서 범위 식별자이고 표시 라벨과 다르다. 삭제한 Name은 재사용될 수 있다."
+    },
+    {
+      "id": "document-D02",
+      "url": "https://github.com/FreeCAD/FreeCAD-documentation/blob/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/Std_LinkMake.md",
+      "title": "FreeCAD 링크와 외부 문서 링크",
+      "product": "FreeCAD",
+      "version": "공식 문서 snapshot 0499378a238ce4c77c643b9cc4a03d0947381e45 (2025-01-15); 각 화면의 실제 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Usage; Usage: external documents; Groups; Properties",
+      "read_status": "full-relevant-sections",
+      "summary": "원본 shape를 참조하는 링크, 외부 문서 저장 전제, 그룹 종류별 가시성 차이를 설명한다."
+    },
+    {
+      "id": "document-D03",
+      "url": "https://github.com/FreeCAD/FreeCAD-documentation/blob/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/Std_Save.md",
+      "title": "FreeCAD 저장",
+      "product": "FreeCAD",
+      "version": "공식 문서 snapshot 0499378a238ce4c77c643b9cc4a03d0947381e45 (2025-01-15); 각 화면의 실제 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Usage; Options",
+      "read_status": "full-relevant-sections",
+      "summary": "활성 문서 저장과 첫 저장 대화상자의 취소를 설명한다."
+    },
+    {
+      "id": "document-D04",
+      "url": "https://github.com/FreeCAD/FreeCAD-documentation/blob/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/Std_Refresh.md",
+      "title": "FreeCAD 재계산",
+      "product": "FreeCAD",
+      "version": "공식 문서 snapshot 0499378a238ce4c77c643b9cc4a03d0947381e45 (2025-01-15); 각 화면의 실제 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Usage; Options; Scripting",
+      "read_status": "full-relevant-sections",
+      "summary": "Edit > Refresh/F5와 강제 재계산, recompute 호출을 구분한다."
+    },
+    {
+      "id": "document-D05",
+      "url": "https://github.com/FreeCAD/FreeCAD-documentation/blob/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/Std_DependencyGraph.md",
+      "title": "FreeCAD 의존성 그래프",
+      "product": "FreeCAD",
+      "version": "공식 문서 snapshot 0499378a238ce4c77c643b9cc4a03d0947381e45 (2025-01-15); 각 화면의 실제 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Description; Installation; Usage; Save; General principles",
+      "read_status": "full-relevant-sections",
+      "summary": "트리와 다른 의존성 표시, 순환·범위 오류 표현과 외부 Graphviz 결손을 설명한다."
+    },
+    {
+      "id": "document-D06",
+      "url": "https://github.com/FreeCAD/FreeCAD-documentation/blob/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/Topological_naming_problem.md",
+      "title": "FreeCAD 위상 이름 문제",
+      "product": "FreeCAD",
+      "version": "공식 문서 snapshot 0499378a238ce4c77c643b9cc4a03d0947381e45 (2025-01-15); 각 화면의 실제 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Example; Solution; Tradeoffs; Topological naming algorithm",
+      "read_status": "full-relevant-sections",
+      "summary": "참조 파손 진단·후보 제시·조건부 자동 복구를 구분하며 모든 파손 해결을 보장하지 않는다."
+    },
+    {
+      "id": "document-D07",
+      "url": "https://github.com/FreeCAD/FreeCAD-documentation/blob/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/Std_Delete.md",
+      "title": "FreeCAD 삭제",
+      "product": "FreeCAD",
+      "version": "공식 문서 snapshot 0499378a238ce4c77c643b9cc4a03d0947381e45 (2025-01-15); 각 화면의 실제 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Usage; Scripting",
+      "read_status": "full-relevant-sections",
+      "summary": "선택한 객체의 삭제 조작과 removeObject 호출을 제시한다."
+    },
+    {
+      "id": "document-D08",
+      "url": "https://github.com/FreeCAD/FreeCAD-documentation/blob/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/Std_Undo.md",
+      "title": "FreeCAD Undo",
+      "product": "FreeCAD",
+      "version": "공식 문서 snapshot 0499378a238ce4c77c643b9cc4a03d0947381e45 (2025-01-15); 각 화면의 실제 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Usage; Preferences; Scripting",
+      "read_status": "full-relevant-sections",
+      "summary": "단계별 Undo와 설정, CLI에서 문서 Undo를 별도 활성화해야 하는 조건을 설명한다."
+    },
+    {
+      "id": "document-D09",
+      "url": "https://github.com/FreeCAD/FreeCAD-documentation/blob/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/Std_LinkImport.md",
+      "title": "FreeCAD 외부 링크의 로컬 복사",
+      "product": "FreeCAD",
+      "version": "공식 문서 snapshot 0499378a238ce4c77c643b9cc4a03d0947381e45 (2025-01-15); 각 화면의 실제 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Usage",
+      "read_status": "full-relevant-sections",
+      "summary": "외부 객체를 현재 문서에 복사하고 기존 링크를 로컬 사본으로 돌린다."
+    },
+    {
+      "id": "document-D10",
+      "url": "https://github.com/FreeCAD/FreeCAD-documentation/blob/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/Std_LinkReplace.md",
+      "title": "FreeCAD 객체를 링크로 교체",
+      "product": "FreeCAD",
+      "version": "공식 문서 snapshot 0499378a238ce4c77c643b9cc4a03d0947381e45 (2025-01-15); 각 화면의 실제 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Description; Usage",
+      "read_status": "full-relevant-sections",
+      "summary": "컨테이너 내부 객체를 링크로 바꾸고 원본을 외부에 남기는 작업이다."
+    },
+    {
+      "id": "document-D11",
+      "url": "https://github.com/FreeCAD/FreeCAD-documentation/blob/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/Document_structure.md",
+      "title": "FreeCAD 문서와 표시 문서",
+      "product": "FreeCAD",
+      "version": "공식 문서 snapshot 0499378a238ce4c77c643b9cc4a03d0947381e45 (2025-01-15); 각 화면의 실제 앱 빌드 미확인",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Application and User Interface; Scripting",
+      "read_status": "full-relevant-sections",
+      "summary": "App 문서와 Gui 문서, 하나의 문서에 여러 뷰를 두는 구조를 설명한다."
+    },
+    {
+      "id": "document-D12",
+      "url": "https://github.com/FreeCAD/FreeCAD/blob/a6d3cb585abeca5643db060ea30d9cda09bb9857/src/App/Document.cpp",
+      "title": "FreeCAD 문서 실행 코드",
+      "product": "FreeCAD",
+      "version": "소스 commit a6d3cb585abeca5643db060ea30d9cda09bb9857; 배포판 실행 확인 없음",
+      "kind": "code",
+      "evidence_type": "D",
+      "locator": "openTransaction/_abortTransaction L361–688; readObjects L1620–1685; save/saveToFile L1898–2110; recompute L2860–3020; removeObject/breakDependency L3511–3644",
+      "read_status": "full-relevant-sections",
+      "summary": "원자 변경, 재계산, 삭제, 파일 입출력의 실제 분기를 확인했다. 부분 로드 문서는 save가 쓰지 않고 true를 반환하는 예외가 있다."
+    },
+    {
+      "id": "document-D13",
+      "url": "https://github.com/FreeCAD/FreeCAD/blob/a6d3cb585abeca5643db060ea30d9cda09bb9857/src/App/Link.h",
+      "title": "FreeCAD Link API와 copy-on-change",
+      "product": "FreeCAD",
+      "version": "소스 commit a6d3cb585abeca5643db060ea30d9cda09bb9857; 배포판 실행 확인 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "LINK_PARAM_COPY_ON_CHANGE L134–145; LinkCopyOnChangeType; setLink; syncCopyOnChange",
+      "read_status": "full-relevant-sections",
+      "summary": "공유 참조와 변경 시 복사·추적의 모드를 구분한다."
+    },
+    {
+      "id": "document-D14",
+      "url": "https://github.com/FreeCAD/FreeCAD/blob/a6d3cb585abeca5643db060ea30d9cda09bb9857/src/App/DocumentObject.h",
+      "title": "FreeCAD DocumentObject API",
+      "product": "FreeCAD",
+      "version": "소스 commit a6d3cb585abeca5643db060ea30d9cda09bb9857; 배포판 실행 확인 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "getNameInDocument/getLabelOrName/getID L250–280; touch/mustRecompute/isValid L301–370; getOutList/getInList L490–665; onUndoRedoFinished",
+      "read_status": "full-relevant-sections",
+      "summary": "문서 내 이름·ID, touch·오류 상태, 순방향·역방향 참조를 별도 API로 노출한다."
+    },
+    {
+      "id": "document-D15",
+      "url": "https://github.com/FreeCAD/FreeCAD/blob/a6d3cb585abeca5643db060ea30d9cda09bb9857/src/App/Transactions.h",
+      "title": "FreeCAD Transaction API",
+      "product": "FreeCAD",
+      "version": "소스 commit a6d3cb585abeca5643db060ea30d9cda09bb9857; 배포판 실행 확인 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Transaction/apply/addObjectNew/addObjectDel/addObjectChange; TransactionObject; TransactionDocumentObject",
+      "read_status": "full-relevant-sections",
+      "summary": "복수 객체·속성 변경을 한 transaction에 기록하고 문서 간 transaction ID를 묶을 수 있다."
+    },
+    {
+      "id": "document-D16",
+      "url": "https://github.com/Open-Cascade-SAS/OCCT/blob/53706f78a8640c4407bdcc6752df13a270b159f2/src/ApplicationFramework/TKLCAF/TDocStd/TDocStd_Document.hxx",
+      "title": "OCCT 문서·Undo API",
+      "product": "OCCT",
+      "version": "소스 commit 53706f78a8640c4407bdcc6752df13a270b159f2; 배포판 실행 확인 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "IsSaved/IsChanged/IsValid; OpenCommand/CommitCommand/AbortCommand/SetUndoLimit L43–180",
+      "read_status": "full-relevant-sections",
+      "summary": "저장 후 변경과 재계산 유효성을 구분한다. Undo는 기본 꺼짐이고 중첩 OpenCommand는 오류다."
+    },
+    {
+      "id": "document-D17",
+      "url": "https://github.com/Open-Cascade-SAS/OCCT/blob/53706f78a8640c4407bdcc6752df13a270b159f2/src/ApplicationFramework/TKLCAF/TDocStd/TDocStd_Application.hxx",
+      "title": "OCCT 열기·저장 API",
+      "product": "OCCT",
+      "version": "소스 commit 53706f78a8640c4407bdcc6752df13a270b159f2; 배포판 실행 확인 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "IsInSession; Open; SaveAs; Save L210–317",
+      "read_status": "full-relevant-sections",
+      "summary": "읽기·쓰기 상태를 반환하며 필터 기반 부분 읽기와 진행 범위를 인자로 받는다."
+    },
+    {
+      "id": "document-D18",
+      "url": "https://github.com/Open-Cascade-SAS/OCCT/blob/53706f78a8640c4407bdcc6752df13a270b159f2/src/ApplicationFramework/TKLCAF/TDocStd/TDocStd_XLinkTool.hxx",
+      "title": "OCCT 외부 참조와 복사 API",
+      "product": "OCCT",
+      "version": "소스 commit 53706f78a8640c4407bdcc6752df13a270b159f2; 배포판 실행 확인 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "CopyWithLink; UpdateLink; Copy; IsDone; RelocationTable",
+      "read_status": "full-relevant-sections",
+      "summary": "복사 범위의 자기 완결성과 기존 링크 여부를 검사한다. 복사·링크·갱신의 시점은 응용 프로그램이 결정한다."
+    },
+    {
+      "id": "document-D19",
+      "url": "https://github.com/Open-Cascade-SAS/OCCT/blob/53706f78a8640c4407bdcc6752df13a270b159f2/src/DataExchange/TKXCAF/XCAFDoc/XCAFDoc_ShapeTool.hxx",
+      "title": "OCCT XDE 조립·역참조 API",
+      "product": "OCCT",
+      "version": "소스 commit 53706f78a8640c4407bdcc6752df13a270b159f2; 배포판 실행 확인 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "GetShape; RemoveShape L230–236; GetUsers/GetLocation/GetReferredShape/GetComponents/AddComponent/RemoveComponent L270–310",
+      "read_status": "full-relevant-sections",
+      "summary": "원형과 배치 참조, 참조 사용자 조회, component 삭제와 전체 shape 삭제를 구분한다."
+    },
+    {
+      "id": "document-D20",
+      "url": "https://github.com/Open-Cascade-SAS/OCCT/blob/53706f78a8640c4407bdcc6752df13a270b159f2/src/ApplicationFramework/TKCAF/TNaming/TNaming_Selector.hxx",
+      "title": "OCCT 위상 참조 선택·재해결 API",
+      "product": "OCCT",
+      "version": "소스 commit 53706f78a8640c4407bdcc6752df13a270b159f2; 배포판 실행 확인 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "IsIdentified; Select(selection,context); Solve; Arguments; NamedShape L35–131",
+      "read_status": "full-relevant-sections",
+      "summary": "문맥을 포함한 참조 생성과 재해결 성공 여부를 제공한다."
+    },
+    {
+      "id": "document-D21",
+      "url": "https://github.com/Open-Cascade-SAS/OCCT/blob/53706f78a8640c4407bdcc6752df13a270b159f2/src/ApplicationFramework/TKLCAF/TDF/TDF_Label.hxx",
+      "title": "OCCT label·attribute 수명 API",
+      "product": "OCCT",
+      "version": "소스 commit 53706f78a8640c4407bdcc6752df13a270b159f2; 배포판 실행 확인 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "Data/Tag/IsEqual; AddAttribute/ForgetAttribute/ForgetAllAttributes/ResumeAttribute/FindAttribute L30–158",
+      "read_status": "full-relevant-sections",
+      "summary": "같은 label과 부착 attribute의 존재·유효·forgotten 상태를 구분한다."
+    },
+    {
+      "id": "document-D22",
+      "url": "https://github.com/Open-Cascade-SAS/OCCT/blob/53706f78a8640c4407bdcc6752df13a270b159f2/src/ApplicationFramework/TKLCAF/TFunction/TFunction_Logbook.hxx",
+      "title": "OCCT 함수 변경 전파 API",
+      "product": "OCCT",
+      "version": "소스 commit 53706f78a8640c4407bdcc6752df13a270b159f2; 배포판 실행 확인 없음",
+      "kind": "api",
+      "evidence_type": "D",
+      "locator": "SetTouched/SetImpacted/SetValid/IsModified/GetTouched/GetImpacted/GetValid L45–97",
+      "read_status": "full-relevant-sections",
+      "summary": "사용자 변경·실행 영향·유효 집합과 실행 완료 상태를 분리한다."
+    },
+    {
+      "id": "document-D23",
+      "url": "https://occt3d.com/dev/doc/overview/html/occt_user_guides__ocaf.html",
+      "title": "OCCT OCAF 안내서",
+      "product": "OCCT",
+      "version": "웹 표시 8.0.1 (2026-10-30 접근); 요청한 7.9.0 URL은 이 페이지로 redirect",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Reference-key model; Adding attributes; Transactions; External Links; Naming services; Function services; TObj Applicability",
+      "read_status": "full-relevant-sections",
+      "summary": "reference-key와 형상을 분리하고 속성 backup, 문서별 transaction, 함수 의존성을 다룬다. TObj의 대량 동일 객체 표현에는 배열을 권한다."
+    },
+    {
+      "id": "document-D24",
+      "url": "https://occt3d.com/dev/doc/overview/html/occt_user_guides__xde.html",
+      "title": "OCCT XDE 안내서",
+      "product": "OCCT",
+      "version": "웹 표시 8.0.1 (2026-10-30 접근); 요청한 7.9.0 URL은 이 페이지로 redirect",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "Basic terms; Assemblies; Using an XDE Document; XDE Data inside an Application Document",
+      "read_status": "full-relevant-sections",
+      "summary": "형상 정의와 위치를 나누어 조립을 표현한다. XDE는 교환 구조이며 최종 앱 고유 의미를 제공하지 않는다고 명시한다."
+    },
+    {
+      "id": "document-D25",
+      "url": "https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Core/files/GUID-EFA35F95-67B6-4B87-83A2-05928923CD2B.htm",
+      "title": "AutoCAD 참조 편집의 Save Back·Discard 범위",
+      "product": "AutoCAD",
+      "version": "2026 공식 도움말",
+      "kind": "user-manual",
+      "evidence_type": "D",
+      "locator": "About Saving Back Edited References, paragraphs 2–8 and Caution",
+      "read_status": "full-relevant-sections",
+      "summary": "참조 작업 집합의 변경을 버려도 그 밖의 삭제는 복원되지 않는 반례다. 원상 복구에는 별도 Undo가 필요하다."
+    }
+  ],
+  "assets": [
+    {
+      "id": "document-S01",
+      "source_ids": [
+        "document-D11"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/Screenshot_treeview.jpg",
+      "file": "assets/document/Screenshot_treeview.jpg",
+      "width": 350,
+      "height": 438,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "옛 Combo View에 Group, Body, Part와 서로 다른 하위 항목이 보인다. 문서 객체 수명은 그림만으로 확인되지 않는다.",
+      "sha256": "2d12cb77cc6ca742ee4dfc7b9c0e2105eb22bc87c8c6fb63ed7a2115e2ac198e"
+    },
+    {
+      "id": "document-S02",
+      "source_ids": [
+        "document-D02"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/Std_Link_tree_example.png",
+      "file": "assets/document/Std_Link_tree_example.png",
+      "width": 223,
+      "height": 149,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "원본 Cylinder와 빈 Link, 화살표 오버레이가 있는 두 항목을 보여 주는 트리 발췌다.",
+      "sha256": "0fb2a266fc27f65ec6a3a3a19587ad8bf5849b94af7d29e041e51c50e8c9de69"
+    },
+    {
+      "id": "document-S03",
+      "source_ids": [
+        "document-D02"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/Std_Link_tree_documents_example.png",
+      "file": "assets/document/Std_Link_tree_documents_example.png",
+      "width": 223,
+      "height": 208,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "source와 target 문서가 동시에 보이며 target에 링크 항목들이 있다.",
+      "sha256": "da4c52604c7e7f2ac252ed9f4ad6ce5951f9d87def6f877cb95458fff477612d"
+    },
+    {
+      "id": "document-S04",
+      "source_ids": [
+        "document-D09"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/Std_Link_tree_import_1_example.png",
+      "file": "assets/document/Std_Link_tree_import_1_example.png",
+      "width": 236,
+      "height": 315,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "import 전 source/target와 외부 Part 링크가 보인다. 링크 문자열 필드는 화면에 없다.",
+      "sha256": "a190045ee3e38b1ca0e8cf175d27ad4d0a35bba0a17fa26c2f97b5d164dd5806"
+    },
+    {
+      "id": "document-S05",
+      "source_ids": [
+        "document-D09"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/Std_Link_tree_import_2_example.png",
+      "file": "assets/document/Std_Link_tree_import_2_example.png",
+      "width": 236,
+      "height": 315,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "import 후 target 아래 로컬 Part와 Part001 항목이 보인다. 원본 문서는 계속 보인다.",
+      "sha256": "b0b65cda9eb075ad2faa3f836a27ab3c58b8bf37b0b6f3c8aebe7a5b6190160b"
+    },
+    {
+      "id": "document-S06",
+      "source_ids": [
+        "document-D10"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/Std_Link_tree_replace_fuse_1_example.png",
+      "file": "assets/document/Std_Link_tree_replace_fuse_1_example.png",
+      "width": 236,
+      "height": 149,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "교체 전 Fusion 아래 Sphere와 Cylinder가 있다.",
+      "sha256": "11af0b4004039ba1de8d5fa0b121064c39b936edf1eac98225e52208541119a7"
+    },
+    {
+      "id": "document-S07",
+      "source_ids": [
+        "document-D10"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/Std_Link_tree_replace_fuse_2_example.png",
+      "file": "assets/document/Std_Link_tree_replace_fuse_2_example.png",
+      "width": 236,
+      "height": 149,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "교체 후 원본 Sphere가 Fusion 밖에 있고 Fusion 아래 Sphere001 링크가 있다.",
+      "sha256": "4df47f4dace3ba3ab35ad83e8fdfd67ff22f93920ed441b304e35f54fc4e7158"
+    },
+    {
+      "id": "document-S08",
+      "source_ids": [
+        "document-D06"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/FreeCAD_topological_problem_12_broken_tree.png",
+      "file": "assets/document/FreeCAD_topological_problem_12_broken_tree.png",
+      "width": 405,
+      "height": 295,
+      "kind": "screen",
+      "visual_review": true,
+      "observations": "Pad002와 관련 sketch 항목에 오류를 나타내는 오버레이/색이 보인다. 실제 오류 전문은 없다.",
+      "sha256": "91897c7232718d169bcf4b21e27f94289efa62bea874e3f0d982417c3088dac2"
+    },
+    {
+      "id": "document-S09",
+      "source_ids": [
+        "document-D06"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/FreeCAD_topological_problem_13_remap_sketch_2.png",
+      "file": "assets/document/FreeCAD_topological_problem_13_remap_sketch_2.png",
+      "width": 439,
+      "height": 464,
+      "kind": "dialog",
+      "visual_review": true,
+      "observations": "Attachment 패널에서 Pad001:Face14, Plane face, Cancel/OK가 보인다. 취소 후 결과는 그림에 없다.",
+      "sha256": "d12d6f612e2788c349a49eb05c752ac89474a59f22a07bd11680108d8671d9a1"
+    },
+    {
+      "id": "document-S10",
+      "source_ids": [
+        "document-D06"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/FreeCAD_topological_problem_16_dependency_graph.png",
+      "file": "assets/document/FreeCAD_topological_problem_16_dependency_graph.png",
+      "width": 189,
+      "height": 572,
+      "kind": "diagram",
+      "visual_review": true,
+      "observations": "위상 참조 예제의 원래 Pad/Sketch/Origin 의존성 연결도다. 메뉴·대화상자 화면이 아니다.",
+      "sha256": "f92212322278698cf2ddae323256949b59d5862e1cb8201f39ef9a6c202b5725"
+    },
+    {
+      "id": "document-S11",
+      "source_ids": [
+        "document-D06"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/FreeCAD_topological_problem_19_dependency_graph_datum_planes.png",
+      "file": "assets/document/FreeCAD_topological_problem_19_dependency_graph_datum_planes.png",
+      "width": 246,
+      "height": 449,
+      "kind": "diagram",
+      "visual_review": true,
+      "observations": "datum plane을 사용하는 대안 의존성 연결도다. 전후 관계가 달라지는 예제이지 모든 모델의 복구 보장이 아니다.",
+      "sha256": "ca4a1ba83de72dc7fcb4cab1b9bc59276b7057512bc8c2159f79103adf77a764"
+    },
+    {
+      "id": "document-S12",
+      "source_ids": [
+        "document-D05"
+      ],
+      "source_url": "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/0499378a238ce4c77c643b9cc4a03d0947381e45/wiki/images/FreeCAD-0.17-missing-Graphviz-error-dialogue.png",
+      "file": "assets/document/FreeCAD-0.17-missing-Graphviz-error-dialogue.png",
+      "width": 479,
+      "height": 138,
+      "kind": "dialog",
+      "visual_review": true,
+      "observations": "Graphviz not found와 No/Yes 버튼이 보인다. 파일명은 FreeCAD0.17, 현재 앱 화면이 아니다.",
+      "sha256": "abb6027ae9b3a7ea8deb8d2425281e8f3e9e1b9f1403a403ed9f4fae1782cf5e"
+    },
+    {
+      "id": "document-S13",
+      "source_ids": [
+        "document-D23"
+      ],
+      "source_url": "https://occt3d.com/dev/doc/overview/html/ocaf_image004.png",
+      "file": "assets/document/ocaf_image004.png",
+      "width": 494,
+      "height": 236,
+      "kind": "diagram",
+      "visual_review": true,
+      "observations": "형상 직접 부착과 reference key 경유 부착을 비교하는 개념도다. 실제 UI 화면이 아니다.",
+      "sha256": "f148f8f77840b3f1a6d64d674c408360a6a30d04356e94b5b28e1917198a56ee"
+    },
+    {
+      "id": "document-S14",
+      "source_ids": [
+        "document-D24"
+      ],
+      "source_url": "https://occt3d.com/dev/doc/overview/html/xde_image003.png",
+      "file": "assets/document/xde_image003.png",
+      "width": 317,
+      "height": 301,
+      "kind": "diagram",
+      "visual_review": true,
+      "observations": "XDE label 계층의 assembly와 shape 정의를 보여 주는 문서 그림이다. 실제 소비자 GUI로 일반화하지 않는다.",
+      "sha256": "1eb39948d22873030575281c965c8ae23e934ff45812d885e70d5fb439f8a231"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "document-P01",
+      "requirement": "표시 이름·문서 내 정체성·외부/native 번호를 구분한다",
+      "products": [
+        "FreeCAD",
+        "OCCT"
+      ],
+      "source_ids": [
+        "document-D01",
+        "document-D14",
+        "document-D21",
+        "document-D23"
+      ],
+      "asset_ids": [
+        "document-S01",
+        "document-S13"
+      ],
+      "prerequisite": "문서에 두 객체가 있고 표시 이름을 바꾸려는 상태",
+      "actions": [
+        "트리에서 F2/Rename으로 Label을 변경한다.",
+        "스크립트는 getObject(Name)와 getObjectsByLabel(Label)을 구별한다."
+      ],
+      "documented_result": "FreeCAD의 Name과 Label은 다른 역할이며 Name도 삭제 후 재사용될 수 있다. OCCT label/tag와 attribute 식별은 또 다른 구조다.",
+      "implementation_locator": "FreeCAD DocumentObject.h getNameInDocument/getLabelOrName/getID; OCCT TDF_Label Data/Tag/IsEqual/FindAttribute",
+      "failure_cancel_undo_save": "삭제 후 재생성·Undo를 거쳐 동일 정체성인지, 내보낸 solver native 번호가 복원되는지는 미확인.",
+      "transferable": "표시 문자열과 참조 키의 역할 분리와 유효성 검사 책임을 참고한다.",
+      "non_transferable": "FreeCAD Name이나 OCAF label entry를 solver native 번호 또는 전역적으로 영원히 고유한 키로 취급하지 않는다.",
+      "unknowns": [
+        "여러 문서를 닫고 재열었을 때의 세션 정체성",
+        "삭제·Undo 뒤 숫자 ID 보존 범위",
+        "solver 번호·namespace mapping은 이 문서에 없음"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "document-P02",
+      "requirement": "원형·instance·공유와 배치 변경을 분리한다",
+      "products": [
+        "FreeCAD",
+        "OCCT XDE"
+      ],
+      "source_ids": [
+        "document-D02",
+        "document-D13",
+        "document-D19",
+        "document-D24"
+      ],
+      "asset_ids": [
+        "document-S02",
+        "document-S03",
+        "document-S14"
+      ],
+      "prerequisite": "원형 객체와 조립/링크 대상 문서가 준비된 상태",
+      "actions": [
+        "대상을 선택하고 Make link를 누르거나 빈 링크의 Linked Object를 지정한다.",
+        "XDE에서는 shape label을 다른 location의 component가 참조하도록 한다."
+      ],
+      "documented_result": "공유 원본과 위치를 구별할 수 있다. FreeCAD의 Part 링크와 Group 링크는 하위 가시성 정책도 다르다.",
+      "implementation_locator": "FreeCAD Link.h setLink/LinkCopyOnChangeType; XCAFDoc_ShapeTool AddComponent/GetReferredShape/GetLocation",
+      "failure_cancel_undo_save": "공유 변경과 instance별 override의 Undo·재열기 전체 경로는 미확인.",
+      "transferable": "반복 배치와 공유 정의의 수명을 구별하는 책임을 참고한다.",
+      "non_transferable": "CAD shape 공유가 FE 절점 공유·tie·접촉 또는 native instance 지원을 뜻하지 않는다.",
+      "unknowns": [
+        "다중 선택 속성 편집의 mixed값/부분 적용 정책",
+        "CAE 물성 override와 DOF 의미",
+        "특정 소스 commit의 대용량 성능"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "document-P03",
+      "requirement": "공유 링크·독립 복사·외부 참조의 로컬 편입을 명시적으로 구분한다",
+      "products": [
+        "FreeCAD",
+        "OCCT"
+      ],
+      "source_ids": [
+        "document-D09",
+        "document-D10",
+        "document-D13",
+        "document-D18"
+      ],
+      "asset_ids": [
+        "document-S04",
+        "document-S05",
+        "document-S06",
+        "document-S07"
+      ],
+      "prerequisite": "외부 객체를 가리키는 링크 또는 컨테이너 안의 원본 객체",
+      "actions": [
+        "Import link로 원본의 사본을 현재 문서에 넣고 링크 대상을 바꾼다.",
+        "Replace with link는 원본을 남기고 컨테이너 안에 링크를 둔다.",
+        "OCCT Copy와 CopyWithLink의 목적·전제 차이를 비교한다."
+      ],
+      "documented_result": "로컬 편입과 링크 교체는 다른 조작이다. copy-on-change 역시 독립 사본과 같은 모드가 아니다.",
+      "implementation_locator": "FreeCAD Link.h CopyOnChangeDisabled/Enabled/Owned/Tracking; TDocStd_XLinkTool Copy/CopyWithLink/RelocationTable",
+      "failure_cancel_undo_save": "OCCT는 자기 완결성이 없는 복사 범위나 기존 외부 링크에 예외를 정의한다. 모든 사본의 Undo·파일 보존은 미확인.",
+      "transferable": "복사/공유/로컬화의 효과를 사용자 동작과 참조 변경으로 명시하는 원리를 참고한다.",
+      "non_transferable": "트리에서 이동하거나 복사한 모양만 보고 배열 소유권·물성 공유·source 관계를 결정하지 않는다.",
+      "unknowns": [
+        "외부 파일이 누락되거나 변경된 후 로컬화 결과",
+        "FreeCAD UI와 현재 소스의 동일 빌드 재현"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "document-P04",
+      "requirement": "저장된 참조를 가진 객체 삭제와 일시 UI draft를 구분한다",
+      "products": [
+        "FreeCAD",
+        "OCCT XDE"
+      ],
+      "source_ids": [
+        "document-D07",
+        "document-D12",
+        "document-D14",
+        "document-D19"
+      ],
+      "asset_ids": [
+        "document-S01"
+      ],
+      "prerequisite": "다른 객체가 참조하는 객체가 선택되어 있고 속성 편집이 진행될 수 있는 상태",
+      "actions": [
+        "Edit > Delete/Del 또는 removeObject(Name)를 호출하는 정상 경로를 읽는다.",
+        "역참조 API와 shape/component 삭제 API의 조건을 비교한다."
+      ],
+      "documented_result": "FreeCAD는 삭제 시 의존 링크를 처리한다. XDE의 RemoveShape는 free/top-level 조건이 맞지 않으면 변경 없이 false를 반환한다.",
+      "implementation_locator": "FreeCAD Document.cpp removeObject/_removeObject/breakDependency; DocumentObject getInList/getOutList; XCAFDoc_ShapeTool GetUsers/RemoveShape/RemoveComponent",
+      "failure_cancel_undo_save": "속성 패널에 미확정 draft가 있을 때 삭제·Undo 이후의 패널 대상과 draft 처리, UI 삭제 경고·전체 복원은 미확인.",
+      "transferable": "참조 삭제 영향과 UI 선택/draft 수명을 교차 확인해야 한다는 책임을 참고한다.",
+      "non_transferable": "removeObject의 내부 처리를 모든 CAE 참조를 안전하게 삭제·자동 복구하는 정책으로 가져오지 않는다.",
+      "unknowns": [
+        "선택 객체 삭제 후 property draft 유지/폐기/재연결",
+        "참조가 여러 문서에 걸릴 때 실패 원자성",
+        "Undo 후 solver native 번호의 복원"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "document-P05",
+      "requirement": "복수 변경을 transaction으로 묶고 Abort와 Undo의 전제를 드러낸다",
+      "products": [
+        "FreeCAD",
+        "OCCT"
+      ],
+      "source_ids": [
+        "document-D08",
+        "document-D12",
+        "document-D15",
+        "document-D16",
+        "document-D23"
+      ],
+      "asset_ids": [],
+      "prerequisite": "Undo가 활성화된 문서와 변경에 참여하는 속성/객체",
+      "actions": [
+        "한 문서 명령의 변경을 transaction에 기록한다.",
+        "정상 종료에서 commit, 실패/포기에서는 abort 경로를 비교한다.",
+        "사용자 Undo와 CLI Undo 활성화 조건을 별도로 확인한다."
+      ],
+      "documented_result": "FreeCAD는 객체·속성 변경 기록을 묶는다. OCAF는 속성이 Backup/Restore 계약에 참여해야 하며 transaction은 문서 중심이다.",
+      "implementation_locator": "FreeCAD Transaction::apply/addObjectChange 및 Document::_abortTransaction; TDocStd_Document OpenCommand/CommitCommand/AbortCommand/SetUndoLimit",
+      "failure_cancel_undo_save": "OCCT Undo는 기본 비활성이며 중첩 OpenCommand는 오류다. FreeCAD CLI도 별도 활성화가 필요하다. 작업 프로세스 중단·파일/네트워크 부작용 복원은 미확인.",
+      "transferable": "문서 변경 범위, Undo 활성화, 실패 복원의 참여 대상을 명시하는 원리를 참고한다.",
+      "non_transferable": "한 backend transaction의 Abort를 UI 모든 draft 취소, mesh worker kill, 여러 파일 원자 저장과 동치로 보지 않는다.",
+      "unknowns": [
+        "붙여넣기 검증 실패와 셀 draft의 transaction 참여",
+        "두 문서 동시 commit 실패의 모든 예외 경로",
+        "Undo history의 저장·재열기 보존 여부"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "document-P06",
+      "requirement": "모델 트리·의존성·재계산·저장 dirty를 같은 상태로 합치지 않는다",
+      "products": [
+        "FreeCAD",
+        "OCCT"
+      ],
+      "source_ids": [
+        "document-D04",
+        "document-D05",
+        "document-D14",
+        "document-D16",
+        "document-D22"
+      ],
+      "asset_ids": [
+        "document-S10",
+        "document-S11",
+        "document-S12"
+      ],
+      "prerequisite": "참조 관계가 있는 문서의 입력 속성이 바뀐 상태",
+      "actions": [
+        "Tools > Dependency graph로 읽기 전용 관계도를 연다.",
+        "Edit > Refresh/F5 또는 필요 객체의 강제 재계산을 읽는다.",
+        "touched/impacted/valid와 saved/changed API의 의미를 비교한다."
+      ],
+      "documented_result": "트리는 의존성 그래프와 다르며, FreeCAD 재계산 필요·오류와 OCCT 저장 이후 변경·재계산 유효성은 별도 신호다.",
+      "implementation_locator": "DocumentObject touch/isTouched/mustRecompute/isValid/getInList; TDocStd_Document IsChanged/IsValid; TFunction_Logbook SetTouched/SetImpacted/SetValid",
+      "failure_cancel_undo_save": "Graphviz 부재는 별도 오류 대화상자로 드러난다. 재계산 취소 후 전체 이전 결과 복원은 미확인.",
+      "transferable": "고수준 객체 변경 전파와 파생 결과 유효성의 구별을 참고한다.",
+      "non_transferable": "저장되지 않은 변경, 해석 입력 stale, solver 결과 stale를 같은 bool 또는 트리 순서로 대체하지 않는다.",
+      "unknowns": [
+        "각 앱의 재계산 취소 시 남는 파생 결과",
+        "CAE job 시작 뒤 대상 수정/삭제·문서 닫기는 jobs 담당과 연결 필요"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "document-P07",
+      "requirement": "문서 저장·재열기와 부분 실패의 실제 성공 조건을 확인한다",
+      "products": [
+        "FreeCAD",
+        "OCCT"
+      ],
+      "source_ids": [
+        "document-D03",
+        "document-D11",
+        "document-D12",
+        "document-D17"
+      ],
+      "asset_ids": [],
+      "prerequisite": "활성 문서와 저장 경로, 선택적으로 부분 로드 상태",
+      "actions": [
+        "File > Save/Ctrl+S로 첫 파일명 입력 또는 저장을 실행한다.",
+        "OCCT Open/Save/SaveAs 반환 상태와 기존 세션 문서 검사를 읽는다.",
+        "FreeCAD 저장 코드의 임시 파일·backup policy·부분 문서 분기를 읽는다."
+      ],
+      "documented_result": "첫 저장 대화상자는 Cancel/Esc로 종료할 수 있다. 저장 정책과 실제 쓰기 경로는 단순 boolean만으로 일반화할 수 없다.",
+      "implementation_locator": "FreeCAD Document.cpp saveAs/save/saveToFile/readObjects; TDocStd_Application IsInSession/Open/SaveAs/Save",
+      "failure_cancel_undo_save": "고정 FreeCAD 소스는 부분 문서 저장을 건너뛰고 true를 반환한다. 임시 파일 사용도 policy 조건이다. 손상/디스크 부족/rename 실패 뒤 보존과 재열기는 실행 미확인.",
+      "transferable": "사용자 저장 완료 판정에 실제 산출물·상태와 재열기 확인이 필요하다는 책임을 참고한다.",
+      "non_transferable": "API true 또는 파일 존재를 전체 자원·참조·native payload의 완전 저장 증거로 쓰지 않는다.",
+      "unknowns": [
+        "정전·디스크 부족·네트워크 경로의 원자성",
+        "저장 취소 직후 dirty 상태",
+        "Windows 한글 경로와 파일 잠금",
+        "모든 객체 ID·Undo history·뷰 상태의 왕복"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "document-P08",
+      "requirement": "외부 문서 참조의 저장 전제와 갱신 결손을 드러낸다",
+      "products": [
+        "FreeCAD",
+        "OCCT"
+      ],
+      "source_ids": [
+        "document-D02",
+        "document-D09",
+        "document-D17",
+        "document-D18"
+      ],
+      "asset_ids": [
+        "document-S03",
+        "document-S04",
+        "document-S05"
+      ],
+      "prerequisite": "source/target 두 문서와 외부 참조가 있는 상태",
+      "actions": [
+        "FreeCAD 문서 둘을 저장한 뒤 외부 Make link를 만든다.",
+        "저장 때 source 문서 저장 요청을 구분하고 필요하면 Import link로 로컬화한다.",
+        "OCCT 외부 링크 갱신과 복사 범위를 읽는다."
+      ],
+      "documented_result": "외부 링크의 대상과 파일 위치가 작업에 참여한다. 로컬 편입은 외부 파일 의존성을 바꾸는 별도 명령이다.",
+      "implementation_locator": "TDocStd_XLinkTool UpdateLink/CopyWithLink; TDocStd_Application Open/IsInSession; FreeCAD LinkImport 사용자 절차",
+      "failure_cancel_undo_save": "UpdateLink는 외부 링크 attribute가 없으면 오류다. 누락·이동·권한 오류의 UI 복구와 여러 파일 저장 실패는 미확인.",
+      "transferable": "저장되는 외부 참조의 해석·갱신·로컬화 책임을 참고한다.",
+      "non_transferable": "외부 CAD 링크를 solver INCLUDE와 동일 형식/namespace/갱신 정책으로 취급하지 않는다.",
+      "unknowns": [
+        "상대/절대 경로 이동 정책",
+        "닫힌 source 갱신·미해결 참조의 표시",
+        "모든 의존 문서의 동시 원자 저장"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "document-P09",
+      "requirement": "CAD topology 변경 뒤 파손을 진단하고 제한된 재연결을 제공한다",
+      "products": [
+        "FreeCAD",
+        "OCCT"
+      ],
+      "source_ids": [
+        "document-D06",
+        "document-D20",
+        "document-D23"
+      ],
+      "asset_ids": [
+        "document-S08",
+        "document-S09",
+        "document-S10",
+        "document-S11",
+        "document-S13"
+      ],
+      "prerequisite": "면에 부착된 sketch 또는 subshape 선택 참조가 있고 상위 형상이 변경되는 상태",
+      "actions": [
+        "예제에서 상위 sketch를 수정해 downstream 파손을 확인하는 문서 순서를 읽는다.",
+        "Map Mode의 참조를 고쳐 재연결하는 절차와 datum 대안을 비교한다.",
+        "OCCT Select(selection,context)/Solve의 성공 반환을 확인한다."
+      ],
+      "documented_result": "FreeCAD 문서는 오류 진단·후보·조건부 자동 복구를 구분한다. OCCT naming은 모델링 이력 정보와 재해결 성공을 필요로 한다.",
+      "implementation_locator": "TNaming_Selector Select/Solve/Arguments/NamedShape; OCAF Naming services의 topology evolution 전제",
+      "failure_cancel_undo_save": "Cancel 버튼 존재는 화면으로 확인되지만 취소 후 참조·geometry의 복원은 미확인. 모든 변경의 자동 복구는 보장하지 않는다.",
+      "transferable": "모호한 참조를 보존·진단하고 사용자가 재연결할 수 있게 하는 책임을 참고한다.",
+      "non_transferable": "FaceN 또는 같은 위치만으로 FE node/element 집합·하중·접촉이 재메시 뒤 복원된다고 주장하지 않는다.",
+      "unknowns": [
+        "서로 다른 CAD backend의 이력 대응",
+        "명시 FE 집합의 재메시 mapping",
+        "자동 후보의 정확도와 큰 조립 검증"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "document-P10",
+      "requirement": "고수준 문서 객체 패턴을 수백만 동일 엔티티에 그대로 확대하지 않는다",
+      "products": [
+        "OCCT"
+      ],
+      "source_ids": [
+        "document-D23",
+        "document-D21"
+      ],
+      "asset_ids": [
+        "document-S13"
+      ],
+      "prerequisite": "고수준 part·설정과 수많은 동일 종류 엔티티를 함께 표현하려는 설계 검토",
+      "actions": [
+        "TObj Applicability의 규모 제약과 배열 권고를 읽는다.",
+        "TDF label/attribute의 고수준 조작 단위와 대량 배열의 역할 차이를 정리한다."
+      ],
+      "documented_result": "OCAF 안내서는 TObj의 계층당 제한된 객체 규모에 적합하다고 설명하며 대량 동일 객체에는 배열 등 다른 표현을 권고한다.",
+      "implementation_locator": "OCAF guide TObj Package > Applicability; TDF_Label의 label/attribute 조작 API",
+      "failure_cancel_undo_save": "이것은 해당 안내서의 구조상 제약이며 현재 장비에서 측정한 임계값·성능 수치가 아니다.",
+      "transferable": "문서 객체·관계와 대량 균질 수치 자료의 책임을 분리하는 근거로 참고한다.",
+      "non_transferable": "TObj 권고를 Qt 트리 성능 한계 또는 CAE의 최대 요소 수로 일반화하지 않는다.",
+      "unknowns": [
+        "실제 수백만 요소 편집/Undo/저장 비용",
+        "Python 바인딩·VTK 변환 사본과 동시 worker 메모리"
+      ],
+      "status": "supported",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    },
+    {
+      "id": "document-P11",
+      "requirement": "취소/Discard가 복원하는 작업 범위를 확인한다",
+      "products": [
+        "AutoCAD"
+      ],
+      "source_ids": [
+        "document-D25"
+      ],
+      "asset_ids": [],
+      "prerequisite": "참조를 제자리 편집하는 작업 집합과 그 밖의 현재 도면 객체",
+      "actions": [
+        "참조 편집에서 Save Back과 Discard의 효과를 비교한다.",
+        "작업 집합 밖의 삭제가 Discard로 복원되지 않는 주의사항을 읽는다."
+      ],
+      "documented_result": "참조 작업 집합을 버리는 것과 현재 도면의 모든 변경을 Undo하는 것은 다르다.",
+      "implementation_locator": "공식 사용자 도움말만 확보; 내부 구현/API는 이번 범위에서 미확인",
+      "failure_cancel_undo_save": "작업 집합 밖 삭제는 Discard로 복원되지 않으며 별도 Undo가 필요하다. 버전2026 도움말의 명시 반례다.",
+      "transferable": "사용자에게 취소 범위를 구체적으로 정의해야 한다는 검토 항목으로 참고한다.",
+      "non_transferable": "이 상용 제품의 제한을 우리 취소 정책의 정답으로 가져오거나 다른 앱에 존재한다고 추정하지 않는다.",
+      "unknowns": [
+        "AutoCAD API transaction과 UI 참조 편집 연결",
+        "실제 앱 실행·원본 파일 복원·다중 문서 예외"
+      ],
+      "status": "partial",
+      "runtime_verified": false,
+      "full_workflow_ready": false
+    }
+  ],
+  "coverage": [
+    {
+      "requirement": "표시 이름·영속 정체성·native 번호",
+      "pattern_ids": [
+        "document-P01"
+      ],
+      "status": "partial",
+      "gap_reason": "UI 이름과 문서 키 구별은 확인; 삭제/Undo/native 번호의 수명 전체는 미확인"
+    },
+    {
+      "requirement": "prototype/instance/sharing/copy/detach·역참조 삭제",
+      "pattern_ids": [
+        "document-P02",
+        "document-P03",
+        "document-P04",
+        "document-P08"
+      ],
+      "status": "partial",
+      "gap_reason": "공유·복사·로컬화 API/조작 확보; UI draft 삭제·모든 외부 참조 복원 공백"
+    },
+    {
+      "requirement": "transaction·Undo·실패 rollback",
+      "pattern_ids": [
+        "document-P05",
+        "document-P11"
+      ],
+      "status": "partial",
+      "gap_reason": "backend 참여 조건과 상용 Discard 반례 확인; GUI draft/worker/외부 파일 전체 rollback 미확인"
+    },
+    {
+      "requirement": "dependency·recompute·dirty 차이",
+      "pattern_ids": [
+        "document-P06"
+      ],
+      "status": "supported",
+      "gap_reason": "좁은 상태/API 의미를 구분; 실제 재계산·job stale의 제품 연결 검증은 없음"
+    },
+    {
+      "requirement": "save/reopen·외부 reference·부분 실패",
+      "pattern_ids": [
+        "document-P07",
+        "document-P08"
+      ],
+      "status": "partial",
+      "gap_reason": "정상 조작/API와 부분 문서 예외 확보; 손상/이동/권한/취소/전원 실패 실행 없음"
+    },
+    {
+      "requirement": "topology 변경 뒤 subshape 참조 한계",
+      "pattern_ids": [
+        "document-P09"
+      ],
+      "status": "partial",
+      "gap_reason": "진단·수동 재연결·조건부 자동 복구의 한계 확인; FE 재메시 복원 미지원"
+    },
+    {
+      "requirement": "수백 파트·수백만 요소·여러 DOF로의 일반화 제약",
+      "pattern_ids": [
+        "document-P02",
+        "document-P09",
+        "document-P10"
+      ],
+      "status": "partial",
+      "gap_reason": "계층/배열 역할의 근거 확보; 실제 성능·formulation/DOF·solver mapping은 이 분야 근거가 아님"
+    }
+  ],
+  "search_log": [
+    {
+      "query": "FreeCAD object Name Label transaction undo link; OCCT OCAF naming persistence XDE",
+      "outcome": "공식 문서/소스의 이름·참조·transaction·교환 구조를 연결했다. 문서 snapshot과 최신 소스의 빌드 일치는 입증하지 않았다."
+    },
+    {
+      "query": "FreeCAD Name reuse Undo; delete referenced undo; save external missing Link",
+      "outcome": "공식 Object_name에서 삭제 후 Name 재사용을 확인했다. 검색의 오래된 포럼·서드파티 wrapper 주장은 새 근거로 수입하지 않았다. 현재 소스의 삭제·save 분기를 직접 읽었다."
+    },
+    {
+      "query": "OCCT TObj 1000; OCAF Undo disabled; topology naming guarantee",
+      "outcome": "현재 OCAF 안내서의 TObj 규모 주의와 공식 API의 Undo 기본 비활성, FreeCAD naming의 조건부 복구를 확인했다. 실제 성능 임계값으로 사용하지 않았다."
+    },
+    {
+      "query": "external reference discard changes not restore deleted object",
+      "outcome": "AutoCAD2026 공식 도움말에서 작업 집합 밖 삭제는 Discard로 복구되지 않는 명시 반례를 읽었다. 내부 API는 미확인으로 남겼다."
+    },
+    {
+      "query": "OCCT7.9.0 guide URL and current implementation paths",
+      "outcome": "7.9.0 URL은8.0.1 표시 페이지로 redirect된다. 현재 소스의 toolkit 재배치 때문에 추정 경로 일부404; 실제 TKCAF/TKLCAF 목록을 읽어 경로를 확인했다."
+    }
+  ],
+  "gaps": [
+    "V/R=0. 제품 실행·설치·직접 Undo/저장 재현을 하지 않았다.",
+    "FreeCAD 공식 문서 repository snapshot은2025-01-15이고 현재 소스는2026-10-29이다. 화면 빌드와 소스가 같은 버전이라고 주장하지 않는다.",
+    "OCCT 웹 안내서는8.0.1 표시이며 소스 commit53706f7은 별도 고정점이다. 과거7.9문서를 확보했다고 세지 않는다.",
+    "선택 객체 삭제 중 property draft, 다중 선택 mixed값/부분 적용, 붙여넣기 실패·검증과 문서 transaction 연결은 공백이다.",
+    "저장/취소의 디스크 부족·권한·파일 이동·잠금·부분 실패·한글 경로·닫힌 source 복구와 실제 왕복은 미검증이다.",
+    "원본/native ID의 삭제·Undo·import·재열기·재메시 수명 전체와 FE 집합/조건 복원은 미확인이다.",
+    "CAD 문서·assembly 구조는 FE 절점 공유, formulation별 DOF, solver equation numbering의 근거가 아니다.",
+    "공식 문서 그림은 진단/연결도의 근거이며 최신 상용 품질 스타일·font/DPI/포커스·전체 동작 재현 자산이 아니다.",
+    "소스 헤더의 라이선스 표시는 확인했으나 앱 배포·모든 의존성의 도입 검토나 라이선스 결론은 내리지 않았다."
+  ],
+  "runtime_verified": false,
+  "collected_on": "2026-10-30",
+  "asset_path_scope": "file is relative to the separate downloadable reference pack; public repository contains metadata and source_url, not these image bytes"
+}
