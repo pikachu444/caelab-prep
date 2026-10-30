@@ -1,0 +1,1504 @@
+{
+  "key": "aster",
+  "title": "Code_Aster",
+  "scope": "공식 v17 documentation command index와 source17.5.8 Cata 전체목록; 입력 생성 핵심규칙 Q01–Q12 및 실제 writer/예제 자료 수집. 모든 parameter 전수 의미검토나 생성기 구현/실행 검증 범위는 아님.",
+  "versions": {
+    "documentation": "official documentation branch v17, retrieved 2026-10-30; no exact minor build advertised",
+    "solver": "17.5.8 source release selected; no binary installed/tested",
+    "source": "c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+    "examples": "Code_Aster c1f5c46ef795e0bf6d82a29dc20da30d281535ce; AsterStudy 51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+    "binary_tested": null
+  },
+  "sources": [
+    {
+      "id": "aster-D01",
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/code_aster/Cata/Commands/__init__.py",
+      "title": "공식 Cata 전체 명령 집합의 bootstrap",
+      "kind": "code",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "locator": "_init_commands, commandStore",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/upstream/code_aster/Cata/Commands/__init__.py",
+      "sha256": "66a59d66b1623e6c4bb9c3d2007f35d34ba78a227cce600670944a2b54112b3a",
+      "size_bytes": 2125,
+      "redistribution": "permitted-with-notice",
+      "summary": "270파일에서 Command 인스턴스 및 특별 VARIABLE 도우미를 수집한다. 전체 개별 파일 provenance는 source-manifest.json에 있다."
+    },
+    {
+      "id": "aster-D03",
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/code_aster/Cata/Language/SyntaxObjects.py",
+      "title": "공식 command/SIMP/FACT/BLOC 객체와 조건",
+      "kind": "code",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "locator": "Command, SimpleKeyword, FactorKeyword, Bloc",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/upstream/code_aster/Cata/Language/SyntaxObjects.py",
+      "sha256": "9b3ec89a18a9b9c8db6ade0940d40f884fea16f571140cd33c998b038dcc886a",
+      "size_bytes": 25419,
+      "redistribution": "permitted-with-notice",
+      "summary": "명령 스키마 정의이며 solver 독립 실행기나 전체 물리 검증기가 아니다."
+    },
+    {
+      "id": "aster-D04",
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/run_aster/export.py",
+      "title": ".export parser와 writer",
+      "kind": "code",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "locator": "Export.parse, Export.__repr__, Export.write_to",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/upstream/run_aster/export.py",
+      "sha256": "df3e5c276882c9de3b3209cf77fbaa47c336ac4e6a18e0b46f47ffd1f6b42fae",
+      "size_bytes": 19980,
+      "redistribution": "permitted-with-notice",
+      "summary": "실행 프로파일의 P/A/F/R 행을 읽고 쓴다. 모델 자체를 .comm으로 생성하지 않는다."
+    },
+    {
+      "id": "aster-D05",
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/run_aster/command_files.py",
+      "title": ".comm 실행 전 텍스트 처리",
+      "kind": "code",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "locator": "add_import_commands, add_coding_line, stop_at_end",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/upstream/run_aster/command_files.py",
+      "sha256": "362ba846cad97c7a722a96b0196997df8f4af80c39bb93b437a3a246bafe1265",
+      "size_bytes": 5045,
+      "redistribution": "permitted-with-notice",
+      "summary": "명령 import와 UTF-8 선언 등을 보완하는 전처리이며 CAE 모델 writer가 아니다."
+    },
+    {
+      "id": "aster-D06",
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/LICENSE",
+      "title": "Code_Aster GPLv3 라이선스",
+      "kind": "code",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "locator": "GNU GPL version 3; 각 코드 헤더는 v3-or-later",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/upstream/LICENSE",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "size_bytes": 35147,
+      "redistribution": "permitted-with-notice",
+      "summary": "보관한 source subset은 원문 헤더와 이 LICENSE를 유지한다."
+    },
+    {
+      "id": "aster-D07",
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/astest/sslv139a.comm",
+      "title": "공식 축대칭 Fourier 선형 좌굴 검증 예제",
+      "kind": "code",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "locator": "DEBUT ... TEST_RESU ... FIN",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/upstream/astest/sslv139a.comm",
+      "sha256": "6bb67c282ab309f428ffb35f368fcf5f1092f9191ec3a11d8eb391b2b592d679",
+      "size_bytes": 3801,
+      "redistribution": "permitted-with-notice",
+      "summary": "상류 TEST_RESU 기대값이 있으며 이번 수집에서 실행하지 않았다."
+    },
+    {
+      "id": "aster-D08",
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/code_aster/Cata/Language/Rules.py",
+      "title": "필수/배타/조건 조합 검사 코드",
+      "kind": "code",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "locator": "AtLeastOne, ExactlyOne, AtMostOne, IfFirstAllPresent, OnlyFirstPresent, AllTogether",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/upstream/code_aster/Cata/Language/Rules.py",
+      "sha256": "b2f1b99fdfa579285bc5bde77d0aba417e239fa064f22cd0ae3994960e6b14ee",
+      "size_bytes": 5660,
+      "redistribution": "permitted-with-notice",
+      "summary": "해당 keyword 조합 규칙과 물리·수치 타당성은 별도 검증 단계다."
+    },
+    {
+      "id": "aster-D09",
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/code_aster/Cata/Commands/dyna_non_line.py",
+      "title": "동적 비선형 스키마",
+      "kind": "code",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "locator": "CONTACT, ETAT_INIT, SCHEMA_TEMPS, b_explicit",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/upstream/code_aster/Cata/Commands/dyna_non_line.py",
+      "sha256": "f30d5eac9d67438b5f6f786386555421194f1d2d0451c5fb1fc21858e078f91c",
+      "size_bytes": 17419,
+      "redistribution": "permitted-with-notice",
+      "summary": "SIMP/FACT/BLOC와 공유 C_ETAT_INIT/C_INCREMENT를 함께 보아야 한다."
+    },
+    {
+      "id": "aster-D02",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/other_pages/commands/index.html",
+      "title": "Code_Aster v17 manual-command-index",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "local_file": "tmp/aster/manual-command-index.html",
+      "sha256": "b1a168504e6d0805982c23eda48768ee4fc811495599b8ebfdf27164698a27f6",
+      "size_bytes": 563903,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D11",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.01.00/Rappels_sur_la_syntaxe_des_commandes_de_Code_Aster.html",
+      "title": "Code_Aster v17 syntax-reminders",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.01.00 §5",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/syntax-reminders.html",
+      "sha256": "d1a744bf1464419fcbf715ef12d4d3e079d22cbc404a7a385d19aa4380fe4cf1",
+      "size_bytes": 502765,
+      "redistribution": "locator-only",
+      "summary": "명령과 factor/simple keyword 구문"
+    },
+    {
+      "id": "aster-D12",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u1/u1.03.01/index.html",
+      "title": "Code_Aster v17 supervisor",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/supervisor.html",
+      "sha256": "99059054ce4fddb077d77bafc634d3c8b61b939165ac65123c2a6b2641f407a6",
+      "size_bytes": 503359,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D13",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u1/u1.05.00/index.html",
+      "title": "Code_Aster v17 simple-example",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/simple-example.html",
+      "sha256": "482b1ee4e44362147ab714e99cdea8c760055b3c7ff3453be0825cd8458d9e62",
+      "size_bytes": 501733,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D14",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.21.01/index.html",
+      "title": "Code_Aster v17 mesh-read",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/mesh-read.html",
+      "sha256": "86fb80142e6ddf11f9f3222e88e88afb745f6dce7e6c051a7261b6ec22d3825d",
+      "size_bytes": 499760,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D15",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u3/u3.01.00/index.html",
+      "title": "Code_Aster v17 mesh-format",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/mesh-format.html",
+      "sha256": "ece58ab5a1e87b56c3d1a0b76f52d04e02ea0d0d1cdb1b7527afe93364994ebf",
+      "size_bytes": 503055,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D16",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.41.01/index.html",
+      "title": "Code_Aster v17 model",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/model.html",
+      "sha256": "5be6453f798e785f4793b6c1a00c46e3b6f27e1abf5e1d334da8656602d57009",
+      "size_bytes": 500443,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D17",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.43.01/index.html",
+      "title": "Code_Aster v17 materials",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/materials.html",
+      "sha256": "e9a352b520a2df5927df79fe4715b41e7420bff741eaebecc17e348830fb8dc1",
+      "size_bytes": 532594,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D18",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.44.01/index.html",
+      "title": "Code_Aster v17 load",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/load.html",
+      "sha256": "df4bcff93354318b3bedfb757ea7e5fe0931a773f10561a54da8824d235d71ff",
+      "size_bytes": 510464,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D19",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.51.03/index.html",
+      "title": "Code_Aster v17 nonlinear",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/nonlinear.html",
+      "sha256": "7198f31b7b30dcf02172160ef3348b05d42bbe57b02133c38a0bdb278abb7587",
+      "size_bytes": 509010,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D20",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.11.03/index.html",
+      "title": "Code_Aster v17 restart",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/restart.html",
+      "sha256": "5935dfe96cf9f4ce483dc52a8763110e9c57c7cbdd33c7f436d668cc726e3172",
+      "size_bytes": 499568,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D21",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.13.01/index.html",
+      "title": "Code_Aster v17 include",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/include.html",
+      "sha256": "62345c85da2d7a256a9f99bdf56541fadbc6ac8aa243a36e2b016b12aa7c5205",
+      "size_bytes": 499658,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D22",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u7/u7.05.21/index.html",
+      "title": "Code_Aster v17 output",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/output.html",
+      "sha256": "aa2f21600e4c76c22e2e52bbb659953ee7daa9dc531197f29f2832d2b34a96b4",
+      "size_bytes": 503417,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D23",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u1/u1.04.00/notions_generales.html",
+      "title": "Code_Aster v17 launch",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U1.04.00 notions générales",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/launch.html",
+      "sha256": "50aa0f5bcb3ae3882ebd2ecc27a646527a9abbdcd3ea19ed9575406460328555",
+      "size_bytes": 517578,
+      "redistribution": "locator-only",
+      "summary": "실행 프로파일과 파일·실행 파라미터"
+    },
+    {
+      "id": "aster-D24",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.01.00/Paragraphe_Syntaxe.html",
+      "title": "Code_Aster v17 syntax-status",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.01.00 §3",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/syntax-status.html",
+      "sha256": "95efaf960730669ec465964b18081b725595fcb769ce06e48c27aeaadb18cc4f",
+      "size_bytes": 522985,
+      "redistribution": "locator-only",
+      "summary": "문서 메타기호·필수/선택·기본값·자료형"
+    },
+    {
+      "id": "aster-D25",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.01.00/Phases_de_v_rification___d_ex_cution.html",
+      "title": "Code_Aster v17 syntax-validation",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.01.00 §4",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/syntax-validation.html",
+      "sha256": "4b14b9ec7f9a1390e6199bb06862eb4606fc64a3f7c1f00c6cf0c42906277529",
+      "size_bytes": 501425,
+      "redistribution": "locator-only",
+      "summary": "catalogue 검증과 실행 검증의 경계"
+    },
+    {
+      "id": "aster-D26",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u1/u1.03.01/Le_langage_de_commande.html",
+      "title": "Code_Aster v17 concepts",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U1.03.01 §3",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/concepts.html",
+      "sha256": "67f96a5b592314ca9a70c29ed367d0ddc5c828a32382d4c77522dbe2bd7e642b",
+      "size_bytes": 522588,
+      "redistribution": "locator-only",
+      "summary": "Python 명령 파일과 typed concept"
+    },
+    {
+      "id": "aster-D27",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.44.01/G_n_ralit_s.html",
+      "title": "Code_Aster v17 units-loads",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.44.01 §2, 특히 §2.5",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/units-loads.html",
+      "sha256": "9e0591b9a0550da7d5e834782505a36b61591bd0319ec29e61331710a4471817",
+      "size_bytes": 537717,
+      "redistribution": "locator-only",
+      "summary": "하중·재료의 단위 일관성과 축대칭 1 radian"
+    },
+    {
+      "id": "aster-D28",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u3/u3.01.00/La_description_des_mailles.html",
+      "title": "Code_Aster v17 mesh-ordering",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U3.01.00 §4",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/mesh-ordering.html",
+      "sha256": "24feeb2cf19f76ff41820df0d4a25bec759d69ea89c25413a7e8fb653b0317a2",
+      "size_bytes": 512335,
+      "redistribution": "locator-only",
+      "summary": "요소 차수·방향과 연결 순서 도표"
+    },
+    {
+      "id": "aster-D29",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u3/u3.01.00/Structure_d_un_sous_fichier.html",
+      "title": "Code_Aster v17 mesh-blocks",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U3.01.00 §2",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/mesh-blocks.html",
+      "sha256": "5fbaf93a280be5fa8431a5e25981995d69facd16df7a02c91e967c1983458af8",
+      "size_bytes": 507107,
+      "redistribution": "locator-only",
+      "summary": "ASCII mesh 하위 블록·이름·그룹"
+    },
+    {
+      "id": "aster-D30",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.21.01/Op_randes.html",
+      "title": "Code_Aster v17 mesh-params",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.21.01 §3",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/mesh-params.html",
+      "sha256": "fa478cf2cc335dd40e3b7499ea7507d76a7a29fd4f380699c8c9eca4c1c60b58",
+      "size_bytes": 511864,
+      "redistribution": "locator-only",
+      "summary": "MED/ASTER/GMSH 읽기와 그룹·logical unit"
+    },
+    {
+      "id": "aster-D31",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.13.01/Operandes.html",
+      "title": "Code_Aster v17 include-params",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.13.01 §3",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/include-params.html",
+      "sha256": "114a556ffc8263c90d7f9a71b060be2fdbf66d03cf6d9eb1292cd8cae1b0af89",
+      "size_bytes": 503228,
+      "redistribution": "locator-only",
+      "summary": "INCLUDE UNITE/DONNEE 파일 참조"
+    },
+    {
+      "id": "aster-D32",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.41.01/Op_randes.html",
+      "title": "Code_Aster v17 model-params",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.41.01 §3",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/model-params.html",
+      "sha256": "880fe09301381503a71fcb98e2f78e7f9af09be067b6d704dc891d9b3718423d",
+      "size_bytes": 537998,
+      "redistribution": "locator-only",
+      "summary": "mesh와 모델·물리·정식화·할당 덮어쓰기"
+    },
+    {
+      "id": "aster-D33",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.43.01/Caract_ristiques__lastiques_g_n_rales.html",
+      "title": "Code_Aster v17 material-elas",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.43.01 §3",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/material-elas.html",
+      "sha256": "3a37f783f8e1dd98c42ceab1523174e2b06eb7ab873d5b30665d33fd8531a460",
+      "size_bytes": 578789,
+      "redistribution": "locator-only",
+      "summary": "탄성 물성 선언 관련 절"
+    },
+    {
+      "id": "aster-D34",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.51.03/Parametrisation_Calcul.html",
+      "title": "Code_Aster v17 nonlinear-time",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.51.03 §4",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/nonlinear-time.html",
+      "sha256": "e43c46441f808f32780c54f20801587c7b532610ad899d939743d8ad74fc05a4",
+      "size_bytes": 513535,
+      "redistribution": "locator-only",
+      "summary": "비선형 증분·pseudo time·재시작 구간"
+    },
+    {
+      "id": "aster-D35",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u7/u7.05.21/Op_randes_FORMAT__UNITE__PROC0__VERSION_MED_et_INFO.html",
+      "title": "Code_Aster v17 output-med",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U7.05.21 §3",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/output-med.html",
+      "sha256": "12daf5f45310eb13ac32008d73ab1826959c7c3742bdc371dda240c842d44baf",
+      "size_bytes": 503658,
+      "redistribution": "locator-only",
+      "summary": "MED 출력 버전과 unit80"
+    },
+    {
+      "id": "aster-D36",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.11.03/Op_randes.html",
+      "title": "Code_Aster v17 restart-params",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.11.03 §4",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/restart-params.html",
+      "sha256": "ed5bc14be54ed5eae17183e1aaba7b7ccb581a70ca356417a299a8b010afa4fb",
+      "size_bytes": 500734,
+      "redistribution": "locator-only",
+      "summary": "POURSUITE base 크기 관련 제한"
+    },
+    {
+      "id": "aster-D37",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u1/u1.05.00/Comment_r_diger_son_fichier_de_commandes__.html",
+      "title": "Code_Aster v17 write-comm",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U1.05.00 §3",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/write-comm.html",
+      "sha256": "f71b4bf9382bd4a8dbeba7e90bf7280a1fba281e5db7acb2298f6e06a959be7a",
+      "size_bytes": 509249,
+      "redistribution": "locator-only",
+      "summary": "mesh→model→material→load→solve→output 예제"
+    },
+    {
+      "id": "aster-D38",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.44.01/Chargements_de_type_Dirichlet_.html",
+      "title": "Code_Aster v17 load-dirichlet",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.44.01 Dirichlet 관련 절",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/load-dirichlet.html",
+      "sha256": "935e738e13f7832dd204a1284056169162f5b00e552a05f79eb67e5446bafd16",
+      "size_bytes": 626838,
+      "redistribution": "locator-only",
+      "summary": "구속·그룹·기계 하중 설정 관련 절"
+    },
+    {
+      "id": "aster-D39",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.44.11/index.html",
+      "title": "Code_Aster v17 contact",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/contact.html",
+      "sha256": "086eed14329c21e7244e90fb19394ac8e701d4a20e696ca376bc8bfdb67427db",
+      "size_bytes": 500349,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D40",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.53.01/index.html",
+      "title": "Code_Aster v17 dyna",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/dyna.html",
+      "sha256": "b0fca940e0818800c45282f3182a1ba4ce1013686db0af6bdeed4b35329e94a6",
+      "size_bytes": 503131,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D41",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.31.02/index.html",
+      "title": "Code_Aster v17 function",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/function.html",
+      "sha256": "d327dd31489a9f57eac2d00622bb8249de4fefc594a1902073826ded6085a42f",
+      "size_bytes": 501524,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D42",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.42.01/index.html",
+      "title": "Code_Aster v17 section",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/section.html",
+      "sha256": "46bedbe08395dcb64496095ddffc61383ed43b2edc0f6325b54aa71b27facb78",
+      "size_bytes": 513275,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D43",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u1/u1.03.00/index.html",
+      "title": "Code_Aster v17 units-general",
+      "kind": "index",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "공식 v17 문서 목차",
+      "access": "downloaded",
+      "read_depth": "index-read",
+      "local_file": "tmp/aster/units-general.html",
+      "sha256": "368d9ccc65726083f6661472f638cfe12faf40d0689a39da19b8ac6a7f2a9d44",
+      "size_bytes": 503230,
+      "redistribution": "locator-only",
+      "summary": "목차·관련 절 locator를 확보했다. 세부 원문 전체를 검토했다고 주장하지 않는다."
+    },
+    {
+      "id": "aster-D44",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.44.11/Principes.html",
+      "title": "Code_Aster v17 contact-principles",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.44.11 §3.1–3.2 관련 절",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/contact-principles.html",
+      "sha256": "f5e049b824b4748d299b53ebe446816db3fcecc4f51ece2f415a2c6b3bdf61e9",
+      "size_bytes": 597671,
+      "redistribution": "locator-only",
+      "summary": "접촉 master/slave 그룹·외향 법선·교집합 제한"
+    },
+    {
+      "id": "aster-D45",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.53.01/Op_randes.html",
+      "title": "Code_Aster v17 dyna-operands",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.53.01 §3.5,3.8,3.19",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/dyna-operands.html",
+      "sha256": "a5ccfeb0f709ea571d9ad2bed1c6c507cf7e968ede9adb039aba83c2de35e6ac",
+      "size_bytes": 555481,
+      "redistribution": "locator-only",
+      "summary": "contact/initial state 및 explicit/implicit 시간 적분 조건"
+    },
+    {
+      "id": "aster-D46",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.31.02/Op_randes.html",
+      "title": "Code_Aster v17 function-operands",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.31.02 §3.8–3.11",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/function-operands.html",
+      "sha256": "5a4263d6884aae0d448cb6af115f2d1c659f87b10e00e4345ce55b4ea216763d",
+      "size_bytes": 516268,
+      "redistribution": "locator-only",
+      "summary": "보간과 외삽·abscissa 검증"
+    },
+    {
+      "id": "aster-D47",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.42.01/Mot_cle_ORIENTATION.html",
+      "title": "Code_Aster v17 section-orientation",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.42.01 §10.2–10.7",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/section-orientation.html",
+      "sha256": "532a738b349a3898d36c57fca99668838148298804ec7f0cd03092f2a3283302",
+      "size_bytes": 529515,
+      "redistribution": "locator-only",
+      "summary": "단면/요소 국소 좌표계와 요소 연결 방향"
+    },
+    {
+      "id": "aster-D48",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u1/u1.03.00/Principes_g_n_raux.html",
+      "title": "Code_Aster v17 general-principles",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U1.03.00 §1",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/general-principles.html",
+      "sha256": "95f373937aa0d26712a65cd81e84ab9d08626ca35eefa5c38a32bc9384b55a10",
+      "size_bytes": 505928,
+      "redistribution": "locator-only",
+      "summary": "mesh 파일과 command 파일 분리"
+    },
+    {
+      "id": "aster-D49",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u1/u1.03.00/Commandes.html",
+      "title": "Code_Aster v17 general-commands",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U1.03.00 §3.4–3.6",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/general-commands.html",
+      "sha256": "895f2840770a74200f6bb9e77df56121ccc639c9cb5ff62a36b4524e7681cb30",
+      "size_bytes": 523773,
+      "redistribution": "locator-only",
+      "summary": "덮어쓰기·잔존 규칙·JEVEUX base"
+    },
+    {
+      "id": "aster-D50",
+      "url": "https://code-aster.org/doc/v17/manuals/man_u/u4/u4.11.03/But.html",
+      "title": "Code_Aster v17 restart-purpose",
+      "kind": "manual",
+      "version": "documentation branch v17; access 2026-10-30",
+      "locator": "U4.11.03 §1",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/aster/restart-purpose.html",
+      "sha256": "66975699cefc654ff51d65e402944e8eab34c78f559c69d73d36ed6b51285263",
+      "size_bytes": 500254,
+      "redistribution": "locator-only",
+      "summary": "v17 DEBUT 자동 이어서 실행과 POURSUITE 호환 경계"
+    },
+    {
+      "id": "aster-D101",
+      "url": "https://gitlab.com/salomemeca/modules/salome-asterstudy/-/blob/51c9fdd31b3d900fa6879ead66c58aa171c6ef3f/asterstudy/datamodel/study2comm.py",
+      "title": "AsterStudy 실제 .comm serializer",
+      "kind": "code",
+      "version": "AsterStudy source commit 51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+      "locator": "ExportToCommVisitor, study2comm",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/asterstudy-upstream/asterstudy/datamodel/study2comm.py",
+      "sha256": "82ebc62c510494cecae3b3ba889317b2dc86fe912745d384a1423b796ac37c91",
+      "size_bytes": 16655,
+      "redistribution": "permitted-with-notice",
+      "summary": "소스 관련 함수/시험을 읽었다. snapshot만으로 독립 실행하거나 Code_Aster 17.5.8 호환을 검증하지 않았다."
+    },
+    {
+      "id": "aster-D102",
+      "url": "https://gitlab.com/salomemeca/modules/salome-asterstudy/-/blob/51c9fdd31b3d900fa6879ead66c58aa171c6ef3f/asterstudy/datamodel/comm2study.py",
+      "title": "AsterStudy .comm→study importer",
+      "kind": "code",
+      "version": "AsterStudy source commit 51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+      "locator": "comm2study, _comm2study, CommandBuilder",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/asterstudy-upstream/asterstudy/datamodel/comm2study.py",
+      "sha256": "3eb615ca2bbd0e42f666cce87ecd6303832c65a697db7c472f78e97999938034",
+      "size_bytes": 30862,
+      "redistribution": "permitted-with-notice",
+      "summary": "소스 관련 함수/시험을 읽었다. snapshot만으로 독립 실행하거나 Code_Aster 17.5.8 호환을 검증하지 않았다."
+    },
+    {
+      "id": "aster-D103",
+      "url": "https://gitlab.com/salomemeca/modules/salome-asterstudy/-/blob/51c9fdd31b3d900fa6879ead66c58aa171c6ef3f/asterstudy/datamodel/stage.py",
+      "title": "Stage .comm 파일 출력",
+      "kind": "code",
+      "version": "AsterStudy source commit 51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+      "locator": "Stage.export",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/asterstudy-upstream/asterstudy/datamodel/stage.py",
+      "sha256": "4feeb9235890915f4225a79a9bfcd499913427c6a4d7226b5e446f60229645a7",
+      "size_bytes": 41035,
+      "redistribution": "permitted-with-notice",
+      "summary": "소스 관련 함수/시험을 읽었다. snapshot만으로 독립 실행하거나 Code_Aster 17.5.8 호환을 검증하지 않았다."
+    },
+    {
+      "id": "aster-D104",
+      "url": "https://gitlab.com/salomemeca/modules/salome-asterstudy/-/blob/51c9fdd31b3d900fa6879ead66c58aa171c6ef3f/asterstudy/datamodel/case.py",
+      "title": "Case .export 출력 진입",
+      "kind": "code",
+      "version": "AsterStudy source commit 51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+      "locator": "Case.export",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/asterstudy-upstream/asterstudy/datamodel/case.py",
+      "sha256": "5bc82d64c2c62a37d93ea4d65f0d1b6a1e7db90d661d74e6d04f51b6d12ff106",
+      "size_bytes": 26360,
+      "redistribution": "permitted-with-notice",
+      "summary": "소스 관련 함수/시험을 읽었다. snapshot만으로 독립 실행하거나 Code_Aster 17.5.8 호환을 검증하지 않았다."
+    },
+    {
+      "id": "aster-D105",
+      "url": "https://gitlab.com/salomemeca/modules/salome-asterstudy/-/blob/51c9fdd31b3d900fa6879ead66c58aa171c6ef3f/asterstudy/datamodel/engine/engine_utils.py",
+      "title": "Case 프로파일 및 의존 파일 출력",
+      "kind": "code",
+      "version": "AsterStudy source commit 51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+      "locator": "ExportCase.generate, write_export, export_comm",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/asterstudy-upstream/asterstudy/datamodel/engine/engine_utils.py",
+      "sha256": "510fb0d278bd206ce30e873572bb44be9da0bd978a13c7d6239e8d33f2c15ebb",
+      "size_bytes": 36530,
+      "redistribution": "permitted-with-notice",
+      "summary": "소스 관련 함수/시험을 읽었다. snapshot만으로 독립 실행하거나 Code_Aster 17.5.8 호환을 검증하지 않았다."
+    },
+    {
+      "id": "aster-D106",
+      "url": "https://gitlab.com/salomemeca/modules/salome-asterstudy/-/blob/51c9fdd31b3d900fa6879ead66c58aa171c6ef3f/COPYING",
+      "title": "AsterStudy GPLv3 라이선스",
+      "kind": "code",
+      "version": "AsterStudy source commit 51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+      "locator": "GNU GPLv3; source headers Version 3",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/asterstudy-upstream/COPYING",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "size_bytes": 35147,
+      "redistribution": "permitted-with-notice",
+      "summary": "소스 관련 함수/시험을 읽었다. snapshot만으로 독립 실행하거나 Code_Aster 17.5.8 호환을 검증하지 않았다."
+    },
+    {
+      "id": "aster-D107",
+      "url": "https://gitlab.com/salomemeca/modules/salome-asterstudy/-/blob/51c9fdd31b3d900fa6879ead66c58aa171c6ef3f/test/datamodel/test_conversion.py",
+      "title": "공식 converter 정상/오류/출력 QA",
+      "kind": "code",
+      "version": "AsterStudy source commit 51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+      "locator": "VALID, test_conversion_error1/3/4, test_unicode, test_logical_unit, test_limited_factor",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/asterstudy-upstream/test/datamodel/test_conversion.py",
+      "sha256": "0bd6fa9157738973376a7472299cf4e996641a38a0a22a4483b0e8b30e7c4077",
+      "size_bytes": 22196,
+      "redistribution": "permitted-with-notice",
+      "summary": "소스 관련 함수/시험을 읽었다. snapshot만으로 독립 실행하거나 Code_Aster 17.5.8 호환을 검증하지 않았다."
+    },
+    {
+      "id": "aster-D108",
+      "url": "https://gitlab.com/salomemeca/modules/salome-asterstudy/-/blob/51c9fdd31b3d900fa6879ead66c58aa171c6ef3f/test/datamodel/test_export.py",
+      "title": "공식 case export QA",
+      "kind": "code",
+      "version": "AsterStudy source commit 51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+      "locator": "상류 export 테스트 코드",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "examples/aster/asterstudy-upstream/test/datamodel/test_export.py",
+      "sha256": "80d1c88a613f4a866168b60c6beacaf46c76f60ccd449db303c2f6236db3dadc",
+      "size_bytes": 18977,
+      "redistribution": "permitted-with-notice",
+      "summary": "소스 관련 함수/시험을 읽었다. snapshot만으로 독립 실행하거나 Code_Aster 17.5.8 호환을 검증하지 않았다."
+    }
+  ],
+  "catalogue": {
+    "files": [
+      "catalogues/aster.csv",
+      "catalogues/aster-manual-index.csv",
+      "catalogues/aster-structure.json",
+      "catalogues/aster-index-reconciliation.json"
+    ],
+    "source_ids": [
+      "aster-D01",
+      "aster-D02"
+    ],
+    "scope": "Code_Aster17.5.8 Cata/Commands 전체와 v17 공식 command documentation index 각각",
+    "entry_count": 269,
+    "count_unit": "268 Command definitions +1 non-Command VARIABLE helper; 270 manual-document rows separately",
+    "completeness": "complete-index",
+    "reconciliation": "270 source files =135 OPER+116 MACRO+15 PROC+1 FIN_PROC+1 FORM+1 VariableSupport+1 bootstrap. Unique entries269, parse failures0. Manual unique document locators270; 4 documents have multiple source names. Source269 중 exact-title match266; IMPR_CORR_HOMO/LIRE_CORR_HOMO/VARIABLE 3개는 제목 exact match 없음. 문서 미존재나 미지원으로 단정하지 않는다.",
+    "full_field_review_complete": false,
+    "counts": {
+      "revision": "c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "file_count": 270,
+      "catalogue_entries": 269,
+      "actual_command_definitions": 268,
+      "special_helpers": 1,
+      "types": {
+        "OPER": 135,
+        "MACRO": 116,
+        "PROC": 15,
+        "FIN_PROC": 1,
+        "FORM": 1,
+        "VariableSupport": 1
+      },
+      "lexical_nested_syntax_nodes": {
+        "SIMP": 12604,
+        "FACT": 1130,
+        "BLOC": 1530
+      },
+      "files_without_command": [
+        "code_aster/Cata/Commands/__init__.py"
+      ],
+      "parse_issues": [],
+      "unique_entry_names": 269,
+      "manual_index_document_rows": 270,
+      "manual_index_unique_locators": 270,
+      "interpretation": "FIN_PROC is a special procedural Command; VARIABLE is not a Command. Counts are lexical SIMP/FACT/BLOC calls within top-level Command declaration call subtrees only, excluding file-local helper factory/function definitions and expanded Commons factories. They are not unique or semantically validated keyword parameters. Manual index counts are reconciled separately in aster-manual-index.csv.",
+      "full_parameter_review_complete": false,
+      "runtime_verified": false
+    },
+    "index_title_reconciliation": {
+      "source_entry_count": 269,
+      "source_entry_with_exact_name_in_manual_index_title": 266,
+      "source_entries_without_exact_title_match": [
+        "IMPR_CORR_HOMO",
+        "LIRE_CORR_HOMO",
+        "VARIABLE"
+      ],
+      "manual_documents_containing_multiple_source_names": 4,
+      "method": "Exact uppercase command token matching in titles only; no semantic support equivalence inferred"
+    }
+  },
+  "rules": [
+    {
+      "id": "aster-R01",
+      "question_ids": [
+        "Q01"
+      ],
+      "source_ids": [
+        "aster-D48",
+        "aster-D37",
+        "aster-D04"
+      ],
+      "statement": "입력은 Python .comm, 실행·파일 스테이징 .export, 독립 mesh(MED 권장)를 분리한다. 전통 명령 흐름은 DEBUT→LIRE_MAILLAGE→할당→계산→출력→FIN이나 low-level CA API 프로그램과 동일한 단일 ASCII deck으로 취급하지 않는다.",
+      "locator": "U1.03.00 §1; U1.05.00 §3; export.py module doc",
+      "examples": [],
+      "limits": "모든 계산 종류의 최소 실행 입력을 만든 상태는 아니다.",
+      "status": "documented"
+    },
+    {
+      "id": "aster-R02",
+      "question_ids": [
+        "Q02"
+      ],
+      "source_ids": [
+        "aster-D26",
+        "aster-D11",
+        "aster-D37",
+        "aster-D05"
+      ],
+      "statement": " .comm은 Python 구문이다. keyword=value와 쉼표, 문자열 enum, _F factor, 반복 tuple/list, # 주석, 괄호 내 여러 줄, 실수 지수 및 Python 표현식을 다룬다. run_aster는 UTF-8 coding line과 command import를 보완한다. fixed-width keyword deck 문법을 적용하지 않는다.",
+      "locator": "U1.03.01 §3; U4.01.00 syntax; command_files.py add_coding_line/add_import_commands",
+      "examples": [],
+      "limits": "임의 Python 프로그램의 graphical round-trip은 보장하지 않는다. .export는 별도 whitespace 기반 행 문법이다.",
+      "status": "documented"
+    },
+    {
+      "id": "aster-R03",
+      "question_ids": [
+        "Q03"
+      ],
+      "source_ids": [
+        "aster-D27",
+        "aster-D33"
+      ],
+      "statement": "힘·선하중·면하중·체적하중과 탄성 물성은 선택한 길이/힘 체계에서 일관되어야 한다. 축대칭 기계 하중의 일부는 1 radian 기준이다. 입력값·표시 단위·좌표계는 독립 관리해야 한다.",
+      "locator": "U4.44.01 §2.5; U4.43.01 elastic properties",
+      "examples": [],
+      "limits": "모든 열/유체/전기 물성의 단위 및 예외에 대한 전수 매핑은 없다.",
+      "status": "partial"
+    },
+    {
+      "id": "aster-R04",
+      "question_ids": [
+        "Q04"
+      ],
+      "source_ids": [
+        "aster-D24",
+        "aster-D25",
+        "aster-D03",
+        "aster-D08"
+      ],
+      "statement": "SIMP/FACT/BLOC와 statut/typ/min/max/defaut/into, 조건부 BLOC, AU_MOINS_UN·UN_PARMI 등 규칙을 구분한다. 문서의 필수/선택 표시나 diamond/slash는 그대로 출력할 문자도 빈 칸/0에 대한 공통 규칙도 아니다.",
+      "locator": "U4.01.00 §3–4; SyntaxObjects.py; Rules.py",
+      "examples": [],
+      "limits": "공유 Commons factory 확장, compat_syntax 별칭, callback sd_prod, 실행 조건을 전수 평가하지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "aster-R05",
+      "question_ids": [
+        "Q05"
+      ],
+      "source_ids": [
+        "aster-D31",
+        "aster-D04"
+      ],
+      "statement": " .export 파일 경로는 프로파일의 부모 디렉터리 기준이다. P/A/F/R와 D/R/C, logical unit을 구분한다. INCLUDE(UNITE=...)는 선언·스테이징 unit을 참조하고 DONNEE 경로 방식과 다르다. 명령 결과 concept은 사용 전에 정의되어야 한다.",
+      "locator": "export.py module doc, Export.parse; U4.13.01 §3",
+      "examples": [],
+      "limits": "중첩 INCLUDE와 임의 Python 파일 의존·외부 도구의 모든 경로 조합은 미실행.",
+      "status": "documented"
+    },
+    {
+      "id": "aster-R06",
+      "question_ids": [
+        "Q06"
+      ],
+      "source_ids": [
+        "aster-D26",
+        "aster-D29",
+        "aster-D101",
+        "aster-D107"
+      ],
+      "statement": "Python 변수, typed solver concept, mesh node/cell 이름, GROUP_NO/GROUP_MA는 서로 다른 namespace다. 구형 ASCII mesh의 8자 entity/24자 group 제약을 Python 변수명 전체에 적용하지 않는다. AsterStudy에도 long_mesh_name 정상변환 예제가 있다.",
+      "locator": "U1.03.01 §3; U3.01.00 §2; test_conversion.py VALID[test6]",
+      "examples": [],
+      "limits": "17.5.8 모든 native 명명 규약·충돌·동적 Python 범위를 전수 검증하지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "aster-R07",
+      "question_ids": [
+        "Q07"
+      ],
+      "source_ids": [
+        "aster-D28",
+        "aster-D30",
+        "aster-D47"
+      ],
+      "statement": "LIRE_MAILLAGE(MED)는 node/cell/type/connectivity/group을 읽고 MED family에서 그룹을 복원한다. 면 법선·요소 연결 노드 순서와 beam/shell 국소 방향은 별개다. ASCII ASTER와 MED/GMSH 연결 변환을 형식별로 검증해야 한다.",
+      "locator": "U3.01.00 §4; U4.21.01 §3; U4.42.01 §10",
+      "examples": [],
+      "limits": "모든 요소의 그림·고차 midside 순서 및 퇴화 허용 조합을 재기술하거나 MED writer round-trip 검증하지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "aster-R08",
+      "question_ids": [
+        "Q08"
+      ],
+      "source_ids": [
+        "aster-D32",
+        "aster-D49",
+        "aster-D47",
+        "aster-D07"
+      ],
+      "statement": "mesh topology와 AFFE_MODELE의 PHENOMENE/MODELISATION/FORMULATION, DEFI_MATERIAU, AFFE_MATERIAU, AFFE_CARA_ELEM 및 group 할당을 분리한다. 다중 assignment의 마지막 할당 우선과 일부 성분 잔존 규칙을 보존해야 한다.",
+      "locator": "U4.41.01 §3; U1.03.00 §3.4–3.5; U4.42.01 §10; sslv139a.comm",
+      "examples": [],
+      "limits": "다중 part를 단일 part card로 대응시키는 형식이 아니며 모든 modelisation·재료 조합을 생성해 본 것은 아니다.",
+      "status": "documented"
+    },
+    {
+      "id": "aster-R09",
+      "question_ids": [
+        "Q09"
+      ],
+      "source_ids": [
+        "aster-D27",
+        "aster-D38",
+        "aster-D44",
+        "aster-D45",
+        "aster-D46",
+        "aster-D47",
+        "aster-D09"
+      ],
+      "statement": "기계 하중/구속 concept을 해석 EXCIT에 참조하고 ETAT_INIT는 초기 상태용이다. DEFI_CONTACT의 master/slave mesh groups·외향 법선·분리 조건을 검사해야 한다. 곡선 DEFI_FONCTION의 interpolation과 extrapolation은 별개이며 범위 밖 EXCLU는 계산 오류 조건이다. 국소 frame은 요소 종류별 정의를 따른다.",
+      "locator": "U4.44.11 §3.1.2; U4.53.01 §3.5/3.8; U4.31.02 §3.8–3.11; U4.42.01 §10",
+      "examples": [],
+      "limits": "U2.04.04 contact methodology와 모든 formulation/large sliding 조합은 별도 심화 검토 대상이다.",
+      "status": "partial"
+    },
+    {
+      "id": "aster-R10",
+      "question_ids": [
+        "Q10"
+      ],
+      "source_ids": [
+        "aster-D34",
+        "aster-D45",
+        "aster-D35"
+      ],
+      "statement": "STAT_NON_LINE의 INST는 물리 시간이 아닐 수 있는 load increment parameter다. DYNA_NON_LINE은 SCHEMA_TEMPS에 따라 implicit Newmark/HHT 계열 또는 explicit DIFF_CENT/TCHAMWA 조건이 다르다. 결과 저장 ARCHIVAGE와 IMPR_RESU(MED) 출력·unit80·MED version은 분리한다.",
+      "locator": "U4.51.03 §4; U4.53.01 §3.19; U7.05.21 §3",
+      "examples": [],
+      "limits": "모든 solver-control 조합·시간 적분의 수치 적합성을 검증한 상태는 아니다.",
+      "status": "documented"
+    },
+    {
+      "id": "aster-R11",
+      "question_ids": [
+        "Q10"
+      ],
+      "source_ids": [
+        "aster-D50",
+        "aster-D36",
+        "aster-D49",
+        "aster-D04"
+      ],
+      "statement": "v17에서 POURSUITE는 호환 명령이며 base가 있으면 DEBUT도 자동으로 기존 계산을 이어간다. base 보존/불러오기와 결과 concept의 ETAT_INIT·reuse, 외부 process cancel은 서로 다른 상태다.",
+      "locator": "U4.11.03 §1/4; U1.03.00 §3.6",
+      "examples": [],
+      "limits": "프로세스 취소 후 복구 가능성, base 버전 간 호환, 저장 보장은 실행 확인하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "aster-R12",
+      "question_ids": [
+        "Q11"
+      ],
+      "source_ids": [
+        "aster-D07",
+        "aster-D04",
+        "aster-D101",
+        "aster-D103",
+        "aster-D104",
+        "aster-D105",
+        "aster-D107"
+      ],
+      "statement": "공식 sslv139a의 .comm/.export/.datg/.mmed를 실제 보유한다. .datg는 mesh 생성 provenance용 Cast3M 문법이며 .comm INCLUDE가 아니다. 공식 TEST_RESU 수치 기대값, AsterStudy 정상/오류변환 QA는 상류 선언이다.",
+      "locator": "astest/sslv139a.*; AsterStudy test_conversion.py",
+      "examples": [],
+      "limits": "모델의 기대값을 여기서 관측한 값으로 쓰지 않으며 변환기 오류시험을 solver 오류시험이라고 부르지 않는다.",
+      "status": "documented"
+    },
+    {
+      "id": "aster-R13",
+      "question_ids": [
+        "Q11"
+      ],
+      "source_ids": [
+        "aster-D01",
+        "aster-D03",
+        "aster-D04",
+        "aster-D05",
+        "aster-D101",
+        "aster-D102",
+        "aster-D103",
+        "aster-D104",
+        "aster-D105"
+      ],
+      "statement": "Cata는 schema, run_aster.Export는 profile parser/writer, command_files는 text preprocessor, AsterStudy study2comm/Stage.export는 실제 .comm serializer, comm2study는 importer다. low-level libaster/solver 실행 및 MED 생성기는 이들 writer와 별도다.",
+      "locator": "각 source locator의 실제 class/function",
+      "examples": [],
+      "limits": "수집 snapshot은 전체 dependency closure나 즉시 실행되는 독립 writer SDK가 아니다.",
+      "status": "documented"
+    },
+    {
+      "id": "aster-R14",
+      "question_ids": [
+        "Q12"
+      ],
+      "source_ids": [
+        "aster-D01",
+        "aster-D03",
+        "aster-D06",
+        "aster-D106",
+        "aster-D25"
+      ],
+      "statement": "source tag17.5.8와 commit, 문서 branch v17, AsterStudy commit을 별도 고정한다. catalogue 구조 검사만으로 mesh·행렬·물리·수렴 타당성을 증명하지 않는다. code 원문 GPL 조건/헤더를 보존하고 manual 전문은 공개 배포하지 않는다.",
+      "locator": "source manifests; licenses; U4.01.00 §4",
+      "examples": [],
+      "limits": "모든 버전 차이와 unsupported 조합은 미검토; solver read/run, libaster, AsterStudy 시험 실행 모두 미수행.",
+      "status": "partial"
+    }
+  ],
+  "examples": [
+    {
+      "id": "aster-E01",
+      "source_ids": [
+        "aster-D07",
+        "aster-D06"
+      ],
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/astest/sslv139a.comm",
+      "file": "examples/aster/upstream/astest/sslv139a.comm",
+      "sha256": "6bb67c282ab309f428ffb35f368fcf5f1092f9191ec3a11d8eb391b2b592d679",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "kind": "official-deck",
+      "purpose": "축대칭 Fourier 좌굴 모델·하중·TEST_RESU",
+      "expected": "Upstream .comm TEST_RESU CHAR_CRIT VALE_CALC=-848467.4364780696 / VALE_REFE=-8.49350940e05, declared precision=2e-3; not observed here",
+      "license": "GPL-3.0-or-later (repository LICENSE and public testcase source context; retain notices)",
+      "redistribution": "permitted-with-notice",
+      "solver_executed": false
+    },
+    {
+      "id": "aster-E02",
+      "source_ids": [
+        "aster-D07",
+        "aster-D06"
+      ],
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/astest/sslv139a.export",
+      "file": "examples/aster/upstream/astest/sslv139a.export",
+      "sha256": "e994953a1dc3ce5e369a2e9da80dffd217e20299df9b6fd919cf515963306ac9",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "kind": "official-deck",
+      "purpose": "전체 testcase의4개 파일과 unit/time/memory 프로파일",
+      "expected": "상류 testcase 연관 파일; 자체 solver 관측 없음",
+      "license": "GPL-3.0-or-later (repository LICENSE and public testcase source context; retain notices)",
+      "redistribution": "permitted-with-notice",
+      "solver_executed": false
+    },
+    {
+      "id": "aster-E03",
+      "source_ids": [
+        "aster-D07",
+        "aster-D06"
+      ],
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/astest/sslv139a.datg",
+      "file": "examples/aster/upstream/astest/sslv139a.datg",
+      "sha256": "1b150a94567f93c66674942bae24eadab2c292c5802196b020cbf0fb45de4077",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "kind": "official-mesh-asset",
+      "purpose": "Cast3M mesh 생성 스크립트 원문",
+      "expected": "상류 testcase 연관 파일; 자체 solver 관측 없음",
+      "license": "GPL-3.0-or-later (repository LICENSE and public testcase source context; retain notices)",
+      "redistribution": "permitted-with-notice",
+      "solver_executed": false
+    },
+    {
+      "id": "aster-E04",
+      "source_ids": [
+        "aster-D07",
+        "aster-D06"
+      ],
+      "url": "https://gitlab.com/codeaster/src/-/blob/c1f5c46ef795e0bf6d82a29dc20da30d281535ce/astest/sslv139a.mmed",
+      "file": "examples/aster/upstream/astest/sslv139a.mmed",
+      "sha256": "77ee2320f304b68a99304dedd26d3926682c636c1d8678a3fecdd2d52f5e9547",
+      "version": "17.5.8 / c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "kind": "official-mesh-asset",
+      "purpose": "실제 binary MED mesh; Git LFS pointer 아님",
+      "expected": "상류 testcase 연관 파일; 자체 solver 관측 없음",
+      "license": "GPL-3.0-or-later (repository LICENSE and public testcase source context; retain notices)",
+      "redistribution": "permitted-with-notice",
+      "solver_executed": false
+    },
+    {
+      "id": "aster-E05",
+      "source_ids": [
+        "aster-D107",
+        "aster-D106"
+      ],
+      "url": "https://gitlab.com/salomemeca/modules/salome-asterstudy/-/blob/51c9fdd31b3d900fa6879ead66c58aa171c6ef3f/test/datamodel/test_conversion.py",
+      "file": "examples/aster/asterstudy-upstream/test/datamodel/test_conversion.py",
+      "sha256": "0bd6fa9157738973376a7472299cf4e996641a38a0a22a4483b0e8b30e7c4077",
+      "version": "51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+      "kind": "source-example",
+      "purpose": "정상 .comm 출력과 unsupported Python·NameError·indent·표현식 등 converter 오류 예제",
+      "expected": "상류 raises/check_export assertions; 이번 작업에서 QA나 solver 미실행",
+      "license": "GPL-3.0-only",
+      "redistribution": "permitted-with-notice",
+      "solver_executed": false
+    }
+  ],
+  "code_assets": [
+    {
+      "id": "aster-C01",
+      "source_ids": [
+        "aster-D01",
+        "aster-D03",
+        "aster-D08"
+      ],
+      "role": "schema",
+      "repository": "https://gitlab.com/codeaster/src",
+      "revision": "c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "paths": [
+        "code_aster/Cata/Commands/__init__.py",
+        "code_aster/Cata/Language/SyntaxObjects.py",
+        "code_aster/Cata/Language/SyntaxChecker.py",
+        "code_aster/Cata/Language/Rules.py"
+      ],
+      "scope": "Commands 270 source files plus whole Cata Commons/Language acquired",
+      "limits": "268 actual Command definitions + VARIABLE helper; callbacks/conditional parameter semantics not exhaustively resolved",
+      "license": "GPL-3.0-or-later",
+      "local_files": [
+        "examples/aster/upstream/code_aster/Cata/Commands/__init__.py",
+        "examples/aster/upstream/code_aster/Cata/Language/SyntaxObjects.py",
+        "examples/aster/upstream/code_aster/Cata/Language/SyntaxChecker.py",
+        "examples/aster/upstream/code_aster/Cata/Language/Rules.py"
+      ],
+      "executed": false
+    },
+    {
+      "id": "aster-C02",
+      "source_ids": [
+        "aster-D04",
+        "aster-D05"
+      ],
+      "role": "parser/writer and text-preprocessor",
+      "repository": "https://gitlab.com/codeaster/src",
+      "revision": "c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+      "paths": [
+        "run_aster/export.py",
+        "run_aster/command_files.py",
+        "run_aster/run.py"
+      ],
+      "scope": "Actual .export profile parsing/serialization; .comm import/coding preprocessing",
+      "limits": "Not a general CAE-to-.comm model generator; runtime dependencies not installed/tested",
+      "license": "GPL-3.0-or-later",
+      "local_files": [
+        "examples/aster/upstream/run_aster/export.py",
+        "examples/aster/upstream/run_aster/command_files.py",
+        "examples/aster/upstream/run_aster/run.py"
+      ],
+      "executed": false
+    },
+    {
+      "id": "aster-C03",
+      "source_ids": [
+        "aster-D101",
+        "aster-D103",
+        "aster-D104",
+        "aster-D105"
+      ],
+      "role": "writer",
+      "repository": "https://gitlab.com/salomemeca/modules/salome-asterstudy",
+      "revision": "51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+      "paths": [
+        "asterstudy/datamodel/study2comm.py",
+        "asterstudy/datamodel/stage.py",
+        "asterstudy/datamodel/case.py",
+        "asterstudy/datamodel/engine/engine_utils.py"
+      ],
+      "scope": "Actual study dependency ordering, .comm serialization and case .export/file export",
+      "limits": "69-file research subset; depends on AsterStudy common/SALOME/asrun/catalogue versions; not standalone and Code_Aster17.5.8 compatibility not executed. limit>0 can intentionally truncate to invalid input.",
+      "license": "GPL-3.0-only",
+      "local_files": [
+        "examples/aster/asterstudy-upstream/asterstudy/datamodel/study2comm.py",
+        "examples/aster/asterstudy-upstream/asterstudy/datamodel/stage.py",
+        "examples/aster/asterstudy-upstream/asterstudy/datamodel/case.py",
+        "examples/aster/asterstudy-upstream/asterstudy/datamodel/engine/engine_utils.py"
+      ],
+      "executed": false
+    },
+    {
+      "id": "aster-C04",
+      "source_ids": [
+        "aster-D102",
+        "aster-D107"
+      ],
+      "role": "parser/converter and QA source",
+      "repository": "https://gitlab.com/salomemeca/modules/salome-asterstudy",
+      "revision": "51c9fdd31b3d900fa6879ead66c58aa171c6ef3f",
+      "paths": [
+        "asterstudy/datamodel/comm2study.py",
+        "test/datamodel/test_conversion.py",
+        "test/datamodel/test_export.py"
+      ],
+      "scope": "Graphical conversion with explicit unsupported-Python/error cases and declared output tests",
+      "limits": "Importer is not universal arbitrary-Python AST round-trip and has no solver-runtime proof",
+      "license": "GPL-3.0-only",
+      "local_files": [
+        "examples/aster/asterstudy-upstream/asterstudy/datamodel/comm2study.py",
+        "examples/aster/asterstudy-upstream/test/datamodel/test_conversion.py",
+        "examples/aster/asterstudy-upstream/test/datamodel/test_export.py"
+      ],
+      "executed": false
+    }
+  ],
+  "coverage": [
+    {
+      "question_id": "Q01",
+      "rule_ids": [
+        "aster-R01"
+      ],
+      "status": "documented",
+      "missing": "모든 계산 종류의 최소 실행 입력을 만든 상태는 아니다."
+    },
+    {
+      "question_id": "Q02",
+      "rule_ids": [
+        "aster-R02"
+      ],
+      "status": "documented",
+      "missing": "임의 Python 프로그램의 graphical round-trip은 보장하지 않는다. .export는 별도 whitespace 기반 행 문법이다."
+    },
+    {
+      "question_id": "Q03",
+      "rule_ids": [
+        "aster-R03"
+      ],
+      "status": "partial",
+      "missing": "모든 열/유체/전기 물성의 단위 및 예외에 대한 전수 매핑은 없다."
+    },
+    {
+      "question_id": "Q04",
+      "rule_ids": [
+        "aster-R04"
+      ],
+      "status": "partial",
+      "missing": "공유 Commons factory 확장, compat_syntax 별칭, callback sd_prod, 실행 조건을 전수 평가하지 않았다."
+    },
+    {
+      "question_id": "Q05",
+      "rule_ids": [
+        "aster-R05"
+      ],
+      "status": "documented",
+      "missing": "중첩 INCLUDE와 임의 Python 파일 의존·외부 도구의 모든 경로 조합은 미실행."
+    },
+    {
+      "question_id": "Q06",
+      "rule_ids": [
+        "aster-R06"
+      ],
+      "status": "partial",
+      "missing": "17.5.8 모든 native 명명 규약·충돌·동적 Python 범위를 전수 검증하지 않았다."
+    },
+    {
+      "question_id": "Q07",
+      "rule_ids": [
+        "aster-R07"
+      ],
+      "status": "partial",
+      "missing": "모든 요소의 그림·고차 midside 순서 및 퇴화 허용 조합을 재기술하거나 MED writer round-trip 검증하지 않았다."
+    },
+    {
+      "question_id": "Q08",
+      "rule_ids": [
+        "aster-R08"
+      ],
+      "status": "documented",
+      "missing": "다중 part를 단일 part card로 대응시키는 형식이 아니며 모든 modelisation·재료 조합을 생성해 본 것은 아니다."
+    },
+    {
+      "question_id": "Q09",
+      "rule_ids": [
+        "aster-R09"
+      ],
+      "status": "partial",
+      "missing": "U2.04.04 contact methodology와 모든 formulation/large sliding 조합은 별도 심화 검토 대상이다."
+    },
+    {
+      "question_id": "Q10",
+      "rule_ids": [
+        "aster-R10",
+        "aster-R11"
+      ],
+      "status": "documented",
+      "missing": "모든 solver-control 조합·시간 적분의 수치 적합성을 검증한 상태는 아니다.; 프로세스 취소 후 복구 가능성, base 버전 간 호환, 저장 보장은 실행 확인하지 않았다."
+    },
+    {
+      "question_id": "Q11",
+      "rule_ids": [
+        "aster-R12",
+        "aster-R13"
+      ],
+      "status": "documented",
+      "missing": "모델의 기대값을 여기서 관측한 값으로 쓰지 않으며 변환기 오류시험을 solver 오류시험이라고 부르지 않는다.; 수집 snapshot은 전체 dependency closure나 즉시 실행되는 독립 writer SDK가 아니다."
+    },
+    {
+      "question_id": "Q12",
+      "rule_ids": [
+        "aster-R14"
+      ],
+      "status": "partial",
+      "missing": "모든 버전 차이와 unsupported 조합은 미검토; solver read/run, libaster, AsterStudy 시험 실행 모두 미수행."
+    }
+  ],
+  "acquisition_log": [
+    {
+      "target": "GitLab repository files API / Code_Aster17.5.8 Commands",
+      "outcome": "Metadata tree270 obtained; per-file acquisition rate-limited HTTP429, recovered with exact-revision sparse Git clone; final source manifest recomputed from actual files."
+    },
+    {
+      "target": "GitLab archive API path=Cata",
+      "outcome": "HTTP429; not relied upon."
+    },
+    {
+      "target": "https://code-aster.org/doc/v17/commande.html",
+      "outcome": "HTTP404 old document layout; current official manuals/man_u/... index retrieved and parsed."
+    },
+    {
+      "target": "https://codeaster.readthedocs.io/en/latest/devguide/run_aster/run_aster.html",
+      "outcome": "Direct urllib HTTP403; official pinned source run_aster/export.py/readable documentation used instead."
+    },
+    {
+      "target": "astest/ssll100a.*, sparse ssll001a.*",
+      "outcome": "Candidate filenames absent/404; not counted. Complete existing sslv139a4-file export bundle acquired."
+    },
+    {
+      "target": "https://gitlab.com/codeaster/asterstudy.git",
+      "outcome": "not public/readable at this candidate URL; official salomemeca/modules/salome-asterstudy acquired instead."
+    },
+    {
+      "target": "Solver or importer execution",
+      "outcome": "Not performed; Python AST extraction/reconciliation only. No libaster import or .comm execution."
+    }
+  ],
+  "gaps": [
+    "Conditional BLOC evaluation, Commons factory expansion, compat_syntax aliases and sd_prod callbacks are not a completed per-parameter schema.",
+    "Complete per-element MED/ASTER node permutation and degenerate-cell tables have not been reimplemented or round-trip tested.",
+    "All physics-specific units/material law combinations, contact methodology U2.04.04 and every modelisation compatibility are not exhaustively reviewed.",
+    "AsterStudy source revision and Code_Aster17.5.8 interoperability/dependency closure are untested.",
+    "No solver binary, libaster runtime, MED reader/writer run, cancellation/restart experiment, or numerical result observation.",
+    "Manual originals are temporary only. Included GPL source subsets retain notices; do not treat proprietary or merely public third-party documentation as redistributable."
+  ],
+  "runtime_verified": false
+}

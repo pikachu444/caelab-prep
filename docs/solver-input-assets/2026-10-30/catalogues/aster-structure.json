@@ -1,0 +1,30 @@
+{
+  "revision": "c1f5c46ef795e0bf6d82a29dc20da30d281535ce",
+  "file_count": 270,
+  "catalogue_entries": 269,
+  "actual_command_definitions": 268,
+  "special_helpers": 1,
+  "types": {
+    "OPER": 135,
+    "MACRO": 116,
+    "PROC": 15,
+    "FIN_PROC": 1,
+    "FORM": 1,
+    "VariableSupport": 1
+  },
+  "lexical_nested_syntax_nodes": {
+    "SIMP": 12604,
+    "FACT": 1130,
+    "BLOC": 1530
+  },
+  "files_without_command": [
+    "code_aster/Cata/Commands/__init__.py"
+  ],
+  "parse_issues": [],
+  "unique_entry_names": 269,
+  "manual_index_document_rows": 270,
+  "manual_index_unique_locators": 270,
+  "interpretation": "FIN_PROC is a special procedural Command; VARIABLE is not a Command. Counts are lexical SIMP/FACT/BLOC calls within top-level Command declaration call subtrees only, excluding file-local helper factory/function definitions and expanded Commons factories. They are not unique or semantically validated keyword parameters. Manual index counts are reconciled separately in aster-manual-index.csv.",
+  "full_parameter_review_complete": false,
+  "runtime_verified": false
+}

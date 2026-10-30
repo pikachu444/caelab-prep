@@ -4,7 +4,7 @@
 
 **OpenRadioss / OpenCourant는 첫 번째 적용 대상입니다.** 공용 기반을 사용하는 첫 응용 프로그램으로 독립 데스크톱 전처리기를 개발합니다. 이 앱에서는 형상·메시를 불러와 재료·단면·접촉·하중·구속·초기조건과 해석 제어를 편집하고 Starter/Engine 파일을 작성하는 흐름을 목표로 합니다. 다른 CAE 프로그램의 재사용은 공용 기반의 설계 범위에 포함되며, 현재 여러 솔버를 지원한다는 뜻은 아닙니다.
 
-**현재 상태: 실행 가능한 첫 네이티브 RAD 편집기와 문서·명령·선택·저장 코어를 구현했습니다.** 기존 RAD의 지원 필드를 편집하고 Undo/Redo, 작업 문서 저장·재열기, RAD 출력을 수행합니다. CAD에서 새 해석 모델 전체를 구성하는 프로그램은 아직 아닙니다.
+**현재 상태: 기존 RAD의 일부 지원 필드를 편집하는 네이티브 시제품과 문서·명령·선택·저장 코어를 구현했습니다.** 기존 RAD의 지원 필드를 편집하고 Undo/Redo, 작업 문서 저장·재열기, RAD 출력을 수행합니다. CAD에서 새 해석 모델 전체를 구성하는 프로그램은 아직 아닙니다.
 
 공용 GUI 컴포넌트 체계와 실행형 갤러리는 정식 개발 산출물입니다. 현재 이 저장소에는 실행형 갤러리가 없으며 공용 위젯·앱 셸 전체가 분리된 상태도 아닙니다. RAD용 세션·화면 전체를 솔버 독립 공용 API나 공용 앱 셸로 간주하지 않습니다.
 
@@ -74,6 +74,8 @@ caelab-prep mesh part.step --output mesh-assets --size 2.0
 
 ## 확보한 개발 자산
 
+[7개 솔버의 입력 생성 자료](docs/solver-input-assets/2026-10-30/README.md)에 Radioss/OpenCourant·LS-DYNA·Abaqus·CalculiX·Code_Aster·OptiStruct·MSC Nastran의 공식 전체 목록, 관련 생성 규칙, 실제 예제·공개 코드의 역할과 버전·출처·취득 해시를 정리했습니다. 기존 RAD field patch 메타데이터·회귀 입력은 새 모델의 전수 생성 명세가 아닙니다. 목록/원문 취득·관련 절 독해·전수 field schema·생성기 구현·실제 solver 실행을 구분하며, 이번 자료 수집으로 제품의 지원 범위가 늘어난 것은 아닙니다.
+
 [상용 CAE GUI 상세 벤치마크 자료](docs/benchmarks/2026-10-30/README.md)에 7제품의 메뉴·선택·입력·결과·실패/취소·저장 근거와 화면 locator를 연결했습니다. 대표 화면 모음과 동작 재현 근거를 구분하고, 이번에 직접 실행하지 않은 제품을 실행 검증으로 표시하지 않습니다.
 
 계획의 구체적인 범위는 [공용 기반 설계](docs/shared-cae-foundation-plan.md), [단계별 작업·종료 조건](docs/execution-stages.md), [Workbench 재사용 계획](docs/workbench-reuse-plan.md), [참조 제품 비교](docs/gui-reference-matrix.md), [다중 파트·자유도·데이터 설계](docs/cae-model-data-design.md)에 둡니다. 공용 GUI/기반 A, 다중 파트 데이터 B, 첫 CAD/메시 흐름 C와 Workbench 적용은 각각 정한 조건을 통과하면 완료로 닫습니다. 작업서는 선행 조건·산출물·필수 확인·후속 범위와 검사를 끝내는 규칙을 명시하며, 계획한 기능을 현재 지원 기능으로 표시하지 않습니다.
@@ -81,3 +83,4 @@ caelab-prep mesh part.step --output mesh-assets --size 2.0
 [메셔 구현 가능성·도입 로드맵](docs/mesher-feasibility-roadmap.md)은 공개 kernel과 wrapper/유료 SDK·연구 코드를 구분하고, 알고리즘/상용 매뉴얼 조사·제한된 실제 SDK 실험·기능별 실증과 중지 조건을 기록합니다. 복잡 자동 중립면·범용 all-hex·robust hybrid를 모델의 능력만으로 구현 가능하다고 확정하지 않습니다.
 
 [BeidPrep 1.0.1 시험 기록](docs/beidprep-evaluation.md)에 실제 수행·미수행 범위와 저장 오류를 기록했습니다. 소형 입력·저장본, Windows GUI 시험 스크립트, 수동 실행 전용 GitHub Actions를 함께 보관합니다. 실행 파일과 솔버 배포본은 Git에 포함하지 않습니다.
+

@@ -1,0 +1,668 @@
+{
+  "key": "nastran",
+  "title": "MSC Nastran 입력 생성 자료",
+  "scope": "MSC Nastran2024.2 QRG;not NX/Autodesk/NASA distribution or all Nastran dialects",
+  "versions": {
+    "documentation": "MSC Nastran2024.2 QRG;PDF creation2024-11-21",
+    "solver": "MSC Nastran2024.2;unexecuted",
+    "source": "PyNastran f51e9ffa74222f93750618d4766e59f2f96751c3",
+    "examples": "별도 example manifest",
+    "binary_tested": null
+  },
+  "sources": [
+    {
+      "id": "nastran-D01",
+      "url": "https://documentation-be.hexagon.com/bundle/MSC_Nastran_2024.2_Quick_Reference_Guide/raw/resource/enus/MSC_Nastran_2024.2_Quick_Reference_Guide.pdf",
+      "title": "MSC Nastran 2024.2 Quick Reference Guide",
+      "kind": "manual",
+      "version": "MSC Nastran 2024.2",
+      "locator": "3143 PDF pages;2196 bookmarks. Read physical pages131,175,209,1056,1061,1285,1558,1686,1960,2036,2650,2672,2855,3022;CTETRA diagram visually inspected.",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/nastran-qrg.pdf",
+      "sha256": "b34f9393f8dfe8b2b025255bad3c7047407938bc1df4455bc7a70ab529bf3060",
+      "size_bytes": 26543810,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다.",
+      "pdf_page_count": 3143
+    },
+    {
+      "id": "nastran-D02",
+      "url": "https://nexus.hexagon.com/documentationcenter/en-US/bundle/MSC_Nastran_2024.2/page/Nastran_Combined_Book/qrg/bulk_data/bulk.data.xhtml",
+      "title": "Legacy Nexus bulk entry HTML shell",
+      "kind": "manual",
+      "version": "MSC Nastran 2024.2",
+      "locator": "JS shell only",
+      "access": "downloaded",
+      "read_depth": "metadata-only",
+      "local_file": "tmp/opti-nastran/nastran-bulk.html",
+      "sha256": "7c86c399f6e204b7775bae6cb1fb5037b6b3f54ffa0c87d4c98311f3b2e5e296",
+      "size_bytes": 139907,
+      "redistribution": "locator-only",
+      "summary": "HTML 응답은 JS shell이므로 원문 독해 근거로 사용하지 않았다. 공식 PDF를 대신 취득했다."
+    },
+    {
+      "id": "nastran-D03",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/LICENSE.md",
+      "title": "PyNastran LICENSE.md",
+      "kind": "license",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "LICENSE.md",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/LICENSE.md",
+      "sha256": "ed3f3f031a9d1da6802011e40ba0b5582dbcca19b902e259ea197cfca7f9e153",
+      "size_bytes": 1523,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "nastran-D04",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/field_writer_8.py",
+      "title": "PyNastran field_writer_8.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/field_writer_8.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/field_writer_8.py",
+      "sha256": "cc7145b7fef441bab52981dadbd2ab2ecce3eb60cc2aaf370c8c4b31594787ad",
+      "size_bytes": 15199,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "nastran-D05",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/field_writer_16.py",
+      "title": "PyNastran field_writer_16.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/field_writer_16.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/field_writer_16.py",
+      "sha256": "f578a20feb1640a47c92f3157a006658ffa8e147176957b8cccc7ea3c104a836",
+      "size_bytes": 12440,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "nastran-D06",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/field_writer_double.py",
+      "title": "PyNastran field_writer_double.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/field_writer_double.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/field_writer_double.py",
+      "sha256": "9a9c4227040fe4b4607ca46af71e427d33d4f45a012fb44708050ef4b91fd0f1",
+      "size_bytes": 3790,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "nastran-D07",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/bdf_interface/write_mesh.py",
+      "title": "PyNastran write_mesh.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/bdf_interface/write_mesh.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/write_mesh.py",
+      "sha256": "eda6d66589916a4d60a903f2d6644a33145761eb889952c693eda29272716f0c",
+      "size_bytes": 100245,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "nastran-D08",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/bdf.py",
+      "title": "PyNastran bdf.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/bdf.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/bdf.py",
+      "sha256": "500fc59f166bcc74d51721fe47d3926926ab48cce5e1303bc617e92bc46b9535",
+      "size_bytes": 210733,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "nastran-D09",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/cards/test/test_solids.py",
+      "title": "PyNastran test_solids.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/cards/test/test_solids.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/test_solids.py",
+      "sha256": "af0731cdcfdaad74602610106f48ca2dd6c22d237eb8373d74f2d59c313b921d",
+      "size_bytes": 24031,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "nastran-D10",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/docs/html_docs/quick_start/bdf_demo.rst",
+      "title": "PyNastran bdf_demo.rst",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "docs/html_docs/quick_start/bdf_demo.rst",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/bdf_demo.rst",
+      "sha256": "8958d7eb91e872d552f1940a222384d1f7eed5d9c2b093e80eabd8b52d1dfe6a",
+      "size_bytes": 42232,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "nastran-D11",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/README.md",
+      "title": "NASA NASTRAN95 README.md",
+      "kind": "example",
+      "version": "NASA NASTRAN95;65e29e9db7b21a02bb42e723afa74fa7635ed765",
+      "locator": "README.md",
+      "access": "downloaded",
+      "read_depth": "metadata-only",
+      "local_file": "tmp/opti-nastran/nastran-examples/README.md",
+      "sha256": "87d1aef2368d2562ae44094464ddffefd715fed7bb28f0da7e25fe57d0619b02",
+      "size_bytes": 859,
+      "redistribution": "locator-only",
+      "summary": "NASA95 참고자료이며 MSC2024.2에 대한 실행·호환 증거가 아니다."
+    },
+    {
+      "id": "nastran-D12",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/NASA%20Open%20Source%20Agreement-NASTRAN%2095.doc",
+      "title": "NASA NASTRAN95 NASA Open Source Agreement-NASTRAN 95.doc",
+      "kind": "license",
+      "version": "NASA NASTRAN95;65e29e9db7b21a02bb42e723afa74fa7635ed765",
+      "locator": "NASA Open Source Agreement-NASTRAN 95.doc",
+      "access": "downloaded",
+      "read_depth": "metadata-only",
+      "local_file": "tmp/opti-nastran/nastran-examples/NASA Open Source Agreement-NASTRAN 95.doc",
+      "sha256": "e847d55f3c948c7aad92351cf8907e634a155afb416e140ad19b89011f283813",
+      "size_bytes": 49152,
+      "redistribution": "locator-only",
+      "summary": "NASA95 참고자료이며 MSC2024.2에 대한 실행·호환 증거가 아니다."
+    },
+    {
+      "id": "nastran-D13",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/inp/d05011a.inp",
+      "title": "NASA NASTRAN95 inp/d05011a.inp",
+      "kind": "example",
+      "version": "NASA NASTRAN95;65e29e9db7b21a02bb42e723afa74fa7635ed765",
+      "locator": "inp/d05011a.inp",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/nastran-examples/inp/d05011a.inp",
+      "sha256": "a507606d63899993e1768044237e10c24b17d34ea4179e3e4bb10eb3b989ce53",
+      "size_bytes": 18368,
+      "redistribution": "locator-only",
+      "summary": "NASA95 참고자료이며 MSC2024.2에 대한 실행·호환 증거가 아니다."
+    },
+    {
+      "id": "nastran-D14",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/inp/d05011a.txt",
+      "title": "NASA NASTRAN95 inp/d05011a.txt",
+      "kind": "example",
+      "version": "NASA NASTRAN95;65e29e9db7b21a02bb42e723afa74fa7635ed765",
+      "locator": "inp/d05011a.txt",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/nastran-examples/inp/d05011a.txt",
+      "sha256": "6e596b34dc11de6ee515643d7230fa1caf4efc4a17e3195befbb47e4086c7ca5",
+      "size_bytes": 4594,
+      "redistribution": "locator-only",
+      "summary": "NASA95 참고자료이며 MSC2024.2에 대한 실행·호환 증거가 아니다."
+    },
+    {
+      "id": "nastran-D15",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/demoout/d05011a.out",
+      "title": "NASA NASTRAN95 demoout/d05011a.out",
+      "kind": "example",
+      "version": "NASA NASTRAN95;65e29e9db7b21a02bb42e723afa74fa7635ed765",
+      "locator": "demoout/d05011a.out",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/nastran-examples/demoout/d05011a.out",
+      "sha256": "2b6e6647744d9d964996dd22a23d35312b1f81be68a7710a42218b051e65b124",
+      "size_bytes": 184687,
+      "redistribution": "locator-only",
+      "summary": "NASA95 참고자료이며 MSC2024.2에 대한 실행·호환 증거가 아니다."
+    },
+    {
+      "id": "nastran-D16",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/inp/d01001a.inp",
+      "title": "NASA NASTRAN95 inp/d01001a.inp",
+      "kind": "example",
+      "version": "NASA NASTRAN95;65e29e9db7b21a02bb42e723afa74fa7635ed765",
+      "locator": "inp/d01001a.inp",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/nastran-examples/inp/d01001a.inp",
+      "sha256": "91f72620847f670a3f001e19625d358f02dabeefaf84557588276fa0eff5511b",
+      "size_bytes": 1230,
+      "redistribution": "locator-only",
+      "summary": "NASA95 참고자료이며 MSC2024.2에 대한 실행·호환 증거가 아니다."
+    },
+    {
+      "id": "nastran-D17",
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/inp/d01021b.inp",
+      "title": "NASA NASTRAN95 inp/d01021b.inp",
+      "kind": "example",
+      "version": "NASA NASTRAN95;65e29e9db7b21a02bb42e723afa74fa7635ed765",
+      "locator": "inp/d01021b.inp",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/nastran-examples/inp/d01021b.inp",
+      "sha256": "bbe39041527320e33db33647c54fb72d1636f36609354c4c064b85faba3f3e62",
+      "size_bytes": 1558,
+      "redistribution": "locator-only",
+      "summary": "NASA95 참고자료이며 MSC2024.2에 대한 실행·호환 증거가 아니다."
+    }
+  ],
+  "catalogue": {
+    "files": [
+      "catalogues/nastran.csv",
+      "catalogues/nastran-outline.csv"
+    ],
+    "source_ids": [
+      "nastran-D01"
+    ],
+    "scope": "QRG chapters2/3/4/5/6/9 entry-level bookmark rows; case subtopics separate; no entire appendix/item-code catalogue claim",
+    "entry_count": 1879,
+    "count_unit": "설정·entry·option topic 혼합 bookmark 행;고유 keyword 수 아님",
+    "completeness": "complete-outline;scoped-entry-index",
+    "sections": {
+      "nastran-system-setting": 154,
+      "file-management": 22,
+      "executive": 20,
+      "case-control": 277,
+      "case-option-topic": 68,
+      "parameter": 414,
+      "bulk-entry": 924
+    },
+    "all_outline_records": 2196,
+    "reconciliation": "모든 북마크2196개 저장. 본문 주장별 chapter/depth/page 필터로1879행 분류. Chapter7item codes/8DOF/appendices는 entry목록 밖에 남긴다.",
+    "full_field_review_complete": false
+  },
+  "rules": [
+    {
+      "id": "nastran-R01",
+      "question_ids": [
+        "Q01"
+      ],
+      "source_ids": [
+        "nastran-D01"
+      ],
+      "statement": "Executive SOL/CEND, Case Control, BEGIN BULK/ENDDATA와 선택적 FMS를 구분한다.",
+      "locator": "QRG sections3–5/9;p131 example",
+      "examples": [],
+      "limits": "",
+      "status": "documented"
+    },
+    {
+      "id": "nastran-R02",
+      "question_ids": [
+        "Q02"
+      ],
+      "source_ids": [
+        "nastran-D01"
+      ],
+      "statement": "Bulk는 small8/large16/free 형식과 전용 이어쓰기 규칙을 가진다. real과 integer 표기도 구분한다.",
+      "locator": "PDF1056,1061;printed1019+",
+      "examples": [],
+      "limits": "모든 precision/continuation 예외 미검토.",
+      "status": "documented"
+    },
+    {
+      "id": "nastran-R03",
+      "question_ids": [
+        "Q03"
+      ],
+      "source_ids": [
+        "nastran-D01"
+      ],
+      "statement": "일반 입력은 일관된 단위를 사용하며 DTI,UNITS 특수 변환 문맥은 별도다.",
+      "locator": "PDF1686;DTI,UNITS",
+      "examples": [],
+      "limits": "",
+      "status": "documented"
+    },
+    {
+      "id": "nastran-R04",
+      "question_ids": [
+        "Q04"
+      ],
+      "source_ids": [
+        "nastran-D01"
+      ],
+      "statement": "MSC CTETRA의 PID는 필수다. OptiStruct2025의 EID 기본값을 가져오면 안 된다.",
+      "locator": "PDF1558;printed1520;CTETRA.PID",
+      "examples": [],
+      "limits": "전수 defaults/conditional schema 미완성.",
+      "status": "partial"
+    },
+    {
+      "id": "nastran-R05",
+      "question_ids": [
+        "Q05"
+      ],
+      "source_ids": [
+        "nastran-D01"
+      ],
+      "statement": "INCLUDE는 어디든 가능하며 중첩은 최대10, 경로 행은72자 제한이다.",
+      "locator": "PDF131;printed99;INCLUDE remarks",
+      "examples": [],
+      "limits": "설치/플랫폼별 실제 탐색은 미실행.",
+      "status": "documented"
+    },
+    {
+      "id": "nastran-R06",
+      "question_ids": [
+        "Q06"
+      ],
+      "source_ids": [
+        "nastran-D01"
+      ],
+      "statement": "GRID ID/CP/CD와 property/material 참조·중복 정책을 분리한다.",
+      "locator": "PDF1960 GRID;2672 PSOLID",
+      "examples": [],
+      "limits": "모든 namespace/duplicate 처리 전수 대조 없음.",
+      "status": "partial"
+    },
+    {
+      "id": "nastran-R07",
+      "question_ids": [
+        "Q07"
+      ],
+      "source_ids": [
+        "nastran-D01"
+      ],
+      "statement": "CTETRA Gi4–10 순서/차수와 원문 node diagram을 보존한다.",
+      "locator": "PDF1558 CTETRA figure",
+      "examples": [],
+      "limits": "그림 실제 확인. 면/법선 permutation 실행 없음.",
+      "status": "partial"
+    },
+    {
+      "id": "nastran-R08",
+      "question_ids": [
+        "Q08"
+      ],
+      "source_ids": [
+        "nastran-D01"
+      ],
+      "statement": "GRID→CTETRA→PSOLID→material 참조를 매핑한다. PSOLID의 물리·재료·SOL 제한도 필요하다.",
+      "locator": "PDF1558;1960;2672",
+      "examples": [],
+      "limits": "",
+      "status": "documented"
+    },
+    {
+      "id": "nastran-R09",
+      "question_ids": [
+        "Q09"
+      ],
+      "source_ids": [
+        "nastran-D01"
+      ],
+      "statement": "SPC/LOAD 정의와 case의 선택은 다르며, SPC DOF 상호배타 집합 및 접촉의 SOL별 제약을 유지한다.",
+      "locator": "PDF209 Case;1285 BCTABLE;2036 FORCE;2855 SPC",
+      "examples": [],
+      "limits": "전수 하중/접촉 옵션 검토 없음.",
+      "status": "partial"
+    },
+    {
+      "id": "nastran-R10",
+      "question_ids": [
+        "Q10"
+      ],
+      "source_ids": [
+        "nastran-D01"
+      ],
+      "statement": "SOL/Case/TSTEP·출력 선택을 구분한다. transient 시간 정의는 선택 참조가 필요하다.",
+      "locator": "PDF175 SOL;209 Case;3022 TSTEP",
+      "examples": [],
+      "limits": "restart FMS/state bundle 전수 검토 없음;process cancel 검증 아님.",
+      "status": "partial"
+    },
+    {
+      "id": "nastran-R11",
+      "question_ids": [
+        "Q11"
+      ],
+      "source_ids": [
+        "nastran-D03",
+        "nastran-D04",
+        "nastran-D05",
+        "nastran-D06",
+        "nastran-D07",
+        "nastran-D08",
+        "nastran-D09",
+        "nastran-D10"
+      ],
+      "statement": "공개 PyNastran은 BDF writer/formatter와 reader·작성 시험 소스를 제공한다. 시험/mesh dump를 완전 해석 deck으로 부르지 않는다.",
+      "locator": "PyNastran pinned paths",
+      "examples": [],
+      "limits": "솔버 독립 실행·완전 analysis golden 아님.",
+      "status": "partial"
+    },
+    {
+      "id": "nastran-R12",
+      "question_ids": [
+        "Q12"
+      ],
+      "source_ids": [
+        "nastran-D01"
+      ],
+      "statement": "공식 QRG 전체 북마크2196개와 분류 entry1879행을 보존했다. appendices/item code/DOF표를 전부 keyword로 정규화하지 않았다.",
+      "locator": "QRG outline;catalogue sections2–6/9",
+      "examples": [],
+      "limits": "다른 Nastran 계열/2025이상/전체 해석 지원으로 일반화하지 않는다.",
+      "status": "partial"
+    }
+  ],
+  "examples": [
+    {
+      "id": "nastran-E01",
+      "source_ids": [
+        "nastran-D13",
+        "nastran-D14",
+        "nastran-D15"
+      ],
+      "url": "https://raw.githubusercontent.com/nasa/NASTRAN-95/65e29e9db7b21a02bb42e723afa74fa7635ed765/inp/d05011a.inp",
+      "file": null,
+      "analysis_local_files": [
+        "tmp/opti-nastran/nastran-examples/inp/d05011a.inp",
+        "tmp/opti-nastran/nastran-examples/inp/d05011a.txt",
+        "tmp/opti-nastran/nastran-examples/demoout/d05011a.out"
+      ],
+      "sha256": "a507606d63899993e1768044237e10c24b17d34ea4179e3e4bb10eb3b989ce53",
+      "version": "NASA NASTRAN95;not MSC2024.2",
+      "kind": "official-deck",
+      "purpose": "Symmetric buckling cylinder SOL5,1; static preload and buckling subcases",
+      "expected": "Description lists four buckling factors and analytical comparison; archival output belongs to NASA1995 run, not our execution",
+      "license": "README explicitly says NOSA1.3; license DOC acquired. No public redistribution here pending full obligations review; locator+hash only.",
+      "redistribution": "locator-only",
+      "solver_executed": false,
+      "msc2024_2_verified": false,
+      "dependencies": {
+        "external_deck_files": [],
+        "runtime": "NASA NASTRAN95 with supported rigid formats and plot runtime (PLOTTER NASTPLT requested)",
+        "limits": "No external READFILE/INCLUDE/ASSIGN observed; not a full graph or solver acceptance validation"
+      }
+    }
+  ],
+  "code_assets": [
+    {
+      "id": "nastran-C01",
+      "source_ids": [
+        "nastran-D03",
+        "nastran-D04",
+        "nastran-D05",
+        "nastran-D06",
+        "nastran-D07",
+        "nastran-D08",
+        "nastran-D09",
+        "nastran-D10"
+      ],
+      "role": "writer",
+      "repository": "https://github.com/SteveDoyle2/pyNastran",
+      "revision": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "paths": [
+        "LICENSE.md",
+        "pyNastran/bdf/field_writer_8.py",
+        "pyNastran/bdf/field_writer_16.py",
+        "pyNastran/bdf/field_writer_double.py",
+        "pyNastran/bdf/bdf_interface/write_mesh.py",
+        "pyNastran/bdf/bdf.py",
+        "pyNastran/bdf/cards/test/test_solids.py",
+        "docs/html_docs/quick_start/bdf_demo.rst"
+      ],
+      "scope": "BDF mesh writer와 8/16/double formatter, reader 및 solid 작성 시험 소스",
+      "limits": "reader whitelist 429개는 writer/MSC2024.2/OptiStruct2025 지원 목록이 아니다. 전체 패키지 의존성이 없고 실행하지 않았다. OptiStruct 별도 override도 전수 호환 보증이 아니다.",
+      "license": "BSD-3-Clause; 원 LICENSE와 NOTICE 동봉",
+      "local_files": [
+        "assets/bdf/pynastran/LICENSE.md",
+        "assets/bdf/pynastran/field_writer_8.py",
+        "assets/bdf/pynastran/field_writer_16.py",
+        "assets/bdf/pynastran/field_writer_double.py",
+        "assets/bdf/pynastran/write_mesh.py",
+        "assets/bdf/pynastran/bdf.py",
+        "assets/bdf/pynastran/test_solids.py",
+        "assets/bdf/pynastran/bdf_demo.rst"
+      ],
+      "executed": false
+    }
+  ],
+  "coverage": [
+    {
+      "question_id": "Q01",
+      "rule_ids": [
+        "nastran-R01"
+      ],
+      "status": "documented",
+      "missing": "문서 근거이며 실행 검증은 아니다."
+    },
+    {
+      "question_id": "Q02",
+      "rule_ids": [
+        "nastran-R02"
+      ],
+      "status": "documented",
+      "missing": "문서 근거이며 실행 검증은 아니다."
+    },
+    {
+      "question_id": "Q03",
+      "rule_ids": [
+        "nastran-R03"
+      ],
+      "status": "documented",
+      "missing": "문서 근거이며 실행 검증은 아니다."
+    },
+    {
+      "question_id": "Q04",
+      "rule_ids": [
+        "nastran-R04"
+      ],
+      "status": "partial",
+      "missing": "전수 필드·조건부·기본값 schema 미완성."
+    },
+    {
+      "question_id": "Q05",
+      "rule_ids": [
+        "nastran-R05"
+      ],
+      "status": "documented",
+      "missing": "문서 근거이며 실행 검증은 아니다."
+    },
+    {
+      "question_id": "Q06",
+      "rule_ids": [
+        "nastran-R06"
+      ],
+      "status": "partial",
+      "missing": "모든 entry namespace와 중복/참조 규칙 전수 검토 없음."
+    },
+    {
+      "question_id": "Q07",
+      "rule_ids": [
+        "nastran-R07"
+      ],
+      "status": "partial",
+      "missing": "연결순서·면·법선 permutation 실행 검증 없음."
+    },
+    {
+      "question_id": "Q08",
+      "rule_ids": [
+        "nastran-R08"
+      ],
+      "status": "documented",
+      "missing": "문서 근거이며 실행 검증은 아니다."
+    },
+    {
+      "question_id": "Q09",
+      "rule_ids": [
+        "nastran-R09"
+      ],
+      "status": "partial",
+      "missing": "모든 물리/접촉 조합 검토 없음."
+    },
+    {
+      "question_id": "Q10",
+      "rule_ids": [
+        "nastran-R10"
+      ],
+      "status": "partial",
+      "missing": "전체 해석 시퀀스/restart 파일 묶음 및 출력 조합 전수 검토 없음."
+    },
+    {
+      "question_id": "Q11",
+      "rule_ids": [
+        "nastran-R11"
+      ],
+      "status": "partial",
+      "missing": "공식 예제 취득 결과는 별도 manifest. 의도적 오류 입력·실행 oracle 미확보."
+    },
+    {
+      "question_id": "Q12",
+      "rule_ids": [
+        "nastran-R12"
+      ],
+      "status": "partial",
+      "missing": "모든 지원/비지원 조합 및 solver read/run 검증 없음."
+    }
+  ],
+  "acquisition_log": [
+    {
+      "target": "https://documentation-be.hexagon.com/bundle/MSC_Nastran_2024.2_Quick_Reference_Guide/raw/resource/enus/MSC_Nastran_2024.2_Quick_Reference_Guide.pdf",
+      "outcome": "downloaded;PDF3143pages"
+    },
+    {
+      "target": "https://nexus.hexagon.com/documentationcenter/en-US/bundle/MSC_Nastran_2024.2/page/Nastran_Combined_Book/qrg/bulk_data/bulk.data.xhtml",
+      "outcome": "downloaded but JS shell"
+    },
+    {
+      "target": "web PDF reader",
+      "outcome": "size>10MiB failed;direct official PDF download succeeded"
+    }
+  ],
+  "gaps": [
+    "QRG 원본 확보와 전수 field schema는 별개.",
+    "공식 완전 example/의도적 오류 deck 확보 상태는 별도 manifest;solver read/run 없음.",
+    "전체 appendix/options/sequence별 의미는 전수 검토하지 않았다.",
+    "MSC2024.2 문서를 다른 Nastran dialect나 최신판 지원으로 부르지 않는다.",
+    "상용 QRG 원문/스크린샷은 배포하지 않는다.",
+    "NASA95 완전 사례와 archival output 확보는 MSC2024.2 공식 완전 사례 확보나 실행 검증을 대체하지 않는다."
+  ],
+  "runtime_verified": false,
+  "collected_on": "2026-10-30",
+  "supplementary_examples_manifest": "catalogues/nastran-examples.json"
+}

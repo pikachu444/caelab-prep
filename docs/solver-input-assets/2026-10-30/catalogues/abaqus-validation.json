@@ -1,0 +1,14 @@
+{
+  "source_records": 45,
+  "source_files_hashed": 44,
+  "catalogue_entries": 600,
+  "detail_pages": 600,
+  "manifest_records": 602,
+  "bad_titles": [],
+  "question_ids": 12,
+  "rules": 22,
+  "keyword_sections_read": 15,
+  "solver_executed": false,
+  "full_field_review": false,
+  "checks": "pass"
+}

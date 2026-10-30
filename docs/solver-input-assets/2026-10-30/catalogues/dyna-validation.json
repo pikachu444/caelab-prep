@@ -1,0 +1,21 @@
+{
+  "sources": 24,
+  "rules": 12,
+  "coverage_questions": 12,
+  "starred_rows": 1773,
+  "all_toc_rows": 2030,
+  "target_header_misses": [],
+  "unparsed_dotted_toc_rows": [],
+  "packaged_upstream_files": 36,
+  "official_example_files": 82,
+  "errors": [],
+  "runtime_verified": false,
+  "cross_review": "discussion/dyna-rad-review.md",
+  "cross_review_participants": [
+    "/root/native_dyna",
+    "/root/rad_repo_inventory"
+  ],
+  "independent_audit": "Astra reviewed; ambiguous coverage-check field renamed and explained as requested",
+  "all_q01_q12_have_status_records": true,
+  "coverage_record_check_meaning": "Checks only that Q01\u2013Q12 each have a status/rule record; does not assert complete research, full field/variant support, implementation, or solver execution."
+}

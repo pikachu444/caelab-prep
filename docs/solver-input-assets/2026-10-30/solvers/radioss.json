@@ -1,0 +1,2343 @@
+{
+  "key": "radioss",
+  "title": "Radioss / OpenRadioss / OpenCourant 입력 생성 자료",
+  "scope": "공용 전처리 자산의 첫 적용 조사. 주 목록은 Altair Radioss2024 Starter+Engine이며 OpenCourant release latest-20261011 소스는 별도 고정한다. 문서 전체 색인 확보는 전수 field 구현/지원/실행을 뜻하지 않는다.",
+  "versions": {
+    "documentation": "Primary Radioss2024 online; historical Reference Guide2022 PDF; comparator current online banner2026 acquired2026-10-30",
+    "solver": "OpenCourant latest-20261011; commit cb760c206e346eff12161a2268b134ef9d48a4ef; binary not run",
+    "source": "OpenCourant cb760c206e346eff12161a2268b134ef9d48a4ef; Tools 1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1; observed current main843b3c457d575dfb22ddca14c95644e2861636fd is NOT target pin",
+    "examples": "QA source archive cb760c206e346eff12161a2268b134ef9d48a4ef, heterogeneous /BEGIN2017/2018/2019/2022; Tools sample 1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1",
+    "binary_tested": null
+  },
+  "sources": [
+    {
+      "id": "radioss-D01",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/starter_input_r.htm",
+      "title": "Starter Input",
+      "kind": "index",
+      "version": "Radioss 2024",
+      "locator": "Supported Keywords 전체 섹션",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "redistribution": "locator-only",
+      "summary": "2024 Starter 원문 링크 590행을 보존했다.",
+      "local_file": "tmp/radioss/starter2024.html",
+      "sha256": "0b0731faf8fec8a6a225c2a89363d927424eeb16a4c403dd62e6077a00421aa2",
+      "size_bytes": 214093
+    },
+    {
+      "id": "radioss-D02",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/engine_input_r.htm",
+      "title": "Engine Input",
+      "kind": "index",
+      "version": "Radioss 2024",
+      "locator": "Supported Keywords 전체 섹션",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "redistribution": "locator-only",
+      "summary": "2024 Engine 원문 링크 235행을 보존했다.",
+      "local_file": "tmp/radioss/engine2024.html",
+      "sha256": "28dcd4adfcfe5a4cbcd8d80ec791b842ed13bdb043e521fd6d2b327160d0a7ca",
+      "size_bytes": 93917
+    },
+    {
+      "id": "radioss-D03",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/starter_keyword_syntax_r.htm",
+      "title": "Starter Keyword Syntax",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Block Format / Keyword Options / Comments / Integer / Real / Booleans",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "블록·필드 형식과 정의/참조 구분, 공란·0의 기본값 의미를 읽었다.",
+      "local_file": "tmp/radioss/syntax2024.html",
+      "sha256": "803734a8e2b29cc8acfe558edf2b27d3d8466689fd768ed78c8f6fa5bd697fde",
+      "size_bytes": 99465
+    },
+    {
+      "id": "radioss-D04",
+      "url": "https://2022.help.altair.com/2022/simulation/pdfs/radopen/AltairRadioss_2022_ReferenceGuide.pdf",
+      "title": "Altair Radioss 2022 Reference Guide",
+      "kind": "manual",
+      "version": "Radioss 2022",
+      "locator": "PDF 3550쪽 중 인쇄 쪽 40–41 Keyword Syntax를 허용된 이미지 출력으로 읽음",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "원본 취득. copy=no이므로 텍스트 추출하지 않았다. PDF 전체 독해가 아니다.",
+      "local_file": "tmp/radioss/reference2022.pdf",
+      "sha256": "ced419a42483fce972d975856def09692213d2afd108ccf3e0a85551a3ce0ffd",
+      "size_bytes": 48136101
+    },
+    {
+      "id": "radioss-D05",
+      "url": "https://help.altair.com/hwsolvers/rad/topics/solvers/rad/starter_input_r.htm",
+      "title": "Starter Input, current rolling edition",
+      "kind": "index",
+      "version": "Radioss 2026, acquired 2026-10-30",
+      "locator": "2026 banner / Supported Keywords 전체 섹션",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "redistribution": "locator-only",
+      "summary": "2026 Starter 비교 목록 614행. 2024와 합산하지 않는다.",
+      "local_file": "tmp/radioss/starter-current.html",
+      "sha256": "6e0f9adb3607607bab729705d83bfc9a61e0691bcdcced5d86b328ade8c4eb5f",
+      "size_bytes": 223504
+    },
+    {
+      "id": "radioss-D06",
+      "url": "https://help.altair.com/hwsolvers/rad/topics/solvers/rad/engine_input_r.htm",
+      "title": "Engine Input, current rolling edition",
+      "kind": "index",
+      "version": "Radioss 2026, acquired 2026-10-30",
+      "locator": "2026 banner / Supported Keywords 전체 섹션",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "redistribution": "locator-only",
+      "summary": "2026 Engine 비교 목록 241행. 대상 solver 지원표로 간주하지 않는다.",
+      "local_file": "tmp/radioss/engine-current.html",
+      "sha256": "12d7e8d49da1c0abca7ab06ce1875c6d97c7525676cf1a2723744478da5763e7",
+      "size_bytes": 98067
+    },
+    {
+      "id": "radioss-D07",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/engine_keywords_syntax_r.htm",
+      "title": "Engine Keywords Syntax",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "본문 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "Engine 자유 형식과 /RUN·/VERS 의무 설명을 확인했다.",
+      "local_file": "tmp/radioss/engine-syntax2024-correct.html",
+      "sha256": "fafd74b72e84c0900fc9bde7880c99c906e8db24106d7fa3787d241399609ee1",
+      "size_bytes": 34921
+    },
+    {
+      "id": "radioss-D08",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/include_starter_r.htm",
+      "title": "#include",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "whole block, 경로 기준, 헤더·버전 제약을 읽었다.",
+      "local_file": "tmp/radioss/include2024.html",
+      "sha256": "c2c90fbaf3242fa42cb01c3d19cd2511f71fcf12595eb5d77d4e2e1f04beb080",
+      "size_bytes": 56601
+    },
+    {
+      "id": "radioss-D09",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/faq_rad_radioss_files_r.htm",
+      "title": "Radioss Files",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Input Format / Version 12.0 and After",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "입력·restart·결과·제어 파일의 생산자/소비자를 구분했다.",
+      "local_file": "tmp/radioss/files2024.html",
+      "sha256": "04c1386c7e825e6ba2013c2cd3388b4b48433650b94002c188890cddc3bce3c7",
+      "size_bytes": 106206
+    },
+    {
+      "id": "radioss-D10",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/single_input_file_r.htm",
+      "title": "Single File Input",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "본문과 Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "통합 파일은 Engine 앞부분, /END/ENGINE, Starter /BEGIN–/END로 구분한다.",
+      "local_file": "tmp/radioss/single-input2024-correct.html",
+      "sha256": "444207809e7a4e360f319722fc1cb15b07a287863cded567ac3920c4dd30a1ee",
+      "size_bytes": 28773
+    },
+    {
+      "id": "radioss-D11",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/enddata_starter_r.htm",
+      "title": "#enddata",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "본문 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "include 종료와 /END의 역할을 구분한다.",
+      "local_file": "tmp/radioss/enddata2024.html",
+      "sha256": "11608b68035877d4fc5386d8bb71bc48ac0fcac2ada8960088fc2bc0c62f779c",
+      "size_bytes": 49095
+    },
+    {
+      "id": "radioss-D20",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/begin_starter_r.htm",
+      "title": "/BEGIN",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition: Invers와 입력/작업 단위 / Comments",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "입력 형식판과 입력/작업 단위를 구분했다.",
+      "local_file": "tmp/radioss/keywords2024/begin_starter_r.htm",
+      "sha256": "061e016fbef8e196551c4099a449955fec038ece7480797f5760c80e51e23bf7",
+      "size_bytes": 101594
+    },
+    {
+      "id": "radioss-D21",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/node_starter_r.htm",
+      "title": "/NODE",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "node ID와 세 좌표의 반복 행 형식을 읽었다.",
+      "local_file": "tmp/radioss/node_starter_r.html",
+      "sha256": "daaf46861aeb9ddb89eb456a9bdbbb7131be976c933ea52cc39b22bca42bceee",
+      "size_bytes": 53747
+    },
+    {
+      "id": "radioss-D22",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/part_starter_r.htm",
+      "title": "/PART",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "파트의 동종 요소 및 material/property/subset 참조와 composite 예외를 읽었다.",
+      "local_file": "tmp/radioss/part_starter_r.html",
+      "sha256": "26459f75b2bbfcde0bf722445ff293c2fca4c344b1928fcec243f05a2de5fb60",
+      "size_bytes": 63982
+    },
+    {
+      "id": "radioss-D23",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/sh3n_starter_r.htm",
+      "title": "/SH3N",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments / Figure 1",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "삼각 shell 연결·두께 상속과 국부 축 그림을 읽었다.",
+      "local_file": "tmp/radioss/sh3n_starter_r.html",
+      "sha256": "eb09aefa40d16ab265499a3f831644be321fc17e64f6779432c925c678bceb86",
+      "size_bytes": 64838
+    },
+    {
+      "id": "radioss-D24",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/shell_starter_r.htm",
+      "title": "/SHELL",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments / Figure 1",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "사각 shell 연결·두께 상속과 국부 축 그림을 읽었다.",
+      "local_file": "tmp/radioss/shell_starter_r.html",
+      "sha256": "2be007e7b415e92992a359e61d8f1fedbb316f596dce5b30eb0a78e89dcf3178",
+      "size_bytes": 64911
+    },
+    {
+      "id": "radioss-D25",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/brick_starter_r.htm",
+      "title": "/BRICK",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체; 도형 전체는 독해하지 않음",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "여덟 node, 요소 family ID와 조건별 퇴화 표현을 읽었다.",
+      "local_file": "tmp/radioss/keywords2024/brick_starter_r.htm",
+      "sha256": "0fde86e007e3fce162d1963869ebcc31276bb4e999ed78dea933bea8b28bb868",
+      "size_bytes": 75610
+    },
+    {
+      "id": "radioss-D26",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/tetra4_starter_r.htm",
+      "title": "/TETRA4",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments / Figure 1",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "4node tetra의 part 분리와 node 순서 그림을 읽었다.",
+      "local_file": "tmp/radioss/tetra4_starter_r.html",
+      "sha256": "34ef732a4821778c802e844b7a011b6855a08999b1926093310480c108115479",
+      "size_bytes": 65478
+    },
+    {
+      "id": "radioss-D27",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/surf_seg_starter_r.htm",
+      "title": "/SURF/SEG",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / 2D format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "surface segment의 연결·삼각형 fourth-node 생략과 요소 소속 제약을 읽었다.",
+      "local_file": "tmp/radioss/surf_seg_starter_r.html",
+      "sha256": "f1efd9341c31afd8b72e962f329a7307238d342db12a62aa9547ec54a271c78a",
+      "size_bytes": 92246
+    },
+    {
+      "id": "radioss-D28",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/surf_part_starter_r.htm",
+      "title": "/SURF/PART",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "surface part 부호에 의한 normal 반전과 3D variant 필요를 읽었다.",
+      "local_file": "tmp/radioss/surf_part_starter_r.html",
+      "sha256": "b7831fedaa37a8ac9e219b05f1798f1d3e2f87206506d8384c3102ffaed27ddd",
+      "size_bytes": 76160
+    },
+    {
+      "id": "radioss-D29",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/grnod_starter_r.htm",
+      "title": "/GRNOD",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Input Type Keywords / Comments",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "선택 방식별 node group과 정렬 보존 variant를 구분했다.",
+      "local_file": "tmp/radioss/keywords2024/grnod_starter_r.htm",
+      "sha256": "65fb6f6301ed4558dd8d0b99ea2a458e4b6cca39e086ebe7e45e739ecc0f6995",
+      "size_bytes": 79474
+    },
+    {
+      "id": "radioss-D30",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/funct_starter_r.htm",
+      "title": "/FUNCT",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "엄격 증가 abscissa, 외삽과 TABLE 공유 ID 제약을 읽었다.",
+      "local_file": "tmp/radioss/keywords2024/funct_starter_r.htm",
+      "sha256": "5d15f6233616f688d22491c904616ff91eb442e65378943d7b1183adc6997c0a",
+      "size_bytes": 63014
+    },
+    {
+      "id": "radioss-D31",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/bcs_starter_r.htm",
+      "title": "/BCS",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Trarot definition / Comments",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "자유도별 고정 코드와 mandatory node-group 참조를 읽었다.",
+      "local_file": "tmp/radioss/keywords2024/bcs_starter_r.htm",
+      "sha256": "6cd8e0f12f2af546ba765a917d458580d1dfb50dbe616c58dbb6a0f8d84215ff",
+      "size_bytes": 102037
+    },
+    {
+      "id": "radioss-D32",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/cload_starter_r.htm",
+      "title": "/CLOAD",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "그룹 전체 값과 node당 하중을 구분하고 curve/skew/sensor 참조를 읽었다.",
+      "local_file": "tmp/radioss/keywords2024/cload_starter_r.htm",
+      "sha256": "425780e06fa557c7a74c5cc98aa005894b882ad91b1614b9c9f659e531d03896",
+      "size_bytes": 77356
+    },
+    {
+      "id": "radioss-D33",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/inivel_starter_r.htm",
+      "title": "/INIVEL",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "재료/격자 및 회전 속도의 차이와 node group 의무를 읽었다.",
+      "local_file": "tmp/radioss/inivel_starter_r.html",
+      "sha256": "50fc41bb5ea81e76df5bd75f6403f1c88a041502aaf8f25a7081187389f5b1cd",
+      "size_bytes": 86531
+    },
+    {
+      "id": "radioss-D34",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/skew_fix_starter_r.htm",
+      "title": "/SKEW/FIX",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "SKEW/FRAME ID 공유 제약과 Y/Z 벡터로 축을 만드는 규칙을 읽었다.",
+      "local_file": "tmp/radioss/skew_fix_starter_r.html",
+      "sha256": "d9f8842d04290ece27b600c621a751f75f0ab582227765cd4e578d5d1025bfe1",
+      "size_bytes": 84014
+    },
+    {
+      "id": "radioss-D35",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/submodel_starter_r.htm",
+      "title": "//SUBMODEL",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "ID offsets, 중첩·버전·단위·지원 제한과 Engine 참조 규칙을 읽었다.",
+      "local_file": "tmp/radioss/submodel_starter_r.html",
+      "sha256": "8d123556bb8e10adaa31c580a9b1feddf72be5e58ce8af07ca35240fedf39bd9",
+      "size_bytes": 81074
+    },
+    {
+      "id": "radioss-D36",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/transforms_overview_starter_r.htm",
+      "title": "Transforms",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Comments 전체 / variant 목록",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "순서 의존과 node-only 대 submodel 전체 변환 범위를 구분했다.",
+      "local_file": "tmp/radioss/transforms_overview_starter_r.html",
+      "sha256": "210eebd6309e36f1fb2b4eb55ef350b187bb30a4a584a6bbb7cc54030dc374e8",
+      "size_bytes": 56641
+    },
+    {
+      "id": "radioss-D37",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/parameter_starter_r.htm",
+      "title": "/PARAMETER",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 중 scope/name/reference/expression dependency",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "공란 정렬과 global/local scope, 평가 순서·외부 templex 의존을 읽었다. 예제 전수 독해는 아니다.",
+      "local_file": "tmp/radioss/parameter_starter_r.html",
+      "sha256": "940ed6cb313397cc97267085d790e9c5846d491c6b3d86182472b1d0acf5c234",
+      "size_bytes": 116317
+    },
+    {
+      "id": "radioss-D38",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/mat_law1_elast_starter_r.htm",
+      "title": "/MAT/LAW1 (ELAST)",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "별칭과 밀도·탄성값, 요소/파괴모델의 조건을 읽었다.",
+      "local_file": "tmp/radioss/mat_law1_elast_starter_r.html",
+      "sha256": "b44c1d0546d72508b7b0d896fe39136de1994dd9683ab3d297defdefac6cf74b",
+      "size_bytes": 89898
+    },
+    {
+      "id": "radioss-D39",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/mat_law36_plas_tab_starter_r.htm",
+      "title": "/MAT/LAW36 (PLAS_TAB)",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format 전체 / Nfunct Definition / Comments 중 곡선 및 strain-rate 규칙",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "조건부 반복 card 수와 곡선 의존을 읽었다. 모든 재료 field의 전수 표 작성은 아니다.",
+      "local_file": "tmp/radioss/mat_law36_plas_tab_starter_r.html",
+      "sha256": "828d362c9e1133b65e89489dc90e443c1ff2f6de05bcb4aa81d79e9ef8738130",
+      "size_bytes": 226752
+    },
+    {
+      "id": "radioss-D40",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/prop_type1_shell_starter_r.htm",
+      "title": "/PROP/TYPE1 (SHELL)",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Ishell·Ismstr Definition / Comments 1–4",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "/DEF_SHELL 상속과 formulation/material 호환 조건을 읽었다. 전 field 독해는 아니다.",
+      "local_file": "tmp/radioss/prop_type1_shell_starter_r.html",
+      "sha256": "1efbed3eb8097c8ff502265bd2d8ac75905434aae7527695d46cf93fe0704e08",
+      "size_bytes": 150232
+    },
+    {
+      "id": "radioss-D41",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/prop_type14_solid_starter_r.htm",
+      "title": "/PROP/TYPE14 (SOLID)",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Isolid Definition / Comments 중 material-dependent defaults",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "조건부 Sol2SPH 행, /DEF_SOLID 상속과 재료별 default를 읽었다. 전 field 독해는 아니다.",
+      "local_file": "tmp/radioss/prop_type14_solid_starter_r.html",
+      "sha256": "63a7a8112eea52c6ea28ddbd560fd85295271e1a51734afc4cfd7127105a0863",
+      "size_bytes": 205762
+    },
+    {
+      "id": "radioss-D42",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/inter_type7_starter_r.htm",
+      "title": "/INTER/TYPE7",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Description / Format 전체 / group·surface Definition / Comments 첫 항목",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "group→surface 접촉과 조건부 추가 행, edge-edge 한계를 읽었다. 모든 접촉 수치식은 검토하지 않았다.",
+      "local_file": "tmp/radioss/inter_type7_starter_r.html",
+      "sha256": "27e3eeb52c540be65dbacd80b252f24877758e1143583ca8a48417d8bbdf86f2",
+      "size_bytes": 437921
+    },
+    {
+      "id": "radioss-D43",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/inter_type24_starter_r.htm",
+      "title": "/INTER/TYPE24",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Description / Format / Comments 1",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "자기접촉/양방향/노드 대 면의 참조 조합과 SMP implicit 제한을 읽었다.",
+      "local_file": "tmp/radioss/inter_type24_starter_r.html",
+      "sha256": "c25f0d7572d60b9c533cb5f408166258c778b8d9550c13fbd57830fd99830718",
+      "size_bytes": 453147
+    },
+    {
+      "id": "radioss-D44",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/run_engine_r.htm",
+      "title": "/RUN",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "최종시간과 run/restart 파일 참조를 읽었다.",
+      "local_file": "tmp/radioss/run_engine_r.html",
+      "sha256": "8731f70c6147db2cffb76c6de5fab622ac1b8be5d04469289a0be5421eb3019d",
+      "size_bytes": 53288
+    },
+    {
+      "id": "radioss-D45",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/vers_engine_r.htm",
+      "title": "/VERS",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "Engine 입력판과 Starter 판 일치 요구를 읽었다.",
+      "local_file": "tmp/radioss/vers_engine_r.html",
+      "sha256": "63a0730a06f1209ba74ad9171752aab53616908ece61f2ccec664c9bc2e8263a",
+      "size_bytes": 44587
+    },
+    {
+      "id": "radioss-D46",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/rfile_n_engine_r.htm",
+      "title": "/RFILE/n",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "restart 파일 주기·순환 개수와 letter 선택을 읽었다.",
+      "local_file": "tmp/radioss/rfile_n_engine_r.html",
+      "sha256": "043173e898319c0026474f646e803f38872f735302b394632f34368c30f3bb01",
+      "size_bytes": 47697
+    },
+    {
+      "id": "radioss-D47",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/stop_engine_r.htm",
+      "title": "/STOP",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Description / Format / Definition 중 Emax와 기본값",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "에너지·질량 기준의 solver 내부 종료이며 외부 process cancel은 아니다.",
+      "local_file": "tmp/radioss/stop_engine_r.html",
+      "sha256": "888842f22014d35f8a4ee154cf7e0c7f4119190131e100603b58d62772e042c4",
+      "size_bytes": 84065
+    },
+    {
+      "id": "radioss-D48",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/tfile_engine_r.htm",
+      "title": "/TFILE",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "출력 시간 간격·형식과 /TH 요청을 구분했다.",
+      "local_file": "tmp/radioss/tfile_engine_r.html",
+      "sha256": "55a42ccdc259aee1f76ed12ca0a12a3f704a0b26224a0c5eefb7b3c889e7c8c0",
+      "size_bytes": 52986
+    },
+    {
+      "id": "radioss-D49",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/anim_dt_engine_r.htm",
+      "title": "/ANIM/DT",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "animation 시작/빈도/종료 요청을 읽었다.",
+      "local_file": "tmp/radioss/keywords2024/anim_dt_engine_r.htm",
+      "sha256": "afbd27bbbd85703e5d72e62a7624ae8cc990276f5c0626f11bd6d8c92f573068",
+      "size_bytes": 51053
+    },
+    {
+      "id": "radioss-D50",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/impl_linear_engine_r.htm",
+      "title": "/IMPL/LINEAR",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "본문 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "선형 정적·모드·좌굴의 implicit 활성 명령을 확인했다.",
+      "local_file": "tmp/radioss/impl_linear_engine_r.html",
+      "sha256": "953bf2405355710701a7387578b587812c78c83823ba47ad6b9c9ccb72a1960c",
+      "size_bytes": 47118
+    },
+    {
+      "id": "radioss-D51",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/impl_dtini_engine_r.htm",
+      "title": "/IMPL/DTINI",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition / Comments 전체",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "비선형 implicit 초기 loading increment와 시간을 구분했다.",
+      "local_file": "tmp/radioss/impl_dtini_engine_r.html",
+      "sha256": "414053b2f4afce8ac7de4e408208b30efe62d422c2ded108febee4e8b106ff93",
+      "size_bytes": 49398
+    },
+    {
+      "id": "radioss-D52",
+      "url": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/impl_dt_1_engine_r.htm",
+      "title": "/IMPL/DT/1",
+      "kind": "manual",
+      "version": "Radioss 2024",
+      "locator": "Format / Definition 중 iteration 기반 time-step 증감",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "적응 increment 제어를 확인했다. implicit 전체 생성법은 아니다.",
+      "local_file": "tmp/radioss/impl_dt_1_engine_r.html",
+      "sha256": "fa9c389ff079658948fe5c7d6539e4e6f4eae99f14bc89cb9fdb4b15a176de8f",
+      "size_bytes": 62462
+    },
+    {
+      "id": "radioss-D80",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/LICENSE.md",
+      "title": "AGPL-3.0-or-later license",
+      "kind": "license",
+      "version": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "locator": "file notice / README complete relevant text",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "permitted-with-notice",
+      "summary": "원문 파일과 저작권 문구를 보존했다. 선택한 함수·관련 절만 읽었으며 빌드/실행하지 않았다.",
+      "local_file": "examples/radioss/code/OpenCourant-LICENSE.md",
+      "sha256": "ad858d53cae05eed9531ecd4c467440803acffe34c69de7b88e03affc5b6a1bd",
+      "size_bytes": 34283
+    },
+    {
+      "id": "radioss-D81",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/COPYRIGHT.md",
+      "title": "OpenCourant file-scope copyright and exceptions",
+      "kind": "license",
+      "version": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "locator": "file notice / README complete relevant text",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "permitted-with-notice",
+      "summary": "원문 파일과 저작권 문구를 보존했다. 선택한 함수·관련 절만 읽었으며 빌드/실행하지 않았다.",
+      "local_file": "examples/radioss/code/OpenCourant-COPYRIGHT.md",
+      "sha256": "f58efdc24ccfa676e7cced2c239e963b42270202afa737033ea25c7ae9f44f1f",
+      "size_bytes": 3602
+    },
+    {
+      "id": "radioss-D82",
+      "url": "https://github.com/OpenCourant/Tools/blob/1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1/Copyright.md",
+      "title": "MIT license, OpenCourant Tools",
+      "kind": "license",
+      "version": "1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1",
+      "locator": "file notice / README complete relevant text",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "permitted-with-notice",
+      "summary": "원문 파일과 저작권 문구를 보존했다. 선택한 함수·관련 절만 읽었으며 빌드/실행하지 않았다.",
+      "local_file": "examples/radioss/code/Tools-Copyright.md",
+      "sha256": "9c9150c7f291f1b5602fac376be874ebf10afea7ec8f86551aed828d5b8c4a37",
+      "size_bytes": 1079
+    },
+    {
+      "id": "radioss-D83",
+      "url": "https://github.com/OpenCourant/Tools/blob/1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1/input_converters/inp2rad/inp2rad/inp2rad.py",
+      "title": "INP to Radioss converter",
+      "kind": "code",
+      "version": "1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1",
+      "locator": "convert_nodes 174–186; material conversion 636–1395; write_parts 2355–2373; write_props 2379–2478; convert_elements 2947–3215; write_output 6202–6721; CLI radversion choices",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "permitted-with-notice",
+      "summary": "원문 파일과 저작권 문구를 보존했다. 선택한 함수·관련 절만 읽었으며 빌드/실행하지 않았다.",
+      "local_file": "examples/radioss/code/inp2rad.py",
+      "sha256": "bf90f1ed5a741abcb6c1db0ac9f5a1339a2632f10cc1444dfbde2369eb12ee61",
+      "size_bytes": 416601
+    },
+    {
+      "id": "radioss-D84",
+      "url": "https://github.com/OpenCourant/Tools/blob/1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1/input_converters/inp2rad/README.md",
+      "title": "inp2rad support scope and beta limits",
+      "kind": "code",
+      "version": "1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1",
+      "locator": "file notice / README complete relevant text",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "permitted-with-notice",
+      "summary": "원문 파일과 저작권 문구를 보존했다. 선택한 함수·관련 절만 읽었으며 빌드/실행하지 않았다.",
+      "local_file": "examples/radioss/code/inp2rad-README.md",
+      "sha256": "315698b53e7d005b14108a2fab09dc1ee7db844e51f35f31bcfa93ccc6c45d4c",
+      "size_bytes": 4204
+    },
+    {
+      "id": "radioss-D85",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/reader/source/io/model_readers/radioss/radiossblk/radiossblk.cxx",
+      "title": "CFG-backed Radioss reader front end",
+      "kind": "code",
+      "version": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "locator": "GetCurrentRadiossStrVersion; CFG profile initialization 423–455; CommonDataReaderCFG.ReadModel 479–481",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "permitted-with-notice",
+      "summary": "원문 파일과 저작권 문구를 보존했다. 선택한 함수·관련 절만 읽었으며 빌드/실행하지 않았다.",
+      "local_file": "examples/radioss/code/radiossblk.cxx",
+      "sha256": "ef85962ed70ad655f358dec4aeff60a01022eb936a6944b42d8ad0638c28ba05",
+      "size_bytes": 40069
+    },
+    {
+      "id": "radioss-D86",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/reader/source/cfgio/MODEL_IO/mec_data_writer.cpp",
+      "title": "Generic CFG-driven data writer",
+      "kind": "code",
+      "version": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "locator": "WriteObjectData 243/253; ComputeValidCards 636; WriteCard 794; WriteSingleCard 1763; WriteIfCard 2856; WriteIfCell 3073",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "permitted-with-notice",
+      "summary": "원문 파일과 저작권 문구를 보존했다. 선택한 함수·관련 절만 읽었으며 빌드/실행하지 않았다.",
+      "local_file": "examples/radioss/code/mec_data_writer.cpp",
+      "sha256": "949c4b3ec67dca61feb1808d631310a425eb03dfd52f83eb730d1438ab35dea7",
+      "size_bytes": 266111
+    },
+    {
+      "id": "radioss-D87",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/reader/source/cfgio/MODEL_IO/mec_single_file_writer.cpp",
+      "title": "Buffered formatted output context",
+      "kind": "code",
+      "version": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "locator": "file header; class constructor, WriteFile and RemoveBlankEnd",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "permitted-with-notice",
+      "summary": "원문 파일과 저작권 문구를 보존했다. 선택한 함수·관련 절만 읽었으며 빌드/실행하지 않았다.",
+      "local_file": "examples/radioss/code/mec_single_file_writer.cpp",
+      "sha256": "43afb235417ed5385584155a559930150244ac89402b33ce1c463b31fa704aca",
+      "size_bytes": 3345
+    },
+    {
+      "id": "radioss-D88",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/qa_tools/verify_results.py",
+      "title": "Upstream engine-result regression comparator",
+      "kind": "code",
+      "version": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "locator": "extract_engine_results 29; extract_reference 104; compute_tolerance 131; compare 222",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "permitted-with-notice",
+      "summary": "원문 파일과 저작권 문구를 보존했다. 선택한 함수·관련 절만 읽었으며 빌드/실행하지 않았다.",
+      "local_file": "examples/radioss/code/verify_results.py",
+      "sha256": "f0a1c0956387aabe75d905b4a120ea76d6c5ef8b80d76ce5add5a00e561e288c",
+      "size_bytes": 13535
+    },
+    {
+      "id": "radioss-D89",
+      "url": "https://codeload.github.com/OpenCourant/OpenCourant/zip/cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "title": "OpenCourant release source archive",
+      "kind": "code",
+      "version": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "locator": "latest-20261011 commit archive; 10563 files",
+      "access": "downloaded",
+      "read_depth": "metadata-only",
+      "redistribution": "locator-only",
+      "summary": "고정 commit 소스 원본을 내부 취득했다. archive 안의 파일별 예외를 분리했다.",
+      "local_file": "tmp/radioss/oc-source-archive.zip",
+      "sha256": "9055ad07964dec2b7f2d8b526155fd389ae55585dbe65ac81bbd6e059e6ce502",
+      "size_bytes": 47436970
+    },
+    {
+      "id": "radioss-D90",
+      "url": "https://opencourant.org/downloads/",
+      "title": "OpenCourant downloads",
+      "kind": "api",
+      "version": "acquired 2026-10-30",
+      "locator": "release / platform links",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "선택한 release와 프로젝트의 공식 배포 경로를 확인했다. 바이너리는 시험하지 않았다.",
+      "local_file": "tmp/radioss/ocdownload.html",
+      "sha256": "7de69e07b1766f40cc06c0e992e04b22be9e2ac4de5e4a32525aeac0f8d679b6",
+      "size_bytes": 24213
+    },
+    {
+      "id": "radioss-D91",
+      "url": "https://help.altair.com/hwsolvers/rad/topics/solvers/rad/new_keywords_radioss_2026_r.htm",
+      "title": "New and modified keywords in Radioss 2026",
+      "kind": "manual",
+      "version": "Radioss 2026",
+      "locator": "new/modified keyword headings",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "2026 문서와 2024 문서의 판 차이를 확인했다.",
+      "local_file": "tmp/radioss/new-keywords2026.html",
+      "sha256": "437fa7aab96e868de3e7fc1931963ff417c5a07c7c82135e3cfb6fca84034a3e",
+      "size_bytes": 48696
+    },
+    {
+      "id": "radioss-D92",
+      "url": "https://github.com/OpenCourant/OpenCourant/tree/cb760c206e346eff12161a2268b134ef9d48a4ef/hm_cfg_files",
+      "title": "HyperMesh/reader CFG descriptors",
+      "kind": "code",
+      "version": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "locator": "Radioss inventory 1333 files; sample begin/tetra4/2025 shell-solid ATTRIBUTES, DEFAULTS, FORMAT/HEADER/CARD",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/radioss/oc-source-archive.zip",
+      "sha256": "9055ad07964dec2b7f2d8b526155fd389ae55585dbe65ac81bbd6e059e6ce502",
+      "size_bytes": 47436970,
+      "redistribution": "locator-only",
+      "summary": "1331개 파일에 OpenRadioss 한정 사용 및 변경 제공 조건이 보인다. repository AGPL을 이 파일들에 덮어 적용하지 않았다."
+    },
+    {
+      "id": "radioss-D93",
+      "url": "https://github.com/OpenCourant/OpenCourant/tree/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa",
+      "title": "OpenCourant upstream QA model and reference corpus",
+      "kind": "example",
+      "version": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "locator": "166 .rad files in acquired archive; 5 case groups selected and read",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/radioss/oc-source-archive.zip",
+      "sha256": "9055ad07964dec2b7f2d8b526155fd389ae55585dbe65ac81bbd6e059e6ce502",
+      "size_bytes": 47436970,
+      "redistribution": "locator-only",
+      "summary": "모델의 file-level CC BY-NC 표시와 회귀 reference를 분리했다. 이 연구에서 solver를 실행하지 않았다."
+    },
+    {
+      "id": "radioss-D94",
+      "url": "https://github.com/OpenCourant/Tools/blob/1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1/userlib_sdk/examples/USER_material_laws_for_solids_and_shells/Solids/small_plast_0000.rad",
+      "title": "Tools SDK small_plast USER01 example",
+      "kind": "example",
+      "version": "1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1",
+      "locator": "file header; /BEGIN2022; /MAT/USER01; paired0001 Engine",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "redistribution": "locator-only",
+      "summary": "실제 모델을 취득했다. code MIT와 별개로 모델 header가 CC BY-NC4.0이므로 deck bytes를 배포하지 않는다.",
+      "local_file": "tmp/radioss/tools-small-plast-0000.rad",
+      "sha256": "268103d9e1e52f1eff612b9a43b21cd92326317bbddd6db704194ac00a4697f9",
+      "size_bytes": 6921
+    }
+  ],
+  "catalogue": {
+    "files": [
+      "catalogues/radioss.csv",
+      "catalogues/radioss.jsonl",
+      "catalogues/radioss-reconciliation.json",
+      "catalogues/radioss-detail-acquisition.json"
+    ],
+    "source_ids": [
+      "radioss-D01",
+      "radioss-D02"
+    ],
+    "scope": "Radioss2024 Starter+Engine Supported Keywords sections, complete index links only",
+    "entry_count": 825,
+    "count_unit": "原文索引行: keyword/family/option/alias labels mixed, not canonical unique supported keywords",
+    "completeness": "complete-index",
+    "reconciliation": "Starter590/Engine235 links parsed; zero unparsed and zero duplicate name+URL rows. Starter577/Engine227 unique detail URLs (combined804). Shared-page groups11+1. Preserve raw FTFILE label linked to atfile_engine_r.htm; semantic aliases/variants not exhaustively resolved. Separate2026 comparator855 rows and added/removed diff; do not add as one denominator.",
+    "full_field_review_complete": false
+  },
+  "rules": [
+    {
+      "id": "radioss-R01",
+      "question_ids": [
+        "Q01",
+        "Q12"
+      ],
+      "source_ids": [
+        "radioss-D09",
+        "radioss-D20"
+      ],
+      "statement": "현재 계열은 model_0000.rad Starter와 model_0001.rad 이후 Engine 입력을 구분한다. /BEGIN의 Invers는 문서 입력 형식판이며 제품 release/코드 commit과 동일한 값이 아니다.",
+      "locator": "Files: Input Format, Version 12.0 and After; /BEGIN: Invers",
+      "examples": [],
+      "limits": "공식 문서의 상향 호환 설명을 OpenCourant의 전 keyword 지원 보증으로 확대하지 않는다.",
+      "status": "documented"
+    },
+    {
+      "id": "radioss-R02",
+      "question_ids": [
+        "Q01",
+        "Q02"
+      ],
+      "source_ids": [
+        "radioss-D03",
+        "radioss-D11"
+      ],
+      "statement": "분리 Starter는 #RADIOSS STARTER 헤더, /BEGIN 및 최종 /END 경계를 가진다. 슬래시 블록은 다음 블록에서 끝난다. #enddata는 include 잔여 부분의 종료이다.",
+      "locator": "Starter Keyword Syntax: Block Format; #enddata: Comments",
+      "examples": [],
+      "limits": "PARAMETER의 /BEGIN 앞 정의 등 별도 규칙이 있으므로 일반 헤더 설명만으로 모든 입력 행의 순서를 결정하지 않는다.",
+      "status": "documented"
+    },
+    {
+      "id": "radioss-R03",
+      "question_ids": [
+        "Q01",
+        "Q05"
+      ],
+      "source_ids": [
+        "radioss-D10"
+      ],
+      "statement": "통합 입력은 Engine 옵션을 먼저 두고 /END/ENGINE으로 닫은 뒤 /BEGIN–/END Starter를 둔다. Engine 옵션은 main 파일에 두며 Engine include와 다중 Engine instance는 이 방식에서 지원하지 않는다.",
+      "locator": "Single File Input: syntax and Comments",
+      "examples": [],
+      "limits": "Radioss 2024 문서 규칙이며 고정 OpenCourant release에서 실행 검증하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "radioss-R04",
+      "question_ids": [
+        "Q02",
+        "Q04"
+      ],
+      "source_ids": [
+        "radioss-D03",
+        "radioss-D04"
+      ],
+      "statement": "Starter의 기본 행 길이는 100자이며 기본 격자는 10자 열이다. 일반 integer/real 설명과 Boolean 특수 위치를 구분한다. reserved 빈 열에 설명문을 넣지 않는다. #/$ 첫 열 주석에는 특수 header/directive 예외가 있다.",
+      "locator": "2024 Starter Keyword Syntax; 2022 PDF pp40–41",
+      "examples": [],
+      "limits": "일부 keyword는 ID 최대10자리, 일반 integer 절은 최대9자리로 적는다. 인코딩·수치 exponent/overflow·모든 예외는 reader와 추가 대조가 필요하다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R05",
+      "question_ids": [
+        "Q02",
+        "Q04",
+        "Q10"
+      ],
+      "source_ids": [
+        "radioss-D07",
+        "radioss-D45"
+      ],
+      "statement": "Engine은 100자 이내 자유 형식, 변수 간 공백, 모든 변수를 적는 방식이다. 문서는 /RUN과 /VERS를 의무로 적고 Engine/Starter 형식판의 일치를 요구한다.",
+      "locator": "Engine Keywords Syntax 전체; /VERS Comments",
+      "examples": [],
+      "limits": "선택한 공식 QA/Tools converter 중 /VERS 생략 사례가 있다. 생략 허용/호환 fallback은 고정 release에서 미검증이다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R06",
+      "question_ids": [
+        "Q03"
+      ],
+      "source_ids": [
+        "radioss-D20"
+      ],
+      "statement": "/BEGIN은 입력 질량·길이·시간과 작업 단위를 구분한다. Starter가 입력을 작업 단위로 변환하며 Engine에서는 단위 변환하지 않고 결과는 작업 단위다. 입력 단위를 생략하면 작업 단위를 따른다.",
+      "locator": "/BEGIN: Definition and Comments on input/work units",
+      "examples": [],
+      "limits": "Radioss 2024 문서 규칙이며 고정 OpenCourant release에서 실행 검증하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "radioss-R07",
+      "question_ids": [
+        "Q04"
+      ],
+      "source_ids": [
+        "radioss-D03",
+        "radioss-D38",
+        "radioss-D39"
+      ],
+      "statement": "공란 또는 0은 각 keyword가 정한 default를 활성화할 수 있으므로 미기입/실제0/상속을 독립 의미로 관리해야 한다. LAW1/ELAST, LAW36/PLAS_TAB과 같은 이름 별칭을 원문과 연결한다.",
+      "locator": "Starter Keyword Syntax: Comments; material Format",
+      "examples": [],
+      "limits": "전체 825행의 별칭·조건별 default를 전수 정규화한 schema가 아니다.",
+      "status": "documented"
+    },
+    {
+      "id": "radioss-R08",
+      "question_ids": [
+        "Q04",
+        "Q08"
+      ],
+      "source_ids": [
+        "radioss-D40",
+        "radioss-D41"
+      ],
+      "statement": "SHELL/SOLID formulation의 0은 /DEF_SHELL·/DEF_SOLID 상속을 뜻할 수 있고 SOLID 일부 default는 material law에 의존한다. Sol2SPH 추가 행 등 조건에 따라 실제 card 수가 달라진다.",
+      "locator": "PROP TYPE1: Ishell, Ismstr; TYPE14: Format and Isolid comments",
+      "examples": [],
+      "limits": "예시 formulation만 읽었다. 모든 property/material 조합의 허용표를 만들지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R09",
+      "question_ids": [
+        "Q04",
+        "Q09"
+      ],
+      "source_ids": [
+        "radioss-D39"
+      ],
+      "statement": "LAW36의 Nfunct>0에서는 function ID·scale·strain-rate 각 목록을 5개 단위로 반복한다. strain-rate는 증가 순서이며 function의 첫 plastic-strain 값과 외삽 의미를 검토해야 한다.",
+      "locator": "LAW36 Format; Nfunct; Comments on curves",
+      "examples": [],
+      "limits": "재료 전체 field 및 모든 failure/strain-rate 조건은 미검토다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R10",
+      "question_ids": [
+        "Q05"
+      ],
+      "source_ids": [
+        "radioss-D08"
+      ],
+      "statement": "#include는 완전한 블록만 포함하며 main 헤더를 포함시킬 수 없다. 상대 경로는 작업 디렉터리 기준이다. filename 공백과 500자 directive 제한, main format 일치와 #enddata 처리를 보존한다.",
+      "locator": "include Comments 전체",
+      "examples": [],
+      "limits": "중첩 시 include 파일 자체 디렉터리 기준으로 임의 변경하면 안 된다.",
+      "status": "documented"
+    },
+    {
+      "id": "radioss-R11",
+      "question_ids": [
+        "Q05",
+        "Q06"
+      ],
+      "source_ids": [
+        "radioss-D37"
+      ],
+      "statement": "GLOBAL/LOCAL parameter의 scope와 이름 대소문자, 왼쪽 정렬·치환 폭을 보존한다. expression 인수는 앞에서 정의해야 하고 공식 문서는 평가에 외부 templex 실행파일을 요구한다.",
+      "locator": "PARAMETER Format/Definition/Comments: names, references, expression order",
+      "examples": [],
+      "limits": "OpenCourant 배포에서 templex 기능의 제공·대체 여부는 미검증이다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R12",
+      "question_ids": [
+        "Q05",
+        "Q06",
+        "Q08"
+      ],
+      "source_ids": [
+        "radioss-D35"
+      ],
+      "statement": "//SUBMODEL은 namespace별 ID offset과 별도 입력판/단위를 가질 수 있다. //ENDSUB가 필요하며 중첩의 제한·무시/비호환 옵션이 있다. Engine의 entity 참조는 적용 후 offset ID를 사용한다.",
+      "locator": "SUBMODEL Definition and Comments 전체",
+      "examples": [],
+      "limits": "큰 다중파트 모델의 ID 재할당 구현이나 충돌검사는 수행하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "radioss-R13",
+      "question_ids": [
+        "Q05",
+        "Q07",
+        "Q09"
+      ],
+      "source_ids": [
+        "radioss-D36"
+      ],
+      "statement": "TRANSFORM은 기록 순서대로 적용한다. node-group 대상은 좌표만 바꾸며 초기 상태·재료 방향·BC 전체 변환은 되지 않는다. 문서는 전체 변환을 위해 submodel 참조를 권한다.",
+      "locator": "Transforms Comments",
+      "examples": [],
+      "limits": "모든 variant의 mirror handedness·하위 객체 변환을 전수 검토하지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R14",
+      "question_ids": [
+        "Q06",
+        "Q08"
+      ],
+      "source_ids": [
+        "radioss-D03",
+        "radioss-D22",
+        "radioss-D24"
+      ],
+      "statement": "option ID의 정의와 reference ID를 분리한다. SHELL의 part_ID는 PART 참조이며 PART를 정의하지 않는다. 다른 PART가 같은 material/property를 공유할 수 있다.",
+      "locator": "Keyword Options / PART Comments / SHELL Format",
+      "examples": [],
+      "limits": "Radioss 2024 문서 규칙이며 고정 OpenCourant release에서 실행 검증하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "radioss-R15",
+      "question_ids": [
+        "Q06",
+        "Q07"
+      ],
+      "source_ids": [
+        "radioss-D23",
+        "radioss-D24",
+        "radioss-D25",
+        "radioss-D26"
+      ],
+      "statement": "element ID는 family 안에서 유일해야 하며 문서는 전체 모델 고유 번호를 권한다. TETRA4의 part_ID는 BRICK 및 TETRA10과 분리한다.",
+      "locator": "각 element Comments",
+      "examples": [],
+      "limits": "모든 family의 정확한 namespace 통합표나 32/64bit ID 한계는 미확정이다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R16",
+      "question_ids": [
+        "Q07"
+      ],
+      "source_ids": [
+        "radioss-D21",
+        "radioss-D23",
+        "radioss-D24",
+        "radioss-D26",
+        "radioss-D25"
+      ],
+      "statement": "NODE 좌표와 요소별 연결 순서를 따로 저장한다. SH3N/SHELL/TETRA4 그림에서 node 순서와 국부 축을 확인했다. 퇴화 BRICK 허용은 formulation별 제한이 있어 모든 wedge/tet을 같은 node 반복으로 바꾸면 안 된다.",
+      "locator": "NODE Format; SH3N/SHELL/TETRA4 Figure1; BRICK Comments",
+      "examples": [],
+      "limits": "고차 요소, 모든 face 번호, 모든 BRICK 도형과 퇴화 조건 전수는 미검토다. mesh 외부 포맷 순서를 native 순서로 가정하지 않는다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R17",
+      "question_ids": [
+        "Q07",
+        "Q08",
+        "Q09"
+      ],
+      "source_ids": [
+        "radioss-D27",
+        "radioss-D28"
+      ],
+      "statement": "SURF/SEG은 요소에 속한 node로 segment를 구성하며 삼각형은 네 번째 node를 생략할 수 있다. SURF/PART의 음수 part 참조는 normal을 뒤집고 solid는 EXT/ALL variant가 필요하다.",
+      "locator": "SURF/SEG Comments; SURF/PART Comments",
+      "examples": [],
+      "limits": "face/normal의 모든 접촉·압력 조건은 미검토다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R18",
+      "question_ids": [
+        "Q08"
+      ],
+      "source_ids": [
+        "radioss-D22"
+      ],
+      "statement": "PART는 같은 요소 종류·material/property를 갖는 동종 집합이다. composite property/ply material은 PART의 단순 mat_ID와 다른 의미를 가지며 PART material은 시간증분·접촉 stiffness에만 사용될 수 있다.",
+      "locator": "PART Comments 1–4",
+      "examples": [],
+      "limits": "assembly/ply/failure 전체 매핑은 미완성이다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R19",
+      "question_ids": [
+        "Q08",
+        "Q09"
+      ],
+      "source_ids": [
+        "radioss-D29"
+      ],
+      "statement": "GRNOD는 명시 node·range·요소·part·property·material·하위 group 등으로 정의된다. NODENS는 입력 순서를 유지하는 특수 variant이므로 일반 정렬과 구분한다.",
+      "locator": "GRNOD Input Type Keywords and Comments",
+      "examples": [],
+      "limits": "모든 group variant 상세 행은 전수 독해하지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R20",
+      "question_ids": [
+        "Q09"
+      ],
+      "source_ids": [
+        "radioss-D31",
+        "radioss-D34"
+      ],
+      "statement": "BCS는 여섯 병진/회전 자유도 코드와 필수 node group을 참조하고 local skew 적용을 구분한다. Boolean의 열 배치가 있다. SKEW/FIX는 FRAME/FIX와 ID가 중복되면 안 된다.",
+      "locator": "BCS Trarot and Comments; SKEW/FIX Definition",
+      "examples": [],
+      "limits": "모든 shell/solid DOF 조합이나 중복 BC의 solver 진단은 미검증이다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R21",
+      "question_ids": [
+        "Q09"
+      ],
+      "source_ids": [
+        "radioss-D32",
+        "radioss-D30"
+      ],
+      "statement": "CLOAD 값은 group 전체 합력이 아니라 node당 force/moment이다. curve와 방향·skew·sensor 참조를 보존한다. FUNCT의 X는 엄격 증가하며 범위 밖은 마지막 두 점의 기울기로 외삽한다. TABLE과 ID를 공유하지 않는다.",
+      "locator": "CLOAD Definition/Comments; FUNCT Comments",
+      "examples": [],
+      "limits": "Radioss 2024 문서 규칙이며 고정 OpenCourant release에서 실행 검증하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "radioss-R22",
+      "question_ids": [
+        "Q09"
+      ],
+      "source_ids": [
+        "radioss-D33"
+      ],
+      "statement": "INIVEL은 필수 node group, 선택 skew, 병진/회전/격자 종류를 구분한다. 회전 속도는 rad/time이며 translation과 동일한 차원의 값으로 저장하지 않는다.",
+      "locator": "INIVEL Definition and Comments",
+      "examples": [],
+      "limits": "Radioss 2024 문서 규칙이며 고정 OpenCourant release에서 실행 검증하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "radioss-R23",
+      "question_ids": [
+        "Q04",
+        "Q09"
+      ],
+      "source_ids": [
+        "radioss-D42",
+        "radioss-D43"
+      ],
+      "statement": "TYPE7의 secondary node group/main surface 참조와 TYPE24의 self/surface-surface/node-surface 조합은 다르다. friction/thermal 등의 flag에 따라 추가 행이 달라진다. TYPE7 edge-edge와 TYPE24 implicit SMP 제약을 보존한다.",
+      "locator": "TYPE7 Description/Format; TYPE24 Description/Format/Comments1",
+      "examples": [],
+      "limits": "모든 접촉 field·수치식·MPI/implicit compatibility는 전수 검토하지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R24",
+      "question_ids": [
+        "Q10"
+      ],
+      "source_ids": [
+        "radioss-D44",
+        "radioss-D46"
+      ],
+      "statement": "RUN의 final time와 run number, restart letter를 구분한다. RFILE은 cycle 주기로 상태를 쓰고 선택 n에 따라 I/J/K 파일을 순환하며 다음 run은 해당 상태를 참조한다.",
+      "locator": "RUN Format/Comments; RFILE/n Comments",
+      "examples": [],
+      "limits": "restart 파일은 generated text deck이 아니라 solver-produced binary state이다.",
+      "status": "documented"
+    },
+    {
+      "id": "radioss-R25",
+      "question_ids": [
+        "Q10"
+      ],
+      "source_ids": [
+        "radioss-D47",
+        "radioss-D09"
+      ],
+      "statement": "STOP은 solver 내부의 에너지/질량 기준 종료다. .ctl 제어 파일과 OS process cancel은 다른 경로이며 안전한 중단·restart 유효성은 실제 런에서 검증해야 한다.",
+      "locator": "STOP Description/Definition; Files control/restart rows",
+      "examples": [],
+      "limits": "외부 kill/cancel을 restart 저장 성공과 동일시하지 않는다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R26",
+      "question_ids": [
+        "Q10"
+      ],
+      "source_ids": [
+        "radioss-D50",
+        "radioss-D51",
+        "radioss-D52"
+      ],
+      "statement": "IMPL/LINEAR의 선형 정적·모드·좌굴과 비선형 IMPL/DTINI 초기 증분, IMPL/DT/1 적응 제어를 구분한다. explicit 시간 제어와 같은 단일 step 필드로 환원하지 않는다.",
+      "locator": "IMPL/LINEAR Comments; DTINI Comments; DT/1 Format/Definition",
+      "examples": [],
+      "limits": "commercial manual의 implicit keyword 존재는 OpenCourant target의 전수 implicit 기능 가용성 증거가 아니다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R27",
+      "question_ids": [
+        "Q10"
+      ],
+      "source_ids": [
+        "radioss-D48",
+        "radioss-D49"
+      ],
+      "statement": "TFILE은 time-history의 출력 형식·시간 간격이고 TH 계열은 요청 변수/객체다. ANIM/DT도 시작·빈도·종료 요청이다. 분석 최종시간과 결과 표본 간격을 분리한다.",
+      "locator": "TFILE Definition/Comments; ANIM/DT Definition",
+      "examples": [],
+      "limits": "H3D 모든 요청·필드 전수는 미검토다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R28",
+      "question_ids": [
+        "Q11",
+        "Q12"
+      ],
+      "source_ids": [
+        "radioss-D83",
+        "radioss-D84"
+      ],
+      "statement": "MIT inp2rad는 일부 INP를 읽어 Starter/Engine text를 출력하는 실제 converter다. 기본 radversion=2025와 2023/2025 CLI 분기, hardcoded Mg/mm/s, 일부 재료·요소 변환을 확인했다.",
+      "locator": "inp2rad convert_nodes/materials/elements, write_parts/props, write_output; README supported keywords",
+      "examples": [],
+      "limits": "Abaqus 전 옵션·Radioss 전 keyword의 standalone generator가 아니다. 실행하지 않았고 변환 의미가 보존되는지도 시험하지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R29",
+      "question_ids": [
+        "Q07",
+        "Q11"
+      ],
+      "source_ids": [
+        "radioss-D83"
+      ],
+      "statement": "inp2rad의 C3D4는 node [0,2,1,3]으로 바꾸고 C3D6은 일부 node를 반복하는 BRICK으로 매핑한다. 이는 선택한 converter의 판단이며 native 포맷의 모든 요소 규격을 대체하지 않는다.",
+      "locator": "inp2rad.py convert_elements 2947–3215",
+      "examples": [],
+      "limits": "변환 결과의 orientation·Jacobian·formulation은 별도 검증해야 한다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R30",
+      "question_ids": [
+        "Q11",
+        "Q12"
+      ],
+      "source_ids": [
+        "radioss-D85",
+        "radioss-D86",
+        "radioss-D87",
+        "radioss-D92"
+      ],
+      "statement": "AGPL reader/writer는 실제 CFG 기반 읽기·조건부 card 출력 구조를 갖는다. 독립 writer는 descriptor·모델·CFG runtime에 의존한다. 제한적 CFG notice가 있는 파일을 AGPL 코드와 같은 조건으로 재사용할 수 있다고 가정하지 않는다.",
+      "locator": "radiossblk CFG.Init/ReadModel; mec_data_writer WriteCard/WriteIfCard; file headers",
+      "examples": [],
+      "limits": "파일 1333개는 keyword 1333개가 아니며 역사 버전 상속을 포함한다. 빌드·실행하지 않았다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R31",
+      "question_ids": [
+        "Q11",
+        "Q12"
+      ],
+      "source_ids": [
+        "radioss-D88",
+        "radioss-D93"
+      ],
+      "statement": "공식 QA deck과 ref.extract, verifier를 실제 확보했다. reference는 upstream 회귀 관측값이며 새로운 generator의 수치 정답이나 독립 물리 검증이 아니다. .rad 다수의 CC BY-NC 표시를 확인해 원문은 내부에만 둔다.",
+      "locator": "qa-tests selected case decks/readme/test_files/ref.extract; verify_results.py functions",
+      "examples": [
+        "radioss-E01",
+        "radioss-E02",
+        "radioss-E03",
+        "radioss-E04",
+        "radioss-E05"
+      ],
+      "limits": "의도된 오류 deck corpus/validator 오류 사전은 확보·분류되지 않았다. 선택 사례의 큰 energy error도 숨기지 않는다.",
+      "status": "partial"
+    },
+    {
+      "id": "radioss-R32",
+      "question_ids": [
+        "Q12"
+      ],
+      "source_ids": [
+        "radioss-D01",
+        "radioss-D02",
+        "radioss-D05",
+        "radioss-D06",
+        "radioss-D89"
+      ],
+      "statement": "2024 문서 색인 825행과 2026 색인 855행, OpenCourant latest-20261011 commit은 서로 다른 판 축이다. 색인·다운로드·관련 절 독해·지원 구현·solver read/run을 독립 상태로 기록한다.",
+      "locator": "catalogue reconciliation and version diff; source archive revision",
+      "examples": [],
+      "limits": "문서 전 field 검토와 target runtime 지원 확인은 false다.",
+      "status": "partial"
+    }
+  ],
+  "examples": [
+    {
+      "id": "radioss-E01",
+      "source_ids": [
+        "radioss-D93",
+        "radioss-D88"
+      ],
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/COQUES3N/ct3a/data/CT3AV4_0000.rad",
+      "file": null,
+      "sha256": "d7e32a8072cd312040e8cb4d0023020b11a9a52db1c8accd7203bb2942fae749",
+      "version": "OpenCourant cb760c206e346eff12161a2268b134ef9d48a4ef; Starter /BEGIN 2019",
+      "kind": "official-deck",
+      "purpose": "SH3N beam/support and initial velocity",
+      "expected": "upstream ref.extract: cycle/time/energies; 독립 실행하지 않았다.",
+      "license": "RAD file header: Creative Commons Attribution-NonCommercial 4.0; ref/meta files not assumed same license",
+      "redistribution": "locator-only",
+      "solver_executed": false,
+      "acquisition": "actual bytes internal in pinned archive and selected paths; public bundle contains locator/hash only",
+      "members": [
+        {
+          "path": "qa-tests/miniqa/COQUES3N/ct3a/data/CT3AV4_0000.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/COQUES3N/ct3a/data/CT3AV4_0000.rad",
+          "sha256": "d7e32a8072cd312040e8cb4d0023020b11a9a52db1c8accd7203bb2942fae749",
+          "size_bytes": 20276,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/COQUES3N/ct3a/data/CT3AV4_0000.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/COQUES3N/ct3a/data/CT3AV4_0001.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/COQUES3N/ct3a/data/CT3AV4_0001.rad",
+          "sha256": "c7bcebd3962bf875c8023cc7daa9ea192a86591706bd05b03c7b77ab4bd06a80",
+          "size_bytes": 490,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/COQUES3N/ct3a/data/CT3AV4_0001.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/COQUES3N/ct3a/data/qadiags.inc",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/COQUES3N/ct3a/data/qadiags.inc",
+          "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+          "size_bytes": 1150,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/COQUES3N/ct3a/data/qadiags.inc",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/COQUES3N/ct3a/data/readme.txt",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/COQUES3N/ct3a/data/readme.txt",
+          "sha256": "d466ac41338c946acb970ae2ea1f9bbf058fad964282e87488a2b763e06e9473",
+          "size_bytes": 501,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/COQUES3N/ct3a/data/readme.txt",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/COQUES3N/ct3a/data/ref.extract",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/COQUES3N/ct3a/data/ref.extract",
+          "sha256": "5b2797d94032674fffb670914df8527ca61d903b6a52fc3b222c3db0241fa99f",
+          "size_bytes": 361,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/COQUES3N/ct3a/data/ref.extract",
+          "redistribution": "locator-only"
+        }
+      ]
+    },
+    {
+      "id": "radioss-E02",
+      "source_ids": [
+        "radioss-D93",
+        "radioss-D88"
+      ],
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_25/tetra4/data/model_00_0000.rad",
+      "file": null,
+      "sha256": "d2483e05ab18c3be1010f116967c126338258ddd9e8212a09ddd76d785aa65e0",
+      "version": "OpenCourant cb760c206e346eff12161a2268b134ef9d48a4ef; Starter /BEGIN 2022",
+      "kind": "official-deck",
+      "purpose": "TETRA4 contact TYPE25 and material/failure dependencies",
+      "expected": "upstream ref.extract has energy ERROR -27.0; clean physical gold standard로 부르지 않는다.",
+      "license": "RAD file header: Creative Commons Attribution-NonCommercial 4.0; ref/meta files not assumed same license",
+      "redistribution": "locator-only",
+      "solver_executed": false,
+      "acquisition": "actual bytes internal in pinned archive and selected paths; public bundle contains locator/hash only",
+      "members": [
+        {
+          "path": "qa-tests/miniqa/INTERF/INT_25/tetra4/data/model_00_0000.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_25/tetra4/data/model_00_0000.rad",
+          "sha256": "d2483e05ab18c3be1010f116967c126338258ddd9e8212a09ddd76d785aa65e0",
+          "size_bytes": 88669,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/INTERF/INT_25/tetra4/data/model_00_0000.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/INTERF/INT_25/tetra4/data/model_00_0001.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_25/tetra4/data/model_00_0001.rad",
+          "sha256": "b1407bd76e5c9996d15526badb53d2f88a284e7e318458236b6f5efb163e81fc",
+          "size_bytes": 234,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/INTERF/INT_25/tetra4/data/model_00_0001.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/INTERF/INT_25/tetra4/data/ref.extract",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_25/tetra4/data/ref.extract",
+          "sha256": "aca2d5a11fbc9e96f5103710c7e4aa9fee92060ee64105e6e132eca363d2c6c6",
+          "size_bytes": 361,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/INTERF/INT_25/tetra4/data/ref.extract",
+          "redistribution": "locator-only"
+        }
+      ]
+    },
+    {
+      "id": "radioss-E03",
+      "source_ids": [
+        "radioss-D93",
+        "radioss-D88"
+      ],
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/44SLD8_0000.rad",
+      "file": null,
+      "sha256": "7fc3b2781753d28da1689e9db95832492820d22854e228c8c5c80effe8e498b9",
+      "version": "OpenCourant cb760c206e346eff12161a2268b134ef9d48a4ef; Starter /BEGIN 2017",
+      "kind": "official-deck",
+      "purpose": "Single BRICK / COWPER LAW44, numeric unit factors, Engine VERS41",
+      "expected": "upstream ref.extract, 2022 readme changes; 이 연구에서 비교 실행하지 않았다.",
+      "license": "RAD file header: Creative Commons Attribution-NonCommercial 4.0; ref/meta files not assumed same license",
+      "redistribution": "locator-only",
+      "solver_executed": false,
+      "acquisition": "actual bytes internal in pinned archive and selected paths; public bundle contains locator/hash only",
+      "members": [
+        {
+          "path": "qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/44SLD8_0000.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/44SLD8_0000.rad",
+          "sha256": "7fc3b2781753d28da1689e9db95832492820d22854e228c8c5c80effe8e498b9",
+          "size_bytes": 3000,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/44SLD8_0000.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/44SLD8_0001.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/44SLD8_0001.rad",
+          "sha256": "9bbb3a9d11d90d16e9235a7a1a1c0b76578dd76b9d388851f914c0939d06442e",
+          "size_bytes": 428,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/44SLD8_0001.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/qadiags.inc",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/qadiags.inc",
+          "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+          "size_bytes": 1150,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/qadiags.inc",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/readme.txt",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/readme.txt",
+          "sha256": "9008caf34d5a68749735f7cd686bf9d9608d69e61bbe98ee643cca590b457ff8",
+          "size_bytes": 465,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/readme.txt",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/ref.extract",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/ref.extract",
+          "sha256": "4c04dbfbd5fcb172ff7db5a1ec92c786f8a21692f6c139eb92f040579991a149",
+          "size_bytes": 361,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/ref.extract",
+          "redistribution": "locator-only"
+        }
+      ]
+    },
+    {
+      "id": "radioss-E04",
+      "source_ids": [
+        "radioss-D93",
+        "radioss-D88"
+      ],
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0000.rad",
+      "file": null,
+      "sha256": "52a253e91f6850f5ae0c009be782b7b5cef7b7294dc0c883eb232fe8cb832926",
+      "version": "OpenCourant cb760c206e346eff12161a2268b134ef9d48a4ef; Starter /BEGIN 2019",
+      "kind": "official-deck",
+      "purpose": "ALE/EOS/HYDVISC and three Engine restart/run stages",
+      "expected": "test_files.json engine array plus upstream ref.extract; USER/외부 환경과 모든 수치 조건을 검증하지 않았다.",
+      "license": "RAD file header: Creative Commons Attribution-NonCommercial 4.0; ref/meta files not assumed same license",
+      "redistribution": "locator-only",
+      "solver_executed": false,
+      "acquisition": "actual bytes internal in pinned archive and selected paths; public bundle contains locator/hash only",
+      "members": [
+        {
+          "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0000.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0000.rad",
+          "sha256": "52a253e91f6850f5ae0c009be782b7b5cef7b7294dc0c883eb232fe8cb832926",
+          "size_bytes": 13438,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0000.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0001.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0001.rad",
+          "sha256": "f9078ee4ab3417345a095bb163213a39b984165506c41f28d6d7639c866c41b4",
+          "size_bytes": 534,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0001.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0002.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0002.rad",
+          "sha256": "ccee3130f3d66f5521dd7a5f544dacf3aa805bb536685a13764bd15fc5d4001f",
+          "size_bytes": 408,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0002.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0003.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0003.rad",
+          "sha256": "b3580f19573de693a34bec679885c1ce4b9c0f0d63d7407ea8c48c2384c9f75f",
+          "size_bytes": 322,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0003.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/qadiags.inc",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/qadiags.inc",
+          "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+          "size_bytes": 1150,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/qadiags.inc",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/readme.txt",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/readme.txt",
+          "sha256": "7186548eed5b28683d4ce56a547159479232006420800b3a8721a82083b071f6",
+          "size_bytes": 480,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/readme.txt",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/ref.extract",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/ref.extract",
+          "sha256": "5c4f5020f7e3e4b5c98d5aea07766f4f9ea9f2b3ebf7eaa49a986ed8541f5f2b",
+          "size_bytes": 367,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/ref.extract",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/test_files.json",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/test_files.json",
+          "sha256": "da14b6caff7ccc64a785d36da730048a030e3cfedcce755f42b6ec86f1f78a4d",
+          "size_bytes": 110,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/test_files.json",
+          "redistribution": "locator-only"
+        }
+      ]
+    },
+    {
+      "id": "radioss-E05",
+      "source_ids": [
+        "radioss-D93",
+        "radioss-D88"
+      ],
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/EOS/EOS_PUFF_2/data/EOSPUFFDET3DCU_0000.rad",
+      "file": null,
+      "sha256": "2bf734d98308817cea1b873c97b109b4bc7acee58715f91fa2784639a6ccf738",
+      "version": "OpenCourant cb760c206e346eff12161a2268b134ef9d48a4ef; Starter /BEGIN 2018",
+      "kind": "official-deck",
+      "purpose": "EOS PUFF + LAW4; version-dependent RHO0 readme",
+      "expected": "upstream ref.extract; readme says RHO0 behavior from format2018, not a new golden result.",
+      "license": "RAD file header: Creative Commons Attribution-NonCommercial 4.0; ref/meta files not assumed same license",
+      "redistribution": "locator-only",
+      "solver_executed": false,
+      "acquisition": "actual bytes internal in pinned archive and selected paths; public bundle contains locator/hash only",
+      "members": [
+        {
+          "path": "qa-tests/miniqa/EOS/EOS_PUFF_2/data/EOSPUFFDET3DCU_0000.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/EOS/EOS_PUFF_2/data/EOSPUFFDET3DCU_0000.rad",
+          "sha256": "2bf734d98308817cea1b873c97b109b4bc7acee58715f91fa2784639a6ccf738",
+          "size_bytes": 8897,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/EOS/EOS_PUFF_2/data/EOSPUFFDET3DCU_0000.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/EOS/EOS_PUFF_2/data/EOSPUFFDET3DCU_0001.rad",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/EOS/EOS_PUFF_2/data/EOSPUFFDET3DCU_0001.rad",
+          "sha256": "461a4e16b97dcfb628ee27c7698e3ca050304b77162b35aa02027101d38094b9",
+          "size_bytes": 347,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/EOS/EOS_PUFF_2/data/EOSPUFFDET3DCU_0001.rad",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/EOS/EOS_PUFF_2/data/qadiags.inc",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/EOS/EOS_PUFF_2/data/qadiags.inc",
+          "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+          "size_bytes": 1150,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/EOS/EOS_PUFF_2/data/qadiags.inc",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/EOS/EOS_PUFF_2/data/readme.txt",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/EOS/EOS_PUFF_2/data/readme.txt",
+          "sha256": "d2c1c869ff4baa768d2b8ef46e25fbbd9e350f7501b92d54f24b1280def956d1",
+          "size_bytes": 586,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/EOS/EOS_PUFF_2/data/readme.txt",
+          "redistribution": "locator-only"
+        },
+        {
+          "path": "qa-tests/miniqa/EOS/EOS_PUFF_2/data/ref.extract",
+          "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/EOS/EOS_PUFF_2/data/ref.extract",
+          "sha256": "b96ef3f687233d4cb184131043df1936c076ac950b2dcf16d3f203fa3675421c",
+          "size_bytes": 361,
+          "internal_file": "tmp/radioss/qa-selected/qa-tests/miniqa/EOS/EOS_PUFF_2/data/ref.extract",
+          "redistribution": "locator-only"
+        }
+      ]
+    },
+    {
+      "id": "radioss-E06",
+      "source_ids": [
+        "radioss-D82",
+        "radioss-D94"
+      ],
+      "url": "https://github.com/OpenCourant/Tools/blob/1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1/userlib_sdk/examples/USER_material_laws_for_solids_and_shells/Solids/small_plast_0000.rad",
+      "file": null,
+      "sha256": "268103d9e1e52f1eff612b9a43b21cd92326317bbddd6db704194ac00a4697f9",
+      "version": "1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1",
+      "kind": "source-example",
+      "purpose": "Tools SDK small_plast USER01 sample; user library required",
+      "expected": "제공 deck을 읽었으며 library build/solver 실행은 하지 않았다.",
+      "license": "RAD file header is CC BY-NC 4.0, not the Tools code MIT notice",
+      "redistribution": "locator-only",
+      "solver_executed": false,
+      "internal_file": "tmp/radioss/tools-small-plast-0000.rad"
+    }
+  ],
+  "code_assets": [
+    {
+      "id": "radioss-C01",
+      "source_ids": [
+        "radioss-D82",
+        "radioss-D83",
+        "radioss-D84"
+      ],
+      "role": "converter",
+      "repository": "https://github.com/OpenCourant/Tools",
+      "revision": "1b6bb9200ee7dca899e61c18bd982c3fb1c72fd1",
+      "paths": [
+        "input_converters/inp2rad/inp2rad/inp2rad.py",
+        "input_converters/inp2rad/README.md"
+      ],
+      "scope": "Actual INP-to-RAD text conversion for documented subset; 85 Python functions inventoried",
+      "limits": "Beta/unsupported suboptions; default version2025 and choices2023/2025; hardcoded Mg/mm/s; no all-keyword claim or execution",
+      "license": "MIT per source header and Tools Copyright.md",
+      "local_files": [
+        "examples/radioss/code/inp2rad.py",
+        "examples/radioss/code/inp2rad-README.md",
+        "examples/radioss/code/Tools-Copyright.md"
+      ],
+      "executed": false
+    },
+    {
+      "id": "radioss-C02",
+      "source_ids": [
+        "radioss-D80",
+        "radioss-D81",
+        "radioss-D85",
+        "radioss-D92"
+      ],
+      "role": "solver-reader",
+      "repository": "https://github.com/OpenCourant/OpenCourant",
+      "revision": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "paths": [
+        "reader/source/io/model_readers/radioss/radiossblk/radiossblk.cxx"
+      ],
+      "scope": "CFG-backed reader front end, profile selection, ReadModel and offsets",
+      "limits": "Not standalone; selected main profile defaults2026; full starter Fortran semantic implementation not reviewed",
+      "license": "AGPL-3.0-or-later source file; required CFG has distinct restrictive notices",
+      "local_files": [
+        "examples/radioss/code/radiossblk.cxx",
+        "examples/radioss/code/OpenCourant-LICENSE.md",
+        "examples/radioss/code/OpenCourant-COPYRIGHT.md"
+      ],
+      "executed": false
+    },
+    {
+      "id": "radioss-C03",
+      "source_ids": [
+        "radioss-D80",
+        "radioss-D81",
+        "radioss-D86",
+        "radioss-D87",
+        "radioss-D92"
+      ],
+      "role": "writer",
+      "repository": "https://github.com/OpenCourant/OpenCourant",
+      "revision": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "paths": [
+        "reader/source/cfgio/MODEL_IO/mec_data_writer.cpp",
+        "reader/source/cfgio/MODEL_IO/mec_single_file_writer.cpp"
+      ],
+      "scope": "Generic descriptor/CFG-driven field/card/list/conditional text output and output buffer",
+      "limits": "Not a standalone generated RAD application or full schema; requires model/runtime/descriptors and CFG with separate conditions",
+      "license": "AGPL-3.0-or-later in selected file headers",
+      "local_files": [
+        "examples/radioss/code/mec_data_writer.cpp",
+        "examples/radioss/code/mec_single_file_writer.cpp",
+        "examples/radioss/code/OpenCourant-LICENSE.md"
+      ],
+      "executed": false
+    },
+    {
+      "id": "radioss-C04",
+      "source_ids": [
+        "radioss-D89",
+        "radioss-D92"
+      ],
+      "role": "schema",
+      "repository": "https://github.com/OpenCourant/OpenCourant",
+      "revision": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "paths": [
+        "hm_cfg_files/config/CFG/radioss*"
+      ],
+      "scope": "1333 descriptors/version hierarchy paths, SHA and header license classifications; selected ATTRIBUTES/DEFAULTS/FORMAT/CARD structures read",
+      "limits": "1331 restrictive CFG notices, 2 unclassified; no CFG bytes redistributed; file count is not keyword count; inherited-version resolution/full-field schema not complete",
+      "license": "File-specific limited use solely with OpenRadioss and modification contribution conditions; not assumed AGPL",
+      "local_files": [
+        "catalogues/radioss-cfg-inventory.json"
+      ],
+      "executed": false
+    },
+    {
+      "id": "radioss-C05",
+      "source_ids": [
+        "radioss-D80",
+        "radioss-D88",
+        "radioss-D93"
+      ],
+      "role": "parser",
+      "repository": "https://github.com/OpenCourant/OpenCourant",
+      "revision": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "paths": [
+        "qa-tests/qa_tools/verify_results.py"
+      ],
+      "scope": "Engine-output extraction and comparison to ref.extract with configured tolerances",
+      "limits": "Regression comparator, not deck writer or proof of physical correctness; no runtime execution",
+      "license": "AGPL-3.0-or-later in source header",
+      "local_files": [
+        "examples/radioss/code/verify_results.py",
+        "examples/radioss/code/OpenCourant-LICENSE.md"
+      ],
+      "executed": false
+    }
+  ],
+  "coverage": [
+    {
+      "question_id": "Q01",
+      "rule_ids": [
+        "radioss-R01",
+        "radioss-R02",
+        "radioss-R03"
+      ],
+      "status": "partial",
+      "missing": "실제 target 최소 덱 read/run 및 모든 특수 파일 역할은 미검증."
+    },
+    {
+      "question_id": "Q02",
+      "rule_ids": [
+        "radioss-R02",
+        "radioss-R04",
+        "radioss-R05"
+      ],
+      "status": "partial",
+      "missing": "인코딩, 전체 수치 표기/overflow/continuation 예외와 모든 card의 exact column schema 미완성."
+    },
+    {
+      "question_id": "Q03",
+      "rule_ids": [
+        "radioss-R06"
+      ],
+      "status": "partial",
+      "missing": "모든 unit_ID 및 열/전기/복합 단위 field의 전수 변환표 미완성."
+    },
+    {
+      "question_id": "Q04",
+      "rule_ids": [
+        "radioss-R04",
+        "radioss-R05",
+        "radioss-R07",
+        "radioss-R08",
+        "radioss-R09",
+        "radioss-R23"
+      ],
+      "status": "partial",
+      "missing": "825행의 전체 field/조건/default/별칭 정규화·상속 전수 검토는 false."
+    },
+    {
+      "question_id": "Q05",
+      "rule_ids": [
+        "radioss-R03",
+        "radioss-R10",
+        "radioss-R11",
+        "radioss-R12",
+        "radioss-R13"
+      ],
+      "status": "partial",
+      "missing": "모든 include/parameter/transform edge case와 templex 제공 여부 runtime 미검증."
+    },
+    {
+      "question_id": "Q06",
+      "rule_ids": [
+        "radioss-R11",
+        "radioss-R12",
+        "radioss-R14",
+        "radioss-R15"
+      ],
+      "status": "partial",
+      "missing": "전체 keyword namespace/ID 상한/duplicate 진단/forward-reference 규칙표와 allocator 미구현."
+    },
+    {
+      "question_id": "Q07",
+      "rule_ids": [
+        "radioss-R13",
+        "radioss-R15",
+        "radioss-R16",
+        "radioss-R17",
+        "radioss-R29"
+      ],
+      "status": "partial",
+      "missing": "고차 요소 전체, face/side 전체, formulation별 퇴화/노멀 전수 규칙과 양의 Jacobian 시험 미확보."
+    },
+    {
+      "question_id": "Q08",
+      "rule_ids": [
+        "radioss-R08",
+        "radioss-R12",
+        "radioss-R14",
+        "radioss-R17",
+        "radioss-R18",
+        "radioss-R19"
+      ],
+      "status": "partial",
+      "missing": "복합재·assembly·MPC·rigid·SPH/ALE 등 전체 객체 매핑 schema 미완성."
+    },
+    {
+      "question_id": "Q09",
+      "rule_ids": [
+        "radioss-R09",
+        "radioss-R13",
+        "radioss-R17",
+        "radioss-R19",
+        "radioss-R20",
+        "radioss-R21",
+        "radioss-R22",
+        "radioss-R23"
+      ],
+      "status": "partial",
+      "missing": "모든 하중/접촉/재료/센서·curve 참조의 조건과 activation 전수 미완성."
+    },
+    {
+      "question_id": "Q10",
+      "rule_ids": [
+        "radioss-R05",
+        "radioss-R24",
+        "radioss-R25",
+        "radioss-R26",
+        "radioss-R27"
+      ],
+      "status": "partial",
+      "missing": "전체 explicit/implicit/restart/output 조합·실제 중단 복구 의미 runtime 미검증."
+    },
+    {
+      "question_id": "Q11",
+      "rule_ids": [
+        "radioss-R28",
+        "radioss-R29",
+        "radioss-R30",
+        "radioss-R31"
+      ],
+      "status": "partial",
+      "missing": "의도된 오류 fixture/expected diagnostic corpus 미분류; 배포 가능한 NC-free 완전 모델 시험쌍 미확보; official NC deck은 내부 취득."
+    },
+    {
+      "question_id": "Q12",
+      "rule_ids": [
+        "radioss-R01",
+        "radioss-R28",
+        "radioss-R30",
+        "radioss-R31",
+        "radioss-R32"
+      ],
+      "status": "partial",
+      "missing": "target OpenCourant의 2024/2026 keyword/field별 support 매핑과 binary read/run false; 제한 CFG 권리 미해소."
+    }
+  ],
+  "acquisition_log": [
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/starter_input_r.htm",
+      "outcome": "downloaded",
+      "key": "starter2024",
+      "size_bytes": 214093,
+      "sha256": "0b0731faf8fec8a6a225c2a89363d927424eeb16a4c403dd62e6077a00421aa2"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/engine_input_r.htm",
+      "outcome": "downloaded",
+      "key": "engine2024",
+      "size_bytes": 93917,
+      "sha256": "28dcd4adfcfe5a4cbcd8d80ec791b842ed13bdb043e521fd6d2b327160d0a7ca"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/starter_keyword_syntax_r.htm",
+      "outcome": "downloaded",
+      "key": "syntax2024",
+      "size_bytes": 99465,
+      "sha256": "803734a8e2b29cc8acfe558edf2b27d3d8466689fd768ed78c8f6fa5bd697fde"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/engine_keyword_syntax_r.htm",
+      "outcome": "blocked",
+      "key": "engine-syntax2024",
+      "error": "HTTP Error 503: Service Unavailable"
+    },
+    {
+      "target": "https://2022.help.altair.com/2022/simulation/pdfs/radopen/AltairRadioss_2022_ReferenceGuide.pdf",
+      "outcome": "downloaded",
+      "key": "reference2022",
+      "size_bytes": 48136101,
+      "sha256": "ced419a42483fce972d975856def09692213d2afd108ccf3e0a85551a3ce0ffd"
+    },
+    {
+      "target": "https://opencourant.org/downloads/",
+      "outcome": "downloaded",
+      "key": "ocdownload",
+      "size_bytes": 24213,
+      "sha256": "7de69e07b1766f40cc06c0e992e04b22be9e2ac4de5e4a32525aeac0f8d679b6"
+    },
+    {
+      "target": "https://help.altair.com/hwsolvers/rad/topics/solvers/rad/starter_input_r.htm",
+      "outcome": "downloaded",
+      "key": "starter-current",
+      "size_bytes": 223504,
+      "sha256": "6e0f9adb3607607bab729705d83bfc9a61e0691bcdcced5d86b328ade8c4eb5f"
+    },
+    {
+      "target": "https://help.altair.com/hwsolvers/rad/topics/solvers/rad/engine_input_r.htm",
+      "outcome": "downloaded",
+      "key": "engine-current",
+      "size_bytes": 98067,
+      "sha256": "12d7e8d49da1c0abca7ab06ce1875c6d97c7525676cf1a2723744478da5763e7"
+    },
+    {
+      "target": "https://codeload.github.com/OpenCourant/OpenCourant/zip/cb760c206e346eff12161a2268b134ef9d48a4ef",
+      "outcome": "downloaded",
+      "key": "oc-source-archive",
+      "size_bytes": 47436970,
+      "sha256": "9055ad07964dec2b7f2d8b526155fd389ae55585dbe65ac81bbd6e059e6ce502"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/engine_keywords_syntax_r.htm",
+      "outcome": "downloaded",
+      "key": "engine-syntax2024-correct",
+      "size_bytes": 34921,
+      "sha256": "fafd74b72e84c0900fc9bde7880c99c906e8db24106d7fa3787d241399609ee1"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/include_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "include2024",
+      "size_bytes": 56601,
+      "sha256": "c2c90fbaf3242fa42cb01c3d19cd2511f71fcf12595eb5d77d4e2e1f04beb080"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/enddata_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "enddata2024",
+      "size_bytes": 49095,
+      "sha256": "11608b68035877d4fc5386d8bb71bc48ac0fcac2ada8960088fc2bc0c62f779c"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/faq_rad_radioss_files_r.htm",
+      "outcome": "downloaded",
+      "key": "files2024",
+      "size_bytes": 106206,
+      "sha256": "04c1386c7e825e6ba2013c2cd3388b4b48433650b94002c188890cddc3bce3c7"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/single_file_input_r.htm",
+      "outcome": "blocked",
+      "key": "single-input2024",
+      "error": "HTTP Error 503: Service Unavailable"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/single_input_file_r.htm",
+      "outcome": "downloaded",
+      "key": "single-input2024-correct",
+      "size_bytes": 28773,
+      "sha256": "444207809e7a4e360f319722fc1cb15b07a287863cded567ac3920c4dd30a1ee"
+    },
+    {
+      "target": "https://help.altair.com/hwsolvers/rad/topics/solvers/rad/new_keywords_radioss_2026_r.htm",
+      "outcome": "downloaded",
+      "key": "new-keywords2026",
+      "size_bytes": 48696,
+      "sha256": "437fa7aab96e868de3e7fc1931963ff417c5a07c7c82135e3cfb6fca84034a3e"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/radioss_supported_unit_system_c.htm",
+      "outcome": "blocked",
+      "key": "units2024",
+      "error": "HTTP Error 503: Service Unavailable"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/inivel_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "inivel_starter_r",
+      "size_bytes": 86531,
+      "sha256": "50fc41bb5ea81e76df5bd75f6403f1c88a041502aaf8f25a7081187389f5b1cd"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/inter_type7_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "inter_type7_starter_r",
+      "size_bytes": 437921,
+      "sha256": "27e3eeb52c540be65dbacd80b252f24877758e1143583ca8a48417d8bbdf86f2"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/inter_type24_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "inter_type24_starter_r",
+      "size_bytes": 453147,
+      "sha256": "c25f0d7572d60b9c533cb5f408166258c778b8d9550c13fbd57830fd99830718"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/mat_law1_elast_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "mat_law1_elast_starter_r",
+      "size_bytes": 89898,
+      "sha256": "b44c1d0546d72508b7b0d896fe39136de1994dd9683ab3d297defdefac6cf74b"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/mat_law36_plas_tab_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "mat_law36_plas_tab_starter_r",
+      "size_bytes": 226752,
+      "sha256": "828d362c9e1133b65e89489dc90e443c1ff2f6de05bcb4aa81d79e9ef8738130"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/node_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "node_starter_r",
+      "size_bytes": 53747,
+      "sha256": "daaf46861aeb9ddb89eb456a9bdbbb7131be976c933ea52cc39b22bca42bceee"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/parameter_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "parameter_starter_r",
+      "size_bytes": 116317,
+      "sha256": "940ed6cb313397cc97267085d790e9c5846d491c6b3d86182472b1d0acf5c234"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/part_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "part_starter_r",
+      "size_bytes": 63982,
+      "sha256": "26459f75b2bbfcde0bf722445ff293c2fca4c344b1928fcec243f05a2de5fb60"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/prop_type1_shell_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "prop_type1_shell_starter_r",
+      "size_bytes": 150232,
+      "sha256": "1efbed3eb8097c8ff502265bd2d8ac75905434aae7527695d46cf93fe0704e08"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/prop_type14_solid_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "prop_type14_solid_starter_r",
+      "size_bytes": 205762,
+      "sha256": "63a7a8112eea52c6ea28ddbd560fd85295271e1a51734afc4cfd7127105a0863"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/sh3n_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "sh3n_starter_r",
+      "size_bytes": 64838,
+      "sha256": "eb09aefa40d16ab265499a3f831644be321fc17e64f6779432c925c678bceb86"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/shell_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "shell_starter_r",
+      "size_bytes": 64911,
+      "sha256": "2be007e7b415e92992a359e61d8f1fedbb316f596dce5b30eb0a78e89dcf3178"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/skew_fix_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "skew_fix_starter_r",
+      "size_bytes": 84014,
+      "sha256": "d9f8842d04290ece27b600c621a751f75f0ab582227765cd4e578d5d1025bfe1"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/submodel_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "submodel_starter_r",
+      "size_bytes": 81074,
+      "sha256": "8d123556bb8e10adaa31c580a9b1feddf72be5e58ce8af07ca35240fedf39bd9"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/surf_part_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "surf_part_starter_r",
+      "size_bytes": 76160,
+      "sha256": "b7831fedaa37a8ac9e219b05f1798f1d3e2f87206506d8384c3102ffaed27ddd"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/surf_seg_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "surf_seg_starter_r",
+      "size_bytes": 92246,
+      "sha256": "f1efd9341c31afd8b72e962f329a7307238d342db12a62aa9547ec54a271c78a"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/tetra4_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "tetra4_starter_r",
+      "size_bytes": 65478,
+      "sha256": "34ef732a4821778c802e844b7a011b6855a08999b1926093310480c108115479"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/transforms_overview_starter_r.htm",
+      "outcome": "downloaded",
+      "key": "transforms_overview_starter_r",
+      "size_bytes": 56641,
+      "sha256": "210eebd6309e36f1fb2b4eb55ef350b187bb30a4a584a6bbb7cc54030dc374e8"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/impl_dt_1_engine_r.htm",
+      "outcome": "downloaded",
+      "key": "impl_dt_1_engine_r",
+      "size_bytes": 62462,
+      "sha256": "fa9c389ff079658948fe5c7d6539e4e6f4eae99f14bc89cb9fdb4b15a176de8f"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/impl_dtini_engine_r.htm",
+      "outcome": "downloaded",
+      "key": "impl_dtini_engine_r",
+      "size_bytes": 49398,
+      "sha256": "414053b2f4afce8ac7de4e408208b30efe62d422c2ded108febee4e8b106ff93"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/impl_linear_engine_r.htm",
+      "outcome": "downloaded",
+      "key": "impl_linear_engine_r",
+      "size_bytes": 47118,
+      "sha256": "953bf2405355710701a7387578b587812c78c83823ba47ad6b9c9ccb72a1960c"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/rfile_n_engine_r.htm",
+      "outcome": "downloaded",
+      "key": "rfile_n_engine_r",
+      "size_bytes": 47697,
+      "sha256": "043173e898319c0026474f646e803f38872f735302b394632f34368c30f3bb01"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/run_engine_r.htm",
+      "outcome": "downloaded",
+      "key": "run_engine_r",
+      "size_bytes": 53288,
+      "sha256": "8731f70c6147db2cffb76c6de5fab622ac1b8be5d04469289a0be5421eb3019d"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/stop_engine_r.htm",
+      "outcome": "downloaded",
+      "key": "stop_engine_r",
+      "size_bytes": 84065,
+      "sha256": "888842f22014d35f8a4ee154cf7e0c7f4119190131e100603b58d62772e042c4"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/tfile_engine_r.htm",
+      "outcome": "downloaded",
+      "key": "tfile_engine_r",
+      "size_bytes": 52986,
+      "sha256": "55a42ccdc259aee1f76ed12ca0a12a3f704a0b26224a0c5eefb7b3c889e7c8c0"
+    },
+    {
+      "target": "https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/vers_engine_r.htm",
+      "outcome": "downloaded",
+      "key": "vers_engine_r",
+      "size_bytes": 44587,
+      "sha256": "63a0730a06f1209ba74ad9171752aab53616908ece61f2ccec664c9bc2e8263a"
+    },
+    {
+      "target": "2024 index-linked detail pages804 unique URLs",
+      "outcome": "See catalogues/radioss-detail-acquisition.json; original HTML internal only; no retry; stop403/429; selected pages relevant-sections, others not-read"
+    },
+    {
+      "target": "OpenCourant source archive QA and CFG",
+      "outcome": "Actual original47,436,970bytes/SHA9055ad07964dec2b7f2d8b526155fd389ae55585dbe65ac81bbd6e059e6ce502 acquired; QA/CFG path+hash inventories retained, proprietary/NC material not put in public assets"
+    }
+  ],
+  "gaps": [
+    "실제 target 최소 덱 read/run 및 모든 특수 파일 역할은 미검증.",
+    "인코딩, 전체 수치 표기/overflow/continuation 예외와 모든 card의 exact column schema 미완성.",
+    "모든 unit_ID 및 열/전기/복합 단위 field의 전수 변환표 미완성.",
+    "825행의 전체 field/조건/default/별칭 정규화·상속 전수 검토는 false.",
+    "모든 include/parameter/transform edge case와 templex 제공 여부 runtime 미검증.",
+    "전체 keyword namespace/ID 상한/duplicate 진단/forward-reference 규칙표와 allocator 미구현.",
+    "고차 요소 전체, face/side 전체, formulation별 퇴화/노멀 전수 규칙과 양의 Jacobian 시험 미확보.",
+    "복합재·assembly·MPC·rigid·SPH/ALE 등 전체 객체 매핑 schema 미완성.",
+    "모든 하중/접촉/재료/센서·curve 참조의 조건과 activation 전수 미완성.",
+    "전체 explicit/implicit/restart/output 조합·실제 중단 복구 의미 runtime 미검증.",
+    "의도된 오류 fixture/expected diagnostic corpus 미분류; 배포 가능한 NC-free 완전 모델 시험쌍 미확보; official NC deck은 내부 취득.",
+    "target OpenCourant의 2024/2026 keyword/field별 support 매핑과 binary read/run false; 제한 CFG 권리 미해소.",
+    "문서 edition·/BEGIN Invers·Engine VERS·source release·binary build는 별도 축이다. source reader의 기본 profile2026과 converter 기본2025를2024 catalogue와 동일하게 보지 않는다.",
+    "공식2024 /VERS mandatory와 일부 QA/Tools의 생략 사례가 불일치해 target runtime 검증 전 판단을 유보한다.",
+    "현재 작업은 실제 수집과 근거 분류이며 caelab-prep에 신규 RAD generator나 전 keyword editor를 구현한 작업이 아니다."
+  ],
+  "runtime_verified": false
+}

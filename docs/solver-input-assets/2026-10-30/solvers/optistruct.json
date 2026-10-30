@@ -1,0 +1,1332 @@
+{
+  "key": "optistruct",
+  "title": "OptiStruct 입력 생성 자료",
+  "scope": "2025 official Bulk/I/O/Subcase/PARAM indexes and selected generation rules; not a full field schema",
+  "versions": {
+    "documentation": "2025",
+    "solver": "OptiStruct2025;unexecuted",
+    "source": "PyNastran f51e9ffa74222f93750618d4766e59f2f96751c3",
+    "examples": "별도 example manifest",
+    "binary_tested": null
+  },
+  "sources": [
+    {
+      "id": "optistruct-D01",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/bulk_data_section.htm",
+      "title": "Bulk index",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "strong child links;597 entries",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "local_file": "tmp/opti-nastran/opti-bulk.html",
+      "sha256": "9c54cf3f18d89dee19d9b37eef8d87bc3bdd7bb49d582597f2bc66f55813c8e4",
+      "size_bytes": 654142,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D02",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/io_options_section.htm",
+      "title": "I/O index",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "strong child links;131 entries",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "local_file": "tmp/opti-nastran/opti-io.html",
+      "sha256": "abb5541db45e77b70ec710242ed69e23ce3371038952f6c949e36f5ae1bb0255",
+      "size_bytes": 197553,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D03",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/subcase_information_section.htm",
+      "title": "Subcase index",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "strong child links;118 entries",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "local_file": "tmp/opti-nastran/opti-subcase.html",
+      "sha256": "e63b1c03fade0285ae095369cb298ab30eafa7af67dba4d27445ee3fdf1af63a",
+      "size_bytes": 166081,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D04",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/param_bulk_r.htm",
+      "title": "PARAM options",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "261 option child links;1 navigation excluded",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "local_file": "tmp/opti-nastran/opti-param_bulk_r.html",
+      "sha256": "c9b97e83b4af6220784da6ff2a4ced8f6a11d75ef06d14d9ecd31b1f9e1be161",
+      "size_bytes": 668670,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D05",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/guidelines_bulk_data_r.htm",
+      "title": "Bulk syntax",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "Guidelines: format/continuation/numbers",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-bulk-guidelines.html",
+      "sha256": "3c994130d5618ebea90b89dafd1ffffb4a8359af681ca533bd89dd6727ce561b",
+      "size_bytes": 60655,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D06",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/guidelines_io_subcase_r.htm",
+      "title": "I/O and subcase syntax",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "Guidelines: abbreviations/continuation/path",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-io-guidelines.html",
+      "sha256": "0f687c01fa8fbea741dd45ecdf8a66a730b041b7fedc073d5bca69b28d39d00f",
+      "size_bytes": 42339,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D07",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/data_input_file_r.htm",
+      "title": "Input file",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "I/O Options, Subcase Information, Bulk Data",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-input.html",
+      "sha256": "1aebdde71d41982f5d51c175158cfd5e9ed6c705fe8daad320c1e2905765d2cd",
+      "size_bytes": 66898,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D08",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/unit_systems_run_optistruct_r.htm",
+      "title": "Units",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "unit consistency;flexbody/CMS exceptions",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-unit_systems_run_optistruct_r.html",
+      "sha256": "709fa2e0b06cd3ac13b22ebe6f6675674239611320d26ace374430be7a63df7d",
+      "size_bytes": 112933,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D09",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/grid_bulk_r.htm",
+      "title": "GRID",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "definitions CP/CD/ID;comments",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-grid_bulk_r.html",
+      "sha256": "cdee59084b1d6ae6b46fe17f4c412eb4d02c57801f65eff3cbd5c80308359dbc",
+      "size_bytes": 400264,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D10",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/ctria3_bulk_r.htm",
+      "title": "CTRIA3",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "format/node/property/orientation",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-ctria3_bulk_r.html",
+      "sha256": "48dc2b70005d87957185c6894980ea0cd57aa45dae46af242cfbf458d4292254",
+      "size_bytes": 417482,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D11",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/ctetra_bulk_r.htm",
+      "title": "CTETRA",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "definitions PID/Gi;ordering diagram",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-ctetra_bulk_r.html",
+      "sha256": "f8e45ce8495351a61c83b5051741d365d22c726507f88fbfe53dd0ee5c2902c3",
+      "size_bytes": 402456,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D12",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/mat1_bulk_r.htm",
+      "title": "MAT1",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "definitions;comments1–6",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-mat1_bulk_r.html",
+      "sha256": "220f2d2ee75d0cae3e23d14be5b18f4201df177d71d7aa21e4175dd1438336cf",
+      "size_bytes": 440272,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D13",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/pshell_bulk_r.htm",
+      "title": "PSHELL",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "material/thickness/property definitions",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-pshell_bulk_r.html",
+      "sha256": "dab41a5f317ec5984a8111485e850c1d19d8f3f0966fe6c62b7d984de5c25c36",
+      "size_bytes": 459755,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D14",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/psolid_bulk_r.htm",
+      "title": "PSOLID",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "material/property definitions",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-psolid_bulk_r.html",
+      "sha256": "b625bff2d36c8fac69af2d1417a800c4de0041f8d4c69efa4af550604015b5cf",
+      "size_bytes": 429471,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D15",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/spc_bulk_r.htm",
+      "title": "SPC",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "definitions;DOF/scalar/thermal restrictions",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-spc_bulk_r.html",
+      "sha256": "9e568c83f60f2450059e3012c528bbbb658de622aa061d7e47f47a0a14a75fd5",
+      "size_bytes": 411540,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D16",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/force_bulk_r.htm",
+      "title": "FORCE",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "CID/vector/GSET;follower DOF restriction",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-force_bulk_r.html",
+      "sha256": "81213887316371fa90f1a122fc0883a4b2bda845e2a54c649caffe351af81b10",
+      "size_bytes": 406698,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D17",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/contact_bulk_r.htm",
+      "title": "CONTACT",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "PID/TYPE/AUTO/SSID/MSID definitions",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-contact_bulk_r.html",
+      "sha256": "ef27097bb7766999526eac0b745c4ca7f8c022ced67b14c39fa930e8e7ba44b2",
+      "size_bytes": 608263,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D18",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/include_io_r.htm",
+      "title": "INCLUDE",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "search order/relative path/filemap/-incpath/.gz",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-include_io_r.html",
+      "sha256": "6a2d35b55d3836402d380a4d0f35cd3de5695844d77a3c32e9e3546b2f8e0974",
+      "size_bytes": 136944,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D19",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/restart_io_r.htm",
+      "title": "RESTART",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "optimization .sh;not valid in analysis mode",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/opti-restart_io_r.html",
+      "sha256": "2fdcd913ae1c512f547664bc84e40bc1a07b585f959558adb12dc13b983d6664",
+      "size_bytes": 129915,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D20",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/example_problems_os_r.htm",
+      "title": "Examples",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "chapter index",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "local_file": "tmp/opti-nastran/opti-example_problems_os_r.html",
+      "sha256": "cd0b65921905e8623afc2683a814d47f3368668bce1fc9b2f61128a74c2c6899",
+      "size_bytes": 59374,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D21",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/verification_problems_os_r.htm",
+      "title": "Verification problems",
+      "kind": "manual",
+      "version": "2025",
+      "locator": "chapter index",
+      "access": "downloaded",
+      "read_depth": "index-parsed",
+      "local_file": "tmp/opti-nastran/opti-verification_problems_os_r.html",
+      "sha256": "f79373aacc3c30852edbb8e8792a8a16b452c0260f83a81bed9e0790458fb07c",
+      "size_bytes": 36902,
+      "redistribution": "locator-only",
+      "summary": "공식 원본을 취득했다. 적힌 절만 독해했으며 전문을 재배포하지 않는다."
+    },
+    {
+      "id": "optistruct-D22",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/LICENSE.md",
+      "title": "PyNastran LICENSE.md",
+      "kind": "license",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "LICENSE.md",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/LICENSE.md",
+      "sha256": "ed3f3f031a9d1da6802011e40ba0b5582dbcca19b902e259ea197cfca7f9e153",
+      "size_bytes": 1523,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "optistruct-D23",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/field_writer_8.py",
+      "title": "PyNastran field_writer_8.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/field_writer_8.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/field_writer_8.py",
+      "sha256": "cc7145b7fef441bab52981dadbd2ab2ecce3eb60cc2aaf370c8c4b31594787ad",
+      "size_bytes": 15199,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "optistruct-D24",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/field_writer_16.py",
+      "title": "PyNastran field_writer_16.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/field_writer_16.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/field_writer_16.py",
+      "sha256": "f578a20feb1640a47c92f3157a006658ffa8e147176957b8cccc7ea3c104a836",
+      "size_bytes": 12440,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "optistruct-D25",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/field_writer_double.py",
+      "title": "PyNastran field_writer_double.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/field_writer_double.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/field_writer_double.py",
+      "sha256": "9a9c4227040fe4b4607ca46af71e427d33d4f45a012fb44708050ef4b91fd0f1",
+      "size_bytes": 3790,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "optistruct-D26",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/bdf_interface/write_mesh.py",
+      "title": "PyNastran write_mesh.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/bdf_interface/write_mesh.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/write_mesh.py",
+      "sha256": "eda6d66589916a4d60a903f2d6644a33145761eb889952c693eda29272716f0c",
+      "size_bytes": 100245,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "optistruct-D27",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/bdf.py",
+      "title": "PyNastran bdf.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/bdf.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/bdf.py",
+      "sha256": "500fc59f166bcc74d51721fe47d3926926ab48cce5e1303bc617e92bc46b9535",
+      "size_bytes": 210733,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "optistruct-D28",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/pyNastran/bdf/cards/test/test_solids.py",
+      "title": "PyNastran test_solids.py",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "pyNastran/bdf/cards/test/test_solids.py",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/test_solids.py",
+      "sha256": "af0731cdcfdaad74602610106f48ca2dd6c22d237eb8373d74f2d59c313b921d",
+      "size_bytes": 24031,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "optistruct-D29",
+      "url": "https://github.com/SteveDoyle2/pyNastran/blob/f51e9ffa74222f93750618d4766e59f2f96751c3/docs/html_docs/quick_start/bdf_demo.rst",
+      "title": "PyNastran bdf_demo.rst",
+      "kind": "code",
+      "version": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "locator": "docs/html_docs/quick_start/bdf_demo.rst",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "assets/bdf/pynastran/bdf_demo.rst",
+      "sha256": "8958d7eb91e872d552f1940a222384d1f7eed5d9c2b093e80eabd8b52d1dfe6a",
+      "size_bytes": 42232,
+      "redistribution": "permitted-with-notice",
+      "summary": "BSD-3-Clause 소스 일부. 전체 설치·실행 또는 솔버별 전수 지원 증거는 아니다."
+    },
+    {
+      "id": "optistruct-D30",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_test_problem_t3_r.htm",
+      "title": "Official example acquisition nafems_test_problem_t3_r.htm",
+      "kind": "example",
+      "version": "2025 distribution;deck header version recorded separately",
+      "locator": "Model Files;archive member in bdf-examples.json",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/examples/nafems_test_problem_t3_r.htm",
+      "sha256": "79499fff1932824169fd90ca63661addc5ebfea70c06eb979aabfcb637c84f61",
+      "size_bytes": 46121,
+      "redistribution": "locator-only",
+      "summary": "실제 예제/설명 취득. ZIP 내부 각 deck 해시는 별도 manifest이며 미실행이다."
+    },
+    {
+      "id": "optistruct-D31",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/piezoelectric_analysis_cantilevered_bar_example_r.htm",
+      "title": "Official example acquisition piezoelectric_analysis_cantilevered_bar_example_r.htm",
+      "kind": "example",
+      "version": "2025 distribution;deck header version recorded separately",
+      "locator": "Model Files;archive member in bdf-examples.json",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/examples/piezoelectric_analysis_cantilevered_bar_example_r.htm",
+      "sha256": "058f692f7a77972083275aaff98699911db6ca34656f01f4d3cbe8f686b0eed7",
+      "size_bytes": 65381,
+      "redistribution": "locator-only",
+      "summary": "실제 예제/설명 취득. ZIP 내부 각 deck 해시는 별도 manifest이며 미실행이다."
+    },
+    {
+      "id": "optistruct-D32",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_linear_elastic_test_problem_r_2.htm",
+      "title": "Official example acquisition nafems_linear_elastic_test_problem_r_2.htm",
+      "kind": "example",
+      "version": "2025 distribution;deck header version recorded separately",
+      "locator": "Model Files;archive member in bdf-examples.json",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/examples/nafems_linear_elastic_test_problem_r_2.htm",
+      "sha256": "005279139046845c93b4a460e42394c8822e31478753901cef9827b996f1da87",
+      "size_bytes": 46181,
+      "redistribution": "locator-only",
+      "summary": "실제 예제/설명 취득. ZIP 내부 각 deck 해시는 별도 manifest이며 미실행이다."
+    },
+    {
+      "id": "optistruct-D33",
+      "url": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_a.zip",
+      "title": "Official example acquisition T3_a.zip",
+      "kind": "example",
+      "version": "2025 distribution;deck header version recorded separately",
+      "locator": "Model Files;archive member in bdf-examples.json",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/examples/T3_a.zip",
+      "sha256": "490bd02d9e0e87d21ccf19d6c0c4d7724913574d5a34e24a23a431bb69aa3fad",
+      "size_bytes": 3918,
+      "redistribution": "locator-only",
+      "summary": "실제 예제/설명 취득. ZIP 내부 각 deck 해시는 별도 manifest이며 미실행이다."
+    },
+    {
+      "id": "optistruct-D34",
+      "url": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/verification/OS-V-0110/T3_b.zip",
+      "title": "Official example acquisition T3_b.zip",
+      "kind": "example",
+      "version": "2025 distribution;deck header version recorded separately",
+      "locator": "Model Files;archive member in bdf-examples.json",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/examples/T3_b.zip",
+      "sha256": "5b31725b9d9875dd4c607c318907bae4917d8709db694253879ed9b0172fd1bf",
+      "size_bytes": 4410,
+      "redistribution": "locator-only",
+      "summary": "실제 예제/설명 취득. ZIP 내부 각 deck 해시는 별도 manifest이며 미실행이다."
+    },
+    {
+      "id": "optistruct-D35",
+      "url": "https://2025.help.altair.com/2025/simulation/demos/hwsolvers/optistruct/examples/OS-E-9000/piezoelectric_analysis_bar.zip",
+      "title": "Official example acquisition piezoelectric_analysis_bar.zip",
+      "kind": "example",
+      "version": "2025 distribution;deck header version recorded separately",
+      "locator": "Model Files;archive member in bdf-examples.json",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/examples/piezoelectric_analysis_bar.zip",
+      "sha256": "8160c9c3f1d5f8827716f44310c6ffa753fe96a5db61fb645ad19ee7629d0de1",
+      "size_bytes": 103269,
+      "redistribution": "locator-only",
+      "summary": "실제 예제/설명 취득. ZIP 내부 각 deck 해시는 별도 manifest이며 미실행이다."
+    },
+    {
+      "id": "optistruct-D36",
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/altair-resources/js/offlinecheck.js?02012025",
+      "title": "Official example acquisition offlinecheck.js",
+      "kind": "example",
+      "version": "2025 distribution;deck header version recorded separately",
+      "locator": "setupOfflineCheck lines25–43",
+      "access": "downloaded",
+      "read_depth": "relevant-sections",
+      "local_file": "tmp/opti-nastran/examples/offlinecheck.js",
+      "sha256": "15dd21e4b945d9d664153e29448a900b410b9a6a7cbd358bc336d3b11d7c2645",
+      "size_bytes": 16033,
+      "redistribution": "locator-only",
+      "summary": "실제 예제/설명 취득. ZIP 내부 각 deck 해시는 별도 manifest이며 미실행이다."
+    }
+  ],
+  "catalogue": {
+    "files": [
+      "catalogues/optistruct.csv"
+    ],
+    "source_ids": [
+      "optistruct-D01",
+      "optistruct-D02",
+      "optistruct-D03",
+      "optistruct-D04"
+    ],
+    "scope": "597bulk+131IO+118subcase+261PARAM option rows",
+    "entry_count": 1107,
+    "count_unit": "서로 다른 종류의 공식 child-link 행",
+    "completeness": "complete-index",
+    "sections": [
+      {
+        "section": "bulk",
+        "entries": 597,
+        "source_id": "optistruct-D01",
+        "first": "ACCEL",
+        "last": "VISCO"
+      },
+      {
+        "section": "io",
+        "entries": 131,
+        "source_id": "optistruct-D02",
+        "first": "@HYPERFORM",
+        "last": "YTITLE"
+      },
+      {
+        "section": "subcase",
+        "entries": 118,
+        "source_id": "optistruct-D03",
+        "first": "A2GG",
+        "last": "WEIGHTCHECK"
+      },
+      {
+        "section": "param-option",
+        "entries": 261,
+        "source_id": "optistruct-D04",
+        "first": "PARAM, ACMODL12",
+        "last": "PARAM, ZAERO"
+      }
+    ],
+    "reconciliation": "4개 child-link 영역의 strong anchor 전수 추출/중복 대조. PARAM navigation1개 제외. 별도 independent numeric index는 없음.",
+    "full_field_review_complete": false
+  },
+  "rules": [
+    {
+      "id": "optistruct-R01",
+      "question_ids": [
+        "Q01"
+      ],
+      "source_ids": [
+        "optistruct-D07"
+      ],
+      "statement": "I/O·Subcase·Bulk의 세 구역을 구분하고 BEGIN BULK로 유한요소 정의를 시작한다.",
+      "locator": "Input File:three sections",
+      "examples": [],
+      "limits": "",
+      "status": "documented"
+    },
+    {
+      "id": "optistruct-R02",
+      "question_ids": [
+        "Q02"
+      ],
+      "source_ids": [
+        "optistruct-D05",
+        "optistruct-D06"
+      ],
+      "statement": "Bulk의 8/16자·comma free·이어쓰기 규칙과 I/O/Subcase의 약어·이어쓰기 규칙은 별도다.",
+      "locator": "Bulk Guidelines;I/O Guidelines",
+      "examples": [],
+      "limits": "모든 예외를 formatter로 구현/실행하지 않았다.",
+      "status": "documented"
+    },
+    {
+      "id": "optistruct-R03",
+      "question_ids": [
+        "Q03"
+      ],
+      "source_ids": [
+        "optistruct-D08"
+      ],
+      "statement": "기본은 일관된 단위 사용이며 DTI/UNITS의 특수 변환 문맥을 전역 자동변환으로 일반화하지 않는다.",
+      "locator": "Units:C​MS/flexbody",
+      "examples": [],
+      "limits": "",
+      "status": "documented"
+    },
+    {
+      "id": "optistruct-R04",
+      "question_ids": [
+        "Q04"
+      ],
+      "source_ids": [
+        "optistruct-D11",
+        "optistruct-D12"
+      ],
+      "statement": "CTETRA.PID 생략은 EID를 사용한다. MAT1의 E/G/NU 공란은 조건부 계산이므로 0 대체가 아니다.",
+      "locator": "CTETRA.PID;MAT1 comments",
+      "examples": [],
+      "limits": "나머지 entry 전체 조건부 schema 미검토.",
+      "status": "partial"
+    },
+    {
+      "id": "optistruct-R05",
+      "question_ids": [
+        "Q05"
+      ],
+      "source_ids": [
+        "optistruct-D18"
+      ],
+      "statement": "INCLUDE 삽입 위치와 검색 순서·상대경로·filemap·-incpath·압축 파일 처리를 보존해야 한다.",
+      "locator": "INCLUDE definitions/comments",
+      "examples": [],
+      "limits": "플랫폼별 파일 탐색 실행 검증 없음.",
+      "status": "documented"
+    },
+    {
+      "id": "optistruct-R06",
+      "question_ids": [
+        "Q06"
+      ],
+      "source_ids": [
+        "optistruct-D09",
+        "optistruct-D12",
+        "optistruct-D15",
+        "optistruct-D16"
+      ],
+      "statement": "숫자 ID·part-qualified 참조·선택 카드의 string label을 구분한다. 모든 ID 필드가 같은 문자열/정수 정책은 아니다.",
+      "locator": "GRID ID;MAT1 uniqueness;SPC/FORCE fully-qualified refs",
+      "examples": [],
+      "limits": "전수 namespace schema 미완성.",
+      "status": "partial"
+    },
+    {
+      "id": "optistruct-R07",
+      "question_ids": [
+        "Q07"
+      ],
+      "source_ids": [
+        "optistruct-D10",
+        "optistruct-D11"
+      ],
+      "statement": "요소의 Gi 순서·차수·면/법선은 카드별 순서로 보존한다. 단순 node 목록 재정렬은 허용으로 보지 않는다.",
+      "locator": "CTRIA3/CTETRA format and ordering",
+      "examples": [],
+      "limits": "원문 diagrams locator 확보;permutation 시험 없음.",
+      "status": "partial"
+    },
+    {
+      "id": "optistruct-R08",
+      "question_ids": [
+        "Q08"
+      ],
+      "source_ids": [
+        "optistruct-D09",
+        "optistruct-D11",
+        "optistruct-D12",
+        "optistruct-D13",
+        "optistruct-D14"
+      ],
+      "statement": "GRID→element→property→material 참조를 별도 객체로 매핑하고 좌표계 CP/CD를 구분한다.",
+      "locator": "GRID CP/CD;CTETRA PID;PSHELL/PSOLID MID",
+      "examples": [],
+      "limits": "",
+      "status": "documented"
+    },
+    {
+      "id": "optistruct-R09",
+      "question_ids": [
+        "Q09"
+      ],
+      "source_ids": [
+        "optistruct-D15",
+        "optistruct-D16",
+        "optistruct-D17"
+      ],
+      "statement": "SPC의 물리별 DOF 규칙, FORCE의 CID/벡터·회전자유도, CONTACT의 PID/TYPE·AUTO 해석 제한을 보존한다.",
+      "locator": "SPC Comments;FORCE FLLW;CONTACT TYPE=AUTO",
+      "examples": [],
+      "limits": "모든 접촉/하중 조합 검증 없음.",
+      "status": "partial"
+    },
+    {
+      "id": "optistruct-R10",
+      "question_ids": [
+        "Q10"
+      ],
+      "source_ids": [
+        "optistruct-D03",
+        "optistruct-D19"
+      ],
+      "statement": "RESTART I/O는 이전 최적화 .sh 상태를 쓰며 analysis mode용이 아니다. 입력 restart와 OS process cancel은 별개다.",
+      "locator": "RESTART comments",
+      "examples": [],
+      "limits": "비선형 해석 restart 별도 옵션 전수 조사 없음.",
+      "status": "partial"
+    },
+    {
+      "id": "optistruct-R11",
+      "question_ids": [
+        "Q11"
+      ],
+      "source_ids": [
+        "optistruct-D22",
+        "optistruct-D23",
+        "optistruct-D24",
+        "optistruct-D25",
+        "optistruct-D26",
+        "optistruct-D27",
+        "optistruct-D28",
+        "optistruct-D29"
+      ],
+      "statement": "PyNastran의 formatter/writer·reader·시험 역할을 분리했다. solid 작성 시험은 완전 해석 deck의 수치 oracle이 아니다.",
+      "locator": "write_mesh.py;field_writer_*.py;test_solids.py;bdf_demo.rst",
+      "examples": [],
+      "limits": "완전 패키지/외부 demo 모델 미포함;미실행.",
+      "status": "partial"
+    },
+    {
+      "id": "optistruct-R12",
+      "question_ids": [
+        "Q12"
+      ],
+      "source_ids": [
+        "optistruct-D01",
+        "optistruct-D02",
+        "optistruct-D03",
+        "optistruct-D04",
+        "optistruct-D27"
+      ],
+      "statement": "공식2025 색인 1107행과 PyNastran reader429개는 서로 다른 분모다. 전수 생성 지원을 뜻하지 않는다.",
+      "locator": "catalogue reconciliation;bdf.py cards_to_read",
+      "examples": [],
+      "limits": "카드/옵션/해석별 지원 매트릭스 미완성.",
+      "status": "partial"
+    }
+  ],
+  "examples": [
+    {
+      "id": "optistruct-E01",
+      "source_ids": [
+        "optistruct-D33",
+        "optistruct-D34"
+      ],
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/nafems_test_problem_t3_r.htm",
+      "file": null,
+      "analysis_local_files": [
+        "tmp/opti-nastran/examples/T3_a/T3CbeamC.fem",
+        "tmp/opti-nastran/examples/T3_a/T3CbeamF.fem",
+        "tmp/opti-nastran/examples/T3_a/T3Quad4C.fem",
+        "tmp/opti-nastran/examples/T3_b/T3Quad4F.fem",
+        "tmp/opti-nastran/examples/T3_b/T3Quad8C.fem",
+        "tmp/opti-nastran/examples/T3_b/T3Quad8F.fem"
+      ],
+      "sha256": null,
+      "version": "Documentation/package URL2025; .fem headers HyperMesh2017.1.0.19/template2017.1",
+      "kind": "official-deck",
+      "purpose": "CBEAM/Quad4/Quad8 coarse/fine transient heat transfer",
+      "expected": "Official page: point C at t32s, target36.60°C; upstream result, not reproduced here. Upstream results heading says Linear Static although this is transient.",
+      "license": "No LICENSE/NOTICE in ZIP; official HTML copyright/all rights reserved. Public download is not redistribution permission; originals remain tmp only.",
+      "redistribution": "locator-only",
+      "solver_executed": false,
+      "standalone_input_observed": true,
+      "dependency_review": "Six decks contain SUBCASE, ANALYSIS HEAT, complete mesh/material/property/BC/load/time definitions, BEGIN BULK and ENDDATA. No external input file request observed. Text/dependency review only, not complete parser/solver acceptance.",
+      "members": [
+        {
+          "archive": "T3_a.zip",
+          "archive_member": "T3CbeamC.fem",
+          "size_bytes": 5286,
+          "sha256": "1b9e591acd90f9600498e771aa6881c394e68dcfc90dddf6d0f51fdfc9f3bf92",
+          "local_file": "tmp/opti-nastran/examples/T3_a/T3CbeamC.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CBEAM",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PBEAML",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        },
+        {
+          "archive": "T3_a.zip",
+          "archive_member": "T3CbeamF.fem",
+          "size_bytes": 5956,
+          "sha256": "61a3fee122548f160b6d6458467cbaa36e084548ff7c67ca9552506462315673",
+          "local_file": "tmp/opti-nastran/examples/T3_a/T3CbeamF.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CBEAM",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PBEAM",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        },
+        {
+          "archive": "T3_a.zip",
+          "archive_member": "T3Quad4C.fem",
+          "size_bytes": 5062,
+          "sha256": "8457cb089b408c0ef5708aad5c30a16053261efa521a3c95d0aadc83b1ebcd55",
+          "local_file": "tmp/opti-nastran/examples/T3_a/T3Quad4C.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CQUAD4",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PSHELL",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        },
+        {
+          "archive": "T3_b.zip",
+          "archive_member": "T3Quad4F.fem",
+          "size_bytes": 5828,
+          "sha256": "2dca5a78834507902bdd386afff69016e32bd69ae6288c7476e4fd3711946c69",
+          "local_file": "tmp/opti-nastran/examples/T3_b/T3Quad4F.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CQUAD4",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PSHELL",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        },
+        {
+          "archive": "T3_b.zip",
+          "archive_member": "T3Quad8C.fem",
+          "size_bytes": 6438,
+          "sha256": "061269c2ac76acda6c6d773a1d524cfde13040e60fc8b52f9e8551c7433b9457",
+          "local_file": "tmp/opti-nastran/examples/T3_b/T3Quad8C.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CQUAD8",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PSHELL",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        },
+        {
+          "archive": "T3_b.zip",
+          "archive_member": "T3Quad8F.fem",
+          "size_bytes": 8442,
+          "sha256": "170a8ba7433a828afdbe13450745b8dd49d207eb8547f04baad89cab41f8e916",
+          "local_file": "tmp/opti-nastran/examples/T3_b/T3Quad8F.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CQUAD8",
+            "ENDDATA",
+            "FORMAT H",
+            "GRID",
+            "MAT4",
+            "PSHELL",
+            "SPC",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TEMPD",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        }
+      ]
+    },
+    {
+      "id": "optistruct-E02",
+      "source_ids": [
+        "optistruct-D35"
+      ],
+      "url": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/piezoelectric_analysis_cantilevered_bar_example_r.htm",
+      "file": null,
+      "analysis_local_files": [
+        "tmp/opti-nastran/examples/piezoelectric_analysis_bar/piezoelectric_analysis_bar.fem"
+      ],
+      "sha256": null,
+      "version": "Documentation/package URL2025; deck solver version not independently pinned",
+      "kind": "official-deck",
+      "purpose": "Two direct-transient subcases for voltage and reverse piezoelectric displacement",
+      "expected": "Official plots show sinusoidal deformation and reverse voltage matching first applied voltage. No numeric tolerance or result reproduced.",
+      "license": "No LICENSE/NOTICE in ZIP; official HTML copyright/all rights reserved. Public download is not redistribution permission; originals remain tmp only.",
+      "redistribution": "locator-only",
+      "solver_executed": false,
+      "standalone_input_observed": true,
+      "dependency_review": "Deck contains two SUBCASE/ANALYSIS DTRAN, solid mesh, MAT2PT/MATPZO/MAT9OR/PSOLID/MPC/load/table/time definitions, BEGIN BULK and ENDDATA. Documentation describes reverse displacement origin; table data are provided in deck. No external input file request observed. Text/dependency review only, not complete parser/solver acceptance.",
+      "members": [
+        {
+          "archive": "piezoelectric_analysis_bar.zip",
+          "archive_member": "piezoelectric_analysis_bar.fem",
+          "size_bytes": 826388,
+          "sha256": "8ab45cc19f24c374de84f30b57e2aa523d4f4f620bbd76dc02485d2aca93cba1",
+          "local_file": "tmp/opti-nastran/examples/piezoelectric_analysis_bar/piezoelectric_analysis_bar.fem",
+          "include_lines": [],
+          "external_reference_lines": [],
+          "begin_bulk": true,
+          "enddata": true,
+          "subcases": [
+            "1",
+            "2"
+          ],
+          "card_names": [
+            "ANALYSIS",
+            "BEGIN BU",
+            "CHEXA",
+            "DLOAD",
+            "ENDDATA",
+            "GRID",
+            "LABEL AP",
+            "MAT2PT",
+            "MAT9OR",
+            "MATPZO",
+            "MPC",
+            "MPC\t10\t6",
+            "PSOLID",
+            "SPC",
+            "SPCADD",
+            "SPCD",
+            "SUBCASE",
+            "TABLED1",
+            "TLOAD1",
+            "TSTEP"
+          ],
+          "redistribution": "locator-only",
+          "runtime_verified": false
+        }
+      ]
+    }
+  ],
+  "code_assets": [
+    {
+      "id": "optistruct-C01",
+      "source_ids": [
+        "optistruct-D22",
+        "optistruct-D23",
+        "optistruct-D24",
+        "optistruct-D25",
+        "optistruct-D26",
+        "optistruct-D27",
+        "optistruct-D28",
+        "optistruct-D29"
+      ],
+      "role": "writer",
+      "repository": "https://github.com/SteveDoyle2/pyNastran",
+      "revision": "f51e9ffa74222f93750618d4766e59f2f96751c3",
+      "paths": [
+        "LICENSE.md",
+        "pyNastran/bdf/field_writer_8.py",
+        "pyNastran/bdf/field_writer_16.py",
+        "pyNastran/bdf/field_writer_double.py",
+        "pyNastran/bdf/bdf_interface/write_mesh.py",
+        "pyNastran/bdf/bdf.py",
+        "pyNastran/bdf/cards/test/test_solids.py",
+        "docs/html_docs/quick_start/bdf_demo.rst"
+      ],
+      "scope": "BDF mesh writer와 8/16/double formatter, reader 및 solid 작성 시험 소스",
+      "limits": "reader whitelist 429개는 writer/MSC2024.2/OptiStruct2025 지원 목록이 아니다. 전체 패키지 의존성이 없고 실행하지 않았다. OptiStruct 별도 override도 전수 호환 보증이 아니다.",
+      "license": "BSD-3-Clause; 원 LICENSE와 NOTICE 동봉",
+      "local_files": [
+        "assets/bdf/pynastran/LICENSE.md",
+        "assets/bdf/pynastran/field_writer_8.py",
+        "assets/bdf/pynastran/field_writer_16.py",
+        "assets/bdf/pynastran/field_writer_double.py",
+        "assets/bdf/pynastran/write_mesh.py",
+        "assets/bdf/pynastran/bdf.py",
+        "assets/bdf/pynastran/test_solids.py",
+        "assets/bdf/pynastran/bdf_demo.rst"
+      ],
+      "executed": false
+    }
+  ],
+  "coverage": [
+    {
+      "question_id": "Q01",
+      "rule_ids": [
+        "optistruct-R01"
+      ],
+      "status": "documented",
+      "missing": "문서 근거이며 실행 검증은 아니다."
+    },
+    {
+      "question_id": "Q02",
+      "rule_ids": [
+        "optistruct-R02"
+      ],
+      "status": "documented",
+      "missing": "문서 근거이며 실행 검증은 아니다."
+    },
+    {
+      "question_id": "Q03",
+      "rule_ids": [
+        "optistruct-R03"
+      ],
+      "status": "documented",
+      "missing": "문서 근거이며 실행 검증은 아니다."
+    },
+    {
+      "question_id": "Q04",
+      "rule_ids": [
+        "optistruct-R04"
+      ],
+      "status": "partial",
+      "missing": "전수 필드·조건부·기본값 schema 미완성."
+    },
+    {
+      "question_id": "Q05",
+      "rule_ids": [
+        "optistruct-R05"
+      ],
+      "status": "documented",
+      "missing": "문서 근거이며 실행 검증은 아니다."
+    },
+    {
+      "question_id": "Q06",
+      "rule_ids": [
+        "optistruct-R06"
+      ],
+      "status": "partial",
+      "missing": "모든 entry namespace와 중복/참조 규칙 전수 검토 없음."
+    },
+    {
+      "question_id": "Q07",
+      "rule_ids": [
+        "optistruct-R07"
+      ],
+      "status": "partial",
+      "missing": "연결순서·면·법선 permutation 실행 검증 없음."
+    },
+    {
+      "question_id": "Q08",
+      "rule_ids": [
+        "optistruct-R08"
+      ],
+      "status": "documented",
+      "missing": "문서 근거이며 실행 검증은 아니다."
+    },
+    {
+      "question_id": "Q09",
+      "rule_ids": [
+        "optistruct-R09"
+      ],
+      "status": "partial",
+      "missing": "모든 물리/접촉 조합 검토 없음."
+    },
+    {
+      "question_id": "Q10",
+      "rule_ids": [
+        "optistruct-R10"
+      ],
+      "status": "partial",
+      "missing": "전체 해석 시퀀스/restart 파일 묶음 및 출력 조합 전수 검토 없음."
+    },
+    {
+      "question_id": "Q11",
+      "rule_ids": [
+        "optistruct-R11"
+      ],
+      "status": "partial",
+      "missing": "공식 예제 취득 결과는 별도 manifest. 의도적 오류 입력·실행 oracle 미확보."
+    },
+    {
+      "question_id": "Q12",
+      "rule_ids": [
+        "optistruct-R12"
+      ],
+      "status": "partial",
+      "missing": "모든 지원/비지원 조합 및 solver read/run 검증 없음."
+    }
+  ],
+  "acquisition_log": [
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/bulk_data_section.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/io_options_section.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/subcase_information_section.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/guidelines_bulk_data_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/guidelines_io_subcase_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/data_input_file_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/grid_bulk_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/ctria3_bulk_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/ctetra_bulk_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/mat1_bulk_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/pshell_bulk_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/psolid_bulk_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/spc_bulk_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/force_bulk_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/contact_bulk_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/include_io_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/restart_io_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/unit_systems_run_optistruct_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/param_bulk_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/example_guide_os_c.htm",
+      "outcome": "HTTP Error 503: Service Unavailable"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/example_problems_os_r.htm",
+      "outcome": "downloaded"
+    },
+    {
+      "target": "https://2025.help.altair.com/2025/hwsolvers/os/topics/solvers/os/verification_problems_os_r.htm",
+      "outcome": "downloaded"
+    }
+  ],
+  "gaps": [
+    "모든 field/conditional/dependency metadata 또는 제품 생성기 완성 아님.",
+    "공식 상용 문서/예제는 원문 재배포 제외.",
+    "전체 continuation/숫자 정밀도/요소 순서/경로 실행 검증 없음.",
+    "공식 완전 예제 및 오류 예제 취득 상태는 별도 manifest로 표시."
+  ],
+  "runtime_verified": false,
+  "collected_on": "2026-10-30",
+  "page_acquisition": {
+    "manifest": "catalogues/optistruct-pages.json",
+    "attempted": 1107,
+    "downloaded": 1107,
+    "failed": 0,
+    "read_depth": "not-read except individually identified relevant sections"
+  },
+  "supplementary_examples_manifest": "catalogues/bdf-examples.json"
+}

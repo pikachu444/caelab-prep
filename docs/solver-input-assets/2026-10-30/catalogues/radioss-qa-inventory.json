@@ -1,0 +1,3076 @@
+{
+  "source_revision": "cb760c206e346eff12161a2268b134ef9d48a4ef",
+  "archive_acquired": true,
+  "entries": [
+    {
+      "path": "qa-tests/miniqa/ACCELEROMETRES/data/ACCELERO_0000.rad",
+      "size_bytes": 54120,
+      "sha256": "3fe4665454b18d4dcd93ab16bad14b13fbe609f2802dad4117442241bb281e2f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/ACCELEROMETRES/data/ACCELERO_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/ACCELEROMETRES/data/ACCELERO_0001.rad",
+      "size_bytes": 577,
+      "sha256": "6ce01c3e9bd77d97ec8fa19bfa94950d88ef05f8630a0bfad931925b0686f462",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/ACCELEROMETRES/data/ACCELERO_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/ACCELEROMETRES/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/ACCELEROMETRES/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/ACCELEROMETRES/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "7aab7204759de272ae2318e3c72b89f54980d49363c8dd9468a195084e674f7d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/ACCELEROMETRES/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/ACCELEROMETRES/data/test_files.json",
+      "size_bytes": 198,
+      "sha256": "a342d6fdf72e8b3c9a47d67bbb3762ca4a41dd6493cd7a42ecdd7aa5a55f2e26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/ACCELEROMETRES/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AIRBAG/jetting41b/data/JETV41B_0000.rad",
+      "size_bytes": 136105,
+      "sha256": "280721dc495dbf5722e6802e33d3ec7ab433a6d1171da791d1349cdfe155ddd3",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AIRBAG/jetting41b/data/JETV41B_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AIRBAG/jetting41b/data/JETV41B_0001.rad",
+      "size_bytes": 608,
+      "sha256": "fc0582381e99f09a7e92ad8d34527492a7255138d0ac93f7d3da36732fa7c245",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AIRBAG/jetting41b/data/JETV41B_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AIRBAG/jetting41b/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AIRBAG/jetting41b/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AIRBAG/jetting41b/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "0d6307918a14416d5d6af202938353b36b4050e8c61545294060b8ce0ae0ca07",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AIRBAG/jetting41b/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AIRBAG/jetting41b/data/test_files.json",
+      "size_bytes": 267,
+      "sha256": "b546737104eae146c23d3c68adca6158df2b5f1bee4b5a85bbe7896fbecb5868",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AIRBAG/jetting41b/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/ALE2D/bar2_v41/data/BAR2V41B_0000.rad",
+      "size_bytes": 50238,
+      "sha256": "a91ebbc9cd953eda002d37de29cac80769ee1285a6e8308da4766874f189a81d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/ALE2D/bar2_v41/data/BAR2V41B_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/ALE2D/bar2_v41/data/BAR2V41B_0001.rad",
+      "size_bytes": 498,
+      "sha256": "d4f0633a329129f55d567dca3cd06e1b037c8c3dedd744a8be1f48781be8ba18",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/ALE2D/bar2_v41/data/BAR2V41B_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/ALE2D/bar2_v41/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/ALE2D/bar2_v41/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/ALE2D/bar2_v41/data/ref.extract",
+      "size_bytes": 366,
+      "sha256": "d26171cc53c8a43a42a2f4389e25ed4f92e92228fc05193fa06682dbe8d8b858",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/ALE2D/bar2_v41/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AMS/auto_element_selection/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "da494036fddd162fe91e28744f35c2cc3f74d9761a56076dd22e47c325f6adf5",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AMS/auto_element_selection/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AMS/auto_element_selection/data/test_files.json",
+      "size_bytes": 148,
+      "sha256": "e817319c0d99e84e512374a19c8e4ba59ff81822eba7f25e62f9558f2b5396f1",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AMS/auto_element_selection/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AMS/auto_element_selection/data/tstpeel_AUTOPART_0000.rad",
+      "size_bytes": 107788,
+      "sha256": "f4c964496dfc979e779ef8dd82e53d41682e5b30d6e2a4639299941e17ab978c",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AMS/auto_element_selection/data/tstpeel_AUTOPART_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AMS/auto_element_selection/data/tstpeel_AUTOPART_0001.rad",
+      "size_bytes": 559,
+      "sha256": "9f56b5bec59917e6e09a4f1b9a5612385d4a91c1311745f920b5179cbec41b53",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AMS/auto_element_selection/data/tstpeel_AUTOPART_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AMS/boxbeam/data/BOXBEAM_0000.rad",
+      "size_bytes": 189374,
+      "sha256": "57d9e040f0175d81fac6d80493ac8f2d53c09fd71854af3acae6654ef98e5d41",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AMS/boxbeam/data/BOXBEAM_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AMS/boxbeam/data/BOXBEAM_0001.rad",
+      "size_bytes": 614,
+      "sha256": "4f0ef423a35af5e020069dda9ce379347806906488c97f25d510dba916c0b06f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AMS/boxbeam/data/BOXBEAM_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AMS/boxbeam/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AMS/boxbeam/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AMS/boxbeam/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "c806f2cfdd6e85510fab741f8875c8f57dd5523ed7a84f56d720c2507bfd2df9",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AMS/boxbeam/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/AMS/boxbeam/data/test_files.json",
+      "size_bytes": 719,
+      "sha256": "56e85cbfea02e67c8ec3ee97b2656679f9acb6c403f40829f6d4ba7253f1ca5d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/AMS/boxbeam/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/COQUES3N/ct3a/data/CT3AV4_0000.rad",
+      "size_bytes": 20276,
+      "sha256": "d7e32a8072cd312040e8cb4d0023020b11a9a52db1c8accd7203bb2942fae749",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/COQUES3N/ct3a/data/CT3AV4_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/COQUES3N/ct3a/data/CT3AV4_0001.rad",
+      "size_bytes": 490,
+      "sha256": "c7bcebd3962bf875c8023cc7daa9ea192a86591706bd05b03c7b77ab4bd06a80",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/COQUES3N/ct3a/data/CT3AV4_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/COQUES3N/ct3a/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/COQUES3N/ct3a/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/COQUES3N/ct3a/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "5b2797d94032674fffb670914df8527ca61d903b6a52fc3b222c3db0241fa99f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/COQUES3N/ct3a/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/CRASH/crashsection/box1_42/data/BOX1BL_0000.rad",
+      "size_bytes": 38639,
+      "sha256": "58ff657f3ce81dc0499f7054cc1847ca5f90a4bf100f0b01bbac3fd7f79dd8a4",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/CRASH/crashsection/box1_42/data/BOX1BL_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/CRASH/crashsection/box1_42/data/BOX1BL_0001.rad",
+      "size_bytes": 486,
+      "sha256": "02b83271d045716360e0b0a03c72ba0c72845a106fd9ed145f8f5bdf7dfd4e21",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/CRASH/crashsection/box1_42/data/BOX1BL_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/CRASH/crashsection/box1_42/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/CRASH/crashsection/box1_42/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/CRASH/crashsection/box1_42/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "f05782dc7ae234fa35b8128a43f36df0971a76771f352d91336579e15a08eec3",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/CRASH/crashsection/box1_42/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/CRASH/crashtriangles/data/TRITUBV4_0000.rad",
+      "size_bytes": 81682,
+      "sha256": "31a3cb83f3452e28a25df5bbc8cecf4a6ea6c87f47d1358c102680349cefec8d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/CRASH/crashtriangles/data/TRITUBV4_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/CRASH/crashtriangles/data/TRITUBV4_0001.rad",
+      "size_bytes": 488,
+      "sha256": "79296d89d20e4e5bb457068c74a9e0918efa7e7a32aca34bc99195b920a10c0b",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/CRASH/crashtriangles/data/TRITUBV4_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/CRASH/crashtriangles/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/CRASH/crashtriangles/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/CRASH/crashtriangles/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "ea1005269124f390c3ece4cd46dcb4b277a64bbe05d6f1bef78afe63737cec41",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/CRASH/crashtriangles/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/EOS/EOS_PUFF_2/data/EOSPUFFDET3DCU_0000.rad",
+      "size_bytes": 8897,
+      "sha256": "2bf734d98308817cea1b873c97b109b4bc7acee58715f91fa2784639a6ccf738",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/EOS/EOS_PUFF_2/data/EOSPUFFDET3DCU_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/EOS/EOS_PUFF_2/data/EOSPUFFDET3DCU_0001.rad",
+      "size_bytes": 347,
+      "sha256": "461a4e16b97dcfb628ee27c7698e3ca050304b77162b35aa02027101d38094b9",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/EOS/EOS_PUFF_2/data/EOSPUFFDET3DCU_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/EOS/EOS_PUFF_2/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/EOS/EOS_PUFF_2/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/EOS/EOS_PUFF_2/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "b96ef3f687233d4cb184131043df1936c076ac950b2dcf16d3f203fa3675421c",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/EOS/EOS_PUFF_2/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/FLUIDE_NEW/COMPA1B/data/COMPA1B_0000.rad",
+      "size_bytes": 16741,
+      "sha256": "9bdfce534200cd50249f57c12baf706bc475f183c940cc7c7ffe59cc83001c19",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/COMPA1B/data/COMPA1B_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/FLUIDE_NEW/COMPA1B/data/COMPA1B_0001.rad",
+      "size_bytes": 830,
+      "sha256": "a4ca460677c58c2857e617d62b5afb7657c52e8dd59ee5713836367bf593ee7e",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/COMPA1B/data/COMPA1B_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/FLUIDE_NEW/COMPA1B/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/COMPA1B/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/FLUIDE_NEW/COMPA1B/data/ref.extract",
+      "size_bytes": 363,
+      "sha256": "9adcf54a9a6f079ec26a4f7954dac8e528f82432245b64ad93c6e8f4f9d6528d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/COMPA1B/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0000.rad",
+      "size_bytes": 13438,
+      "sha256": "52a253e91f6850f5ae0c009be782b7b5cef7b7294dc0c883eb232fe8cb832926",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0001.rad",
+      "size_bytes": 534,
+      "sha256": "f9078ee4ab3417345a095bb163213a39b984165506c41f28d6d7639c866c41b4",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0002.rad",
+      "size_bytes": 408,
+      "sha256": "ccee3130f3d66f5521dd7a5f544dacf3aa805bb536685a13764bd15fc5d4001f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0002.rad",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0003.rad",
+      "size_bytes": 322,
+      "sha256": "b3580f19573de693a34bec679885c1ce4b9c0f0d63d7407ea8c48c2384c9f75f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/INIV_0003.rad",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/ref.extract",
+      "size_bytes": 367,
+      "sha256": "5c4f5020f7e3e4b5c98d5aea07766f4f9ea9f2b3ebf7eaa49a986ed8541f5f2b",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/test_files.json",
+      "size_bytes": 110,
+      "sha256": "da14b6caff7ccc64a785d36da730048a030e3cfedcce755f42b6ec86f1f78a4d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/FLUIDE_NEW/EBCS/INIV/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/IMPOSED/IMPDISP_FGEO/data/mapSimple_0000.rad",
+      "size_bytes": 1734751,
+      "sha256": "ad841cab2870a1df0418df09dc35a6ee8aca732a682769aa513151c39b24b50d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/IMPOSED/IMPDISP_FGEO/data/mapSimple_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/IMPOSED/IMPDISP_FGEO/data/mapSimple_0001.rad",
+      "size_bytes": 614,
+      "sha256": "e4f6873eb903ac7f059814d62130fd891b272398103564df05ed6ed804813f66",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/IMPOSED/IMPDISP_FGEO/data/mapSimple_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/IMPOSED/IMPDISP_FGEO/data/ref.extract",
+      "size_bytes": 366,
+      "sha256": "0a4245b141a778a29bfd5f4ea7996b30b9b00bcf7bf31fb87b53ff99435aa591",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/IMPOSED/IMPDISP_FGEO/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_2/pl_dam_ilev/data/PLREG41B_0000.rad",
+      "size_bytes": 18812,
+      "sha256": "8f7fb77ce259af3211360235e085d912e7ddf58bc158769b2a740de6f6db920d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_2/pl_dam_ilev/data/PLREG41B_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_2/pl_dam_ilev/data/PLREG41B_0001.rad",
+      "size_bytes": 584,
+      "sha256": "a66412ecac1cec7c85d6126879a27d04126e489d9e7e879982351c080e1fe6bd",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_2/pl_dam_ilev/data/PLREG41B_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_2/pl_dam_ilev/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_2/pl_dam_ilev/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_2/pl_dam_ilev/data/ref.extract",
+      "size_bytes": 366,
+      "sha256": "deb832517db3443dba74014e3d08019e8e1223dfdc94880c18081a5acfb5537e",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_2/pl_dam_ilev/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_22/1D_U-SURF_9ELEMS_LAW6_Linear_EOS_EULER_0.FVM/data/9BRICKS_0000.rad",
+      "size_bytes": 17592,
+      "sha256": "752c31b866b1358435c5cb2bfb390d2991a772f84559e3090838d69644cdd875",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_22/1D_U-SURF_9ELEMS_LAW6_Linear_EOS_EULER_0.FVM/data/9BRICKS_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_22/1D_U-SURF_9ELEMS_LAW6_Linear_EOS_EULER_0.FVM/data/9BRICKS_0001.rad",
+      "size_bytes": 476,
+      "sha256": "d0885dc57c0030ecd3a66d3962d94426d9a2d4309c7d10d23ed84011063d49ee",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_22/1D_U-SURF_9ELEMS_LAW6_Linear_EOS_EULER_0.FVM/data/9BRICKS_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_22/1D_U-SURF_9ELEMS_LAW6_Linear_EOS_EULER_0.FVM/data/ref.extract",
+      "size_bytes": 367,
+      "sha256": "0579c88752bdf85624602faace728f2b52e1874f399866dceee3fbee24634b8c",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_22/1D_U-SURF_9ELEMS_LAW6_Linear_EOS_EULER_0.FVM/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_22/1D_U-SURF_9ELEMS_LAW6_Linear_EOS_EULER_0.FVM/data/test_files.json",
+      "size_bytes": 136,
+      "sha256": "e58390a3365cd84f0cde96c01e3b3a41ebaa1025f91f4e8bff96a00399f06898",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_22/1D_U-SURF_9ELEMS_LAW6_Linear_EOS_EULER_0.FVM/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_25/hexa8/data/model_00_0000.rad",
+      "size_bytes": 60912,
+      "sha256": "6acdc0be3b1c0f033952b6d29b47102ad43a617bf86b6f420b2387ca3a158335",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_25/hexa8/data/model_00_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_25/hexa8/data/model_00_0001.rad",
+      "size_bytes": 236,
+      "sha256": "9611033b0902b8bbc678a2ee21c119681260d2c2aa57a72fd274de807edc99b2",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_25/hexa8/data/model_00_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_25/hexa8/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "4501930e31f700ea81b1712b272677fab01f7ae0d9dd29f3e8b49f36ca57124b",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_25/hexa8/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_25/tetra4/data/model_00_0000.rad",
+      "size_bytes": 88669,
+      "sha256": "d2483e05ab18c3be1010f116967c126338258ddd9e8212a09ddd76d785aa65e0",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_25/tetra4/data/model_00_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_25/tetra4/data/model_00_0001.rad",
+      "size_bytes": 234,
+      "sha256": "b1407bd76e5c9996d15526badb53d2f88a284e7e318458236b6f5efb163e81fc",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_25/tetra4/data/model_00_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_25/tetra4/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "aca2d5a11fbc9e96f5103710c7e4aa9fee92060ee64105e6e132eca363d2c6c6",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_25/tetra4/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/fpenmax/data/model_0000.rad",
+      "size_bytes": 17434,
+      "sha256": "92126abd359bcd2ac507978e1009b1dbd375dd9a9e5c5f9f878726169134e93b",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/fpenmax/data/model_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/fpenmax/data/model_0001.rad",
+      "size_bytes": 399,
+      "sha256": "9b705d5eee732d846c0c49697b9fe35967c21793298ca609a879424d95db7d36",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/fpenmax/data/model_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/fpenmax/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/fpenmax/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/fpenmax/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "0e1c99dcd17e3e6559220afddee28746796097958cbbeb8114729920fafbbb7d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/fpenmax/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/friction/data/FRICT41_0000.rad",
+      "size_bytes": 15787,
+      "sha256": "d981d52971a40e8a62781a0e642f1b49c25959524084ed78d70d3cd4064c62d0",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/friction/data/FRICT41_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/friction/data/FRICT41_0001.rad",
+      "size_bytes": 487,
+      "sha256": "1cabfb276d8a0f7aad5d79663b68b8f525cd14ebb09e11dd864439f65bf4af3a",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/friction/data/FRICT41_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/friction/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/friction/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/friction/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "d215bb4e1cc676f5c2a025c0256a9fd14f11507f296e922dfd22889f9857696d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/friction/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/idel7=2/data/IDEL8_0000.rad",
+      "size_bytes": 91938,
+      "sha256": "09b44c301de00a7af48368e8331393a1e21cfebd3b5edec575d1082208784c48",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/idel7=2/data/IDEL8_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/idel7=2/data/IDEL8_0001.rad",
+      "size_bytes": 749,
+      "sha256": "be29e17d343154c233883b9b1befab34db9a9ac340acfb9811e54bc1e8976257",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/idel7=2/data/IDEL8_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/idel7=2/data/IDEL8_0002.rad",
+      "size_bytes": 571,
+      "sha256": "7e1b339f51dd9755cead27f899254f867417b85075514079a71941202732a1e3",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/idel7=2/data/IDEL8_0002.rad",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/idel7=2/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/idel7=2/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/idel7=2/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "6bb6c86a19bf80219aeba291b45e1f30140645f4700a9c37a8af8f6e1952071c",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/idel7=2/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/idel7=2/data/test_files.json",
+      "size_bytes": 258,
+      "sha256": "72af9dad57bf4884f4868ebef9431803a6ab6af6c94e641cdf4e1b28de996be8",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/idel7=2/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/data/BOULEV44_0000.rad",
+      "size_bytes": 32811,
+      "sha256": "61ede4f4de8896d75dbfba2314c250ca2bf7aaa3846519812032067a314e66e6",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/data/BOULEV44_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/data/BOULEV44_0001.rad",
+      "size_bytes": 529,
+      "sha256": "11541b405f79e46d7c915c6786cc2112971fd15678cbb4c5e95bfc487f90fb5d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/data/BOULEV44_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "b84926069fc3d517085cfdf1ad5eb2b6fa9576285d3fe692243941602ac0ec49",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/data/test_files.json",
+      "size_bytes": 394,
+      "sha256": "32170b9ef2c7f161606c7b4f661e6b2cd3e191174365e72cd822e0e303a66861",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/dtmin_02/data/BOULE1V5_0000.rad",
+      "size_bytes": 30736,
+      "sha256": "fc0c7bfcaa911c523e5d50f6c4f60e9afb9575cc6fc8b01eb74cc2de7ee927a4",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/dtmin_02/data/BOULE1V5_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/dtmin_02/data/BOULE1V5_0001.rad",
+      "size_bytes": 363,
+      "sha256": "3c21f14a7cfd0223b9b5d229fb460d3dea3db7276d8aad0dd8d68e1f1fbbaa5a",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/dtmin_02/data/BOULE1V5_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/dtmin_02/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/dtmin_02/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/dtmin_02/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "5e3dbc615a8289420a1622faa0d065fe942917e56add8cc8803d1e4b5ab09faf",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/igsti/small_boule_igsti/dtmin_02/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/small_boule/data/BOULE1V4_0000.rad",
+      "size_bytes": 32406,
+      "sha256": "f80552da087d5e20c266a0f7b621cb9c81a4be58b58531947ab0d4fc3aada6ee",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/small_boule/data/BOULE1V4_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/small_boule/data/BOULE1V4_0001.rad",
+      "size_bytes": 468,
+      "sha256": "3287abec76f50e494dbd2867d8a981cba9d2647d2dcced6448add00e03cc378f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/small_boule/data/BOULE1V4_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/small_boule/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/small_boule/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/small_boule/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "2e0700b2804fbe66073bfb0eee9f5557401f8a798783588825116052d6184a94",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/small_boule/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/INT_7/small_boule/data/test_files.json",
+      "size_bytes": 424,
+      "sha256": "a816bc608aa8a3dac3e139f7b0169ad1bee7b1d883ffdb10a8c87eccb5fb7614",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/INT_7/small_boule/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/int357/data/INT357_0000.rad",
+      "size_bytes": 34684,
+      "sha256": "bb4496a8465c1504086f2fbacbc2c24d8e079edaab7996b50327359032b10d5a",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/int357/data/INT357_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/int357/data/INT357_0001.rad",
+      "size_bytes": 488,
+      "sha256": "80dbcb19d497dc8bba02f6c0630de565838817455ce848fa226621097188d666",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/int357/data/INT357_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/int357/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/int357/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/INTERF/int357/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "811896bc5b0a644024d9fd8adf23613c62181d5f7b7abb43b3773b3b7aff84e8",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/INTERF/int357/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/KIN_CONSTRAINTS/RBODY/ROTA/data/BLOCK_0000.rad",
+      "size_bytes": 7608,
+      "sha256": "566c17427fafd1432fcbc7926faf3d96a5a57f00c4c151176c65d379a261911d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/KIN_CONSTRAINTS/RBODY/ROTA/data/BLOCK_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/KIN_CONSTRAINTS/RBODY/ROTA/data/BLOCK_0001.rad",
+      "size_bytes": 551,
+      "sha256": "6d49836a587fde5e46f520b860b3982261c1ea8de213fa7509a978efc73facfc",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/KIN_CONSTRAINTS/RBODY/ROTA/data/BLOCK_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/KIN_CONSTRAINTS/RBODY/ROTA/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/KIN_CONSTRAINTS/RBODY/ROTA/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/KIN_CONSTRAINTS/RBODY/ROTA/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "a3439e7a9a78f29cf7ef23c7bbcdaa7eed98ccc86677453505fa8f5282851263",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/KIN_CONSTRAINTS/RBODY/ROTA/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/FOAM/FOAM429/input_100/isolid_101/data/FOAM_V10_0000.rad",
+      "size_bytes": 224680,
+      "sha256": "56526699a96a42deb4a2ffe5b509a599ecfb4ccf85b250593c7d103ff53e469e",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/FOAM/FOAM429/input_100/isolid_101/data/FOAM_V10_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/FOAM/FOAM429/input_100/isolid_101/data/FOAM_V10_0001.rad",
+      "size_bytes": 592,
+      "sha256": "c111520b1598095fc21457114657b6aa7ec18d5525f9cdb44ff367ed2e9efaea",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/FOAM/FOAM429/input_100/isolid_101/data/FOAM_V10_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/FOAM/FOAM429/input_100/isolid_101/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/FOAM/FOAM429/input_100/isolid_101/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/FOAM/FOAM429/input_100/isolid_101/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "062a5108dd31c410d0aa60ccc7f2d1b3e65948079a7d039516d1089b55a877bd",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/FOAM/FOAM429/input_100/isolid_101/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW19_quads/data/RBPLI_0000.rad",
+      "size_bytes": 130993,
+      "sha256": "902f140a04273969dc9bcbcc3a072bb5939e61527ebe14c0d5cd0698135858ab",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW19_quads/data/RBPLI_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW19_quads/data/RBPLI_0001.rad",
+      "size_bytes": 469,
+      "sha256": "9208e304397ff47d6265c6ef320036f3851a6b58f48e7d45abe84799f6753bb0",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW19_quads/data/RBPLI_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW19_quads/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW19_quads/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW19_quads/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "e1866e78c3966bcfdc4add11bd3a5df8bd8cfbf2d7cd7afedfc507f3bfba57f5",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW19_quads/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW19_quads/data/test_files.json",
+      "size_bytes": 399,
+      "sha256": "9db4ce301a0ef1230fe72795394b4fc4de8c80f36f89d026864600af4645a0bd",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW19_quads/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW58_quads/data/RBPLI_0000.rad",
+      "size_bytes": 131542,
+      "sha256": "c1a195d0eddec01c0a124210118e8396ce6300d597a3fbaf4707e895f009b3e7",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW58_quads/data/RBPLI_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW58_quads/data/RBPLI_0001.rad",
+      "size_bytes": 469,
+      "sha256": "9208e304397ff47d6265c6ef320036f3851a6b58f48e7d45abe84799f6753bb0",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW58_quads/data/RBPLI_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW58_quads/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW58_quads/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW58_quads/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "6cd7144dc38e4554c5d865bf8b27dce2897432f5ed01bcc75d567611d8f2b5db",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW58_quads/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW58_quads/data/test_files.json",
+      "size_bytes": 652,
+      "sha256": "97c67b79d4fd748cd900b50ddd9809b3857fe30448309477fadc8cde091a7828",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LEAK_MAT/run2_LAW58_quads/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI12/test1/data/LOI12_0000.rad",
+      "size_bytes": 16669,
+      "sha256": "1871e75dd4ffb2f32c5e08ba30d741039f097f36ae84ebaa85ead7813dea4a05",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI12/test1/data/LOI12_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI12/test1/data/LOI12_0001.rad",
+      "size_bytes": 606,
+      "sha256": "e94bbe7be0e7c873b54023c3c3421c93b865bd46b6cba7736ca483a8c6b5a818",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI12/test1/data/LOI12_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI12/test1/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI12/test1/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI12/test1/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "1f9db64f9da0059740b09aee0a97eed9b96145ca6da9714d37a63818c94e1ffa",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI12/test1/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI13/solide/data/MODELE_0000.rad",
+      "size_bytes": 108412,
+      "sha256": "b0c6e648276beec388b5e939b0db0173b76d59d447df083000b9c64c135837b3",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI13/solide/data/MODELE_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI13/solide/data/MODELE_0001.rad",
+      "size_bytes": 367,
+      "sha256": "329dbf11cc7c1b3db183321927ad9fb4baf27b68972563a5361192a3df05749e",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI13/solide/data/MODELE_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI13/solide/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI13/solide/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI13/solide/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "ed1408d6a196075b538c48eb6ca8ef5c8daec8e386775b167553fcf3b5797df6",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI13/solide/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI14/data/LOI14_0000.rad",
+      "size_bytes": 15990,
+      "sha256": "aaef52b5b3b91acea6ad56c7bba1711c272997f908f1b5c592e9fe481d054fd6",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI14/data/LOI14_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI14/data/LOI14_0001.rad",
+      "size_bytes": 609,
+      "sha256": "52225617e3b12fbe812b65fbe756695f558b0ce546558ceb5aff6568d32d5ad0",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI14/data/LOI14_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI14/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI14/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI14/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "1f9db64f9da0059740b09aee0a97eed9b96145ca6da9714d37a63818c94e1ffa",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI14/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI2/BESH/input_44/data/BESHV44_0000.rad",
+      "size_bytes": 13769,
+      "sha256": "16e3868ca866bf0108f4f8ee1d1aa8cd12e2f65156cc5bda0678cca343f8bee7",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI2/BESH/input_44/data/BESHV44_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI2/BESH/input_44/data/BESHV44_0001.rad",
+      "size_bytes": 612,
+      "sha256": "a513a24154c5e15782098aa75fd630baa88385beab89fcbbbf44660196528dc3",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI2/BESH/input_44/data/BESHV44_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI2/BESH/input_44/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI2/BESH/input_44/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI2/BESH/input_44/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "c19dba0a5c560583b6911616529ab50b9e81226c49e27fb006ec2ed7097f51ca",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI2/BESH/input_44/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI21/data/M21AV31_0000.rad",
+      "size_bytes": 9515,
+      "sha256": "0939a83c239ea0cf1831cfcaff2527f40dce90d12002ee1f3ba29bb21cd44381",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI21/data/M21AV31_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI21/data/M21AV31_0001.rad",
+      "size_bytes": 489,
+      "sha256": "93c4beb87232d54c6ce840e05acba0ee46ac9cc33919e26ade01ff159e7e9d76",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI21/data/M21AV31_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI21/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI21/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI21/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "588bbccfd67854f2fdd8cd952a7da2f3dde2341da15a8d97aa75b13fc216ddfb",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI21/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI22/sol2223/version_100/data/LOI2223_0000.rad",
+      "size_bytes": 14105,
+      "sha256": "35ded151341a680f733af92d9262cdfd9eeed34b18d4f2239309160acacf3122",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI22/sol2223/version_100/data/LOI2223_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI22/sol2223/version_100/data/LOI2223_0001.rad",
+      "size_bytes": 602,
+      "sha256": "3eed81cac232ee5ef6267ef2b711e5447420d1314c57e691584511ab596e2d0a",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI22/sol2223/version_100/data/LOI2223_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI22/sol2223/version_100/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI22/sol2223/version_100/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI22/sol2223/version_100/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "ca79e12c4d18514d9cecd248a8b0f88d5f64f9e329e05234da5fc682f2a83c47",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI22/sol2223/version_100/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI25/test_crasurv_bloc/input_44/data/L25CRASB_0000.rad",
+      "size_bytes": 15765,
+      "sha256": "952f9dccaf0c7a873a77fd28b830a0aefa4c9ccbed670b6fa72f079e29bd2e3a",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI25/test_crasurv_bloc/input_44/data/L25CRASB_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI25/test_crasurv_bloc/input_44/data/L25CRASB_0001.rad",
+      "size_bytes": 609,
+      "sha256": "dd4064c7932e4d895887e13182463c22c80cde0c8afc824b59dc4d4944d01faf",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI25/test_crasurv_bloc/input_44/data/L25CRASB_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI25/test_crasurv_bloc/input_44/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI25/test_crasurv_bloc/input_44/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI25/test_crasurv_bloc/input_44/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "a33a14b9041d2d0ab02538ffd1cd077461fb6a2f9bed8bc3880dcfc90df7ec75",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI25/test_crasurv_bloc/input_44/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI25/test_crasurv_bloc/input_44/data/test_files.json",
+      "size_bytes": 226,
+      "sha256": "c5ea9e80e0410bc33c3fbd349ce6bae679d5dce64c19a4f0027b8139f20f9894",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI25/test_crasurv_bloc/input_44/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI27/B_POKE_9/data/B_POKE_9_0000.rad",
+      "size_bytes": 10474,
+      "sha256": "8284a08fe5a468db97bc394f4aac06ff086f314aa00f3014c56fa553f9a0f8bf",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI27/B_POKE_9/data/B_POKE_9_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI27/B_POKE_9/data/B_POKE_9_0001.rad",
+      "size_bytes": 949,
+      "sha256": "62260598695d6450704aa90a35028e84f079ad7af1956f3646fcb8e5da332c4e",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI27/B_POKE_9/data/B_POKE_9_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI27/B_POKE_9/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI27/B_POKE_9/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI27/B_POKE_9/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "0868f3d42d7cb89dd7971fd0dd802c4304fdb4908bb21461f89b5767a45c746c",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI27/B_POKE_9/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI35/NewTests/Coques/test2/data/TEST5C_0000.rad",
+      "size_bytes": 9437,
+      "sha256": "3df5dd43348c939228aecd2d07ff9bde24c310ef04ce87dc976e7f1b533cff40",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI35/NewTests/Coques/test2/data/TEST5C_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI35/NewTests/Coques/test2/data/TEST5C_0001.rad",
+      "size_bytes": 594,
+      "sha256": "2564af7d02b0a64542ed08e748c10a4154e115d34fec60955c4092d494c25706",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI35/NewTests/Coques/test2/data/TEST5C_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI35/NewTests/Coques/test2/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI35/NewTests/Coques/test2/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI35/NewTests/Coques/test2/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "415aa629f2b9fd98b6bd4a3357ff54e5408f8d52b03aa750bcdb22fe2b82a932",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI35/NewTests/Coques/test2/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI38/DMAFNLIN/input_44/isolid_1/data/DMAFNLIN_0000.rad",
+      "size_bytes": 70581,
+      "sha256": "52e55d772ed545213bbb32da4bbfe48f78682f4555a99c187577ce3337fec833",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI38/DMAFNLIN/input_44/isolid_1/data/DMAFNLIN_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI38/DMAFNLIN/input_44/isolid_1/data/DMAFNLIN_0001.rad",
+      "size_bytes": 570,
+      "sha256": "6204cec2840751773f4b814f76285d4685a76b480a505a4b3fa257bea5763d46",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI38/DMAFNLIN/input_44/isolid_1/data/DMAFNLIN_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI38/DMAFNLIN/input_44/isolid_1/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI38/DMAFNLIN/input_44/isolid_1/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI38/DMAFNLIN/input_44/isolid_1/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "0413701c6e26750788057da1b8559fa05ef52f0009b598b705099204b829f8fd",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI38/DMAFNLIN/input_44/isolid_1/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/44SLD8_0000.rad",
+      "size_bytes": 3000,
+      "sha256": "7fc3b2781753d28da1689e9db95832492820d22854e228c8c5c80effe8e498b9",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/44SLD8_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/44SLD8_0001.rad",
+      "size_bytes": 428,
+      "sha256": "9bbb3a9d11d90d16e9235a7a1a1c0b76578dd76b9d388851f914c0939d06442e",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/44SLD8_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "4c04dbfbd5fcb172ff7db5a1ec92c786f8a21692f6c139eb92f040579991a149",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI44/solides_8pt/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI49/bar2_v44/loi_4_49/data/BAR2V41B_0000.rad",
+      "size_bytes": 93090,
+      "sha256": "4d090b6c4c11d9a1246223f1ca391afef0eb03c90d0129c02b31516ccc49a39e",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI49/bar2_v44/loi_4_49/data/BAR2V41B_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI49/bar2_v44/loi_4_49/data/BAR2V41B_0001.rad",
+      "size_bytes": 546,
+      "sha256": "b1c8de36479520263b5f86a1ea2ccc6f43b1706c1a1b8ec45f281a2bceec61d3",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI49/bar2_v44/loi_4_49/data/BAR2V41B_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI49/bar2_v44/loi_4_49/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI49/bar2_v44/loi_4_49/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI49/bar2_v44/loi_4_49/data/ref.extract",
+      "size_bytes": 367,
+      "sha256": "81dbc373a7f8e63ece1f13be8b33fd082090591d2a207e3fb5955a84f1e9c969",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI49/bar2_v44/loi_4_49/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI50/test1/pid_6/input_44/data/M50B_0000.rad",
+      "size_bytes": 19144,
+      "sha256": "02615d6c297ab00c60078beb11d70df89fe4c2ab55fd3dd22fc4b6f15bb9b753",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI50/test1/pid_6/input_44/data/M50B_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI50/test1/pid_6/input_44/data/M50B_0001.rad",
+      "size_bytes": 557,
+      "sha256": "8be60e6a5c40e5c4d4f572cbdef53bae92126d5ead193d7519f77bd4a9741b58",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI50/test1/pid_6/input_44/data/M50B_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI50/test1/pid_6/input_44/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI50/test1/pid_6/input_44/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI50/test1/pid_6/input_44/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "18f4f50650b806a13417bcd5f8030ab5bc9c5a41da33ac1a4c2eaf26ce9b2167",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI50/test1/pid_6/input_44/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01a_P-E/data/L51_JWL_PG_P-E_0000.rad",
+      "size_bytes": 14931,
+      "sha256": "d0b10f5ac1d4a9f899b3ebecc3b3b697f53d5139179de9750e12d2e88b9d6a54",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01a_P-E/data/L51_JWL_PG_P-E_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01a_P-E/data/L51_JWL_PG_P-E_0001.rad",
+      "size_bytes": 338,
+      "sha256": "6efd5ac32b42db98a75d0c061c97f61971003e9f5bfbc15e31c2dc8ca75f1e3e",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01a_P-E/data/L51_JWL_PG_P-E_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01a_P-E/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01a_P-E/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01a_P-E/data/ref.extract",
+      "size_bytes": 366,
+      "sha256": "41e9a39c3cf3fac7239e43d230d933095bf77eb29baf7eced1be524d34bfd5a0",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01a_P-E/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01a_P-E/data/test_files.json",
+      "size_bytes": 119,
+      "sha256": "96717b974309a7c5199d6c8867fec711a7a2de3e50e8cd7f2837ccdaf7994d1b",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01a_P-E/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01b_dP-E/data/L51_JWL_PG_dP-E_0000.rad",
+      "size_bytes": 14941,
+      "sha256": "e0312fcf82c96176d7336c7a55ac319a40f47b118aeae4b23a36387d3c64d27c",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01b_dP-E/data/L51_JWL_PG_dP-E_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01b_dP-E/data/L51_JWL_PG_dP-E_0001.rad",
+      "size_bytes": 352,
+      "sha256": "a2bd40632376ad44966310c3b15cf7f42604f0b332e0a32e3da990834e8ae8d9",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01b_dP-E/data/L51_JWL_PG_dP-E_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01b_dP-E/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01b_dP-E/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01b_dP-E/data/ref.extract",
+      "size_bytes": 367,
+      "sha256": "0b675ddecc0cbf14afe5ecc8393741d04e34dac8a19d75ed6b528e27ed566f6f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI51/JWL/01-PG_degenerated/01b_dP-E/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI62/cisaillement/data/TEST62_0000.rad",
+      "size_bytes": 7906,
+      "sha256": "4cf8a0020ebf00b75e08433591a3ec00877d8a932e06baa7708a8f406c32c052",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI62/cisaillement/data/TEST62_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI62/cisaillement/data/TEST62_0001.rad",
+      "size_bytes": 653,
+      "sha256": "c1685dfc27189cff94633bb2d023de6784a4b48224c8809c19a02a9d4000de55",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI62/cisaillement/data/TEST62_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI62/cisaillement/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI62/cisaillement/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI62/cisaillement/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "be049d9552dfcf939bb195fd4576bc4b397192636796bf361af184c71d693d29",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI62/cisaillement/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI66/test_shell/data/DEUXELC_0000.rad",
+      "size_bytes": 33792,
+      "sha256": "68a525582c41c5ea020009cd620b7df5f50ee8a9d2637a3a78c21c308be0f8c8",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI66/test_shell/data/DEUXELC_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI66/test_shell/data/DEUXELC_0001.rad",
+      "size_bytes": 669,
+      "sha256": "2a32b22e1db5e0373953096c772981d6c8beffb2794f386baafaeb20a7898f92",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI66/test_shell/data/DEUXELC_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI66/test_shell/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI66/test_shell/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI66/test_shell/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "94e21156d41cc5de83a85709c8dd69e455615a62f188132a7d3041d58695a328",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI66/test_shell/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI68/cisaillement/test1/input_51/data/CISA12_0000.rad",
+      "size_bytes": 572393,
+      "sha256": "ede981891a6dbae48c9847510e3873ba986cd2caf80127fac41ec7e2d196a6ad",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI68/cisaillement/test1/input_51/data/CISA12_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI68/cisaillement/test1/input_51/data/CISA12_0001.rad",
+      "size_bytes": 436,
+      "sha256": "425000170792396617770afab3039e4a70fd62c57bce8d13cd4bb365a8792ecd",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI68/cisaillement/test1/input_51/data/CISA12_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI68/cisaillement/test1/input_51/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI68/cisaillement/test1/input_51/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI68/cisaillement/test1/input_51/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "e5bedb9f3583939d3bf4b574fd6471a8eab195ec93e7d9802461f3990424854c",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI68/cisaillement/test1/input_51/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI68/cisaillement/test1/input_51/data/test_files.json",
+      "size_bytes": 577,
+      "sha256": "57865211884cc6a1c45bca968314d0ec26df2f090ec1ea2800b7ea4d6d0d2f27",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI68/cisaillement/test1/input_51/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI76/shell/test1/compression/data/COMP_0000.rad",
+      "size_bytes": 32671,
+      "sha256": "5ff1f14c3407ce691844a15d6f08717cf56fced1eacc3c1767952831a543a1db",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI76/shell/test1/compression/data/COMP_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI76/shell/test1/compression/data/COMP_0001.rad",
+      "size_bytes": 669,
+      "sha256": "959a79c347787918675c8c70dc922d51494c2ebbce70e380d91395833c44dfc9",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI76/shell/test1/compression/data/COMP_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI76/shell/test1/compression/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI76/shell/test1/compression/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/LOIS/LOI76/shell/test1/compression/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "57aacc6c5d37f0b3c93c3d6b59293e4702833afae8de85a9e14f269b4fd2b906",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/LOIS/LOI76/shell/test1/compression/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRBRICK/data/FOAM_GRBRICK_0000.rad",
+      "size_bytes": 819354,
+      "sha256": "1b9ebd372aeded065169ce80e6a5e95e892491252efaf6df2637af2a311a1691",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRBRICK/data/FOAM_GRBRICK_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRBRICK/data/FOAM_GRBRICK_0001.rad",
+      "size_bytes": 430,
+      "sha256": "9f747003742cb0d88d1be8c095b049234b48a9d76da3380e5c2cfe4850c034db",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRBRICK/data/FOAM_GRBRICK_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRBRICK/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRBRICK/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRBRICK/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "6bf44caa1fa303b2f7e1885198b60376c3cf6406173343523d285214f7f1ccf7",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRBRICK/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRSHEL/data/FOAM_GRSHEL_0000.rad",
+      "size_bytes": 819186,
+      "sha256": "052c5ecad76173d1ce97b5e052b01b29aad04dea436c338bb83508f1d26e5e80",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRSHEL/data/FOAM_GRSHEL_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRSHEL/data/FOAM_GRSHEL_0001.rad",
+      "size_bytes": 429,
+      "sha256": "034d372dba3a2ebf709ef1b4d9070cb097bda0ee2998466a4e4927dfcf05a6fe",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRSHEL/data/FOAM_GRSHEL_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRSHEL/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRSHEL/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRSHEL/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "6bf44caa1fa303b2f7e1885198b60376c3cf6406173343523d285214f7f1ccf7",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/NEW_BOX_V11/BOX_GRSHEL/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/damp/damping_all_nodes/input_44/data/DAMPC_0000.rad",
+      "size_bytes": 18604,
+      "sha256": "7fe53accfd277eb0effe73a5acc85006bacf371685e4339c314d92d07adae574",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/damp/damping_all_nodes/input_44/data/DAMPC_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/damp/damping_all_nodes/input_44/data/DAMPC_0001.rad",
+      "size_bytes": 556,
+      "sha256": "499f3603dbc0109fe2d5d19fe2f4d7f25354c2b46b684b7895d842bb594bee04",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/damp/damping_all_nodes/input_44/data/DAMPC_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/damp/damping_all_nodes/input_44/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/damp/damping_all_nodes/input_44/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/damp/damping_all_nodes/input_44/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "b7a7450dc4fba989d0e7320fb2d7e9cc9db86c6bbd2a525e20610ff8aa1d1b09",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/damp/damping_all_nodes/input_44/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/damp/new_test_v11/data/FFO25SCB_0000.rad",
+      "size_bytes": 32886,
+      "sha256": "d3a36092354a6786f56330c37e8eb35223cbbaa806d27cf71f8558ee5ddde997",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/damp/new_test_v11/data/FFO25SCB_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/damp/new_test_v11/data/FFO25SCB_0001.rad",
+      "size_bytes": 680,
+      "sha256": "f7e786e7222d4a9497feaa38359d8ddf03ebff4782c10b41299b588c059ddf08",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/damp/new_test_v11/data/FFO25SCB_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/damp/new_test_v11/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/damp/new_test_v11/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/damp/new_test_v11/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "75f0f73575f04f8b14032f3a18b99bc239bdcc53ae385a27ff8f71c05c6a7ae4",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/damp/new_test_v11/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/desacti/test2/version_5/data/HYPE_0000.rad",
+      "size_bytes": 34634,
+      "sha256": "efb1b1e1dbf9cf2e4a9f4d3df878eea9109005a65fdd8b12b8e3d53d76ca2a38",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/desacti/test2/version_5/data/HYPE_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/desacti/test2/version_5/data/HYPE_0001.rad",
+      "size_bytes": 578,
+      "sha256": "c99059026e71a6110869ab18366739f2432a86606c03b8eed4ee9a4b1883627f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/desacti/test2/version_5/data/HYPE_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/desacti/test2/version_5/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/desacti/test2/version_5/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/desacti/test2/version_5/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "a523b47d61990cf6337165ec0da661a30576619f121e352755daa675d7e608b8",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/desacti/test2/version_5/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/frame_or_skew/MOV/frame/data/THFRAME_0000.rad",
+      "size_bytes": 10569,
+      "sha256": "93f5875d421c9ef72e5abad72b7eb3fb896b728514853d4eee29877c4e7d9197",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/frame_or_skew/MOV/frame/data/THFRAME_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/frame_or_skew/MOV/frame/data/THFRAME_0001.rad",
+      "size_bytes": 530,
+      "sha256": "5ecfbf9ae9ff8d4a0cd90c0b41b4e5ab4fa2014dd747e6547eba52acf73a3ff9",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/frame_or_skew/MOV/frame/data/THFRAME_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/frame_or_skew/MOV/frame/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/frame_or_skew/MOV/frame/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/OPTIONS/frame_or_skew/MOV/frame/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "edcda64962a0c0e3f9d8f8efbd54193e5cb6049c891aa2474f53aad765997aa0",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/OPTIONS/frame_or_skew/MOV/frame/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/PROPSOL_ORTH_Istrain/data/Test_traction_0000.rad",
+      "size_bytes": 6628,
+      "sha256": "d53cda756cffcfd26fd4d67b2c8724872fe1e76db98934621e36094cd7524c18",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/PROPSOL_ORTH_Istrain/data/Test_traction_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/PROPSOL_ORTH_Istrain/data/Test_traction_0001.rad",
+      "size_bytes": 648,
+      "sha256": "75b2023c1bc8a54a78f09c3a8c80d51ce9b78ebe8ddf3aca4321cde76c557214",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/PROPSOL_ORTH_Istrain/data/Test_traction_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/PROPSOL_ORTH_Istrain/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/PROPSOL_ORTH_Istrain/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/PROPSOL_ORTH_Istrain/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "a49ce6085e88ea487d8541cbd5e7fbefbd05dff4dcb21f29936b852829bf6253",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/PROPSOL_ORTH_Istrain/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type13/Hardening7/data/R01CV3_0000.rad",
+      "size_bytes": 6174,
+      "sha256": "9683f911bcfc86f09103f8416d94185ae0ad211cb6b20f5be1aa4cbb69726f01",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type13/Hardening7/data/R01CV3_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type13/Hardening7/data/R01CV3_0001.rad",
+      "size_bytes": 328,
+      "sha256": "d18a3c8a1622c03fdc14e8a6c02868beae392ab1eef26505af0ac952a87dece4",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type13/Hardening7/data/R01CV3_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type13/Hardening7/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type13/Hardening7/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type13/Hardening7/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "c1c1200ee0d9cee906ad7386a14b1b94576faf3428e26ed8df623c13426e66e0",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type13/Hardening7/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type4/Hardening7/data/R01CV3_0000.rad",
+      "size_bytes": 11093,
+      "sha256": "cd0b8b292373bf92fce40d6be2b0cda78dde21d12e46e1dbe5f62ecf3f66fbaa",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type4/Hardening7/data/R01CV3_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type4/Hardening7/data/R01CV3_0001.rad",
+      "size_bytes": 478,
+      "sha256": "5d46a520eefbd2e01fda9d5882da14267f2569b13e6a035e086b7ff056187141",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type4/Hardening7/data/R01CV3_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type4/Hardening7/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type4/Hardening7/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type4/Hardening7/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "098d7676acf3ab9e6b651fe401d3744d9c4c7d94ece3c9ebe0693d9cb12072f5",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type4/Hardening7/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type4/Hardening7/data/test_files.json",
+      "size_bytes": 197,
+      "sha256": "f78234aebda46f208ec9bcf1492611350b93ca4682ff01def8ef7002579f105f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type4/Hardening7/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type8/Hardening6/data/R01CV3_0000.rad",
+      "size_bytes": 14249,
+      "sha256": "4c578fcdf8b3d969097015c7b227b4376f3d6cd8f5aa69c42094fc11cc8d11b2",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type8/Hardening6/data/R01CV3_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type8/Hardening6/data/R01CV3_0001.rad",
+      "size_bytes": 478,
+      "sha256": "31b3135fa8326fd65ccec1e3a577a7a964ab75230c161928be281bed7b7141a5",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type8/Hardening6/data/R01CV3_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type8/Hardening6/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type8/Hardening6/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PROP/spring_beam_Hardening7/Type8/Hardening6/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "b6af175fe21dd2709e7165bf9b6aad36251d199f835bcba59f86827286911c10",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PROP/spring_beam_Hardening7/Type8/Hardening6/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PYTHON/FUNCT_PYTHON/data/ref.extract",
+      "size_bytes": 395,
+      "sha256": "e5610151d2f7de5514299375e369a02e99d15b88e2fffe5e0d9ba3bc44932c49",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PYTHON/FUNCT_PYTHON/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PYTHON/FUNCT_PYTHON/data/test_files.json",
+      "size_bytes": 159,
+      "sha256": "e4832c763682c3af88c7589e16419c4ee883b333266c7ffb29c4c34e481477a0",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PYTHON/FUNCT_PYTHON/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PYTHON/FUNCT_PYTHON/data/test_torsion_orthstrain_shell_0000.rad",
+      "size_bytes": 143795,
+      "sha256": "94dd99cbf40590f14f819ff47c410a7f17f24df42d9ff125e182dc6b7eed01c6",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PYTHON/FUNCT_PYTHON/data/test_torsion_orthstrain_shell_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/PYTHON/FUNCT_PYTHON/data/test_torsion_orthstrain_shell_0001.rad",
+      "size_bytes": 335,
+      "sha256": "b04c72f1bb2c628e552e57e49abd452d825f4fe7ae567b345df37fd916bf72fc",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/PYTHON/FUNCT_PYTHON/data/test_torsion_orthstrain_shell_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/REFERENCE_STATE_FILES/REFSTA/SOLIDES/law42/data/FILE_0000.rad",
+      "size_bytes": 326732,
+      "sha256": "2c43a69c0d9bee640bdf13474cb58431593088bea966ab9f18eb45880d10b7da",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/REFERENCE_STATE_FILES/REFSTA/SOLIDES/law42/data/FILE_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/REFERENCE_STATE_FILES/REFSTA/SOLIDES/law42/data/FILE_0001.rad",
+      "size_bytes": 454,
+      "sha256": "8c7c472b4527f008f81e86d13cb462de30e3cb079d6e86247325d06df44fc3cd",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/REFERENCE_STATE_FILES/REFSTA/SOLIDES/law42/data/FILE_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/REFERENCE_STATE_FILES/REFSTA/SOLIDES/law42/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/REFERENCE_STATE_FILES/REFSTA/SOLIDES/law42/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/REFERENCE_STATE_FILES/REFSTA/SOLIDES/law42/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "21db438da230c8c1c5aa02a62cd82a17df999bf0e96c845ab898e4ac20d12b24",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/REFERENCE_STATE_FILES/REFSTA/SOLIDES/law42/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/couple/data/TYPE8M_0000.rad",
+      "size_bytes": 12822,
+      "sha256": "174a0c0e07509d422bcae0fffd43eadfef9c6c39f933aee3b60fc34a1379ae0b",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/couple/data/TYPE8M_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/couple/data/TYPE8M_0001.rad",
+      "size_bytes": 476,
+      "sha256": "2b1e8500c9b47174369447f89ddc905b78d3f10c937d6973b4645b7f8407f10b",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/couple/data/TYPE8M_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/couple/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/couple/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/couple/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "e1e06959f34d48582ae52e9d70bc35ef689137ec1d5bf2a6a81c3dc25a6119aa",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/couple/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/kjoint2/data/JOINT_0000.rad",
+      "size_bytes": 15323,
+      "sha256": "c198814041872b63d230641d5755d3d247e465cbd5c325512f671f59855b3291",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/kjoint2/data/JOINT_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/kjoint2/data/JOINT_0001.rad",
+      "size_bytes": 353,
+      "sha256": "9f1e100fefb3b286a6781c3d63a8073a3ffe3625d62a52bc1f488de71855a88a",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/kjoint2/data/JOINT_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/kjoint2/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "9a1eabcb1e2446e75c27b7ff4de14c9deecf326a4fa8f908aeda73ea8627042c",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/kjoint2/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type25/input_51/data/SPR250_0000.rad",
+      "size_bytes": 7610,
+      "sha256": "a491ba35124c782e7178b28663d63f899f789b05c0e22d47f55b99e03c74cb46",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type25/input_51/data/SPR250_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type25/input_51/data/SPR250_0001.rad",
+      "size_bytes": 331,
+      "sha256": "f00b33a44d8c9968388082dc7b0207078932115286bc85d846a439ba193de032",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type25/input_51/data/SPR250_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type25/input_51/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type25/input_51/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type25/input_51/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "fc3200f8274e691fb4c504099590623050a15ab335db31416dd96d2559684016",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type25/input_51/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type32/ILOCK2/data/SPR_PRE_2FLAG_0000.rad",
+      "size_bytes": 11468,
+      "sha256": "41ef9e762331b5d746ab793a776bc34c4c1d92953d95b32d5ace21ee16bbc16f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type32/ILOCK2/data/SPR_PRE_2FLAG_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type32/ILOCK2/data/SPR_PRE_2FLAG_0001.rad",
+      "size_bytes": 376,
+      "sha256": "36098f7ba00bf44955eec19213201e46c8dd8d2757530ca6b34ef81a3cd43855",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type32/ILOCK2/data/SPR_PRE_2FLAG_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type32/ILOCK2/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type32/ILOCK2/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type32/ILOCK2/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "2f3e7d9d994cc2813c5ad5c51a6c8c2a84d43013c8140c0ccff724fb407e61cb",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type32/ILOCK2/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type32/ILOCK2/data/test_files.json",
+      "size_bytes": 118,
+      "sha256": "be566f158e4c4792542f8f27a4616f1c39ec2f1cca160ee5661efc0db9c60fd5",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type32/ILOCK2/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type8/ecrouissage/data/TYPE8H1_0000.rad",
+      "size_bytes": 13467,
+      "sha256": "ec93a463ac001f16d00e0cc4733faecd15a71c3136cba2ed3fee7e225898ba61",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type8/ecrouissage/data/TYPE8H1_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type8/ecrouissage/data/TYPE8H1_0001.rad",
+      "size_bytes": 431,
+      "sha256": "3931dc87c5971357ce11be5d796e3881303f6ef67edf32e40b76971e23263841",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type8/ecrouissage/data/TYPE8H1_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type8/ecrouissage/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type8/ecrouissage/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESSORT/prop_type8/ecrouissage/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "36bcc223fe070b97160cf2ef62b4e920a0277f2eae60ab721176c36fb1a55f9e",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESSORT/prop_type8/ecrouissage/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/cra2/data/CRA2V44_0000.rad",
+      "size_bytes": 113417,
+      "sha256": "e0379ad27fc20191d414a85883ce1e50b7d91e63484e1365fecfcc954289adeb",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/cra2/data/CRA2V44_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/cra2/data/CRA2V44_0001.rad",
+      "size_bytes": 756,
+      "sha256": "a3b7ed8b9a9435a5d64b4cb190f4bd4eb05d85fd6c0083c798fcf38e2e83c9cc",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/cra2/data/CRA2V44_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/cra2/data/CRA2V44_0002.rad",
+      "size_bytes": 414,
+      "sha256": "1b0899c6e6fcba72f274fba56b46e7bad0912daf4109a476f951a2c573810e64",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/cra2/data/CRA2V44_0002.rad",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/cra2/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/cra2/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/cra2/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "4c8a52172c2e4864fc84b43668951c33ee2cf0d76fab1a6d6630c69e229c44ca",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/cra2/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/cra2/data/test_files.json",
+      "size_bytes": 102,
+      "sha256": "9989aaad84887e4c5d339aaf9be8bbe2eab593900b62a819681531599438c822",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/cra2/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/int7_small_boule_rst/data/BOULE1V4_0000.rad",
+      "size_bytes": 32406,
+      "sha256": "fdfc71293a06aa314dbb1fbf0e31c445ad882ca188bdad4a79def973357bffdd",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/int7_small_boule_rst/data/BOULE1V4_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/int7_small_boule_rst/data/BOULE1V4_0001.rad",
+      "size_bytes": 468,
+      "sha256": "e1ca8dd71bf4d53cec83b03a3100e0ae65b8c3e07093aa5abe019c7ea766b26a",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/int7_small_boule_rst/data/BOULE1V4_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/int7_small_boule_rst/data/BOULE1V4_0002.rad",
+      "size_bytes": 289,
+      "sha256": "98b6cb9bbc1a30aa737cf240c0bdcc1ffd5ef30eec59a0d2ce600a121832c243",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/int7_small_boule_rst/data/BOULE1V4_0002.rad",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/int7_small_boule_rst/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/int7_small_boule_rst/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/int7_small_boule_rst/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "fc8c1aad8c63a3a86e350c39eade49b972c647eab398dbe98113d5c653b040a9",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/int7_small_boule_rst/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RESTART/int7_small_boule_rst/data/test_files.json",
+      "size_bytes": 106,
+      "sha256": "b89f5e7fdf02d2024f0ae233e93c0b62f31deb0a27fd45cd3506dbea9ff0b53e",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RESTART/int7_small_boule_rst/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RUPTURE/FAIL_TAB/ELEM_SAMP/data/1ELEM_SAMP_0000.rad",
+      "size_bytes": 27868,
+      "sha256": "b1d41680ae9584f28fc826c50ae2023d5e23023490040ca95a0452ea73c0b937",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RUPTURE/FAIL_TAB/ELEM_SAMP/data/1ELEM_SAMP_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RUPTURE/FAIL_TAB/ELEM_SAMP/data/1ELEM_SAMP_0001.rad",
+      "size_bytes": 638,
+      "sha256": "eb356e5c948ca2d297592e75b80715fdbcac70f9d30c32d2bdd7afbc61505f26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RUPTURE/FAIL_TAB/ELEM_SAMP/data/1ELEM_SAMP_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RUPTURE/FAIL_TAB/ELEM_SAMP/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RUPTURE/FAIL_TAB/ELEM_SAMP/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RUPTURE/FAIL_TAB/ELEM_SAMP/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "d1979229b0be7ad3906dced0c679cb5974fde0b35d25815aec24f8be27e7255b",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RUPTURE/FAIL_TAB/ELEM_SAMP/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RUPTURE/Wierzbcki/User_law/shell/input_51/data/1SHELL_0000.rad",
+      "size_bytes": 18363,
+      "sha256": "39f2a6b5554dcf40118dc414383c0e47932e7baf29ad1136de52718685347288",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RUPTURE/Wierzbcki/User_law/shell/input_51/data/1SHELL_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RUPTURE/Wierzbcki/User_law/shell/input_51/data/1SHELL_0001.rad",
+      "size_bytes": 448,
+      "sha256": "a8d5fa8ddfe91ad61ae04a6d1ddf11c77c1661dfa944c9523aca7f8011097e37",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RUPTURE/Wierzbcki/User_law/shell/input_51/data/1SHELL_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RUPTURE/Wierzbcki/User_law/shell/input_51/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RUPTURE/Wierzbcki/User_law/shell/input_51/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/RUPTURE/Wierzbcki/User_law/shell/input_51/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "f2ceee1c6db102757320feae9732203b7ebbce3da6979208c69a83bf062a30ce",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/RUPTURE/Wierzbcki/User_law/shell/input_51/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SMOKE_TEST/data/TWISBEAM_0000.rad",
+      "size_bytes": 10237,
+      "sha256": "744aedcce64eb815a24b104640911c551cd61d95effc718c37b4736ac95e1c2a",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SMOKE_TEST/data/TWISBEAM_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SMOKE_TEST/data/TWISBEAM_0001.rad",
+      "size_bytes": 516,
+      "sha256": "38b5e84fa8127dac953ec94cd10ccda3c3615f85bae619d0abdc77b58f838f3d",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SMOKE_TEST/data/TWISBEAM_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SMOKE_TEST/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "4ebddccc58ba6efdb0cfcb0d24761c3745420aea2656721d316c27fc6f0c2b5a",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SMOKE_TEST/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/TYPE6_LAW28/data/LAW28_0000.rad",
+      "size_bytes": 10588,
+      "sha256": "b5949465feb309fc38b01fd1d3fa7887871f528086df8e69ae06b3dbe75fa411",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/TYPE6_LAW28/data/LAW28_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/TYPE6_LAW28/data/LAW28_0001.rad",
+      "size_bytes": 601,
+      "sha256": "a6fb434c889a94b8df1f5a1deaff34a8860a8be60a135c8575f82503c0ffbfd9",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/TYPE6_LAW28/data/LAW28_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/TYPE6_LAW28/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/TYPE6_LAW28/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/TYPE6_LAW28/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "dc2b69bd7ea8131142e2526bd6443d4e66c84cc2a6f3f2a499bd980c48d9c3a3",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/TYPE6_LAW28/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/inibri_stress/data/TEST_002_0000.rad",
+      "size_bytes": 11888,
+      "sha256": "16e675f161c3021252042d6c42620234b192cea456a67bda1fdd4a1c362d213f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/inibri_stress/data/TEST_002_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/inibri_stress/data/TEST_002_0001.rad",
+      "size_bytes": 781,
+      "sha256": "a18037e7ec1d8622e3ae76cf5d6319f7e0ddc27b0798f743e1c93446a7dd6f01",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/inibri_stress/data/TEST_002_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/inibri_stress/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/inibri_stress/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/inibri_stress/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "41d74b91ab3a7bd937b5dd7caba7a8595fe352adf86f374c90898dde04401dbb",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/inibri_stress/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/inibri_stress/data/test_files.json",
+      "size_bytes": 281,
+      "sha256": "9dc881c94d94a2e1c4fb83c7c2dc432cbe12cb20cb5fef5b17f38f0b576e6c29",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/inibri_stress/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H101/data/CONV_ELS_0000.rad",
+      "size_bytes": 51367,
+      "sha256": "1c7052020ac643bb0072c4ca8a2d0e740e9e0e4bf638c9ef79c2bfd57bb60be4",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H101/data/CONV_ELS_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H101/data/CONV_ELS_0001.rad",
+      "size_bytes": 668,
+      "sha256": "4ff0720926192cfcbe78ae3c9ce8d5ff775c762dd4e47784d380276efdbda8ab",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H101/data/CONV_ELS_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H101/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H101/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H101/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "15c73fa15927b2f4cd5462cf4e0b62583c77f19a333cc09b586a7a7509063223",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H101/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H112/data/CONV_ELS_0000.rad",
+      "size_bytes": 51367,
+      "sha256": "92765603520102269d2a4fa1dc714fc9aa9c8fd33c0b0ea601b5b5890b291d30",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H112/data/CONV_ELS_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H112/data/CONV_ELS_0001.rad",
+      "size_bytes": 668,
+      "sha256": "4ff0720926192cfcbe78ae3c9ce8d5ff775c762dd4e47784d380276efdbda8ab",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H112/data/CONV_ELS_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H112/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H112/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H112/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "ed8210246b706f81389e6f488e1326008693f01ea74b9166d90d8dcc8027f57f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/H112/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HEPH/icpre_1/data/CONV_ELS_0000.rad",
+      "size_bytes": 51367,
+      "sha256": "1fe33148110366a2ba8181821122f62c6410d2a96f5793bddc4d7edf8dedb7a6",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HEPH/icpre_1/data/CONV_ELS_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HEPH/icpre_1/data/CONV_ELS_0001.rad",
+      "size_bytes": 668,
+      "sha256": "4ff0720926192cfcbe78ae3c9ce8d5ff775c762dd4e47784d380276efdbda8ab",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HEPH/icpre_1/data/CONV_ELS_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HEPH/icpre_1/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HEPH/icpre_1/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HEPH/icpre_1/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "d98e24b72366edcd0def86844a41d34d7c9a2b4a7f6c2d24efc51e15a885cae1",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HEPH/icpre_1/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HSEPH/data/CONV_ELS_0000.rad",
+      "size_bytes": 51367,
+      "sha256": "51903389bc790e4ce741da4a68d4d6d218641dcf5936884d73ef7b55f4e61f96",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HSEPH/data/CONV_ELS_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HSEPH/data/CONV_ELS_0001.rad",
+      "size_bytes": 668,
+      "sha256": "4ff0720926192cfcbe78ae3c9ce8d5ff775c762dd4e47784d380276efdbda8ab",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HSEPH/data/CONV_ELS_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HSEPH/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HSEPH/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HSEPH/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "6c55c4688890e6a5624a88c8a58c46452a10ffa7c5f0bc1559493d9a6608c295",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/HSEPH/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/PA6/data/CONV_EL6_0000.rad",
+      "size_bytes": 61438,
+      "sha256": "a630be831d615164a4c25b8b9965bd11779c91e100a921717e20558622b47fce",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/PA6/data/CONV_EL6_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/PA6/data/CONV_EL6_0001.rad",
+      "size_bytes": 667,
+      "sha256": "79096600905c9d5ebc288ba0780ed140c2b3e86145cc479b89ac4ee2f971e079",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/PA6/data/CONV_EL6_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/PA6/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/PA6/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/PA6/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "4e2b6789c9e5cf87c599d5017ece1be923d77a537ea49401446fbd634b7a4e8c",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SOLIDES/nv_elts/poutre_flex/flexion/PA6/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SPH/WavesCompression/data/CUBC_0000.rad",
+      "size_bytes": 14243,
+      "sha256": "44964eb0302c642135e53f7048b227c987bf596bee1adf1e022c5f84ba4f3cf1",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SPH/WavesCompression/data/CUBC_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SPH/WavesCompression/data/CUBC_0001.rad",
+      "size_bytes": 697,
+      "sha256": "4a52056146e4adcbaaaf073533554077d6b9a00a1e10f542158e0fd06e5858ed",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SPH/WavesCompression/data/CUBC_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SPH/WavesCompression/data/qadiags.inc",
+      "size_bytes": 1170,
+      "sha256": "0bb1adde342d9b71f457d6d08591fbffa99aefa9c32fa7f833accaf1a8b3e8ae",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SPH/WavesCompression/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SPH/WavesCompression/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "5a6b0380b945b1947e090c87b243717e175d3e02b650e11c870b718f3f4cee9a",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SPH/WavesCompression/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/TRANSF/data/BOULE1V5_0000.rad",
+      "size_bytes": 30368,
+      "sha256": "667b11b83bdd5bd82bac0c566d189e2f2552b0cfafa5aac985c70282fd805956",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/TRANSF/data/BOULE1V5_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/TRANSF/data/BOULE1V5_0001.rad",
+      "size_bytes": 468,
+      "sha256": "b3263ba2cfe9960fc944ced2c68b7db0ce65e38c28d6fadd7230d6350cf09b1f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/TRANSF/data/BOULE1V5_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/TRANSF/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/TRANSF/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/TRANSF/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "7380d338769c2ee700ee383e6ee56b4e452775d957cec516ea234b9fae9faa86",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/TRANSF/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/ACTIV/data/HYPE_SUB_0000.rad",
+      "size_bytes": 167245,
+      "sha256": "576bcfad8b6a2d9bfeca82dcc9a3ab7a53f813767afd45c76d936fdf31e06781",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/ACTIV/data/HYPE_SUB_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/ACTIV/data/HYPE_SUB_0001.rad",
+      "size_bytes": 714,
+      "sha256": "abc0f8c2a491977ba1251af0e7355049071ec63c2071391fe58509dcec3f1459",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/ACTIV/data/HYPE_SUB_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/ACTIV/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/ACTIV/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/ACTIV/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "7626f80242bcf53e61dc34b6eb9e56b4d6ff2064c22e0987e832e6ba9ef6c00e",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/ACTIV/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/FAIL/Jonhson_Cook/data/SPECT_SUB_0000.rad",
+      "size_bytes": 99787,
+      "sha256": "e0ea2d65de027f59006623916619599bfbb19bb25af5aa14b961424de90e0525",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/FAIL/Jonhson_Cook/data/SPECT_SUB_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/FAIL/Jonhson_Cook/data/SPECT_SUB_0001.rad",
+      "size_bytes": 689,
+      "sha256": "3b1474106381f4cf5f77219fef9feaa921bbdbc77aa82b43b1ee0496f921c973",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/FAIL/Jonhson_Cook/data/SPECT_SUB_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/FAIL/Jonhson_Cook/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/FAIL/Jonhson_Cook/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/FAIL/Jonhson_Cook/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "533c5a9e18eee9bac4f0f5ffa4a8042afbc38e70aad11c5d6611c2065b151e56",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/FAIL/Jonhson_Cook/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/PLOAD/data/BOXBEAM_SUB_0000.rad",
+      "size_bytes": 193583,
+      "sha256": "a96aad09678d98314c6a5f32ba07d00836323f831ac9ee5743ae70b5fe32c9a7",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/PLOAD/data/BOXBEAM_SUB_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/PLOAD/data/BOXBEAM_SUB_0001.rad",
+      "size_bytes": 692,
+      "sha256": "bc65e6ee3d49472e32b985d9b237a5784098e3b3916411f21ee992626d716934",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/PLOAD/data/BOXBEAM_SUB_0001.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/PLOAD/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/PLOAD/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/SUBMODEL/update_v_100/PLOAD/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "cdf9a4f0ba4fe2f3021aababf842352baf79a6df9039c8c8c732e8b5b733cd7b",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/SUBMODEL/update_v_100/PLOAD/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/onefile_rad/data/CRA2AV4_0000.rad",
+      "size_bytes": 119173,
+      "sha256": "e06a0b1fbd3e0ed26b62ece4c08e142a3c30f7fda0612d30ce696bcd36c62e22",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/onefile_rad/data/CRA2AV4_0000.rad",
+      "license": "CC-BY-NC-4.0",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/onefile_rad/data/qadiags.inc",
+      "size_bytes": 1150,
+      "sha256": "130b846f8a588888aa1839d18a7a147c1f8f9d5c2fcf93f92ff85dac96609a26",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/onefile_rad/data/qadiags.inc",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/onefile_rad/data/ref.extract",
+      "size_bytes": 361,
+      "sha256": "082044102da70f6161d48fad321211bcc73b6e2e46e5da0cc5d505871db4bcfd",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/onefile_rad/data/ref.extract",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    },
+    {
+      "path": "qa-tests/miniqa/onefile_rad/data/test_files.json",
+      "size_bytes": 345,
+      "sha256": "85a51c8ded2f5773ba94b46e020406b22bb13e9e1bea570a567874e0ada2866f",
+      "url": "https://github.com/OpenCourant/OpenCourant/blob/cb760c206e346eff12161a2268b134ef9d48a4ef/qa-tests/miniqa/onefile_rad/data/test_files.json",
+      "license": "not-classified-for-redistribution",
+      "redistribution": "locator-only",
+      "solver_executed": false
+    }
+  ],
+  "runtime_verified": false
+}

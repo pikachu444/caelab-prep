@@ -1,0 +1,42 @@
+[
+  {
+    "file": "assets/bdf/pynastran/LICENSE.md",
+    "size_bytes": 1523,
+    "sha256": "ed3f3f031a9d1da6802011e40ba0b5582dbcca19b902e259ea197cfca7f9e153"
+  },
+  {
+    "file": "assets/bdf/pynastran/field_writer_8.py",
+    "size_bytes": 15199,
+    "sha256": "cc7145b7fef441bab52981dadbd2ab2ecce3eb60cc2aaf370c8c4b31594787ad"
+  },
+  {
+    "file": "assets/bdf/pynastran/field_writer_16.py",
+    "size_bytes": 12440,
+    "sha256": "f578a20feb1640a47c92f3157a006658ffa8e147176957b8cccc7ea3c104a836"
+  },
+  {
+    "file": "assets/bdf/pynastran/field_writer_double.py",
+    "size_bytes": 3790,
+    "sha256": "9a9c4227040fe4b4607ca46af71e427d33d4f45a012fb44708050ef4b91fd0f1"
+  },
+  {
+    "file": "assets/bdf/pynastran/write_mesh.py",
+    "size_bytes": 100245,
+    "sha256": "eda6d66589916a4d60a903f2d6644a33145761eb889952c693eda29272716f0c"
+  },
+  {
+    "file": "assets/bdf/pynastran/bdf.py",
+    "size_bytes": 210733,
+    "sha256": "500fc59f166bcc74d51721fe47d3926926ab48cce5e1303bc617e92bc46b9535"
+  },
+  {
+    "file": "assets/bdf/pynastran/test_solids.py",
+    "size_bytes": 24031,
+    "sha256": "af0731cdcfdaad74602610106f48ca2dd6c22d237eb8373d74f2d59c313b921d"
+  },
+  {
+    "file": "assets/bdf/pynastran/bdf_demo.rst",
+    "size_bytes": 42232,
+    "sha256": "8958d7eb91e872d552f1940a222384d1f7eed5d9c2b093e80eabd8b52d1dfe6a"
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "official_index_anchor_count": 145,
+  "unique_manual_keyword_sections": 143,
+  "tex_keyword_subsections": 143,
+  "navigation_duplicate_anchors": 2,
+  "index_minus_tex": [],
+  "tex_minus_index": [],
+  "missing_local_html": [],
+  "aliases_and_options": "No synthetic aliases/options count added; each official starred subsection retained exactly. Parameters and element types are not extra keywords.",
+  "official_test_archive_files": 1511,
+  "official_input_decks": 638,
+  "official_reference_result_files": 855,
+  "all_fields_reviewed": false,
+  "runtime_verified": false
+}
