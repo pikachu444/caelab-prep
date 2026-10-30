@@ -41,6 +41,8 @@ def parser():
     commands = result.add_subparsers(dest="command")
     gui = commands.add_parser("gui", help="Open the desktop editor")
     gui.add_argument("path", nargs="?")
+    gallery = commands.add_parser("gallery", help="Open the shared Qt material/curve gallery (no VTK required)")
+    gallery.add_argument("path", nargs="?", help="Neutral material/curve working document")
     inspect = commands.add_parser("inspect", help="Read a RAD/project in an independent session")
     inspect.add_argument("path")
     schema = commands.add_parser("fields", help="List native cards or query an editable card")
@@ -66,6 +68,19 @@ def parser():
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
+        if args.command == "gallery":
+            from PySide6.QtWidgets import QApplication
+            from .application.neutral import CurveSession
+            from .ui.gallery import GalleryWindow
+
+            app = QApplication.instance() or QApplication(sys.argv[:1])
+            app.setApplicationName("CAELab Prep Gallery")
+            session = CurveSession()
+            if args.path:
+                session.open_project(args.path)
+            window = GalleryWindow(session=session)
+            window.show()
+            return app.exec()
         if args.command in (None, "gui"):
             from PySide6.QtWidgets import QApplication
             from .ui.main_window import MainWindow

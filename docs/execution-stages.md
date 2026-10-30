@@ -110,6 +110,20 @@ P0 종료 뒤에는 계획서를 새로 늘리는 작업 대신 P1의 실제 계
 
 ## 5. P1 — 공용 계약과 기존 RAD의 첫 연결
 
+### 2026-10-31 첫 구현의 고정 입력과 선택 (P0/A1)
+
+| 항목 | 이번 A 구현에서 고정한 선택 |
+|---|---|
+| 코드/소유 | main `4828818`에서 전용 로컬 `feat/shared-gui-foundation`. 계약·중립 codec·통합은 root, 공용 Qt/갤러리는 별도 구현자, RAD adapter/실제 앱은 별도 구현자, Astra 설계/독립 검토. Workbench 변경·원격 게시 제외 |
+| 목표 화면 | 기계 공간: AB01/AB06/AB28, HM03/HM04/HM23의 트리·압축 속성·중앙 메시. 재료/곡선 공간: COM-T02/T09와 AB27의 동일 값 표/plot. 참조의 정적 관찰을 자체 실행 결과로 세지 않음 |
+| 상태/자료 | 기존 two_shell_plates 입력 보존 + 자체 생성 다중 파트 셸/브래킷 및 서로 다른 솔리드 조립 RAD 2개, 중립 plastic/load 곡선 2개. 정상/선택/오류/포커스/비활성, 긴 한글, 1320×840 및 960×640, 100/150/200% |
+| 실제 환경 | Windows 11 build 26200, Python 3.13.5, PySide6/Qt 6.9.1, VTK 9.4.2. CIM 장비 조회는 접근 거절되어 CPU/GPU/RAM 미확인. B 성능 기준은 보류하며 A에 대용량 예산을 추가하지 않음 |
+| 도킹·그래프·단위 | QDockWidget 기본 채택. 기본 곡선은 Qt QPainter와 model/view 표로 구현(새 plot 의존성 불필요). 제공자가 아는 MPa/GPa·kg/m³/g/cm³만 명시 변환, RAD는 입력 덱 문맥 보존. Pint/ADS·고급 곡선은 후속 |
+| 자산 | Prep 자체 SVG/토큰을 소유. 기존 GUI 조사 결과의 planning-only prototype 및 Workbench 테마를 제품 코드로 복제하지 않음. 별도 GUI repo 미확인은 비필수 보류. 외부 벤더 아이콘 추가 없음 |
+| 종료 | P1 계약/코어·파일·CLI, P2 위젯/갤러리, P3 실제 RAD와 중립 저장 작업을 검증. 실제 Windows 화면·입력 확인이 불가능하면 해당 항목만 보류, A 완료로 쓰지 않음 |
+
+P0의 A 선택은 위 내용으로 닫고 구현한다. C/B·Workbench·새 카드/Engine·고급 메셔·IPC/MCP·최종 설치 배포는 이번 종료 조건이 아니다.
+
 **선행/입력:** P0의 A 범위·입력, 현재 세션/문서/CLI. B의 장비 미확정과 무관하게 계약 작성 가능.
 
 **작업/산출물:** `application/contracts.py`에 DocumentSession·property/tree/selection provider·Action/capability·structured error/event의 최소 자료형과 호출 예를 둔다. 기존 PrepSession의 RAD 구현을 그 계약에 연결하고 API 호환 경로를 유지한다. typed object/resource/native scope, mesh revision, 단위/좌표/field 성분을 표현한다. 모든 node가 6자유도라는 가정, 전역 native ID, Qt object를 정본으로 삼는 가정을 금지한다. 저장의 공용 컨테이너/codec 인터페이스, expected_revision, 초안 충돌, 최소 작업 상태·완료 상태와 이벤트 스레드 경계를 포함한다.
@@ -317,9 +331,23 @@ python -m pytest tests/test_gmsh_adapter.py
 caelab-prep mesh INPUT.step --output OUT --size 2.0 --dimension 3
 ```
 
-위 단계의 `test_application_contracts.py`, `test_common_widgets.py`, `test_curve_workflow.py`, `test_layout_profiles.py`, `test_model_resources.py`, `test_resource_transactions.py`, `test_candidate_adoption.py`, `test_mesh_quality.py`, `test_radioss_generation.py`, `test_model_relations.py`, `test_condition_fields.py`, `test_model_roundtrip.py`, `test_large_model_behavior.py`, `test_mesh_operations.py`, `test_remesh_relations.py`, `tools/benchmark_model.py`, `caelab-prep gallery`는 **후속 작업에서 추가할 산출물 이름**이다. 현재 실행 가능한 것으로 기재하지 않는다. 파일을 나누는 목적은 검사 수를 늘리는 것이 아니라 단계별로 필요한 동작만 지정해 실행하는 것이다. 같은 책임의 기존 검사가 있으면 그 파일에 합치고 작업서의 명령을 그때 수정한다.
+`test_application_contracts.py`, `test_common_widgets.py`, `test_rad_provider.py`와 `caelab-prep gallery`는 첫 구현에서 추가했다. 나머지 단계의 `test_curve_workflow.py`, `test_layout_profiles.py`, `test_model_resources.py`, `test_resource_transactions.py`, `test_candidate_adoption.py`, `test_mesh_quality.py`, `test_radioss_generation.py`, `test_model_relations.py`, `test_condition_fields.py`, `test_model_roundtrip.py`, `test_large_model_behavior.py`, `test_mesh_operations.py`, `test_remesh_relations.py`, `tools/benchmark_model.py`는 **후속 작업에서 추가할 산출물 이름**이다. 이 나머지 항목을 현재 실행 가능한 것으로 기재하지 않는다. 같은 책임의 기존 검사가 있으면 그 파일에 합친다.
 
 ## 19. 문서와 작업 상태의 관리
+
+### 2026-10-31 첫 구현 결과
+
+**P1–P3 구현 완료 / Windows 확인 보류. A 완료 아님.** 전용 브랜치 `feat/shared-gui-foundation`에서 공용 계약·디자인·위젯·실행 갤러리·RAD adapter/실제 화면·중립 codec을 구현했다. 초기 main은 `4828818`이며 원격 push/PR/병합과 Workbench 변경은 하지 않았다.
+
+- 통합과 공용 Qt/RAD 구현: GPT-6.1 Sol/high. 계약 검토와 작성자와 다른 독립 코드·기능·렌더 검토: GPT-6 Astra/xhigh. 파일 소유를 나누고 통합자가 최종 수정·검사를 수행했다.
+- A2/A3: 실제 RAD와 갤러리가 같은 디자인·Action·model/view 트리·그룹 속성·숫자/단위·벡터·곡선 표/plot·도킹·뷰포트 프레임·비동기 FileTask를 사용한다. 선택·초안·검증·한 명령/Undo·dirty·저장이 연결된다. unsupported 동작은 활성 mock으로 추가하지 않았다.
+- A4/A5: 원래 작은 회귀 자료와 `examples/rad/shell_panels_0000.rad`(27절점/12quad/3파트), `solid_blocks_0000.rad`+INCLUDE(16절점/2hex/2파트)를 같은 경로로 읽고 지원 필드·기존 FUNCT/속도 벡터를 편집했다. `.caeprep` 재열기·RAD 출력의 값·미지원 원문·BCS/IPLAS·INCLUDE 보존과 기존 CLI 새 프로세스 흐름을 확인했다. 중립 재료/곡선은 RAD import 차단 상태의 새 프로세스에서 재열었다. 이 예제는 편집 검증 입력이며 솔버 계산 검증 모델이 아니다.
+- A6/A8: 불완전 숫자/NaN/Inf·부분 오류 batch·단위·오래된 문서/개정·입력 중 외부 교체·저장/읽기 실패·닫기 취소·활성 표 셀 저장·picker 충돌을 검증했다. 위젯은 초안을 유지하고 확정값은 바뀌지 않는다. 공용 Qt/갤러리는 RAD/VTK/main_window import를 금지한 프로세스에서 로드된다. `[widgets]`는 Qt만 요구하며 `[gui]` 호환 경로를 유지한다.
+- 최종 관련 검사: `test_document_core`, `test_radioss_editing`, `test_project_roundtrip`, `test_cli_workflow`, `test_application_contracts`, `test_common_widgets`, `test_rad_provider`, `test_gui_document_flow` **70 passed, 1 skipped**. skip은 Windows에서 대소문자만 다른 두 파일을 만들 수 없는 기존 검사다. 독립 검토의 남은 코드/기능 결함은 없음. setuptools backend wheel 생성도 성공했다. 깨끗한 설치형 배포 검증은 이번 범위가 아니다.
+- A7: 설치된 Windows Segoe UI/Malgun 글꼴을 QA 프로세스에 로드한 Qt offscreen 정상/좁은 창·오류/벡터/곡선 렌더를 작성자와 독립 검토자가 확인하고 수정했다. `docs/gallery-preview.png`는 그 미리보기다. **실제 Windows 입력·100/150/200% DPI·도킹 이동/재시작 배치·VTK 조작은 미확인**이다. 실제 Qt/VTK 프로세스의 창 `52953454`(two_shell_plates_0000.rad — CAELab Prep)는 Windows 창 목록에 나타났지만, `cua.getApp`의 앱 접근 승인이 시간 초과됐다. 승인이 완료되지 않은 상태이며 UI 입력/캡처는 실행하지 않았고 우회/재시도하지 않았다. 최종 창 목록에는 테스트 창이 남아 있지 않다.
+- 세션 공유 URL: 공유 도구가 `Thread sharing permissions or account policy could not be determined`를 반환해 생성하지 못했다. 검증된 공유 URL이 없어 임의 링크를 만들지 않았다.
+
+다음은 접근 승인 가능한 실제 Windows 세션에서 위 A7 항목만 확인하는 것이다. C/B·Workbench·새 RAD 카드/Engine·고급 메셔·MCP 전체·설치형 배포를 A 종료 조건에 추가하지 않는다.
 
 - `shared-cae-foundation-plan.md`: P0–P9 번호와 A1–A8은 유지. 9절 P6/P7/P8 표의 세부 단계·선행 관계, 10절 묶음 C와 종료 상태, 12절 미확정 처리의 유한 결정을 반영한다. 단계별 실행·검사는 본 작업서에서 관리하고 기존 문서에는 링크와 묶음 표만 둔다.
 - `cae-model-data-design.md`: 7절의 P6→P6a/b/c, P7→P7a/b/c 설명을 맞추고 8절 B1–B6은 그대로 유지한다. P6a/C가 B나 반복 instance 편집 완료가 아님을 명시한다. P7 일반 재메시라는 기존 문구는 P7b로 구체화한다.

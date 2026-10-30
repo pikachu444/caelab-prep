@@ -1,0 +1,44 @@
+# Original CAELab editor fixture; CC0-1.0
+/BEGIN
+Two solid blocks with separate INCLUDE geometry
+      2025         0
+                  Mg                  mm                   s
+/MAT/LAW1/11
+Block steel 11
+             7.8e-09
+              205000                 0.3
+/PROP/SOLID/11
+Solid property 11
+         1         0         0
+/PART/11
+Block 11
+        11        11         0
+/MAT/LAW1/22
+Block steel 22
+             7.8e-09
+              205000                 0.3
+/PROP/SOLID/22
+Solid property 22
+         1         0         0
+/PART/22
+Block 22
+        22        22         0
+#include
+solid_geometry.inc
+/GRNOD/NODE/1
+Fixed end
+       101       102       103       104
+/BCS/1
+Fixed end
+   111 111         0         1
+/INIVEL/TRA/1
+Initial motion
+                   0                   0                -100         1         0
+/FUNCT/1
+Piecewise response
+                   0                   0
+                 0.1                  50
+                 0.3                  80
+/PRESERVED/EDITOR/91
+Original unsupported payload remains byte-identical.  
+/END

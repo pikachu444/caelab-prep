@@ -8,7 +8,9 @@
 
 공용 산출물에는 디자인·아이콘·공학 위젯·앱 셸과 실행 가능한 네이티브 갤러리뿐 아니라 문서·명령·선택·저장, 형상/메시/조건의 관계, 외부 도구 어댑터와 자동화 API가 포함된다. 이 자산의 개발은 두 번째 제품이 생긴 뒤에만 시작하는 후속 작업이 아니다. 실제 사용 앱과 갤러리는 공용 자산을 소비하며, 공용 코어가 RAD 편집기나 갤러리에 의존하지 않게 한다. 기존 공용 GUI 저장소의 자산·갤러리와 소유 범위를 맞춰 중복 구현을 피한다.
 
-현재 `cae_core`는 솔버와 GUI를 모르는 문서·명령·선택 기반이고, `ui/theme.py`에는 작은 시각 자산이 분리돼 있다. 반면 `PrepSession`은 `DeckResource`와 RAD/INCLUDE 저장·출력을 직접 다루며, 현재 메인 창과 CLI도 이 RAD 작업에 연결된다. 이름이 일반적이라는 이유로 이 전체를 이미 솔버 독립적인 공용 세션·앱 셸이라고 보지 않는다. 공용 세션 계약·공학 위젯·갤러리는 아직 완성되지 않았으며, 실제 RAD 기능을 보존하면서 공용 책임과 솔버별 구현을 분리해야 한다.
+`cae_core`는 솔버와 GUI를 모르는 문서·명령·선택 기반이다. `application.contracts`의 PropertyHost/DocumentSession·ObjectRef·PropertySpec·SetProperties는 Qt/RAD/VTK 없이 로드된다. `RadProvider`가 기존 PrepSession을 이 계약에 연결하고 `CurveSession`은 중립 재료/곡선 문서를 제공한다. 공용 위젯과 갤러리는 RAD와 VTK 없이 로드되며 기존 `ui.MainWindow`와 `application.PrepSession` export는 지연 로딩으로 호환한다. 기존 PrepSession 자체는 RAD/INCLUDE·원문·출력을 소유하는 솔버별 구현으로 남는다.
+
+`ui/design`은 자체 SVG·토큰·상태 스타일, `ui/widgets`는 model/view 트리·그룹 속성·숫자/단위·벡터·곡선 표/plot을 소유한다. `ui/actions`와 `ui/shell`은 동일 Action·도킹·renderer frame·비동기 FileTask를 제공하며 실제 전처리기와 갤러리가 공유한다. 위젯은 초안만 소유하고 provider/session이 확정 값·검증·Undo를 소유한다. 실제 Windows 입력·DPI·도킹 확인이 보류여서 묶음 A 완료로 보고하지 않는다.
 
 ## 이번 구현의 결정
 
@@ -38,7 +40,10 @@ flowchart TB
 | `cae_core` | solver/Qt/VTK를 모르는 Document·Resource·CommandDispatcher·ChangeSet·SelectionRef·SaveState |
 | `radioss` | 원문과 지원 필드 patch, 카드 schema/단위 문맥, 미지원 부분 보존, 표시용 메시 투영 |
 | `application.session` | 현재 RAD용 PrepSession. RAD 자원 조합, 조회·편집·Undo·INCLUDE·저장·내보내기 API, 호출 직렬화. 공용 세션 계약 전체가 완성된 상태는 아님 |
-| `ui` | 현재 RAD 사용 앱의 메뉴/툴바 Action, 트리·속성·3D·선택 피드백과 작은 시각 자산. 모델 값의 정본은 세션이며 범용 위젯·앱 셸 전체가 분리된 상태는 아님 |
+| `application.contracts` / `rad_provider` / `neutral` | 최소 host 계약, 기존 RAD adapter, 독립 재료/곡선 provider와 codec. 범용 FE 스키마를 강제하지 않음 |
+| `application.storage` | codec과 독립인 atomic ZIP writer와 bounded reader. RAD v1 manifest·원문과 중립 codec의 의미는 각각 유지 |
+| `ui/design`, `ui/widgets`, `ui/actions`, `ui/shell` | 공용 디자인·입력 초안·트리·표/plot·Action·도킹·renderer frame·실제 FileTask 상태/오류/산출물 |
+| `ui/main_window`, `ui/gallery` | 앱별 조립과 초안/선택/파일 작업 조정. 모델 값의 정본은 주입한 provider/session |
 | `cli` | 현재 RAD 세션 API를 호출하는 명시적인 독립 프로세스 진입점 |
 | `adapters.gmsh_backend` / `gmsh_worker` | 별도 SDK 프로세스, 시간 제한·취소, 입력 CAD에서 독립 후보 자산 생성 |
 
@@ -60,6 +65,8 @@ Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 p
 
 이는 현재 RAD 사용 앱의 저장 계약이다. 다른 솔버의 모델을 RAD 원문이나 하나의 공통 FE 스키마로 강제하는 공용 저장 규격이 이미 완성됐다는 뜻은 아니다.
 
+중립 재료/곡선은 같은 원자 저장 절차를 쓰되 manifest `format=caelab-material-curves`, `version=1`과 `material-curves.json` payload를 사용한다. 이 codec은 RAD를 import하지 않는다. `gallery [path]`로 열고 저장하며 RAD `.caeprep` v1과 서로 구분한다. 양쪽 모두 파일 작업 실패 시 기존 파일과 dirty 상태를 보존한다. 비동기 FileTask는 running/succeeded/failed·구조화 오류·실제 산출물 경로를 반환하고 저장/열기는 취소 불가능으로 표시한다. 지원하지 않는 Cancel 동작을 제공하지 않는다.
+
 `#include`는 지시문으로 식별한다. 이번 구현은 처음 입력 덱의 작업 폴더를 기준으로 안전하게 해석 가능한 상대 파일들을 묶는다. 절대 경로·상위 경로·누락·순환 등 처리하지 못한 참조는 보존하고 부분 읽기 진단을 반환한다. 해결되지 않은 INCLUDE가 있는 문서는 독립 native 출력 묶음으로 내보내지 않는다. 이 제한은 사용자의 원본 덱 실행 가능성을 판정하는 솔버 허용 목록이 아니다.
 
 내보내기는 작업 문서 저장과 별개다. 원본 입력 파일을 덮어쓰지 않으며 root 덱과 해결된 INCLUDE를 전달한다. Engine 파일을 새로 생성·변경하거나 계산을 실행하지 않는다.
@@ -74,7 +81,7 @@ Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 p
 
 현재 첫 적용 대상은 OpenRadioss/OpenCourant이고, 실행 가능한 사용 앱은 RAD 원문 편집기다. 공용 자산과 네이티브 갤러리는 이 저장소의 정식 개발 산출물이며 실제 편집 흐름과 함께 개발한다. 서로 다른 사용처에서 같은 코어·위젯을 사용하는 확인은 재사용 품질을 판단하는 기준이고, 공용 자산 개발을 시작하기 위한 전제 조건이 아니다.
 
-공용 위젯·앱 셸·갤러리의 분리와 공용 세션/API 계약은 남은 작업이다. 기존 RAD 사용처의 새 카드 생성, CAD 메시와 Radioss 조건의 GUI 통합, 고급 메시/중립면/접촉 생성, MCP/IPC, 솔버 실행·후처리, 설치형 배포도 아직 구현되지 않았다. 이 목록이 모든 솔버 기능을 동시에 구현하거나 상용 CAE 전체를 재현하라는 범위는 아니다.
+첫 공용 위젯·셸 부품·갤러리·최소 세션 계약의 구현과 가능한 관련 검사는 완료했으며 Windows 실제 입력/배율/도킹 확인은 보류다. 기존 RAD 사용처의 새 카드 생성, CAD 메시와 Radioss 조건의 GUI 통합, 고급 메시/중립면/접촉 생성, MCP/IPC, 솔버 실행·후처리, 설치형 배포는 후속이다. 이 목록이 모든 솔버 기능을 동시에 구현하거나 상용 CAE 전체를 재현하라는 범위는 아니다.
 
 
 

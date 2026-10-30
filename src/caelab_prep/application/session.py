@@ -13,6 +13,7 @@ from functools import wraps
 
 from ..cae_core import CommandDispatcher, Document, PrepError, Selection, SelectionRef
 from ..radioss import DeckResource
+from .storage import write_container
 
 
 PROJECT_FORMAT = "caelab-prep-project"
@@ -215,14 +216,36 @@ class PrepSession:
 
     def set_field(self, card_id: str, field_name: str, value: object,
                   expected_revision: int | None = None) -> dict:
+        return self.set_fields(card_id, {field_name: value}, expected_revision=expected_revision)
+
+    def set_fields(self, card_id: str, values: dict[str, object],
+                   expected_revision: int | None = None, *,
+                   expected_document_id: str | None = None,
+                   expected_resource_id: str | None = None) -> dict:
+        """Validate all fields first, then commit one vector/table/property edit."""
         with self._lock:
+            document = self._require()
+            if expected_document_id is not None and expected_document_id != document.id:
+                raise PrepError("document_conflict", "The target document has been replaced.")
             if expected_revision is not None and (type(expected_revision) is not int or expected_revision != self._require().revision):
                 raise PrepError("revision_conflict", "모델이 변경됐습니다. 현재 값을 다시 읽어 주세요.",
                                 {"expected": expected_revision, "actual": self._require().revision})
             resource = self._find_card(card_id)
-            state = resource.patched_state(card_id, field_name, value)
+            if expected_resource_id is not None and expected_resource_id != resource.id:
+                raise PrepError("invalid_reference", "The target resource does not match.")
+            if not isinstance(values, dict) or not values:
+                raise PrepError("invalid_command", "A nonempty field mapping is required.")
+            state = resource.snapshot()
+            for name, value in values.items():
+                validated = resource.patched_state(card_id, name, value)
+                if name in validated.get(card_id, {}):
+                    state.setdefault(card_id, {})[name] = validated[card_id][name]
+                else:
+                    state.get(card_id, {}).pop(name, None)
+                    if card_id in state and not state[card_id]:
+                        state.pop(card_id)
             assert self.dispatcher is not None
-            self.dispatcher.execute(resource.id, state, f"{resource.card(card_id).keyword}: {field_name}",
+            self.dispatcher.execute(resource.id, state, f"{resource.card(card_id).keyword}: {', '.join(values)}",
                                     object_ids=(card_id,), expected_revision=expected_revision)
             return self.describe()
 
@@ -322,21 +345,11 @@ class PrepSession:
                         "resources": [{"id": r.id, "kind": r.kind, "name": r.name,
                             "logical_path": self._paths[r.id], "raw_member": f"raw/{r.id}.rad",
                             "patches": r.snapshot()} for r in document.resources.values()]}
-            fd, temp = tempfile.mkstemp(prefix=".caeprep-", dir=target.parent)
-            os.close(fd)
             try:
-                with zipfile.ZipFile(temp, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-                    archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
-                    for resource in document.resources.values():
-                        archive.writestr(f"raw/{resource.id}.rad", resource.raw)
-                # Windows' _commit/FlushFileBuffers requires a writable handle.
-                with open(temp, "r+b") as stream:
-                    os.fsync(stream.fileno())
-                os.replace(temp, target)
+                write_container(target, manifest, {f"raw/{resource.id}.rad": resource.raw
+                                                  for resource in document.resources.values()})
             except (OSError, zipfile.BadZipFile) as exc:
                 raise PrepError("project_write_error", "작업 문서를 저장하지 못했습니다.", {"reason": str(exc)}) from exc
-            finally:
-                if os.path.exists(temp): os.unlink(temp)
             document.mark_saved(str(target))
             self._notify("save")
             return {**self.describe(), "saved_path": str(target)}

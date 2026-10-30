@@ -4,13 +4,29 @@
 
 **OpenRadioss / OpenCourant는 첫 번째 적용 대상입니다.** 공용 기반을 사용하는 첫 응용 프로그램으로 독립 데스크톱 전처리기를 개발합니다. 이 앱에서는 형상·메시를 불러와 재료·단면·접촉·하중·구속·초기조건과 해석 제어를 편집하고 Starter/Engine 파일을 작성하는 흐름을 목표로 합니다. 다른 CAE 프로그램의 재사용은 공용 기반의 설계 범위에 포함되며, 현재 여러 솔버를 지원한다는 뜻은 아닙니다.
 
-**현재 상태: 기존 RAD의 일부 지원 필드를 편집하는 네이티브 시제품과 문서·명령·선택·저장 코어를 구현했습니다.** 기존 RAD의 지원 필드를 편집하고 Undo/Redo, 작업 문서 저장·재열기, RAD 출력을 수행합니다. CAD에서 새 해석 모델 전체를 구성하는 프로그램은 아직 아닙니다.
+**현재 상태: 공용 Qt 부품·실행형 갤러리를 기존 RAD 편집기에 연결했습니다.** 트리·그룹 속성·수치/단위·벡터·표/기본 곡선·Action·도킹을 공유합니다. 기존 RAD 편집·Undo/Redo·작업 문서·RAD 출력은 유지하고, 중립 재료/곡선 문서도 RAD 없이 저장·재열기합니다. 실제 Windows 입력·배율 확인은 보류이며 CAD에서 새 해석 모델 전체를 구성하는 기능은 후속입니다.
 
-공용 GUI 컴포넌트 체계와 실행형 갤러리는 정식 개발 산출물입니다. 현재 이 저장소에는 실행형 갤러리가 없으며 공용 위젯·앱 셸 전체가 분리된 상태도 아닙니다. RAD용 세션·화면 전체를 솔버 독립 공용 API나 공용 앱 셸로 간주하지 않습니다.
+공용 부품은 `ui/design`, `ui/widgets`, `ui/actions.py`, `ui/shell.py`에 있고 갤러리와 실제 전처리기가 같은 코드를 사용합니다. 솔버별 카드 의미·단위·원문·출력은 RAD adapter/session에 남습니다. 모든 솔버의 FE 스키마나 전체 CAE 기반이 완성됐다는 뜻은 아닙니다.
 
 ![실제 Qt/VTK 네이티브 편집기](docs/native-editor.png)
 
 소형 RAD를 실제 Linux Qt/VTK 창에서 열어 편집·Undo/Redo·저장·재열기·출력과 마우스 절점/요소 선택을 확인한 화면입니다. 별도 입력의 재료·구속 편집 출력은 OpenCourant Starter에서도 값이 유지됐습니다. Windows GUI·설치형 배포와 대용량 성능은 아직 확인하지 않았습니다.
+
+## 공용 부품과 갤러리 실행
+
+Qt 부품과 재료/곡선 갤러리는 VTK 없이 실행합니다.
+
+```sh
+python -m pip install -e ".[widgets]"
+caelab-prep gallery
+caelab-prep gallery path/to/material-curves.caeprep
+```
+
+재료 또는 곡선을 선택하고 **Apply properties / Apply curve**로 확정합니다. 잘못된 숫자·표는 초안으로 유지되며 Revert 또는 Escape로 취소합니다. 단위 선택은 알려진 단위 사이에서 표시값을 변환합니다. 표 붙여넣기는 전체 검증 후 미리보기로 남고 Apply 한 번이 Undo 한 번입니다. 저장·재열기를 지원하며 **View → Component catalog**에서 자체 아이콘과 입력 상태를 확인합니다. 새 RAD 행·카드 생성은 지원하지 않습니다.
+
+![공용 갤러리의 Qt offscreen 미리보기](docs/gallery-preview.png)
+
+위 그림은 설치된 Windows 글꼴을 QA 프로세스에 로드한 **Qt offscreen 렌더**입니다. 실제 Windows 입력·도킹·DPI 또는 VTK 검증 증거가 아닙니다. A의 구현 결과와 플랫폼 확인 보류는 [작업서](docs/execution-stages.md)에 구분합니다.
 
 ## 첫 적용 앱 실행
 

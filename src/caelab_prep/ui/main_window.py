@@ -6,16 +6,21 @@ import math
 from pathlib import Path
 import sys
 
-from PySide6.QtCore import QObject, QRunnable, QSettings, QSize, Qt, QThreadPool, Signal
-from PySide6.QtGui import QAction, QCloseEvent, QDoubleValidator, QFont, QKeySequence
+from PySide6.QtCore import QSettings, QSize, Qt, QThreadPool, Signal
+from PySide6.QtGui import QCloseEvent, QFont, QKeySequence
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QDockWidget, QFileDialog, QFormLayout,
-    QFrame, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox,
-    QPlainTextEdit, QProgressBar, QScrollArea, QTabWidget, QToolBar, QTreeWidget, QTreeWidgetItem,
+    QApplication, QCheckBox, QComboBox, QFileDialog,
+    QLabel, QLineEdit, QMainWindow, QMessageBox,
+    QPlainTextEdit, QProgressBar, QPushButton, QScrollArea, QSizePolicy, QTabWidget, QToolBar, QTreeWidget, QTreeWidgetItem,
     QVBoxLayout, QWidget,
 )
 
-from .theme import STYLESHEET, icon
+from .theme import STYLESHEET
+from .actions import create_action
+from .shell import FileTask as _FileTask, create_dock
+from .widgets import CurvePlot, CurveTable, ModelTree, PropertyEditor, VectorEdit
+from ..application.contracts import SetProperties
+from ..application.rad_provider import RadProvider
 
 
 def _field_label(field):
@@ -37,26 +42,6 @@ def _field_label(field):
     return str(field.get("label") or name.replace("_", " ").capitalize())
 
 
-class _TaskSignals(QObject):
-    complete = Signal(object)
-    failed = Signal(object)
-
-
-class _FileTask(QRunnable):
-    def __init__(self, function):
-        super().__init__()
-        self.function = function
-        self.signals = _TaskSignals()
-
-    def run(self):
-        try:
-            result = self.function()
-        except Exception as exc:
-            self.signals.failed.emit(exc)
-        else:
-            self.signals.complete.emit(result)
-
-
 class MainWindow(QMainWindow):
     """Presentation of one PrepSession; editing never bypasses its commands."""
 
@@ -70,12 +55,17 @@ class MainWindow(QMainWindow):
             from caelab_prep.application.session import PrepSession
             session = PrepSession()
         self.session = session
+        self.provider = RadProvider(session)
+        self._tree_nodes = ()
+        self._card_refs = {}
         self._busy = False
         self._active_task = None
+        self.operation_state = None
         self._project_path = None
         self._source_path = None
         self._selected_card_id = None
         self._editor_revision = None
+        self._replacement_conflict = False
         self._updating = False
         self._allow_close = False
         self._closed = False
@@ -118,12 +108,7 @@ class MainWindow(QMainWindow):
         self.refresh_document(rebuild_viewport=bool(self._summary().get("document_id")))
 
     def _action(self, key, label, callback, shortcut=None, *, checkable=False):
-        action = QAction(icon(key), label, self)
-        if shortcut:
-            action.setShortcut(shortcut)
-        action.setCheckable(checkable)
-        action.triggered.connect(callback)
-        return action
+        return create_action(self, key, label, callback, shortcut, checkable=checkable)
 
     def _create_actions(self):
         self.open_rad_action = self._action("open", "Open Radioss deck…", self.open_rad_dialog, QKeySequence.StandardKey.Open)
@@ -195,21 +180,12 @@ class MainWindow(QMainWindow):
             self.setCentralWidget(label)
 
     def _dock(self, name, title, widget, area):
-        dock = QDockWidget(title, self)
-        dock.setObjectName(name)
-        dock.setWidget(widget)
-        self.addDockWidget(area, dock)
-        self._view_menu.addAction(dock.toggleViewAction())
-        return dock
+        return create_dock(self, name, title, widget, area, menu=self._view_menu)
 
     def _create_model_dock(self):
-        self.model_tree = QTreeWidget()
+        self.model_tree = ModelTree()
         self.model_tree.setObjectName("modelTree")
-        self.model_tree.setHeaderHidden(True)
-        self.model_tree.setIndentation(17)
-        self.model_tree.setUniformRowHeights(True)
-        self.model_tree.setAlternatingRowColors(False)
-        self.model_tree.currentItemChanged.connect(self._card_selected)
+        self.model_tree.nodeSelected.connect(self._card_selected)
         self.model_dock = self._dock("modelDock", "Model", self.model_tree, Qt.DockWidgetArea.LeftDockWidgetArea)
 
     def _create_properties_dock(self):
@@ -218,34 +194,32 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(14, 15, 14, 12)
         layout.setSpacing(9)
-        self.property_title = QLabel("Properties")
-        self.property_title.setObjectName("propertyTitle")
-        self.property_title.setWordWrap(True)
-        self.property_subtitle = QLabel("Select an item in the model tree")
-        self.property_subtitle.setObjectName("propertySubtitle")
-        self.property_subtitle.setWordWrap(True)
-        layout.addWidget(self.property_title)
-        layout.addWidget(self.property_subtitle)
-        separator = QFrame()
-        separator.setFrameShape(QFrame.Shape.HLine)
-        layout.addWidget(separator)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        self._form_host = QWidget()
-        self._form = QFormLayout(self._form_host)
-        self._form.setContentsMargins(0, 7, 0, 0)
-        self._form.setHorizontalSpacing(12)
-        self._form.setVerticalSpacing(12)
-        self._form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
-        self._form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
-        scroll.setWidget(self._form_host)
-        layout.addWidget(scroll, 1)
+        self.property_editor = PropertyEditor()
+        self.property_title = self.property_editor.title
+        self.property_subtitle = self.property_editor.subtitle
+        self._form_host = self.property_editor
+        layout.addWidget(self.property_editor, 1)
+        self.apply_vector_button = QPushButton("Apply velocity")
+        self.apply_vector_button.clicked.connect(self._commit_vector)
+        self.apply_vector_button.hide()
+        layout.addWidget(self.apply_vector_button)
+        self.curve_table = CurveTable(minimum_points=1, require_increasing_x=False)
+        self.curve_table.pointsEdited.connect(self._commit_curve)
+        self.curve_plot = CurvePlot()
+        layout.addWidget(self.curve_table, 2)
+        layout.addWidget(self.curve_plot, 2)
+        self.curve_table.hide()
+        self.curve_plot.hide()
         self.units_note = QLabel("Values retain the units declared by the input deck.\nA field is applied when you finish editing it.")
         self.units_note.setObjectName("unitsNote")
         self.units_note.setWordWrap(True)
         layout.addWidget(self.units_note)
         tabs = QTabWidget()
-        tabs.addTab(panel, "Properties")
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        scroll.setWidget(panel)
+        tabs.addTab(scroll, "Properties")
         self.raw_source = QPlainTextEdit()
         self.raw_source.setReadOnly(True)
         self.raw_source.setFont(QFont("Consolas", 10))
@@ -279,7 +253,15 @@ class MainWindow(QMainWindow):
             return
         if kind == "field" and same_document and event.get("revision", -1) <= self._last_presented_revision:
             return
-        drafts = self._text_drafts() if same_document else {}
+        drafts = self._text_drafts()
+        if self._replacement_conflict or (not same_document and drafts):
+            self._replacement_conflict = True
+            message = "The document was replaced while input was unfinished. Your draft remains visible. Reload properties (Ctrl+R) to discard it and show the current document."
+            self.property_subtitle.setText("Draft from the previous document — reload required")
+            self._append_message(message)
+            self.statusBar().showMessage(message)
+            self._refresh_actions()
+            return
         draft_revision = self._editor_revision
         self.refresh_document(rebuild_viewport=kind == "document")
         self._restore_text_drafts(drafts)
@@ -289,7 +271,7 @@ class MainWindow(QMainWindow):
 
     def refresh_document(self, *, rebuild_viewport=False):
         """Refresh from the canonical session, also usable by an IPC coordinator."""
-        if self._busy:
+        if self._busy or self._replacement_conflict:
             return
         summary = self._summary()
         self._project_path = Path(summary["project_path"]) if summary.get("project_path") else None
@@ -327,62 +309,46 @@ class MainWindow(QMainWindow):
     def _refresh_actions(self, summary=None):
         summary = summary or self._summary()
         loaded = bool(summary.get("document_id"))
+        editable = not self._busy and not self._replacement_conflict
         for action in [self.open_rad_action, self.open_project_action]:
             action.setEnabled(not self._busy)
         for action in [self.save_action, self.save_as_action, self.export_action]:
-            action.setEnabled(loaded and not self._busy)
-        self.undo_action.setEnabled(bool(summary.get("can_undo")) and not self._busy)
-        self.redo_action.setEnabled(bool(summary.get("can_redo")) and not self._busy)
+            action.setEnabled(loaded and editable)
+        self.undo_action.setEnabled(bool(summary.get("can_undo")) and editable)
+        self.redo_action.setEnabled(bool(summary.get("can_redo")) and editable)
         self.reload_properties_action.setEnabled(loaded and not self._busy)
         self._form_host.setEnabled(not self._busy)
+        self.apply_vector_button.setEnabled(not self._busy)
+        self.curve_table.setEnabled(not self._busy)
         self.model_tree.setEnabled(not self._busy)
         if self.viewport:
-            self.viewport.setEnabled(not self._busy)
-        self.pick_mode.setEnabled(loaded and self.viewport is not None and not self._busy)
+            self.viewport.setEnabled(editable)
+        self.pick_mode.setEnabled(loaded and self.viewport is not None and editable)
         for action in [self.fit_action, self.iso_action, self.edges_action]:
-            action.setEnabled(loaded and self.viewport is not None)
+            action.setEnabled(loaded and self.viewport is not None and editable)
 
     def _refresh_tree(self):
-        previous = self._selected_card_id
-        self.model_tree.blockSignals(True)
-        self.model_tree.clear()
-        if not self._summary().get("document_id"):
-            self._selected_card_id = None
-            self.model_tree.blockSignals(False)
+        nodes = self.provider.tree_nodes()
+        # Field commands do not alter the card hierarchy. Keep its Qt model,
+        # collapsed branches and scroll position intact during scalar edits.
+        if nodes == self._tree_nodes:
             return
-        categories = {}
-        selected = None
-        for card in self.session.list_cards():
-            category = str(card.get("category") or "Other cards")
-            if category not in categories:
-                root = QTreeWidgetItem([category])
-                root.setFlags(root.flags() & ~Qt.ItemFlag.ItemIsSelectable)
-                root.setExpanded(True)
-                self.model_tree.addTopLevelItem(root)
-                categories[category] = root
-            title = str(card.get("title") or card.get("keyword") or "Card")
-            item = QTreeWidgetItem([title])
-            item.setData(0, Qt.ItemDataRole.UserRole, card["id"])
-            item.setData(0, Qt.ItemDataRole.UserRole + 1, card)
-            item.setToolTip(0, str(card.get("keyword", "")))
-            category_lower = category.lower()
-            symbol = "material" if "material" in category_lower else "constraint" if any(s in category_lower for s in ["constraint", "bound", "구속"]) else "card"
-            item.setIcon(0, icon(symbol))
-            categories[category].addChild(item)
-            if card["id"] == previous:
-                selected = item
-        for root in categories.values():
-            root.setExpanded(True)
-        if selected:
-            self.model_tree.setCurrentItem(selected)
-        else:
-            self._selected_card_id = None
-        self.model_tree.blockSignals(False)
+        self._tree_nodes = nodes
+        self._card_refs = {node.ref.object_id: node.ref for node in nodes}
+        self.model_tree.blockSignals(True)
+        try:
+            self.model_tree.set_nodes(nodes)
+            if self._selected_card_id in self._card_refs:
+                self.model_tree.select_ref(self._card_refs[self._selected_card_id])
+            else:
+                self._selected_card_id = None
+        finally:
+            self.model_tree.blockSignals(False)
 
-    def _card_selected(self, current, previous):
+    def _card_selected(self, ref):
         if self._updating or self._busy:
             return
-        target_id = current.data(0, Qt.ItemDataRole.UserRole) if current else None
+        target_id = ref.object_id if ref else None
         if not self._finish_pending_edits():
             self._focus_tree_card(self._selected_card_id)
             return
@@ -391,21 +357,14 @@ class MainWindow(QMainWindow):
         self._refresh_fields()
 
     def _focus_tree_card(self, card_id):
-        """Restore selection after a pending edit may have rebuilt the tree."""
+        """Restore selection after a rejected draft without rebuilding rows."""
+        ref = self._card_refs.get(card_id)
+        if ref is None:
+            return False
         self.model_tree.blockSignals(True)
-        found = False
-        for i in range(self.model_tree.topLevelItemCount()):
-            group = self.model_tree.topLevelItem(i)
-            for j in range(group.childCount()):
-                item = group.child(j)
-                if item.data(0, Qt.ItemDataRole.UserRole) == card_id:
-                    self.model_tree.setCurrentItem(item)
-                    found = True
-                    break
-            if found:
-                break
+        self.model_tree.select_ref(ref)
         self.model_tree.blockSignals(False)
-        return found
+        return True
 
     def select_card(self, card_id):
         """Select a model card through the same guarded interaction as the tree."""
@@ -418,8 +377,13 @@ class MainWindow(QMainWindow):
         return True
 
     def _clear_form(self):
-        while self._form.rowCount():
-            self._form.removeRow(0)
+        self.property_editor.set_fields(())
+        self.property_editor.setMinimumHeight(0)
+        self.property_editor.scroll.show()
+        self.property_editor.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        self.apply_vector_button.hide()
+        self.curve_table.hide()
+        self.curve_plot.hide()
         self.field_editors = {}
         self._field_specs = {}
 
@@ -443,7 +407,7 @@ class MainWindow(QMainWindow):
         self.raw_source.setPlainText(source)
         self._editor_revision = self._summary().get("revision")
         fields = self.session.card_fields(self._selected_card_id)
-        units = fields[0].get("units", {}) if fields else {}
+        units = self.provider.unit_context(self._card_refs[self._selected_card_id])
         unit_note = "Values use the input deck units; no unit conversion is applied."
         if units.get("unit_id") is not None:
             unit_note += f"\nMaterial unit system ID: {units['unit_id']} (card override)."
@@ -451,72 +415,123 @@ class MainWindow(QMainWindow):
             basis = units["global"]
             unit_note += "\nDeck basis: " + ", ".join(f"{key}: {value}" for key, value in basis.items()) + "."
         self.units_note.setText(unit_note + "\nA field is applied when you finish editing it.")
-        if not fields:
-            note = QLabel("This card is preserved in the deck.\nA property editor is not available for this card.")
-            note.setWordWrap(True)
-            self._form.addRow(note)
-            return
-        for field in fields:
-            name = field["name"]
-            value = field.get("value")
-            field_type = field.get("type", "string")
-            if field_type in ("bool", "boolean"):
-                editor = QCheckBox("Fixed" if name in ("tx", "ty", "tz", "rx", "ry", "rz") else "Enabled")
-                editor.setChecked(bool(value))
+        specs = self.provider.properties(self._card_refs[self._selected_card_id])
+        scalar_specs = tuple(spec for spec in specs if spec.kind != "table")
+        self.property_editor.set_fields(scalar_specs, title=str(card.get("title") or "Properties"),
+                                        subtitle=str(card.get("keyword") or ""))
+        self._field_specs = {field["name"]: field for field in fields}
+        self.field_editors = dict(self.property_editor.editors)
+        for name, editor in self.property_editor.editors.items():
+            if isinstance(editor, VectorEdit):
+                self.property_editor.setMinimumHeight(240)
+                for component, child in zip(("vx", "vy", "vz"), editor.editors):
+                    self.field_editors[component] = child
+                    child.setObjectName("field_" + component)
+                    child.returnPressed.connect(lambda n=component, e=child: self._commit_text(n, e))
+                self.apply_vector_button.show()
+                self.units_note.setText(unit_note + "\nApply velocity or press Enter to commit all three components together.")
+            elif isinstance(editor, QCheckBox):
                 editor.toggled.connect(lambda checked, n=name: self._commit_field(n, checked))
-            elif field.get("options"):
-                editor = QComboBox()
-                for option in field["options"]:
-                    if isinstance(option, dict):
-                        editor.addItem(str(option.get("label", option.get("value"))), option.get("value"))
-                    else:
-                        editor.addItem(str(option), option)
-                index = editor.findData(value)
-                editor.setCurrentIndex(max(0, index))
+            elif isinstance(editor, QComboBox):
                 editor.activated.connect(lambda index, n=name, e=editor: self._commit_field(n, e.itemData(index)))
-            else:
-                editor = QLineEdit(str(value) if value is not None else "")
+            elif isinstance(editor, QLineEdit):
                 editor.setObjectName("field_" + name)
-                if field_type in ("float", "number"):
-                    validator = QDoubleValidator(editor)
-                    validator.setNotation(QDoubleValidator.Notation.ScientificNotation)
-                    editor.setValidator(validator)
                 editor.editingFinished.connect(lambda n=name, e=editor: self._commit_text(n, e))
-            editor.setEnabled(bool(field.get("writable", True)))
-            editor.setToolTip(str(field.get("description", "Input deck units")))
-            self.field_editors[name] = editor
-            self._field_specs[name] = dict(field)
-            label = QLabel(_field_label(field))
-            label.setWordWrap(True)
-            self._form.addRow(label, editor)
+        table_spec = next((spec for spec in specs if spec.kind == "table"), None)
+        if table_spec:
+            self.property_editor.scroll.hide()
+            self.property_editor.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+            self.curve_table.set_points(table_spec.value)
+            grid = self.curve_table.table
+            grid.setFixedHeight(grid.horizontalHeader().sizeHint().height()
+                                + min(8, len(table_spec.value)) * grid.verticalHeader().defaultSectionSize()
+                                + 2 * grid.frameWidth())
+            self.curve_plot.set_points(table_spec.value, x_label="X (input deck)", y_label="Y (input deck)")
+            self.curve_table.show()
+            self.curve_plot.show()
+            self.units_note.setText(unit_note + "\nApply curve commits all existing rows together.")
+        if not fields:
+            self.property_subtitle.setText(str(card.get("keyword") or "") + "\nPreserved read-only; no supported fields.")
 
     def _commit_text(self, name, editor):
         if self._updating or not editor.isModified():
             return True
+        if name in ("vx", "vy", "vz") and "velocity" in self.property_editor.editors:
+            return self._commit_vector()
         spec = self._field_specs[name]
         try:
             text = editor.text().strip()
             field_type = spec.get("type")
-            value = float(text) if field_type in ("float", "number") else int(text) if field_type in ("int", "integer") else text
+            value = editor.numeric_value() if hasattr(editor, "numeric_value") else float(text) if field_type in ("float", "number") else int(text) if field_type in ("int", "integer") else text
             if isinstance(value, float) and not math.isfinite(value):
                 raise ValueError("Enter a finite number")
         except (TypeError, ValueError) as exc:
+            self.property_editor.set_error(name, str(exc))
             self._show_error(exc)
             return False
         return self._commit_field(name, value)
+
+    def _submit_properties(self, values):
+        ref = self._card_refs[self._selected_card_id]
+        return self.provider.submit(SetProperties(ref, values, self._editor_revision))
+
+    def _commit_vector(self):
+        if self._updating or self._busy:
+            return False
+        editor = self.property_editor.editors["velocity"]
+        try:
+            value = editor.numeric_value()
+        except ValueError as exc:
+            self.property_editor.set_error("velocity", str(exc))
+            self._show_error(exc)
+            return False
+        previous = tuple(self._field_specs[name]["value"] for name in ("vx", "vy", "vz"))
+        if value == previous:
+            for child in editor.editors:
+                child.setModified(False)
+            return True
+        try:
+            self._submit_properties({"velocity": value})
+        except Exception as exc:
+            self.property_editor.set_error("velocity", str(getattr(exc, "message", exc)))
+            self._show_error(exc)
+            return False
+        self.refresh_document()
+        self.statusBar().showMessage("Initial velocity updated", 5000)
+        return True
+
+    def _commit_curve(self, points):
+        if self._updating or self._busy:
+            return False
+        try:
+            spec = self.provider.properties(self._card_refs[self._selected_card_id])[0]
+            if tuple(map(tuple, points)) == spec.value:
+                self.curve_table.set_points(spec.value)
+                return True
+            self._submit_properties({"points": tuple(map(tuple, points))})
+        except Exception as exc:
+            self._show_error(exc)
+            return False
+        self.refresh_document()
+        self.statusBar().showMessage("Curve points updated", 5000)
+        return True
 
     def _commit_field(self, name, value):
         if self._updating or self._busy:
             return False
         spec = self._field_specs.get(name, {})
         if value == spec.get("value"):
+            editor = self.field_editors.get(name)
+            if isinstance(editor, QLineEdit):
+                editor.setModified(False)
             return True
         # A different editor may contain a validator's intermediate text ("1e").
         # Applying this field must not discard that unfinished user input.
         drafts = self._text_drafts(exclude=name)
         try:
-            self.session.set_field(self._selected_card_id, name, value, expected_revision=self._editor_revision)
+            self._submit_properties({name: value})
         except Exception as exc:
+            self.property_editor.set_error(name, str(getattr(exc, "message", exc)))
             self._show_error(exc)
             return False
         label = _field_label(spec) if spec else "Property"
@@ -526,11 +541,17 @@ class MainWindow(QMainWindow):
         return True
 
     def _text_drafts(self, *, exclude=None):
-        return {key: editor.text() for key, editor in self.field_editors.items()
-                if key != exclude and isinstance(editor, QLineEdit) and editor.isModified()}
+        drafts = {key: editor.text() for key, editor in self.field_editors.items()
+                  if key != exclude and isinstance(editor, QLineEdit) and editor.isModified()}
+        if not self.curve_table.isHidden() and self.curve_table.has_draft():
+            drafts["@curve"] = self.curve_table.draft_state()
+        return drafts
 
     def _restore_text_drafts(self, drafts):
         for key, text in drafts.items():
+            if key == "@curve":
+                self.curve_table.restore_draft(text)
+                continue
             editor = self.field_editors.get(key)
             if isinstance(editor, QLineEdit):
                 editor.setText(text)
@@ -539,20 +560,35 @@ class MainWindow(QMainWindow):
     def _reload_properties(self):
         if self._busy:
             return
-        if self._text_drafts():
+        if self._text_drafts() or self._replacement_conflict:
             answer = QMessageBox.question(self, "Unfinished input", "Discard unfinished property input and reload current model values?", QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
             if answer != QMessageBox.StandardButton.Discard:
                 return
-        self._refresh_fields()
+        if self._replacement_conflict:
+            self._replacement_conflict = False
+            self.refresh_document(rebuild_viewport=True)
+        else:
+            self._refresh_fields()
 
     def _finish_pending_edits(self):
         """A validator's intermediate text must never be silently discarded by Save."""
+        if self._replacement_conflict:
+            self._show_error(ValueError("Reload properties (Ctrl+R) before continuing with the replaced document."))
+            return False
         for name in list(self.field_editors):
             editor = self.field_editors.get(name)
             if isinstance(editor, QLineEdit) and editor.isModified():
                 if not self._commit_text(name, editor):
                     editor.setFocus()
                     return False
+        if not self.curve_table.isHidden() and self.curve_table.has_draft():
+            try:
+                points = self.curve_table.points()
+            except ValueError as exc:
+                self._show_error(exc)
+                return False
+            if not self._commit_curve(points):
+                return False
         return True
 
     def _history(self, command):
@@ -581,7 +617,8 @@ class MainWindow(QMainWindow):
         self._refresh_actions()
         self._progress.show()
         self.statusBar().showMessage(label + "…")
-        task = _FileTask(function)
+        task = _FileTask(function, operation_id=label)
+        task.signals.stateChanged.connect(self._operation_changed)
         self._active_task = task
 
         def done(result):
@@ -611,6 +648,10 @@ class MainWindow(QMainWindow):
         task.signals.complete.connect(done)
         task.signals.failed.connect(failed)
         QThreadPool.globalInstance().start(task)
+
+    def _operation_changed(self, state):
+        self.operation_state = state
+        self._progress.setAccessibleDescription(f"{state.operation_id}: {state.status}")
 
     def _before_replace(self, continuation):
         if not self._finish_pending_edits():
@@ -705,7 +746,7 @@ class MainWindow(QMainWindow):
         self._start_task("Export Radioss deck", lambda: self.session.export_rad(str(filename)), exported)
 
     def _entity_picked(self, entity):
-        if self._busy:
+        if self._busy or self._replacement_conflict:
             return
         try:
             selection = self.session.select_entity(entity["kind"], entity["id"]) if entity.get("kind") else self.session.clear_selection()
