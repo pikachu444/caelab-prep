@@ -31,6 +31,14 @@ Final source verification is **100 passed, 1 skipped in 12.38s, process exit 0**
 
 Current team disposition: all three review roles agree the bounded native evidence closes A7 within the original P1–P3/A packet. No important scoped functional/native item remains unverified. Existing raw RAD/INCLUDE, CLI, history and neutral persistence remain credited. No new B/C, new RAD cards, advanced curves, second profile, exhaustive state matrix, OS SendInput or manual-review requirement is added. Publication remains root-owned; this report makes no GitHub APPROVE, protection bypass or merge action and does not claim a future CI result.
 
+## Latest CI ownership correction
+
+Commit `0952d66` passed its push Qt42 run but its PR Qt run exited 139 during fixture `DeferredDelete` processing. That intermittent failure is retained as a real CI blocker; an earlier green run does not certify the next candidate.
+
+The measured narrow-test graph in `.test-tmp/qt-owner-flags-before.log` contains 13 top-level-flagged widgets: one Python-owned parentless Gallery root, six Qt-owned menus and six Qt-owned combo popup containers, all descendants of that Gallery. The fixture previously closed/queued destruction of all 13. Its bounded correction closes and queues only Python-owned parentless roots, allowing Qt parent ownership to destroy the descendants. The assertion that **all 13 wrappers become invalid** remains, as do worker completion/zero-worker checks and isolated INI settings. No test is skipped, no assertion is weakened, and no exit status is masked. CI `-vv` is diagnostic only.
+
+The verifier reports the corrected Qt42 local run passed in 9.77s with process exit 0, zero widgets/workers and unchanged real preferences. This supports the ownership correction but is not Linux CI proof. Product code and accepted native A7 evidence are unchanged; repeating native validation is unnecessary. No scoped implementation/native blocker remains, but merge still requires all required checks to be green for the **new exact final SHA**. This reviewer performed no source edit, GitHub approval, protection bypass or publication action.
+
 ## Authority and scope
 
 - `docs/shared-cae-foundation-plan.md:53–64`: actual design rules, semantic icon families, and per-asset catalogue metadata.

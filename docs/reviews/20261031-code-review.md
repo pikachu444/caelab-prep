@@ -1,6 +1,6 @@
 # Independent code and regression-risk review — current final verdict
 
-**Accepted: final source, scoped native Windows behavior, and corrected documentation. No remaining scoped code/regression/native/doc blocker. The only remaining publication gate is successful required CI on the exact final new commit SHA.** Previous c23149e checks do not cover the latest wrapper/settings/test/driver/doc changes.
+**Current verdict: final product source/native behavior/documentation remain accepted, and the concrete Qt ownership-root cleanup correction is approved by source review. No remaining scoped source blocker in the new correction. Required CI on the exact new commit SHA is still pending; merge remains gated until it passes.** The 0952d66 PR segmentation fault is retained as a real failure and is not closed by its same-head green push run or by a retry.
 
 This verdict supersedes every earlier pending-Windows/A7/teardown/size-caveat verdict below. The earlier material native acceptance gap is now addressed through the user's explicitly approved own-process Windows QPA/QTest route. It is not an OS SendInput, manual-human-input, OS-monitor-DPI-change, oversized-full-screen-input, floating-caption-redock, installer, B/C or all-feature-combinations claim.
 
@@ -140,3 +140,28 @@ Read the new README/DESIGN/ARCHITECTURE and native validation record. Applicatio
 **Final code-peer verdict:** no remaining scoped code/regression or native-behavior blocker for the explicitly authorized Windows own-process QTest route. This conclusion is based on the reviewed source, actual input/state/value assertions, all three separate-process restores, repaired-control bounds, actual Win32 OpenGL pixels/pick, and the independently inspected images—not only stage visibility. The originally material A7 environment gap has been addressed for that bounded agreed route. Physical-screen limits at the oversized 200% normal size and excluded OS/manual methods remain limitations, not false completion claims. Root must still bind publication/merge to the exact final new commit and successful required CI; c23149e's green checks do not cover this new source/test/driver/doc correction.
 
 Final documentation re-read confirms the requested dock wording is corrected: it explicitly records the API Bottom setup, actual Bottom→Left drag, and does not claim floating→docked input success. The 200% exact-size supplement is separately labelled layout rendering with no physical-screen input claim. No documentation overclaim remains in those reviewed passages.
+
+
+
+## New 0952d66 CI cleanup blocker — ownership diagnosis
+
+Push run 41174599358 passed all four jobs (Qt42, exit0), but PR run 41174601977 segfaulted with exit139 while `tests/conftest.py:54` delivered DeferredDelete during a function fixture. The log has nineteen completed GUI cases and twenty-one common-widget dots, pinpointing teardown of `test_narrow_gallery_catalogue_scrolls_controls_into_view_before_edit_and_undo`, not interpreter shutdown after all tests. No green retry may substitute for correcting this gate failure.
+
+Independently read `.test-tmp/ci-qt-0952-pr-failure.log` and verifier's actual `.test-tmp/qt-owner-flags-before.log`. The narrow test produces thirteen top-level widgets: one parentless/Python-owned GalleryWindow, six parent-owned/non-Python-owned QMenus, and six QComboBoxPrivateContainers parented to QComboBoxes. All twelve private/menu windows descend from the Gallery root. The fixture's new-top-level list misidentifies creation as ownership and calls close/deleteLater on all thirteen independently.
+
+Minimal causal correction: close/delete only test-created parentless Python-owned roots; let Qt-owned descendants be destroyed with their owning root. Preserve the assertion that every original test-created top-level wrapper is invalid afterward. This removes arbitrary independent close/deletion of Qt private popup containers and related owner callbacks, rather than adding delays, masking failure, weakening checks or changing production behavior.
+
+Qt's documented QObject tree semantics already prevent generic parent-child double deletion regardless of destruction order (https://doc.qt.io/qt-6/objecttrees.html). Therefore this is not a proven generic QObject double-delete stack diagnosis; the actionable mistake is independently manipulating non-owned private widget internals. Root-only cleanup needs concrete patch review and actual affected Linux CI exit0. Native A7 acceptance is unchanged and does not need another native campaign for this test-only correction.
+
+
+### Concrete ownership-root correction reviewed
+
+Independently reviewed the minimal fixture diff: import shiboken ownedByPython, select only new widgets whose QObject parent is None and which are owned by Python, and close/delete those roots. The original `assert all(not isValid(widget) for widget in owned)` is unchanged and still checks destruction of every originally observed root/menu/private-popup wrapper. Worker bounds and deferred delivery checks remain unchanged. The CI-only -vv addition improves failing-case identification without masking errors. No production source or native UI behavior changes.
+
+The actual ownership graph justifies this correction: all twelve non-root QMenu/QComboBoxPrivateContainer objects belong to the single Gallery root and should be destroyed through that owner, not independently closed and deleted by a top-level-window scan. This removes the concrete ownership mistake; it does not claim a native stack-proven generic QObject double-delete bug.
+
+Read `.test-tmp/qt-root-ownership-verification.xml`: 42 tests, zero errors/failures/skips, including the previously implicated narrow-gallery case and both subsequent external-selection cases. Verifier reports process exit0, native settings unchanged, zero top-level widgets and zero workers. No duplicate suite/native run was performed by this reviewer.
+
+**Disposition:** source review approves this bounded cleanup patch for root's new commit and required CI. Native A7 acceptance remains unchanged. Actual Linux success for the exact new commit is still required to close the current CI gate; no previous passing job, single successful retry, test skip, dependency pin or exit suppression substitutes for that result. The prior 0952d66 PR failure must remain documented honestly.
+
+Reviewer correction: my earlier cleanup approval did not distinguish a newly created top-level window from a Python-owned lifetime root. The captured private-popup ownership graph shows that omission was unsafe. The revised approval is specifically for ownership-root deletion with the full descendant-destruction assertion retained, not a blanket endorsement of deleting everything returned by topLevelWidgets().

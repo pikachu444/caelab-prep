@@ -34,7 +34,7 @@ def qt_settings(tmp_path, monkeypatch):
 @pytest.fixture
 def qt_widgets(qt_app, qt_settings):
     from PySide6.QtCore import QCoreApplication, QEvent, QThreadPool
-    from shiboken6 import isValid
+    from shiboken6 import isValid, ownedByPython
 
     existing = set(qt_app.topLevelWidgets())
     yield qt_app
@@ -44,7 +44,9 @@ def qt_widgets(qt_app, qt_settings):
     qt_app.processEvents()
     assert pool.activeThreadCount() == 0, "A file callback started an unfinished Qt worker"
     owned = [widget for widget in qt_app.topLevelWidgets() if widget not in existing]
-    for widget in owned:
+    # Window flags also include parent-owned menus and private combo popups.
+    roots = [widget for widget in owned if widget.parent() is None and ownedByPython(widget)]
+    for widget in roots:
         if isValid(widget):
             if hasattr(widget, "_allow_close"):
                 widget._allow_close = True

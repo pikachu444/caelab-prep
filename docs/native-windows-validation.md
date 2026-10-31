@@ -31,7 +31,9 @@ P1–P3/A의 공용 부품과 실제 Prep 편집 흐름을 검증했다. 구현�
 
 초기 검증 도구는 `setDefaultFormat(IniFormat)`이 `QSettings(org, app)`에도 적용된다고 잘못 가정했다. 이 생성자는 NativeFormat을 사용해 초기 실행들이 실제 앱의 네 가지 **창 크기/도킹 설정**을 읽고 썼을 수 있다. 이전 값의 백업이 없어 알 수 없는 값으로 복원하거나 지우지 않았다. 작업 문서/모델 내용에는 해당 설정을 쓰지 않는다. 이후 pytest와 평가 도구 모두 명시적 임시 INI 생성자로 수정했으며 전후 실제 설정 값이 같음을 확인했다. 초기 100/150 실행의 ‘격리’ 주장은 최종 실행으로 대체한다.
 
-초기 통합 100% 실행은 9개 중 8개가 통과했고 곡선 셀의 `mouseDClick` 단독 입력에서 delegate를 찾지 못했다. 실제 선택 클릭+F2로 여는 표준 입력으로 평가 도구를 고친 뒤 **곡선 단계만** 다시 실행해 Apply/plot/Undo를 확인했다. 초기 실패 manifest를 통과로 바꿔 쓰지 않았다. Qt 자동 검사 종료의 SIGSEGV는 살아남은 테스트 창의 수명 문제로 진단해 테스트 소유 창을 명시 파괴하도록 수정했고, `c23149e`의 push/PR CI 모두 Qt41 정상 통과·exit0을 확인했다. 새 후보는 새 CI가 필요하다.
+초기 통합 100% 실행은 9개 중 8개가 통과했고 곡선 셀의 `mouseDClick` 단독 입력에서 delegate를 찾지 못했다. 실제 선택 클릭+F2로 여는 표준 입력으로 평가 도구를 고친 뒤 **곡선 단계만** 다시 실행해 Apply/plot/Undo를 확인했다. 초기 실패 manifest를 통과로 바꿔 쓰지 않았다.
+
+Qt 자동 검사 종료의 SIGSEGV 때문에 테스트 창을 명시 정리한 `c23149e`의 push/PR CI는 Qt41 정상 통과·exit0이었다. 이후 `0952d66`은 push 네 job이 통과했지만 [PR Qt job](https://github.com/pikachu444/caelab-prep/actions/runs/41174601977/job/124459446444)이 새 좁은 카탈로그 검사 정리 중 DeferredDelete에서 exit139로 실패했다. 단순 재실행으로 통과 처리하지 않았다. 해당 장면의 정리 전 객체 그래프는 Python 소유·부모 없는 Gallery 1개와 그 자식인 Qt 소유 메뉴 6개/내부 combo popup 6개였다. 이전 fixture는 13개를 각각 닫고 삭제 예약했다. 이제 Python 소유 root만 정리하고 자식은 [Qt의 객체 소유권](https://doc.qt.io/qt-6/objecttrees.html)에 맡긴다. **원래 13개 모두 삭제됐는지 검사는 유지**한다. 일반 QObject 부모/자식이 항상 이중 삭제된다는 주장은 아니다. 영향받은 Qt42는 로컬 9.77s/exit0, 남은 widget/worker0, 실제 설정 전후 동일이다. Linux 실패 해소는 수정 뒤 정확한 새 SHA의 push/PR CI로 별도 확인해야 한다. 제품 소스/네이티브 입력 경로는 이 정리 수정에서 바꾸지 않았다.
 
 ## 재현과 증거
 
