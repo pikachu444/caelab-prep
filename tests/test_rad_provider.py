@@ -147,3 +147,104 @@ def test_material_override_and_unknown_basis_remain_descriptive(tmp_path):
         provider.submit(SetProperties(target, {"density": 1}, 0, None))
     assert error.value.code == "invalid_unit"
     assert session.describe()["revision"] == 0
+
+
+def mesh_pick(session, kind="element", identifier=None):
+    projection = session.mesh_view()
+    cell = projection["cells"][0]
+    resource = cell["resource_id"]
+    return {key: projection[key] for key in ("document_id", "document_epoch", "revision", "projection_revision")} | {
+        "kind": kind, "id": cell["id"] if identifier is None else identifier,
+        "resource_id": resource, "resource_revision": projection["resource_revisions"][resource],
+    }
+
+
+@pytest.mark.parametrize("field,bad", [
+    ("document_id", "other"), ("document_epoch", "other"), ("revision", -1),
+    ("projection_revision", -1), ("resource_id", "other"), ("resource_revision", -1),
+    ("id", True), ("kind", "card"),
+])
+def test_qualified_pick_rejects_stale_or_invalid_identity_without_changing_selection(field, bad):
+    session, provider = opened()
+    candidate = mesh_pick(session)
+    approved = session.select_pick(candidate)
+    with pytest.raises(PrepError):
+        session.select_pick(candidate | {field: bad})
+    assert session.selection() == approved
+
+
+def test_pick_from_previous_presentation_is_rejected_after_same_ids_are_reopened(tmp_path):
+    session, provider = opened()
+    path = tmp_path / "same-document.caeprep"
+    session.save_project(path)
+    candidate = mesh_pick(session)
+    session.open_project(path)
+    current = mesh_pick(session)
+    assert current["document_id"] == candidate["document_id"]
+    assert current["resource_id"] == candidate["resource_id"]
+    assert current["id"] == candidate["id"]
+    before = session.select_pick(current)
+    with pytest.raises(PrepError):
+        session.select_pick(candidate)
+    assert session.selection() == before
+    with pytest.raises(PrepError):
+        session.select_pick(candidate | {"kind": None})
+    assert session.selection() == before
+    assert before["ids"] == [current["id"]]
+
+
+@pytest.mark.parametrize("filename,scope,duplicate_scope", [
+    ("shell_panels_0000.rad", "/PART/2", None), ("solid_blocks_0000.rad", "/PART/22", None),
+    ("shell_panels_0000.rad", "/PART/1", "/PART/01"),
+])
+def test_part_activation_shares_typed_target_and_existing_native_mesh_relation(tmp_path, filename, scope, duplicate_scope):
+    session, provider = opened(filename)
+    if duplicate_scope:
+        source = tmp_path / "duplicate-parts.rad"
+        source.write_bytes((INPUTS / filename).read_bytes().replace(
+            b"/END", (duplicate_scope + "\nDuplicate Part\n         1         1         0\n/END").encode("ascii")))
+        session.open_rad(source)
+    target = node(provider, scope).ref
+    if duplicate_scope:
+        before = session.selection()
+        with pytest.raises(PrepError) as error:
+            provider.select(target)
+        assert error.value.code == "ambiguous_selection"
+        assert session.selection() == before and provider.active_object() is None
+        return
+    provider.select(target)
+    assert provider.active_object() == session.active_object() == target
+    part_id = int(scope.rsplit("/", 1)[1])
+    related = [cell for cell in session.mesh_view()["cells"] if cell["part_id"] == part_id]
+    assert related
+    assert set(session.selection()["ids"]) == {cell["id"] for cell in related}
+    assert {ref["resource_id"] for ref in session.selection()["refs"]} == {cell["resource_id"] for cell in related}
+    assert provider.properties(target), "Part activation must expose actual read-only properties"
+    assert all(not spec.editable for spec in provider.properties(target))
+    before = session.selection()
+    with pytest.raises(PrepError):
+        provider.select(replace(target, resource_id="missing-resource"))
+    assert session.selection() == before and provider.active_object() == target
+
+
+def test_qualified_pick_keeps_canonical_invalid_and_ambiguous_id_rejection(tmp_path):
+    source = tmp_path / "duplicate-nodes.rad"
+    included = tmp_path / "duplicate.inc"
+    # A second native resource reuses an existing node ID; its provenance must not
+    # silently turn the session's ambiguous canonical ID into an approved pick.
+    included.write_text("/NODE\n" + f"{1:10d}{0:20g}{0:20g}{0:20g}\n/END\n", encoding="ascii")
+    source.write_bytes((INPUTS / "shell_panels_0000.rad").read_bytes().replace(
+        b"/END", b"#include duplicate.inc\n/END"))
+    session = PrepSession()
+    session.open_rad(source)
+    before = session.selection()
+    for candidate in (mesh_pick(session, "node", True), mesh_pick(session, "node", -999)):
+        with pytest.raises(PrepError) as error:
+            session.select_pick(candidate)
+        assert error.value.code == "invalid_selection"
+        assert session.selection() == before
+    candidate = mesh_pick(session, "node", 1)
+    with pytest.raises(PrepError) as error:
+        session.select_pick(candidate)
+    assert error.value.code == "ambiguous_selection"
+    assert session.selection() == before

@@ -10,6 +10,8 @@ from PySide6.QtWidgets import (QAbstractItemDelegate, QAbstractItemView, QApplic
                               QHBoxLayout, QHeaderView, QLabel, QPlainTextEdit, QPushButton,
                               QLineEdit, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
+from ..design import TOKENS
+
 
 def validate_points(points, *, minimum_points=1, require_increasing_x=False):
     result = []
@@ -56,14 +58,14 @@ class CurveTable(QWidget):
         self._paste_error = False
         self.paste_text_buffer = ""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 8, 8, 8)
-        layout.setSpacing(6)
+        layout.setContentsMargins(*([TOKENS["form_column_gap"]] * 4))
+        layout.setSpacing(TOKENS["space_md"])
         self.table = _CurveGrid(0, 2)
         self.table.setAccessibleName("Curve points")
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.table.verticalHeader().setDefaultSectionSize(25)
+        self.table.verticalHeader().setDefaultSectionSize(TOKENS["row_height"])
         self.table.itemChanged.connect(self._changed)
         self.table.pasteRequested.connect(self._paste_clipboard)
         layout.addWidget(self.table, 1)
@@ -241,7 +243,7 @@ class CurvePlot(QWidget):
         super().__init__(parent)
         self._points = ()
         self.x_label, self.y_label = "X", "Y"
-        self.setMinimumSize(220, 180)
+        self.setMinimumSize(TOKENS["plot_min_width"], TOKENS["plot_min_height"])
         self.setAccessibleName("Curve plot")
 
     def set_points(self, points, *, x_label=None, y_label=None):
@@ -260,9 +262,11 @@ class CurvePlot(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.fillRect(self.rect(), QColor("#ffffff"))
-        area = QRectF(64, 30, max(10, self.width()-88), max(10, self.height()-84))
-        painter.setPen(QColor("#536574"))
+        painter.fillRect(self.rect(), QColor(TOKENS["surface"]))
+        area = QRectF(TOKENS["plot_left"], TOKENS["plot_top"],
+                      max(TOKENS["space_lg"], self.width()-TOKENS["plot_left"]-TOKENS["plot_right"]),
+                      max(TOKENS["space_lg"], self.height()-TOKENS["plot_top"]-TOKENS["plot_bottom"]))
+        painter.setPen(QColor(TOKENS["plot_text"]))
         painter.drawText(QRectF(12, 3, self.width()-24, 23), Qt.AlignmentFlag.AlignLeft, self.y_label)
         painter.drawText(QRectF(64, self.height()-27, self.width()-88, 20), Qt.AlignmentFlag.AlignCenter, self.x_label)
         if not self._points:
@@ -278,13 +282,13 @@ class CurvePlot(QWidget):
             fraction = step/4
             x = area.left()+fraction*area.width()
             y = area.bottom()-fraction*area.height()
-            painter.setPen(QColor("#e5ebef"))
+            painter.setPen(QColor(TOKENS["plot_grid"]))
             painter.drawLine(QPointF(x, area.top()), QPointF(x, area.bottom()))
             painter.drawLine(QPointF(area.left(), y), QPointF(area.right(), y))
-            painter.setPen(QColor("#536574"))
+            painter.setPen(QColor(TOKENS["plot_text"]))
             painter.drawText(QRectF(x-34, area.bottom()+7, 68, 18), Qt.AlignmentFlag.AlignHCenter, f"{x0+fraction*(x1-x0):.3g}")
             painter.drawText(QRectF(2, y-9, 55, 18), Qt.AlignmentFlag.AlignRight, f"{y0+fraction*(y1-y0):.3g}")
-        painter.setPen(QPen(QColor("#aab8c4"), 1))
+        painter.setPen(QPen(QColor(TOKENS["plot_border"]), TOKENS["border_width"]))
         painter.drawRect(area)
         path = QPainterPath()
         coordinates = [QPointF(area.left()+(x-x0)/(x1-x0)*area.width(), area.bottom()-(y-y0)/(y1-y0)*area.height())
@@ -292,8 +296,8 @@ class CurvePlot(QWidget):
         path.moveTo(coordinates[0])
         for point in coordinates[1:]:
             path.lineTo(point)
-        painter.setPen(QPen(QColor("#217a90"), 2))
+        painter.setPen(QPen(QColor(TOKENS["accent"]), TOKENS["plot_line_width"]))
         painter.drawPath(path)
-        painter.setBrush(QColor("#ffffff"))
+        painter.setBrush(QColor(TOKENS["surface"]))
         for point in coordinates:
-            painter.drawEllipse(point, 3, 3)
+            painter.drawEllipse(point, TOKENS["plot_marker_radius"], TOKENS["plot_marker_radius"])

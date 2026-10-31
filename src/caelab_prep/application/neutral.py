@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import asdict
 import hashlib
 import json
 import math
@@ -54,7 +55,8 @@ class MaterialCurveResource:
         if not isinstance(state, dict) or set(state) != {"material", "curves"}:
             raise PrepError("invalid_project", "Invalid material/curve payload.")
         material = state["material"]
-        if not isinstance(material, dict) or set(material) != {"name", "density", "young_modulus", "poisson_ratio", "direction"}:
+        required = {"name", "density", "young_modulus", "poisson_ratio", "direction"}
+        if not isinstance(material, dict) or not required <= material.keys() or set(material) - required - {"reference_curve"}:
             raise PrepError("invalid_project", "Invalid material fields.")
         if not isinstance(material["name"], str) or not material["name"].strip():
             raise PrepError("invalid_value", "A material name is required.")
@@ -75,8 +77,12 @@ class MaterialCurveResource:
             if not all(isinstance(curve[field], str) for field in ("name", "x_unit", "y_unit")) or not curve["name"].strip():
                 raise PrepError("invalid_project", "Invalid curve metadata.")
             validated[key] = {**curve, "points": validate_points(curve["points"])}
+        reference = material.get("reference_curve")
+        if reference is not None and (not isinstance(reference, str) or reference not in validated):
+            raise PrepError("invalid_reference", "The material's associated curve does not exist.")
         self._state = {"material": {**material, "density": density, "young_modulus": modulus,
-                                   "poisson_ratio": poisson, "direction": direction}, "curves": validated}
+                                   "poisson_ratio": poisson, "direction": direction,
+                                   "reference_curve": reference}, "curves": validated}
 
     def state_token(self):
         return hashlib.sha256(json.dumps(self._state, sort_keys=True, ensure_ascii=False, allow_nan=False).encode()).hexdigest()
@@ -84,7 +90,7 @@ class MaterialCurveResource:
 
 class MaterialCurveCodec:
     format = "caelab-material-curves"
-    version = 1
+    version = 2
 
     @classmethod
     def encode(cls, document):
@@ -95,7 +101,7 @@ class MaterialCurveCodec:
 
     @classmethod
     def decode(cls, manifest, members):
-        if manifest.get("format") != cls.format or type(manifest.get("version")) is not int or manifest["version"] != cls.version:
+        if manifest.get("format") != cls.format or type(manifest.get("version")) is not int or manifest["version"] not in (1, cls.version):
             raise PrepError("project_version", "Unsupported material/curve document version.")
         for key in ("document_id", "resource_id"):
             if not isinstance(manifest[key], str):
@@ -136,6 +142,7 @@ class CurveSession:
         if hasattr(self, "document") and self.document.id == document.id:
             document.revision = max(document.revision, self.document.revision + 1)
         self.document = document
+        self._document_epoch = str(uuid4())
         self.dispatcher = CommandDispatcher(document)
         self.dispatcher.subscribe(lambda change: self._notify(change.kind, change=change.to_dict()))
         self._selected = None
@@ -145,7 +152,8 @@ class CurveSession:
         return next(iter(self.document.resources.values()))
 
     def _notify(self, kind, **details):
-        event = {"kind": kind, "document_id": self.document.id, "revision": self.document.revision, **details}
+        event = {"kind": kind, "document_id": self.document.id, "revision": self.document.revision,
+                 "document_epoch": self._document_epoch, **details}
         for listener in tuple(self._listeners):
             try:
                 listener(dict(event))
@@ -167,6 +175,8 @@ class CurveSession:
                     "name": self.document.name, "dirty": self.document.dirty,
                     "project_path": self.document.save_state.path,
                     "can_undo": self.dispatcher.can_undo, "can_redo": self.dispatcher.can_redo,
+                    "active_object": asdict(self._selected) if self._selected else None,
+                    "document_epoch": self._document_epoch,
                     "capabilities": {"undo": True, "save": True, "curve_edit": True, "solver_execution": False}}
 
     def tree_nodes(self):
@@ -193,13 +203,18 @@ class CurveSession:
                         PropertySpec("points", "Curve points", curve["points"], kind="table", group="Curve",
                                      unit=curve["y_unit"], components=(curve["x_unit"], curve["y_unit"]))]
             material = state["material"]
+            candidates = tuple(node for node in self.tree_nodes() if node.ref.kind == "curve")
+            selected = next((node.ref for node in candidates if node.ref.object_id == material["reference_curve"]), None)
             return [PropertySpec("name", "Name", material["name"], kind="text"),
                     PropertySpec("density", "Density", material["density"], unit="kg/m³", unit_choices=("kg/m³", "g/cm³"), group="Elastic material", minimum=0,
                                  unit_scales=(("kg/m³", 1), ("g/cm³", 1000))),
                     PropertySpec("young_modulus", "Young's modulus", material["young_modulus"], unit="MPa", unit_choices=("MPa", "GPa"), group="Elastic material", minimum=0,
                                  unit_scales=(("MPa", 1), ("GPa", 1000))),
                     PropertySpec("poisson_ratio", "Poisson's ratio", material["poisson_ratio"], unit="1", group="Elastic material", minimum=-1, maximum=.5),
-                    PropertySpec("direction", "Material direction", material["direction"], kind="vector", unit="1", components=("X", "Y", "Z"), group="Orientation")]
+                    PropertySpec("direction", "Material direction", material["direction"], kind="vector", unit="1", components=("X", "Y", "Z"), group="Orientation"),
+                    PropertySpec("reference_curve", "Associated curve", selected, kind="reference",
+                                 group="Reference (not a constitutive law)", choices=(None,) + tuple(node.ref for node in candidates),
+                                 choice_labels=("No curve",) + tuple(node.label for node in candidates))]
 
     def submit(self, command):
         with self._lock:
@@ -225,6 +240,12 @@ class CurveSession:
                     value = finite(value)
                     if unit == "GPa": value *= 1000
                     if unit == "g/cm³": value *= 1000
+                elif spec.kind == "reference":
+                    if value is not None:
+                        self._validate_target(value)
+                        if value.kind != "curve":
+                            raise PrepError("invalid_reference", "Select an existing curve.")
+                        value = value.object_id
                 values[name] = deepcopy(value)
             # Validate before Dispatcher receives a state; no partial edits escape.
             candidate = MaterialCurveResource(state, self.resource.id).snapshot()
@@ -244,13 +265,18 @@ class CurveSession:
 
     def select(self, target):
         with self._lock:
-            self._validate_target(target)
+            if target is not None:
+                self._validate_target(target)
             self._selected = target
             self._notify("selection")
             return target
 
     def selection(self):
         return self._selected
+
+    def active_object(self):
+        with self._lock:
+            return self._selected
 
     def undo(self):
         with self._lock:

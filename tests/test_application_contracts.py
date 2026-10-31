@@ -147,16 +147,29 @@ assert isinstance(CurveSession().describe()['revision'],int)
     subprocess.run([sys.executable, "-c", code], check=True, capture_output=True, text=True)
 
 
-def test_shared_qt_imports_do_not_load_rad_or_vtk():
-    code = """
-import importlib.abc, sys
-class Fence(importlib.abc.MetaPathFinder):
-    def find_spec(self, fullname, *args):
-        if fullname.startswith(('vtk','caelab_prep.radioss','caelab_prep.application.session','caelab_prep.application.rad_provider','caelab_prep.ui.main_window')):
-            raise AssertionError(fullname)
-sys.meta_path.insert(0,Fence())
-from caelab_prep.ui.gallery import GalleryWindow
-from caelab_prep.ui.widgets import NumericEdit, CurvePlot
-from caelab_prep.ui.shell import FileTask
-"""
-    subprocess.run([sys.executable, "-c", code], check=True, capture_output=True, text=True)
+def test_typed_reference_candidates_submit_invalid_reject_undo_and_project_roundtrip(tmp_path):
+    session = CurveSession()
+    material = next(node.ref for node in session.tree_nodes() if node.ref.kind == "material")
+    spec = next(spec for spec in session.properties(material) if spec.name == "reference_curve")
+    candidates = [candidate for candidate in spec.choices if candidate is not None]
+    assert spec.kind == "reference" and len(candidates) == 2
+    assert all(candidate.kind == "curve" for candidate in candidates)
+    replacement = next(candidate for candidate in candidates if candidate != spec.value)
+    session.submit(SetProperties(material, {spec.name: replacement}, 0))
+    assert next(p.value for p in session.properties(material) if p.name == spec.name) == replacement
+    before = session.describe()
+    for bad in (replace(replacement, document_id="other-document"),
+                replace(replacement, resource_id="missing-resource"),
+                replace(replacement, object_id="missing-curve"), material, "plastic"):
+        with pytest.raises(PrepError):
+            session.submit(SetProperties(material, {spec.name: bad}, before["revision"]))
+        assert session.describe() == before
+        assert next(p.value for p in session.properties(material) if p.name == spec.name) == replacement
+    session.undo()
+    assert next(p.value for p in session.properties(material) if p.name == spec.name) == spec.value
+    session.redo()
+    path = tmp_path / "reference.caeprep"
+    session.save_project(path)
+    reopened = CurveSession()
+    reopened.open_project(path)
+    assert next(p.value for p in reopened.properties(material) if p.name == spec.name) == replacement

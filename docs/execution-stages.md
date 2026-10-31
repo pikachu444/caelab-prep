@@ -337,17 +337,40 @@ caelab-prep mesh INPUT.step --output OUT --size 2.0 --dimension 3
 
 ### 2026-10-31 첫 구현 결과
 
-**P1–P3 구현 완료 / Windows 확인 보류. A 완료 아님.** 전용 브랜치 `feat/shared-gui-foundation`에서 공용 계약·디자인·위젯·실행 갤러리·RAD adapter/실제 화면·중립 codec을 구현했다. 초기 main은 `4828818`이며 원격 push/PR/병합과 Workbench 변경은 하지 않았다.
+**원보고의 완료 판정 정정.** `6a2c96e`에서 공용 위젯·편집·저장 경로를 구현하고 Windows 확인 보류로 보고했지만, 이후 원요구 대조에서 카탈로그 외에도 여섯 항목의 누락을 확인했다. P1–P3 구현이 완료됐다고 한 판정은 과했으며 아래 보완/재리뷰 결과로 대체한다. 당시 원격 게시 전의 구현 기록은 보존한다.
 
 - 통합과 공용 Qt/RAD 구현: GPT-6.1 Sol/high. 계약 검토와 작성자와 다른 독립 코드·기능·렌더 검토: GPT-6 Astra/xhigh. 파일 소유를 나누고 통합자가 최종 수정·검사를 수행했다.
 - A2/A3: 실제 RAD와 갤러리가 같은 디자인·Action·model/view 트리·그룹 속성·숫자/단위·벡터·곡선 표/plot·도킹·뷰포트 프레임·비동기 FileTask를 사용한다. 선택·초안·검증·한 명령/Undo·dirty·저장이 연결된다. unsupported 동작은 활성 mock으로 추가하지 않았다.
 - A4/A5: 원래 작은 회귀 자료와 `examples/rad/shell_panels_0000.rad`(27절점/12quad/3파트), `solid_blocks_0000.rad`+INCLUDE(16절점/2hex/2파트)를 같은 경로로 읽고 지원 필드·기존 FUNCT/속도 벡터를 편집했다. `.caeprep` 재열기·RAD 출력의 값·미지원 원문·BCS/IPLAS·INCLUDE 보존과 기존 CLI 새 프로세스 흐름을 확인했다. 중립 재료/곡선은 RAD import 차단 상태의 새 프로세스에서 재열었다. 이 예제는 편집 검증 입력이며 솔버 계산 검증 모델이 아니다.
 - A6/A8: 불완전 숫자/NaN/Inf·부분 오류 batch·단위·오래된 문서/개정·입력 중 외부 교체·저장/읽기 실패·닫기 취소·활성 표 셀 저장·picker 충돌을 검증했다. 위젯은 초안을 유지하고 확정값은 바뀌지 않는다. 공용 Qt/갤러리는 RAD/VTK/main_window import를 금지한 프로세스에서 로드된다. `[widgets]`는 Qt만 요구하며 `[gui]` 호환 경로를 유지한다.
-- 최종 관련 검사: `test_document_core`, `test_radioss_editing`, `test_project_roundtrip`, `test_cli_workflow`, `test_application_contracts`, `test_common_widgets`, `test_rad_provider`, `test_gui_document_flow` **70 passed, 1 skipped**. skip은 Windows에서 대소문자만 다른 두 파일을 만들 수 없는 기존 검사다. 독립 검토의 남은 코드/기능 결함은 없음. setuptools backend wheel 생성도 성공했다. 깨끗한 설치형 배포 검증은 이번 범위가 아니다.
+- 당시 로컬 관련 검사: `test_document_core`, `test_radioss_editing`, `test_project_roundtrip`, `test_cli_workflow`, `test_application_contracts`, `test_common_widgets`, `test_rad_provider`, `test_gui_document_flow` **70 passed, 1 skipped**. skip은 Windows에서 대소문자만 다른 두 파일을 만들 수 없는 기존 검사다. 동작 중심 검토의 통과는 원요구 전체 충족을 증명하지 못했다. 이 수치를 기존 원격 CI 전체 보장으로 해석하지 않는다. setuptools backend wheel 생성도 성공했다. 깨끗한 설치형 배포 검증은 이번 범위가 아니다.
 - A7: 설치된 Windows Segoe UI/Malgun 글꼴을 QA 프로세스에 로드한 Qt offscreen 정상/좁은 창·오류/벡터/곡선 렌더를 작성자와 독립 검토자가 확인하고 수정했다. `docs/gallery-preview.png`는 그 미리보기다. **실제 Windows 입력·100/150/200% DPI·도킹 이동/재시작 배치·VTK 조작은 미확인**이다. 실제 Qt/VTK 프로세스의 창 `52953454`(two_shell_plates_0000.rad — CAELab Prep)는 Windows 창 목록에 나타났지만, `cua.getApp`의 앱 접근 승인이 시간 초과됐다. 승인이 완료되지 않은 상태이며 UI 입력/캡처는 실행하지 않았고 우회/재시도하지 않았다. 최종 창 목록에는 테스트 창이 남아 있지 않다.
 - 세션 공유 URL: 공유 도구가 `Thread sharing permissions or account policy could not be determined`를 반환해 생성하지 못했다. 검증된 공유 URL이 없어 임의 링크를 만들지 않았다.
 
-다음은 접근 승인 가능한 실제 Windows 세션에서 위 A7 항목만 확인하는 것이다. C/B·Workbench·새 RAD 카드/Engine·고급 메셔·MCP 전체·설치형 배포를 A 종료 조건에 추가하지 않는다.
+### 2026-10-31 원범위 여섯 항목 보완과 재리뷰
+
+`6a2c96e` 다음 로컬 보완이다. 구현팀은 파일 소유를 나눈 Sol/high 두 명과 통합자, 검증팀은 Sol/high, **리뷰팀 하나**에는 요구사항 비판 Astra/xhigh·구현 옹호 Sol/xhigh·코드/회귀 위험 독립 검토 Sol/high를 두었다. 원래 충족한 편집/보존 기능은 인정하고 잘못된 범위 확대는 반박했으며, 유효 지적은 코드/동작 수정 뒤 재검토했다. 새 로컬 sidebar 세션을 생성한 것이 아니다.
+
+| 원범위 누락 | 실제 보완과 확인 |
+|---|---|
+| 선택 계약 | 공통 `SelectionProvider.select/active_object`를 두 provider와 창에서 사용. 기존 native PART→표시 요소 하나의 관계로 트리·읽기 전용 속성·모든 관련 요소 강조 연결. 문서 epoch·문서 revision·resource token·projection_revision이 있는 pick/clear를 검증해 같은 ID로 재열어도 이전 pick 거부. 스칼라 변경 뒤 투영을 재생성하지 않고 stamp 갱신. 원 ID/중복 ambiguity 검사 보존 |
+| 공용 Action/셸 | 두 창이 `ActionRegistry` identity/capability/context/state와 `FileEditCoordinator` 초안/저장/닫기 절차를 실제 공유. RAD도 공용 ViewportFrame에 renderer 주입. RAD 자동 Apply와 중립 수동 Apply 차이는 유지. 외부 승인 선택은 초안을 보존하고 Apply/Revert 후 반영 |
+| 디자인 원본 | `design/tokens.py`를 QSS·SVG·위젯 수치·plot 색의 실제 원본으로 사용. 기존 아이콘 보존, 부족한 section/load/contact/set/select/result/job만 추가. RAD의 실제 카드 범주를 의미 아이콘에 매핑 |
+| 참조 입력 | 중립 재료의 Associated curve에서 표시명–typed ObjectRef 후보를 선택해 같은 명령/Undo/save/reopen 경로 사용. 잘못된 문서/자원/종류/대상 거부와 부분 변경 없음 확인. 중립 codec v2 저장/v1·v2 읽기, 기존 RAD v1 유지. 솔버 구성 법칙이나 B 모델 관계 일반화 아님 |
+| 카탈로그 | 부품별 의미 키·용도·소스·실제 소비 장면·상태·출처/허용 조건과 조작 가능한 상태/입력 장면 제공. 툴바 Browse component catalogue / View / Ctrl+Shift+G로 발견·탐색. 재료/곡선 화면은 조합 사용 예로 구분. 좁은 창에서 설명 prefix가 가려지던 현상은 스크롤 가능한 plain-text 설명으로 수정 |
+| RAD 닫기 | invalid draft 또는 dirty일 때 Save/Discard/Cancel을 먼저 질문. Discard는 검증 없이 명시 폐기, Save만 검증, Cancel/Save 실패는 창/초안 보존. 모달 focus-loss 자동 적용·중첩 close·첫 비동기 Save와 실패 복원을 수정/확인 |
+
+최종 통합 로컬 여덟 관련 suite는 **99 passed, 1 skipped**(case-sensitive 파일명 필요). 이후 마지막 설명 위젯 변경은 영향받은 카탈로그 2건, 마지막 셸 보호 변경은 Qt GUI/공용 위젯 41건과 교체 후 invalid-curve 닫기 경로로 확인했다. 실제 VTK 선택 추출 코드로 모든 승인 ref와 stamp를 검사했으나 OpenGL 창을 열지 않았다. 무관한 Gmsh 재검사는 하지 않았다.
+
+CI workflow는 기존에 빠졌던 application contracts/RAD provider를 core matrix에, common widgets를 Qt job에 포함했다. 현재 수집 기준 core 59건(각 Linux/Windows), Qt 41건이다. **이 새 workflow를 원격에서 실행한 결과는 없다.** 이전 CI `41137052412` 성공은 이전 포함 범위에 한정한다.
+
+리뷰팀의 [요구사항 비판 근거](reviews/20261031-requirements-critic.md), [구현 옹호·반박 근거](reviews/20261031-implementation-defender.md), [코드·회귀 검토 근거](reviews/20261031-code-review.md)를 함께 보존했다. 선택 helper 우회, 닫기 순서/focus loss, 저장된 두 번째 곡선 표시, numeric PART ID alias, 외부 선택의 지연 반영, 카탈로그 설명 가림 지적을 실제 수정했다. 최종 이미지의 가림 여부에 있던 의견 차이는 동일 PNG 바이트를 다시 확인해 해소했으며, 원범위 여섯 항목에 남은 blocker는 없다.
+
+**남은 것은 A7 실제 Windows 입력·100/150/200% DPI·도킹 이동/재시작·VTK 조작 확인이다. A 전체 완료가 아니다.** `docs/catalogue-preview.png`는 실제 Gallery 객체의 Qt offscreen 렌더이며 데스크톱 캡처가 아니다. 앱 접근 승인 시간초과를 우회하거나 재시도하지 않았다. B/C·Workbench·새 RAD 카드/Engine·고급 메셔·MCP·전체 설치 배포를 종료 조건으로 추가하지 않는다.
+
+사용자 재개 지시에 따라 같은 기존 세션에서 보존된 최종 코드를 다시 확인했다. 새 전체 관련 실행은 **99 passed, 1 skipped / 10.18s**, 실패·오류 없음이다. JUnit은 `.test-tmp/final-all-modifications-verification.xml`이다. 세 리뷰어가 소스·설계 요구·동작 근거를 다시 대조해 여섯 항목은 통과로 유지했다. 현재 런타임의 453개 도구에는 CUA/sky/node_repl/데스크톱 제어가 없고 Computer Use 스킬 패키지와 이전 파일 경로도 사용할 수 없었다. 따라서 실제 A7은 실행 불가이며 새 권한 거절이 발생한 것은 아니다.
+
+최신 사용자 지시는 원범위 차단과 중요한 미검증이 해소되고 정확한 최종 SHA의 필수 CI가 통과하면 PR/main 병합을 허용하는 **조건부 승인**이다. 리뷰팀 세 명 모두 실제 A7을 중요한 미검증으로 판단했다. 작업 브랜치 게시·정확한 SHA의 CI·초안 PR 정리는 진행하되, CI 성공으로 실제 Windows 확인을 대체하거나 병합하지 않는다. 별도 GitHub APPROVE·보호 규칙 우회·자동 병합도 수행하지 않는다.
 
 - `shared-cae-foundation-plan.md`: P0–P9 번호와 A1–A8은 유지. 9절 P6/P7/P8 표의 세부 단계·선행 관계, 10절 묶음 C와 종료 상태, 12절 미확정 처리의 유한 결정을 반영한다. 단계별 실행·검사는 본 작업서에서 관리하고 기존 문서에는 링크와 묶음 표만 둔다.
 - `cae-model-data-design.md`: 7절의 P6→P6a/b/c, P7→P7a/b/c 설명을 맞추고 8절 B1–B6은 그대로 유지한다. P6a/C가 B나 반복 instance 편집 완료가 아님을 명시한다. P7 일반 재메시라는 기존 문구는 P7b로 구체화한다.

@@ -16,10 +16,10 @@ from PySide6.QtWidgets import (
 )
 
 from .theme import STYLESHEET
-from .actions import create_action
-from .shell import FileTask as _FileTask, create_dock
+from .actions import ActionRegistry
+from .shell import FileEditCoordinator, FileTask as _FileTask, ViewportFrame, create_dock
 from .widgets import CurvePlot, CurveTable, ModelTree, PropertyEditor, VectorEdit
-from ..application.contracts import SetProperties
+from ..application.contracts import ActionSpec, SetProperties
 from ..application.rad_provider import RadProvider
 
 
@@ -66,13 +66,22 @@ class MainWindow(QMainWindow):
         self._selected_card_id = None
         self._editor_revision = None
         self._replacement_conflict = False
+        self._pending_selection = False
         self._updating = False
         self._allow_close = False
         self._closed = False
         self._last_presented_document = None
+        self._last_presented_epoch = None
         self._last_presented_revision = -1
         self.field_editors = {}
         self._field_specs = {}
+        self.actions = ActionRegistry(self)
+        self.file_edits = FileEditCoordinator(
+            self, has_draft=lambda: bool(self._text_drafts()) or self._replacement_conflict,
+            finish=self._finish_pending_edits, discard=self._discard_pending_edits,
+            is_dirty=lambda: bool(self._summary().get("dirty")),
+            save=lambda continuation: self.save_project_dialog(on_saved=continuation),
+            capture=self._capture_pending_edits, restore=self._restore_pending_edits)
         self._settings = QSettings("CAELab", "Prep")
         self.setObjectName("caelabPrepWindow")
         self.setWindowTitle("CAELab Prep")
@@ -107,22 +116,25 @@ class MainWindow(QMainWindow):
         self._unsubscribe = self.session.subscribe(self._sessionEvent.emit)
         self.refresh_document(rebuild_viewport=bool(self._summary().get("document_id")))
 
-    def _action(self, key, label, callback, shortcut=None, *, checkable=False):
-        return create_action(self, key, label, callback, shortcut, checkable=checkable)
+    def _action(self, key, label, callback, shortcut="", *, checkable=False, action_id=None, capability="", contexts=()):
+        return self.actions.register(ActionSpec(action_id or key, label, shortcut=shortcut,
+                                     capability=capability, icon=key, contexts=contexts,
+                                     checkable=checkable), callback)
 
     def _create_actions(self):
-        self.open_rad_action = self._action("open", "Open Radioss deck…", self.open_rad_dialog, QKeySequence.StandardKey.Open)
-        self.open_project_action = self._action("project", "Open project…", self.open_project_dialog, "Ctrl+Shift+O")
-        self.save_action = self._action("save", "Save project", self.save_project_dialog, QKeySequence.StandardKey.Save)
-        self.save_as_action = self._action("save", "Save project as…", lambda: self.save_project_dialog(force_new=True), QKeySequence.StandardKey.SaveAs)
-        self.export_action = self._action("export", "Export Radioss deck…", self.export_rad_dialog, "Ctrl+E")
-        self.undo_action = self._action("undo", "Undo", lambda: self._history("undo"), QKeySequence.StandardKey.Undo)
-        self.redo_action = self._action("redo", "Redo", lambda: self._history("redo"), QKeySequence.StandardKey.Redo)
-        self.reload_properties_action = self._action("card", "Reload properties", self._reload_properties, "Ctrl+R")
-        self.fit_action = self._action("fit", "Fit model", self._fit, "F")
-        self.iso_action = self._action("iso", "Isometric view", self._isometric, "0")
-        self.edges_action = self._action("edges", "Show mesh edges", self._toggle_edges, checkable=True)
+        self.open_rad_action = self._action("open", "Open Radioss deck…", self.open_rad_dialog, QKeySequence.StandardKey.Open, action_id="file.open")
+        self.open_project_action = self._action("project", "Open project…", self.open_project_dialog, "Ctrl+Shift+O", action_id="file.open_project")
+        self.save_action = self._action("save", "Save project", self.save_project_dialog, QKeySequence.StandardKey.Save, action_id="file.save", capability="save")
+        self.save_as_action = self._action("save", "Save project as…", lambda: self.save_project_dialog(force_new=True), QKeySequence.StandardKey.SaveAs, action_id="file.save_as", capability="save")
+        self.export_action = self._action("export", "Export Radioss deck…", self.export_rad_dialog, "Ctrl+E", action_id="file.export", capability="radioss_raw_preservation")
+        self.undo_action = self._action("undo", "Undo", lambda: self._history("undo"), QKeySequence.StandardKey.Undo, action_id="edit.undo", capability="undo")
+        self.redo_action = self._action("redo", "Redo", lambda: self._history("redo"), QKeySequence.StandardKey.Redo, action_id="edit.redo", capability="undo")
+        self.reload_properties_action = self._action("card", "Reload properties", self._reload_properties, "Ctrl+R", action_id="edit.reload")
+        self.fit_action = self._action("fit", "Fit model", self._fit, "F", action_id="view.fit", contexts=("mesh",))
+        self.iso_action = self._action("iso", "Isometric view", self._isometric, "0", action_id="view.isometric", contexts=("mesh",))
+        self.edges_action = self._action("edges", "Show mesh edges", self._toggle_edges, checkable=True, action_id="view.edges", contexts=("mesh",))
         self.edges_action.setChecked(True)
+        self.close_action = self._action("card", "Exit", self.close, QKeySequence.StandardKey.Quit, action_id="file.close")
 
     def _create_menus(self):
         menu = self.menuBar().addMenu("&File")
@@ -130,8 +142,7 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addActions([self.save_action, self.save_as_action, self.export_action])
         menu.addSeparator()
-        quit_action = menu.addAction("Exit", self.close)
-        quit_action.setShortcut(QKeySequence.StandardKey.Quit)
+        menu.addAction(self.close_action)
         edit = self.menuBar().addMenu("&Edit")
         edit.addActions([self.undo_action, self.redo_action])
         edit.addSeparator()
@@ -168,16 +179,18 @@ class MainWindow(QMainWindow):
                 self.viewport = MeshViewport(self)
                 self.viewport.entityPicked.connect(self._entity_picked)
                 self.viewport.diagnostic.connect(self._append_message)
-                self.setCentralWidget(self.viewport)
+                content = self.viewport
             except Exception as exc:
                 label = QLabel(f"3D viewer could not start.\n{exc}")
                 label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 label.setWordWrap(True)
-                self.setCentralWidget(label)
+                content = label
         else:
             label = QLabel("3D viewer disabled for this session")
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.setCentralWidget(label)
+            content = label
+        self.viewport_frame = ViewportFrame(content, "Model", "Elements / nodes")
+        self.setCentralWidget(self.viewport_frame)
 
     def _dock(self, name, title, widget, area):
         return create_dock(self, name, title, widget, area, menu=self._view_menu)
@@ -246,10 +259,21 @@ class MainWindow(QMainWindow):
         if self._closed or self._busy:
             return
         kind = event.get("kind")
-        same_document = event.get("document_id") == self._last_presented_document
+        same_document = (event.get("document_id") == self._last_presented_document
+                         and event.get("document_epoch") == self._last_presented_epoch)
         if kind == "selection":
             if self.viewport:
                 self.viewport.set_selection(self.session.selection())
+            active = self.provider.active_object()
+            target_id = active.object_id if active else None
+            if target_id != self._selected_card_id:
+                if self._text_drafts():
+                    self._pending_selection = True
+                    self.statusBar().showMessage("Selection changed. Finish or reload the current property draft before showing the selected object.")
+                    return
+                self._selected_card_id = target_id
+                self._focus_tree_card(target_id)
+                self._refresh_fields()
             return
         if kind == "field" and same_document and event.get("revision", -1) <= self._last_presented_revision:
             return
@@ -301,6 +325,7 @@ class MainWindow(QMainWindow):
             if self.viewport is not None and summary.get("document_id"):
                 self.viewport.set_selection(self.session.selection())
             self._last_presented_document = summary.get("document_id")
+            self._last_presented_epoch = summary.get("document_epoch")
             self._last_presented_revision = summary.get("revision", 0)
             self.statusBar().showMessage("Ready" if summary.get("document_id") else "Open a Radioss deck or a saved project")
         finally:
@@ -310,13 +335,11 @@ class MainWindow(QMainWindow):
         summary = summary or self._summary()
         loaded = bool(summary.get("document_id"))
         editable = not self._busy and not self._replacement_conflict
-        for action in [self.open_rad_action, self.open_project_action]:
-            action.setEnabled(not self._busy)
-        for action in [self.save_action, self.save_as_action, self.export_action]:
-            action.setEnabled(loaded and editable)
-        self.undo_action.setEnabled(bool(summary.get("can_undo")) and editable)
-        self.redo_action.setEnabled(bool(summary.get("can_redo")) and editable)
-        self.reload_properties_action.setEnabled(loaded and not self._busy)
+        self.actions.refresh(summary, busy=self._busy,
+                             context="mesh" if loaded and self.viewport is not None else "",
+                             enabled={"file.save": loaded and editable, "file.save_as": loaded and editable,
+                                      "file.export": loaded and editable, "edit.undo": editable,
+                                      "edit.redo": editable, "edit.reload": loaded})
         self._form_host.setEnabled(not self._busy)
         self.apply_vector_button.setEnabled(not self._busy)
         self.curve_table.setEnabled(not self._busy)
@@ -325,7 +348,7 @@ class MainWindow(QMainWindow):
             self.viewport.setEnabled(editable)
         self.pick_mode.setEnabled(loaded and self.viewport is not None and editable)
         for action in [self.fit_action, self.iso_action, self.edges_action]:
-            action.setEnabled(loaded and self.viewport is not None and editable)
+            action.setEnabled(action.isEnabled() and editable)
 
     def _refresh_tree(self):
         nodes = self.provider.tree_nodes()
@@ -352,6 +375,12 @@ class MainWindow(QMainWindow):
         if not self._finish_pending_edits():
             self._focus_tree_card(self._selected_card_id)
             return
+        try:
+            self._activate_card(ref)
+        except Exception as exc:
+            self._focus_tree_card(self._selected_card_id)
+            self._show_error(exc)
+            return
         self._selected_card_id = target_id
         self._focus_tree_card(target_id)
         self._refresh_fields()
@@ -360,18 +389,36 @@ class MainWindow(QMainWindow):
         """Restore selection after a rejected draft without rebuilding rows."""
         ref = self._card_refs.get(card_id)
         if ref is None:
+            self.model_tree.blockSignals(True)
+            self.model_tree.clearSelection()
+            self.model_tree.selectionModel().clearCurrentIndex()
+            self.model_tree.blockSignals(False)
             return False
         self.model_tree.blockSignals(True)
         self.model_tree.select_ref(ref)
         self.model_tree.blockSignals(False)
         return True
 
+    def _activate_card(self, ref):
+        self.provider.select(ref)
+        selection = self.session.selection()
+        if self.viewport:
+            self.viewport.set_selection(selection)
+        self.selectionChanged.emit(selection)
+
     def select_card(self, card_id):
         """Select a model card through the same guarded interaction as the tree."""
         if self._busy or not self._finish_pending_edits():
             return False
-        if not self._focus_tree_card(card_id):
+        ref = self._card_refs.get(card_id)
+        if ref is None:
             return False
+        try:
+            self._activate_card(ref)
+        except Exception as exc:
+            self._show_error(exc)
+            return False
+        self._focus_tree_card(card_id)
         self._selected_card_id = card_id
         self._refresh_fields()
         return True
@@ -422,6 +469,8 @@ class MainWindow(QMainWindow):
         self._field_specs = {field["name"]: field for field in fields}
         self.field_editors = dict(self.property_editor.editors)
         for name, editor in self.property_editor.editors.items():
+            if not editor.isEnabled():
+                continue
             if isinstance(editor, VectorEdit):
                 self.property_editor.setMinimumHeight(240)
                 for component, child in zip(("vx", "vy", "vz"), editor.editors):
@@ -450,11 +499,14 @@ class MainWindow(QMainWindow):
             self.curve_table.show()
             self.curve_plot.show()
             self.units_note.setText(unit_note + "\nApply curve commits all existing rows together.")
-        if not fields:
+        if not fields and not specs:
             self.property_subtitle.setText(str(card.get("keyword") or "") + "\nPreserved read-only; no supported fields.")
+        elif specs and not any(spec.editable for spec in specs):
+            self.property_subtitle.setText(str(card.get("keyword") or "") + "\nRead-only native object summary")
+            self.units_note.setText("Selecting this native part highlights its displayed elements.")
 
     def _commit_text(self, name, editor):
-        if self._updating or not editor.isModified():
+        if self._updating or self.file_edits.choosing or not editor.isModified():
             return True
         if name in ("vx", "vy", "vz") and "velocity" in self.property_editor.editors:
             return self._commit_vector()
@@ -497,6 +549,7 @@ class MainWindow(QMainWindow):
             self._show_error(exc)
             return False
         self.refresh_document()
+        self._consume_pending_selection()
         self.statusBar().showMessage("Initial velocity updated", 5000)
         return True
 
@@ -513,6 +566,7 @@ class MainWindow(QMainWindow):
             self._show_error(exc)
             return False
         self.refresh_document()
+        self._consume_pending_selection()
         self.statusBar().showMessage("Curve points updated", 5000)
         return True
 
@@ -537,6 +591,7 @@ class MainWindow(QMainWindow):
         label = _field_label(spec) if spec else "Property"
         self.refresh_document()
         self._restore_text_drafts(drafts)
+        self._consume_pending_selection()
         self.statusBar().showMessage(f"{label} updated", 5000)
         return True
 
@@ -557,6 +612,35 @@ class MainWindow(QMainWindow):
                 editor.setText(text)
                 editor.setModified(True)
 
+    def _capture_pending_edits(self):
+        drafts = self._text_drafts()
+        points = None
+        if ("@curve" in drafts and self._summary().get("document_epoch") == self._last_presented_epoch
+                and not self._replacement_conflict):
+            points = next(spec.value for spec in self.provider.properties(self._card_refs[self._selected_card_id])
+                          if spec.kind == "table")
+        return self._selected_card_id, drafts, self._pending_selection, points
+
+    def _restore_pending_edits(self, state):
+        card_id, drafts, pending, points = state
+        if self._selected_card_id != card_id:
+            self._selected_card_id = card_id
+            self._focus_tree_card(card_id)
+            self._refresh_fields()
+        if points is not None:
+            self.curve_table.set_points(points)
+        self._restore_text_drafts(drafts)
+        self._pending_selection = pending
+
+    def _consume_pending_selection(self):
+        if not self._pending_selection or self._text_drafts() or self._replacement_conflict:
+            return
+        self._pending_selection = False
+        active = self.provider.active_object()
+        self._selected_card_id = active.object_id if active else None
+        self._focus_tree_card(self._selected_card_id)
+        self._refresh_fields()
+
     def _reload_properties(self):
         if self._busy:
             return
@@ -569,6 +653,7 @@ class MainWindow(QMainWindow):
             self.refresh_document(rebuild_viewport=True)
         else:
             self._refresh_fields()
+        self._consume_pending_selection()
 
     def _finish_pending_edits(self):
         """A validator's intermediate text must never be silently discarded by Save."""
@@ -589,7 +674,13 @@ class MainWindow(QMainWindow):
                 return False
             if not self._commit_curve(points):
                 return False
+        self._consume_pending_selection()
         return True
+
+    def _discard_pending_edits(self):
+        self._replacement_conflict = False
+        self.refresh_document(rebuild_viewport=True)
+        self._consume_pending_selection()
 
     def _history(self, command):
         if self._busy or not self._finish_pending_edits():
@@ -642,28 +733,21 @@ class MainWindow(QMainWindow):
             self._active_task = None
             self._progress.hide()
             self._refresh_actions()
+            self.file_edits.save_failed()
             self._show_error(exc)
             self.operationFinished.emit(label, False)
 
         task.signals.complete.connect(done)
         task.signals.failed.connect(failed)
         QThreadPool.globalInstance().start(task)
+        return True
 
     def _operation_changed(self, state):
         self.operation_state = state
         self._progress.setAccessibleDescription(f"{state.operation_id}: {state.status}")
 
     def _before_replace(self, continuation):
-        if not self._finish_pending_edits():
-            return
-        if not self._summary().get("dirty"):
-            continuation()
-            return
-        answer = QMessageBox.question(self, "Unsaved changes", "Save changes to the current project?", QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Save)
-        if answer == QMessageBox.StandardButton.Save:
-            self.save_project_dialog(on_saved=continuation)
-        elif answer == QMessageBox.StandardButton.Discard:
-            continuation()
+        return self.file_edits.guard(continuation)
 
     def open_rad_dialog(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Open Radioss deck", "", "Radioss decks (*.rad);;All files (*)")
@@ -697,32 +781,32 @@ class MainWindow(QMainWindow):
 
     def save_project_dialog(self, checked=False, *, force_new=False, on_saved=None):
         if self._busy:
-            return
+            return False
         if not self._finish_pending_edits():
-            return
+            return False
         path = None if force_new else self._project_path
         if path is None:
             default = self._source_path.with_suffix(".caeprep") if self._source_path else Path("model.caeprep")
             filename, _ = QFileDialog.getSaveFileName(self, "Save CAELab Prep project", str(default), "CAELab Prep projects (*.caeprep)")
             if not filename:
-                return
+                return False
             path = Path(filename)
             if not path.suffix:
                 path = path.with_suffix(".caeprep")
-        self.save_project_file(path, on_saved=on_saved)
+        return self.save_project_file(path, on_saved=on_saved)
 
     def save_project_file(self, filename, *, on_saved=None):
         if self._busy:
-            return
+            return False
         if not self._finish_pending_edits():
-            return
+            return False
         def saved(_):
             self._project_path = Path(filename)
             self.refresh_document()
             self.statusBar().showMessage("Project saved", 5000)
             if on_saved:
                 on_saved()
-        self._start_task("Save project", lambda: self.session.save_project(str(filename)), saved)
+        return self._start_task("Save project", lambda: self.session.save_project(str(filename)), saved)
 
     def export_rad_dialog(self):
         if self._busy:
@@ -749,7 +833,13 @@ class MainWindow(QMainWindow):
         if self._busy or self._replacement_conflict:
             return
         try:
-            selection = self.session.select_entity(entity["kind"], entity["id"]) if entity.get("kind") else self.session.clear_selection()
+            if self._text_drafts():
+                if not self._finish_pending_edits():
+                    return
+                # Finishing input can replace the projection stamp; the user picks again.
+                self.statusBar().showMessage("Properties applied. Pick the model again.")
+                return
+            selection = self.session.select_pick(entity)
         except Exception as exc:
             self._show_error(exc)
             return
@@ -785,17 +875,16 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage("Wait for the current file operation to finish")
             event.ignore()
             return
-        if not self._allow_close and not self._finish_pending_edits():
-            event.ignore()
-            return
-        if not self._allow_close and self._summary().get("dirty"):
-            answer = QMessageBox.question(self, "Unsaved changes", "Save changes before closing?", QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Save)
-            if answer == QMessageBox.StandardButton.Cancel:
+        if not self._allow_close:
+            deciding = True
+            def continue_close():
+                self._allow_close = True
+                if not deciding:
+                    self.close()
+            proceed = self.file_edits.guard(continue_close)
+            deciding = False
+            if not proceed:
                 event.ignore()
-                return
-            if answer == QMessageBox.StandardButton.Save:
-                event.ignore()
-                self.save_project_dialog(on_saved=self._close_after_save)
                 return
         self._settings.setValue("windowGeometry", self.saveGeometry())
         self._settings.setValue("windowState", self.saveState(1))

@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QHBoxLayout,
 
 from .numeric import NumericEdit, VectorEdit
 from .tree import field
+from ..design import TOKENS
 
 
 class PropertyEditor(QWidget):
@@ -18,8 +19,8 @@ class PropertyEditor(QWidget):
         self.errors = {}
         self.unit_selectors = {}
         self._layout = QVBoxLayout(self)
-        self._layout.setContentsMargins(10, 9, 10, 9)
-        self._layout.setSpacing(7)
+        self._layout.setContentsMargins(TOKENS["space_lg"], TOKENS["panel_pad_y"], TOKENS["space_lg"], TOKENS["panel_pad_y"])
+        self._layout.setSpacing(TOKENS["form_spacing"])
         self.title = QLabel("Select an object")
         self.title.setObjectName("propertyTitle")
         self.title.setWordWrap(True)
@@ -40,8 +41,8 @@ class PropertyEditor(QWidget):
         self.editors, self.specs, self.errors, self.unit_selectors = {}, {}, {}, {}
         body = QWidget()
         layout = QVBoxLayout(body)
-        layout.setContentsMargins(0, 3, 0, 0)
-        layout.setSpacing(10)
+        layout.setContentsMargins(0, TOKENS["control_pad_y"], 0, 0)
+        layout.setSpacing(TOKENS["space_lg"])
         groups = {}
         for spec in specs:
             name = field(spec, "name")
@@ -53,8 +54,8 @@ class PropertyEditor(QWidget):
                 layout.addWidget(heading)
                 form = QFormLayout()
                 form.setContentsMargins(0, 0, 0, 0)
-                form.setHorizontalSpacing(8)
-                form.setVerticalSpacing(7)
+                form.setHorizontalSpacing(TOKENS["form_column_gap"])
+                form.setVerticalSpacing(TOKENS["form_spacing"])
                 form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
                 form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
                 layout.addLayout(form)
@@ -73,10 +74,12 @@ class PropertyEditor(QWidget):
                 editor = QCheckBox()
                 editor.setChecked(bool(value))
                 editor.toggled.connect(self.draftChanged)
-            elif kind == "choice":
+            elif kind in ("choice", "reference"):
                 editor = QComboBox()
-                for choice in field(spec, "choices", ()):
-                    editor.addItem(str(choice), choice)
+                labels = field(spec, "choice_labels", ())
+                for index, choice in enumerate(field(spec, "choices", ())):
+                    label = labels[index] if index < len(labels) else str(field(choice, "object_id", choice))
+                    editor.addItem(label, choice)
                 editor.setCurrentIndex(editor.findData(value))
                 editor.currentIndexChanged.connect(self.draftChanged)
             else:
@@ -89,10 +92,10 @@ class PropertyEditor(QWidget):
             wrapper = QWidget()
             row = QVBoxLayout(wrapper)
             row.setContentsMargins(0, 0, 0, 0)
-            row.setSpacing(2)
+            row.setSpacing(TOKENS["space_xs"])
             input_row = QHBoxLayout()
             input_row.setContentsMargins(0, 0, 0, 0)
-            input_row.setSpacing(5)
+            input_row.setSpacing(TOKENS["control_pad_x"])
             input_row.addWidget(editor, 1)
             units = field(spec, "unit_choices", ())
             if units:

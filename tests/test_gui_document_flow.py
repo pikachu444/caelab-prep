@@ -14,7 +14,7 @@ import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QPersistentModelIndex, QSettings, Qt, Signal
+from PySide6.QtCore import QPersistentModelIndex, QSettings, Qt, QTimer, Signal
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QFileDialog, QLineEdit, QMessageBox, QWidget
 
@@ -49,6 +49,15 @@ def material_card(session):
 
 def young_modulus(session, card_id):
     return next(field["value"] for field in session.card_fields(card_id) if field["name"] == "young_modulus")
+
+
+def qualified_pick(session, kind, identifier):
+    projection = session.mesh_view()
+    resource_id = projection["cells"][0]["resource_id"]
+    return {key: projection[key] for key in ("document_id", "document_epoch", "revision", "projection_revision")} | {
+        "kind": kind, "id": identifier, "resource_id": resource_id,
+        "resource_revision": projection["resource_revisions"][resource_id],
+    }
 
 
 def edit_young_modulus(window, value):
@@ -248,6 +257,9 @@ def test_preopened_session_paths_projection_and_external_events(tmp_path, monkey
     session.save_project(project)
     window = MainWindow(session)
     try:
+        from caelab_prep.ui.shell import ViewportFrame
+        assert isinstance(window.viewport_frame, ViewportFrame)
+        assert window.viewport_frame.isAncestorOf(window.viewport)
         assert window._project_path == project
         assert len(window.viewport.projection["cells"]) == 2
         card_id = material_card(session)["id"]
@@ -259,15 +271,23 @@ def test_preopened_session_paths_projection_and_external_events(tmp_path, monkey
 
         assert float(window.field_editors["young_modulus"].text()) == 205000
         assert window.undo_action.isEnabled()
-        window._entity_picked({"kind": "element", "id": 1})
+        part = next(card for card in session.list_cards() if card["keyword"].startswith("/PART/"))
+        assert window.select_card(part["id"])
+        app.processEvents()
+        assert window.model_tree.selected_ref() == window.provider.active_object()
+        assert window.provider.active_object().object_id == part["id"]
+        assert window.property_editor.editors
+        assert window.viewport.current_selection == session.selection()
+        assert window.viewport.current_selection["ids"]
+        window._entity_picked(qualified_pick(session, "element", 1))
         approved = session.selection()
         assert approved["ids"] == [1]
         assert window.viewport.current_selection == approved
-        window._entity_picked({"kind": "element", "id": -999})
+        window._entity_picked(qualified_pick(session, "element", -999))
         assert window.viewport.current_selection == approved
-        window._entity_picked({"kind": "node", "id": 2})
+        window._entity_picked(qualified_pick(session, "node", 2))
         assert window.viewport.current_selection["kind"] == "node"
-        window._entity_picked({"kind": None})
+        window._entity_picked(qualified_pick(session, None, None))
         assert window.viewport.current_selection["ids"] == []
     finally:
         window._allow_close = True
@@ -535,3 +555,154 @@ def test_external_document_replacement_keeps_visible_draft_until_reload(tmp_path
         window.close()
         window.deleteLater()
         app.processEvents()
+
+
+@pytest.mark.parametrize("choice,closes", [
+    (QMessageBox.StandardButton.Discard, True),
+    (QMessageBox.StandardButton.Cancel, False),
+    (QMessageBox.StandardButton.Save, False),
+])
+def test_rad_close_invalid_draft_respects_save_discard_cancel(tmp_path, monkeypatch, choice, closes):
+    app = application(tmp_path)
+    session = PrepSession()
+    session.open_rad(FIXTURE)
+    window = MainWindow(session, enable_viewport=False)
+    path = tmp_path / "invalid-close.caeprep"
+    questions = []
+    def answer(*args, **kwargs):
+        questions.append(args)
+        return choice
+    monkeypatch.setattr(QMessageBox, "question", answer)
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args, **kwargs: (str(path), ""))
+    try:
+        window.show()
+        card_id = material_card(session)["id"]
+        window.select_card(card_id)
+        editor = window.field_editors["young_modulus"]
+        editor.setText("1e")
+        editor.setModified(True)
+        before = session.describe()
+        window.close()
+        app.processEvents()
+        assert questions, "Closing an uncommitted draft must offer a choice"
+        assert window.isVisible() is not closes
+        assert not path.exists() and not window._busy
+        assert session.describe()["revision"] == before["revision"]
+        if not closes:
+            assert editor.text() == "1e" and editor.isModified()
+    finally:
+        window._allow_close = True
+        window.close()
+        window.deleteLater()
+        app.processEvents()
+
+
+@pytest.mark.parametrize("save_fails", [False, True])
+def test_rad_close_first_save_waits_and_retains_draft_after_failure(tmp_path, monkeypatch, save_fails):
+    app = application(tmp_path)
+    session = PrepSession()
+    session.open_rad(FIXTURE)
+    window = MainWindow(session, enable_viewport=False)
+    path = tmp_path / "first-close.caeprep"
+    if save_fails:
+        path.mkdir()
+    monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.Save)
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args, **kwargs: (str(path), ""))
+    try:
+        window.show()
+        card_id = material_card(session)["id"]
+        window.select_card(card_id)
+        editor = window.field_editors["young_modulus"]
+        editor.setText("199000")
+        editor.setModified(True)
+        window.close()
+        assert window.isVisible() and window._busy
+        wait_operation(window)
+        if save_fails:
+            assert window.isVisible() and session.describe()["dirty"]
+            assert window.field_editors["young_modulus"].text() == "199000"
+            assert window.field_editors["young_modulus"].isModified()
+            assert window.operation_state.status == "failed"
+        else:
+            assert not window.isVisible()
+            reopened = PrepSession()
+            reopened.open_project(path)
+            assert young_modulus(reopened, card_id) == 199000
+    finally:
+        window._allow_close = True
+        window.close()
+        window.deleteLater()
+        app.processEvents()
+
+
+def test_rad_real_modal_close_cancel_preserves_focused_scalar_draft(tmp_path):
+    app = application(tmp_path)
+    session = PrepSession()
+    session.open_rad(FIXTURE)
+    window = MainWindow(session, enable_viewport=False)
+    timer = QTimer()
+    dialogs = []
+    def cancel_dialog():
+        dialog = QApplication.activeModalWidget()
+        if isinstance(dialog, QMessageBox):
+            dialogs.append(dialog.text())
+            dialog.done(int(QMessageBox.StandardButton.Cancel))
+            timer.stop()
+    timer.timeout.connect(cancel_dialog)
+    try:
+        window.show()
+        window.select_card(material_card(session)["id"])
+        editor = window.field_editors["young_modulus"]
+        editor.setFocus()
+        app.processEvents()
+        editor.selectAll()
+        QTest.keyClicks(editor, "199000")
+        before = session.describe()
+        timer.start(10)
+        window.close()
+        timer.stop()
+        assert dialogs and window.isVisible()
+        assert session.describe()["revision"] == before["revision"]
+        assert editor.text() == "199000" and editor.isModified()
+    finally:
+        timer.stop()
+        window._allow_close = True
+        window.close()
+        window.deleteLater()
+        app.processEvents()
+
+
+def test_vtk_selection_extracts_all_approved_refs_and_refreshes_pick_stamp():
+    """Exercise the real extraction code without creating an OpenGL window."""
+    from types import SimpleNamespace
+    import vtk
+    from caelab_prep.ui.viewport import MeshViewport, pick_candidate
+    points = vtk.vtkPoints()
+    for point in ((0, 0, 0), (1, 0, 0), (0, 1, 0), (1, 1, 0)):
+        points.InsertNextPoint(*point)
+    grid = vtk.vtkUnstructuredGrid()
+    grid.SetPoints(points)
+    for indices in ((0, 1, 2), (1, 3, 2)):
+        identifiers = vtk.vtkIdList()
+        for index in indices:
+            identifiers.InsertNextId(index)
+        grid.InsertNextCell(vtk.VTK_TRIANGLE, identifiers)
+    stamp = {"document_id": "document", "document_epoch": "epoch", "projection_revision": 0,
+             "revision": 0, "resource_revisions": {"mesh": "old"}}
+    projection = SimpleNamespace(vtk=vtk, _highlight=vtk.vtkActor(), _projection_stamp=dict(stamp),
+                                 _document_id="document", _grid=grid,
+                                 _cells=[{"resource_id": "mesh", "id": 11}, {"resource_id": "mesh", "id": 12}],
+                                 render=lambda: None)
+    selection = stamp | {"kind": "element", "ids": [11, 12], "revision": 1,
+                         "resource_revisions": {"mesh": "current"}, "refs": [
+                             {"resource_id": "mesh", "entity_kind": "element", "local_id": 11},
+                             {"resource_id": "mesh", "entity_kind": "element", "local_id": 12}]}
+    MeshViewport.set_selection(projection, selection)
+    mapper = projection._highlight.GetMapper()
+    mapper.Update()
+    assert projection._highlight.GetVisibility()
+    assert mapper.GetInput().GetNumberOfCells() == 2
+    candidate = pick_candidate(projection._projection_stamp, "element", 11, "mesh")
+    assert candidate["revision"] == 1 and candidate["resource_revision"] == "current"
+    MeshViewport.set_selection(projection, selection | {"document_epoch": "old-epoch"})
+    assert not projection._highlight.GetVisibility()

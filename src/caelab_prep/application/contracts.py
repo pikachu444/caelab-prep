@@ -36,6 +36,7 @@ class PropertySpec:
     unit_context: dict = field(default_factory=dict)
     coordinate_frame: str | None = None
     unit_scales: tuple[tuple[str, float], ...] = ()
+    choice_labels: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -68,6 +69,9 @@ class ActionSpec:
     label: str
     shortcut: str = ""
     capability: str = ""
+    icon: str = ""
+    contexts: tuple[str, ...] = ()
+    checkable: bool = False
 
 
 @dataclass(frozen=True)
@@ -89,7 +93,14 @@ class PropertyHost(Protocol):
     def subscribe(self, listener: Callable[[dict], None]) -> Callable[[], None]: ...
 
 
-class DocumentSession(PropertyHost, Protocol):
+@runtime_checkable
+class SelectionProvider(Protocol):
+    """Active object identity is shared; domain-specific highlighting stays hosted."""
+    def select(self, target: ObjectRef | None) -> object: ...
+    def active_object(self) -> ObjectRef | None: ...
+
+
+class DocumentSession(PropertyHost, SelectionProvider, Protocol):
     def undo(self) -> dict: ...
     def redo(self) -> dict: ...
     def save_project(self, path: str) -> dict: ...

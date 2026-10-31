@@ -4,9 +4,58 @@ from uuid import uuid4
 
 from PySide6.QtCore import QObject, QRunnable, Signal
 
-from PySide6.QtWidgets import QDockWidget, QFrame, QHBoxLayout, QLabel, QVBoxLayout
+from PySide6.QtWidgets import QDockWidget, QFrame, QHBoxLayout, QLabel, QMessageBox, QVBoxLayout
 
 from ..application.contracts import OperationState
+
+
+class FileEditCoordinator:
+    """Ask before replacing/closing; only Save finishes and validates drafts."""
+
+    def __init__(self, parent, *, has_draft, finish, discard, is_dirty, save, capture=None, restore=None):
+        self.parent = parent
+        self.has_draft = has_draft
+        self.finish = finish
+        self.discard = discard
+        self.is_dirty = is_dirty
+        self.save = save
+        self.capture = capture
+        self.restore = restore
+        self.choosing = False
+        self._save_draft = None
+
+    def guard(self, continuation):
+        if not (self.is_dirty() or self.has_draft()):
+            continuation()
+            return True
+        self.choosing = True
+        try:
+            answer = QMessageBox.question(
+                self.parent, "Unsaved changes", "Save changes before continuing?",
+                QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel)
+        finally:
+            self.choosing = False
+        if answer == QMessageBox.StandardButton.Discard:
+            self.discard()
+            continuation()
+            return True
+        if answer == QMessageBox.StandardButton.Save:
+            self._save_draft = self.capture() if self.capture else None
+            if not self.finish():
+                self.save_failed()
+                return False
+            def saved():
+                self._save_draft = None
+                continuation()
+            if self.save(saved) is False:
+                self.save_failed()
+        return False
+
+    def save_failed(self):
+        if self._save_draft is not None and self.restore:
+            self.restore(self._save_draft)
+        self._save_draft = None
 
 
 class _FileSignals(QObject):

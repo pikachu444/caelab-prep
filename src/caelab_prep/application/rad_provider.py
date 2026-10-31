@@ -17,6 +17,10 @@ _LABELS = {
     "tz": "Translation Z fixed", "rx": "Rotation X fixed", "ry": "Rotation Y fixed", "rz": "Rotation Z fixed",
 }
 
+_ICONS = {"Materials": "material", "Properties": "section", "Parts": "part", "Nodes": "select",
+          "Elements": "mesh", "Constraints": "constraint", "Contacts": "contact", "Curves": "curve",
+          "Groups": "set", "Loads": "load", "Initial conditions": "vector"}
+
 
 class RadProvider:
     """Expose a PrepSession without making shared widgets understand RAD."""
@@ -36,7 +40,7 @@ class RadProvider:
             return ()
         return tuple(TreeNode(self.ref_for_card(card), str(card.get("title") or card["keyword"]),
                               str(card.get("category") or "Other cards"),
-                              "material" if card.get("category") == "Materials" else "card",
+                              _ICONS.get(card.get("category"), "card"),
                               f"{card['keyword']}\n{card['resource_name']}")
                      for card in self.session.list_cards())
 
@@ -56,6 +60,11 @@ class RadProvider:
         fields = self.session.card_fields(card["id"])
         values = {field["name"]: field["value"] for field in fields}
         context = self.unit_context(ref)
+        words = card["keyword"].upper().split("/")
+        if len(words) == 3 and words[1] == "PART" and words[2].isdigit():
+            summary = self.session.part_summary(ref)
+            return (PropertySpec("part_id", "Native part ID", summary["part_id"], editable=False),
+                    PropertySpec("element_count", "Displayed elements", summary["element_count"], editable=False))
         if (card["keyword"].upper().startswith("/FUNCT/") and fields
                 and set(values) == {f"point_{i}_{axis}" for i in range(len(fields) // 2) for axis in ("x", "y")}):
             points = tuple((values[f"point_{i}_x"], values[f"point_{i}_y"])
@@ -94,6 +103,8 @@ class RadProvider:
         fields = {}
         for name, value in command.values.items():
             spec = specs[name]
+            if not spec.editable:
+                raise PrepError("field_not_writable", "This property is read-only.")
             if name in command.units and command.units[name] != spec.unit:
                 raise PrepError("invalid_unit", "RAD values retain the input deck units; conversion is unavailable.")
             if name == "velocity":
@@ -128,3 +139,9 @@ class RadProvider:
 
     def subscribe(self, listener):
         return self.session.subscribe(listener)
+
+    def select(self, target):
+        return self.session.activate_object(target)
+
+    def active_object(self):
+        return self.session.active_object()

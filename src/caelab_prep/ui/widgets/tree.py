@@ -5,6 +5,7 @@ from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTreeView
 
 from ..theme import icon
+from ..design import TOKENS
 
 
 def field(item, name, default=None):
@@ -21,7 +22,7 @@ class ModelTree(QTreeView):
         self.setAlternatingRowColors(True)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.setIndentation(14)
+        self.setIndentation(TOKENS["tree_indent"])
         self._model = QStandardItemModel(self)
         self.setModel(self._model)
         self._indices = {}

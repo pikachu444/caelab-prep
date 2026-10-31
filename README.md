@@ -22,7 +22,11 @@ caelab-prep gallery
 caelab-prep gallery path/to/material-curves.caeprep
 ```
 
-재료 또는 곡선을 선택하고 **Apply properties / Apply curve**로 확정합니다. 잘못된 숫자·표는 초안으로 유지되며 Revert 또는 Escape로 취소합니다. 단위 선택은 알려진 단위 사이에서 표시값을 변환합니다. 표 붙여넣기는 전체 검증 후 미리보기로 남고 Apply 한 번이 Undo 한 번입니다. 저장·재열기를 지원하며 **View → Component catalog**에서 자체 아이콘과 입력 상태를 확인합니다. 새 RAD 행·카드 생성은 지원하지 않습니다.
+기본 화면은 공용 부품을 조합한 **재료/곡선 작업 예**입니다. 재료 또는 곡선을 선택하고 **Apply properties / Apply curve**로 확정합니다. 잘못된 숫자·표는 초안으로 유지되며 Revert 또는 Escape로 취소합니다. 단위 선택은 알려진 단위 사이에서 표시값을 변환합니다. 표 붙여넣기는 전체 검증 후 미리보기로 남고 Apply 한 번이 Undo 한 번입니다. 재료의 **Associated curve**에서는 실제 곡선 참조를 선택·Undo·저장·재열기할 수 있습니다. 이는 중립 문서의 연결이며 솔버 구성 법칙을 새로 정의하지 않습니다.
+
+툴바의 **Browse component catalogue**, **View** 메뉴 또는 **Ctrl+Shift+G**로 부품 카탈로그를 엽니다. 부품·디자인 토큰·의미별 아이콘을 선택하면 의미 키, 용도, 소스 위치, 실제 사용 장면, 구현 상태와 출처/허용 조건이 나옵니다. 숫자 오류/비활성/포커스, 단위/벡터, 그룹 속성/참조, 트리, 표/곡선, 메뉴/버튼, 메시지를 해당 부품으로 직접 조작합니다. 지원하지 않는 모델링 기능이 아이콘 미리보기에서 실행되지는 않습니다. 새 RAD 행·카드 생성은 지원하지 않습니다.
+
+![실제 갤러리에서 카탈로그를 연 Qt offscreen 미리보기](docs/catalogue-preview.png)
 
 ![공용 갤러리의 Qt offscreen 미리보기](docs/gallery-preview.png)
 
@@ -42,6 +46,8 @@ caelab-prep gui path/to/model_0000.rad
 ```
 
 앱에서 RAD를 열고 트리의 지원 카드를 선택해 값을 바꿉니다. Enter로 적용하며 Undo/Redo를 사용할 수 있습니다. **저장**은 원문과 편집을 포함하는 `.caeprep` 작업 문서를 만들고, **RAD 내보내기**는 솔버용 덱을 별도로 작성합니다. 새 세션에서 `.caeprep`을 열어 계속 편집할 수 있습니다. 원본 RAD는 덮어쓰지 않습니다.
+
+기존 PART를 선택하면 원래 파트 ID·표시 요소 수와 연결된 요소 강조가 같은 active object를 따릅니다. 렌더러 pick은 문서 세대·문서/자원/투영 개정을 검사해, 같은 파일을 다시 연 뒤 도착한 이전 pick도 거부합니다. 잘못된 초안을 남긴 채 닫으면 Save/Discard/Cancel을 먼저 선택하며 Discard는 검증 없이 명시적으로 폐기합니다.
 
 | 현재 기능 | 범위 |
 |---|---|

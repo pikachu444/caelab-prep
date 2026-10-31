@@ -7,6 +7,8 @@ import math
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
 
+from ..design import TOKENS
+
 
 class NumericEdit(QLineEdit):
     """A numeric draft that allows incomplete text and reports errors on Apply."""
@@ -24,7 +26,7 @@ class NumericEdit(QLineEdit):
         self._committed_text = "" if value is None else str(value)
         self.setText(self._committed_text)
         self.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.setMinimumWidth(64)
+        self.setMinimumWidth(TOKENS["numeric_min_width"])
         self.setAccessibleDescription(f"Numeric value; {unit}" if unit else "Numeric value")
         self.textEdited.connect(self._edited)
 
@@ -99,7 +101,7 @@ class VectorEdit(QWidget):
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
+        layout.setSpacing(TOKENS["space_sm"])
         editors = []
         for component, value in zip(components, values, strict=True):
             label = QLabel(component)

@@ -1,6 +1,9 @@
 """Real Qt draft/input and document behavior; no GPU or solver required."""
 
 import os
+from pathlib import Path
+import subprocess
+import sys
 import time
 from threading import Event
 
@@ -9,9 +12,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import pytest
 from PySide6.QtCore import QSettings, Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QFileDialog, QLineEdit, QMessageBox
+from PySide6.QtWidgets import QApplication, QFileDialog, QLineEdit, QMainWindow, QMenu, QMessageBox, QToolBar
 
-from caelab_prep.application.contracts import SetProperties
+from caelab_prep.application.contracts import ActionSpec, SetProperties
 from caelab_prep.application.neutral import CurveSession
 from caelab_prep.ui.gallery import GalleryWindow
 from caelab_prep.ui.widgets import CurveTable, ModelTree, NumericEdit, PropertyEditor, VectorEdit
@@ -137,7 +140,7 @@ def test_unit_selection_converts_display_and_preserves_physical_value(app):
 
 def test_gallery_real_values_vector_undo_save_reopen_and_stale_draft(app, tmp_path):
     window = GalleryWindow()
-    window._allow_discard = lambda: True
+    window._allow_close = True
     try:
         material = window.session.tree_nodes()[0].ref
         assert window.select_ref(material)
@@ -179,7 +182,7 @@ def test_gallery_external_document_replacement_keeps_draft_until_reload(app, tmp
     path = tmp_path / "other.caeprep"
     other.save_project(path)
     window = GalleryWindow()
-    window._allow_discard = lambda: True
+    window._allow_close = True
     try:
         old_ref = window._target
         window.field_editors["name"].setText("Pending name")
@@ -211,7 +214,7 @@ def test_gallery_async_file_operation_locks_mutation_and_reports_artifact(app, t
         return save(path)
     session.save_project = blocked_save
     window = GalleryWindow(session)
-    window._allow_discard = lambda: True
+    window._allow_close = True
     try:
         path = tmp_path / "async.caeprep"
         assert window.save_project_file(path)
@@ -240,7 +243,7 @@ def test_gallery_async_file_operation_locks_mutation_and_reports_artifact(app, t
 
 def test_gallery_curve_apply_preserves_name_draft_without_false_revision_conflict(app):
     window = GalleryWindow()
-    window._allow_discard = lambda: True
+    window._allow_close = True
     try:
         target = window._target
         window.field_editors["name"].setText("Pending curve title")
@@ -257,7 +260,7 @@ def test_gallery_curve_apply_preserves_name_draft_without_false_revision_conflic
 
 def test_keyboard_save_in_active_table_cell_saves_visible_draft(app, tmp_path):
     window = GalleryWindow()
-    window._allow_discard = lambda: True
+    window._allow_close = True
     try:
         path = tmp_path / "delegate-edit.caeprep"
         assert window.save_project_file(path)
@@ -307,7 +310,7 @@ def test_gallery_close_after_save_waits_for_async_completion(app, tmp_path, monk
 
 def test_curve_rename_updates_plot_caption_without_discarding_table_draft(app):
     window = GalleryWindow()
-    window._allow_discard = lambda: True
+    window._allow_close = True
     try:
         target = next(node.ref for node in window.session.tree_nodes() if node.ref.kind == "curve")
         assert window.select_ref(target)
@@ -319,4 +322,182 @@ def test_curve_rename_updates_plot_caption_without_discarding_table_draft(app):
         assert window.curve_table.points()[1][1] == 333
         assert window.session.curve_points(target)[1][1] == 310
     finally:
+        window.close()
+
+def test_shared_qt_imports_do_not_load_rad_or_vtk():
+    code = """
+import importlib.abc, sys
+class Fence(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, *args):
+        if fullname.startswith(('vtk','caelab_prep.radioss','caelab_prep.application.session','caelab_prep.application.rad_provider','caelab_prep.ui.main_window')):
+            raise AssertionError(fullname)
+sys.meta_path.insert(0,Fence())
+from caelab_prep.ui.gallery import GalleryWindow
+from caelab_prep.ui.widgets import NumericEdit, CurvePlot
+from caelab_prep.ui.shell import FileTask
+"""
+    subprocess.run([sys.executable, "-c", code], check=True, capture_output=True, text=True)
+
+
+def test_action_registry_shares_identity_and_obeys_host_capability_context_and_state(app):
+    from caelab_prep.ui.actions import ActionRegistry
+    host = QMainWindow()
+    registry = ActionRegistry(host)
+    calls = []
+    action = registry.register(ActionSpec("edit.apply", "Apply", "Ctrl+Return", "apply",
+                                          icon="apply", contexts=("material",), checkable=True),
+                               lambda checked: calls.append(checked))
+    menu = host.menuBar().addMenu("Edit")
+    toolbar = QToolBar(host)
+    host.addToolBar(toolbar)
+    menu.addAction(action)
+    toolbar.addAction(action)
+    assert menu.actions()[0] is toolbar.actions()[0] is registry.action("edit.apply")
+    registry.refresh({"capabilities": {"apply": False}}, context="material")
+    assert not action.isEnabled()
+    registry.refresh({"capabilities": {"apply": True}}, context="curve")
+    assert not action.isEnabled()
+    registry.refresh({"capabilities": {"apply": True}}, context="material", busy=True)
+    assert not action.isEnabled()
+    registry.refresh({"capabilities": {"apply": True}}, context="material",
+                     checked={"edit.apply": True})
+    assert action.isEnabled() and action.isChecked()
+    menu.actions()[0].trigger()
+    assert calls == [False]
+    assert not toolbar.actions()[0].isChecked()
+    with pytest.raises(ValueError):
+        registry.register(ActionSpec("edit.apply", "Duplicate"), lambda: None)
+    host.close()
+
+
+def test_gallery_reference_picker_applies_typed_candidate_undo_and_saves(app, tmp_path):
+    window = GalleryWindow()
+    window._allow_close = True
+    try:
+        material = next(node.ref for node in window.session.tree_nodes() if node.ref.kind == "material")
+        assert window.select_ref(material)
+        spec = next(spec for spec in window.session.properties(material) if spec.name == "reference_curve")
+        picker = window.field_editors[spec.name]
+        candidate = next(choice for choice in spec.choices if choice is not None and choice != spec.value)
+        index = next(i for i in range(picker.count()) if picker.itemData(i) == candidate)
+        picker.setCurrentIndex(index)
+        assert window.apply_properties()
+        assert next(p.value for p in window.session.properties(material) if p.name == spec.name) == candidate
+        window._history("undo")
+        assert window.field_editors[spec.name].currentData() == spec.value
+        window._history("redo")
+        path = tmp_path / "picked-reference.caeprep"
+        assert window.save_project_file(path)
+        wait_operation(window)
+        reopened = CurveSession()
+        reopened.open_project(path)
+        assert next(p.value for p in reopened.properties(material) if p.name == spec.name) == candidate
+    finally:
+        window.close()
+
+
+@pytest.mark.parametrize("window_kind", ["rad", "gallery"])
+def test_shared_shell_clean_close_accepts_first_request(app, window_kind):
+    if window_kind == "rad":
+        from caelab_prep.ui.main_window import MainWindow
+        window = MainWindow(enable_viewport=False)
+    else:
+        window = GalleryWindow()
+    assert window.actions.action("file.save") is window.save_action
+    assert any(window.save_action in menu.actions() for menu in window.findChildren(QMenu))
+    assert any(window.save_action in toolbar.actions() for toolbar in window.findChildren(QToolBar))
+    window.show()
+    app.processEvents()
+    assert window.close()
+    assert not window.isVisible()
+
+
+def test_catalogue_browsing_exposes_source_metadata_and_distinct_semantic_icons(app):
+    from caelab_prep.ui.catalogue import CatalogueWidget
+    from caelab_prep.ui.design import icon
+    catalogue = CatalogueWidget()
+    numeric = catalogue.scene
+    numeric.editor.editors["young_modulus"].setText("199000")
+    fallback = icon("card").pixmap(24, 24).toImage()
+    for family in ("section", "load", "contact", "set", "select", "result", "job"):
+        assert catalogue.select_asset("icon." + family)
+        asset = catalogue.selected_asset()
+        metadata = catalogue.metadata.toPlainText()
+        assert asset.key == "icon." + family
+        assert all(value in metadata for value in (asset.source_path, asset.purpose, asset.status, asset.provenance, asset.permission))
+        assert icon(family).pixmap(24, 24).toImage() != fallback
+        assert catalogue.scene is not numeric
+    assert not catalogue.select_asset("missing")
+    assert catalogue.select_asset("component.numeric")
+    assert catalogue.scene is numeric
+    assert numeric.editor.editors["young_modulus"].text() == "199000"
+    catalogue.close()
+
+
+def test_catalogue_numeric_and_curve_scenes_use_real_apply_error_and_undo(app):
+    from caelab_prep.ui.catalogue import CatalogueWidget
+    catalogue = CatalogueWidget()
+    numeric = catalogue.scene
+    assert not numeric.editor.editors["density"].isEnabled()
+    initial = numeric.session.describe()
+    assert not numeric.apply()
+    assert numeric.session.describe() == initial
+    assert numeric.editor.editors["poisson_ratio"].text() == "1e"
+    numeric.editor.editors["poisson_ratio"].setText("0.28")
+    numeric.apply_button.click()
+    assert numeric.session.describe()["revision"] == initial["revision"] + 1
+    assert next(p.value for p in numeric.session.properties(numeric.target) if p.name == "poisson_ratio") == .28
+    numeric.undo_button.click()
+    assert next(p.value for p in numeric.session.properties(numeric.target) if p.name == "poisson_ratio") == .3
+    assert catalogue.select_asset("component.curve")
+    curve = catalogue.scene
+    original = curve.session.curve_points(curve.target)
+    curve.table.paste_text("0 10\n.1 20\n.2 30")
+    assert curve.session.curve_points(curve.target) == original
+    curve.table.apply_button.click()
+    assert curve.session.curve_points(curve.target) == [[0, 10], [.1, 20], [.2, 30]]
+    assert curve.plot._points == ((0, 10), (.1, 20), (.2, 30))
+    curve.undo_button.click()
+    assert curve.session.curve_points(curve.target) == original
+    catalogue.close()
+
+
+@pytest.mark.parametrize("window_kind", ["rad", "gallery"])
+def test_external_approved_selection_is_shown_after_draft_revert(app, monkeypatch, window_kind):
+    if window_kind == "rad":
+        from caelab_prep.application.session import PrepSession
+        from caelab_prep.ui.main_window import MainWindow
+        session = PrepSession()
+        session.open_rad(Path(__file__).resolve().parents[1] / "examples/rad/shell_panels_0000.rad")
+        window = MainWindow(session, enable_viewport=False)
+        source = next(node.ref for node in window.provider.tree_nodes() if node.ref.native_scope == "/MAT/LAW1/1")
+        destination = next(node.ref for node in window.provider.tree_nodes() if node.ref.native_scope == "/PART/2")
+        window.select_card(source.object_id)
+        tree = window.model_tree
+        select = window.provider.select
+        revert = window._reload_properties
+    else:
+        window = GalleryWindow()
+        session = window.session
+        source = next(node.ref for node in session.tree_nodes() if node.ref.kind == "material")
+        destination = next(node.ref for node in session.tree_nodes() if node.ref.kind == "curve")
+        window.select_ref(source)
+        tree = window.tree
+        select = session.select
+        revert = window.reload_values
+    monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.Discard)
+    try:
+        editor = window.field_editors["young_modulus"]
+        editor.setText("1e")
+        editor.setModified(True)
+        select(destination)
+        app.processEvents()
+        assert tree.selected_ref() == source
+        assert editor.text() == "1e"
+        revert()
+        app.processEvents()
+        assert tree.selected_ref() == destination
+        assert session.active_object() == destination
+    finally:
+        window._allow_close = True
         window.close()
