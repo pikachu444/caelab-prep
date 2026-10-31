@@ -14,7 +14,7 @@ import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QPersistentModelIndex, QSettings, Qt, QTimer, Signal
+from PySide6.QtCore import QPersistentModelIndex, Qt, QTimer, Signal
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QFileDialog, QLineEdit, QMessageBox, QWidget
 
@@ -29,11 +29,8 @@ FIXTURE = Path(__file__).resolve().parents[1] / "scripts/evaluation/models/two_s
 EXAMPLES = Path(__file__).resolve().parents[1] / "examples/rad"
 
 
-def application(tmp_path):
-    app = QApplication.instance() or QApplication([])
-    QSettings.setDefaultFormat(QSettings.Format.IniFormat)
-    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
-    return app
+def application(_tmp_path):
+    return QApplication.instance()
 
 
 def wait_operation(window, timeout=10):

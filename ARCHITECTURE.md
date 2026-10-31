@@ -10,7 +10,7 @@
 
 `cae_core`는 솔버와 GUI를 모르는 문서·명령·선택 기반이다. `application.contracts`의 PropertyHost/DocumentSession·ObjectRef·PropertySpec·SetProperties는 Qt/RAD/VTK 없이 로드된다. `RadProvider`가 기존 PrepSession을 이 계약에 연결하고 `CurveSession`은 중립 재료/곡선 문서를 제공한다. 공용 위젯과 갤러리는 RAD와 VTK 없이 로드되며 기존 `ui.MainWindow`와 `application.PrepSession` export는 지연 로딩으로 호환한다. 기존 PrepSession 자체는 RAD/INCLUDE·원문·출력을 소유하는 솔버별 구현으로 남는다.
 
-`ui/design`은 자체 SVG·토큰·상태 스타일, `ui/widgets`는 model/view 트리·그룹 속성·숫자/단위·벡터·곡선 표/plot을 소유한다. `ui/actions`와 `ui/shell`은 동일 Action·도킹·renderer frame·비동기 FileTask를 제공하며 실제 전처리기와 갤러리가 공유한다. 위젯은 초안만 소유하고 provider/session이 확정 값·검증·Undo를 소유한다. 실제 Windows 입력·DPI·도킹 확인이 보류여서 묶음 A 완료로 보고하지 않는다.
+`ui/design`은 자체 SVG·토큰·상태 스타일, `ui/widgets`는 model/view 트리·그룹 속성·숫자/단위·벡터·곡선 표/plot을 소유한다. `ui/actions`와 `ui/shell`은 동일 Action·도킹·renderer frame·비동기 FileTask를 제공하며 실제 전처리기와 갤러리가 공유한다. 위젯은 초안만 소유하고 provider/session이 확정 값·검증·Undo를 소유한다. 묶음 A의 실제 Windows 입력·배율·도킹 확인은 [검증 기록](docs/native-windows-validation.md)에 환경·입력 방법·화면과 함께 남겼다.
 
 ## 이번 구현의 결정
 
@@ -85,7 +85,7 @@ Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 p
 
 현재 첫 적용 대상은 OpenRadioss/OpenCourant이고, 실행 가능한 사용 앱은 RAD 원문 편집기다. 공용 자산과 네이티브 갤러리는 이 저장소의 정식 개발 산출물이며 실제 편집 흐름과 함께 개발한다. 서로 다른 사용처에서 같은 코어·위젯을 사용하는 확인은 재사용 품질을 판단하는 기준이고, 공용 자산 개발을 시작하기 위한 전제 조건이 아니다.
 
-첫 공용 위젯·셸 부품·갤러리·최소 세션 계약의 구현과 가능한 관련 검사는 완료했으며 Windows 실제 입력/배율/도킹 확인은 보류다. 기존 RAD 사용처의 새 카드 생성, CAD 메시와 Radioss 조건의 GUI 통합, 고급 메시/중립면/접촉 생성, MCP/IPC, 솔버 실행·후처리, 설치형 배포는 후속이다. 이 목록이 모든 솔버 기능을 동시에 구현하거나 상용 CAE 전체를 재현하라는 범위는 아니다.
+첫 공용 위젯·셸 부품·갤러리·최소 세션 계약을 실제 RAD와 중립 재료/곡선 문서에 연결했고, 관련 자동 검사와 범위를 고정한 Windows 실제 창 검증을 수행했다. 기존 RAD 사용처의 새 카드 생성, CAD 메시와 Radioss 조건의 GUI 통합, 고급 메시/중립면/접촉 생성, MCP/IPC, 솔버 실행·후처리, 설치형 배포는 후속이다. 이 목록이 모든 솔버 기능을 동시에 구현하거나 상용 CAE 전체를 재현하라는 범위는 아니다.
 
 
 

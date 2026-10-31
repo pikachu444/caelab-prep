@@ -17,7 +17,22 @@ def qt_app():
 
 
 @pytest.fixture
-def qt_widgets(qt_app):
+def qt_settings(tmp_path, monkeypatch):
+    from PySide6.QtCore import QSettings
+    from caelab_prep.ui import gallery, main_window
+
+    def isolated_settings(organization, application):
+        path = tmp_path / "settings" / organization / (application + ".ini")
+        settings = QSettings(str(path), QSettings.Format.IniFormat)
+        settings.setFallbacksEnabled(False)
+        return settings
+
+    monkeypatch.setattr(gallery, "QSettings", isolated_settings)
+    monkeypatch.setattr(main_window, "QSettings", isolated_settings)
+
+
+@pytest.fixture
+def qt_widgets(qt_app, qt_settings):
     from PySide6.QtCore import QCoreApplication, QEvent, QThreadPool
     from shiboken6 import isValid
 

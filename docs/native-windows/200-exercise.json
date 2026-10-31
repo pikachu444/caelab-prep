@@ -1,0 +1,596 @@
+{
+  "phase": "exercise",
+  "scale_factor": "2",
+  "input_method": "QTest events to this process's own Qt widgets; no OS SendInput",
+  "capture_method": "own QWidget.grab plus own VTK framebuffer; no desktop capture",
+  "scaling_scope": "QT_SCALE_FACTOR application scaling; OS DPI is observed, never changed",
+  "stages": [
+    {
+      "name": "native_rad_normal_and_narrow",
+      "status": "passed",
+      "evidence": {
+        "window": {
+          "native_handle": 74516228,
+          "exposed": true,
+          "dpr": 2.0,
+          "screen": "LS27B61x",
+          "logical_size": [
+            1282,
+            711
+          ],
+          "frame_geometry": [
+            4,
+            0,
+            1282,
+            727
+          ],
+          "frame_fits_available_screen": false
+        },
+        "normal": {
+          "path": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-200\\exercise-rad-normal.png",
+          "sha256": "27b7b8be49c23f69418fa09e8c08531ccbc5b38105b3d884b7ba6ff7e2cdb1f1",
+          "pixels": [
+            2640,
+            1680
+          ],
+          "dpr": 2.0,
+          "logical_size": [
+            1320,
+            840
+          ],
+          "frame_geometry": [
+            4,
+            0,
+            1320,
+            856
+          ],
+          "frame_fits_available_screen": false
+        },
+        "narrow": {
+          "path": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-200\\exercise-rad-narrow.png",
+          "sha256": "56b15316807f7c5772c6143ed4aad1455a135ed7f6df5d8f103c044dff01cc82",
+          "pixels": [
+            1920,
+            1280
+          ],
+          "dpr": 2.0,
+          "logical_size": [
+            960,
+            640
+          ],
+          "frame_geometry": [
+            4,
+            0,
+            960,
+            656
+          ],
+          "frame_fits_available_screen": true
+        }
+      }
+    },
+    {
+      "name": "rad_tree_scalar_undo_redo_save",
+      "status": "passed",
+      "evidence": {
+        "tree_input": "QTest clicks",
+        "scalar_input": "QTest keys",
+        "undo_redo": "QTest toolbar clicks"
+      }
+    },
+    {
+      "name": "live_vtk_render_and_qtest_pick",
+      "status": "passed",
+      "evidence": {
+        "render_window": "vtkWin32OpenGLRenderWindow",
+        "supports_opengl": 1,
+        "cells": 12,
+        "framebuffer_pixels": [
+          700,
+          732,
+          1
+        ],
+        "framebuffer": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-200\\native-vtk-framebuffer.png",
+        "post_pick_framebuffer": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-200\\native-vtk-post-pick-framebuffer.png",
+        "post_pick_sha256": "3efb3682d14c96b806248f099ee557d1ac0eeed51e4160da63ae015f91c55f69",
+        "click_logical": [
+          99,
+          257
+        ],
+        "candidate": {
+          "card_id": "7a34c2ca-b023-5a11-9243-6fe48de79a00",
+          "document_epoch": "f2315837-a7d4-4358-8bc3-b38e9fd8179f",
+          "document_id": "fe4c84b3-8c7e-4096-8b3d-3813dfd27e25",
+          "id": 1,
+          "kind": "element",
+          "part_id": 1,
+          "projection_revision": 1,
+          "resource_id": "877cba91-956b-4b94-8ef9-5114f12359ec",
+          "resource_revision": "b036afcbb1390979f95c153d8e56965d4a0035c0adecb82a55b1b1da7d6a8398",
+          "revision": 3
+        },
+        "canonical_selection": {
+          "kind": "element",
+          "ids": [
+            1
+          ],
+          "document_id": "fe4c84b3-8c7e-4096-8b3d-3813dfd27e25",
+          "revision": 3,
+          "document_epoch": "f2315837-a7d4-4358-8bc3-b38e9fd8179f",
+          "projection_revision": 1,
+          "resource_revisions": {
+            "877cba91-956b-4b94-8ef9-5114f12359ec": "b036afcbb1390979f95c153d8e56965d4a0035c0adecb82a55b1b1da7d6a8398"
+          },
+          "active_object": {
+            "document_id": "fe4c84b3-8c7e-4096-8b3d-3813dfd27e25",
+            "resource_id": "877cba91-956b-4b94-8ef9-5114f12359ec",
+            "object_id": "67da79cf-7459-5cf1-ac3e-8321d46c39ec",
+            "kind": "rad-card",
+            "native_scope": "/PART/1",
+            "mesh_revision": null
+          },
+          "refs": [
+            {
+              "resource_id": "877cba91-956b-4b94-8ef9-5114f12359ec",
+              "entity_kind": "element",
+              "local_id": 1
+            }
+          ]
+        },
+        "capture": {
+          "path": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-200\\exercise-vtk-pick.png",
+          "sha256": "a82770dbc3230a7b8b2aaba810294ff9e407a3d6d779b9f10c075ca199919b45",
+          "pixels": [
+            1920,
+            1280
+          ],
+          "dpr": 2.0,
+          "logical_size": [
+            960,
+            640
+          ],
+          "frame_geometry": [
+            10,
+            10,
+            960,
+            656
+          ],
+          "frame_fits_available_screen": true
+        }
+      }
+    },
+    {
+      "name": "gallery_tree_typed_reference_catalogue_save_reopen",
+      "status": "passed",
+      "evidence": {
+        "window": {
+          "native_handle": 83298984,
+          "exposed": true,
+          "dpr": 2.0,
+          "screen": "LS27B61x",
+          "logical_size": [
+            1280,
+            711
+          ],
+          "frame_geometry": [
+            4,
+            0,
+            1280,
+            727
+          ],
+          "frame_fits_available_screen": false
+        },
+        "reference": "load",
+        "normal": {
+          "path": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-200\\exercise-gallery-catalogue-normal.png",
+          "sha256": "96c42f01fab0390947c14aaebef8beb311ef8d57ed9cd200f9d775fc6c1a27be",
+          "pixels": [
+            2564,
+            1422
+          ],
+          "dpr": 2.0,
+          "logical_size": [
+            1282,
+            711
+          ],
+          "frame_geometry": [
+            10,
+            10,
+            1282,
+            727
+          ],
+          "frame_fits_available_screen": false
+        },
+        "narrow": {
+          "path": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-200\\exercise-gallery-catalogue-narrow.png",
+          "sha256": "d55085bbff4eebaa368e6b66444933fdf9e8cf8d938a951bccc4309473527dad",
+          "pixels": [
+            1920,
+            1280
+          ],
+          "dpr": 2.0,
+          "logical_size": [
+            960,
+            640
+          ],
+          "frame_geometry": [
+            10,
+            10,
+            960,
+            656
+          ],
+          "frame_fits_available_screen": true
+        },
+        "narrow_reachability": [
+          {
+            "target": "Density",
+            "scrolls": [
+              {
+                "name": "",
+                "horizontal": [
+                  0,
+                  0
+                ],
+                "vertical": [
+                  0,
+                  30
+                ]
+              },
+              {
+                "name": "Catalogue workspace",
+                "horizontal": [
+                  15,
+                  120
+                ],
+                "vertical": [
+                  14,
+                  169
+                ]
+              }
+            ]
+          },
+          {
+            "target": "Young's modulus",
+            "scrolls": [
+              {
+                "name": "",
+                "horizontal": [
+                  0,
+                  0
+                ],
+                "vertical": [
+                  0,
+                  30
+                ]
+              },
+              {
+                "name": "Catalogue workspace",
+                "horizontal": [
+                  25,
+                  120
+                ],
+                "vertical": [
+                  48,
+                  169
+                ]
+              }
+            ]
+          },
+          {
+            "target": "Poisson's ratio",
+            "scrolls": [
+              {
+                "name": "",
+                "horizontal": [
+                  0,
+                  0
+                ],
+                "vertical": [
+                  16,
+                  30
+                ]
+              },
+              {
+                "name": "Catalogue workspace",
+                "horizontal": [
+                  69,
+                  120
+                ],
+                "vertical": [
+                  66,
+                  169
+                ]
+              }
+            ]
+          },
+          {
+            "target": "QPushButton",
+            "scrolls": [
+              {
+                "name": "Catalogue workspace",
+                "horizontal": [
+                  104,
+                  120
+                ],
+                "vertical": [
+                  152,
+                  169
+                ]
+              }
+            ]
+          },
+          {
+            "target": "QPushButton",
+            "scrolls": [
+              {
+                "name": "Catalogue workspace",
+                "horizontal": [
+                  104,
+                  120
+                ],
+                "vertical": [
+                  152,
+                  169
+                ]
+              }
+            ]
+          },
+          {
+            "target": "Young's modulus",
+            "scrolls": [
+              {
+                "name": "",
+                "horizontal": [
+                  0,
+                  0
+                ],
+                "vertical": [
+                  0,
+                  12
+                ]
+              },
+              {
+                "name": "Catalogue workspace",
+                "horizontal": [
+                  104,
+                  120
+                ],
+                "vertical": [
+                  152,
+                  153
+                ]
+              }
+            ]
+          },
+          {
+            "target": "QPushButton",
+            "scrolls": [
+              {
+                "name": "Catalogue workspace",
+                "horizontal": [
+                  104,
+                  120
+                ],
+                "vertical": [
+                  152,
+                  153
+                ]
+              }
+            ]
+          },
+          {
+            "target": "QPushButton",
+            "scrolls": [
+              {
+                "name": "Catalogue workspace",
+                "horizontal": [
+                  104,
+                  120
+                ],
+                "vertical": [
+                  152,
+                  153
+                ]
+              }
+            ]
+          }
+        ],
+        "narrow_input": "Scrolled real view, asserted full control bounds, QTest Revert/edit/Apply/Undo"
+      }
+    },
+    {
+      "name": "rad_export_and_reopen",
+      "status": "passed",
+      "evidence": {
+        "export": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-200\\native-export.rad",
+        "input_scope": "public window file APIs; no file-dialog input claim"
+      }
+    },
+    {
+      "name": "dock_float_redock_and_prepare_restart",
+      "status": "passed",
+      "evidence": {
+        "float_by_qtest_double_click": true,
+        "redock_by_qtest_gesture": false,
+        "move_to_left_by_qtest_drag": true,
+        "before_drag_area": 8,
+        "drag_result_before_fallback": {
+          "area": 1,
+          "floating": false
+        },
+        "api_fallback_for_final_layout": false,
+        "input_scope": "QTest titlebar double clicks and 12-step own-widget drag; API fallback explicitly recorded",
+        "layout": {
+          "docks": {
+            "modelDock": {
+              "area": 1,
+              "floating": false,
+              "visible": true
+            },
+            "propertiesDock": {
+              "area": 2,
+              "floating": false,
+              "visible": true
+            },
+            "messagesDock": {
+              "area": 1,
+              "floating": false,
+              "visible": true
+            }
+          },
+          "logical_size": [
+            960,
+            640
+          ]
+        },
+        "floating_capture": {
+          "path": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-200\\exercise-dock-floating.png",
+          "sha256": "4f85f80cbfd295ed2270ac4fcd8865f395174ff1c915d380cbaab29c2e33b5cb",
+          "pixels": [
+            1920,
+            250
+          ],
+          "dpr": 2.0,
+          "logical_size": [
+            960,
+            125
+          ],
+          "frame_geometry": [
+            6,
+            496,
+            968,
+            145
+          ],
+          "frame_fits_available_screen": true
+        },
+        "capture": {
+          "path": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-200\\exercise-dock-redocked.png",
+          "sha256": "4b4b3228e298c821c9735cb71da3e5658e26c7015ce4c9579fe5a74bb87a6cde",
+          "pixels": [
+            1920,
+            1280
+          ],
+          "dpr": 2.0,
+          "logical_size": [
+            960,
+            640
+          ],
+          "frame_geometry": [
+            10,
+            10,
+            960,
+            656
+          ],
+          "frame_fits_available_screen": true
+        }
+      }
+    },
+    {
+      "name": "real_modal_close_save_discard_cancel_and_saved_value",
+      "status": "passed",
+      "evidence": {
+        "cancel_invalid": [
+          {
+            "title": "Unsaved changes",
+            "text": "Save changes before continuing?",
+            "button": "Cancel",
+            "focus_widget": "QPushButton"
+          }
+        ],
+        "save_invalid": [
+          {
+            "title": "Unsaved changes",
+            "text": "Save changes before continuing?",
+            "button": "Save",
+            "focus_widget": "QPushButton"
+          }
+        ],
+        "save_valid_async": [
+          {
+            "title": "Unsaved changes",
+            "text": "Save changes before continuing?",
+            "button": "Save",
+            "focus_widget": "QPushButton"
+          }
+        ],
+        "discard_invalid": [
+          {
+            "title": "Unsaved changes",
+            "text": "Save changes before continuing?",
+            "button": "Discard",
+            "focus_widget": "QPushButton"
+          }
+        ],
+        "reopened_window": {
+          "native_handle": 74647300,
+          "exposed": true,
+          "dpr": 2.0,
+          "screen": "LS27B61x",
+          "logical_size": [
+            960,
+            640
+          ],
+          "frame_geometry": [
+            10,
+            10,
+            960,
+            656
+          ],
+          "frame_fits_available_screen": true
+        },
+        "save_reopened_value": 198000,
+        "original_revision": 4
+      }
+    }
+  ],
+  "input_desktop": "Default",
+  "settings_stores": {
+    "CAELab/Prep": {
+      "file": "C:/Users/pikac/Documents/Codex/2026-10-31/task-2/prep/.test-tmp/native-ui/isolated-200/settings/CAELab-Prep.ini",
+      "format": "Format.IniFormat",
+      "fallbacks": false
+    },
+    "CAELab/ComponentGallery": {
+      "file": "C:/Users/pikac/Documents/Codex/2026-10-31/task-2/prep/.test-tmp/native-ui/isolated-200/settings/CAELab-ComponentGallery.ini",
+      "format": "Format.IniFormat",
+      "fallbacks": false
+    }
+  },
+  "settings_isolation": "Explicit per-window INI filenames; native stores are read only and compared after cleanup",
+  "platform": "windows",
+  "pyside": "6.9.1",
+  "font_families": 266,
+  "fonts": {
+    "Segoe UI": true,
+    "Malgun Gothic": true
+  },
+  "screens": [
+    {
+      "name": "LS27B61x",
+      "dpr": 2.0,
+      "logical_dpi": 96.0,
+      "physical_dpi": 54.398232202580026,
+      "geometry": [
+        0,
+        0,
+        1280,
+        720
+      ],
+      "available_geometry": [
+        0,
+        0,
+        1280,
+        696
+      ]
+    }
+  ],
+  "remaining_workers": 0,
+  "native_settings_unchanged": true,
+  "unverified": [
+    "OS SendInput and manual human input were not used",
+    "Application scale factors do not prove changes to OS monitor DPI",
+    "Oversized 1320x840 captures at forced 2x do not prove full physical-screen reachability; input uses fitted 960x640",
+    "Any false dock input assertion remains unverified; API fallback is not input evidence"
+  ],
+  "acceptance_claim": "Only listed stage assertions; no blanket A7 completion claim",
+  "status": "passed"
+}

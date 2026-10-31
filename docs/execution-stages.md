@@ -360,17 +360,17 @@ caelab-prep mesh INPUT.step --output OUT --size 2.0 --dimension 3
 | 카탈로그 | 부품별 의미 키·용도·소스·실제 소비 장면·상태·출처/허용 조건과 조작 가능한 상태/입력 장면 제공. 툴바 Browse component catalogue / View / Ctrl+Shift+G로 발견·탐색. 재료/곡선 화면은 조합 사용 예로 구분. 좁은 창에서 설명 prefix가 가려지던 현상은 스크롤 가능한 plain-text 설명으로 수정 |
 | RAD 닫기 | invalid draft 또는 dirty일 때 Save/Discard/Cancel을 먼저 질문. Discard는 검증 없이 명시 폐기, Save만 검증, Cancel/Save 실패는 창/초안 보존. 모달 focus-loss 자동 적용·중첩 close·첫 비동기 Save와 실패 복원을 수정/확인 |
 
-최종 통합 로컬 여덟 관련 suite는 **99 passed, 1 skipped**(case-sensitive 파일명 필요). 이후 마지막 설명 위젯 변경은 영향받은 카탈로그 2건, 마지막 셸 보호 변경은 Qt GUI/공용 위젯 41건과 교체 후 invalid-curve 닫기 경로로 확인했다. 실제 VTK 선택 추출 코드로 모든 승인 ref와 stamp를 검사했으나 OpenGL 창을 열지 않았다. 무관한 Gmsh 재검사는 하지 않았다.
+보완 당시 여덟 관련 suite는 **99 passed, 1 skipped**였다. 이후 실제 Windows 검증에서 발견한 좁은 카탈로그 결함을 공용 스크롤로 고쳤고, Qt 테스트 설정을 명시적 임시 INI로 격리했다. 최종 로컬 여덟 suite는 **100 passed, 1 skipped / 12.38s**, process exit0, 종료 뒤 widget/worker 모두0이다. JUnit은 `.test-tmp/final-isolated-settings-verification.xml`이다. skip은 대소문자만 다른 파일을 만들 수 없는 Windows 파일시스템 조건이다. 무관한 Gmsh 로컬 재검사는 하지 않았다.
 
-CI workflow는 기존에 빠졌던 application contracts/RAD provider를 core matrix에, common widgets를 Qt job에 포함했다. 현재 수집 기준 core 59건(각 Linux/Windows), Qt 41건이다. **이 새 workflow를 원격에서 실행한 결과는 없다.** 이전 CI `41137052412` 성공은 이전 포함 범위에 한정한다.
+CI workflow는 기존에 빠졌던 application contracts/RAD provider를 core matrix에, common widgets를 Qt job에 포함했다. 현재 수집 기준 core 59건(각 Linux/Windows), Qt 42건과 기존 CAD job이다. 첫 PR CI에서 Qt41 통과 뒤 interpreter 종료 SIGSEGV가 발생했고, 살아남은 테스트 소유 창을 명시 파괴하도록 고친 `c23149e`에서 push `41172805733`과 PR `41172808346`의 네 job이 모두 정상 종료했다. 새 최종 후보도 정확한 SHA에서 CI를 통과해야 병합한다. 이전 CI `41137052412` 성공은 이전 포함 범위에 한정한다.
 
 리뷰팀의 [요구사항 비판 근거](reviews/20261031-requirements-critic.md), [구현 옹호·반박 근거](reviews/20261031-implementation-defender.md), [코드·회귀 검토 근거](reviews/20261031-code-review.md)를 함께 보존했다. 선택 helper 우회, 닫기 순서/focus loss, 저장된 두 번째 곡선 표시, numeric PART ID alias, 외부 선택의 지연 반영, 카탈로그 설명 가림 지적을 실제 수정했다. 최종 이미지의 가림 여부에 있던 의견 차이는 동일 PNG 바이트를 다시 확인해 해소했으며, 원범위 여섯 항목에 남은 blocker는 없다.
 
-**남은 것은 A7 실제 Windows 입력·100/150/200% DPI·도킹 이동/재시작·VTK 조작 확인이다. A 전체 완료가 아니다.** `docs/catalogue-preview.png`는 실제 Gallery 객체의 Qt offscreen 렌더이며 데스크톱 캡처가 아니다. 앱 접근 승인 시간초과를 우회하거나 재시도하지 않았다. B/C·Workbench·새 RAD 카드/Engine·고급 메셔·MCP·전체 설치 배포를 종료 조건으로 추가하지 않는다.
+**A7의 Windows 실제 창 검증은 별도 [실행 기록](native-windows-validation.md)의 유한 범위로 수행했다.** 허용된 자체 앱 QTest 입력과 실제 Win32 OpenGL framebuffer를 사용해 트리/속성/선택·숫자/곡선/참조·저장/닫기·도킹·새 프로세스 복원을 확인했다. 실제 애플리케이션 DPR 1/1.5/2이며 OS 모니터 DPI 설정을 바꾸거나 수동/OS SendInput 시험을 한 것은 아니다. 200% 큰 창은 화면보다 커서 실제 입력은 960×640 안에서 했다. 1320×840 렌더와 실제 화면 안의 입력을 구분한다. `docs/catalogue-preview.png`는 여전히 offscreen 미리보기이며 새 native 캡처와 혼동하지 않는다. B/C·Workbench·새 RAD 카드/Engine·고급 메셔·MCP·전체 설치 배포를 종료 조건으로 추가하지 않는다.
 
-사용자 재개 지시에 따라 같은 기존 세션에서 보존된 최종 코드를 다시 확인했다. 새 전체 관련 실행은 **99 passed, 1 skipped / 10.18s**, 실패·오류 없음이다. JUnit은 `.test-tmp/final-all-modifications-verification.xml`이다. 세 리뷰어가 소스·설계 요구·동작 근거를 다시 대조해 여섯 항목은 통과로 유지했다. 현재 런타임의 453개 도구에는 CUA/sky/node_repl/데스크톱 제어가 없고 Computer Use 스킬 패키지와 이전 파일 경로도 사용할 수 없었다. 따라서 실제 A7은 실행 불가이며 새 권한 거절이 발생한 것은 아니다.
+초기에는 CUA/sky/node_repl을 사용할 수 없어 Windows 확인을 보류했다. 이후 지원되는 로컬 실행 도구의 정식 승인을 통해 설치된 PySide6의 자체 앱 네이티브 입력 경로를 실행했다. 이전 CUA 승인 시간초과를 우회하거나 잠금 화면에 접근하지 않았다. 리뷰팀은 실제 좁은 카탈로그 가림을 발견해 수정시켰고, 설정 격리 오해·곡선 delegate 진입 방식·Windows의 큰 창 크기 제한도 증거에서 바로잡았다. 초기 설정 시험은 앱의 네 가지 레이아웃 선호값을 읽고 썼을 수 있으며 백업 없는 이전 값을 임의 복원/삭제하지 않았다. 최종 격리 실행과 pytest에서는 실제 설정 값이 전후 같았다.
 
-최신 사용자 지시는 원범위 차단과 중요한 미검증이 해소되고 정확한 최종 SHA의 필수 CI가 통과하면 PR/main 병합을 허용하는 **조건부 승인**이다. 리뷰팀 세 명 모두 실제 A7을 중요한 미검증으로 판단했다. 작업 브랜치 게시·정확한 SHA의 CI·초안 PR 정리는 진행하되, CI 성공으로 실제 Windows 확인을 대체하거나 병합하지 않는다. 별도 GitHub APPROVE·보호 규칙 우회·자동 병합도 수행하지 않는다.
+최신 사용자 지시는 원범위 차단과 중요한 미검증이 해소되고 정확한 최종 SHA의 필수 CI가 통과하면 PR/main 병합을 허용하는 **조건부 승인**이다. 리뷰팀 세 명이 원요구·실제 코드·최종 native 화면/입력 근거를 대조하며 타당한 지적의 수정을 재검토한다. native 기록과 CI는 서로를 대체하지 않는다. 별도 GitHub APPROVE·보호 규칙 우회·자동 병합은 수행하지 않는다.
 
 - `shared-cae-foundation-plan.md`: P0–P9 번호와 A1–A8은 유지. 9절 P6/P7/P8 표의 세부 단계·선행 관계, 10절 묶음 C와 종료 상태, 12절 미확정 처리의 유한 결정을 반영한다. 단계별 실행·검사는 본 작업서에서 관리하고 기존 문서에는 링크와 묶음 표만 둔다.
 - `cae-model-data-design.md`: 7절의 P6→P6a/b/c, P7→P7a/b/c 설명을 맞추고 8절 B1–B6은 그대로 유지한다. P6a/C가 B나 반복 instance 편집 완료가 아님을 명시한다. P7 일반 재메시라는 기존 문구는 P7b로 구체화한다.

@@ -1,0 +1,103 @@
+{
+  "phase": "layout",
+  "scale_factor": "2",
+  "input_method": "QTest events to this process's own Qt widgets; no OS SendInput",
+  "capture_method": "own QWidget.grab plus own VTK framebuffer; no desktop capture",
+  "scaling_scope": "QT_SCALE_FACTOR application scaling; OS DPI is observed, never changed",
+  "stages": [
+    {
+      "name": "native_gallery_exact_oversized_layout_capture",
+      "status": "passed",
+      "evidence": {
+        "initial_window": {
+          "native_handle": 20516766,
+          "exposed": true,
+          "dpr": 2.0,
+          "screen": "LS27B61x",
+          "logical_size": [
+            1280,
+            711
+          ],
+          "frame_geometry": [
+            4,
+            0,
+            1280,
+            727
+          ],
+          "frame_fits_available_screen": false
+        },
+        "requested_logical_size": [
+          1320,
+          840
+        ],
+        "capture": {
+          "path": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-layout-200\\layout-gallery-exact-1320x840-oversized.png",
+          "sha256": "a01a4af09a9804905db2e42fa98447fc97455ef557bfb6eb3a51d9019a7375f7",
+          "pixels": [
+            2640,
+            1680
+          ],
+          "dpr": 2.0,
+          "logical_size": [
+            1320,
+            840
+          ],
+          "frame_geometry": [
+            10,
+            10,
+            1320,
+            856
+          ],
+          "frame_fits_available_screen": false
+        },
+        "scope": "Own-widget oversized layout capture only; no input or full physical-screen reachability claim"
+      }
+    }
+  ],
+  "input_desktop": "Default",
+  "settings_stores": {
+    "CAELab/ComponentGallery": {
+      "file": "C:/Users/pikac/Documents/Codex/2026-10-31/task-2/prep/.test-tmp/native-ui/isolated-layout-200/settings/CAELab-ComponentGallery.ini",
+      "format": "Format.IniFormat",
+      "fallbacks": false
+    }
+  },
+  "settings_isolation": "Explicit per-window INI filenames; native stores are read only and compared after cleanup",
+  "platform": "windows",
+  "pyside": "6.9.1",
+  "font_families": 266,
+  "fonts": {
+    "Segoe UI": true,
+    "Malgun Gothic": true
+  },
+  "screens": [
+    {
+      "name": "LS27B61x",
+      "dpr": 2.0,
+      "logical_dpi": 96.0,
+      "physical_dpi": 54.398232202580026,
+      "geometry": [
+        0,
+        0,
+        1280,
+        720
+      ],
+      "available_geometry": [
+        0,
+        0,
+        1280,
+        696
+      ]
+    }
+  ],
+  "remaining_workers": 0,
+  "native_settings_unchanged": true,
+  "unverified": [
+    "OS SendInput and manual human input were not used",
+    "Application scale factors do not prove changes to OS monitor DPI",
+    "Oversized 1320x840 captures at forced 2x do not prove full physical-screen reachability; input uses fitted 960x640",
+    "Any false dock input assertion remains unverified; API fallback is not input evidence"
+  ],
+  "acceptance_claim": "Only listed stage assertions; no blanket A7 completion claim",
+  "status": "passed"
+}

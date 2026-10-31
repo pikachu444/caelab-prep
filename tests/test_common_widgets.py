@@ -12,7 +12,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import pytest
 from PySide6.QtCore import QSettings, Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QFileDialog, QLineEdit, QMainWindow, QMenu, QMessageBox, QToolBar
+from PySide6.QtWidgets import QApplication, QFileDialog, QLineEdit, QMainWindow, QMenu, QMessageBox, QScrollArea, QToolBar
 
 from caelab_prep.application.contracts import ActionSpec, SetProperties
 from caelab_prep.application.neutral import CurveSession
@@ -23,9 +23,7 @@ pytestmark = pytest.mark.usefixtures("qt_widgets")
 
 
 @pytest.fixture
-def app(tmp_path, qt_widgets):
-    QSettings.setDefaultFormat(QSettings.Format.IniFormat)
-    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
+def app(qt_widgets):
     return qt_widgets
 
 
@@ -398,12 +396,15 @@ def test_gallery_reference_picker_applies_typed_candidate_undo_and_saves(app, tm
 
 
 @pytest.mark.parametrize("window_kind", ["rad", "gallery"])
-def test_shared_shell_clean_close_accepts_first_request(app, window_kind):
+def test_shared_shell_clean_close_accepts_first_request(app, tmp_path, window_kind):
     if window_kind == "rad":
         from caelab_prep.ui.main_window import MainWindow
         window = MainWindow(enable_viewport=False)
     else:
         window = GalleryWindow()
+    assert window._settings.format() == QSettings.Format.IniFormat
+    assert not window._settings.fallbacksEnabled()
+    assert Path(window._settings.fileName()).is_relative_to(tmp_path)
     assert window.actions.action("file.save") is window.save_action
     assert any(window.save_action in menu.actions() for menu in window.findChildren(QMenu))
     assert any(window.save_action in toolbar.actions() for toolbar in window.findChildren(QToolBar))
@@ -411,6 +412,8 @@ def test_shared_shell_clean_close_accepts_first_request(app, window_kind):
     app.processEvents()
     assert window.close()
     assert not window.isVisible()
+    window._settings.sync()
+    assert Path(window._settings.fileName()).is_file()
 
 
 def test_catalogue_browsing_exposes_source_metadata_and_distinct_semantic_icons(app):
@@ -461,6 +464,82 @@ def test_catalogue_numeric_and_curve_scenes_use_real_apply_error_and_undo(app):
     curve.undo_button.click()
     assert curve.session.curve_points(curve.target) == original
     catalogue.close()
+
+
+def test_narrow_gallery_catalogue_scrolls_controls_into_view_before_edit_and_undo(app):
+    window = GalleryWindow()
+    window._allow_close = True
+    window.resize(960, 640)
+    catalogue = window.catalogue
+    catalogue.setMaximumSize(420, 400)
+    window.catalogue_action.trigger()
+    window.show()
+
+    def settle():
+        for _ in range(3):
+            app.processEvents()
+            QTest.qWait(5)
+
+    def reveal(control):
+        settle()
+        catalogue.content_scroll.ensureWidgetVisible(control, 0, 0)
+        settle()
+        center = control.rect().center()
+        # Line edits may reveal only their caret in nested scroll areas.
+        ancestor = control.parentWidget()
+        while ancestor is not catalogue:
+            if isinstance(ancestor, QScrollArea):
+                position = control.mapTo(ancestor.widget(), center)
+                ancestor.ensureVisible(position.x(), position.y(), 4, 4)
+                settle()
+            ancestor = ancestor.parentWidget()
+        assert catalogue.content_scroll.viewport().rect().contains(
+            control.mapTo(catalogue.content_scroll.viewport(), center)), {
+                "control": control.geometry(), "content": catalogue.content_scroll.widget().size(),
+                "horizontal": (catalogue.content_scroll.horizontalScrollBar().value(), catalogue.content_scroll.horizontalScrollBar().maximum()),
+                "vertical": (catalogue.content_scroll.verticalScrollBar().value(), catalogue.content_scroll.verticalScrollBar().maximum()),
+            }
+        ancestors = []
+        ancestor = control
+        while ancestor is not None:
+            ancestors.append((type(ancestor).__name__, ancestor.geometry(), control.mapTo(ancestor, center)))
+            ancestor = ancestor.parentWidget()
+        assert control.visibleRegion().contains(center), "\n".join(map(str, ancestors))
+
+    try:
+        settle()
+        assert window.width() == 960 and catalogue.width() <= 420
+        assert catalogue.content_scroll.horizontalScrollBar().maximum() > 0
+        numeric = catalogue.scene
+        editor = numeric.editor.editors["poisson_ratio"]
+        reveal(editor)
+        editor.setFocus()
+        editor.selectAll()
+        QTest.keyClicks(editor, "0.28")
+        reveal(numeric.apply_button)
+        QTest.mouseClick(numeric.apply_button, Qt.MouseButton.LeftButton)
+        assert next(p.value for p in numeric.session.properties(numeric.target) if p.name == "poisson_ratio") == .28
+        reveal(numeric.undo_button)
+        QTest.mouseClick(numeric.undo_button, Qt.MouseButton.LeftButton)
+        assert next(p.value for p in numeric.session.properties(numeric.target) if p.name == "poisson_ratio") == .3
+        reveal(numeric.revert_button)
+        for asset in ("component.properties", "component.curve", "component.actions"):
+            assert catalogue.select_asset(asset)
+            settle()
+            scene = catalogue.scene
+            if asset == "component.properties":
+                reference = scene.editor.editors["reference_curve"]
+                reveal(reference)
+                reveal(scene.apply_button)
+                reveal(scene.revert_button)
+            elif asset == "component.curve":
+                reveal(scene.table.apply_button)
+            else:
+                reveal(scene.enable_control)
+                QTest.mouseClick(scene.enable_control, Qt.MouseButton.LeftButton)
+                assert not scene.record_action.isEnabled()
+    finally:
+        window.close()
 
 
 @pytest.mark.parametrize("window_kind", ["rad", "gallery"])

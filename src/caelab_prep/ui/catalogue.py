@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QMenu,
-                              QPlainTextEdit, QPushButton, QSplitter, QStackedWidget,
+                              QPlainTextEdit, QPushButton, QScrollArea, QSplitter, QStackedWidget,
                               QTableWidget, QTableWidgetItem, QToolBar, QToolButton,
                               QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
 
@@ -390,7 +390,16 @@ class CatalogueWidget(QWidget):
         self._records = {asset.key: asset for asset in self.assets}
         self._items, self._pages = {}, {}
         self.setAccessibleName("Shared component catalogue")
-        layout = _layout(self)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        self.content_scroll = QScrollArea()
+        self.content_scroll.setAccessibleName("Catalogue workspace")
+        self.content_scroll.setWidgetResizable(True)
+        self.content_scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        outer.addWidget(self.content_scroll)
+        content = QWidget()
+        layout = _layout(content)
+        self.content_scroll.setWidget(content)
         layout.addWidget(_label("Component catalogue", title=True))
         layout.addWidget(_label("Browse shared source assets. Component scenes use editable sample documents; the material workspace is a composition example."))
         splitter = QSplitter()

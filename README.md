@@ -4,13 +4,13 @@
 
 **OpenRadioss / OpenCourant는 첫 번째 적용 대상입니다.** 공용 기반을 사용하는 첫 응용 프로그램으로 독립 데스크톱 전처리기를 개발합니다. 이 앱에서는 형상·메시를 불러와 재료·단면·접촉·하중·구속·초기조건과 해석 제어를 편집하고 Starter/Engine 파일을 작성하는 흐름을 목표로 합니다. 다른 CAE 프로그램의 재사용은 공용 기반의 설계 범위에 포함되며, 현재 여러 솔버를 지원한다는 뜻은 아닙니다.
 
-**현재 상태: 공용 Qt 부품·실행형 갤러리를 기존 RAD 편집기에 연결했습니다.** 트리·그룹 속성·수치/단위·벡터·표/기본 곡선·Action·도킹을 공유합니다. 기존 RAD 편집·Undo/Redo·작업 문서·RAD 출력은 유지하고, 중립 재료/곡선 문서도 RAD 없이 저장·재열기합니다. 실제 Windows 입력·배율 확인은 보류이며 CAD에서 새 해석 모델 전체를 구성하는 기능은 후속입니다.
+**현재 상태: 공용 Qt 부품·탐색형 카탈로그를 기존 RAD 편집기와 갤러리에 연결했습니다.** 트리·그룹 속성·수치/단위·벡터·표/기본 곡선·Action·도킹을 공유합니다. 기존 RAD 편집·Undo/Redo·작업 문서·RAD 출력은 유지하고, 중립 재료/곡선 문서도 RAD 없이 저장·재열기합니다. 실제 Windows 창에서 입력·선택·저장·닫기·도킹과 100/150/200% 애플리케이션 배율을 확인했습니다. CAD에서 새 해석 모델 전체를 구성하는 기능은 후속입니다.
 
 공용 부품은 `ui/design`, `ui/widgets`, `ui/actions.py`, `ui/shell.py`에 있고 갤러리와 실제 전처리기가 같은 코드를 사용합니다. 솔버별 카드 의미·단위·원문·출력은 RAD adapter/session에 남습니다. 모든 솔버의 FE 스키마나 전체 CAE 기반이 완성됐다는 뜻은 아닙니다.
 
 ![실제 Qt/VTK 네이티브 편집기](docs/native-editor.png)
 
-소형 RAD를 실제 Linux Qt/VTK 창에서 열어 편집·Undo/Redo·저장·재열기·출력과 마우스 절점/요소 선택을 확인한 화면입니다. 별도 입력의 재료·구속 편집 출력은 OpenCourant Starter에서도 값이 유지됐습니다. Windows GUI·설치형 배포와 대용량 성능은 아직 확인하지 않았습니다.
+소형 RAD를 실제 Linux Qt/VTK 창에서 열어 편집·Undo/Redo·저장·재열기·출력과 마우스 절점/요소 선택을 확인한 기존 화면입니다. 별도 입력의 재료·구속 편집 출력은 OpenCourant Starter에서도 값이 유지됐습니다. 새 Windows 실행의 범위와 화면은 [Windows 검증 기록](docs/native-windows-validation.md)에 있습니다. 설치형 배포와 대용량 성능은 후속입니다.
 
 ## 공용 부품과 갤러리 실행
 
@@ -30,7 +30,9 @@ caelab-prep gallery path/to/material-curves.caeprep
 
 ![공용 갤러리의 Qt offscreen 미리보기](docs/gallery-preview.png)
 
-위 그림은 설치된 Windows 글꼴을 QA 프로세스에 로드한 **Qt offscreen 렌더**입니다. 실제 Windows 입력·도킹·DPI 또는 VTK 검증 증거가 아닙니다. A의 구현 결과와 플랫폼 확인 보류는 [작업서](docs/execution-stages.md)에 구분합니다.
+위 두 그림은 설치된 Windows 글꼴을 QA 프로세스에 로드한 **Qt offscreen 렌더**입니다. 아래는 실제 Windows QPA 창에서 입력 검증한 갤러리의 자체 위젯 캡처입니다. 전체 데스크톱 캡처는 아니며, VTK는 별도 실제 OpenGL framebuffer로 확인했습니다. OS 모니터 DPI 설정은 바꾸지 않았습니다. 배율·작은 창·실행 방법은 [Windows 검증 기록](docs/native-windows-validation.md)에 구분합니다.
+
+![실제 Windows 갤러리에서 탐색형 카탈로그 조작](docs/native-windows/catalogue-100.png)
 
 ## 첫 적용 앱 실행
 
