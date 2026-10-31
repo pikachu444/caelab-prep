@@ -296,7 +296,7 @@ class ActionScene(QWidget):
         self.enable_control = QCheckBox("Enable Record message")
         self.enable_control.setChecked(True)
         self.enable_control.toggled.connect(self._refresh_actions)
-        layout.addWidget(self.enable_control)
+        layout.addWidget(self.enable_control, 0, Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(self.message)
         self.details = _label("Checked state is shared by both presentations of Show details.")
         self.details.hide()

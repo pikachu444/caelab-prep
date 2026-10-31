@@ -1,7 +1,7 @@
 """Provider-driven model/view navigation without domain-specific naming."""
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QStandardItem, QStandardItemModel
+from PySide6.QtGui import QColor, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTreeView
 
 from ..theme import icon
@@ -17,9 +17,12 @@ class ModelTree(QTreeView):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setObjectName("modelTree")
         self.setAccessibleName("Model objects")
         self.setUniformRowHeights(True)
-        self.setAlternatingRowColors(True)
+        self.setAlternatingRowColors(False)
+        self.setAllColumnsShowFocus(True)
+        self.setTextElideMode(Qt.TextElideMode.ElideRight)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setIndentation(TOKENS["tree_indent"])
@@ -35,7 +38,7 @@ class ModelTree(QTreeView):
         scroll = self.verticalScrollBar().value()
         expansion = {self._model.item(row).text(): self.isExpanded(self._model.item(row).index())
                      for row in range(self._model.rowCount())}
-        widths = [self.columnWidth(column) for column in range(3)] if self._model.rowCount() else (220, 80, 100)
+        widths = [self.columnWidth(column) for column in range(3)] if self._model.rowCount() else (210, 72, 80)
         self._resetting = True
         self._model.clear()
         self._model.setHorizontalHeaderLabels(["Name", "Type", "ID"])
@@ -47,23 +50,40 @@ class ModelTree(QTreeView):
                 parent = QStandardItem(group)
                 parent.setEditable(False)
                 parent.setSelectable(False)
+                font = parent.font()
+                font.setBold(True)
+                parent.setFont(font)
+                parent.setForeground(QColor(TOKENS["group_heading"]))
+                parent.setBackground(QColor(TOKENS["raised"]))
                 groups[group] = parent
-                self._model.appendRow([parent, QStandardItem(), QStandardItem()])
+                cells = [parent, QStandardItem(), QStandardItem()]
+                for cell in cells[1:]:
+                    cell.setSelectable(False)
+                    cell.setBackground(QColor(TOKENS["raised"]))
+                self._model.appendRow(cells)
             ref = field(node, "ref")
             name = QStandardItem(icon(field(node, "icon", "card")), str(field(node, "label", "")))
             name.setData(ref, Qt.ItemDataRole.UserRole)
             name.setToolTip(str(field(node, "tooltip", "") or field(node, "label", "")))
             kind = str(field(ref, "kind", ""))
             native = field(ref, "native_scope") or field(ref, "object_id", "")
-            groups[group].appendRow([name, QStandardItem(kind), QStandardItem(str(native))])
+            kind_item, native_item = QStandardItem(kind), QStandardItem(str(native))
+            kind_item.setForeground(QColor(TOKENS["muted"]))
+            native_item.setForeground(QColor(TOKENS["muted"]))
+            native_item.setToolTip(str(native))
+            groups[group].appendRow([name, kind_item, native_item])
             self._indices[ref] = name
         # Preserve useful names in a narrow dock; secondary columns can scroll.
         self.header().setStretchLastSection(False)
         self.header().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         for column, width in enumerate(widths):
             self.setColumnWidth(column, width)
         self.setColumnHidden(2, not any(field(field(node, "ref"), "native_scope") for node in nodes))
         for group, item in groups.items():
+            count = self._model.item(item.row(), 1)
+            count.setText(str(item.rowCount()))
+            count.setForeground(QColor(TOKENS["muted"]))
             self.setExpanded(item.index(), expansion.get(group, True))
         if selected in self._indices:
             self.setCurrentIndex(self._indices[selected].index())

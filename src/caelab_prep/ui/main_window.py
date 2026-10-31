@@ -10,9 +10,9 @@ from PySide6.QtCore import QSettings, QSize, Qt, QThreadPool, Signal
 from PySide6.QtGui import QCloseEvent, QFont, QKeySequence
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QFileDialog,
-    QLabel, QLineEdit, QMainWindow, QMessageBox,
+    QLabel, QLineEdit, QMainWindow, QMenu, QMessageBox,
     QPlainTextEdit, QProgressBar, QPushButton, QScrollArea, QSizePolicy, QTabWidget, QToolBar, QTreeWidget, QTreeWidgetItem,
-    QVBoxLayout, QWidget,
+    QToolButton, QVBoxLayout, QWidget,
 )
 
 from .theme import STYLESHEET
@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
         self._settings = QSettings("CAELab", "Prep")
         self.setObjectName("caelabPrepWindow")
         self.setWindowTitle("CAELab Prep")
-        self.resize(1320, 840)
+        self.resize(1440, 900)
         self.setMinimumSize(900, 600)
         self.setDockOptions(QMainWindow.DockOption.AllowTabbedDocks | QMainWindow.DockOption.AllowNestedDocks)
         self.setStyleSheet(STYLESHEET)
@@ -96,7 +96,9 @@ class MainWindow(QMainWindow):
         self._create_model_dock()
         self._create_properties_dock()
         self._create_messages_dock()
-        self.resizeDocks([self.model_dock, self.properties_dock], [270, 330], Qt.Orientation.Horizontal)
+        self.splitDockWidget(self.model_dock, self.properties_dock, Qt.Orientation.Vertical)
+        self.resizeDocks([self.model_dock], [350], Qt.Orientation.Horizontal)
+        self.resizeDocks([self.model_dock, self.properties_dock], [300, 430], Qt.Orientation.Vertical)
         self.resizeDocks([self.messages_dock], [125], Qt.Orientation.Vertical)
         self._counts = QLabel()
         self._counts.setContentsMargins(8, 0, 10, 0)
@@ -110,8 +112,9 @@ class MainWindow(QMainWindow):
         state = self._settings.value("windowState")
         if geometry:
             self.restoreGeometry(geometry)
-        if state:
-            self.restoreState(state, 1)
+        restored = bool(state) and self.restoreState(state, 2)
+        if not restored:
+            self.messages_dock.hide()
         self._sessionEvent.connect(self._session_changed, Qt.ConnectionType.QueuedConnection)
         self._unsubscribe = self.session.subscribe(self._sessionEvent.emit)
         self.refresh_document(rebuild_viewport=bool(self._summary().get("document_id")))
@@ -132,6 +135,10 @@ class MainWindow(QMainWindow):
         self.reload_properties_action = self._action("card", "Reload properties", self._reload_properties, "Ctrl+R", action_id="edit.reload")
         self.fit_action = self._action("fit", "Fit model", self._fit, "F", action_id="view.fit", contexts=("mesh",))
         self.iso_action = self._action("iso", "Isometric view", self._isometric, "0", action_id="view.isometric", contexts=("mesh",))
+        self.standard_view_actions = [
+            self._action("iso", f"{axis.title()} view", lambda checked=False, a=axis: self._standard_view(a),
+                         action_id=f"view.{axis}", contexts=("mesh",))
+            for axis in ("front", "top", "right")]
         self.edges_action = self._action("edges", "Show mesh edges", self._toggle_edges, checkable=True, action_id="view.edges", contexts=("mesh",))
         self.edges_action.setChecked(True)
         self.close_action = self._action("card", "Exit", self.close, QKeySequence.StandardKey.Quit, action_id="file.close")
@@ -149,27 +156,34 @@ class MainWindow(QMainWindow):
         edit.addAction(self.reload_properties_action)
         self._view_menu = self.menuBar().addMenu("&View")
         self._view_menu.addActions([self.fit_action, self.iso_action, self.edges_action])
+        self._view_menu.addActions(self.standard_view_actions)
 
     def _create_toolbar(self):
         toolbar = QToolBar("Document", self)
         toolbar.setObjectName("documentToolbar")
         toolbar.setMovable(False)
-        toolbar.setIconSize(QSize(20, 20))
-        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        toolbar.setIconSize(QSize(18, 18))
+        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.addToolBar(toolbar)
-        toolbar.addActions([self.open_rad_action, self.open_project_action, self.save_action, self.export_action])
+        brand = QLabel("CAELab  /  Prep")
+        brand.setObjectName("applicationBrand")
+        brand.setContentsMargins(10, 0, 16, 0)
+        toolbar.addWidget(brand)
+        for action, text in ((self.open_rad_action, "Open deck"), (self.save_action, "Save"),
+                             (self.export_action, "Export")):
+            toolbar.addAction(action)
+            button = toolbar.widgetForAction(action)
+            button.setText(text)
+            button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         toolbar.addSeparator()
         toolbar.addActions([self.undo_action, self.redo_action])
-        toolbar.addSeparator()
-        toolbar.addActions([self.fit_action, self.iso_action, self.edges_action])
-        toolbar.addSeparator()
-        label = QLabel("  Select  ")
-        toolbar.addWidget(label)
-        self.pick_mode = QComboBox()
-        self.pick_mode.setObjectName("pickMode")
-        self.pick_mode.addItems(["Elements", "Nodes"])
-        self.pick_mode.currentIndexChanged.connect(self._pick_mode_changed)
-        toolbar.addWidget(self.pick_mode)
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        toolbar.addWidget(spacer)
+        self.document_state = QLabel()
+        self.document_state.setObjectName("documentState")
+        self.document_state.setContentsMargins(8, 0, 12, 0)
+        toolbar.addWidget(self.document_state)
 
     def _create_viewport(self, enabled):
         self.viewport = None
@@ -178,7 +192,7 @@ class MainWindow(QMainWindow):
                 from .viewport import MeshViewport
                 self.viewport = MeshViewport(self)
                 self.viewport.entityPicked.connect(self._entity_picked)
-                self.viewport.diagnostic.connect(self._append_message)
+                self.viewport.diagnostic.connect(self._viewport_diagnostic)
                 content = self.viewport
             except Exception as exc:
                 label = QLabel(f"3D viewer could not start.\n{exc}")
@@ -189,24 +203,68 @@ class MainWindow(QMainWindow):
             label = QLabel("3D viewer disabled for this session")
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             content = label
-        self.viewport_frame = ViewportFrame(content, "Model", "Elements / nodes")
+        self.viewport_frame = ViewportFrame(content, "Model", "")
+        for action, text in ((self.fit_action, "Fit"), (self.iso_action, "Isometric"), (self.edges_action, "Edges")):
+            button = self.viewport_frame.add_action(action)
+            button.setText(text)
+            if action == self.iso_action:
+                menu = QMenu(button)
+                menu.addActions([self.iso_action, *self.standard_view_actions])
+                button.setMenu(menu)
+                button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
+        self.pick_mode = QComboBox()
+        self.pick_mode.setObjectName("pickMode")
+        self.pick_mode.setAccessibleName("Mesh selection type")
+        self.pick_mode.addItems(["Elements", "Nodes"])
+        self.pick_mode.currentIndexChanged.connect(self._pick_mode_changed)
+        self.viewport_frame.header.addWidget(self.pick_mode)
         self.setCentralWidget(self.viewport_frame)
 
     def _dock(self, name, title, widget, area):
         return create_dock(self, name, title, widget, area, menu=self._view_menu)
 
     def _create_model_dock(self):
+        panel = QWidget()
+        layout = QVBoxLayout(panel)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        self.model_filter = QLineEdit()
+        self.model_filter.setObjectName("modelFilter")
+        self.model_filter.setPlaceholderText("Filter model objects")
+        self.model_filter.setAccessibleName("Filter model objects")
+        self.model_filter.setClearButtonEnabled(True)
+        self.model_filter.textChanged.connect(self._filter_model)
+        layout.addWidget(self.model_filter)
         self.model_tree = ModelTree()
         self.model_tree.setObjectName("modelTree")
         self.model_tree.nodeSelected.connect(self._card_selected)
-        self.model_dock = self._dock("modelDock", "Model", self.model_tree, Qt.DockWidgetArea.LeftDockWidgetArea)
+        layout.addWidget(self.model_tree, 1)
+        self.model_dock = self._dock("modelDock", "Model browser", panel, Qt.DockWidgetArea.LeftDockWidgetArea)
+        self.model_dock.setMinimumWidth(300)
+
+    def _filter_model(self, text):
+        query = text.strip().casefold()
+        model = self.model_tree.model()
+        for row in range(model.rowCount()):
+            group = model.index(row, 0)
+            group_match = query in str(group.data() or "").casefold()
+            matches = 0
+            for child in range(model.rowCount(group)):
+                values = " ".join(str(model.index(child, column, group).data() or "")
+                                  for column in range(model.columnCount(group))).casefold()
+                visible = not query or group_match or query in values
+                self.model_tree.setRowHidden(child, group, not visible)
+                matches += visible
+            self.model_tree.setRowHidden(row, group.parent(), not matches)
+            if query and matches:
+                self.model_tree.expand(group)
 
     def _create_properties_dock(self):
         panel = QWidget()
         panel.setAutoFillBackground(True)
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(14, 15, 14, 12)
-        layout.setSpacing(9)
+        layout.setContentsMargins(0, 0, 0, 6)
+        layout.setSpacing(4)
         self.property_editor = PropertyEditor()
         self.property_title = self.property_editor.title
         self.property_subtitle = self.property_editor.subtitle
@@ -223,11 +281,14 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.curve_plot, 2)
         self.curve_table.hide()
         self.curve_plot.hide()
-        self.units_note = QLabel("Values retain the units declared by the input deck.\nA field is applied when you finish editing it.")
+        self.units_note = QLabel()
         self.units_note.setObjectName("unitsNote")
         self.units_note.setWordWrap(True)
+        self.units_note.setContentsMargins(10, 4, 10, 4)
+        self.units_note.setToolTip("Values retain the input deck unit context. No unit conversion is applied.")
         layout.addWidget(self.units_note)
-        tabs = QTabWidget()
+        self.property_tabs = tabs = QTabWidget()
+        tabs.setObjectName("inspectorTabs")
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.Shape.NoFrame)
@@ -238,8 +299,8 @@ class MainWindow(QMainWindow):
         self.raw_source.setFont(QFont("Consolas", 10))
         self.raw_source.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         tabs.addTab(self.raw_source, "Card source")
-        self.properties_dock = self._dock("propertiesDock", "Properties", tabs, Qt.DockWidgetArea.RightDockWidgetArea)
-        self.properties_dock.setMinimumWidth(270)
+        self.properties_dock = self._dock("propertiesDock", "Inspector", tabs, Qt.DockWidgetArea.LeftDockWidgetArea)
+        self.properties_dock.setMinimumWidth(300)
 
     def _create_messages_dock(self):
         self.messages = QTreeWidget()
@@ -305,6 +366,8 @@ class MainWindow(QMainWindow):
             name = str(summary.get("name") or "Untitled")
             dirty = bool(summary.get("dirty"))
             self.setWindowTitle(f"{name}{' *' if dirty else ''} — CAELab Prep")
+            self.viewport_frame.title.setText(name if summary.get("document_id") else "Model")
+            self.document_state.setText("Unsaved changes" if dirty else "Radioss" if summary.get("document_id") else "")
             self._refresh_tree()
             self._refresh_fields()
             self._refresh_actions(summary)
@@ -317,17 +380,19 @@ class MainWindow(QMainWindow):
                 else:
                     level, message = "Info", str(diagnostic)
                 self.messages.addTopLevelItem(QTreeWidgetItem([level, message]))
+                if level.casefold() in ("warning", "error"):
+                    self.messages_dock.show()
             if rebuild_viewport and self.viewport is not None:
                 try:
                     self.viewport.set_mesh(self.session.mesh_view())
                 except Exception as exc:
-                    self._append_message(f"Mesh display failed: {exc}", "Error")
+                    self._viewport_diagnostic(f"Mesh display failed: {exc}")
             if self.viewport is not None and summary.get("document_id"):
                 self.viewport.set_selection(self.session.selection())
             self._last_presented_document = summary.get("document_id")
             self._last_presented_epoch = summary.get("document_epoch")
             self._last_presented_revision = summary.get("revision", 0)
-            self.statusBar().showMessage("Ready" if summary.get("document_id") else "Open a Radioss deck or a saved project")
+            self.statusBar().clearMessage()
         finally:
             self._updating = False
 
@@ -360,11 +425,18 @@ class MainWindow(QMainWindow):
         self._card_refs = {node.ref.object_id: node.ref for node in nodes}
         self.model_tree.blockSignals(True)
         try:
-            self.model_tree.set_nodes(nodes)
+            groups = ("Parts", "Materials", "Properties", "Groups", "Constraints", "Contacts",
+                      "Loads", "Initial conditions", "Curves", "Nodes", "Elements", "Other cards")
+            order = {group: index for index, group in enumerate(groups)}
+            self.model_tree.set_nodes(sorted(nodes, key=lambda node: order.get(node.group, len(groups))))
+            # Every row is a RAD card; the native keyword carries the useful distinction.
+            self.model_tree.setColumnHidden(1, True)
+            self.model_tree.model().setHeaderData(2, Qt.Orientation.Horizontal, "Card")
             if self._selected_card_id in self._card_refs:
                 self.model_tree.select_ref(self._card_refs[self._selected_card_id])
             else:
                 self._selected_card_id = None
+            self._filter_model(self.model_filter.text())
         finally:
             self.model_tree.blockSignals(False)
 
@@ -431,14 +503,15 @@ class MainWindow(QMainWindow):
         self.apply_vector_button.hide()
         self.curve_table.hide()
         self.curve_plot.hide()
+        self.units_note.clear()
         self.field_editors = {}
         self._field_specs = {}
 
     def _refresh_fields(self):
         self._clear_form()
         if not self._selected_card_id:
-            self.property_title.setText("Properties")
-            self.property_subtitle.setText("Select an item in the model tree")
+            self.property_title.setText("No object selected")
+            self.property_subtitle.clear()
             self.raw_source.clear()
             return
         cards = {card["id"]: card for card in self.session.list_cards()}
@@ -455,13 +528,13 @@ class MainWindow(QMainWindow):
         self._editor_revision = self._summary().get("revision")
         fields = self.session.card_fields(self._selected_card_id)
         units = self.provider.unit_context(self._card_refs[self._selected_card_id])
-        unit_note = "Values use the input deck units; no unit conversion is applied."
+        unit_note = "Units: input deck"
         if units.get("unit_id") is not None:
-            unit_note += f"\nMaterial unit system ID: {units['unit_id']} (card override)."
+            unit_note = f"Material unit system: {units['unit_id']}"
         elif units.get("global"):
             basis = units["global"]
-            unit_note += "\nDeck basis: " + ", ".join(f"{key}: {value}" for key, value in basis.items()) + "."
-        self.units_note.setText(unit_note + "\nA field is applied when you finish editing it.")
+            unit_note = "Units: " + ", ".join(f"{key}: {value}" for key, value in basis.items())
+        self.units_note.setText(unit_note)
         specs = self.provider.properties(self._card_refs[self._selected_card_id])
         scalar_specs = tuple(spec for spec in specs if spec.kind != "table")
         self.property_editor.set_fields(scalar_specs, title=str(card.get("title") or "Properties"),
@@ -472,13 +545,13 @@ class MainWindow(QMainWindow):
             if not editor.isEnabled():
                 continue
             if isinstance(editor, VectorEdit):
-                self.property_editor.setMinimumHeight(240)
+                self.property_editor.setMinimumHeight(190)
                 for component, child in zip(("vx", "vy", "vz"), editor.editors):
                     self.field_editors[component] = child
                     child.setObjectName("field_" + component)
                     child.returnPressed.connect(lambda n=component, e=child: self._commit_text(n, e))
                 self.apply_vector_button.show()
-                self.units_note.setText(unit_note + "\nApply velocity or press Enter to commit all three components together.")
+                self.apply_vector_button.setToolTip("Apply all three velocity components together (Enter)")
             elif isinstance(editor, QCheckBox):
                 editor.toggled.connect(lambda checked, n=name: self._commit_field(n, checked))
             elif isinstance(editor, QComboBox):
@@ -498,12 +571,12 @@ class MainWindow(QMainWindow):
             self.curve_plot.set_points(table_spec.value, x_label="X (input deck)", y_label="Y (input deck)")
             self.curve_table.show()
             self.curve_plot.show()
-            self.units_note.setText(unit_note + "\nApply curve commits all existing rows together.")
+            self.units_note.setText(unit_note)
         if not fields and not specs:
-            self.property_subtitle.setText(str(card.get("keyword") or "") + "\nPreserved read-only; no supported fields.")
+            self.property_subtitle.setText(str(card.get("keyword") or "") + "  /  Read-only")
         elif specs and not any(spec.editable for spec in specs):
-            self.property_subtitle.setText(str(card.get("keyword") or "") + "\nRead-only native object summary")
-            self.units_note.setText("Selecting this native part highlights its displayed elements.")
+            self.property_subtitle.setText(str(card.get("keyword") or "") + "  /  Read-only")
+            self.units_note.clear()
 
     def _commit_text(self, name, editor):
         if self._updating or self.file_edits.choosing or not editor.isModified():
@@ -519,7 +592,7 @@ class MainWindow(QMainWindow):
                 raise ValueError("Enter a finite number")
         except (TypeError, ValueError) as exc:
             self.property_editor.set_error(name, str(exc))
-            self._show_error(exc)
+            self._append_message(str(exc), "Error")
             return False
         return self._commit_field(name, value)
 
@@ -535,10 +608,11 @@ class MainWindow(QMainWindow):
             value = editor.numeric_value()
         except ValueError as exc:
             self.property_editor.set_error("velocity", str(exc))
-            self._show_error(exc)
+            self._append_message(str(exc), "Error")
             return False
         previous = tuple(self._field_specs[name]["value"] for name in ("vx", "vy", "vz"))
         if value == previous:
+            self.property_editor.set_error("velocity", "")
             for child in editor.editors:
                 child.setModified(False)
             return True
@@ -546,7 +620,7 @@ class MainWindow(QMainWindow):
             self._submit_properties({"velocity": value})
         except Exception as exc:
             self.property_editor.set_error("velocity", str(getattr(exc, "message", exc)))
-            self._show_error(exc)
+            self._append_message(str(getattr(exc, "message", exc)), "Error")
             return False
         self.refresh_document()
         self._consume_pending_selection()
@@ -563,7 +637,8 @@ class MainWindow(QMainWindow):
                 return True
             self._submit_properties({"points": tuple(map(tuple, points))})
         except Exception as exc:
-            self._show_error(exc)
+            self.curve_table.message.setText(str(getattr(exc, "message", exc)))
+            self._append_message(str(getattr(exc, "message", exc)), "Error")
             return False
         self.refresh_document()
         self._consume_pending_selection()
@@ -575,6 +650,7 @@ class MainWindow(QMainWindow):
             return False
         spec = self._field_specs.get(name, {})
         if value == spec.get("value"):
+            self.property_editor.set_error(name, "")
             editor = self.field_editors.get(name)
             if isinstance(editor, QLineEdit):
                 editor.setModified(False)
@@ -586,7 +662,7 @@ class MainWindow(QMainWindow):
             self._submit_properties({name: value})
         except Exception as exc:
             self.property_editor.set_error(name, str(getattr(exc, "message", exc)))
-            self._show_error(exc)
+            self._append_message(str(getattr(exc, "message", exc)), "Error")
             return False
         label = _field_label(spec) if spec else "Property"
         self.refresh_document()
@@ -664,15 +740,24 @@ class MainWindow(QMainWindow):
             editor = self.field_editors.get(name)
             if isinstance(editor, QLineEdit) and editor.isModified():
                 if not self._commit_text(name, editor):
+                    self.property_tabs.setCurrentIndex(0)
+                    self.property_editor.scroll.ensureWidgetVisible(editor)
+                    self.property_tabs.widget(0).ensureWidgetVisible(editor)
                     editor.setFocus()
+                    self.statusBar().showMessage("Correct the highlighted property before continuing", 8000)
                     return False
         if not self.curve_table.isHidden() and self.curve_table.has_draft():
             try:
                 points = self.curve_table.points()
             except ValueError as exc:
-                self._show_error(exc)
+                self.curve_table.message.setText(str(exc))
+                self._append_message(str(exc), "Error")
+                self.property_tabs.setCurrentIndex(0)
+                self.property_tabs.widget(0).ensureWidgetVisible(self.curve_table)
                 return False
             if not self._commit_curve(points):
+                self.property_tabs.setCurrentIndex(0)
+                self.property_tabs.widget(0).ensureWidgetVisible(self.curve_table)
                 return False
         self._consume_pending_selection()
         return True
@@ -694,6 +779,10 @@ class MainWindow(QMainWindow):
 
     def _append_message(self, message, level="Warning"):
         self.messages.addTopLevelItem(QTreeWidgetItem([level, str(message)]))
+
+    def _viewport_diagnostic(self, message):
+        self._append_message(message)
+        self.messages_dock.show()
 
     def _show_error(self, exc):
         message = str(getattr(exc, "message", str(exc)))
@@ -866,6 +955,10 @@ class MainWindow(QMainWindow):
         if self.viewport:
             self.viewport.isometric_view()
 
+    def _standard_view(self, axis):
+        if self.viewport:
+            self.viewport.standard_view(axis)
+
     def _toggle_edges(self, visible):
         if self.viewport:
             self.viewport.set_edges_visible(visible)
@@ -887,7 +980,7 @@ class MainWindow(QMainWindow):
                 event.ignore()
                 return
         self._settings.setValue("windowGeometry", self.saveGeometry())
-        self._settings.setValue("windowState", self.saveState(1))
+        self._settings.setValue("windowState", self.saveState(2))
         if self.viewport:
             self.viewport.shutdown()
         self._unsubscribe()

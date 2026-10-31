@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import QGridLayout, QLabel, QLineEdit, QWidget
 
 from ..design import TOKENS
 
@@ -99,20 +99,21 @@ class VectorEdit(QWidget):
 
     def __init__(self, values=(0, 0, 0), *, unit="", components=("X", "Y", "Z"), parent=None):
         super().__init__(parent)
-        layout = QHBoxLayout(self)
+        layout = QGridLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(TOKENS["space_sm"])
         editors = []
-        for component, value in zip(components, values, strict=True):
+        for row, (component, value) in enumerate(zip(components, values, strict=True)):
             label = QLabel(component)
             editor = NumericEdit(value, unit=unit)
             editor.setAccessibleName(component)
             label.setBuddy(editor)
-            layout.addWidget(label)
-            layout.addWidget(editor, 1)
+            layout.addWidget(label, row, 0)
+            layout.addWidget(editor, row, 1)
             editor.draftChanged.connect(self.draftChanged)
             editors.append(editor)
         self.editors = tuple(editors)
+        layout.setColumnStretch(1, 1)
         self.setFocusProxy(self.editors[0])
 
     def numeric_value(self):

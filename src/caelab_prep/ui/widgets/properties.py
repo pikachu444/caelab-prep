@@ -1,8 +1,8 @@
 """Grouped property presentation; host providers own meaning and commits."""
 
-from PySide6.QtCore import Signal
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QHBoxLayout,
-                              QLabel, QLineEdit, QScrollArea, QVBoxLayout, QWidget)
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QFrame, QHBoxLayout,
+                              QLabel, QLineEdit, QScrollArea, QSizePolicy, QVBoxLayout, QWidget)
 
 from .numeric import NumericEdit, VectorEdit
 from .tree import field
@@ -14,23 +14,31 @@ class PropertyEditor(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setObjectName("propertyEditor")
         self.editors = {}
         self.specs = {}
         self.errors = {}
         self.unit_selectors = {}
         self._layout = QVBoxLayout(self)
-        self._layout.setContentsMargins(TOKENS["space_lg"], TOKENS["panel_pad_y"], TOKENS["space_lg"], TOKENS["panel_pad_y"])
-        self._layout.setSpacing(TOKENS["form_spacing"])
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout.setSpacing(0)
+        header = QFrame()
+        header.setObjectName("propertyHeader")
+        header_layout = QVBoxLayout(header)
+        header_layout.setContentsMargins(8, 8, 8, 8)
+        header_layout.setSpacing(3)
         self.title = QLabel("Select an object")
         self.title.setObjectName("propertyTitle")
         self.title.setWordWrap(True)
         self.subtitle = QLabel()
         self.subtitle.setObjectName("propertySubtitle")
         self.subtitle.setWordWrap(True)
-        self._layout.addWidget(self.title)
-        self._layout.addWidget(self.subtitle)
+        header_layout.addWidget(self.title)
+        header_layout.addWidget(self.subtitle)
+        self._layout.addWidget(header)
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._layout.addWidget(self.scroll, 1)
         self.set_fields(())
 
@@ -38,27 +46,36 @@ class PropertyEditor(QWidget):
         if title:
             self.title.setText(title)
         self.subtitle.setText(subtitle)
+        self.subtitle.setVisible(bool(subtitle))
         self.editors, self.specs, self.errors, self.unit_selectors = {}, {}, {}, {}
         body = QWidget()
+        body.setObjectName("propertyBody")
         layout = QVBoxLayout(body)
-        layout.setContentsMargins(0, TOKENS["control_pad_y"], 0, 0)
-        layout.setSpacing(TOKENS["space_lg"])
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
         groups = {}
         for spec in specs:
             name = field(spec, "name")
             self.specs[name] = spec
             group = field(spec, "group", "Properties")
             if group not in groups:
+                section = QFrame()
+                section.setObjectName("propertyGroup")
+                section_layout = QVBoxLayout(section)
+                section_layout.setContentsMargins(0, 0, 0, 0)
+                section_layout.setSpacing(0)
                 heading = QLabel(str(group))
-                heading.setObjectName("groupTitle")
-                layout.addWidget(heading)
+                heading.setObjectName("propertyGroupTitle")
+                section_layout.addWidget(heading)
                 form = QFormLayout()
-                form.setContentsMargins(0, 0, 0, 0)
+                form.setContentsMargins(8, 6, 8, 7)
                 form.setHorizontalSpacing(TOKENS["form_column_gap"])
                 form.setVerticalSpacing(TOKENS["form_spacing"])
                 form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
                 form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
-                layout.addLayout(form)
+                form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                section_layout.addLayout(form)
+                layout.addWidget(section)
                 groups[group] = form
             value = (values or {}).get(name, field(spec, "value"))
             kind = field(spec, "kind", "number")
@@ -87,6 +104,7 @@ class PropertyEditor(QWidget):
                 editor.textEdited.connect(self.draftChanged)
             label_text = str(field(spec, "label", name))
             editor.setAccessibleName(label_text)
+            editor.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             editor.setEnabled(bool(field(spec, "editable", True)))
             self.editors[name] = editor
             wrapper = QWidget()
@@ -103,6 +121,7 @@ class PropertyEditor(QWidget):
                 selector.addItems(list(units))
                 selector.setCurrentText(unit)
                 selector.setAccessibleName(f"{label_text} unit")
+                selector.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
                 selector.setEnabled(bool(field(spec, "editable", True)))
                 scales = dict(field(spec, "unit_scales", ()))
                 if scales and isinstance(editor, NumericEdit):
@@ -113,7 +132,7 @@ class PropertyEditor(QWidget):
             elif unit:
                 unit_label = QLabel(str(unit))
                 unit_label.setObjectName("unitsNote")
-                unit_label.setWordWrap(True)
+                unit_label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
                 input_row.addWidget(unit_label)
             row.addLayout(input_row)
             error = QLabel()
@@ -123,6 +142,8 @@ class PropertyEditor(QWidget):
             self.errors[name] = error
             row.addWidget(error)
             label = QLabel(label_text)
+            label.setObjectName("propertyLabel")
+            label.setFixedWidth(112)
             label.setWordWrap(True)
             label.setBuddy(editor)
             groups[group].addRow(label, wrapper)

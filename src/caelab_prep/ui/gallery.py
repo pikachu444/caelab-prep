@@ -48,7 +48,7 @@ class GalleryWindow(QMainWindow):
             capture=self._capture_drafts, restore=self._restore_drafts)
         self._settings = QSettings("CAELab", "ComponentGallery")
         self.setObjectName("caelabGallery")
-        self.setWindowTitle("CAELab Materials — Composition workspace")
+        self.setWindowTitle("CAELab Materials")
         self.resize(1280, 800)
         self.setMinimumSize(800, 560)
         self.setStyleSheet(STYLESHEET)
@@ -91,7 +91,8 @@ class GalleryWindow(QMainWindow):
         edit = self.menuBar().addMenu("&Edit")
         edit.addActions([self.undo_action, self.redo_action, self.reload_action])
         self.view_menu = self.menuBar().addMenu("&View")
-        self.view_menu.addAction(self.catalogue_action)
+        developer = self.menuBar().addMenu("&Developer")
+        developer.addAction(self.catalogue_action)
         toolbar = QToolBar("Document", self)
         toolbar.setObjectName("galleryDocumentToolbar")
         toolbar.setMovable(False)
@@ -99,12 +100,7 @@ class GalleryWindow(QMainWindow):
         toolbar.addActions([self.open_action, self.save_action])
         toolbar.addSeparator()
         toolbar.addActions([self.undo_action, self.redo_action])
-        toolbar.addSeparator()
-        toolbar.addAction(self.unsupported_action)
-        toolbar.addSeparator()
-        toolbar.addAction(self.catalogue_action)
         toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
-        toolbar.widgetForAction(self.catalogue_action).setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.addToolBar(toolbar)
 
     def _build_workspace(self):
@@ -114,16 +110,16 @@ class GalleryWindow(QMainWindow):
                                       Qt.DockWidgetArea.LeftDockWidgetArea, self.view_menu)
         property_body = QWidget()
         layout = QVBoxLayout(property_body)
-        layout.setContentsMargins(0, 0, 0, 8)
+        layout.setContentsMargins(0, 0, 0, 4)
         self.properties = PropertyEditor()
         self.property_editor = self.properties
         layout.addWidget(self.properties, 1)
         row = QHBoxLayout()
-        row.setContentsMargins(10, 0, 10, 0)
+        row.setContentsMargins(6, 0, 6, 0)
         self.revert_button = QPushButton("Revert")
         self.revert_button.clicked.connect(self.reload_action.trigger)
         self.reload_action.changed.connect(lambda: self.revert_button.setEnabled(self.reload_action.isEnabled()))
-        self.apply_button = QPushButton("Apply properties")
+        self.apply_button = QPushButton("Apply")
         self.apply_button.setObjectName("primaryAction")
         self.apply_button.clicked.connect(self.apply_action.trigger)
         self.apply_action.changed.connect(lambda: self.apply_button.setEnabled(self.apply_action.isEnabled()))
@@ -131,26 +127,30 @@ class GalleryWindow(QMainWindow):
         row.addWidget(self.apply_button)
         layout.addLayout(row)
         self.properties_dock = create_dock(self, "galleryProperties", "Properties", property_body,
-                                           Qt.DockWidgetArea.RightDockWidgetArea, self.view_menu)
+                                           Qt.DockWidgetArea.LeftDockWidgetArea, self.view_menu)
+        self.splitDockWidget(self.model_dock, self.properties_dock, Qt.Orientation.Vertical)
         self.curve_table = CurveTable()
         self.curve_table.pointsEdited.connect(self._commit_curve)
         self.plot = CurvePlot()
         splitter = QSplitter(Qt.Orientation.Vertical)
         splitter.addWidget(self.plot)
         splitter.addWidget(self.curve_table)
-        splitter.setSizes([350, 250])
-        self.viewport_frame = ViewportFrame(splitter, "Material curve", "Composition example · material and curve editing")
+        splitter.setChildrenCollapsible(False)
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 2)
+        splitter.setSizes([420, 240])
+        self.viewport_frame = ViewportFrame(splitter, "Material curve", "")
         self.setCentralWidget(self.viewport_frame)
         self.messages = QPlainTextEdit()
         self.messages.setReadOnly(True)
         self.messages.setMaximumBlockCount(200)
         self.messages.setAccessibleName("Operation messages")
-        self.messages.setPlainText("Material and curve composition example\nSelect a material or curve. Apply validates the entire draft; Undo restores one edit.\nBrowse component catalogue to inspect reusable controls and their states.")
         self.messages_dock = create_dock(self, "galleryMessages", "Messages", self.messages,
                                         Qt.DockWidgetArea.BottomDockWidgetArea, self.view_menu)
+        self.messages_dock.hide()
         self._build_asset_inspector()
-        self.resizeDocks([self.model_dock, self.properties_dock], [260, 330], Qt.Orientation.Horizontal)
-        self.resizeDocks([self.messages_dock], [95], Qt.Orientation.Vertical)
+        self.resizeDocks([self.model_dock], [320], Qt.Orientation.Horizontal)
+        self.resizeDocks([self.model_dock, self.properties_dock], [250, 440], Qt.Orientation.Vertical)
         self.status = QLabel()
         self.statusBar().addWidget(self.status, 1)
 
@@ -159,7 +159,6 @@ class GalleryWindow(QMainWindow):
         self.catalogue = CatalogueWidget()
         self.assets_dock = create_dock(self, "galleryAssets", "Component catalogue", self.catalogue,
                                        Qt.DockWidgetArea.RightDockWidgetArea, self.view_menu)
-        self.tabifyDockWidget(self.properties_dock, self.assets_dock)
         self.assets_dock.hide()
 
     def _show_catalogue(self):
@@ -408,8 +407,11 @@ class GalleryWindow(QMainWindow):
             return
         description = self.session.describe()
         dirty = " · Modified" if description["dirty"] else ""
-        self.setWindowTitle(f"{description['name']}{dirty} — CAELab Materials · Composition workspace")
-        self.status.setText(f"Revision {description['revision']}{dirty}    Qt-only material / curve provider")
+        self.setWindowTitle(f"{description['name']}{dirty} — CAELab Materials")
+        nodes = self.session.tree_nodes()
+        materials = sum(node.ref.kind == "material" for node in nodes)
+        curves = sum(node.ref.kind == "curve" for node in nodes)
+        self.status.setText(f"{materials} materials   {curves} curves" + ("   Modified" if dirty else ""))
         self._refresh_actions(description)
 
     def _refresh_actions(self, description=None):
@@ -434,6 +436,7 @@ class GalleryWindow(QMainWindow):
             self.messages.appendPlainText("File operation succeeded" + (": " + ", ".join(state.artifacts) if state.artifacts else ""))
         elif state.error:
             self.messages.appendPlainText(state.error["message"])
+            self.messages_dock.show()
 
     def _start_file_operation(self, label, function, on_success=None, *, artifacts=()):
         if self._busy:
