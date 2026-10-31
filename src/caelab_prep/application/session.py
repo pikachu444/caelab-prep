@@ -7,12 +7,15 @@ import os
 from pathlib import Path, PurePosixPath
 import tempfile
 from threading import RLock
-from uuid import UUID
+from uuid import UUID, uuid4
+from dataclasses import asdict
 import zipfile
 from functools import wraps
 
 from ..cae_core import CommandDispatcher, Document, PrepError, Selection, SelectionRef
 from ..radioss import DeckResource
+from .storage import write_container
+from .contracts import ObjectRef
 
 
 PROJECT_FORMAT = "caelab-prep-project"
@@ -43,6 +46,9 @@ class PrepSession:
         self._projection_cache: dict | None = None
         self._source_path: str | None = None
         self._listeners = []
+        self._active_object: ObjectRef | None = None
+        self._document_epoch = str(uuid4())
+        self._projection_revision = 0
 
     def subscribe(self, listener):
         """Observe committed session events on the calling thread; return unsubscribe.
@@ -59,7 +65,8 @@ class PrepSession:
 
     def _notify(self, kind: str, **details) -> None:
         event = {"kind": kind, "document_id": self.document.id if self.document else None,
-                 "revision": self.document.revision if self.document else 0, **details}
+                 "revision": self.document.revision if self.document else 0,
+                 "document_epoch": self._document_epoch, **details}
         for listener in tuple(self._listeners):
             try:
                 listener(dict(event))
@@ -94,6 +101,9 @@ class PrepSession:
         self._diagnostics = diagnostics
         self._projection_cache = None
         self._source_path = source_path
+        self._active_object = None
+        self._document_epoch = str(uuid4())
+        self._projection_revision += 1
 
     @staticmethod
     def _path_collisions(paths: dict[str, str]) -> list[list[str]]:
@@ -158,7 +168,8 @@ class PrepSession:
                 return {"document_id": None, "revision": 0, "dirty": False, "name": "새 작업",
                         "can_undo": False, "can_redo": False, "node_count": 0, "element_count": 0,
                         "capabilities": self.capabilities(), "diagnostics": [], "source_path": None,
-                        "project_path": None, "last_change": None}
+                        "project_path": None, "last_change": None, "active_object": None,
+                        "document_epoch": self._document_epoch, "projection_revision": self._projection_revision}
             if self._projection_cache is None:
                 self.mesh_view()
             projection = self._projection_cache
@@ -169,11 +180,13 @@ class PrepSession:
                     "element_count": len(projection["cells"]), "capabilities": self.capabilities(),
                     "diagnostics": self.diagnostics(), "project_path": document.save_state.path,
                     "source_path": self._source_path,
-                    "last_change": self.dispatcher.last_change.to_dict() if self.dispatcher.last_change else None}
+                    "last_change": self.dispatcher.last_change.to_dict() if self.dispatcher.last_change else None,
+                    "active_object": asdict(self._active_object) if self._active_object else None,
+                    "document_epoch": self._document_epoch, "projection_revision": self._projection_revision}
 
     @staticmethod
     def capabilities() -> dict:
-        return {"radioss_raw_preservation": True, "project_format": PROJECT_FORMAT,
+        return {"save": True, "undo": True, "radioss_raw_preservation": True, "project_format": PROJECT_FORMAT,
                 "project_version": PROJECT_VERSION, "material_edit": ["LAW1/ELAST", "LAW36/PLAS_TAB"],
                 "constraint_edit": ["BCS"], "contact_edit": ["INTER/TYPE24 friction"],
                 "curve_edit": ["FUNCT existing points"], "initial_velocity_edit": ["INIVEL/TRA"],
@@ -215,14 +228,36 @@ class PrepSession:
 
     def set_field(self, card_id: str, field_name: str, value: object,
                   expected_revision: int | None = None) -> dict:
+        return self.set_fields(card_id, {field_name: value}, expected_revision=expected_revision)
+
+    def set_fields(self, card_id: str, values: dict[str, object],
+                   expected_revision: int | None = None, *,
+                   expected_document_id: str | None = None,
+                   expected_resource_id: str | None = None) -> dict:
+        """Validate all fields first, then commit one vector/table/property edit."""
         with self._lock:
+            document = self._require()
+            if expected_document_id is not None and expected_document_id != document.id:
+                raise PrepError("document_conflict", "The target document has been replaced.")
             if expected_revision is not None and (type(expected_revision) is not int or expected_revision != self._require().revision):
                 raise PrepError("revision_conflict", "모델이 변경됐습니다. 현재 값을 다시 읽어 주세요.",
                                 {"expected": expected_revision, "actual": self._require().revision})
             resource = self._find_card(card_id)
-            state = resource.patched_state(card_id, field_name, value)
+            if expected_resource_id is not None and expected_resource_id != resource.id:
+                raise PrepError("invalid_reference", "The target resource does not match.")
+            if not isinstance(values, dict) or not values:
+                raise PrepError("invalid_command", "A nonempty field mapping is required.")
+            state = resource.snapshot()
+            for name, value in values.items():
+                validated = resource.patched_state(card_id, name, value)
+                if name in validated.get(card_id, {}):
+                    state.setdefault(card_id, {})[name] = validated[card_id][name]
+                else:
+                    state.get(card_id, {}).pop(name, None)
+                    if card_id in state and not state[card_id]:
+                        state.pop(card_id)
             assert self.dispatcher is not None
-            self.dispatcher.execute(resource.id, state, f"{resource.card(card_id).keyword}: {field_name}",
+            self.dispatcher.execute(resource.id, state, f"{resource.card(card_id).keyword}: {', '.join(values)}",
                                     object_ids=(card_id,), expected_revision=expected_revision)
             return self.describe()
 
@@ -271,7 +306,97 @@ class PrepSession:
                     "node_ids": list(self._projection_cache["node_ids"]),
                     "cells": [{**c, "nodes": list(c["nodes"])} for c in self._projection_cache["cells"]],
                     "diagnostics": [dict(d) for d in self._projection_cache["diagnostics"]],
-                    "immutable_projection": True, "document_id": document.id, "revision": document.revision}
+                    "immutable_projection": True, "document_id": document.id, "revision": document.revision,
+                    "document_epoch": self._document_epoch, "projection_revision": self._projection_revision,
+                    "resource_revisions": {key: resource.state_token() for key, resource in document.resources.items()},
+                    "node_resources": deepcopy(self._projection_cache["node_resources"])}
+
+    def _object_card(self, target: ObjectRef):
+        document = self._require()
+        if not isinstance(target, ObjectRef) or target.document_id != document.id or target.kind != "rad-card":
+            raise PrepError("invalid_reference", "A card in the current document is required.")
+        resource = document.resources.get(target.resource_id)
+        if resource is None:
+            raise PrepError("invalid_reference", "The target resource does not exist.")
+        card = resource.card(target.object_id)
+        if target.native_scope != card.keyword or target.mesh_revision is not None:
+            raise PrepError("invalid_reference", "The card scope does not match.")
+        return resource, card
+
+    def active_object(self) -> ObjectRef | None:
+        with self._lock:
+            return self._active_object
+
+    @staticmethod
+    def _native_part_id(keyword):
+        words = keyword.upper().split("/")
+        return int(words[2]) if len(words) == 3 and words[1] == "PART" and words[2].isdigit() else None
+
+    def _part_cells(self, target: ObjectRef) -> list[dict]:
+        """One supported relationship: a native PART to its displayed elements."""
+        _, card = self._object_card(target)
+        part_id = self._native_part_id(card.keyword)
+        if part_id is None:
+            return []
+        matching = [item for item in self.list_cards() if self._native_part_id(item["keyword"]) == part_id]
+        if len(matching) != 1:
+            raise PrepError("ambiguous_selection", "The PART ID is repeated across resources.")
+        if self._projection_cache is None:
+            self.mesh_view()
+        cells = [cell for cell in self._projection_cache["cells"] if cell.get("part_id") == part_id]
+        keys = [(cell["resource_id"], cell["id"]) for cell in cells]
+        if len(keys) != len(set(keys)):
+            raise PrepError("ambiguous_selection", "The part contains repeated element IDs.")
+        return cells
+
+    def part_summary(self, target: ObjectRef) -> dict:
+        with self._lock:
+            _, card = self._object_card(target)
+            if not card.keyword.upper().startswith("/PART/") or not card.keyword.rsplit("/", 1)[1].isdigit():
+                raise PrepError("invalid_reference", "A native PART is required.")
+            cells = self._part_cells(target)
+            return {"part_id": int(target.native_scope.rsplit("/", 1)[1]), "element_count": len(cells)}
+
+    def activate_object(self, target: ObjectRef | None) -> dict:
+        with self._lock:
+            document = self._require()
+            cells = []
+            if target is not None:
+                self._object_card(target)
+                cells = self._part_cells(target)
+            self._active_object = target
+            document.selection = Selection("element", tuple(cell["id"] for cell in cells),
+                tuple(SelectionRef(cell["resource_id"], "element", cell["id"]) for cell in cells)) if cells else Selection()
+            self._notify("selection")
+            return self.selection()
+
+    def select_pick(self, candidate: dict) -> dict:
+        """A transient renderer candidate must match the exact displayed projection."""
+        with self._lock:
+            document = self._require()
+            if (not isinstance(candidate, dict) or candidate.get("document_id") != document.id
+                    or candidate.get("document_epoch") != self._document_epoch
+                    or type(candidate.get("revision")) is not int or candidate["revision"] != document.revision
+                    or type(candidate.get("projection_revision")) is not int
+                    or candidate["projection_revision"] != self._projection_revision):
+                raise PrepError("stale_pick", "The displayed document or projection has changed. Pick again.")
+            kind = candidate.get("kind")
+            if kind is None:
+                return self.clear_selection()
+            if kind not in ("node", "element") or type(candidate.get("id")) is not int:
+                raise PrepError("invalid_selection", "A node/element and integer native ID are required.")
+            resource_id = candidate.get("resource_id")
+            resource = document.resources.get(resource_id) if isinstance(resource_id, str) else None
+            if resource is None or candidate.get("resource_revision") != resource.state_token():
+                raise PrepError("stale_pick", "The displayed resource has changed. Pick again.")
+            entity_id = candidate.get("id")
+            if self._projection_cache is None:
+                self.mesh_view()
+            resources = self._projection_cache["node_resources"].get(entity_id, []) if kind == "node" else [
+                cell["resource_id"] for cell in self._projection_cache["cells"] if cell["id"] == entity_id]
+            if resource_id not in resources:
+                raise PrepError("invalid_selection", "The entity does not belong to the displayed resource.")
+            return self.select_entity(kind, entity_id)
 
     def select_entity(self, kind: str, entity_id: int) -> dict:
         with self._lock:
@@ -285,12 +410,20 @@ class PrepSession:
             if len(resources) != 1:
                 raise PrepError("ambiguous_selection", "여러 자원에 같은 ID가 있어 선택 대상을 확정할 수 없습니다.", {"kind": kind, "id": entity_id})
             document.selection = Selection(kind, (int(entity_id),), (SelectionRef(resources[0], kind, int(entity_id)),))
+            self._active_object = None
+            if kind == "element":
+                cell = next(cell for cell in self._projection_cache["cells"] if cell["id"] == entity_id)
+                parts = [item for item in self.list_cards() if self._native_part_id(item["keyword"]) == cell.get("part_id")]
+                if len(parts) == 1:
+                    card = parts[0]
+                    self._active_object = ObjectRef(document.id, card["resource_id"], card["id"], "rad-card", card["keyword"])
             self._notify("selection")
             return self.selection()
 
     def clear_selection(self) -> dict:
         with self._lock:
             self._require().selection = Selection()
+            self._active_object = None
             self._notify("selection")
             return self.selection()
 
@@ -299,6 +432,9 @@ class PrepSession:
             document = self._require()
             return {"kind": document.selection.kind, "ids": list(document.selection.ids),
                     "document_id": document.id, "revision": document.revision,
+                    "document_epoch": self._document_epoch, "projection_revision": self._projection_revision,
+                    "resource_revisions": {key: resource.state_token() for key, resource in document.resources.items()},
+                    "active_object": asdict(self._active_object) if self._active_object else None,
                     "refs": [{"resource_id": r.resource_id, "entity_kind": r.entity_kind, "local_id": r.local_id}
                              for r in document.selection.refs]}
 
@@ -322,21 +458,11 @@ class PrepSession:
                         "resources": [{"id": r.id, "kind": r.kind, "name": r.name,
                             "logical_path": self._paths[r.id], "raw_member": f"raw/{r.id}.rad",
                             "patches": r.snapshot()} for r in document.resources.values()]}
-            fd, temp = tempfile.mkstemp(prefix=".caeprep-", dir=target.parent)
-            os.close(fd)
             try:
-                with zipfile.ZipFile(temp, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-                    archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
-                    for resource in document.resources.values():
-                        archive.writestr(f"raw/{resource.id}.rad", resource.raw)
-                # Windows' _commit/FlushFileBuffers requires a writable handle.
-                with open(temp, "r+b") as stream:
-                    os.fsync(stream.fileno())
-                os.replace(temp, target)
+                write_container(target, manifest, {f"raw/{resource.id}.rad": resource.raw
+                                                  for resource in document.resources.values()})
             except (OSError, zipfile.BadZipFile) as exc:
                 raise PrepError("project_write_error", "작업 문서를 저장하지 못했습니다.", {"reason": str(exc)}) from exc
-            finally:
-                if os.path.exists(temp): os.unlink(temp)
             document.mark_saved(str(target))
             self._notify("save")
             return {**self.describe(), "saved_path": str(target)}

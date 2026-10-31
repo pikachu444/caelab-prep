@@ -10,3 +10,5 @@ beidprep-trial/
 *.dll
 *.7z
 *.zip
+.test-tmp/
+.pytest_cache/

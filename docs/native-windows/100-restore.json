@@ -1,0 +1,99 @@
+{
+  "phase": "restore",
+  "scale_factor": "1",
+  "input_method": "QTest events to this process's own Qt widgets; no OS SendInput",
+  "capture_method": "own QWidget.grab plus own VTK framebuffer; no desktop capture",
+  "scaling_scope": "QT_SCALE_FACTOR application scaling; OS DPI is observed, never changed",
+  "stages": [
+    {
+      "name": "cross_process_qsettings_layout_and_saved_document",
+      "status": "passed",
+      "evidence": {
+        "docks": {
+          "modelDock": {
+            "area": 1,
+            "floating": false,
+            "visible": true
+          },
+          "propertiesDock": {
+            "area": 2,
+            "floating": false,
+            "visible": true
+          },
+          "messagesDock": {
+            "area": 1,
+            "floating": false,
+            "visible": true
+          }
+        },
+        "capture": {
+          "path": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-100\\restore-restored-layout.png",
+          "sha256": "423b61aea461a11ad2935b4e4a650fcd6e5f9a1a582f5932420c900b1a55c039",
+          "pixels": [
+            1320,
+            840
+          ],
+          "dpr": 1.0,
+          "logical_size": [
+            1320,
+            840
+          ],
+          "frame_geometry": [
+            10,
+            10,
+            1320,
+            871
+          ],
+          "frame_fits_available_screen": true
+        },
+        "restart": "new Python process; same isolated QSettings directory"
+      }
+    }
+  ],
+  "input_desktop": "Default",
+  "settings_stores": {
+    "CAELab/Prep": {
+      "file": "C:/Users/pikac/Documents/Codex/2026-10-31/task-2/prep/.test-tmp/native-ui/isolated-100/settings/CAELab-Prep.ini",
+      "format": "Format.IniFormat",
+      "fallbacks": false
+    }
+  },
+  "settings_isolation": "Explicit per-window INI filenames; native stores are read only and compared after cleanup",
+  "platform": "windows",
+  "pyside": "6.9.1",
+  "font_families": 266,
+  "fonts": {
+    "Segoe UI": true,
+    "Malgun Gothic": true
+  },
+  "screens": [
+    {
+      "name": "LS27B61x",
+      "dpr": 1.0,
+      "logical_dpi": 96.0,
+      "physical_dpi": 108.79646440516005,
+      "geometry": [
+        0,
+        0,
+        2560,
+        1440
+      ],
+      "available_geometry": [
+        0,
+        0,
+        2560,
+        1392
+      ]
+    }
+  ],
+  "remaining_workers": 0,
+  "native_settings_unchanged": true,
+  "unverified": [
+    "OS SendInput and manual human input were not used",
+    "Application scale factors do not prove changes to OS monitor DPI",
+    "Oversized 1320x840 captures at forced 2x do not prove full physical-screen reachability; input uses fitted 960x640",
+    "Any false dock input assertion remains unverified; API fallback is not input evidence"
+  ],
+  "acceptance_claim": "Only listed stage assertions; no blanket A7 completion claim",
+  "status": "passed"
+}

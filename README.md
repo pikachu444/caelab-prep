@@ -4,13 +4,35 @@
 
 **OpenRadioss / OpenCourant는 첫 번째 적용 대상입니다.** 공용 기반을 사용하는 첫 응용 프로그램으로 독립 데스크톱 전처리기를 개발합니다. 이 앱에서는 형상·메시를 불러와 재료·단면·접촉·하중·구속·초기조건과 해석 제어를 편집하고 Starter/Engine 파일을 작성하는 흐름을 목표로 합니다. 다른 CAE 프로그램의 재사용은 공용 기반의 설계 범위에 포함되며, 현재 여러 솔버를 지원한다는 뜻은 아닙니다.
 
-**현재 상태: 기존 RAD의 일부 지원 필드를 편집하는 네이티브 시제품과 문서·명령·선택·저장 코어를 구현했습니다.** 기존 RAD의 지원 필드를 편집하고 Undo/Redo, 작업 문서 저장·재열기, RAD 출력을 수행합니다. CAD에서 새 해석 모델 전체를 구성하는 프로그램은 아직 아닙니다.
+**현재 상태: 공용 Qt 부품·탐색형 카탈로그를 기존 RAD 편집기와 갤러리에 연결했습니다.** 트리·그룹 속성·수치/단위·벡터·표/기본 곡선·Action·도킹을 공유합니다. 기존 RAD 편집·Undo/Redo·작업 문서·RAD 출력은 유지하고, 중립 재료/곡선 문서도 RAD 없이 저장·재열기합니다. 실제 Windows 창에서 입력·선택·저장·닫기·도킹과 100/150/200% 애플리케이션 배율을 확인했습니다. CAD에서 새 해석 모델 전체를 구성하는 기능은 후속입니다.
 
-공용 GUI 컴포넌트 체계와 실행형 갤러리는 정식 개발 산출물입니다. 현재 이 저장소에는 실행형 갤러리가 없으며 공용 위젯·앱 셸 전체가 분리된 상태도 아닙니다. RAD용 세션·화면 전체를 솔버 독립 공용 API나 공용 앱 셸로 간주하지 않습니다.
+공용 부품은 `ui/design`, `ui/widgets`, `ui/actions.py`, `ui/shell.py`에 있고 갤러리와 실제 전처리기가 같은 코드를 사용합니다. 솔버별 카드 의미·단위·원문·출력은 RAD adapter/session에 남습니다. 모든 솔버의 FE 스키마나 전체 CAE 기반이 완성됐다는 뜻은 아닙니다.
 
 ![실제 Qt/VTK 네이티브 편집기](docs/native-editor.png)
 
-소형 RAD를 실제 Linux Qt/VTK 창에서 열어 편집·Undo/Redo·저장·재열기·출력과 마우스 절점/요소 선택을 확인한 화면입니다. 별도 입력의 재료·구속 편집 출력은 OpenCourant Starter에서도 값이 유지됐습니다. Windows GUI·설치형 배포와 대용량 성능은 아직 확인하지 않았습니다.
+소형 RAD를 실제 Linux Qt/VTK 창에서 열어 편집·Undo/Redo·저장·재열기·출력과 마우스 절점/요소 선택을 확인한 기존 화면입니다. 별도 입력의 재료·구속 편집 출력은 OpenCourant Starter에서도 값이 유지됐습니다. 새 Windows 실행의 범위와 화면은 [Windows 검증 기록](docs/native-windows-validation.md)에 있습니다. 설치형 배포와 대용량 성능은 후속입니다.
+
+## 공용 부품과 갤러리 실행
+
+Qt 부품과 재료/곡선 갤러리는 VTK 없이 실행합니다.
+
+```sh
+python -m pip install -e ".[widgets]"
+caelab-prep gallery
+caelab-prep gallery path/to/material-curves.caeprep
+```
+
+기본 화면은 공용 부품을 조합한 **재료/곡선 작업 예**입니다. 재료 또는 곡선을 선택하고 **Apply properties / Apply curve**로 확정합니다. 잘못된 숫자·표는 초안으로 유지되며 Revert 또는 Escape로 취소합니다. 단위 선택은 알려진 단위 사이에서 표시값을 변환합니다. 표 붙여넣기는 전체 검증 후 미리보기로 남고 Apply 한 번이 Undo 한 번입니다. 재료의 **Associated curve**에서는 실제 곡선 참조를 선택·Undo·저장·재열기할 수 있습니다. 이는 중립 문서의 연결이며 솔버 구성 법칙을 새로 정의하지 않습니다.
+
+툴바의 **Browse component catalogue**, **View** 메뉴 또는 **Ctrl+Shift+G**로 부품 카탈로그를 엽니다. 부품·디자인 토큰·의미별 아이콘을 선택하면 의미 키, 용도, 소스 위치, 실제 사용 장면, 구현 상태와 출처/허용 조건이 나옵니다. 숫자 오류/비활성/포커스, 단위/벡터, 그룹 속성/참조, 트리, 표/곡선, 메뉴/버튼, 메시지를 해당 부품으로 직접 조작합니다. 지원하지 않는 모델링 기능이 아이콘 미리보기에서 실행되지는 않습니다. 새 RAD 행·카드 생성은 지원하지 않습니다.
+
+![실제 갤러리에서 카탈로그를 연 Qt offscreen 미리보기](docs/catalogue-preview.png)
+
+![공용 갤러리의 Qt offscreen 미리보기](docs/gallery-preview.png)
+
+위 두 그림은 설치된 Windows 글꼴을 QA 프로세스에 로드한 **Qt offscreen 렌더**입니다. 아래는 실제 Windows QPA 창에서 입력 검증한 갤러리의 자체 위젯 캡처입니다. 전체 데스크톱 캡처는 아니며, VTK는 별도 실제 OpenGL framebuffer로 확인했습니다. OS 모니터 DPI 설정은 바꾸지 않았습니다. 배율·작은 창·실행 방법은 [Windows 검증 기록](docs/native-windows-validation.md)에 구분합니다.
+
+![실제 Windows 갤러리에서 탐색형 카탈로그 조작](docs/native-windows/catalogue-100.png)
 
 ## 첫 적용 앱 실행
 
@@ -26,6 +48,8 @@ caelab-prep gui path/to/model_0000.rad
 ```
 
 앱에서 RAD를 열고 트리의 지원 카드를 선택해 값을 바꿉니다. Enter로 적용하며 Undo/Redo를 사용할 수 있습니다. **저장**은 원문과 편집을 포함하는 `.caeprep` 작업 문서를 만들고, **RAD 내보내기**는 솔버용 덱을 별도로 작성합니다. 새 세션에서 `.caeprep`을 열어 계속 편집할 수 있습니다. 원본 RAD는 덮어쓰지 않습니다.
+
+기존 PART를 선택하면 원래 파트 ID·표시 요소 수와 연결된 요소 강조가 같은 active object를 따릅니다. 렌더러 pick은 문서 세대·문서/자원/투영 개정을 검사해, 같은 파일을 다시 연 뒤 도착한 이전 pick도 거부합니다. 잘못된 초안을 남긴 채 닫으면 Save/Discard/Cancel을 먼저 선택하며 Discard는 검증 없이 명시적으로 폐기합니다.
 
 | 현재 기능 | 범위 |
 |---|---|

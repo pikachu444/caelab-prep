@@ -1,0 +1,37 @@
+"""The shared visual values used by QSS, icons and engineering controls."""
+
+_SPACING = (2, 4, 6, 10, 16)
+
+TOKENS = {
+    "surface": "#ffffff", "workspace": "#e7ebef", "text": "#25313d",
+    "muted": "#677582", "border": "#cbd4dd", "accent": "#217a90",
+    "accent_hover": "#1b6679", "selection": "#dcecf9", "selection_text": "#164d78",
+    "error": "#b23838", "error_surface": "#fff5f3", "focus": "#3788c4",
+    "subtle": "#f8fafc", "alternate": "#f8fafb", "raised": "#f2f5f8",
+    "divider": "#d5dde5", "hover": "#e7eff7", "hover_border": "#c3d6e7",
+    "checked": "#dcebf8", "checked_border": "#acc9e2", "pressed": "#d8e6f0",
+    "button": "#f4f7fa", "button_border": "#c4cfda", "button_hover_border": "#9abbd7",
+    "disabled": "#f0f3f5", "disabled_text": "#6d7884", "disabled_border": "#dce2e7",
+    "disabled_accent": "#e1e7ea", "heading": "#243c52", "group_heading": "#324d60",
+    "icon_stroke": "#40556a", "plot_text": "#536574", "plot_grid": "#e5ebef",
+    "plot_border": "#aab8c4",
+    "font_family": "'Segoe UI', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif",
+    "font_size": 12, "title_size": 15, "heading_weight": 600, "header_weight": 500,
+    "spacing": _SPACING, "space_xs": _SPACING[0], "space_sm": _SPACING[1],
+    "space_md": _SPACING[2], "space_lg": _SPACING[3], "space_xl": _SPACING[4],
+    "border_width": 1, "radius": 3, "row_height": 25, "tree_row_height": 24,
+    "icon_size": 20, "icon_canvas": 24, "icon_render_size": 48, "icon_stroke_width": 1.65,
+    "control_min_height": 19, "numeric_min_width": 64, "tree_indent": 14,
+    "control_pad_y": 3, "control_pad_x": 5, "button_pad_y": 6, "button_pad_x": 12,
+    "menu_pad": 5, "menu_bar_pad_y": 3, "menu_bar_pad_x": 7,
+    "menu_item_pad_y": 5, "menu_item_pad_x": 10,
+    "menu_popup_pad_y": 6, "menu_popup_pad_right": 27, "menu_popup_pad_left": 20,
+    "toolbar_pad_y": 5, "toolbar_pad_x": 8, "toolbutton_pad": 5,
+    "dock_pad_y": 7, "dock_pad_x": 9, "tree_pad_y": 1, "tree_pad_x": 3,
+    "checkbox_spacing": 7, "checkbox_pad_y": 3, "form_spacing": 7,
+    "form_column_gap": 8, "panel_pad_y": 9, "catalogue_navigation_width": 200,
+    "catalogue_metadata_height": 120,
+    "plot_min_width": 220, "plot_min_height": 180, "plot_preview_min_height": 120,
+    "plot_left": 64, "plot_top": 30, "plot_right": 24, "plot_bottom": 54,
+    "plot_line_width": 2, "plot_marker_radius": 3,
+}

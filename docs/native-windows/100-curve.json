@@ -1,0 +1,120 @@
+{
+  "phase": "curve",
+  "scale_factor": "1",
+  "input_method": "QTest events to this process's own Qt widgets; no OS SendInput",
+  "capture_method": "own QWidget.grab plus own VTK framebuffer; no desktop capture",
+  "scaling_scope": "QT_SCALE_FACTOR application scaling; OS DPI is observed, never changed",
+  "stages": [
+    {
+      "name": "native_existing_curve_cell_apply_plot_and_undo",
+      "status": "passed",
+      "evidence": {
+        "curve": "load",
+        "input": "QTest cell click + F2 + delegate keys, Apply curve button, Undo toolbar",
+        "applied": {
+          "path": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-curve-100\\curve-gallery-curve-applied.png",
+          "sha256": "195903f62717ce02c9cf43fe06a9b317dc71a837c499d8840ea52d3124a5485b",
+          "pixels": [
+            1320,
+            840
+          ],
+          "dpr": 1.0,
+          "logical_size": [
+            1320,
+            840
+          ],
+          "frame_geometry": [
+            10,
+            10,
+            1320,
+            871
+          ],
+          "frame_fits_available_screen": true
+        },
+        "restored": {
+          "path": "C:\\Users\\pikac\\Documents\\Codex\\2026-10-31\\task-2\\prep\\.test-tmp\\native-ui\\isolated-curve-100\\curve-gallery-curve-undo.png",
+          "sha256": "1fe7aa97ffcb5f1e6168b3d203a74941b5bd1c48846eb7b2501ed57e349c54a8",
+          "pixels": [
+            1320,
+            840
+          ],
+          "dpr": 1.0,
+          "logical_size": [
+            1320,
+            840
+          ],
+          "frame_geometry": [
+            10,
+            10,
+            1320,
+            871
+          ],
+          "frame_fits_available_screen": true
+        }
+      }
+    }
+  ],
+  "input_desktop": "Default",
+  "settings_stores": {
+    "CAELab/ComponentGallery": {
+      "file": "C:/Users/pikac/Documents/Codex/2026-10-31/task-2/prep/.test-tmp/native-ui/isolated-curve-100/settings/CAELab-ComponentGallery.ini",
+      "format": "Format.IniFormat",
+      "fallbacks": false
+    }
+  },
+  "settings_isolation": "Explicit per-window INI filenames; native stores are read only and compared after cleanup",
+  "platform": "windows",
+  "pyside": "6.9.1",
+  "font_families": 266,
+  "fonts": {
+    "Segoe UI": true,
+    "Malgun Gothic": true
+  },
+  "screens": [
+    {
+      "name": "LS27B61x",
+      "dpr": 1.0,
+      "logical_dpi": 96.0,
+      "physical_dpi": 108.79646440516005,
+      "geometry": [
+        0,
+        0,
+        2560,
+        1440
+      ],
+      "available_geometry": [
+        0,
+        0,
+        2560,
+        1392
+      ]
+    }
+  ],
+  "curve_window": {
+    "native_handle": 18088836,
+    "exposed": true,
+    "dpr": 1.0,
+    "screen": "LS27B61x",
+    "logical_size": [
+      1280,
+      800
+    ],
+    "frame_geometry": [
+      640,
+      265,
+      1280,
+      831
+    ],
+    "frame_fits_available_screen": true
+  },
+  "remaining_workers": 0,
+  "native_settings_unchanged": true,
+  "unverified": [
+    "OS SendInput and manual human input were not used",
+    "Application scale factors do not prove changes to OS monitor DPI",
+    "Oversized 1320x840 captures at forced 2x do not prove full physical-screen reachability; input uses fitted 960x640",
+    "Any false dock input assertion remains unverified; API fallback is not input evidence"
+  ],
+  "acceptance_claim": "Only listed stage assertions; no blanket A7 completion claim",
+  "status": "passed"
+}

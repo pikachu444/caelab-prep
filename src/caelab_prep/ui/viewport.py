@@ -6,6 +6,16 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel, QStackedLayout, QWidget
 
 
+def pick_candidate(projection, kind, entity_id=None, resource_id=None):
+    """Keep the original projection identity with a queued renderer candidate."""
+    result = {key: projection.get(key) for key in ("document_id", "document_epoch", "revision", "projection_revision")}
+    result["kind"] = kind
+    if kind is not None:
+        result.update(id=entity_id, resource_id=resource_id,
+                      resource_revision=projection.get("resource_revisions", {}).get(resource_id))
+    return result
+
+
 class MeshViewport(QWidget):
     entityPicked = Signal(dict)
     diagnostic = Signal(str)
@@ -20,6 +30,8 @@ class MeshViewport(QWidget):
         self._node_ids = []
         self._cells = []
         self._document_id = None
+        self._projection_stamp = {}
+        self._node_resources = {}
         self._render_failed = False
         self._pick_mode = "element"
         self._grid = vtk.vtkUnstructuredGrid()
@@ -75,6 +87,10 @@ class MeshViewport(QWidget):
     def set_mesh(self, projection: dict, *, reset_camera=True):
         vtk = self.vtk
         self._document_id = projection.get("document_id")
+        self._projection_stamp = {key: projection.get(key) for key in
+            ("document_id", "document_epoch", "revision", "projection_revision")}
+        self._projection_stamp["resource_revisions"] = dict(projection.get("resource_revisions", {}))
+        self._node_resources = projection.get("node_resources", {})
         points = vtk.vtkPoints()
         coordinates = projection.get("points", [])
         self._node_ids = list(projection.get("node_ids", []))
@@ -161,27 +177,37 @@ class MeshViewport(QWidget):
             if picker.Pick(x, y, 0, self._renderer):
                 point_id = picker.GetPointId()
                 if 0 <= point_id < len(self._node_ids):
-                    self.entityPicked.emit({"kind": "node", "id": self._node_ids[point_id]})
+                    identifier = self._node_ids[point_id]
+                    resources = self._node_resources.get(identifier, [])
+                    self.entityPicked.emit(pick_candidate(self._projection_stamp, "node", identifier,
+                                                          resources[0] if len(resources) == 1 else None))
                     return
-            self.entityPicked.emit({"kind": None})
+            self.entityPicked.emit(pick_candidate(self._projection_stamp, None))
             return
         picker = vtk.vtkCellPicker()
         picker.SetTolerance(0.005)
         picker.AddPickList(self._actor)
         picker.PickFromListOn()
         if not picker.Pick(x, y, 0, self._renderer):
-            self.entityPicked.emit({"kind": None})
+            self.entityPicked.emit(pick_candidate(self._projection_stamp, None))
             return
         index = picker.GetCellId()
         if not 0 <= index < len(self._cells):
             return
         cell = self._cells[index]
-        self.entityPicked.emit({"kind": "element", "id": cell["id"], "part_id": cell.get("part_id"),
+        self.entityPicked.emit({**pick_candidate(self._projection_stamp, "element", cell["id"], cell.get("resource_id")), "part_id": cell.get("part_id"),
                                 "resource_id": cell.get("resource_id"), "card_id": cell.get("card_id")})
 
     def set_selection(self, selection):
         """Only an approved canonical session selection may alter the highlight."""
         self._highlight.SetVisibility(False)
+        if any(selection.get(key) != self._projection_stamp.get(key) for key in
+               ("document_id", "document_epoch", "projection_revision")):
+            self.render()
+            return
+        # Scalar edits do not rebuild geometry, but future picks use current tokens.
+        self._projection_stamp["revision"] = selection.get("revision")
+        self._projection_stamp["resource_revisions"] = dict(selection.get("resource_revisions", {}))
         ids = selection.get("ids", [])
         if selection.get("document_id") != self._document_id or not ids:
             self.render()
@@ -211,16 +237,15 @@ class MeshViewport(QWidget):
             self.render()
             return
         refs = selection.get("refs", [])
-        resource_id = refs[0].get("resource_id") if refs else None
-        indices = [i for i, cell in enumerate(self._cells) if cell["id"] == ids[0]
-                   and (resource_id is None or cell.get("resource_id") == resource_id)]
-        if len(indices) != 1:
+        keys = {(ref.get("resource_id"), ref.get("local_id")) for ref in refs if ref.get("entity_kind") == "element"}
+        indices = [i for i, cell in enumerate(self._cells) if (cell.get("resource_id"), cell["id"]) in keys]
+        if not keys or len(indices) != len(keys):
             self.render()
             return
-        index = indices[0]
         vtk = self.vtk
         ids = vtk.vtkIdList()
-        ids.InsertNextId(index)
+        for index in indices:
+            ids.InsertNextId(index)
         extract = vtk.vtkExtractCells()
         extract.SetInputData(self._grid)
         extract.SetCellList(ids)
