@@ -124,7 +124,7 @@ class _ViewContext(QLabel):
         painter = QPainter(self)
         painter.setPen(self.palette().color(self.foregroundRole()))
         text = self.fontMetrics().elidedText(self.text(), Qt.TextElideMode.ElideRight, self.width())
-        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, text)
+        painter.drawText(self.rect(), self.alignment(), text)
 
 
 class ViewportFrame(QFrame):
@@ -142,10 +142,12 @@ class ViewportFrame(QFrame):
         header = self.header
         header.setContentsMargins(8, 3, 6, 3)
         header.setSpacing(6)
-        self.title = QLabel(title)
+        self.title = _ViewContext(title)
         self.title.setObjectName("groupTitle")
+        self.title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.context = _ViewContext(context)
         self.context.setObjectName("propertySubtitle")
+        self.context.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.context.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         self.context.setToolTip(context)
         header.addWidget(self.title)

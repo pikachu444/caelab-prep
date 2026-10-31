@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QSettings, QSize, Qt, QThreadPool, Signal
+from PySide6.QtCore import QSettings, Qt, QThreadPool, Signal
 from PySide6.QtGui import QKeySequence
-from PySide6.QtWidgets import (QApplication, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QMainWindow,
-                              QMessageBox, QPlainTextEdit, QPushButton, QSplitter, QToolBar,
-                              QVBoxLayout, QWidget)
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox
 
 from ..application.contracts import ActionSpec, SetProperties
 from ..application.neutral import CurveSession
 from .actions import ActionRegistry
-from .shell import FileEditCoordinator, FileTask, ViewportFrame, create_dock
+from .shell import FileEditCoordinator, FileTask
 from .theme import STYLESHEET
-from .widgets import CurvePlot, CurveTable, ModelTree, PropertyEditor
 
 
 class GalleryWindow(QMainWindow):
@@ -21,6 +18,7 @@ class GalleryWindow(QMainWindow):
 
     _sessionEvent = Signal(object)
     operationFinished = Signal(str, bool)
+    LAYOUT_VERSION = 2
 
     def __init__(self, session=None):
         super().__init__()
@@ -62,7 +60,7 @@ class GalleryWindow(QMainWindow):
         if geometry:
             self.restoreGeometry(geometry)
         if layout:
-            self.restoreState(layout, 1)
+            self.restoreState(layout, self.LAYOUT_VERSION)
         self._refresh_tree()
         curves = [node.ref for node in self.session.tree_nodes() if node.ref.kind == "curve"]
         if curves:
@@ -84,82 +82,11 @@ class GalleryWindow(QMainWindow):
         self.unsupported_action = register("analysis.run", "Run solver — unavailable for this provider", lambda: None, icon="mesh", capability="solver_execution")
         self.catalogue_action = register("view.catalogue", "Browse component catalogue", self._show_catalogue, "Ctrl+Shift+G", icon="card")
         self.close_action = register("file.close", "Exit", self.close, QKeySequence.StandardKey.Quit, icon="card")
-        file_menu = self.menuBar().addMenu("&File")
-        file_menu.addActions([self.open_action, self.save_action, self.save_as_action])
-        file_menu.addSeparator()
-        file_menu.addAction(self.close_action)
-        edit = self.menuBar().addMenu("&Edit")
-        edit.addActions([self.undo_action, self.redo_action, self.reload_action])
-        self.view_menu = self.menuBar().addMenu("&View")
-        developer = self.menuBar().addMenu("&Developer")
-        developer.addAction(self.catalogue_action)
-        toolbar = QToolBar("Document", self)
-        toolbar.setObjectName("galleryDocumentToolbar")
-        toolbar.setMovable(False)
-        toolbar.setIconSize(QSize(20, 20))
-        toolbar.addActions([self.open_action, self.save_action])
-        toolbar.addSeparator()
-        toolbar.addActions([self.undo_action, self.redo_action])
-        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
-        self.addToolBar(toolbar)
 
     def _build_workspace(self):
-        self.tree = ModelTree()
-        self.tree.nodeSelected.connect(self._select_target)
-        self.model_dock = create_dock(self, "galleryObjects", "Model", self.tree,
-                                      Qt.DockWidgetArea.LeftDockWidgetArea, self.view_menu)
-        property_body = QWidget()
-        layout = QVBoxLayout(property_body)
-        layout.setContentsMargins(0, 0, 0, 4)
-        self.properties = PropertyEditor()
-        self.property_editor = self.properties
-        layout.addWidget(self.properties, 1)
-        row = QHBoxLayout()
-        row.setContentsMargins(6, 0, 6, 0)
-        self.revert_button = QPushButton("Revert")
-        self.revert_button.clicked.connect(self.reload_action.trigger)
-        self.reload_action.changed.connect(lambda: self.revert_button.setEnabled(self.reload_action.isEnabled()))
-        self.apply_button = QPushButton("Apply")
-        self.apply_button.setObjectName("primaryAction")
-        self.apply_button.clicked.connect(self.apply_action.trigger)
-        self.apply_action.changed.connect(lambda: self.apply_button.setEnabled(self.apply_action.isEnabled()))
-        row.addWidget(self.revert_button)
-        row.addWidget(self.apply_button)
-        layout.addLayout(row)
-        self.properties_dock = create_dock(self, "galleryProperties", "Properties", property_body,
-                                           Qt.DockWidgetArea.LeftDockWidgetArea, self.view_menu)
-        self.splitDockWidget(self.model_dock, self.properties_dock, Qt.Orientation.Vertical)
-        self.curve_table = CurveTable()
-        self.curve_table.pointsEdited.connect(self._commit_curve)
-        self.plot = CurvePlot()
-        splitter = QSplitter(Qt.Orientation.Vertical)
-        splitter.addWidget(self.plot)
-        splitter.addWidget(self.curve_table)
-        splitter.setChildrenCollapsible(False)
-        splitter.setStretchFactor(0, 3)
-        splitter.setStretchFactor(1, 2)
-        splitter.setSizes([420, 240])
-        self.viewport_frame = ViewportFrame(splitter, "Material curve", "")
-        self.setCentralWidget(self.viewport_frame)
-        self.messages = QPlainTextEdit()
-        self.messages.setReadOnly(True)
-        self.messages.setMaximumBlockCount(200)
-        self.messages.setAccessibleName("Operation messages")
-        self.messages_dock = create_dock(self, "galleryMessages", "Messages", self.messages,
-                                        Qt.DockWidgetArea.BottomDockWidgetArea, self.view_menu)
-        self.messages_dock.hide()
-        self._build_asset_inspector()
-        self.resizeDocks([self.model_dock], [320], Qt.Orientation.Horizontal)
-        self.resizeDocks([self.model_dock, self.properties_dock], [250, 440], Qt.Orientation.Vertical)
-        self.status = QLabel()
-        self.statusBar().addWidget(self.status, 1)
-
-    def _build_asset_inspector(self):
-        from .catalogue import CatalogueWidget
-        self.catalogue = CatalogueWidget()
-        self.assets_dock = create_dock(self, "galleryAssets", "Component catalogue", self.catalogue,
-                                       Qt.DockWidgetArea.RightDockWidgetArea, self.view_menu)
-        self.assets_dock.hide()
+        from .materials_workspace import MaterialsWorkspace
+        self.workspace = MaterialsWorkspace(self)
+        self.workspace.build()
 
     def _show_catalogue(self):
         self.assets_dock.show()
@@ -521,7 +448,7 @@ class GalleryWindow(QMainWindow):
                 event.ignore()
                 return
         self._settings.setValue("geometry", self.saveGeometry())
-        self._settings.setValue("layout", self.saveState(1))
+        self._settings.setValue("layout", self.saveState(self.LAYOUT_VERSION))
         self._closed = True
         self._unsubscribe()
         event.accept()

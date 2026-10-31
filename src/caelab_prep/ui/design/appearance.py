@@ -1,4 +1,4 @@
-"""Small, application-independent visual assets for the native desktop shell."""
+"""Engineering glyphs and native surface rules, independent of app providers."""
 
 from string import Template
 
@@ -9,133 +9,133 @@ from PySide6.QtSvg import QSvgRenderer
 from .tokens import TOKENS
 
 
-_PATHS = {
-    "open": '<path d="M2.5 6.5h6l2-2h4.5v4M2.5 6.5v12h17l2-10h-17l-2 10"/>',
-    "project": '<path d="M3 5h6l2 2h10v13H3z"/><path d="M7 12h10M7 16h7"/>',
-    "save": '<path d="M4 3h14l3 3v15H3V3z"/><path d="M7 3v6h10V3M7 21v-8h10v8"/>',
-    "export": '<path d="M13 4H4v17h16v-8M13 3h8v8M10 14 21 3"/>',
-    "undo": '<path d="M8 5 3 10l5 5M3 10h11a6 6 0 0 1 0 12"/>',
-    "redo": '<path d="m16 5 5 5-5 5M21 10H10a6 6 0 0 0 0 12"/>',
-    "fit": '<path d="M3 9V3h6M15 3h6v6M21 15v6h-6M9 21H3v-6"/><rect x="8" y="8" width="8" height="8"/>',
-    "iso": '<path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/>',
-    "edges": '<path d="M4 4h16v16H4zM4 4l16 16M20 4 4 20M4 12h16M12 4v16"/>',
-    "material": '<path d="m12 3 9 5v9l-9 5-9-5V8zM3 8l9 5 9-5M12 13v9"/>',
-    "constraint": '<path d="M4 5h16M6 5v8M12 5v8M18 5v8M4 13h16M5 14l-3 4M10 14l-3 4M15 14l-3 4M20 14l-3 4"/>',
-    "card": '<path d="M6 3h9l4 4v14H6zM15 3v5h4M9 12h7M9 16h7"/>',
-    "curve": '<path d="M4 3v17h17M6 17l4-6 4 2 6-8"/><circle cx="10" cy="11" r="1"/><circle cx="14" cy="13" r="1"/>',
-    "vector": '<path d="M5 20V5m0 15h15M5 20 18 7M14 7h4v4"/>',
-    "warning": '<path d="m12 3 10 18H2zM12 9v5M12 17v1"/>',
-    "apply": '<path d="m4 12 5 5L21 5"/>',
-    "mesh": '<path d="m3 19 9-16 9 16zM7 12h10M7 12l5 7 5-7M12 3v16"/>',
-    "part": '<path d="m3 7 9-4 9 4v11l-9 4-9-4zM3 7l9 4 9-4M12 11v11"/>',
-    "section": '<path d="M4 3h16v4h-6v10h6v4H4v-4h6V7H4z"/>',
-    "load": '<path d="M4 20h16M7 3v12m-3-3 3 3 3-3M17 3v12m-3-3 3 3 3-3"/>',
-    "contact": '<path d="M3 5h7v14H3M21 5h-7v14h7M10 9l4 3-4 3"/>',
-    "set": '<path d="M7 3H3v18h4M17 3h4v18h-4"/><circle cx="9" cy="8" r="1"/><circle cx="15" cy="8" r="1"/><circle cx="9" cy="16" r="1"/><circle cx="15" cy="16" r="1"/>',
-    "select": '<path d="m5 3 14 10-7 1-3 7zM14 14l5 6"/>',
-    "result": '<path d="M3 3v18h18M7 17v-5h3v5M12 17V8h3v9M17 17V4h3v13"/>',
-    "job": '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M7 2v4M17 2v4M3 9h18m-12 3 5 3-5 3z"/>',
-}
-
 ICON_PURPOSES = {
-    "open": "Open an existing document", "project": "Work document or project",
-    "save": "Save the current document", "export": "Write a separate exchange or native file",
-    "undo": "Undo one committed command", "redo": "Redo one committed command",
-    "fit": "Fit the view to its contents", "iso": "Isometric view",
-    "edges": "Display mesh edges", "material": "Material object",
-    "constraint": "Prescribed or constrained degrees of freedom", "card": "Generic document record",
-    "curve": "Curve data and plot", "vector": "Vector quantity or direction",
-    "warning": "Warning requiring attention", "apply": "Apply a validated draft",
-    "mesh": "Mesh resource", "part": "Geometry or part object", "section": "Section property",
+    "open": "Open an existing document", "project": "Working document",
+    "save": "Save the working document", "export": "Export a separate solver file",
+    "undo": "Undo one command", "redo": "Redo one command", "fit": "Fit model",
+    "iso": "Orient model", "edges": "Show element edges", "material": "Material definition",
+    "constraint": "Boundary condition", "card": "Native card", "curve": "Curve definition",
+    "vector": "Vector quantity", "warning": "Model warning", "apply": "Apply draft",
+    "mesh": "Mesh resource", "part": "Model part", "section": "Section property",
     "load": "Applied load", "contact": "Contact relationship", "set": "Entity set",
-    "select": "Select an object or entity", "result": "Result quantity", "job": "Operation or job",
+    "select": "Entity selection", "result": "Result quantity", "job": "Operation",
+}
+
+# Original glyphs on one 24-unit construction grid; no vendor artwork.
+_GLYPHS = {
+    "open": '<path d="M3 8V5h6l2 3h10l-3 12H3V8h15M3 20l4-9h13"/>',
+    "project": '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    "save": '<path d="M4 3h14l3 3v15H3V3h1M7 3v6h9V3M7 21v-7h10v7M13 4v3"/>',
+    "export": '<path d="M10 4H4v16h16v-6M12 3h9v9M10 14 21 3M7 17h6"/>',
+    "undo": '<path d="m8 4-5 5 5 5M3 9h10a6 6 0 0 1 0 12"/>',
+    "redo": '<path d="m16 4 5 5-5 5M21 9H11a6 6 0 0 0 0 12"/>',
+    "fit": '<path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5M8 8h8v8H8z"/>',
+    "iso": '<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/>',
+    "edges": '<path d="M3 4h18v16H3zM3 4l18 16M21 4 3 20M3 12h18M12 4v16"/>',
+    "material": '<path d="m12 3 9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8M8 5l9 5v8"/>',
+    "constraint": '<path d="M3 6h18M5 6v9M12 6v9M19 6v9M3 15h18M5 15l-3 5M10 15l-3 5M15 15l-3 5M20 15l-3 5"/>',
+    "card": '<path d="M5 3h10l4 4v14H5zM15 3v5h4M8 12h8M8 16h6"/>',
+    "curve": '<path d="M4 3v17h17M7 17l4-7 4 3 5-8"/><circle cx="11" cy="10" r="1.2"/><circle cx="15" cy="13" r="1.2"/>',
+    "vector": '<path d="M4 20h16M4 20V4M4 20 18 6M12 6h6v6"/>',
+    "warning": '<path d="m12 3 10 18H2zM12 8v6"/><circle cx="12" cy="17.5" r=".7"/>',
+    "apply": '<path d="m3 12 6 6L21 5"/>',
+    "mesh": '<path d="m12 3 9 17H3zM7 12h10M7 12l5 8 5-8M12 3v17"/>',
+    "part": '<path d="m4 6 9-3 7 4v12l-9 3-7-4zM4 6l7 4 9-3M11 10v12M11 10v-4l5-2"/>',
+    "section": '<path d="M5 3h14v4h-5v10h5v4H5v-4h5V7H5z"/>',
+    "load": '<path d="M3 20h18M7 3v12m-4-4 4 4 4-4M17 3v12m-4-4 4 4 4-4"/>',
+    "contact": '<path d="M3 4h6v16H3M21 4h-6v16h6M9 9l6 3-6 3"/>',
+    "set": '<path d="M7 3H3v18h4M17 3h4v18h-4"/><circle cx="9" cy="8" r="1.5"/><circle cx="15" cy="8" r="1.5"/><circle cx="9" cy="16" r="1.5"/><circle cx="15" cy="16" r="1.5"/>',
+    "select": '<path d="m5 3 14 9-7 2-3 7zM14 15l5 6"/>',
+    "result": '<path d="M3 3v18h18M7 17v-4h3v4M12 17V9h3v8M17 17V5h3v12"/>',
+    "job": '<rect x="3" y="4" width="18" height="17" rx="1"/><path d="M3 9h18M7 2v4M17 2v4m-8 6 6 3-6 3z"/>',
 }
 
 
-def icon(name: str) -> QIcon:
-    """Draw original, consistently sized line icons, without bundled vendor art."""
-    body = _PATHS.get(name, _PATHS["card"])
-    source = (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{TOKENS["icon_canvas"]}" height="{TOKENS["icon_canvas"]}" '
-        f'viewBox="0 0 24 24"><g fill="none" stroke="{TOKENS["icon_stroke"]}" '
-        f'stroke-width="{TOKENS["icon_stroke_width"]}" stroke-linecap="round" stroke-linejoin="round">'
-        + body + "</g></svg>"
-    )
-    pixmap = QPixmap(TOKENS["icon_render_size"], TOKENS["icon_render_size"])
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap)
-    QSvgRenderer(QByteArray(source.encode())).render(painter)
-    painter.end()
-    return QIcon(pixmap)
+def icon(name):
+    svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+           f'<g fill="none" stroke="{TOKENS["icon_stroke"]}" stroke-width="1.6" '
+           'stroke-linecap="round" stroke-linejoin="round">'
+           + _GLYPHS.get(name, _GLYPHS["card"]) + '</g></svg>')
+    renderer = QSvgRenderer(QByteArray(svg.encode("utf-8")))
+    result = QIcon()
+    for size in (16, 20, 24, 32, 48):
+        canvas = QPixmap(size, size)
+        canvas.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(canvas)
+        renderer.render(painter)
+        painter.end()
+        result.addPixmap(canvas)
+    return result
 
 
 STYLESHEET = Template("""
+QWidget { font-family: $font_family; font-size: ${font_size}px; color: $text; }
 QMainWindow { background: $workspace; }
-QMainWindow::separator { background: $workspace; width: 4px; height: 4px; }
-QMainWindow::separator:hover { background: $hover_border; }
-QWidget { color: $text; font-family: $font_family; font-size: ${font_size}px; }
-QToolTip { background: $surface; color: $text; border: 1px solid $border; padding: 4px 6px; }
-QMenuBar { background: $surface; border-bottom: ${border_width}px solid $divider; padding: ${menu_bar_pad_y}px ${menu_bar_pad_x}px; }
-QMenuBar::item { padding: ${menu_item_pad_y}px ${menu_item_pad_x}px; }
-QMenuBar::item:selected, QMenu::item:selected { background: $hover; color: $selection_text; }
-QMenu { background: $surface; border: ${border_width}px solid $border; padding: ${menu_pad}px; }
-QMenu::item { padding: ${menu_popup_pad_y}px ${menu_popup_pad_right}px ${menu_popup_pad_y}px ${menu_popup_pad_left}px; }
-QToolBar { background: $subtle; border: none; border-bottom: ${border_width}px solid $divider; spacing: ${space_sm}px; padding: ${toolbar_pad_y}px ${toolbar_pad_x}px; }
-QToolBar::separator { background: $divider; width: 1px; margin: 3px 5px; }
-QToolButton { border: ${border_width}px solid transparent; border-radius: ${radius}px; padding: ${toolbutton_pad}px; }
+QMenuBar, QMenu { background: $surface; }
+QMenuBar { border-bottom: 1px solid $divider; padding: 2px 6px; }
+QMenuBar::item { padding: 4px 10px; }
+QMenu { border: 1px solid $border; padding: 4px; }
+QMenu::item { padding: 5px 28px 5px 22px; }
+QMenuBar::item:selected, QMenu::item:selected { background: $hover; color: $text; }
+QToolTip { padding: 5px 8px; background: $surface; border: 1px solid $border; color: $text; }
+QToolBar { background: $subtle; border: none; border-bottom: 1px solid $divider; padding: 3px 6px; spacing: 4px; }
+QToolBar::separator { background: $divider; width: 1px; margin: 4px 6px; }
+QToolButton { min-height: 22px; padding: 4px 6px; border: 1px solid transparent; border-radius: 2px; }
 QToolButton:hover { background: $hover; border-color: $hover_border; }
 QToolButton:checked { background: $checked; border-color: $checked_border; }
-QDockWidget { font-weight: $heading_weight; border: 1px solid $divider; }
-QDockWidget::title { background: $raised; padding: ${dock_pad_y}px ${dock_pad_x}px; border-bottom: ${border_width}px solid $divider; text-align: left; }
+QToolButton::menu-button { subcontrol-origin: padding; subcontrol-position: top right; width: 14px; border: none; border-left: 1px solid $divider; background: $subtle; }
+QToolButton::menu-button:hover { background: $hover; }
+QToolButton::menu-button:disabled { background: $subtle; border-color: $divider; }
+QToolButton[primaryCommand="true"] { color: $selection_text; background: $checked; border-color: $accent; font-weight: 600; }
+QToolButton[primaryCommand="true"]:hover { background: $selection; border-color: $accent_hover; }
+QToolBar#modelViewCommands QToolButton { min-height: 20px; padding: 3px 5px; }
+QToolButton:pressed, QPushButton:pressed { background: $pressed; }
+QPushButton { padding: 4px 9px; background: $button; border: 1px solid $button_border; border-radius: 2px; }
+QPushButton:hover { background: $hover; border-color: $button_hover_border; }
+QPushButton#primaryAction { color: $surface; background: $accent; border-color: $accent; }
+QPushButton#primaryAction:hover { background: $accent_hover; }
+QPushButton:focus, QToolButton:focus { border-color: $focus; }
+QPushButton:disabled, QToolButton:disabled, QPushButton#primaryAction:disabled { color: $disabled_text; background: $disabled; border-color: $disabled_border; }
+QToolButton:disabled { background: transparent; border-color: transparent; }
+QMainWindow::separator, QSplitter::handle { background: $workspace; width: 4px; height: 4px; }
+QMainWindow::separator:hover, QSplitter::handle:hover { background: $hover_border; }
+QDockWidget::title { background: $raised; border-bottom: 1px solid $divider; padding: 5px 8px; font-weight: 600; }
+QTabWidget::pane { background: $surface; border: none; border-top: 1px solid $divider; }
+QTabBar::tab { padding: 5px 10px; border-bottom: 2px solid transparent; background: $raised; }
+QTabBar::tab:selected { background: $surface; border-bottom-color: $accent; }
+QScrollArea { background: $surface; border: none; }
 QTreeView, QTableView { background: $surface; border: none; alternate-background-color: $alternate; selection-background-color: $selection; selection-color: $selection_text; }
-QTableView { gridline-color: $divider; }
-QTreeView::item { min-height: ${tree_row_height}px; padding: ${tree_pad_y}px ${tree_pad_x}px; }
-QTreeView::item:selected { background: $selection; color: $selection_text; }
+QTreeView::item { min-height: ${tree_row_height}px; padding: 0px 3px; }
 QTreeView::item:hover { background: $hover; }
-QTreeView::item:selected:hover { background: $selection; }
+QTreeView::item:selected, QTreeView::item:selected:hover { background: $selection; color: $selection_text; }
 QTreeView:focus, QTableView:focus { outline: 1px solid $focus; }
-QHeaderView::section { background: $subtle; color: $muted; border: none; border-right: 1px solid $divider; border-bottom: ${border_width}px solid $divider; padding: 4px 6px; font-weight: $header_weight; }
-QTableCornerButton::section { background: $subtle; border: none; border-bottom: 1px solid $divider; }
-QScrollArea { border: none; background: $surface; }
+QTableView { gridline-color: $divider; }
+QHeaderView::section { padding: 4px 6px; color: $muted; background: $subtle; border: none; border-right: 1px solid $divider; border-bottom: 1px solid $divider; }
+QTableCornerButton::section { border: none; border-bottom: 1px solid $divider; background: $subtle; }
+QLineEdit, QComboBox { min-height: ${control_min_height}px; padding: 2px 5px; background: $surface; border: 1px solid $border; border-radius: 1px; }
+QLineEdit:focus, QComboBox:focus { border-color: $focus; }
+QLineEdit:disabled, QComboBox:disabled { color: $disabled_text; background: $raised; }
+QComboBox::drop-down { width: 18px; border: none; }
+QCheckBox { spacing: 6px; padding: 2px 0; }
+QPlainTextEdit { background: $surface; border: 1px solid $divider; selection-background-color: $selection; selection-color: $selection_text; }
 QWidget#propertyEditor, QWidget#propertyBody, QFrame#propertyGroup { background: $surface; }
 QFrame#propertyHeader { background: $surface; border-bottom: 1px solid $divider; }
 QFrame#propertyGroup { border-bottom: 1px solid $divider; }
-QLabel#propertyGroupTitle { background: $raised; color: $group_heading; padding: 5px 8px; font-weight: $heading_weight; }
-QLabel#propertyLabel { color: $muted; }
-QLineEdit, QComboBox { background: $surface; border: ${border_width}px solid $border; border-radius: ${radius}px; padding: ${control_pad_y}px ${control_pad_x}px; min-height: ${control_min_height}px; }
-QLineEdit:focus, QComboBox:focus { border-color: $focus; }
-QLineEdit:disabled, QComboBox:disabled { background: $raised; color: $disabled_text; }
-QComboBox::drop-down { border: none; width: 18px; }
-QPushButton { background: $button; border: ${border_width}px solid $button_border; border-radius: ${radius}px; padding: ${button_pad_y}px ${button_pad_x}px; }
-QPushButton:hover { background: $hover; border-color: $button_hover_border; }
-QCheckBox { spacing: ${checkbox_spacing}px; padding: ${checkbox_pad_y}px 0; }
-QStatusBar { background: $subtle; border-top: ${border_width}px solid $divider; }
-QStatusBar::item { border: none; }
-QStatusBar QLabel { padding: 2px 6px; color: $muted; }
-QLabel#propertyTitle { font-size: ${title_size}px; font-weight: $heading_weight; color: $heading; }
+QLabel#propertyGroupTitle { padding: 5px 8px; color: $group_heading; background: $raised; font-weight: 600; }
+QLabel#propertyTitle { color: $heading; font-size: ${title_size}px; font-weight: 600; }
+QLabel#propertyLabel { color: $text; }
 QLabel#propertySubtitle, QLabel#unitsNote { color: $muted; }
+QLabel#groupTitle { color: $group_heading; font-weight: 600; }
+QLabel#inputError, QLabel[invalid="true"] { color: $error; }
+QLineEdit[invalid="true"] { background: $error_surface; border-color: $error; }
 QLabel#viewportHint { color: $muted; background: transparent; font-size: ${title_size}px; }
-QLabel#groupTitle { font-weight: $heading_weight; color: $group_heading; }
-QLabel#inputError { color: $error; }
-QLabel[invalid="true"] { color: $error; }
-QLineEdit[invalid="true"] { border: ${border_width}px solid $error; background: $error_surface; }
-QPushButton#primaryAction { background: $accent; border-color: $accent; color: $surface; }
-QPushButton#primaryAction:hover { background: $accent_hover; }
-QPushButton:pressed, QToolButton:pressed { background: $pressed; }
-QPushButton:focus, QToolButton:focus { border: ${border_width}px solid $focus; }
-QPushButton:disabled, QToolButton:disabled { background: $disabled; color: $disabled_text; border-color: $disabled_border; }
-QPushButton#primaryAction:disabled { background: $disabled_accent; color: $disabled_text; border-color: $divider; }
-QFrame#viewportFrame { background: $surface; border: ${border_width}px solid $divider; }
-QFrame#viewportBar { background: $button; border-bottom: ${border_width}px solid $divider; }
-QFrame#curveCommands { background: $subtle; border-top: 1px solid $divider; }
-QSplitter::handle { background: $workspace; }
-QSplitter::handle:hover { background: $hover_border; }
-QTabWidget::pane { border: 1px solid $divider; background: $surface; }
-QTabBar::tab { background: $raised; border: 1px solid $divider; padding: 5px 12px; }
-QTabBar::tab:selected { background: $surface; border-bottom-color: $accent; }
-QPlainTextEdit { background: $surface; border: 1px solid $divider; selection-background-color: $selection; selection-color: $selection_text; }
-QScrollBar:vertical { background: $subtle; width: 12px; margin: 0; }
-QScrollBar:horizontal { background: $subtle; height: 12px; margin: 0; }
+QFrame#viewportFrame { background: $surface; border: 1px solid $divider; }
+QFrame#viewportBar, QFrame#curveCommands, QFrame#inspectorCommands { background: $subtle; border-bottom: 1px solid $divider; }
+QStatusBar { background: $subtle; border-top: 1px solid $divider; }
+QStatusBar::item { border: none; }
+QStatusBar QLabel { color: $muted; padding: 2px 6px; }
+QScrollBar:vertical { width: 12px; margin: 0; background: $subtle; }
+QScrollBar:horizontal { height: 12px; margin: 0; background: $subtle; }
 QScrollBar::handle { background: $border; border: 3px solid $subtle; border-radius: 5px; min-height: 24px; min-width: 24px; }
 QScrollBar::handle:hover { background: $muted; }
 QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }

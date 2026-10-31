@@ -1,15 +1,86 @@
-"""Provider-driven model/view navigation without domain-specific naming."""
+"""Provider-backed native navigator with stable object identity across refreshes."""
 
-from PySide6.QtCore import Qt, Signal
+from dataclasses import dataclass
+
+from PySide6.QtCore import QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTreeView
+from PySide6.QtWidgets import (QAbstractItemView, QHeaderView, QStyledItemDelegate,
+                              QStyleOptionViewItem, QTreeView)
 
-from ..theme import icon
-from ..design import TOKENS
+from ..design import TOKENS, icon
 
 
 def field(item, name, default=None):
     return item.get(name, default) if isinstance(item, dict) else getattr(item, name, default)
+
+
+_GROUP = int(Qt.ItemDataRole.UserRole) + 1
+_COUNT = _GROUP + 1
+
+
+class _ObjectDelegate(QStyledItemDelegate):
+    """Group bands and compact metadata share the native selection/focus path."""
+
+    def sizeHint(self, option, index):
+        hint = super().sizeHint(option, index)
+        return QSize(hint.width(), 25 if index.data(_GROUP) else TOKENS["tree_row_height"])
+
+    def paint(self, painter, option, index):
+        if not index.data(_GROUP):
+            native = QStyleOptionViewItem(option)
+            self.initStyleOption(native, index)
+            if index.column() > 0:
+                native.palette.setColor(native.palette.ColorRole.Text, QColor(TOKENS["muted"]))
+            super().paint(painter, native, index)
+            return
+        painter.save()
+        rect = option.rect
+        painter.fillRect(rect, QColor(TOKENS["raised"]))
+        painter.setPen(QColor(TOKENS["divider"]))
+        painter.drawLine(rect.bottomLeft(), rect.bottomRight())
+        if index.column() == 0:
+            font = option.font
+            font.setWeight(font.Weight.DemiBold)
+            painter.setFont(font)
+            painter.setPen(QColor(TOKENS["group_heading"]))
+            text = option.fontMetrics.elidedText(str(index.data() or ""), Qt.TextElideMode.ElideRight, rect.width() - 43)
+            painter.drawText(rect.adjusted(5, 0, -36, 0), Qt.AlignmentFlag.AlignVCenter, text)
+            badge = QRectF(rect.right() - 31, rect.top() + 4, 25, rect.height() - 8)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor(TOKENS["surface"]))
+            painter.drawRoundedRect(badge, 3, 3)
+            painter.setPen(QColor(TOKENS["muted"]))
+            painter.drawText(badge, Qt.AlignmentFlag.AlignCenter, str(index.data(_COUNT) or ""))
+        painter.restore()
+
+
+@dataclass
+class _TreeViewState:
+    """Compatibility adapter for selection, user expansion and scroll position."""
+
+    selected: object
+    expanded: dict
+    widths: tuple
+    scroll: int
+
+    @classmethod
+    def capture(cls, tree):
+        model = tree.model()
+        return cls(tree.selected_ref(),
+                   {model.item(row).text(): tree.isExpanded(model.item(row).index())
+                    for row in range(model.rowCount())},
+                   tuple(tree.columnWidth(column) for column in range(3)) if model.rowCount() else (210, 72, 80),
+                   tree.verticalScrollBar().value())
+
+    def restore(self, tree, groups):
+        for column, width in enumerate(self.widths):
+            tree.setColumnWidth(column, width)
+        for label, item in groups.items():
+            tree.setExpanded(item.index(), self.expanded.get(label, True))
+        selected = tree._indices.get(self.selected)
+        if selected is not None:
+            tree.setCurrentIndex(selected.index())
+        tree.verticalScrollBar().setValue(self.scroll)
 
 
 class ModelTree(QTreeView):
@@ -19,87 +90,75 @@ class ModelTree(QTreeView):
         super().__init__(parent)
         self.setObjectName("modelTree")
         self.setAccessibleName("Model objects")
-        self.setUniformRowHeights(True)
+        self.setRootIsDecorated(True)
+        self.setItemsExpandable(True)
+        self.setUniformRowHeights(False)
         self.setAlternatingRowColors(False)
         self.setAllColumnsShowFocus(True)
-        self.setTextElideMode(Qt.TextElideMode.ElideRight)
-        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.setIndentation(TOKENS["tree_indent"])
-        self._model = QStandardItemModel(self)
+        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.setIconSize(QSize(16, 16))
+        self.setIndentation(15)
+        self.setTextElideMode(Qt.TextElideMode.ElideRight)
+        self.setItemDelegate(_ObjectDelegate(self))
+        self._model = QStandardItemModel(0, 3, self)
+        self._model.setHorizontalHeaderLabels(["Name", "Type", "ID"])
         self.setModel(self._model)
-        self._indices = {}
-        self._resetting = False
+        self.header().setStretchLastSection(False)
+        self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
+        self.header().setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)
+        self.header().setMinimumSectionSize(45)
+        self._indices, self._resetting = {}, False
         self.selectionModel().currentChanged.connect(self._selected)
 
     def set_nodes(self, nodes):
         nodes = list(nodes)
-        selected = self.selected_ref()
-        scroll = self.verticalScrollBar().value()
-        expansion = {self._model.item(row).text(): self.isExpanded(self._model.item(row).index())
-                     for row in range(self._model.rowCount())}
-        widths = [self.columnWidth(column) for column in range(3)] if self._model.rowCount() else (210, 72, 80)
+        state = _TreeViewState.capture(self)
         self._resetting = True
-        self._model.clear()
-        self._model.setHorizontalHeaderLabels(["Name", "Type", "ID"])
-        self._indices.clear()
-        groups = {}
-        for node in nodes:
-            group = str(field(node, "group", "Objects"))
-            if group not in groups:
-                parent = QStandardItem(group)
-                parent.setEditable(False)
-                parent.setSelectable(False)
-                font = parent.font()
-                font.setBold(True)
-                parent.setFont(font)
-                parent.setForeground(QColor(TOKENS["group_heading"]))
-                parent.setBackground(QColor(TOKENS["raised"]))
-                groups[group] = parent
-                cells = [parent, QStandardItem(), QStandardItem()]
-                for cell in cells[1:]:
-                    cell.setSelectable(False)
-                    cell.setBackground(QColor(TOKENS["raised"]))
-                self._model.appendRow(cells)
-            ref = field(node, "ref")
-            name = QStandardItem(icon(field(node, "icon", "card")), str(field(node, "label", "")))
-            name.setData(ref, Qt.ItemDataRole.UserRole)
-            name.setToolTip(str(field(node, "tooltip", "") or field(node, "label", "")))
-            kind = str(field(ref, "kind", ""))
-            native = field(ref, "native_scope") or field(ref, "object_id", "")
-            kind_item, native_item = QStandardItem(kind), QStandardItem(str(native))
-            kind_item.setForeground(QColor(TOKENS["muted"]))
-            native_item.setForeground(QColor(TOKENS["muted"]))
-            native_item.setToolTip(str(native))
-            groups[group].appendRow([name, kind_item, native_item])
-            self._indices[ref] = name
-        # Preserve useful names in a narrow dock; secondary columns can scroll.
-        self.header().setStretchLastSection(False)
-        self.header().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-        self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        for column, width in enumerate(widths):
-            self.setColumnWidth(column, width)
-        self.setColumnHidden(2, not any(field(field(node, "ref"), "native_scope") for node in nodes))
-        for group, item in groups.items():
-            count = self._model.item(item.row(), 1)
-            count.setText(str(item.rowCount()))
-            count.setForeground(QColor(TOKENS["muted"]))
-            self.setExpanded(item.index(), expansion.get(group, True))
-        if selected in self._indices:
-            self.setCurrentIndex(self._indices[selected].index())
-        self.verticalScrollBar().setValue(scroll)
-        self._resetting = False
+        try:
+            self._model.removeRows(0, self._model.rowCount())
+            self._indices.clear()
+            groups = {}
+            for node in nodes:
+                group = str(field(node, "group", "Objects"))
+                if group not in groups:
+                    cells = [QStandardItem(group), QStandardItem(), QStandardItem()]
+                    for cell in cells:
+                        cell.setData(True, _GROUP)
+                        cell.setEditable(False)
+                        cell.setSelectable(False)
+                    self._model.appendRow(cells)
+                    groups[group] = cells[0]
+                ref = field(node, "ref")
+                native = field(ref, "native_scope") or field(ref, "object_id", "")
+                cells = [QStandardItem(icon(field(node, "icon", "card")), str(field(node, "label", ""))),
+                         QStandardItem(str(field(ref, "kind", ""))), QStandardItem(str(native))]
+                cells[0].setData(ref, Qt.ItemDataRole.UserRole)
+                cells[0].setToolTip(str(field(node, "tooltip", "") or field(node, "label", "")))
+                cells[2].setToolTip(str(native))
+                for cell in cells:
+                    cell.setEditable(False)
+                groups[group].appendRow(cells)
+                self._indices[ref] = cells[0]
+            for item in groups.values():
+                item.setData(item.rowCount(), _COUNT)
+            self.setColumnHidden(2, not any(field(field(node, "ref"), "native_scope") for node in nodes))
+            state.restore(self, groups)
+        finally:
+            self._resetting = False
 
     def selected_ref(self):
         return self.currentIndex().siblingAtColumn(0).data(Qt.ItemDataRole.UserRole)
 
     def select_ref(self, ref):
         item = self._indices.get(ref)
-        if item is not None:
-            self.setCurrentIndex(item.index())
-            self.scrollTo(item.index())
-            return True
-        return False
+        if item is None:
+            return False
+        self.setCurrentIndex(item.index())
+        self.scrollTo(item.index())
+        return True
 
     def _selected(self, current, previous):
         ref = current.siblingAtColumn(0).data(Qt.ItemDataRole.UserRole)
