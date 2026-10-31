@@ -19,13 +19,14 @@ from caelab_prep.application.neutral import CurveSession
 from caelab_prep.ui.gallery import GalleryWindow
 from caelab_prep.ui.widgets import CurveTable, ModelTree, NumericEdit, PropertyEditor, VectorEdit
 
+pytestmark = pytest.mark.usefixtures("qt_widgets")
+
 
 @pytest.fixture
-def app(tmp_path):
-    instance = QApplication.instance() or QApplication([])
+def app(tmp_path, qt_widgets):
     QSettings.setDefaultFormat(QSettings.Format.IniFormat)
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path / "settings"))
-    return instance
+    return qt_widgets
 
 
 def wait_operation(window):

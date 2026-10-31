@@ -22,6 +22,8 @@ from caelab_prep.application.session import PrepSession
 from caelab_prep.ui.main_window import MainWindow
 from caelab_prep.ui.widgets import CurvePlot, CurveTable, ModelTree, NumericEdit, PropertyEditor, VectorEdit
 
+pytestmark = pytest.mark.usefixtures("qt_widgets")
+
 
 FIXTURE = Path(__file__).resolve().parents[1] / "scripts/evaluation/models/two_shell_plates_0000.rad"
 EXAMPLES = Path(__file__).resolve().parents[1] / "examples/rad"
