@@ -1,0 +1,180 @@
+"""Structural-state regression: identities, untouched bytes and failed command isolation."""
+from copy import deepcopy
+import json
+from pathlib import Path
+import zipfile
+
+import pytest
+
+from caelab_prep.application.session import PrepSession
+from caelab_prep.cae_core import PrepError
+from caelab_prep.radioss import DeckResource
+
+SOURCE = Path(__file__).resolve().parents[1] / "examples/rad/shell_panels_0000.rad"
+
+
+def opened(path=SOURCE):
+    session = PrepSession()
+    session.open_rad(path)
+    return session
+
+
+def known_only(tmp_path):
+    path = tmp_path / "known.rad"
+    text = SOURCE.read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0] + b"/END\n"
+    path.write_bytes(text)
+    return opened(path)
+
+
+def lookup(session, keyword):
+    return next(card for card in session.list_cards() if card["keyword"] == keyword)
+
+
+def test_structural_undo_keeps_original_and_created_card_identities():
+    session = opened()
+    before = {card["id"]: card["keyword"] for card in session.list_cards()}
+    material = lookup(session, "/MAT/LAW1/2")
+    unknown = lookup(session, "/PRESERVED/EDITOR/91")
+    untouched = session.card_text(unknown["id"])
+    created = session.create_material("새 강재", 7.8e-9, 195000, .29, native_id=20)
+    assert lookup(session, "/MAT/LAW1/20")["title"] == "새 강재"
+    assert all(lookup(session, keyword)["id"] == identifier for identifier, keyword in before.items())
+    session.set_field(material["id"], "young_modulus", 200000)
+    session.undo()
+    session.undo()
+    assert session.document.resources[material["resource_id"]].render() == SOURCE.read_bytes()
+    assert not session.describe()["dirty"]
+    session.redo()
+    assert lookup(session, "/MAT/LAW1/20")["id"] == created["card_id"]
+    session.redo()
+    assert session.card_text(unknown["id"]) == untouched
+    assert next(field["value"] for field in session.card_fields(material["id"]) if field["name"] == "young_modulus") == 200000
+
+
+def test_copy_uses_current_patched_values_and_changes_only_header_and_requested_title(tmp_path):
+    session = known_only(tmp_path)
+    original = lookup(session, "/PROP/SHELL/2")
+    session.set_field(original["id"], "thickness", 3.75)
+    text = session.card_text(original["id"])
+    copied = session.copy_card(original["id"], native_id=40, name="Copied section")
+    copied_text = session.card_text(copied["card_id"])
+    assert copied_text.splitlines()[2:] == text.splitlines()[2:]
+    assert copied_text.splitlines()[:2] == ["/PROP/SHELL/40", "Copied section"]
+    session.delete_card(copied["card_id"])
+    with pytest.raises(PrepError): session.card_fields(copied["card_id"])
+    session.undo()
+    assert session.card_text(copied["card_id"]) == copied_text
+    session.redo()
+    assert session.card_text(original["id"]) == text
+
+
+def test_v1_patch_document_is_read_without_migration_of_original_bytes(tmp_path):
+    resource = DeckResource(SOURCE.read_bytes())
+    material = next(card for card in resource.cards if card.keyword == "/MAT/LAW1/1")
+    from uuid import uuid4
+    manifest = {"format": "caelab-prep-project", "version": 1, "document_id": str(uuid4()),
+        "name": "Legacy", "revision": 7, "root_id": resource.id, "source_paths": [],
+        "resources": [{"id": resource.id, "kind": resource.kind, "name": "legacy.rad",
+          "logical_path": "legacy.rad", "raw_member": f"raw/{resource.id}.rad",
+          "patches": {material.id: {"young_modulus": 185000}}}]}
+    path = tmp_path / "legacy.caeprep"
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("manifest.json", json.dumps(manifest))
+        archive.writestr(f"raw/{resource.id}.rad", resource.raw)
+    session = PrepSession()
+    session.open_project(path)
+    assert session.describe()["revision"] == 7 and not session.describe()["dirty"]
+    assert next(item["value"] for item in session.card_fields(material.id) if item["name"] == "young_modulus") == 185000
+    created = session.create_shell_property("New shell", 2.2)
+    session.save_project(tmp_path / "new.caeprep")
+    check = PrepSession()
+    check.open_project(tmp_path / "new.caeprep")
+    assert lookup(check, "/PROP/SHELL/4")["id"] == created["card_id"]
+    assert check.document.resources[resource.id].raw == resource.raw
+
+
+def test_invalid_structure_restore_is_atomic_and_preserves_raw():
+    session = opened()
+    resource = next(iter(session.document.resources.values()))
+    session.create_material("M", 1, 100, .3)
+    before = resource.snapshot()
+    rendered = resource.render()
+    bad = deepcopy(before)
+    bad["created"][0]["text"] += "/NODE\n"
+    with pytest.raises(PrepError): resource.restore(bad)
+    assert resource.snapshot() == before and resource.render() == rendered
+    bad = deepcopy(before)
+    bad["deleted"] = [resource.cards[0].id]
+    with pytest.raises(PrepError): resource.restore(bad)
+    assert resource.snapshot() == before and resource.raw == SOURCE.read_bytes()
+
+
+def test_part_assignments_return_uuid_targets_and_dependents(tmp_path):
+    session = known_only(tmp_path)
+    part = lookup(session, "/PART/1")
+    old_material = lookup(session, "/MAT/LAW1/1")
+    section = lookup(session, "/PROP/SHELL/1")
+    assignments = session.part_assignments(part["id"])
+    assert assignments["material_id"] == old_material["id"]
+    assert assignments["property_id"] == section["id"]
+    assert assignments["native_material_id"] == assignments["native_property_id"] == 1
+    assert session.card_dependents(old_material["id"])[0]["id"] == part["id"]
+    new_material = session.create_material("New", 1, 100, .3)
+    session.assign_part(part["id"], material_id=new_material["card_id"])
+    assert session.part_assignments(part["id"])["material_id"] == new_material["card_id"]
+    assert not session.card_dependents(old_material["id"])
+    session.delete_card(old_material["id"])
+    assert session.part_assignments(part["id"])["material_id"] == new_material["card_id"]
+    session.undo()
+    session.undo()
+    assert session.part_assignments(part["id"])["material_id"] == old_material["id"]
+
+
+def test_delete_selected_new_card_clears_selection_and_stale_ref(tmp_path):
+    from caelab_prep.application.contracts import ObjectRef
+    session = known_only(tmp_path)
+    result = session.create_material("Selected", 1, 100, .3)
+    card = next(c for c in session.list_cards() if c["id"] == result["card_id"])
+    ref = ObjectRef(session.document.id, card["resource_id"], card["id"], "rad-card", card["keyword"])
+    session.activate_object(ref)
+    session.delete_card(card["id"])
+    assert session.active_object() is None
+    with pytest.raises(PrepError): session.activate_object(ref)
+    session.undo()
+    session.activate_object(ref)
+    assert session.active_object() == ref
+
+
+def test_native_ids_cannot_bypass_uuid_reference_command():
+    session = opened()
+    part = lookup(session, "/PART/1")
+    before = session.describe()
+    with pytest.raises(PrepError): session.set_field(part["id"], "material_id", 1234)
+    assert session.describe() == before
+
+
+def test_multiple_parts_select_union_once_and_invalid_target_keeps_selection():
+    from dataclasses import replace
+    from caelab_prep.application.contracts import ObjectRef
+    session = opened()
+    def ref(keyword):
+        card = lookup(session, keyword)
+        return ObjectRef(session.document.id, card["resource_id"], card["id"], "rad-card", card["keyword"])
+    first, second = ref("/PART/1"), ref("/PART/2")
+    events = []
+    session.subscribe(events.append)
+    result = session.select_objects((first, second, first), active=second)
+    assert session.selected_objects() == (first, second)
+    assert session.active_object() == second
+    expected = {cell["id"] for cell in session.mesh_view()["cells"] if cell["part_id"] in (1, 2)}
+    assert set(result["ids"]) == expected
+    assert len(events) == 1 and events[0]["kind"] == "selection"
+    before = session.selection()
+    for bad in ((first, replace(second, document_id="stale")), (first, ref("/MAT/LAW1/1"))):
+        with pytest.raises(PrepError): session.select_objects(bad, active=first)
+        assert session.selection() == before and len(events) == 1
+    with pytest.raises(PrepError): session.select_objects((first,), active=second)
+    assert session.selection() == before and len(events) == 1
+    session.select_objects((), active=None)
+    assert not session.selection()["refs"] and not session.selected_objects()
+    assert session.active_object() is None and len(events) == 2

@@ -6,6 +6,7 @@ This is not an IPC client for an already open desktop document.
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict, is_dataclass
 import json
 from pathlib import Path
 import sys
@@ -24,7 +25,8 @@ def _session(path: str):
 
 def _print(value):
     # JSON escapes keep machine output valid on legacy Windows pipe encodings.
-    print(json.dumps(value, ensure_ascii=True, indent=2, default=str))
+    print(json.dumps(value, ensure_ascii=True, indent=2,
+                     default=lambda item: asdict(item) if is_dataclass(item) else str(item)))
 
 
 def _resolve_card(session, identifier):
@@ -59,6 +61,14 @@ def parser():
     edit.add_argument("--field", required=True)
     edit.add_argument("--value", required=True)
     edit.add_argument("--output", required=True)
+    model = commands.add_parser("model", help="Create, duplicate, delete or assign objects through the GUI's command API")
+    model.add_argument("path")
+    model.add_argument("operation", choices=("material.create", "section.create", "object.copy", "object.delete", "part.assign"))
+    model.add_argument("--target", help="Target card ID or exact unique native header")
+    model.add_argument("--set", dest="values", action="append", default=[], metavar="FIELD=VALUE",
+                       help="Set a form value; numbers/booleans use JSON and references use a card ID/header")
+    model.add_argument("--describe", action="store_true", help="Print the current operation form without changing the document")
+    model.add_argument("--output", help="Save the resulting working document")
     export = commands.add_parser("export", help="Export native RAD and resolved dependencies")
     export.add_argument("path")
     export.add_argument("--output", required=True)
@@ -143,6 +153,41 @@ def main(argv=None):
                 value = args.value
             session.set_field(_resolve_card(session, args.card), args.field, value, expected_revision=session.describe()["revision"])
             _print(session.save_project(args.output))
+        elif args.command == "model":
+            from .application.contracts import ObjectRef, OperationRequest
+            from .application.rad_provider import RadProvider
+
+            provider = RadProvider(session)
+            def reference(identifier):
+                card_id = _resolve_card(session, identifier)
+                return provider.ref_for_card(next(card for card in session.list_cards() if card["id"] == card_id))
+            target = reference(args.target) if args.target else None
+            spec = provider.operation_spec(args.operation, target)
+            if args.describe:
+                if args.values or args.output:
+                    raise ValueError("--describe cannot be combined with changes or --output")
+                _print(spec)
+                return 0
+            if not args.output:
+                raise ValueError("--output is required when changing a working document")
+            fields = {item.name: item for item in spec.fields}
+            values = {name: item.value for name, item in fields.items()}
+            assigned = set()
+            for text in args.values:
+                name, separator, encoded = text.partition("=")
+                if not separator or name not in fields or name in assigned:
+                    raise ValueError("Each --set must name one supported field exactly once")
+                assigned.add(name)
+                try:
+                    value = json.loads(encoded)
+                except json.JSONDecodeError:
+                    value = encoded
+                if fields[name].kind == "reference":
+                    value = reference(value) if isinstance(value, str) else ObjectRef(**value) if isinstance(value, dict) else value
+                values[name] = value
+            result = provider.execute_operation(OperationRequest(spec.key, values, spec.document_id,
+                                                                  spec.expected_revision, spec.target))
+            _print({"operation": result, "saved": session.save_project(args.output)})
         elif args.command == "export":
             _print(session.export_rad(args.output))
         return 0

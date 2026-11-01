@@ -14,12 +14,13 @@ from functools import wraps
 
 from ..cae_core import CommandDispatcher, Document, PrepError, Selection, SelectionRef
 from ..radioss import DeckResource
+from ..radioss.modeling import native_identity, integer, material_block, shell_block, copy_block
 from .storage import write_container
 from .contracts import ObjectRef
 
 
 PROJECT_FORMAT = "caelab-prep-project"
-PROJECT_VERSION = 1
+PROJECT_VERSION = 2
 
 
 def _file_boundary(function):
@@ -47,6 +48,7 @@ class PrepSession:
         self._source_path: str | None = None
         self._listeners = []
         self._active_object: ObjectRef | None = None
+        self._selected_objects: tuple[ObjectRef, ...] = ()
         self._document_epoch = str(uuid4())
         self._projection_revision = 0
 
@@ -94,7 +96,7 @@ class PrepSession:
             document.revision = max(self.document.revision + 1, document.revision)
         self.document = document
         self.dispatcher = CommandDispatcher(document)
-        self.dispatcher.subscribe(lambda change: self._notify(change.kind, change=change.to_dict()))
+        self.dispatcher.subscribe(self._command_changed)
         self._root_id = root_id
         self._paths = paths
         self._source_paths = source_paths
@@ -102,6 +104,7 @@ class PrepSession:
         self._projection_cache = None
         self._source_path = source_path
         self._active_object = None
+        self._selected_objects = ()
         self._document_epoch = str(uuid4())
         self._projection_revision += 1
 
@@ -168,7 +171,7 @@ class PrepSession:
                 return {"document_id": None, "revision": 0, "dirty": False, "name": "새 작업",
                         "can_undo": False, "can_redo": False, "node_count": 0, "element_count": 0,
                         "capabilities": self.capabilities(), "diagnostics": [], "source_path": None,
-                        "project_path": None, "last_change": None, "active_object": None,
+                        "project_path": None, "last_change": None, "active_object": None, "selected_objects": [],
                         "document_epoch": self._document_epoch, "projection_revision": self._projection_revision}
             if self._projection_cache is None:
                 self.mesh_view()
@@ -182,6 +185,7 @@ class PrepSession:
                     "source_path": self._source_path,
                     "last_change": self.dispatcher.last_change.to_dict() if self.dispatcher.last_change else None,
                     "active_object": asdict(self._active_object) if self._active_object else None,
+                    "selected_objects": [asdict(ref) for ref in self._selected_objects],
                     "document_epoch": self._document_epoch, "projection_revision": self._projection_revision}
 
     @staticmethod
@@ -190,7 +194,8 @@ class PrepSession:
                 "project_version": PROJECT_VERSION, "material_edit": ["LAW1/ELAST", "LAW36/PLAS_TAB"],
                 "constraint_edit": ["BCS"], "contact_edit": ["INTER/TYPE24 friction"],
                 "curve_edit": ["FUNCT existing points"], "initial_velocity_edit": ["INIVEL/TRA"],
-                "shell_edit": ["PROP/SHELL thickness"], "create_cards": False,
+                "shell_edit": ["PROP/SHELL thickness"], "create_cards": ["MAT/LAW1", "PROP/SHELL"],
+                "copy_delete_cards": ["MAT/LAW1", "MAT/LAW36", "PROP/SHELL"], "part_assignment": True,
                 "cad_import": False, "meshing": False, "solver_execution": False,
                 "projection_only": True, "include_base": "root-deck-working-directory",
                 "unsupported_cards": "read-only, original bytes preserved"}
@@ -211,6 +216,8 @@ class PrepSession:
             return [card for resource in document.resources.values() for card in resource.list_cards()]
 
     def _find_card(self, card_id: str) -> DeckResource:
+        if not isinstance(card_id, str):
+            raise PrepError("invalid_reference", "A card UUID is required.")
         for resource in self._require().resources.values():
             if card_id in resource._by_id:
                 return resource
@@ -247,19 +254,252 @@ class PrepSession:
                 raise PrepError("invalid_reference", "The target resource does not match.")
             if not isinstance(values, dict) or not values:
                 raise PrepError("invalid_command", "A nonempty field mapping is required.")
-            state = resource.snapshot()
-            for name, value in values.items():
-                validated = resource.patched_state(card_id, name, value)
-                if name in validated.get(card_id, {}):
-                    state.setdefault(card_id, {})[name] = validated[card_id][name]
-                else:
-                    state.get(card_id, {}).pop(name, None)
-                    if card_id in state and not state[card_id]:
-                        state.pop(card_id)
+            if native_identity(resource.card(card_id).keyword) and resource.card(card_id).keyword.upper().startswith("/PART/"):
+                raise PrepError("reference_command_required", "Use assign_part with material/property card identities.")
+            state = resource.fields_state(card_id, values)
             assert self.dispatcher is not None
             self.dispatcher.execute(resource.id, state, f"{resource.card(card_id).keyword}: {', '.join(values)}",
                                     object_ids=(card_id,), expected_revision=expected_revision)
             return self.describe()
+
+    def _command_changed(self, change):
+        if change.kind == "structure":
+            self._projection_cache = None
+            self._projection_revision += 1
+            if self._active_object is not None:
+                resource = self.document.resources.get(self._active_object.resource_id)
+                if resource is None or self._active_object.object_id not in resource._by_id:
+                    self._active_object = None
+                    self.document.selection = Selection()
+            self._selected_objects = tuple(ref for ref in self._selected_objects
+                if ref.resource_id in self.document.resources and ref.object_id in self.document.resources[ref.resource_id]._by_id)
+        self._notify(change.kind, change=change.to_dict())
+
+    def _check_model_edit(self, expected_revision, expected_document_id):
+        document = self._require()
+        if expected_document_id is not None and expected_document_id != document.id:
+            raise PrepError("document_conflict", "The target document has been replaced.")
+        if expected_revision is not None and (type(expected_revision) is not int or expected_revision != document.revision):
+            raise PrepError("revision_conflict", "The model changed. Reload before editing.",
+                            {"expected": expected_revision, "actual": document.revision})
+        if any(item.get("unresolved_include") for item in self._diagnostics):
+            raise PrepError("unresolved_include", "Resolve INCLUDE files before changing native identities or references.")
+        return document
+
+    def _native_matches(self, namespace, identifier):
+        return [card for card in self.list_cards() if native_identity(card["keyword"]) == (namespace, identifier)]
+
+    def _allocate_native_id(self, namespace, requested=None):
+        used = {identity[1] for card in self.list_cards()
+                if (identity := native_identity(card["keyword"])) and identity[0] == namespace}
+        if requested is None:
+            requested = 1
+            while requested in used: requested += 1
+        integer(requested)
+        if requested in used:
+            raise PrepError("native_id_collision", "That native ID already exists in this document.",
+                            {"namespace": namespace, "native_id": requested})
+        return requested
+
+    def _model_resource(self, resource_id):
+        identity = resource_id if resource_id is not None else self._root_id
+        if not isinstance(identity, str):
+            raise PrepError("invalid_reference", "A resource UUID is required.")
+        resource = self._require().resources.get(identity)
+        if resource is None:
+            raise PrepError("invalid_reference", "The target deck resource does not exist.")
+        return resource
+
+    def _unique_card(self, card_id, namespace=None):
+        resource = self._find_card(card_id)
+        card = resource.card(card_id)
+        identity = native_identity(card.keyword)
+        if identity is None or (namespace is not None and identity[0] != namespace):
+            raise PrepError("invalid_reference", "The card is not in the required native namespace.")
+        if len(self._native_matches(*identity)) != 1:
+            raise PrepError("ambiguous_reference", "The native ID is repeated across resources.",
+                            {"namespace": identity[0], "native_id": identity[1]})
+        return resource, card, identity
+
+    def _model_result(self, resource, card_id, change, **details):
+        return {**self.describe(), "card_id": card_id, "resource_id": resource.id,
+                "change": change.to_dict() if change else None, **details}
+
+    def _insert_model_card(self, resource, text, label, expected_revision):
+        state, card_id = resource.inserted_state(text)
+        change = self.dispatcher.execute(resource.id, state, label, object_ids=(card_id,),
+                                         expected_revision=expected_revision, kind="structure")
+        return self._model_result(resource, card_id, change)
+
+    def create_material(self, name, density, young_modulus, poisson_ratio, *, resource_id=None,
+                        native_id=None, expected_revision=None, expected_document_id=None):
+        """Create one linear isotropic LAW1 in the input deck's unit system."""
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            resource = self._model_resource(resource_id)
+            identifier = self._allocate_native_id("MAT", native_id)
+            text = material_block(identifier, name, density, young_modulus, poisson_ratio, newline=resource.newline)
+            return self._insert_model_card(resource, text, "Create material", expected_revision)
+
+    def create_shell_property(self, name, thickness, *, resource_id=None, native_id=None,
+                              expected_revision=None, expected_document_id=None):
+        """Create the explicitly specified QEPH elastic-shell property profile."""
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            resource = self._model_resource(resource_id)
+            identifier = self._allocate_native_id("PROP", native_id)
+            text = shell_block(identifier, name, thickness, newline=resource.newline)
+            return self._insert_model_card(resource, text, "Create shell property", expected_revision)
+
+    @staticmethod
+    def _supported_model_card(card):
+        words = card.keyword.upper().split("/")
+        return len(words) >= 4 and ((words[1] == "MAT" and words[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB"))
+                                  or (words[1] == "PROP" and words[2] in ("SHELL", "TYPE1")))
+
+    def copy_card(self, card_id, *, name=None, resource_id=None, native_id=None,
+                  expected_revision=None, expected_document_id=None):
+        """Copy a complete material/property block, retaining its nonedited native fields."""
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            source, card, identity = self._unique_card(card_id)
+            if not self._supported_model_card(card):
+                raise PrepError("unsupported_operation", "Copy supports LAW1/LAW36 materials and SHELL properties only.")
+            destination = self._model_resource(resource_id if resource_id is not None else source.id)
+            identifier = self._allocate_native_id(identity[0], native_id)
+            text = copy_block(self.card_text(card_id), identifier, name=name, newline=destination.newline)
+            return self._insert_model_card(destination, text, "Copy " + card.keyword, expected_revision)
+
+    def _part_native_references(self, card_id):
+        resource, card, identity = self._unique_card(card_id, "PART")
+        if len(card.data) < 2:
+            raise PrepError("invalid_reference", "The PART card has no assignment row.")
+        lines = resource.render().decode("latin1").splitlines()
+        line = lines[card.data[1]]
+        try:
+            prop, material = int(line[:10]), int(line[10:20])
+            subset = int(line[20:30].strip() or "0")
+            if min(prop, material) < 1 or subset < 0: raise ValueError()
+        except ValueError:
+            raise PrepError("invalid_reference", "The PART assignment row is not a supported fixed-width reference.") from None
+        return resource, card, {"native_property_id": prop, "native_material_id": material,
+                                "subset_id": subset, "native_part_id": identity[1]}
+
+    def part_assignments(self, card_id):
+        """Resolve current UUID targets; unresolved or ambiguous references remain explicit."""
+        with self._lock:
+            resource, card, refs = self._part_native_references(card_id)
+            result = {"card_id": card.id, "resource_id": resource.id, **refs, "diagnostics": []}
+            for key, namespace in (("material_id", "MAT"), ("property_id", "PROP")):
+                identifier = refs["native_" + key]
+                matches = self._native_matches(namespace, identifier)
+                result[key] = matches[0]["id"] if len(matches) == 1 else None
+                if len(matches) != 1:
+                    result["diagnostics"].append({"code": "dangling_reference" if not matches else "ambiguous_reference",
+                        "field": key, "native_id": identifier, "message": "The PART reference cannot be resolved uniquely."})
+            return result
+
+    # Singular alias for callers using an individual PART query.
+    part_assignment = part_assignments
+
+    def _dependency_inventory(self, card_id):
+        _, _, identity = self._unique_card(card_id)
+        if identity[0] not in ("MAT", "PROP"):
+            return [], []
+        dependents, unverified = [], []
+        # These card families have no direct material/property references. Their
+        # other references (nodes, groups, functions, frames) are outside this query.
+        independent = {"BEGIN", "END", "NODE", "SHELL", "SH3N", "BRICK", "TETRA4", "TETRA",
+                       "BEAM", "TRUSS", "FUNCT", "UNIT", "BCS"}
+        independent_pairs = {("MAT", "LAW1"), ("MAT", "ELAST"), ("MAT", "LAW36"), ("MAT", "PLAS_TAB"),
+                             ("PROP", "SHELL"), ("PROP", "TYPE1"), ("GRNOD", "NODE"),
+                             ("GRNOD", "PART"), ("INIVEL", "TRA")}
+        for item in self.list_cards():
+            words = item["keyword"].upper().split("/")
+            root = words[1] if len(words) > 1 else ""
+            pair = tuple(words[1:3])
+            native = native_identity(item["keyword"])
+            if root == "PART":
+                try:
+                    _, _, refs = self._part_native_references(item["id"])
+                except PrepError:
+                    unverified.append(item)
+                    continue
+                key = "native_material_id" if identity[0] == "MAT" else "native_property_id"
+                if refs[key] == identity[1]: dependents.append(item)
+            elif pair in (("PROP", "PLY"), ("PROP", "TYPE19")):
+                if identity[0] == "MAT":
+                    resource = self._find_card(item["id"])
+                    card = resource.card(item["id"])
+                    try:
+                        line = resource.render().decode("latin1").splitlines()[card.data[1]]
+                        material = int(line[:10])
+                    except (ValueError, IndexError):
+                        unverified.append(item)
+                    else:
+                        if material == identity[1]: dependents.append(item)
+            elif root not in independent and pair not in independent_pairs:
+                unverified.append(item)
+        return dependents, unverified
+
+    def card_dependents(self, card_id):
+        """Known PART/PLY references; deletion additionally requires a complete scan."""
+        with self._lock:
+            return self._dependency_inventory(card_id)[0]
+
+    def delete_card(self, card_id, *, expected_revision=None, expected_document_id=None):
+        """Delete an unreferenced material/property; never cascade into other cards."""
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            resource, card, identity = self._unique_card(card_id)
+            if not self._supported_model_card(card):
+                raise PrepError("unsupported_operation", "Delete supports LAW1/LAW36 materials and SHELL properties only.")
+            dependents, unverified = self._dependency_inventory(card_id)
+            if dependents:
+                raise PrepError("card_in_use", "Reassign the dependent parts before deleting this card.",
+                                {"dependents": dependents})
+            if unverified:
+                raise PrepError("dependency_scan_incomplete", "Deletion is blocked because some cards have unverified material/property references.",
+                                {"cards": unverified})
+            state = resource.deleted_state(card_id)
+            change = self.dispatcher.execute(resource.id, state, "Delete " + card.keyword,
+                object_ids=(card_id,), expected_revision=expected_revision, kind="structure")
+            return self._model_result(resource, None, change, deleted_card_id=card_id)
+
+    def assign_part(self, card_id, *, material_id=None, property_id=None,
+                    expected_revision=None, expected_document_id=None):
+        """Assign UUID targets atomically; native IDs never masquerade as object IDs."""
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            resource, card, refs = self._part_native_references(card_id)
+            if material_id is None and property_id is None:
+                raise PrepError("invalid_command", "Choose a material or property to assign.")
+            values = {}
+            for key, target, namespace in (("material_id", material_id, "MAT"), ("property_id", property_id, "PROP")):
+                if target is None:
+                    matches = self._native_matches(namespace, refs["native_" + key])
+                    if len(matches) != 1:
+                        raise PrepError("dangling_reference" if not matches else "ambiguous_reference",
+                                        "Replace the unresolved PART reference before applying.", {"field": key})
+                    continue
+                _, target_card, identity = self._unique_card(target, namespace)
+                values[key] = identity[1]
+                if key == "material_id" and target_card.keyword.upper().split("/")[2] not in ("LAW1", "ELAST", "LAW36", "PLAS_TAB"):
+                    raise PrepError("unsupported_operation", "Assignment supports LAW1/LAW36 material families only.")
+                if key == "property_id":
+                    family = target_card.keyword.upper().split("/")[2]
+                    compatible = ({"quad", "triangle"} if family in ("SHELL", "TYPE1") else
+                                  {"tetra", "hexahedron", "wedge", "pyramid"} if family in ("SOLID", "TYPE14") else None)
+                    if compatible is None and identity[1] != refs["native_property_id"]:
+                        raise PrepError("unsupported_operation", "Assignment supports SHELL and SOLID property families only.")
+                    if self._projection_cache is None: self.mesh_view()
+                    kinds = {cell["type"] for cell in self._projection_cache["cells"] if cell.get("part_id") == refs["native_part_id"]}
+                    if compatible is not None and kinds - compatible:
+                        raise PrepError("incompatible_property", "The property family does not match the part's element types.")
+            state = resource.fields_state(card_id, values)
+            change = self.dispatcher.execute(resource.id, state, "Assign material / property",
+                object_ids=(card_id,), expected_revision=expected_revision)
+            return self._model_result(resource, card_id, change)
 
     def undo(self) -> dict:
         with self._lock:
@@ -298,13 +538,23 @@ class PrepSession:
                         diagnostics.append({"severity": "warning", "code": "missing_display_nodes",
                             "message": f"요소 {cell['id']}의 참조 절점이 없어 표시하지 못했습니다."})
                 identifiers = sorted(nodes)
+                parts = {}
+                for resource in document.resources.values():
+                    for card in resource.cards:
+                        identity = native_identity(card.keyword)
+                        if identity and identity[0] == "PART":
+                            parts.setdefault(identity[1], []).append((resource.id, card))
+                for cell in valid:
+                    matches = parts.get(cell.get("part_id"), [])
+                    cell["part_ref"] = ({"resource_id": matches[0][0], "native_scope": matches[0][1].keyword}
+                                        if len(matches) == 1 else None)
                 self._projection_cache = {"points": [nodes[i] for i in identifiers], "node_ids": identifiers,
                     "cells": valid, "diagnostics": diagnostics, "immutable_projection": True,
                     "document_id": document.id, "node_resources": node_resources}
             # The caller may render or serialize this projection, never mutate the model through it.
             return {"points": [list(p) for p in self._projection_cache["points"]],
                     "node_ids": list(self._projection_cache["node_ids"]),
-                    "cells": [{**c, "nodes": list(c["nodes"])} for c in self._projection_cache["cells"]],
+                    "cells": [{**c, "nodes": list(c["nodes"]), "part_ref": dict(c["part_ref"]) if c.get("part_ref") else None} for c in self._projection_cache["cells"]],
                     "diagnostics": [dict(d) for d in self._projection_cache["diagnostics"]],
                     "immutable_projection": True, "document_id": document.id, "revision": document.revision,
                     "document_epoch": self._document_epoch, "projection_revision": self._projection_revision,
@@ -329,8 +579,8 @@ class PrepSession:
 
     @staticmethod
     def _native_part_id(keyword):
-        words = keyword.upper().split("/")
-        return int(words[2]) if len(words) == 3 and words[1] == "PART" and words[2].isdigit() else None
+        identity = native_identity(keyword)
+        return identity[1] if identity and identity[0] == "PART" else None
 
     def _part_cells(self, target: ObjectRef) -> list[dict]:
         """One supported relationship: a native PART to its displayed elements."""
@@ -352,10 +602,11 @@ class PrepSession:
     def part_summary(self, target: ObjectRef) -> dict:
         with self._lock:
             _, card = self._object_card(target)
-            if not card.keyword.upper().startswith("/PART/") or not card.keyword.rsplit("/", 1)[1].isdigit():
+            part_id = self._native_part_id(card.keyword)
+            if part_id is None:
                 raise PrepError("invalid_reference", "A native PART is required.")
             cells = self._part_cells(target)
-            return {"part_id": int(target.native_scope.rsplit("/", 1)[1]), "element_count": len(cells)}
+            return {"part_id": part_id, "element_count": len(cells)}
 
     def activate_object(self, target: ObjectRef | None) -> dict:
         with self._lock:
@@ -365,8 +616,41 @@ class PrepSession:
                 self._object_card(target)
                 cells = self._part_cells(target)
             self._active_object = target
+            self._selected_objects = (target,) if target is not None else ()
             document.selection = Selection("element", tuple(cell["id"] for cell in cells),
                 tuple(SelectionRef(cell["resource_id"], "element", cell["id"]) for cell in cells)) if cells else Selection()
+            self._notify("selection")
+            return self.selection()
+
+    def selected_objects(self):
+        with self._lock:
+            return self._selected_objects
+
+    def select_objects(self, refs, active=None):
+        """Select existing PARTs together, with one separately specified active object.
+
+        Every reference is validated before selection changes. One notification
+        contains the canonical union of element refs across all selected PARTs.
+        """
+        with self._lock:
+            document = self._require()
+            if not isinstance(refs, (tuple, list)):
+                raise PrepError("invalid_selection", "Provide a sequence of PART references.")
+            normalized, cells = [], []
+            for ref in refs:
+                _, card = self._object_card(ref)
+                if self._native_part_id(card.keyword) is None:
+                    raise PrepError("unsupported_selection", "Multiple-object selection currently supports PARTs only.")
+                if ref not in normalized:
+                    normalized.append(ref)
+                    cells.extend(self._part_cells(ref))
+            if active is not None and active not in normalized:
+                raise PrepError("invalid_selection", "The active PART must belong to the selected objects.")
+            entity_refs = tuple(dict.fromkeys(SelectionRef(cell["resource_id"], "element", cell["id"]) for cell in cells))
+            selection = Selection("element", tuple(ref.local_id for ref in entity_refs), entity_refs) if entity_refs else Selection()
+            self._selected_objects = tuple(normalized)
+            self._active_object = active
+            document.selection = selection
             self._notify("selection")
             return self.selection()
 
@@ -417,6 +701,7 @@ class PrepSession:
                 if len(parts) == 1:
                     card = parts[0]
                     self._active_object = ObjectRef(document.id, card["resource_id"], card["id"], "rad-card", card["keyword"])
+            self._selected_objects = (self._active_object,) if self._active_object is not None else ()
             self._notify("selection")
             return self.selection()
 
@@ -424,6 +709,7 @@ class PrepSession:
         with self._lock:
             self._require().selection = Selection()
             self._active_object = None
+            self._selected_objects = ()
             self._notify("selection")
             return self.selection()
 
@@ -435,6 +721,7 @@ class PrepSession:
                     "document_epoch": self._document_epoch, "projection_revision": self._projection_revision,
                     "resource_revisions": {key: resource.state_token() for key, resource in document.resources.items()},
                     "active_object": asdict(self._active_object) if self._active_object else None,
+                    "selected_objects": [asdict(ref) for ref in self._selected_objects],
                     "refs": [{"resource_id": r.resource_id, "entity_kind": r.entity_kind, "local_id": r.local_id}
                              for r in document.selection.refs]}
 
@@ -457,7 +744,7 @@ class PrepSession:
                         "source_paths": sorted(self._source_paths), "diagnostics": self._diagnostics,
                         "resources": [{"id": r.id, "kind": r.kind, "name": r.name,
                             "logical_path": self._paths[r.id], "raw_member": f"raw/{r.id}.rad",
-                            "patches": r.snapshot()} for r in document.resources.values()]}
+                            "state": r.snapshot()} for r in document.resources.values()]}
             try:
                 write_container(target, manifest, {f"raw/{resource.id}.rad": resource.raw
                                                   for resource in document.resources.values()})
@@ -480,7 +767,7 @@ class PrepSession:
                     manifest = json.loads(archive.read("manifest.json"))
                     if not isinstance(manifest, dict):
                         raise PrepError("invalid_project", "작업 문서의 manifest는 객체여야 합니다.")
-                    if manifest.get("format") != PROJECT_FORMAT or type(manifest.get("version")) is not int or manifest.get("version") != PROJECT_VERSION:
+                    if manifest.get("format") != PROJECT_FORMAT or type(manifest.get("version")) is not int or manifest.get("version") not in (1, PROJECT_VERSION):
                         raise PrepError("project_version", "지원하지 않는 작업 문서 형식/버전입니다.")
                     if not isinstance(manifest["document_id"], str): raise ValueError("invalid document ID")
                     UUID(manifest["document_id"])
@@ -502,7 +789,7 @@ class PrepSession:
                         if item["raw_member"] != member: raise ValueError("invalid raw member")
                         resource = DeckResource(archive.read(member), resource_id=item["id"], name=item["name"],
                                                 is_include=item["id"] != manifest["root_id"])
-                        resource.restore(item["patches"])
+                        resource.restore(item["patches"] if manifest["version"] == 1 else item["state"])
                         document.resources[resource.id] = resource; paths[resource.id] = logical
                     if manifest["root_id"] not in document.resources: raise ValueError("missing root resource")
                     if not isinstance(manifest.get("source_paths", []), list) or not all(isinstance(p, str) for p in manifest.get("source_paths", [])):

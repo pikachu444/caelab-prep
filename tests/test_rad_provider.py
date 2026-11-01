@@ -219,8 +219,11 @@ def test_part_activation_shares_typed_target_and_existing_native_mesh_relation(t
     assert related
     assert set(session.selection()["ids"]) == {cell["id"] for cell in related}
     assert {ref["resource_id"] for ref in session.selection()["refs"]} == {cell["resource_id"] for cell in related}
-    assert provider.properties(target), "Part activation must expose actual read-only properties"
-    assert all(not spec.editable for spec in provider.properties(target))
+    specs = {spec.name: spec for spec in provider.properties(target)}
+    assert not specs["part_id"].editable and not specs["element_count"].editable
+    assert specs["material"].kind == specs["property"].kind == "reference"
+    assert specs["material"].editable and specs["property"].editable
+    assert specs["material"].value.document_id == target.document_id
     before = session.selection()
     with pytest.raises(PrepError):
         provider.select(replace(target, resource_id="missing-resource"))

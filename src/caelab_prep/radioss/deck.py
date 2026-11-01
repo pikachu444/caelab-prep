@@ -6,6 +6,7 @@ line endings, ordering, and unedited fields are never reformatted.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from copy import copy
 import hashlib
 import json
 import math
@@ -54,16 +55,26 @@ class DeckResource:
         self.raw = bytes(raw)
         self._raw_digest = hashlib.sha256(self.raw).digest()
         self.name = name
-        self.lines = self.raw.decode("latin1").splitlines(keepends=True)
         self.is_include = is_include
-        # #enddata terminates the current INCLUDE, not the caller. Keep the
-        # ignored tail in raw, but do not expose it as active model content.
-        self.active_stop = next((i for i, line in enumerate(self.lines)
-                                 if is_include and re.match(r"^\s*#enddata\b", line, re.I)), len(self.lines))
         self._patches: dict[str, dict[str, object]] = {}
-        self.cards: list[Card] = []
-        self.diagnostics: list[dict] = []
+        self._created: list[dict[str, str]] = []
+        self._deleted: set[str] = set()
+        self._source_lines = self.raw.decode("latin1").splitlines(keepends=True)
+        self._parse_layout(self._source_lines)
+        self._source_cards = tuple(self.cards)
+        self._source_active_stop = self.active_stop
+        if not self.cards and not is_include:
+            raise PrepError("invalid_deck", "Radioss 블록 카드가 없는 파일입니다.", {"name": name})
+
+    def _parse_layout(self, lines, card_ids=None):
+        """Build the editing projection; explicit identities survive structural edits."""
+        self.lines = list(lines)
+        self.active_stop = next((i for i, line in enumerate(self.lines)
+                                 if self.is_include and re.match(r"^\s*#enddata\b", line, re.I)), len(self.lines))
         starts = [i for i, line in enumerate(self.lines[:self.active_stop]) if line.startswith("/")]
+        if card_ids is not None and len(card_ids) != len(starts):
+            raise PrepError("invalid_project", "Card identity count does not match the deck layout.")
+        self.cards, self.diagnostics = [], []
         for ordinal, start in enumerate(starts):
             stop = starts[ordinal + 1] if ordinal + 1 < len(starts) else self.active_stop
             keyword = self.lines[start].strip()
@@ -71,11 +82,13 @@ class DeckResource:
                          if self.lines[i].strip() and not self.lines[i].lstrip().startswith("#"))
             category = self._category(keyword)
             title = self.lines[data[0]].strip() if data and category not in ("Nodes", "Elements") else ""
-            self.cards.append(Card(str(uuid5(UUID(self.id), str(ordinal) + ":" + keyword)),
-                                   keyword, start, stop, data, title, category))
+            try:
+                title = title.encode("latin1").decode("utf-8")
+            except UnicodeError:
+                pass
+            identity = card_ids[ordinal] if card_ids is not None else str(uuid5(UUID(self.id), str(ordinal) + ":" + keyword))
+            self.cards.append(Card(identity, keyword, start, stop, data, title, category))
         self._by_id = {card.id: card for card in self.cards}
-        if not self.cards and not is_include:
-            raise PrepError("invalid_deck", "Radioss 블록 카드가 없는 파일입니다.", {"name": name})
         for card in self.cards:
             if card.keyword.upper().startswith("/TRANSFORM"):
                 self.diagnostics.append({"severity": "warning", "code": "display_transform_not_applied",
@@ -83,6 +96,37 @@ class DeckResource:
             if card.keyword.upper().startswith("/BCS/") and not self._schema(card):
                 self.diagnostics.append({"severity": "warning", "code": "bcs_layout_not_editable",
                     "message": "구속 카드의 고정 폭을 해석하지 못했습니다. 원문을 보존하며 편집하지 않습니다.", "card_id": card.id})
+
+    @property
+    def newline(self):
+        for line in self._source_lines:
+            if line.endswith("\r\n"): return "\r\n"
+            if line.endswith("\n"): return "\n"
+            if line.endswith("\r"): return "\r"
+        return "\n"
+
+    def _rebuild_layout(self):
+        """Retain original spans, inserting new blocks before /END or #enddata."""
+        first = self._source_cards[0].start if self._source_cards else self._source_active_stop
+        chunks = ["".join(self._source_lines[:first])]
+        identities, inserted = [], False
+        def insert():
+            nonlocal inserted
+            if self._created and chunks and chunks[-1] and not chunks[-1].endswith(("\n", "\r")):
+                chunks.append(self.newline)
+            for item in self._created:
+                chunks.append(item["text"])
+                identities.append(item["id"])
+            inserted = True
+        for card in self._source_cards:
+            if card.keyword.upper() == "/END" and not inserted:
+                insert()
+            if card.id not in self._deleted:
+                chunks.append("".join(self._source_lines[card.start:card.stop]))
+                identities.append(card.id)
+        if not inserted: insert()
+        chunks.append("".join(self._source_lines[self._source_active_stop:]))
+        self._parse_layout("".join(chunks).splitlines(keepends=True), identities)
 
     @staticmethod
     def _category(keyword: str) -> str:
@@ -107,6 +151,10 @@ class DeckResource:
             fields = [Field("density", "밀도 (입력 덱 단위)", "float", data[1], 0, 20, 0, strict_minimum=True),
                       Field("young_modulus", "Young 계수 (입력 덱 단위)", "float", data[2], 0, 20, 0, strict_minimum=True),
                       Field("poisson_ratio", "Poisson 비", "float", data[2], 20, 40, -1, 0.5, True, True)]
+        elif (len(key) in (3, 4) and key[1] == "PART" and key[2].isdigit()
+              and (len(key) == 3 or key[3].isdigit()) and len(data) >= 2):
+            fields = [Field("property_id", "Property ID", "int", data[1], 0, 10, 1),
+                      Field("material_id", "Material ID", "int", data[1], 10, 20, 1)]
         elif len(key) > 1 and key[1] == "BCS" and len(data) >= 2:
             line = self.lines[data[1]].rstrip("\r\n")
             # /BCS uses fields of width 6 (Tra), 4 (Rot), then two width-10 IDs.
@@ -145,6 +193,8 @@ class DeckResource:
             if text not in ("0", "1"):
                 raise ValueError(text)
             return text == "1"
+        if field.type == "int":
+            return int(text)
         result = number(text)
         if not math.isfinite(result):
             raise ValueError(text)
@@ -170,65 +220,128 @@ class DeckResource:
                  "units": self.unit_context(card), "minimum": f.minimum, "maximum": f.maximum}
                 for f in self._schema(card)]
 
-    def patched_state(self, card_id: str, name: str, value: object) -> dict:
-        card = self.card(card_id)
-        field = next((f for f in self._schema(card) if f.name == name), None)
-        if field is None:
-            raise PrepError("field_not_writable", "이 필드는 원문 보존 전용입니다.", {"card_id": card_id, "field": name})
+    def _validated_value(self, field, value):
         if field.type == "bool":
             if not isinstance(value, bool):
                 raise PrepError("invalid_value", "구속 값은 true 또는 false여야 합니다.")
+            return value
+        if field.type == "int":
+            if type(value) is not int:
+                raise PrepError("invalid_value", "An integer native ID is required.")
             normalized = value
         else:
             try:
-                if isinstance(value, bool):
-                    raise ValueError()
+                if isinstance(value, bool): raise ValueError()
                 normalized = float(value)
-                if not math.isfinite(normalized):
-                    raise ValueError()
-            except (TypeError, ValueError):
-                raise PrepError("invalid_value", "유한한 수치가 필요합니다.", {"field": name}) from None
-            if field.minimum is not None and (normalized < field.minimum or (field.strict_minimum and normalized == field.minimum)):
-                raise PrepError("invalid_value", "허용 범위보다 작습니다.", {"field": name, "minimum": field.minimum})
-            if field.maximum is not None and (normalized > field.maximum or (field.strict_maximum and normalized == field.maximum)):
-                raise PrepError("invalid_value", "허용 범위보다 큽니다.", {"field": name, "maximum": field.maximum})
-            if normalized != self._read_field(field) and len(repr(normalized)) > field.stop - field.start:
-                raise PrepError("field_overflow", "솔버 필드 폭에 값을 기록할 수 없습니다.")
+                if not math.isfinite(normalized): raise ValueError()
+            except (TypeError, ValueError, OverflowError):
+                raise PrepError("invalid_value", "유한한 수치가 필요합니다.", {"field": field.name}) from None
+        if field.minimum is not None and (normalized < field.minimum or (field.strict_minimum and normalized == field.minimum)):
+            raise PrepError("invalid_value", "허용 범위보다 작습니다.", {"field": field.name, "minimum": field.minimum})
+        if field.maximum is not None and (normalized > field.maximum or (field.strict_maximum and normalized == field.maximum)):
+            raise PrepError("invalid_value", "허용 범위보다 큽니다.", {"field": field.name, "maximum": field.maximum})
+        text = str(normalized) if field.type == "int" else repr(normalized)
+        if normalized != self._read_field(field) and len(text) > field.stop - field.start:
+            raise PrepError("field_overflow", "솔버 필드 폭에 값을 기록할 수 없습니다.")
+        return normalized
+
+    def patched_state(self, card_id: str, name: str, value: object) -> dict:
+        return self.fields_state(card_id, {name: value})
+
+    def fields_state(self, card_id: str, values: dict) -> dict:
+        schema = {field.name: field for field in self._schema(self.card(card_id))}
         result = self.snapshot()
-        result.setdefault(card_id, {})[name] = normalized
-        if normalized == self._read_field(field):
-            result[card_id].pop(name)
-            if not result[card_id]:
-                result.pop(card_id)
+        patches = result["patches"]
+        for name, value in values.items():
+            field = schema.get(name)
+            if field is None:
+                raise PrepError("field_not_writable", "이 필드는 원문 보존 전용입니다.", {"card_id": card_id, "field": name})
+            normalized = self._validated_value(field, value)
+            if normalized != self._read_field(field):
+                patches.setdefault(card_id, {})[name] = normalized
+            else:
+                patches.get(card_id, {}).pop(name, None)
+                if card_id in patches and not patches[card_id]: patches.pop(card_id)
         return result
 
     def snapshot(self) -> dict:
-        return {key: dict(value) for key, value in self._patches.items()}
+        return {"state_version": 2, "patches": {key: dict(value) for key, value in self._patches.items()},
+                "created": [dict(item) for item in self._created], "deleted": sorted(self._deleted)}
 
     def restore(self, state: dict) -> None:
+        """Validate a candidate before replacing live state; legacy patch dictionaries still read."""
         if not isinstance(state, dict):
             raise PrepError("invalid_project", "편집 패치 형식이 잘못됐습니다.")
-        # Validate all fields and values without exposing a partial state.
-        previous = self._patches
-        candidate: dict = {}
-        try:
-            self._patches = {}
-            for card_id, fields in state.items():
-                if not isinstance(fields, dict):
-                    raise PrepError("invalid_project", "필드 패치 형식이 잘못됐습니다.")
-                for name, value in fields.items():
-                    candidate = self.patched_state(card_id, name, value)
-                    self._patches = candidate
-        except Exception:
-            self._patches = previous
-            raise
-        self._patches = candidate
+        if "state_version" not in state:
+            state = {"state_version": 2, "patches": state, "created": [], "deleted": []}
+        if (type(state.get("state_version")) is not int or state["state_version"] != 2
+                or set(state) != {"state_version", "patches", "created", "deleted"}
+                or not isinstance(state["patches"], dict) or not isinstance(state["created"], list)
+                or not isinstance(state["deleted"], list)):
+            raise PrepError("invalid_project", "Unsupported structural deck state.")
+        source_ids = {card.id for card in self._source_cards}
+        created, used = [], set(source_ids)
+        for item in state["created"]:
+            if not isinstance(item, dict) or set(item) != {"id", "text"} or not all(isinstance(value, str) for value in item.values()):
+                raise PrepError("invalid_project", "Invalid created card block.")
+            try:
+                UUID(item["id"])
+                item["text"].encode("latin1")
+            except (ValueError, UnicodeError):
+                raise PrepError("invalid_project", "Invalid created card identity or encoding.") from None
+            lines = item["text"].splitlines()
+            if (item["id"] in used or not lines or not lines[0].startswith("/")
+                    or len([line for line in lines if line.startswith("/")]) != 1
+                    or lines[0].upper().strip() in ("/BEGIN", "/END")
+                    or any(re.match(r"^\s*#(?:include|enddata)\b", line, re.I) for line in lines)
+                    or not item["text"].endswith(("\n", "\r"))):
+                raise PrepError("invalid_project", "Invalid created card block boundaries.")
+            used.add(item["id"])
+            created.append(dict(item))
+        if (any(not isinstance(item, str) or item not in source_ids for item in state["deleted"])
+                or len(state["deleted"]) != len(set(state["deleted"]))):
+            raise PrepError("invalid_project", "Invalid deleted card identities.")
+        deleted = set(state["deleted"])
+        for card in self._source_cards:
+            if card.id in deleted:
+                text = "".join(self._source_lines[card.start:card.stop])
+                if card.keyword.upper() in ("/BEGIN", "/END") or re.search(r"^\s*#include\b", text, re.I | re.M):
+                    raise PrepError("invalid_project", "Cannot remove a document boundary or INCLUDE directive.")
+        candidate = copy(self)
+        candidate._created, candidate._deleted, candidate._patches = created, deleted, {}
+        if created != self._created or deleted != self._deleted:
+            candidate._rebuild_layout()
+        for card_id, values in state["patches"].items():
+            if not isinstance(values, dict):
+                raise PrepError("invalid_project", "필드 패치 형식이 잘못됐습니다.")
+            candidate._patches = candidate.fields_state(card_id, values)["patches"]
+        self.__dict__.update(candidate.__dict__)
+
+    def inserted_state(self, text: str, *, card_id=None):
+        identity = card_id or str(uuid4())
+        state = self.snapshot()
+        state["created"].append({"id": identity, "text": text})
+        candidate = copy(self)
+        candidate.restore(state)
+        return state, identity
+
+    def deleted_state(self, card_id):
+        self.card(card_id)
+        state = self.snapshot()
+        if any(item["id"] == card_id for item in state["created"]):
+            state["created"] = [item for item in state["created"] if item["id"] != card_id]
+        else:
+            state["deleted"].append(card_id)
+        state["patches"].pop(card_id, None)
+        candidate = copy(self)
+        candidate.restore(state)
+        return state
 
     def state_token(self) -> str:
-        return hashlib.sha256(self._raw_digest + json.dumps(self._patches, sort_keys=True).encode()).hexdigest()
+        return hashlib.sha256(self._raw_digest + json.dumps(self.snapshot(), sort_keys=True).encode()).hexdigest()
 
     def render(self) -> bytes:
-        if not self._patches:
+        if not self._patches and not self._created and not self._deleted:
             return self.raw
         lines = list(self.lines)
         for card_id, values in self._patches.items():
@@ -238,7 +351,8 @@ class DeckResource:
                 line = lines[field.line]
                 ending = "\r\n" if line.endswith("\r\n") else "\n" if line.endswith("\n") else "\r" if line.endswith("\r") else ""
                 content = line[:-len(ending)] if ending else line
-                text = ("1" if value else "0") if field.type == "bool" else repr(float(value)).rjust(field.stop - field.start)
+                text = (("1" if value else "0") if field.type == "bool" else
+                        (str(value) if field.type == "int" else repr(float(value))).rjust(field.stop - field.start))
                 lines[field.line] = content[:field.start] + text + content[field.stop:] + ending
         return "".join(lines).encode("latin1")
 
