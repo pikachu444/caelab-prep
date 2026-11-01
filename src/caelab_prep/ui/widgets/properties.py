@@ -175,8 +175,11 @@ class _ColumnPresentation:
         minimum = max((row.value_cell.minimumSizeHint().width() for row in panel._rows.values()
                        if not row.multiline), default=100)
         if not self.paired:
-            widths[2] = max(widths[2], max((row.unit_cell.minimumSizeHint().width()
-                                          for row in panel._rows.values()), default=64))
+            has_units = any(row.unit_widget is not None for row in panel._rows.values())
+            panel.column_header.setSectionHidden(2, not has_units)
+            widths[2] = (max(widths[2], max((row.unit_cell.minimumSizeHint().width()
+                                           for row in panel._rows.values()), default=64))
+                         if has_units else 0)
         if not panel._columns_changed:
             widths[0] = max(96, min(156, round(available * .40)))
             widths[1] = max(110, available - widths[0] - sum(widths[2:]))

@@ -9,8 +9,8 @@ projection is newly expressed here from the existing schema-binding behavior
 timing follows the retained controller.
 """
 
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QFont
+from PySide6.QtCore import QEvent, QObject, QSize, Qt
+from PySide6.QtGui import QActionGroup, QFont
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QFrame, QHeaderView, QLabel, QLineEdit, QMenu,
     QPlainTextEdit, QProgressBar, QPushButton, QScrollArea, QSizePolicy,
@@ -20,6 +20,47 @@ from PySide6.QtWidgets import (
 from .shell import ViewportFrame, create_dock
 from .theme import STYLESHEET
 from .widgets import CurvePlot, CurveTable, ModelTree, PropertyEditor, VectorEdit
+
+
+class _SelectionTypeMenu(QObject):
+    """Keep a menu route to the toolbar's one selection-mode control.
+
+    Qt toolbar overflow does not reliably expose embedded combo widgets. The
+    menu remains usable when the model-view toolbar is narrower than its items.
+    """
+
+    def __init__(self, combo, menu):
+        super().__init__(menu)
+        self.combo = combo
+        self.menu = menu
+        self.group = QActionGroup(menu)
+        self.group.setExclusive(True)
+        self.actions = []
+        for index, (label, key) in enumerate((("Elements", "element"), ("Nodes", "node"))):
+            action = menu.addAction(label)
+            action.setObjectName("view.selection." + key)
+            action.setCheckable(True)
+            action.setData(index)
+            self.group.addAction(action)
+            self.actions.append(action)
+        self.group.triggered.connect(lambda action: combo.setCurrentIndex(action.data()))
+        combo.currentIndexChanged.connect(self._sync_checked)
+        combo.installEventFilter(self)
+        self._sync_checked(combo.currentIndex())
+        self._sync_enabled()
+
+    def _sync_checked(self, index):
+        if 0 <= index < len(self.actions):
+            self.actions[index].setChecked(True)
+
+    def _sync_enabled(self):
+        self.menu.setEnabled(self.combo.isEnabled())
+        self.group.setEnabled(self.combo.isEnabled())
+
+    def eventFilter(self, watched, event):
+        if watched is self.combo and event.type() == QEvent.Type.EnabledChange:
+            self._sync_enabled()
+        return False
 
 
 class PrepWorkspace:
@@ -160,6 +201,9 @@ class PrepWorkspace:
         self.pick_mode.addItems(["Elements", "Nodes"])
         self.pick_mode.currentIndexChanged.connect(self._pick_mode_changed)
         bar.addWidget(self.pick_mode)
+        self.selection_type_menu = self._view_menu.addMenu("Selection type")
+        self.selection_type_menu.setObjectName("selectionTypeMenu")
+        self._selection_type_menu = _SelectionTypeMenu(self.pick_mode, self.selection_type_menu)
         return bar
 
     def _install_navigation(self):

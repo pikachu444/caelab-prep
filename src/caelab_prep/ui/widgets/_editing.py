@@ -14,6 +14,15 @@ _COLLECTION_EDITORS = (IntegerListEdit, BooleanVectorEdit, ReferenceListEdit, Nu
 class ReferenceComboBox(QComboBox):
     """Qt's opaque Python user data compares identity, but references use value identity."""
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        # Qualified references belong in the popup/tooltip, not in the minimum
+        # width of every row in the inspector. The editor still expands to use
+        # all of the space that its host provides.
+        self.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.setMinimumContentsLength(10)
+        self.currentTextChanged.connect(self.setToolTip)
+
     def findData(self, data, role=Qt.ItemDataRole.UserRole,
                  flags=Qt.MatchFlag.MatchExactly | Qt.MatchFlag.MatchCaseSensitive):
         if role == Qt.ItemDataRole.UserRole:
@@ -56,6 +65,7 @@ def create_editor(spec, value, changed):
         for index, choice in enumerate(field(spec, "choices", ())):
             label = labels[index] if index < len(labels) else str(field(choice, "object_id", choice))
             editor.addItem(label, choice)
+            editor.setItemData(index, label, Qt.ItemDataRole.ToolTipRole)
         editor.setCurrentIndex(editor.findData(value))
         editor.currentIndexChanged.connect(changed)
     else:

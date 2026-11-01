@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDockWidget,
-    QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QSplitter,
+    QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMenu, QPushButton, QSizePolicy, QSplitter,
     QStyledItemDelegate, QTabWidget, QToolBar, QToolButton, QTreeView, QVBoxLayout, QWidget)
 
 from .reference_profiles import profile
@@ -56,6 +56,62 @@ def reference_style(key):
     """
 
 
+class _CommandGroup(QWidget):
+    """Keep direct commands when they fit, with named group menus when narrow."""
+
+    def __init__(self, key, actions, kind, parent=None):
+        super().__init__(parent)
+        self.setObjectName("referenceCommandGroup")
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        stack = QVBoxLayout(self)
+        stack.setContentsMargins(3, 0, 3, 0)
+        stack.setSpacing(0)
+        self.buttons = QWidget()
+        commands = QHBoxLayout(self.buttons)
+        commands.setContentsMargins(2, 1, 2, 1)
+        for action in actions:
+            button = QToolButton()
+            button.setDefaultAction(action)
+            button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+                if kind == "ribbon" else Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+            button.setIconSize(QSize(24, 24) if kind == "ribbon" else QSize(16, 16))
+            commands.addWidget(button)
+        stack.addWidget(self.buttons)
+        self.menu_button = QToolButton()
+        self.menu_button.setObjectName("referenceGroupMenu")
+        self.menu_button.setText(key)
+        self.menu_button.setAccessibleName(key + " commands")
+        self.menu_button.setToolTip(key + " commands")
+        self.menu_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        menu = QMenu(self.menu_button)
+        menu.addActions(actions)
+        self.menu_button.setMenu(menu)
+        stack.addWidget(self.menu_button, 0, Qt.AlignmentFlag.AlignHCenter)
+        self.menu_button.hide()
+        caption = QLabel(key)
+        caption.setObjectName("commandGroup")
+        caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        stack.addWidget(caption)
+        self.ensurePolished()
+        for widget in self.findChildren(QWidget):
+            widget.ensurePolished()
+        self._preferred = super().sizeHint()
+        self._minimum = QSize(self.menu_button.sizeHint().width() + 6, self._preferred.height())
+        self.setMinimumWidth(self._minimum.width())
+
+    def sizeHint(self):
+        return self._preferred if hasattr(self, "_preferred") else super().sizeHint()
+
+    def minimumSizeHint(self):
+        return self._minimum if hasattr(self, "_minimum") else super().minimumSizeHint()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        narrow = self.width() < self._preferred.width()
+        self.buttons.setVisible(not narrow)
+        self.menu_button.setVisible(narrow)
+
+
 @dataclass(frozen=True)
 class CommandSurface:
     kind: str
@@ -91,37 +147,18 @@ class CommandSurface:
                 b.toolbar.addWidget(QLabel("Module:"))
                 b.toolbar.addWidget(context)
             return
-        tabs = QTabWidget()
+        tabs = QTabWidget(contextual_bar)
         tabs.setObjectName("referenceCommands")
         for title, keys in self.pages:
             if not any(b.commands.get(key) for key in keys):
                 continue
-            page = QWidget()
+            page = QWidget(tabs)
             row = QHBoxLayout(page)
             row.setContentsMargins(0, 0, 0, 0)
             for key in keys:
                 if not b.commands.get(key):
                     continue
-                group = QWidget()
-                stack = QVBoxLayout(group)
-                stack.setContentsMargins(3, 0, 3, 0)
-                stack.setSpacing(0)
-                buttons = QWidget()
-                commands = QHBoxLayout(buttons)
-                commands.setContentsMargins(2, 1, 2, 1)
-                for action in b.commands.get(key, ()):
-                    button = QToolButton()
-                    button.setDefaultAction(action)
-                    button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon
-                        if self.kind == "ribbon" else Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-                    button.setIconSize(QSize(24, 24) if self.kind == "ribbon" else QSize(16, 16))
-                    commands.addWidget(button)
-                stack.addWidget(buttons)
-                caption = QLabel(key)
-                caption.setObjectName("commandGroup")
-                caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                stack.addWidget(caption)
-                row.addWidget(group)
+                row.addWidget(_CommandGroup(key, b.commands[key], self.kind, page))
             row.addStretch()
             tabs.addTab(page, title)
         contextual_bar.addWidget(tabs)
@@ -322,9 +359,12 @@ class ReferenceAdapter:
         if self.docks.adjacent:
             width = max(800, b.window.width())
             b.window.resizeDocks([b.model_dock, b.properties_dock],
-                [round(width * .17), round(width * .27)], Qt.Orientation.Horizontal)
+                [round(width * .17), max(320, round(width * .27))], Qt.Orientation.Horizontal)
         else:
-            b.window.resizeDocks([b.model_dock], [round(b.window.width() * profile(self.key).tree_fraction)], Qt.Orientation.Horizontal)
+            width = round(b.window.width() * profile(self.key).tree_fraction)
+            if self.interaction.mode != "dialog":
+                width = max(340, width)
+            b.window.resizeDocks([b.model_dock], [width], Qt.Orientation.Horizontal)
         if self.docks.outline_fraction is not None:
             # Initial arrangement only: the host calls resize before its first
             # show, so subsequent user splitter changes remain untouched.
