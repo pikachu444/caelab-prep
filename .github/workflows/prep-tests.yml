@@ -66,7 +66,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: sudo apt-get update && sudo apt-get install -y xvfb xauth libglu1-mesa libgl1 libegl1 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxkbcommon-x11-0 libfontconfig1
+      - run: sudo apt-get update && sudo apt-get install -y xvfb xauth libglu1-mesa libgl1 libegl1 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxkbcommon-x11-0 libfontconfig1
       - run: python -m pip install -e ".[gui,dev]"
       - name: Require the XCB plugin and an actual X11 Qt window system
         run: |
