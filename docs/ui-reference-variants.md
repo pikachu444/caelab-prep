@@ -13,7 +13,7 @@ The current target and acceptance contract are defined in
 All eight approaches must support the same T1–T6 tasks through distinct
 presentation and interaction, including command groups and task flow, while
 sharing the model, commands, validation and reusable components. The source map
-below describes current implementation and evidence gaps; it is not an
+below describes the handoff implementation and its evidence gaps; it is not an
 acceptance matrix for that target. Current unresolved status belongs in
 [execution-stages section 19](execution-stages.md#current-progress); sections 1–18 are not implied
 complete. Functional regression, UI quality, usable engineering tasks and
@@ -135,9 +135,10 @@ appear in the Prep inspector header; its only editable provider field is shell
 thickness. Material is linked through the RAD PART, so the PSHELL Material row
 is not fabricated. This is a shell-property editing comparison, not identical
 cards, values or a claim that all source metadata is editable.
-Naksha's supported Undo/Redo commands are in the small quick-file row. Only the
-working Materials context is included; unimplemented Home/Results content is
-omitted rather than filling a ribbon with inert controls.
+In the handoff captures, Naksha's Undo/Redo commands were in the small
+quick-file row and only its Materials context was included. The G1–G4 adapter
+now also provides Selections and Conditions, using the same shared commands.
+Unimplemented Home/Results content remains omitted.
 
 Additional exact-image downloads were blocked by the local network restriction;
 no installation or security setting was changed to retrieve them. Documentation
