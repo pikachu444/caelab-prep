@@ -66,10 +66,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: sudo apt-get update && sudo apt-get install -y xvfb xauth libglu1-mesa libgl1 libegl1 libxcb-cursor0 libxkbcommon-x11-0 libfontconfig1
+      - run: sudo apt-get update && sudo apt-get install -y xvfb xauth libglu1-mesa libgl1 libegl1 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxkbcommon-x11-0 libfontconfig1
       - run: python -m pip install -e ".[gui,dev]"
+      - name: Require the XCB plugin and an actual X11 Qt window system
+        run: |
+          python - <<'PYCODE'
+          from pathlib import Path
+          import subprocess
+          from PySide6.QtCore import QLibraryInfo
+          plugin = Path(QLibraryInfo.path(QLibraryInfo.PluginsPath)) / "platforms/libqxcb.so"
+          result = subprocess.run(["ldd", str(plugin)], capture_output=True, text=True)
+          print(result.stdout, result.stderr, flush=True)
+          assert result.returncode == 0 and "not found" not in result.stdout
+          PYCODE
+          QT_DEBUG_PLUGINS=1 xvfb-run -a -s "-screen 0 1920x1080x24" python -u -c 'from PySide6.QtWidgets import QApplication; app = QApplication([]); print(app.platformName(), app.primaryScreen().geometry(), flush=True); assert app.platformName() == "xcb"'
       - name: Actual Qt VTK rendering and picking
-        run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q tests/test_native_render.py
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -s tests/test_native_render.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

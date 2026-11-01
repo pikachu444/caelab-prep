@@ -22,7 +22,16 @@ def _r(*values):
     return "".join(f"{v:20.12g}" for v in values)
 
 
-def _base_model(directory, name="conditions"):
+def _native_bytes(text, newline=b"\n"):
+    assert newline in (b"\n", b"\r\n")
+    return text.encode("latin1").replace(b"\n", newline)
+
+
+def _newline(raw):
+    return b"\r\n" if b"\r\n" in raw else b"\n"
+
+
+def _base_model(directory, name="conditions", *, newline=b"\n"):
     directory.mkdir(parents=True, exist_ok=True)
     nodes = [(101, 0, 0, 0), (205, 10, 0, 0), (309, 10, 10, 0), (411, 0, 10, 0),
              (501, 0, 0, 1), (605, 10, 0, 1), (709, 10, 10, 1), (811, 0, 10, 1)]
@@ -39,8 +48,8 @@ def _base_model(directory, name="conditions"):
             "\n/PART/903\nUpper plate\n" + _i(19, 17, 0) +
             "\n#include mesh.inc\n/END\n")
     source = directory / f"{name}_0000.rad"
-    source.write_text(root)
-    (directory / "mesh.inc").write_text(geometry)
+    source.write_bytes(_native_bytes(root, newline))
+    (directory / "mesh.inc").write_bytes(_native_bytes(geometry, newline))
     return source
 
 
@@ -61,8 +70,8 @@ def _snapshot(session):
 
 
 @pytest.fixture
-def model(tmp_path):
-    source = _base_model(tmp_path / "input")
+def model(tmp_path, request):
+    source = _base_model(tmp_path / "input", newline=getattr(request, "param", b"\n"))
     session = PrepSession()
     session.open_rad(str(source))
     return session, source
@@ -81,8 +90,10 @@ def _create_conditions(session):
                 velocity=velocity, contact=contact)
 
 
+@pytest.mark.parametrize("model", [b"\n", b"\r\n"], indirect=True, ids=["lf", "crlf"])
 def test_conditions_create_curve_edit_undo_save_reopen_export(model, tmp_path):
     session, source = model
+    newline = _newline(source.read_bytes())
     mesh_before = (source.parent / "mesh.inc").read_bytes()
     ids = _create_conditions(session)
     before = session.card_text(ids["curve"])
@@ -102,7 +113,7 @@ def test_conditions_create_curve_edit_undo_save_reopen_export(model, tmp_path):
     reopened.export_rad(str(output))
     raw = output.read_bytes()
     assert (output.parent / "mesh.inc").read_bytes() == mesh_before
-    assert b"#include mesh.inc\n" in raw
+    assert b"#include mesh.inc" + newline in raw
     curve = _block(raw, "/FUNCT/63")
     assert [(float(r[:20]), float(r[20:40])) for r in curve[1:]] == [(0, 0), (.0005, .75), (.002, 1)]
     for keyword, expected in (("/GRNOD/NODE/47", [101, 205, 309, 411]),
@@ -176,19 +187,22 @@ def test_condition_reference_types_and_values_are_checked_before_mutation(model)
         assert _snapshot(session) == before
 
 
+@pytest.mark.parametrize("model", [b"\n", b"\r\n"], indirect=True, ids=["lf", "crlf"])
 def test_existing_curve_rows_preserve_id_comments_and_other_cards(model):
     _, source = model
+    raw = source.read_bytes()
+    newline = _newline(raw)
     extra = ("/FUNCT/406\nExisting measured load\n# measured data comment  \n" + _r(0, 2) +
              "\n# instrument calibration remains\n" + _r(1, 3) + "\n")
-    source.write_text(source.read_text().replace("/END\n", extra + "/END\n"))
+    source.write_bytes(raw.replace(b"/END" + newline, _native_bytes(extra + "/END\n", newline)))
     session = PrepSession()
     session.open_rad(str(source))
     curve = _card(session, "/FUNCT/406")
     untouched = {c["id"]: session.card_text(c["id"]) for c in session.list_cards() if c["id"] != curve["id"]}
     session.set_curve_points(curve["id"], [(0, 10), (.3, 20), (.9, 15), (1, 0)])
     text = session.card_text(curve["id"])
-    assert "# measured data comment  \n" in text
-    assert "# instrument calibration remains\n" in text
+    assert b"# measured data comment  " + newline in text.encode("latin1")
+    assert b"# instrument calibration remains" + newline in text.encode("latin1")
     assert len(_block(text.encode("latin1"), "/FUNCT/406")) == 5
     assert {c["id"]: session.card_text(c["id"]) for c in session.list_cards() if c["id"] != curve["id"]} == untouched
 
@@ -196,7 +210,10 @@ def test_existing_curve_rows_preserve_id_comments_and_other_cards(model):
 def test_curve_id_conflicts_with_table_namespace(model):
     _, source = model
     # The opaque table is retained; its ID still reserves the function namespace.
-    source.write_text(source.read_text().replace("/END\n", "/TABLE/1/406\nExisting table\n         1\n/END\n"))
+    raw = source.read_bytes()
+    newline = _newline(raw)
+    source.write_bytes(raw.replace(b"/END" + newline,
+        _native_bytes("/TABLE/1/406\nExisting table\n         1\n/END\n", newline)))
     session = PrepSession()
     session.open_rad(str(source))
     before = _snapshot(session)
@@ -227,7 +244,8 @@ def test_group_with_more_than_ten_nodes_uses_continuation_rows(model):
     _, source = model
     mesh = source.parent / "mesh.inc"
     additions = "\n".join(_i(n) + _r(n, 0, 0) for n in (9001, 9003, 9007, 9011))
-    mesh.write_text(mesh.read_text().replace("/SHELL/902", additions + "\n/SHELL/902"))
+    raw = mesh.read_bytes()
+    mesh.write_bytes(raw.replace(b"/SHELL/902", _native_bytes(additions + "\n/SHELL/902", _newline(raw))))
     session = PrepSession()
     session.open_rad(str(source))
     members = [101, 205, 309, 411, 501, 605, 709, 811, 9001, 9003, 9007, 9011]
@@ -240,7 +258,8 @@ def test_group_with_more_than_ten_nodes_uses_continuation_rows(model):
 def test_surface_rejects_solid_part_instead_of_silently_ignoring_volume_elements(model):
     _, source = model
     mesh = source.parent / "mesh.inc"
-    mesh.write_text(mesh.read_text() + "/BRICK/903\n" + _i(9901, 101, 205, 309, 411, 501, 605, 709, 811) + "\n")
+    raw = mesh.read_bytes()
+    mesh.write_bytes(raw + _native_bytes("/BRICK/903\n" + _i(9901, 101, 205, 309, 411, 501, 605, 709, 811) + "\n", _newline(raw)))
     session = PrepSession()
     session.open_rad(str(source))
     before = _snapshot(session)
@@ -254,14 +273,15 @@ def test_existing_curved_type7_friction_edit_preserves_optional_node_row(model, 
     _create_conditions(session)
     output = tmp_path / "curved" / "conditions_0000.rad"
     session.export_rad(str(output))
-    lines = output.read_text().splitlines()
+    raw = output.read_bytes()
+    lines = raw.decode("latin1").splitlines()
     header = lines.index("/INTER/TYPE7/97")
     data_indices = [i for i in range(header + 1, len(lines)) if lines[i].strip() and not lines[i].startswith("#")]
     first = data_indices[1]
     lines[first] = lines[first][:80] + _i(2) + lines[first][90:]
     # Icurv=2 inserts node identifiers before the Stfac/Fric row.
     lines.insert(data_indices[4], _i(101, 205))
-    output.write_text("\n".join(lines) + "\n")
+    output.write_bytes(_native_bytes("\n".join(lines) + "\n", _newline(raw)))
     edited = PrepSession()
     edited.open_rad(str(output))
     contact = _card(edited, "/INTER/TYPE7/97")
