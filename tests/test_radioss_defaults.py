@@ -98,7 +98,9 @@ def test_contact_defaults_depend_on_function_and_match_both_editing_paths(tmp_pa
     original = session.card_text(contact)
     values = session.condition_values(contact)
     assert values["friction"] == expected and values["friction_is_scale"] is bool(function)
-    assert next(field["value"] for field in session.card_fields(contact) if field["name"] == "friction") == expected
+    friction_field = next(field for field in session.card_fields(contact) if field["name"] == "friction")
+    assert friction_field["value"] == expected
+    assert friction_field["label"] == ("마찰 함수 배율" if function else "마찰계수")
     assert session.set_condition_values(contact, {"friction": expected})["change"] is None
     assert session.card_text(contact) == original
     if function:

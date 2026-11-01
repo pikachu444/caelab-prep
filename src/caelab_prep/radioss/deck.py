@@ -183,7 +183,7 @@ class DeckResource:
                     default, zero_default = condition_scalar_default(card.keyword, "friction", [self.lines[index] for index in data])
                 except PrepError:
                     return []
-                fields = [Field("friction", "마찰계수", "float", data[row], 20, 40, 0,
+                fields = [Field("friction", "마찰 함수 배율" if zero_default else "마찰계수", "float", data[row], 20, 40, 0,
                                 blank_default=default, zero_default=zero_default)]
         elif len(key) > 1 and key[1] == "FUNCT" and len(data) >= 2:
             for row, line in enumerate(data[1:]):
