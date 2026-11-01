@@ -4,6 +4,8 @@
 
 **OpenRadioss / OpenCourant는 첫 번째 적용 대상입니다.** 공용 기반을 사용하는 첫 응용 프로그램으로 독립 데스크톱 전처리기를 개발합니다. 이 앱에서는 형상·메시를 불러와 재료·단면·접촉·하중·구속·초기조건과 해석 제어를 편집하고 Starter/Engine 파일을 작성하는 흐름을 목표로 합니다. 다른 CAE 프로그램의 재사용은 공용 기반의 설계 범위에 포함되며, 현재 여러 솔버를 지원한다는 뜻은 아닙니다.
 
+**2026-11-02 목표 수정:** [달성 목표와 제품 완료 기준](DESIGN.md#delivery-goals)에 실무 작업(T1–T6), 8제품별 방식, 실제 공통 재사용과 Windows 품질을 함께 정의했습니다. 첫 납품 G1은 **사용자 메시의 여러 파트에 재료 2개·단면 2개 생성/할당 → 수정·Undo/Redo → 저장·새 프로세스 재열기 → native 값/관계 확인**이며, HyperMesh·PrePoMax·Naksha·Abaqus/CAE·COMSOL·midas NFX·MIDAS MeshFree·BeidPrep의 8방식으로 수행하는 것이 목표입니다. 곡선·조건(G2), CAD/메시와 Starter/Engine(G3), 실제 host 재사용·API·배포(G4)까지 남겨 둡니다. 아래 현재 기능이 이 목표를 달성한 상태는 아닙니다. 현재 진도는 [작업서 19절](docs/execution-stages.md#current-progress)에서 관리합니다.
+
 **현재 상태: 공용 Qt 부품과 Prep의 작업 화면을 재구성했습니다.** 새 레이아웃의 실제 Windows 입력·전체 GPU 화면 검증은 캡처/활성화 실패로 보류이며, 기존 검증 기록을 이번 변경의 합격 증거로 사용하지 않습니다. [재구현 기록](docs/ui-rebuild.md)을 참고하세요. 트리·그룹 속성·수치/단위·벡터·표/기본 곡선·Action·도킹을 공유합니다. 기존 RAD 편집·Undo/Redo·작업 문서·RAD 출력은 유지하고, 중립 재료/곡선 문서도 RAD 없이 저장·재열기합니다. 아래 Windows 입력·배율 확인 기록은 재구현 전 버전에 한정합니다. CAD에서 새 해석 모델 전체를 구성하는 기능은 후속입니다.
 
 공용 부품은 `ui/design`, `ui/widgets`, `ui/actions.py`, `ui/shell.py`에 있고 갤러리와 실제 전처리기가 같은 코드를 사용합니다. 솔버별 카드 의미·단위·원문·출력은 RAD adapter/session에 남습니다. 모든 솔버의 FE 스키마나 전체 CAE 기반이 완성됐다는 뜻은 아닙니다.
@@ -100,11 +102,11 @@ caelab-prep mesh part.step --output mesh-assets --size 2.0
 - 공용 자산·기반 구축 자체가 저장소의 목적입니다. Action, 선택 상태, 속성 입력, 문서, 아이콘·스타일을 재사용 가능한 모듈로 개발하며 두 번째 앱의 등장을 시작 조건으로 두지 않습니다.
 - 공용 자산에는 모델링 데이터·작업 문서·형상/메시/조건의 관계, 저장·입출력과 GUI·Python·MCP가 공유하는 API도 포함합니다.
 - 실행형 갤러리는 공용 컴포넌트와 기본·선택·비활성·오류·포커스 상태, 배율별 외관과 입력 동작을 확인하는 정식 산출물입니다. 갤러리와 적용 앱은 같은 공용 코드를 사용합니다.
-- 첫 적용 작업은 사용자 RAD 열기 → 3D/모델 트리 확인 → 실제 재료·구속·접촉 편집 → Undo → 저장 → 재시작·재열기입니다. 공용 자산 개발과 이 작업의 연결을 함께 진행하고, Radioss 고유 형식·규칙은 해당 모듈에 둡니다.
+- 첫 납품 G1은 사용자 메시/RAD 열기 → 파트 선택 → 재료·단면 생성/할당 → 수정·Undo → 저장·새 프로세스 재열기·native 관계 확인입니다. 곡선·구속·접촉의 생성은 G2로 연결하고 Radioss 고유 형식·규칙은 해당 모듈에 둡니다.
 - 공용 자산은 이 저장소에서 관리합니다. 기존 외부 자산은 소유 위치·의존 관계·라이선스를 확인해 연결하고, 같은 부품을 갤러리와 앱에서 따로 구현하지 않습니다. 별도 패키지 배포 여부는 재사용 방식에 맞춰 결정합니다.
 - 공개 소스의 재사용, 공개 규격과 정상 실행 동작을 바탕으로 한 독립 구현을 우선합니다. 외부 프로그램의 분석·재배포는 해당 허가 조건을 확인합니다.
 
-공용 기반의 목표·후보 비교는 [DESIGN.md](DESIGN.md), **구체적인 자산·계약·코드 이행·갤러리 장면·작업 순서·첫 납품 범위는 [공용 CAE 자산·기반 실행 계획](docs/shared-cae-foundation-plan.md)**에 둡니다. 현재 실행 코드와 목표 구조의 경계는 [ARCHITECTURE.md](ARCHITECTURE.md), 공개 SDK 사용은 [THIRD_PARTY.md](THIRD_PARTY.md)를 따릅니다. 현재 Qt/VTK·자체 문서 코어·Gmsh 조합은 첫 원문 편집 흐름에 대한 구현 결정입니다. SMTK/CMB·FEBioStudio·SALOME와 전체 CAD→조건→솔버 흐름을 빌드·실행 비교해 최선이라고 선정한 결과는 아닙니다.
+제품 목표·첫 납품·완료 기준은 [DESIGN.md](DESIGN.md#delivery-goals), 자산·계약·코드 이행·갤러리의 기술 상세는 [공용 CAE 자산·기반 실행 계획](docs/shared-cae-foundation-plan.md), 실행 순서·현재 진도는 [단계별 작업서](docs/execution-stages.md#current-progress)에 둡니다. 현재 실행 코드와 목표 구조의 경계는 [ARCHITECTURE.md](ARCHITECTURE.md), 공개 SDK 사용은 [THIRD_PARTY.md](THIRD_PARTY.md)를 따릅니다. 현재 Qt/VTK·자체 문서 코어·Gmsh 조합은 첫 원문 편집 흐름에 대한 구현 결정입니다. SMTK/CMB·FEBioStudio·SALOME와 전체 CAD→조건→솔버 흐름을 빌드·실행 비교해 최선이라고 선정한 결과는 아닙니다.
 
 ## 확보한 개발 자산
 
@@ -114,7 +116,7 @@ caelab-prep mesh part.step --output mesh-assets --size 2.0
 
 [상용 CAE GUI 상세 벤치마크 자료](docs/benchmarks/2026-10-30/README.md)에 7제품의 메뉴·선택·입력·결과·실패/취소·저장 근거와 화면 locator를 연결했습니다. 대표 화면 모음과 동작 재현 근거를 구분하고, 이번에 직접 실행하지 않은 제품을 실행 검증으로 표시하지 않습니다.
 
-계획의 구체적인 범위는 [공용 기반 설계](docs/shared-cae-foundation-plan.md), [단계별 작업·종료 조건](docs/execution-stages.md), [Workbench 재사용 계획](docs/workbench-reuse-plan.md), [참조 제품 비교](docs/gui-reference-matrix.md), [다중 파트·자유도·데이터 설계](docs/cae-model-data-design.md)에 둡니다. 공용 GUI/기반 A, 다중 파트 데이터 B, 첫 CAD/메시 흐름 C와 Workbench 적용은 각각 정한 조건을 통과하면 완료로 닫습니다. 작업서는 선행 조건·산출물·필수 확인·후속 범위와 검사를 끝내는 규칙을 명시하며, 계획한 기능을 현재 지원 기능으로 표시하지 않습니다.
+계획의 기술적인 상세는 [공용 기반 설계](docs/shared-cae-foundation-plan.md), [단계별 작업·종료 조건](docs/execution-stages.md), [Workbench 재사용 계획](docs/workbench-reuse-plan.md), [참조 제품 비교](docs/gui-reference-matrix.md), [다중 파트·자유도·데이터 설계](docs/cae-model-data-design.md)에 둡니다. 현재 제품 목표는 DESIGN의 G0–G4를 따르며 과거 A/B/C의 제한된 통과를 8제품별 실무 작업 완료로 바꾸지 않습니다. 기능/파일·UI·원제품 비교·재사용·플랫폼을 분리해 보고하고 계획한 기능을 현재 지원 기능으로 표시하지 않습니다.
 
 [메셔 구현 가능성·도입 로드맵](docs/mesher-feasibility-roadmap.md)은 공개 kernel과 wrapper/유료 SDK·연구 코드를 구분하고, 알고리즘/상용 매뉴얼 조사·제한된 실제 SDK 실험·기능별 실증과 중지 조건을 기록합니다. 복잡 자동 중립면·범용 all-hex·robust hybrid를 모델의 능력만으로 구현 가능하다고 확정하지 않습니다.
 

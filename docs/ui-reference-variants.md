@@ -1,10 +1,24 @@
 # Working program-specific UI comparisons
 
-This is a user-requested extension of the UI rebuild, beyond the earlier single
-P0–P3 composition. It preserves the existing document, provider, validation,
-selection, command history and codecs. It does not add the referenced solvers or
-their full product features. Visual fidelity and functional regression are
-separate verdicts; actual Windows input/GPU acceptance is still on hold.
+This document records the eight approaches implemented before the preservation
+handoff at `f4d12d078aac08f5e4474e362ac18c1aa128386b`. The earlier implementation
+record described them as an extension beyond its single P0–P3 composition. That
+description is project history, not evidence that the user approved reducing
+the original requirement to one composition. The implementation preserves the
+existing document, provider, validation, selection, command history and codecs;
+it does not implement all features of the referenced products.
+
+The current target and acceptance contract are defined in
+[DESIGN, “달성 목표와 제품 완료 기준 (2026-11-02)”](../DESIGN.md#delivery-goals).
+All eight approaches must support the same T1–T6 tasks through distinct
+presentation and interaction, including command groups and task flow, while
+sharing the model, commands, validation and reusable components. The source map
+below describes current implementation and evidence gaps; it is not an
+acceptance matrix for that target. Current unresolved status belongs in
+[execution-stages section 19](execution-stages.md#current-progress); sections 1–18 are not implied
+complete. Functional regression, UI quality, usable engineering tasks and
+source-product comparison require separate verdicts. Actual Windows input/GPU
+acceptance remains unverified for these eight approaches.
 
 ## Entry points and shared state
 
@@ -34,6 +48,12 @@ documented instructions and unknown behavior. They are not native reproduction
 tests. PrePoMax supplements that collection with its official 2.5.0 manual,
 v1.0.0, 2026-03-08, pp3/5/7/27–29.
 
+G0 must establish the same-task evidence contract for every approach using these
+sources and identify missing observations or original-product runs. A documented
+pattern, an inspected screenshot and an actual operation in the source program
+are different evidence levels. This table does not establish that T1–T6 have
+been performed or reproduced in any source program.
+
 | Reference | Implemented composition/interaction | Source scenes | Important differences / missing evidence |
 |---|---|---|---|
 | HyperMesh 2025 / curve 2025.1 | Lower-left Name/Value Entity Editor; scalar focus completion; table-left/plot-right | HM03/04/05/21/22 | Original PSHELL crop was inspected. Whole-window proportion and full Curve Editor pixels are not newly verified. Prep keeps atomic table Apply, its own units and typed curve references. |
@@ -51,6 +71,14 @@ Unknown commit/cancel behavior is not inferred from a visible button. Shared
 Prep safety rules are retained and disclosed where original behavior is unknown.
 HyperMesh-style scalar edits complete immediately; Prep vectors retain explicit
 Apply/Revert for an atomic three-component command and one Undo.
+
+These differences are real presentation and interaction seams, but the current
+limited provider actions do not satisfy the current product goal. G1 requires
+T1–T2 in all eight approaches on actual parts with material/section creation and
+assignment; G2 adds T3–T4 with real curve and condition relationships. Existing
+scalar editing or a neutral `Associated curve` reference does not demonstrate
+those operations. Detailed requirements and completion criteria remain in
+DESIGN rather than being redefined by the current provider's capabilities.
 
 ## Reuse interface and ownership
 
@@ -109,14 +137,23 @@ observations support the working differences above, but do not certify full
 pixel fidelity for the missing images. Actual Windows input, complete GPU
 captures, display scaling and native file/dialog workflows remain unverified.
 
-Applied guidance: `cae-desktop-ux` QT-PANELS/FC-PROPERTY/QT-ACCESS for draft-safe
+The earlier implementation report recorded applied guidance from
+`cae-desktop-ux` QT-PANELS/FC-PROPERTY/QT-ACCESS for draft-safe
 resizing and visual evidence; `ponytail` for retaining typed bindings and
 commands; Matt `codebase-design` for the shared interface and real host adapters;
 pstack `principle-test-behavior-not-implementation` for externally observable
 value/file checks. tstack workflows were inspected but publication/review
-automation was not invoked. No hooks or user security configuration were changed.
+automation was not invoked. It reported no changes to hooks or user security
+configuration. This statement identifies reported guidance; installation or a
+skill name alone is not proof that the required product review took place.
 
-## This milestone's recorded result
+## Historical implementation review record
+
+The following counts and dispositions are the earlier milestone's recorded
+results, not a rerun on the preservation commit or acceptance of the current
+G0–G4 target. Review reports must be read with their actual task and environment
+scope; the existence of a report does not establish a source-product or full
+Windows workflow comparison.
 
 Independent offscreen QA ran the six affected suites: **105 passed**, plus
 **11 independent user-flow cases**. The final Naksha quick-command/pane-ratio
@@ -129,7 +166,9 @@ tracks the selected curve editing context rather than tab visibility; save,
 close, cancellation, discard, invalid input and save failure were rechecked.
 Review also found the embedded Exit/None-selection defects, consumer transitive
 imports, missing vector Apply, tab row spacing and source-layout differences.
-All reported defects were corrected and rechecked by their original reviewers.
+The milestone report states that these reported defects were corrected and
+rechecked by their original reviewers. This does not establish that all product
+requirements were examined or met.
 
 The critic closed its five specific findings after source/pixel reinspection;
 the defender accepted the working compositions and disclosed differences; the
@@ -138,8 +177,13 @@ This closes those findings, not full source-product fidelity or native Windows
 acceptance. Five programs lack newly available original pixels; PrePoMax's
 material editor and Naksha's populated Details remain source-evidence gaps.
 
-Reference/implementation image pairs and baseline comparisons are under ignored
-`.review/program-variants/final`. The HyperMesh representative is
+The milestone recorded reference/implementation image pairs and baseline
+comparisons under ignored `.review/program-variants/final`. Those local paths
+are not versioned evidence guaranteed to be available in a fresh checkout.
+The recorded HyperMesh representative is
 `hypermesh-shell-property-reference-vs-implementation.png`; the eight shared
-material captures remain available. Actual Windows/GPU, original-product runs,
-Library upload, push, PR and merge have not been performed.
+material captures were also reported there. The report's statement that upload,
+push, PR and merge had not occurred described that earlier point in time;
+[preservation PR #13](https://github.com/pikachu444/caelab-prep/pull/13) and the
+handoff commit are later repository history. They do not supply the missing
+actual Windows/GPU or same-task original-product acceptance.

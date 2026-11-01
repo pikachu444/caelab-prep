@@ -1,5 +1,7 @@
 # Prep 산출물의 Workbench 재사용 계획
 
+2026-11-02 목표 연결: [현재 DESIGN의 G4](../DESIGN.md#delivery-goals)는 아래 W1 공용 입력 부품의 실제 사용과 W2 Prep 문서/파일 연결을 각각 요구한다. 테스트용 QWidget host나 W2 파일 전달만으로 W1의 재사용을 완료 처리하지 않는다. 현재 제품 기능·호환성은 착수 시 실제 양쪽 SHA에서 다시 확인하며, 아래 2026-10-29 코드 표를 최신 상태로 전용하지 않는다. 이번 목표 수정은 Prep 문서만 변경하고 Workbench 코드·사용자 설정은 변경하지 않는다.
+
 검토일 2026-10-29. 현재 코드에 대한 독립 검토와 후속 구현 계획이다. 아래 consumer 검증은 **후속 구현의 종료 조건**이며 이번에 실행한 실험이 아니다. 제품 코드·의존성·Workbench는 이번 문서 작업에서 변경하지 않는다. 전체 순서와 단계 종료 규칙은 [단계별 작업서](execution-stages.md)를 따른다.
 
 기준은 `pikachu444/caelab-workbench@92ce81181396bed9bb6e3024bba62913834c2a7e`, `pikachu444/caelab-prep@5d16e81c7ec7c92499401d63208039424bf73cc9`이다. GitHub connector로 두 main을 읽었고 조사 시점에는 모두 기준 SHA와 일치했다. 이후 main이 움직여도 이 검토의 코드 사실은 이 SHA에 한정한다.
