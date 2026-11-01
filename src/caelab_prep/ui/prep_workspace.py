@@ -46,17 +46,24 @@ class PrepWorkspace:
 
     def _install_command_surfaces(self):
         groups = (
-            ("&File", ((self.open_rad_action, self.open_project_action),
-                       (self.save_action, self.save_as_action, self.export_action), (self.close_action,))),
+            ("&File", ((self.mesh_workflow.new_action, self.open_rad_action, self.open_project_action),
+                       (self.save_action, self.save_as_action, self.export_action, self.mesh_workflow.export_action), (self.close_action,))),
             ("&Edit", ((self.undo_action, self.redo_action), (self.reload_properties_action,))),
             ("&Model", ((self.modeling.actions["material.create"], self.modeling.actions["section.create"]),
+                        (self.modeling.actions["solid_section.create"],),
+                        (self.modeling.actions["group.create"], self.modeling.actions["element_group.create"], self.modeling.actions["surface.create"]),
+                        (self.modeling.actions["object.edit"],),
                         (self.modeling.actions["object.copy"], self.modeling.actions["object.delete"]),
                         (self.modeling.actions["part.assign"],))),
+            ("&Conditions", ((self.modeling.actions["curve.create"],),
+                             tuple(self.modeling.actions[key + ".create"] for key in
+                                   ("constraint", "load", "velocity", "contact")))),
+            ("&Mesh", ((self.mesh_workflow.mesh_action,),)),
             ("&View", ((self.fit_action, self.fit_selected_action, self.iso_action, *self.standard_view_actions, self.edges_action),
                        (self.hide_selected_action, self.isolate_action, self.show_all_action))),
         )
         for name, sections in groups:
-            if name == "&Model" and self.presentation:
+            if name in ("&Model", "&Conditions") and self.presentation:
                 continue
             menu = self.menuBar().addMenu(name)
             for index, actions in enumerate(sections):
@@ -209,7 +216,7 @@ class PrepWorkspace:
         self._form_host = self.property_editor
         self.apply_vector_button = QPushButton("Apply velocity")
         self.apply_vector_button.setObjectName("primaryAction")
-        self.apply_vector_button.clicked.connect(self._commit_vector)
+        self.apply_vector_button.clicked.connect(self._apply_properties)
         self.curve_table = CurveTable(minimum_points=1, require_increasing_x=False)
         self.curve_table.pointsEdited.connect(self._commit_curve)
         self.curve_plot = CurvePlot()
@@ -218,6 +225,12 @@ class PrepWorkspace:
         self.units_note.setWordWrap(True)
         self.units_note.setContentsMargins(8, 5, 8, 5)
         self.units_note.setToolTip("Input deck unit context; no unit conversion is applied.")
+        self.target_role_selector = QComboBox()
+        self.target_role_selector.setObjectName("conditionTargetRole")
+        self.target_role_selector.setAccessibleName("Displayed condition target")
+        self.target_role_selector.setToolTip("Choose which referenced geometry is highlighted in the 3D view")
+        self.target_role_selector.currentIndexChanged.connect(self._condition_target_selected)
+        layout.addWidget(self.target_role_selector)
         layout.addWidget(self.property_editor, 1)
         layout.addWidget(self.apply_vector_button)
         layout.addWidget(self.curve_table)
@@ -341,6 +354,7 @@ class PrepWorkspace:
 
     def _clear_form(self):
         self._curve_active = False
+        self.target_role_selector.hide()
         self.property_editor.set_fields(())
         self.property_editor.setMinimumHeight(0)
         self.property_editor.scroll.show()
@@ -355,6 +369,9 @@ class PrepWorkspace:
             bindings.curve_pages.hide()
 
     def _refresh_fields(self):
+        previous_units = self.property_editor.units()
+        target_key = (self._summary().get("document_epoch"), self._selected_card_id)
+        retain_units = getattr(self, "_property_target_key", None) == target_key
         self._clear_form()
         cards = {card["id"]: card for card in self.session.list_cards()} if self._selected_card_id else {}
         card = cards.get(self._selected_card_id)
@@ -370,12 +387,22 @@ class PrepWorkspace:
         fields = self.session.card_fields(self._selected_card_id)
         self._editor_revision = self._summary().get("revision")
         self._field_specs = {field["name"]: field for field in fields}
+        self._field_specs.update({spec.name: {"name": spec.name, "label": spec.label,
+                                            "value": spec.value, "type": spec.kind} for spec in specs})
         self.property_editor.set_fields(tuple(spec for spec in specs if spec.kind != "table"),
                                         title=str(card.get("title") or "Properties"),
                                         subtitle=str(card.get("keyword") or ""))
+        if retain_units:
+            for name, unit in previous_units.items():
+                selector = self.property_editor.unit_selectors.get(name)
+                if selector is not None and selector.findText(unit) >= 0:
+                    selector.setCurrentText(unit)
+        self._property_target_key = target_key
         self.field_editors = dict(self.property_editor.editors)
         self._native_property_baseline = self.property_editor.raw_values()
+        self._native_unit_baseline = self.property_editor.units()
         self._connect_property_inputs()
+        self._refresh_target_roles()
         source = self.session.card_text(self._selected_card_id)
         if len(source) > 100_000:
             source = source[:100_000] + "\n… Card preview truncated; the full card is preserved in the document."
@@ -384,7 +411,7 @@ class PrepWorkspace:
         self.units_note.setText(self._unit_caption(units))
         table = next((spec for spec in specs if spec.kind == "table"), None)
         if table:
-            self._present_curve(table.value)
+            self._present_curve(table)
         if not specs or not any(spec.editable for spec in specs):
             self.property_subtitle.setText(str(card.get("keyword") or "") + "  /  Read-only")
             if specs:
@@ -392,7 +419,7 @@ class PrepWorkspace:
         self.modeling.refresh()
 
     def _connect_property_inputs(self):
-        deferred = getattr(getattr(self, "reference_adapter", None), "defer_scalars", False)
+        deferred = self._deferred_property_drafts()
         for name, editor in self.property_editor.editors.items():
             if not editor.isEnabled():
                 continue
@@ -404,23 +431,33 @@ class PrepWorkspace:
                     if not deferred:
                         child.returnPressed.connect(lambda n=component, e=child: self._commit_text(n, e))
                 self.apply_vector_button.setToolTip("Apply all three velocity components together (Enter)")
+                self.apply_vector_button.setText("Apply velocity")
                 self.apply_vector_button.setVisible(not deferred)
             elif isinstance(editor, QCheckBox):
                 if not deferred:
                     editor.toggled.connect(lambda checked, n=name: self._commit_field(n, checked))
             elif isinstance(editor, QComboBox):
-                if not deferred:
+                if self.property_editor.specs[name].kind == "choice":
+                    editor.currentIndexChanged.connect(lambda index, n=name, e=editor: self._property_choice_changed(n, e))
+                elif not deferred:
                     editor.activated.connect(lambda index, n=name, e=editor: self._commit_field(n, e.itemData(index)))
             elif isinstance(editor, QLineEdit):
                 editor.setObjectName("field_" + name)
                 if not deferred:
                     editor.editingFinished.connect(lambda n=name, e=editor: self._commit_text(n, e))
+        if deferred and not getattr(getattr(self, "reference_adapter", None), "defer_scalars", False):
+            self.apply_vector_button.setText("Apply properties")
+            self.apply_vector_button.setToolTip("Apply the complete property draft as one transaction")
+            self.apply_vector_button.show()
 
-    def _present_curve(self, points):
+    def _present_curve(self, spec):
+        points = spec.value
         self._curve_active = True
         self.property_editor.scroll.hide()
         self.property_editor.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self.curve_table.set_points(points)
+        self.curve_table.minimum_points = spec.minimum_rows
+        self.curve_table.maximum_points = spec.maximum_rows
+        self.curve_table.set_points(points, headers=spec.components or ("X", "Y"))
         grid = self.curve_table.table
         grid.setFixedHeight(grid.horizontalHeader().sizeHint().height()
                             + min(8, len(points)) * grid.verticalHeader().defaultSectionSize()

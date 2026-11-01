@@ -154,19 +154,19 @@ def test_native_dialog_defers_boolean_draft_and_cancel_restores_without_command(
     view.select_card(card["id"])
     before = session.describe()["revision"]
     view.property_dialog.open();pump()
-    view.field_editors["tx"].setChecked(False)
+    view.field_editors["translations"].editors[0].setChecked(False)
     assert session.describe()["revision"] == before
     assert view._text_drafts()
     view.property_dialog.reject();pump()
-    assert view.field_editors["tx"].isChecked()
+    assert view.field_editors["translations"].editors[0].isChecked()
     assert session.describe()["revision"] == before
     view.property_dialog.open();pump()
-    view.field_editors["tx"].setChecked(False)
-    view.field_editors["ty"].setChecked(False)
+    view.field_editors["translations"].editors[0].setChecked(False)
+    view.field_editors["translations"].editors[1].setChecked(False)
     assert view._finish_pending_edits()
     assert session.describe()["revision"] == before + 1
     session.undo();pump()
-    assert view.field_editors["tx"].isChecked() and view.field_editors["ty"].isChecked()
+    assert all(editor.isChecked() for editor in view.field_editors["translations"].editors[:2])
     window.close()
 
 

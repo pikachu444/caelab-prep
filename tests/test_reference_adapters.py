@@ -246,7 +246,7 @@ def test_naksha_history_actions_use_small_quick_bar_instead_of_context_ribbon():
     assert quick.actions().index(window.save_action) < quick.actions().index(window.undo_action)
     context = window.findChild(QToolBar, "referenceContextCommands")
     tabs = context.findChild(QTabWidget, "referenceCommands")
-    assert [tabs.tabText(index) for index in range(tabs.count())] == ["Materials"]
+    assert [tabs.tabText(index) for index in range(tabs.count())] == ["Materials", "Selections", "Conditions"]
     window.close()
 
 

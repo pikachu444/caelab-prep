@@ -4,10 +4,39 @@ from __future__ import annotations
 
 import math
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSignalBlocker, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from ..design import TOKENS
+
+
+def _display_factor(factor):
+    """Unit scales cannot reverse bounds, erase values, or create infinities."""
+    try:
+        value = float(factor)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("Unit scale must be a finite positive number") from exc
+    if isinstance(factor, bool) or not math.isfinite(value) or value <= 0:
+        raise ValueError("Unit scale must be a finite positive number")
+    return value
+
+
+def _scaled(value, factor):
+    try:
+        result = value * factor
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("Unit conversion would produce a non-finite number") from exc
+    if not math.isfinite(result):
+        raise ValueError("Unit conversion would produce a non-finite number")
+    if value != 0 and result == 0:
+        raise ValueError("Unit conversion would underflow a nonzero value")
+    return result
+
+
+def _display_text(value):
+    # Keep a round-trip representation without showing an unnecessary .0.
+    text = str(value)
+    return text[:-2] if text.endswith(".0") else text
 
 
 class NumericEdit(QLineEdit):
@@ -38,23 +67,41 @@ class NumericEdit(QLineEdit):
     def draft(self):
         return self.text()
 
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, unit):
+        self._unit = str(unit)
+        error = getattr(self, "error", "")
+        self.setToolTip(error or self._unit)
+        self.setAccessibleDescription(error or self._unit or "Numeric value")
+
+    def _validated_value(self, text, *, check_bounds=True):
+        """Validate without changing the input or its error presentation."""
+        try:
+            value = float(text.strip())
+        except (ValueError, OverflowError) as exc:
+            raise ValueError("Enter a valid number") from exc
+        if not math.isfinite(value):
+            raise ValueError("Enter a finite number")
+        if self.integer and not value.is_integer():
+            raise ValueError("Enter a whole number")
+        if check_bounds and self.minimum is not None and value < self.minimum:
+            raise ValueError(f"Minimum is {self.minimum}")
+        if check_bounds and self.maximum is not None and value > self.maximum:
+            raise ValueError(f"Maximum is {self.maximum}")
+        return int(value) if self.integer else value
+
     def numeric_value(self):
         try:
-            value = float(self.text().strip())
-            if not math.isfinite(value):
-                raise ValueError("Enter a finite number")
-            if self.integer and not value.is_integer():
-                raise ValueError("Enter a whole number")
-            if self.minimum is not None and value < self.minimum:
-                raise ValueError(f"Minimum is {self.minimum}")
-            if self.maximum is not None and value > self.maximum:
-                raise ValueError(f"Maximum is {self.maximum}")
-        except (ValueError, OverflowError) as exc:
-            message = str(exc) if str(exc).startswith(("Enter", "Minimum", "Maximum")) else "Enter a valid number"
-            self.set_error(message)
-            raise ValueError(message) from exc
+            value = self._validated_value(self.text())
+        except ValueError as exc:
+            self.set_error(str(exc))
+            raise
         self.set_error("")
-        return int(value) if self.integer else value
+        return value
 
     def set_error(self, message):
         self.error = str(message)
@@ -70,14 +117,31 @@ class NumericEdit(QLineEdit):
         self.set_error("")
 
     def convert_display(self, factor):
-        value = self.numeric_value()
-        committed = float(self._committed_text)
-        self.setText(format(value * factor, ".12g"))
-        self._committed_text = format(committed * factor, ".12g")
-        if self.minimum is not None:
-            self.minimum *= factor
-        if self.maximum is not None:
-            self.maximum *= factor
+        self._apply_display_conversion(self._display_conversion_plan(_display_factor(factor)))
+
+    def _display_conversion_plan(self, factor):
+        """Calculate every changed value before the first widget mutation."""
+        value = _scaled(self._validated_value(self.text()), factor)
+        committed = (_scaled(self._validated_value(self._committed_text, check_bounds=False), factor)
+                     if self._committed_text.strip() else None)
+        minimum = _scaled(self.minimum, factor) if self.minimum is not None else None
+        maximum = _scaled(self.maximum, factor) if self.maximum is not None else None
+        if self.integer and (not value.is_integer() or (committed is not None and not committed.is_integer())):
+            raise ValueError("Unit conversion would produce a fractional whole-number field")
+        return (_display_text(value), _display_text(committed) if committed is not None else "",
+                minimum, maximum, self.isModified(), self.cursorPosition(),
+                self.selectionStart(), len(self.selectedText()))
+
+    def _apply_display_conversion(self, plan):
+        text, committed, minimum, maximum, modified, cursor, start, length = plan
+        self._committed_text, self.minimum, self.maximum = committed, minimum, maximum
+        self.setText(text)
+        self.setModified(modified)
+        if start >= 0:
+            self.setSelection(min(start, len(text)), min(length, max(0, len(text) - start)))
+        else:
+            self.setCursorPosition(min(cursor, len(text)))
+        self.set_error("")
 
     def revert(self):
         self.setText(self._committed_text)
@@ -122,7 +186,30 @@ class VectorEdit(QWidget):
             editor.draftChanged.connect(self.draftChanged)
             editors.append(editor)
         self.editors = tuple(editors)
+        self.unit = unit
         self.setFocusProxy(self.editors[0])
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, unit):
+        self._unit = str(unit)
+        self.setToolTip(self._unit)
+        self.setAccessibleDescription(self._unit or "Vector value")
+        for editor in self.editors:
+            editor.unit = self._unit
+
+    def convert_display(self, factor):
+        factor = _display_factor(factor)
+        plans = tuple(editor._display_conversion_plan(factor) for editor in self.editors)
+        # Observers cannot see a mixture of old and new component units during
+        # the display update. The host still owns its one unit-change signal.
+        blocked = [QSignalBlocker(editor) for editor in self.editors]
+        for editor, plan in zip(self.editors, plans, strict=True):
+            editor._apply_display_conversion(plan)
+        del blocked
 
     def numeric_value(self):
         values = []

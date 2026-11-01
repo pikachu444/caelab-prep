@@ -1,6 +1,7 @@
 """Provider-backed operation editing and transient display state shared by views."""
 from weakref import WeakKeyDictionary
-from PySide6.QtCore import QObject, Signal
+from dataclasses import replace
+from PySide6.QtCore import QObject, Signal, Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ..application.contracts import OperationRequest
@@ -91,6 +92,16 @@ class ModelingActions(QObject):
     COMMANDS = (
         ("material.create", "New material…", "material"),
         ("section.create", "New shell section…", "section"),
+        ("solid_section.create", "New solid section…", "section"),
+        ("curve.create", "New load curve…", "curve"),
+        ("group.create", "New node group…", "set"),
+        ("element_group.create", "New element group…", "set"),
+        ("surface.create", "New shell surface…", "mesh"),
+        ("constraint.create", "New boundary condition…", "constraint"),
+        ("load.create", "New per-node load…", "load"),
+        ("velocity.create", "New initial velocity…", "vector"),
+        ("contact.create", "New TYPE7 contact…", "contact"),
+        ("object.edit", "Edit selected…", "card"),
         ("object.copy", "Copy selected…", "project"),
         ("object.delete", "Delete selected…", "card"),
         ("part.assign", "Assign material / section…", "part"),
@@ -103,13 +114,18 @@ class ModelingActions(QObject):
         self.panel.hide()
         self.spec = None
         self.stack = None
+        self._dock_sizes = None
         self.actions = {}
         for key, label, glyph in self.COMMANDS:
             self.actions[key] = host._action(glyph, label, lambda checked=False, k=key: self.begin(k),
                                              action_id=key)
-            self.actions[key].setIconText({"material.create": "New material", "section.create": "New section",
-                                           "object.copy": "Copy", "object.delete": "Delete",
-                                           "part.assign": "Assign"}[key])
+            self.actions[key].setIconText({"material.create": "New material", "section.create": "Shell section",
+                                           "solid_section.create": "Solid section",
+                                           "object.copy": "Copy", "object.delete": "Delete", "object.edit": "Edit",
+                                           "part.assign": "Assign", "curve.create": "Curve", "group.create": "Node group",
+                                           "element_group.create": "Element group",
+                                           "surface.create": "Surface", "constraint.create": "Boundary",
+                                           "load.create": "Load", "velocity.create": "Velocity", "contact.create": "Contact"}[key])
         self.panel.applyRequested.connect(self.commit)
         self.panel.cancelRequested.connect(self.cancel)
 
@@ -131,7 +147,7 @@ class ModelingActions(QObject):
             except Exception:
                 available = set()
         if hasattr(h, "model_tree") and len(h.model_tree.selected_refs()) > 1:
-            available.difference_update(("object.copy", "object.delete", "part.assign"))
+            available.difference_update(("object.edit", "object.copy", "object.delete", "part.assign"))
         for key, action in self.actions.items():
             action.setEnabled(key in available)
 
@@ -147,10 +163,30 @@ class ModelingActions(QObject):
             return False
         self.spec = spec
         self.panel.present(spec, h.property_editor.presentation)
+        self._bind_context_choices()
         self.stack.setCurrentWidget(self.panel)
         self._show()
         self.refresh()
         return True
+
+    def _bind_context_choices(self):
+        for field in self.spec.fields:
+            if field.kind == "choice":
+                self.panel.editor.editors[field.name].currentIndexChanged.connect(self._context_changed)
+
+    def _context_changed(self, _index):
+        if self.spec is None:
+            return
+        editor = self.panel.editor
+        values = {field.name: editor.editors[field.name].currentData()
+                  for field in self.spec.fields if field.kind == "choice"}
+        try:
+            fresh = self.host.provider.operation_spec(self.spec.key, self.spec.target, draft_values=values)
+            if editor.refresh_context(fresh.fields):
+                self.spec = replace(self.spec, fields=fresh.fields)
+                self._bind_context_choices()
+        except Exception as exc:
+            self.panel.fail(str(getattr(exc, "message", exc)))
 
     def _show(self):
         h = self.host
@@ -164,6 +200,12 @@ class ModelingActions(QObject):
         else:
             h.properties_dock.show()
             h.properties_dock.raise_()
+            adjacent = getattr(getattr(h, "reference_adapter", None), "docks", None)
+            if self._dock_sizes is None and not (adjacent and adjacent.adjacent):
+                self._dock_sizes = (h.model_dock.height(), h.properties_dock.height())
+                total = sum(self._dock_sizes)
+                h.resizeDocks([h.model_dock, h.properties_dock],
+                              [max(90, total - 390), min(390, max(290, total - 90))], Qt.Orientation.Vertical)
 
     def finish(self):
         """File/navigation actions cannot implicitly create or delete an object."""
@@ -182,14 +224,15 @@ class ModelingActions(QObject):
         try:
             values = self.panel.editor.values()
             result = self.host.provider.execute_operation(OperationRequest(
-                spec.key, values, spec.document_id, spec.expected_revision, spec.target))
+                spec.key, values, spec.document_id, spec.expected_revision, spec.target,
+                units=self.panel.editor.units()))
         except Exception as exc:
             self.panel.fail(str(getattr(exc, "message", exc)))
             return False
         self.cancel()
         self.host.refresh_document(rebuild_viewport=True)
         target = result.get("object")
-        if target is not None:
+        if target is not None and target != self.host.provider.active_object():
             self.host.select_card(target.object_id)
         self.host.statusBar().showMessage(spec.title + " completed", 5000)
         return True
@@ -208,4 +251,7 @@ class ModelingActions(QObject):
             if bindings.dialog_buttons is not None:
                 bindings.dialog_buttons.show()
             dialog.setWindowTitle(h.reference_adapter.interaction.title + " — CAELab Prep")
+        if self._dock_sizes is not None:
+            h.resizeDocks([h.model_dock, h.properties_dock], self._dock_sizes, Qt.Orientation.Vertical)
+            self._dock_sizes = None
         self.refresh()

@@ -76,6 +76,21 @@ def test_all_native_approaches_create_assign_copy_safe_delete_refusal_and_export
     section = window.provider.ref_for_card(card(session, "/PROP/SHELL/207"))
     assert session.describe()["revision"] == 2
 
+    op.actions["material.create"].trigger()
+    for name, value in {"name": "UI titanium", "native_id": 43, "density": 4.51e-9,
+                        "young_modulus": 114789, "poisson_ratio": .321}.items():
+        enter(op.panel, name, value)
+    click_apply(window)
+    second_material = window.provider.ref_for_card(card(session, "/MAT/LAW1/43"))
+    op.actions["section.create"].trigger()
+    for name, value in {"name": "UI thin shell", "native_id": 209, "thickness": 1.125}.items():
+        enter(op.panel, name, value)
+    click_apply(window)
+    second_section = window.provider.ref_for_card(card(session, "/PROP/SHELL/209"))
+    assert session.describe()["revision"] == 4
+
+    second_part = card(session, "/PART/903")["id"]
+    second_before = session.card_text(second_part)
     assert window.select_card(card(session, "/PART/902")["id"])
     op.actions["part.assign"].trigger()
     for name, ref in (("material", material), ("property", section)):
@@ -83,11 +98,40 @@ def test_all_native_approaches_create_assign_copy_safe_delete_refusal_and_export
         combo.setCurrentIndex(combo.findData(ref))
     click_apply(window)
     assert not op.active, op.panel.error.text()
-    assert session.describe()["revision"] == 3
+    assert session.describe()["revision"] == 5
     assert session.part_assignments(card(session, "/PART/902")["id"])["property_id"] == section.object_id
+    assert session.card_text(second_part) == second_before
+    first_part = card(session, "/PART/902")["id"]
+    first_assigned = session.card_text(first_part)
+    assert window.select_card(second_part)
+    op.actions["part.assign"].trigger()
+    for name, ref in (("material", second_material), ("property", second_section)):
+        combo = op.panel.editor.editors[name]
+        combo.setCurrentIndex(combo.findData(ref))
+    click_apply(window)
+    assert session.describe()["revision"] == 6
+    assert session.card_text(first_part) == first_assigned
+    second_assigned = session.card_text(second_part)
+    assert session.part_assignments(second_part)["material_id"] == second_material.object_id
+    assert session.part_assignments(second_part)["property_id"] == second_section.object_id
+
+    # Replace only the first part's pair. A different INCLUDE owns the second
+    # part, whose source bytes and typed assignments must remain unchanged.
+    assert window.select_card(first_part)
+    op.actions["part.assign"].trigger()
+    for name, ref in (("material", second_material), ("property", second_section)):
+        combo = op.panel.editor.editors[name]
+        combo.setCurrentIndex(combo.findData(ref))
+    click_apply(window)
+    assert session.describe()["revision"] == 7
+    assert session.card_text(second_part) == second_assigned
+    assert session.part_assignments(first_part)["property_id"] == second_section.object_id
     window.undo_action.trigger(); pump()
-    assert session.part_assignments(card(session, "/PART/902")["id"])["property_id"] != section.object_id
+    assert session.card_text(first_part) == first_assigned
+    assert session.card_text(second_part) == second_assigned
     window.redo_action.trigger(); pump()
+    assert session.part_assignments(first_part)["material_id"] == second_material.object_id
+    assert session.card_text(second_part) == second_assigned
 
     assert window.select_card(section.object_id)
     op.actions["object.copy"].trigger()
@@ -109,16 +153,22 @@ def test_all_native_approaches_create_assign_copy_safe_delete_refusal_and_export
     assert window.save_project_file(tmp_path / (key + ".caeprep"))
     wait_file(window)
     reopened = PrepSession(); reopened.open_project(tmp_path / (key + ".caeprep"))
-    assert reopened.part_assignments(card(reopened, "/PART/902")["id"])["material_id"] == material.object_id
+    assert reopened.part_assignments(card(reopened, "/PART/902")["id"])["material_id"] == second_material.object_id
+    assert reopened.card_text(second_part) == second_assigned
     exported = tmp_path / key / "ui_0000.rad"
     window.export_rad_file(exported); wait_file(window)
     assert (exported.parent / "geometry.inc").read_bytes() == geometry_bytes
     lines = exported.read_text().splitlines()
     part_start = lines.index("/PART/902")
     assignment = lines[part_start + 2]
-    assert int(assignment[:10]) == 207 and int(assignment[10:20]) == 41
+    assert int(assignment[:10]) == 209 and int(assignment[10:20]) == 43
+    included_lines = (exported.parent / "parts.inc").read_text().splitlines()
+    second_assignment = included_lines[included_lines.index("/PART/903") + 2]
+    assert int(second_assignment[:10]) == 209 and int(second_assignment[10:20]) == 43
     material_start = lines.index("/MAT/LAW1/41")
     assert float(lines[material_start + 3][:20]) == 203456
+    second_material_start = lines.index("/MAT/LAW1/43")
+    assert float(lines[second_material_start + 3][:20]) == 114789
 
 
 @pytest.mark.parametrize("key", PROFILES)

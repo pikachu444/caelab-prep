@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemDelegate, QLineEdit, QTableWidgetItem
 
 
-def validate_points(points, *, minimum_points=1, require_increasing_x=False):
+def validate_points(points, *, minimum_points=1, maximum_points=None, require_increasing_x=False):
     result = []
     for row, point in enumerate(points, 1):
         if len(point) != 2:
@@ -20,6 +20,8 @@ def validate_points(points, *, minimum_points=1, require_increasing_x=False):
         result.append(pair)
     if len(result) < minimum_points:
         raise ValueError(f"A curve needs at least {minimum_points} point(s)")
+    if maximum_points is not None and len(result) > maximum_points:
+        raise ValueError(f"A curve allows at most {maximum_points} point(s)")
     if require_increasing_x and any(b[0] <= a[0] for a, b in zip(result, result[1:])):
         raise ValueError("X values must increase strictly; no rows were applied")
     return tuple(result)
@@ -56,6 +58,7 @@ class CurveDraftAdapter:
         rows = [[self.table.item(r, c).text() if self.table.item(r, c) else ""
                  for c in range(2)] for r in range(self.table.rowCount())]
         return validate_points(rows, minimum_points=self.minimum_points,
+                               maximum_points=self.maximum_points,
                                require_increasing_x=self.require_increasing_x)
 
     def _changed(self):
@@ -74,6 +77,7 @@ class CurveDraftAdapter:
                 for line in lines]
         try:
             candidate = validate_points(rows, minimum_points=self.minimum_points,
+                                        maximum_points=self.maximum_points,
                                         require_increasing_x=self.require_increasing_x)
         except ValueError as exc:
             self._paste_error = True
@@ -114,7 +118,9 @@ class CurveDraftAdapter:
         try:
             return self.points() != self._committed
         except ValueError:
-            return bool(self.table.rowCount())
+            # Removing every row is still an unfinished draft when the host's
+            # minimum count is nonzero; navigation must not silently discard it.
+            return self.draft_state()["cells"] != [list(map(str, p)) for p in self._committed]
 
     def draft_state(self):
         self.flush_editor()
