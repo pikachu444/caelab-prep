@@ -1,8 +1,8 @@
 # 공용 CAE 기반과 첫 구현의 구조
 
-이 저장소는 여러 CAE 프로그램에서 재사용할 개발 자산과 기반을 만든다. OpenRadioss/OpenCourant는 첫 적용 대상이며, 현재 RAD 편집기는 공용 기반을 실제 작업에 연결한 첫 사용처다. 이 문서는 공용 자산의 경계와 현재 구현의 파일 계약을 구분해 설명한다. 목표와 후보 비교는 [DESIGN](DESIGN.md), 후속 모듈·계약·코드 이행과 작업 단위는 [상세 실행 계획](docs/shared-cae-foundation-plan.md)에 둔다. 상세 계획의 경로와 인터페이스를 현재 구현으로 해석하지 않는다.
+이 저장소는 여러 CAE 프로그램에서 재사용할 개발 자산과 기반을 만든다. OpenRadioss/OpenCourant는 첫 적용 대상이며, 현재 RAD 모델 작성·편집 앱은 공용 기반을 실제 작업에 연결한 첫 사용처다. 이 문서는 공용 자산의 경계와 현재 구현의 파일 계약을 구분해 설명한다. 목표와 후보 비교는 [DESIGN](DESIGN.md), 후속 모듈·계약·코드 이행과 작업 단위는 [상세 실행 계획](docs/shared-cae-foundation-plan.md)에 둔다. 상세 계획의 경로와 인터페이스를 현재 구현으로 해석하지 않는다.
 
-2026-11-02의 현재 납품 기준은 [DESIGN의 R1–R4/T1–T6/G0–G4](DESIGN.md#delivery-goals)를 따른다. 아래 출발점 표는 `f4d12d0` 진단 기준이며 현재 구현은 이어지는 G1–G4 변경 설명과 작업서 19절의 검증 범위를 따른다. 원제품 충실도와 Windows 검증은 구현 자체와 별도로 남는다.
+2026-11-02의 현재 납품 기준은 [DESIGN의 R1–R4/T1–T6/G0–G4](DESIGN.md#delivery-goals)를 따른다. 제품 코드 기준은 Prep main `a48d3b4`와 Workbench main `d6f05a3`다. 아래 출발점 표는 `f4d12d0` 진단 기준이며 현재 구현은 이어지는 PR #15 변경 설명과 [남은 작업표](docs/execution-stages.md#remaining-work)를 따른다. 원제품 충실도와 Windows 검증은 구현 자체와 별도로 남는다.
 
 | 보존할 구현 | 실제 한계 | 현재 목표를 위해 필요한 보완 |
 |---|---|---|
@@ -30,13 +30,13 @@ G1에서는 `radioss/modeling.py`의 명시된 writer와 `PrepSession` 생성·�
 
 ## 이번 구현의 결정
 
-첫 사용 앱은 사용자 Radioss 원문을 편집하는 독립 앱이다. 전체 CAE를 포크하기 전에 공개 VTK·Qt와 Gmsh SDK를 교체 가능한 경계로 연결하고, 문서·명령·선택·저장 코어를 실제 코드로 분리했다. 이 결정은 미지원 카드도 보존해야 하는 첫 작업에 대한 선택이며, 저장소 전체를 Radioss 전용 제품으로 한정하거나 SMTK/FEBioStudio/SALOME보다 모든 기능에서 우월하다고 선정한 결과가 아니다.
+첫 사용 앱은 사용자 Radioss 원문 편집과 새 문서의 지원 모델 작성을 제공하는 독립 앱이다. 전체 CAE를 포크하기 전에 공개 VTK·Qt와 Gmsh SDK를 교체 가능한 경계로 연결하고, 문서·명령·선택·저장 코어를 실제 코드로 분리했다. 이 결정은 미지원 카드도 보존해야 하는 첫 작업에 대한 선택이며, 저장소 전체를 Radioss 전용 제품으로 한정하거나 SMTK/FEBioStudio/SALOME보다 모든 기능에서 우월하다고 선정한 결과가 아니다.
 
 Gmsh는 CAD/메시 엔진이고 문서의 정본이 아니다. OCP/OCAF와 Gmsh OCC를 동시에 정본으로 두지 않는다. Gmsh 산출물은 독립 후보 자산이다. 품질·원자산 해시·배열·단위·참조를 검증한 뒤 명시적 채택 명령으로만 Radioss 문서에 반영한다.
 
 계획상 첫 CAD/메시 C는 최소 자원·배열·채택 명령(P6a)만 선행하고 P7a에서 연결한다. 완전한 다중 파트·대용량 B를 선행 조건으로 삼지 않는다. 후보 생성과 문서 변경을 구분하고, 품질 확인 뒤 채택/교체를 하나의 명령으로 적용한다. 외피 facet과 물리 shell 요소, Gmsh tag와 지속 객체 참조를 구분한다. `radioss/modeling.py`가 신규 native writer를 소유한다. tri3는 SH3N/SHELL 단면, tet4는 TETRA4/SOLID 단면에 연결하며 외피 facet을 별도 shell로 중복 채택하지 않는다. 일반 재메시의 조건 자동 재연결은 구현하지 않았고 참조가 있으면 교체를 거부한다.
 
-Workbench는 현재 자체 PySide6 앱이며 FreeCAD를 외부 프로그램으로 사용한다. 공용 위젯에는 Workbench 서비스 adapter를 주입하고 프로젝트/연구의 소유권을 유지한다. 독립 Prep 문서와 Workbench 프로젝트는 파일 역할·개정으로 연결하며, 두 명령 이력이나 문서 정본을 겹치지 않는다. 현재 Workbench의 INP용 실행 입력 복사 경로와 RAD 실행 연결은 별도 후속 구현 대상이다.
+Workbench는 현재 자체 PySide6 앱이며 FreeCAD를 외부 프로그램으로 사용한다. 공용 위젯에는 Workbench 서비스 adapter를 주입하고 프로젝트/연구의 소유권을 유지한다. 독립 Prep 문서와 Workbench 프로젝트는 파일 역할·개정으로 연결하며, 두 명령 이력이나 문서 정본을 겹치지 않는다. Workbench W1의 NumericEdit 소비와 W2의 RAD/작업문서 독립 Prep 열기는 구현됐다. 현재 INP용 실행 입력 복사 규칙을 RAD의 Starter/Engine/INCLUDE snapshot과 두 단계 실행에 적용하는 W3는 후속 N21이다.
 
 ## 계층과 의존 방향
 
@@ -92,16 +92,16 @@ Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 p
 
 `#include`는 지시문으로 식별한다. 이번 구현은 처음 입력 덱의 작업 폴더를 기준으로 안전하게 해석 가능한 상대 파일들을 묶는다. 절대 경로·상위 경로·누락·순환 등 처리하지 못한 참조는 보존하고 부분 읽기 진단을 반환한다. 해결되지 않은 INCLUDE가 있는 문서는 독립 native 출력 묶음으로 내보내지 않는다. 이 제한은 사용자의 원본 덱 실행 가능성을 판정하는 솔버 허용 목록이 아니다.
 
-내보내기는 작업 문서 저장과 별개다. 원본 입력 파일을 덮어쓰지 않으며 root 덱과 해결된 INCLUDE를 전달한다. `export_rad`는 기존 native 출력만 만들며 `export_solver_inputs`는 명시된 종료 시간·출력 간격으로 새 Engine을 함께 만든다. 원본 Engine을 수정하거나 계산을 실행하지 않는다.
+내보내기는 작업 문서 저장과 별개다. 원본 입력 파일을 덮어쓰지 않으며 root 덱과 해결된 INCLUDE를 전달한다. `export_rad`는 기존 native 출력만 만들며 `export_solver_inputs`는 명시된 종료 시간·출력 간격으로 새 Engine을 함께 만든다. 원본 Engine을 수정하거나 계산을 실행하지 않는다. 종료 시간·출력 간격은 export 호출 인자이며 문서에 저장되는 케이스/해석 설정 모델이 아니다. T4의 해당 누락은 N01이다.
 
 ## CAD/메시 후보 자산
 
-공개 Gmsh 4.15.2 SDK를 별도 worker에서 사용한다. 호출 프로세스에 Gmsh를 import해 전역 모델을 공유하지 않는다. 후보의 CAD XAO, 메시 MSH, 연결 메타데이터를 함께 보관한다. Gmsh backend tag는 작업 중 주소이고 UUID·자원 개정과 구분한다. 외부 STEP/BREP를 새로 가져오면 새 형상 자원이다.
+공개 Gmsh 4.15.2 SDK를 별도 worker에서 사용한다. `gmsh_backend`의 import 대상은 CAD이며 `mesh_candidates`는 자체 CAD/XAO/MSH/metadata 후보 묶음을 검증한다. 외부 MSH만으로 가져오는 일반 독립 메시 import(N02)는 없다. 호출 프로세스에 Gmsh를 import해 전역 모델을 공유하지 않는다. 후보의 CAD XAO, 메시 MSH, 연결 메타데이터를 함께 보관한다. Gmsh backend tag는 작업 중 주소이고 UUID·자원 개정과 구분한다. 외부 STEP/BREP를 새로 가져오면 새 형상 자원이다.
 
 실제 시험에서 MSH만 재열면 CAD는 discrete entity가 되었고 BREP만으로는 physical group이 보존되지 않았다. XAO의 named group과 별도 메시 자산을 함께 다루는 정책이 필요하다. 또한 재메시 전후 같은 node ID의 좌표가 달라질 수 있었다. 따라서 explicit node/element 선택을 새 메시로 자동 전용하지 않는다. `application/mesh_candidates.py`는 공식 SDK로 MSH 전체 inventory를 읽어 metadata와 대조하고 품질을 계산한다. Qt의 `mesh_workflow`는 후보와 문서의 identity를 분리해 표시하고, 비동기 생성·취소·검토·채택을 연결한다. 소유 메시의 안전 교체는 조건/집합 참조가 없을 때만 가능하며 공유 노드는 보존한다. 새 문서는 모든 작업 단위를 명시해야 한다. 채택한 메시의 최종 native ID·PART 출처 UUID·자산 해시는 `.caeprep`의 native 자원에 보존한다. 원본→native 절점/요소 ID 대응은 채택 명령의 반환값이며 작업문서에 별도 매핑으로 저장하지 않는다. 원 CAD/XAO/MSH 번들은 별도 후보 폴더를 유지해야 재메시할 수 있다.
 
 ## 재사용과 남은 범위
 
-현재 첫 적용 대상은 OpenRadioss/OpenCourant이고, 실행 가능한 사용 앱은 RAD 원문 편집기다. 공용 자산과 네이티브 갤러리는 이 저장소의 정식 개발 산출물이며 실제 편집 흐름과 함께 개발한다. 서로 다른 사용처에서 같은 코어·위젯을 사용하는 확인은 재사용 품질을 판단하는 기준이고, 공용 자산 개발을 시작하기 위한 전제 조건이 아니다.
+현재 첫 적용 대상은 OpenRadioss/OpenCourant이고, 실행 가능한 사용 앱은 RAD 원문 편집과 지원 모델 생성 앱이다. 공용 자산과 네이티브 갤러리는 이 저장소의 정식 개발 산출물이며 실제 편집 흐름과 함께 개발한다. 서로 다른 사용처에서 같은 코어·위젯을 사용하는 확인은 재사용 품질을 판단하는 기준이고, 공용 자산 개발을 시작하기 위한 전제 조건이 아니다.
 
-첫 공용 위젯·셸 부품·갤러리·최소 세션 계약을 실제 RAD와 중립 재료/곡선 문서에 연결했다. 과거 Windows 검증은 위에 한정한 구버전 자료이며 현재 UI는 별도 확인이 필요하다. G1 생성/할당과 G2 곡선·조건·집합, G3 후보 채택·Starter/Engine을 같은 native 문서에 연결했다. G4는 Workbench의 기존 MDO 서비스가 Prep NumericEdit를 실제 사용하고, 기존 연결/JobManager가 독립 Prep 프로세스와 문서·출력 파일을 전달한다. 두 앱의 이력·모델은 합치지 않는다. 현재 기능·UI·원제품 비교·플랫폼의 통과 범위는 실행 기록에 따르며 Windows 납품은 후속이다. MCP/IPC는 P8c, 고급 메시/중립면·대용량은 기존 별도 단계로 유지한다. 솔버 실행·후처리의 Workbench 소유는 바꾸지 않는다.
+첫 공용 위젯·셸 부품·갤러리·최소 세션 계약을 실제 RAD와 중립 재료/곡선 문서에 연결했다. 과거 Windows 검증은 위에 한정한 구버전 자료이며 현재 UI는 별도 확인이 필요하다. G1 생성/할당과 G2 곡선·조건·집합, G3 후보 채택·Starter/Engine을 같은 native 문서에 연결했다. G4는 Workbench의 기존 MDO 서비스가 Prep NumericEdit를 실제 사용하고, 기존 연결/JobManager가 독립 Prep 프로세스와 문서·출력 파일을 전달한다. 두 앱의 이력·모델은 합치지 않는다. 현재 기능·UI·원제품 비교·플랫폼의 통과 범위는 실행 기록에 따르며 Windows 납품은 후속이다. 현재 `CurvePlot`은 표의 선택/값을 그리며 직접 plot drag는 없다. RAD의 CSV/행 편집과 달리 독립 중립 갤러리의 CSV 왕복도 남아 있다(N15). MCP/IPC는 P8c(N19–N20), 다중 자원·대용량·일반 재메시는 N16–N18, 조건부 메시/중립면은 N22–N26으로 유지한다. 솔버 실행·후처리의 Workbench 소유는 바꾸지 않는다.

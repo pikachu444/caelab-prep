@@ -1,5 +1,7 @@
 # Radioss / OpenRadioss / OpenCourant 입력 생성 자산 조사
 
+> **제품 상태와 분리:** 아래는 2026-10-30 수집 대상의 원장과 당시 미실행 기록이다. 2026-11-02 제품 `a48d3b4`의 지원 카드 writer·CAD 후보 채택·Starter/Engine 생성과 소형 실제 solver 검사는 [현 상태](../../../execution-stages.md#current-progress)에 별도로 있다. 그 후속 성공으로 아래 upstream 예제의 `solver_executed=false`를 바꾸거나 전수 카드 지원을 선언하지 않는다. 현재 미완료 작업은 [N01–N26](../../../execution-stages.md#remaining-work)을 따른다.
+
 > **후속 보완:** [새 RAD 생성 자산](../followup/rad/GUIDE.md)과 [Gmsh native mesh writer](../followup/gmsh/README.md)를 추가 확보했다. 공식 카드 필드 규격은 이미 보유하고 있으며 실제 reader/default·writer·MIT 자작 완전 모델까지 연결했다. 아래의 초기 조사 한계 중 “NC-free 완전 작은 모델 미확보”는 column 입력쌍 범위에서 해소됐다. 우리 제품의 전수 생성 구현과는 구분한다.
 
 2026-10-30. 이 기록은 실제 자료 수집과 관련 규칙 독해의 결과다. `caelab-prep`에 신규 RAD 생성기 또는 전 keyword 편집기를 구현했다는 뜻이 아니다. 공용 CAE 자산의 첫 적용 대상으로 OpenRadioss/OpenCourant를 조사했으며, 다른 solver에 같은 default·ID·node 순서를 강제하지 않는다.
@@ -73,7 +75,7 @@
 
 추가 Tools SDK `small_plast`는 실제 확보했으나 `/MAT/USER01`의 별도 user library가 필요하고 **deck header는 MIT가 아닌 CC BY-NC4.0**이다. 이를 범용 완전 해석 예제로 배포하지 않는다. 모든 사례는 `solver_executed=false`다. upstream reference는 관측 회귀 기준이며 새 generator 출력의 golden이나 독립 물리 검증은 아니다. 배포 허가가 분명한 NC-free 완전 모델 시험쌍 및 의도된 오류/expected diagnostic corpus는 아직 확보·분류되지 않았다. 자작 미실행 deck으로 이 공백을 대체하지 않았다.
 
-## 현재 닫은 범위와 남은 공백
+## 수집 당시 닫은 범위와 남긴 공백
 
 공식 전체 색인 추출·분모 대조, 해당 상세 원문 취득, Q01–Q12 관련 근거/부분/공백 분리, 실제 예제와 코드 역할·판·권리·해시 기록을 마쳤다. LS-DYNA 담당과 default·connectivity·include/transform의 반례를 교환했고 `discussion/dyna-rad-review.md`에 대조했다.
 

@@ -1,14 +1,25 @@
-# Prep UI rebuild — 2026-10-31
+# Prep UI rebuild — historical record, 2026-10-31
 
-2026-11-01 보존 정리: 최신 게시·병합 승인 범위와 미해결 진도는 [실행 단계 19절](execution-stages.md#19-문서와-작업-상태의-관리)을 따른다. 아래의 이전 게시 보류는 보존 통합에 한해 대체됐으며, 실제 Windows/GPU·제품 품질 검증 보류는 유지한다.
+2026-11-01 handoff: this is the earlier presentation rebuild record, not the
+current support table or a current publication gate. The eight approaches and
+native modeling workflows were subsequently integrated in
+[PR #15](https://github.com/pikachu444/caelab-prep/pull/15), merged at `a48d3b4`.
+See [current implementation and reference differences](ui-reference-variants.md),
+[current execution evidence](execution-stages.md#current-progress), and the
+[remaining work and completion criteria](execution-stages.md#remaining-work).
+The source ranges, test counts, process IDs and publication restrictions below
+belong to the dated rebuild; they are not refreshed evidence for the merged code.
 
-2026-11-01 follow-up: the user expanded the scope to separate working
-program-specific approaches. See [the current implementation, source map and
-remaining fidelity limits](ui-reference-variants.md). The historical rebuild
-record below is preserved; its 121/11 results are not the new session's tests.
-The follow-up retains native-input/publication holds.
+The later Linux X11 campaign covers eight presentations at two window sizes on
+a two-quad input: whole-window layout, actual VTK rendering and picking. It does
+not complete the modeling workflow's visual acceptance, Windows verification,
+or same-task execution in the eight reference products. Windows verification is
+deferred under the current implementation plan; the old native/publication hold
+below is not an instruction to stop otherwise authorized work.
 
-Status: second presentation implementation and code regression review complete; native interaction and visual acceptance remain open. Native input/capture is on parent-directed hold pending the user's lock-state check and desktop coordination. This local branch must not merge on the strength of automated tests alone.
+## Preserved rebuild status and scope
+
+Status at that review point: second presentation implementation and code regression review complete; native interaction and visual acceptance remained open. Native input/capture was on parent-directed hold pending the user's lock-state check and desktop coordination. The local candidate was not approved to merge on automated tests alone.
 
 ## Scope and implementation
 
@@ -89,6 +100,6 @@ Unverified: actual Windows open/edit/Undo/save/reopen, close/cancel/error intera
 
 The technical team independently reported the same capture/activation failures and a LockApp process; lock state was not thereby established. Parent requested the user's lock check and put native input/capture on hold. No retry or new Windows launch has occurred during that hold. The native scene/scale/docking/maximize/file-flow plan and isolated launcher are prepared for the parent's coordinated release.
 
-The branch remains draft; do not merge until this blocker is resolved, affected native flows pass, whole-window pixels are inspected by the review team and final CI is green.
+The historical branch remained draft at this point; its recorded gate required resolution of this blocker, affected native flows, whole-window pixel review and final green CI. This is the earlier gate, not the status of merged PR #15.
 
-Publication attempt: automatic approval review rejected branch push plus draft PR creation before process execution because the existing approval was conditional on no major unresolved verification. No workaround or retry was used. Read-only verification confirmed remote main still `0dc14127cbfaf22f54cc59b4a6648f35e9cfaec7`, no remote rebuild branch and no PR. Remote publication, CI and merge have not occurred. Parent instructed verification first, with no request to publish an unverified draft; that direction is retained. Completed native verification would provide new material evidence before any future publication attempt.
+Historical publication attempt: automatic approval review rejected branch push plus draft PR creation before process execution because the existing approval was conditional on no major unresolved verification. No workaround or retry was used. Read-only verification at that time confirmed remote main still `0dc14127cbfaf22f54cc59b4a6648f35e9cfaec7`, no remote rebuild branch and no PR. Remote publication, CI and merge had not occurred at that point. Parent had instructed verification first, with no request to publish an unverified draft. Later preservation and implementation merges are recorded separately in the current execution evidence; they do not turn this failed native capture into a pass.

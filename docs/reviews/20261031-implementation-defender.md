@@ -1,8 +1,17 @@
-# Implementation advocate review
+# Implementation advocate review — 2026-10-31 milestone
+
+**Historical scope notice, 2026-11-01:** the accepted six corrections and native
+A7 campaign below concern the bounded `feat/shared-gui-foundation` / PR #12
+candidate. They do not certify merged PR #15 (`a48d3b4`), the eight complete
+modeling approaches, or current Windows delivery. The statements excluding new
+cards, advanced curves and other work describe this old review packet; they do
+not remove those items from later user requirements. Use [current execution evidence](../execution-stages.md#current-progress)
+and [remaining work](../execution-stages.md#remaining-work) for the handoff.
+The historical conclusions, failed runs and reviewer corrections remain below.
 
 Review role: member of the shared review team; independent of the writers. Read-only review apart from this evidence report and the parent's later-authorized byte-identical image audit copies. Baseline: `6a2c96e` on `feat/shared-gui-foundation`.
 
-**Current final disposition: all six bounded corrections and finite native Windows A7 acceptance are accepted. No scoped code, feature or native-verification blocker remains. Only required CI for the exact new final commit remains pending before root may merge under the user's conditional authorization.** Earlier A7-pending judgments below are historical and superseded by the final native review in this report. This reviewer performs no GitHub approval or publication action.
+**Final disposition at this milestone: all six bounded corrections and finite native Windows A7 acceptance are accepted. No scoped code, feature or native-verification blocker remains. Only required CI for the exact new final commit remains pending before root may merge under the user's conditional authorization.** Earlier A7-pending judgments below are historical and superseded by the final native review in this report. This reviewer performs no GitHub approval or publication action.
 
 ## Final native review and remaining merge gate
 

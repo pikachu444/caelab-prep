@@ -1,5 +1,7 @@
 # 독립 Astra 감사 기록
 
+> **역사적 감사 범위:** 아래 판정은 2026-10-30 초기 수집물에 대한 것이다. 이후 [RAD 자산](../followup/rad/GUIDE.md)·[MSC 완전 입력](../followup/msc/README.md)을 보완했고 지원 RAD writer와 소형 solver 검증도 제품에 추가됐다. 따라서 아래 초기 “예제 미확보/생성·실행 미수행”을 현재 전체 상태로 반복하지 않는다. 원 수집 대상의 수량·판본·실행 여부는 보존하고, 현재 구현·잔여 검증은 [작업서](../../../execution-stages.md#remaining-work)를 따른다.
+
 2026-10-30. `discussion/protocol.md`와 `discussion/astra-checklist.md`를 기준으로 실제 JSON·목록·원본·예제와 집계를 대조했다. 핵심 5종과 OptiStruct·MSC Nastran의 확보 주장에 대한 최종 감사 기록이다. 실제 solver 실행, 전수 field 의미 검증 또는 신규 원본 수집을 수행한 감사가 아니다.
 
 ## 1. CalculiX — 1차 실물 감사

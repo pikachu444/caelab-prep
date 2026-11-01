@@ -1,5 +1,7 @@
 # 기존 Gmsh SDK에서 이용할 수 있는 실제 RAD mesh writer
 
+> 2026-10-30 수집 묶음의 참고 source 조사다. 후속 Prep 제품은 Gmsh가 만든 후보를 검증한 뒤 자체 RAD writer로 채택·출력하며, 아래 `gmsh.write(...rad)` 전체 출력 경로를 제품 exporter로 편입한 것은 아니다. 현재 tri3/tet4 채택·조건·Starter/Engine 지원과 임의 MSH 가져오기 등 남은 범위는 [현 상태·N01–N26](../../../../execution-stages.md#remaining-work)을 따른다.
+
 공식 [Gmsh 4.15.2 source archive](https://gmsh.info/src/gmsh-4.15.2-source.tgz)를 내려받아 native RAD 출력부와 요소별 연결 순서 코드를 확보했다. 현재 Prep가 이미 쓰는 Gmsh SDK에 RAD 출력 경로가 있다는 점에서 직접적인 참고 자산이다. 새 mesher나 CAE exporter를 구현한 것은 아니다.
 
 [실제 RAD writer 열기](source/src/geo/GModelIO_RAD.cpp) · [요소 연결 출력](source/src/geo/MElement.cpp) · [라이선스](source/LICENSE.txt)

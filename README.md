@@ -6,7 +6,9 @@
 
 **현재 구현:** 사용자 RAD의 재료·단면·파트 관계를 편집하고, 새 문서에서 CAD 메시 후보를 검토·채택해 조건과 Starter/Engine을 작성할 수 있습니다. 같은 문서·명령·편집 부품을 8개 프로그램별 표현에서 사용합니다. 재료/단면 2쌍의 생성·할당, 곡선·집합·구속·하중·초기속도·접촉, 단위 표시 변환, Undo/Redo·저장·재열기를 연결했습니다. 실제 Workbench는 공용 숫자 입력 부품과 독립 Prep 문서 열기를 사용합니다.
 
-[달성 목표](DESIGN.md#delivery-goals)와 [검증·남은 범위](docs/execution-stages.md#current-progress)를 구분합니다. 원제품 8종과의 동일 과업 실행 비교는 미확인이고 Windows 실제 창·IME·DPI·배포 검증은 사용자 지시에 따라 후속 일괄 검사로 남깁니다. 이 구현을 상용 CAE 전체 기능·품질과 동등하다고 주장하지 않습니다.
+**새 세션의 시작점:** [남은 작업 26개와 각각의 완료 기준](docs/execution-stages.md#remaining-work)을 확인하세요. 현재 목표 14개, 보존한 기존 구현 요구 7개, 실증이 선행되는 조건부 5개입니다. 작업 크기가 같은 26개나 완료율을 뜻하지 않습니다. 다음 구현은 **N01 케이스·영속 해석 설정, N02 외부 독립 메시 import**입니다. 두 기능은 아직 없으며, 남은 일이 검증뿐인 상태가 아닙니다.
+
+[달성 목표](DESIGN.md#delivery-goals)와 [구현·검증 근거](docs/execution-stages.md#current-progress)를 구분합니다. 원제품 8종과의 동일 과업 실행 비교는 미확인이고 Windows 실제 창·IME·DPI·배포 검증은 사용자 지시에 따라 후속 일괄 검사로 남깁니다. 이 구현을 상용 CAE 전체 기능·품질과 동등하다고 주장하지 않습니다.
 
 공용 부품은 `ui/design`, `ui/widgets`, `ui/actions.py`, `ui/shell.py`에 있고 갤러리와 실제 전처리기가 같은 코드를 사용합니다. 솔버별 카드 의미·단위·원문·출력은 RAD adapter/session에 남습니다. 모든 솔버의 FE 스키마나 전체 CAE 기반이 완성됐다는 뜻은 아닙니다.
 
@@ -14,7 +16,7 @@
 
 ![실제 Qt/VTK 네이티브 편집기](docs/native-editor.png)
 
-소형 RAD를 실제 Linux Qt/VTK 창에서 열어 편집·Undo/Redo·저장·재열기·출력과 마우스 절점/요소 선택을 확인한 기존 화면입니다. 별도 입력의 재료·구속 편집 출력은 OpenCourant Starter에서도 값이 유지됐습니다. 새 Windows 실행의 범위와 화면은 [Windows 검증 기록](docs/native-windows-validation.md)에 있습니다. 설치형 배포와 대용량 성능은 후속입니다.
+소형 RAD를 실제 Linux Qt/VTK 창에서 열어 편집·Undo/Redo·저장·재열기·출력과 마우스 절점/요소 선택을 확인한 기존 화면입니다. 별도 입력의 재료·구속 편집 출력은 OpenCourant Starter에서도 값이 유지됐습니다. 2026-10-31 구버전 Windows 실행의 범위와 화면은 [Windows 검증 기록](docs/native-windows-validation.md)에 있습니다. 설치형 배포와 대용량 성능은 후속입니다.
 
 ## 첫 적용 앱 실행
 
@@ -44,6 +46,8 @@ PART를 선택하면 원래 파트 ID·표시 요소 수·현재 재료/단면 �
 | CAD/메시 | 별도 Gmsh worker의 tri3/tet4 후보, 품질 문턱·공유 경계·국부 크기, 후보 취소·채택·참조 없는 소유 메시의 안전 교체 |
 | 문서·출력 | 원문/구조 편집·Undo/Redo·revision, `.caeprep` v2와 v1 읽기, INCLUDE 묶음과 새 Starter/Engine 출력 |
 | 실제 공통화 | 8 native 표현의 같은 provider/명령/위젯, 중립 문서, Workbench의 NumericEdit 소비와 독립 프로세스 파일 전달 |
+
+현재 CAD 후보 경로는 자체 생성한 CAD/XAO/MSH/metadata 묶음을 요구합니다. 외부 MSH 같은 독립 메시를 직접 여는 기능은 없으며 RAD 메시 열기와 구별합니다. Export 창의 종료 시간·출력 간격은 그 내보내기 호출의 인자이며 저장·재열기 가능한 케이스/해석 설정이 아닙니다.
 
 미지원 카드는 원문으로 보존합니다. 알 수 없는 참조가 있는 삭제·교체는 차단하며 전체 Radioss 카드, 일반 재메시의 조건 자동 재연결, 모든 요소·재료법칙을 지원하지 않습니다. 채택한 native 메시와 출처 해시는 작업문서에 남지만 재메시에 필요한 CAD/XAO/MSH 원자산은 별도로 보관한 후보 폴더를 유지해야 합니다. 임의 all-hex·중립면·대용량·live GUI IPC/MCP·Windows 설치형 배포는 별도 남은 범위입니다. 솔버 실행·후처리의 Workbench 소유권은 유지합니다.
 
@@ -109,7 +113,7 @@ caelab-prep catalogue
 
 ![공용 갤러리의 Qt offscreen 미리보기](docs/gallery-preview.png)
 
-위 두 그림은 설치된 Windows 글꼴을 QA 프로세스에 로드한 **Qt offscreen 렌더**입니다. 아래는 실제 Windows QPA 창에서 입력 검증한 갤러리의 자체 위젯 캡처입니다. 전체 데스크톱 캡처는 아니며, VTK는 별도 실제 OpenGL framebuffer로 확인했습니다. OS 모니터 DPI 설정은 바꾸지 않았습니다. 배율·작은 창·실행 방법은 [Windows 검증 기록](docs/native-windows-validation.md)에 구분합니다.
+위 두 그림은 설치된 Windows 글꼴을 QA 프로세스에 로드한 **2026-10-31 Qt offscreen 렌더**입니다. 아래는 같은 날짜의 실제 Windows QPA 창에서 입력 검증한 갤러리의 자체 위젯 캡처입니다. 현재 G 구현의 Windows 검증 화면은 아닙니다. 전체 데스크톱 캡처는 아니며, VTK는 별도 실제 OpenGL framebuffer로 확인했습니다. OS 모니터 DPI 설정은 바꾸지 않았습니다. 배율·작은 창·실행 방법은 [Windows 검증 기록](docs/native-windows-validation.md)에 구분합니다.
 
 ![실제 Windows 갤러리에서 탐색형 카탈로그 조작](docs/native-windows/catalogue-100.png)
 
@@ -127,11 +131,11 @@ caelab-prep catalogue
 - 공용 자산·기반 구축 자체가 저장소의 목적입니다. Action, 선택 상태, 속성 입력, 문서, 아이콘·스타일을 재사용 가능한 모듈로 개발하며 두 번째 앱의 등장을 시작 조건으로 두지 않습니다.
 - 공용 자산에는 모델링 데이터·작업 문서·형상/메시/조건의 관계, 저장·입출력과 GUI·Python·MCP가 공유하는 API도 포함합니다.
 - 실행형 갤러리는 공용 컴포넌트와 기본·선택·비활성·오류·포커스 상태, 배율별 외관과 입력 동작을 확인하는 정식 산출물입니다. 갤러리와 적용 앱은 같은 공용 코드를 사용합니다.
-- 첫 납품 G1은 사용자 메시/RAD 열기 → 파트 선택 → 재료·단면 생성/할당 → 수정·Undo → 저장·새 프로세스 재열기·native 관계 확인입니다. 곡선·구속·접촉의 생성은 G2로 연결하고 Radioss 고유 형식·규칙은 해당 모듈에 둡니다.
+- G1의 목표 작업은 사용자 메시/RAD 열기 → 파트 선택 → 재료·단면 생성/할당 → 수정·Undo → 저장·새 프로세스 재열기·native 관계 확인입니다. 현재 연결한 곡선·구속·접촉 생성의 지원 범위는 위 표를 따르며 Radioss 고유 형식·규칙은 해당 모듈에 둡니다.
 - 공용 자산은 이 저장소에서 관리합니다. 기존 외부 자산은 소유 위치·의존 관계·라이선스를 확인해 연결하고, 같은 부품을 갤러리와 앱에서 따로 구현하지 않습니다. 별도 패키지 배포 여부는 재사용 방식에 맞춰 결정합니다.
 - 공개 소스의 재사용, 공개 규격과 정상 실행 동작을 바탕으로 한 독립 구현을 우선합니다. 외부 프로그램의 분석·재배포는 해당 허가 조건을 확인합니다.
 
-제품 목표·첫 납품·완료 기준은 [DESIGN.md](DESIGN.md#delivery-goals), 자산·계약·코드 이행·갤러리의 기술 상세는 [공용 CAE 자산·기반 실행 계획](docs/shared-cae-foundation-plan.md), 실행 순서·현재 진도는 [단계별 작업서](docs/execution-stages.md#current-progress)에 둡니다. 현재 실행 코드와 목표 구조의 경계는 [ARCHITECTURE.md](ARCHITECTURE.md), 공개 SDK 사용은 [THIRD_PARTY.md](THIRD_PARTY.md)를 따릅니다. 현재 Qt/VTK·자체 문서 코어·Gmsh 조합은 첫 원문 편집 흐름에 대한 구현 결정입니다. SMTK/CMB·FEBioStudio·SALOME와 전체 CAD→조건→솔버 흐름을 빌드·실행 비교해 최선이라고 선정한 결과는 아닙니다.
+제품 목표·첫 납품·완료 기준은 [DESIGN.md](DESIGN.md#delivery-goals), 자산·계약·코드 이행·갤러리의 기술 상세는 [공용 CAE 자산·기반 실행 계획](docs/shared-cae-foundation-plan.md), 실행 순서·현재 진도는 [단계별 작업서](docs/execution-stages.md#current-progress)에 둡니다. 새 세션은 작업서의 같은 N 행을 근거와 함께 갱신하고, 구현·검증·PR 병합 결과 및 그룹별 남은 개수를 보고합니다. 현재 실행 코드와 목표 구조의 경계는 [ARCHITECTURE.md](ARCHITECTURE.md), 공개 SDK 사용은 [THIRD_PARTY.md](THIRD_PARTY.md)를 따릅니다. 현재 Qt/VTK·자체 문서 코어·Gmsh 조합은 첫 원문 편집 흐름에 대한 구현 결정입니다. SMTK/CMB·FEBioStudio·SALOME와 전체 CAD→조건→솔버 흐름을 빌드·실행 비교해 최선이라고 선정한 결과는 아닙니다.
 
 ## 확보한 개발 자산
 

@@ -1,7 +1,8 @@
 # Working program-specific UI comparisons
 
-This document records the eight approaches implemented before the preservation
-handoff at `f4d12d078aac08f5e4474e362ac18c1aa128386b`. The earlier implementation
+This document separates the current eight approaches at main `a48d3b4`
+(PR #15) from their preservation-era source map at
+`f4d12d078aac08f5e4474e362ac18c1aa128386b`. The earlier implementation
 record described them as an extension beyond its single P0–P3 composition. That
 description is project history, not evidence that the user approved reducing
 the original requirement to one composition. The implementation preserves the
@@ -15,7 +16,7 @@ presentation and interaction, including command groups and task flow, while
 sharing the model, commands, validation and reusable components. The source map
 below describes the handoff implementation and its evidence gaps; it is not an
 acceptance matrix for that target. Current unresolved status belongs in
-[execution-stages section 19](execution-stages.md#current-progress); sections 1–18 are not implied
+[the remaining-work table in section 19](execution-stages.md#remaining-work); sections 1–18 are not implied
 complete. Functional regression, UI quality, usable engineering tasks and
 source-product comparison require separate verdicts. Actual Windows input/GPU
 acceptance remains unverified for these eight approaches.
@@ -40,9 +41,16 @@ The comparison header's **Reference / differences** button explains each
 approach's source scenes and deviations. Product names identify references;
 these are CAELab Prep views, not vendor software or endorsed implementations.
 
-## G1–G4 implementation update
+## Current implementation and missing tasks
 
 [PR #15](https://github.com/pikachu444/caelab-prep/pull/15) connects native material/section creation, copy/delete and PART assignment; curve rows/CSV and typed node/element group membership; supported BCS/CLOAD/initial velocity/TYPE7 conditions; verified display-unit conversion; CAD candidate adoption and Starter/Engine export. The eight adapters consume the same provider commands and typed editors. `test_modeling_ui.py`, `test_conditions_ui.py`, `test_groups_ui.py` and `test_native_units_ui.py` exercise the corresponding tasks and invalid drafts across all eight approaches. This replaces the old provider's scalar-only limitation; it does not supply vendor-native formats or all vendor features.
+
+Case/persistent analysis settings (N01) and standalone external mesh import
+(N02) are still absent. RAD CSV/row editing does not complete the neutral
+gallery CSV and direct plot-drag work (N15). The eight same-task source-product
+comparisons and resulting UI corrections remain N03–N10; none is closed by
+adapter counts or internal tests. Windows GUI and actual Workbench validation
+remain N12–N14.
 
 The original source map below is a **handoff-era observation**, not the present feature support table. Its statements that creation, assignment or set operations were absent describe `f4d12d0`. Current supported commands are listed in [README](../README.md); source-product operation/appearance gaps remain unverified. Offscreen UI checks and the separate X11 Qt/VTK render/pick job are reported separately in section 19.
 
@@ -56,7 +64,7 @@ documented instructions and unknown behavior. They are not native reproduction
 tests. PrePoMax supplements that collection with its official 2.5.0 manual,
 v1.0.0, 2026-03-08, pp3/5/7/27–29.
 
-G0 must establish the same-task evidence contract for every approach using these
+N03–N10 retain G0's same-task evidence contract for every approach using these
 sources and identify missing observations or original-product runs. A documented
 pattern, an inspected screenshot and an actual operation in the source program
 are different evidence levels. This table does not establish that T1–T6 have
@@ -135,16 +143,19 @@ appear in the Prep inspector header; its only editable provider field is shell
 thickness. Material is linked through the RAD PART, so the PSHELL Material row
 is not fabricated. This is a shell-property editing comparison, not identical
 cards, values or a claim that all source metadata is editable.
-In the handoff captures, Naksha's Undo/Redo commands were in the small
+The captures in this paragraph are historical; later PR #15 screenshots do
+not retroactively change their scope. In the handoff captures, Naksha's Undo/Redo commands were in the small
 quick-file row and only its Materials context was included. The G1–G4 adapter
 now also provides Selections and Conditions, using the same shared commands.
 Unimplemented Home/Results content remains omitted.
 
-Additional exact-image downloads were blocked by the local network restriction;
+During that earlier capture session, additional exact-image downloads were blocked by its local network restriction;
 no installation or security setting was changed to retrieve them. Documentation
 observations support the working differences above, but do not certify full
-pixel fidelity for the missing images. Actual Windows input, complete GPU
-captures, display scaling and native file/dialog workflows remain unverified.
+pixel fidelity for the missing images. Current Linux X11 CI covers actual Qt/VTK pixels and QTest picking in 16
+default two-element scenes. It does not cover a complete T1–T6 native workflow
+or original-product equivalence. Current Windows input, GPU capture, display
+scaling and full native file/dialog workflows remain unverified.
 
 The earlier implementation report recorded applied guidance from
 `cae-desktop-ux` QT-PANELS/FC-PROPERTY/QT-ACCESS for draft-safe

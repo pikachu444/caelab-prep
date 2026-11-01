@@ -1,5 +1,7 @@
 # 긴 작업·취소·산출물 수명 — 직접 조사
 
+> 2026-10-30 문헌/API 조사 기록이다. 아래 후속 질문은 당시 외부 근거의 공백이며 현재 구현의 미완료 판정이 아니다. Prep·Workbench의 구현 범위와 남은 작업은 [현 상태·N01–N26](../../../execution-stages.md#remaining-work)을 따른다.
+
 root가 Qt 6.8.9, Python 3.11.18, QGIS 3.40 문서/API, VS Code rolling 문서/API, Win32 문서를 읽어 비교했다. 분야의 14개 URL과 10개 패턴은 `domains/jobs.json`에 있다. 실제 프로그램·SDK·Windows 프로세스는 실행하지 않았다.
 
 ## 필요한 방향
