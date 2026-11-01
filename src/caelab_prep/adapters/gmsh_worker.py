@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import hashlib
+from itertools import combinations
 import json
 import math
 import os
@@ -82,13 +83,150 @@ def _identity(gmsh, surfaces, volumes, extension):
     return resource_uuid, revision, unit, by_entity
 
 
+def _entity_closure(gmsh, entity):
+    """Collect the actual CAD boundary identities, including curves and points."""
+    found, pending = set(), [entity]
+    while pending:
+        item = pending.pop()
+        if item[0] == 0:
+            continue
+        for dim, tag in gmsh.model.getBoundary([item], combined=False, oriented=False):
+            child = (int(dim), int(tag))
+            if child not in found:
+                found.add(child)
+                pending.append(child)
+    return found
+
+
+def _prepare_interfaces(gmsh, policy, extension):
+    """Change fresh geometry only; never guess old face UUIDs after a boolean.
+
+    OCC fragment makes interfaces conformal. Its returned source-to-result map
+    must preserve each input volume one-to-one: overlapping/split/merged source
+    parts are rejected instead of inventing an ownership mapping.
+    """
+    originals = [(int(dim), int(tag)) for dim, tag in gmsh.model.getEntities(3)]
+    before = {tag: float(gmsh.model.occ.getMass(dim, tag)) for dim, tag in originals}
+    mapping = {tag: tag for _, tag in originals}
+    operation = "none"
+    if policy == "conformal":
+        if extension == ".xao":
+            raise WorkerFailure("topology_identity", "Prepare conformal topology from fresh CAD, then remesh XAO with preserve")
+        if len(originals) > 1:
+            output, correspondence = gmsh.model.occ.fragment(originals[:1], originals[1:])
+            gmsh.model.occ.synchronize()
+            if len(correspondence) != len(originals):
+                raise WorkerFailure("topology_mapping", "Fragment did not return complete original volume ownership")
+            targets = []
+            for original, entities in zip(originals, correspondence):
+                volume_tags = [int(tag) for dim, tag in entities if dim == 3]
+                if len(volume_tags) != 1:
+                    raise WorkerFailure("topology_mapping", "Conformal preparation would split or remove an original volume")
+                mapping[original[1]] = volume_tags[0]
+                targets.extend(volume_tags)
+            if len(set(targets)) != len(originals) or set(targets) != {int(tag) for dim, tag in output if dim == 3}:
+                raise WorkerFailure("topology_mapping", "Conformal preparation has ambiguous or merged volume ownership")
+            for old, new in mapping.items():
+                after = float(gmsh.model.occ.getMass(3, new))
+                if before[old] <= 0 or not math.isclose(before[old], after, rel_tol=1e-8, abs_tol=0):
+                    raise WorkerFailure("topology_mapping", "Conformal preparation changed an original part volume")
+            operation = "occ.fragment"
+    volumes = [int(tag) for _, tag in gmsh.model.getEntities(3)]
+    closures = {tag: _entity_closure(gmsh, (3, tag)) for tag in volumes}
+    if policy == "independent":
+        for index, left in enumerate(volumes):
+            if any(closures[left] & closures[right] for right in volumes[index + 1:]):
+                raise WorkerFailure("shared_topology", "Independent mode is a preflight check; the input shares CAD boundaries and must be separated explicitly")
+    return {"operation": operation,
+            "source_volume_map": [{"source_backend_tag": old, "backend_tag": new,
+                                   "source_volume": before[old]} for old, new in mapping.items()]}, closures
+
+
+def _apply_local_sizes(gmsh, local_sizes, identities, global_size):
+    """Entity-restricted Constant fields; a Min field combines refinements.
+
+    Public Gmsh 4.15.2 Constant/IncludeBoundary supports surfaces and volumes.
+    Global min/max must not clamp local refinements back to the global size.
+    """
+    if not local_sizes:
+        return []
+    by_uuid = {identifier: entity for entity, identifier in identities.items()}
+    fields, applied = [], []
+    for identifier, size in local_sizes.items():
+        entity = by_uuid.get(identifier)
+        if entity is None:
+            raise WorkerFailure("sizing_reference", f"Local sizing entity is absent from this XAO: {identifier}")
+        dim, tag = entity
+        field = gmsh.model.mesh.field.add("Constant")
+        gmsh.model.mesh.field.setNumbers(field, "SurfacesList" if dim == 2 else "VolumesList", [tag])
+        gmsh.model.mesh.field.setNumber(field, "IncludeBoundary", 1)
+        gmsh.model.mesh.field.setNumber(field, "VIn", size)
+        gmsh.model.mesh.field.setNumber(field, "VOut", global_size)
+        fields.append(field)
+        applied.append({"entity_uuid": identifier, "dimension": dim, "backend_tag": tag, "size": size,
+                        "include_boundary": True})
+    minimum = gmsh.model.mesh.field.add("Min")
+    gmsh.model.mesh.field.setNumbers(minimum, "FieldsList", fields)
+    gmsh.model.mesh.field.setAsBackgroundMesh(minimum)
+    gmsh.option.setNumber("Mesh.MeshSizeMin", min(local_sizes.values()))
+    gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+    gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
+    gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+    return applied
+
+
+def _check_mesh_interfaces(gmsh, closures, blocks, identities, policy):
+    """Check actual shared node identity, not merely coincident coordinates."""
+    node_sets = {}
+    for tag in closures:
+        node_sets[tag] = {node for block in blocks if block["dimension"] == 3
+                         and block["entity_uuid"] == identities[(3, tag)] for conn in block["connectivity"] for node in conn}
+    checks, tags = [], sorted(closures)
+    for index, left in enumerate(tags):
+        for right in tags[index + 1:]:
+            common = node_sets[left] & node_sets[right]
+            boundaries = closures[left] & closures[right]
+            expected = set()
+            for dim, tag in boundaries:
+                ids, _, _ = gmsh.model.mesh.getNodes(dim, tag, includeBoundary=True)
+                expected.update(int(value) for value in ids)
+            if common != expected:
+                raise WorkerFailure("interface_mesh", "Volume mesh nodes do not match their shared CAD boundaries")
+            if policy == "independent" and common:
+                raise WorkerFailure("interface_mesh", "Independent volumes unexpectedly share mesh node IDs")
+            shared_surfaces = [identities[(dim, tag)] for dim, tag in sorted(boundaries) if dim == 2]
+            facets = {tuple(sorted(conn)) for block in blocks if block["dimension"] == 2
+                      and block["entity_uuid"] in shared_surfaces for conn in block["connectivity"]}
+            if facets:
+                for volume in (left, right):
+                    faces = {tuple(sorted(face)) for block in blocks if block["dimension"] == 3
+                             and block["entity_uuid"] == identities[(3, volume)]
+                             for conn in block["connectivity"] for face in combinations(conn, 3)}
+                    if not facets <= faces:
+                        raise WorkerFailure("interface_mesh", "A shared surface facet is not a tetrahedron face on both adjacent parts")
+            checks.append({"volume_uuids": [identities[(3, left)], identities[(3, right)]],
+                           "shared_node_count": len(common),
+                           "shared_surface_uuids": shared_surfaces,
+                           "shared_facets_verified": len(facets)})
+    return checks
+
+
 def generate(request):
     source = Path(request["source"]).resolve()
     out = Path(request["output_dir"]).resolve()
     size = float(request["mesh_size"])
     dimension = request["dimension"]
+    policy = request.get("interface_policy", "preserve")
+    local_sizes = request.get("local_sizes", {})
     if not math.isfinite(size) or size <= 0 or dimension not in (2, 3):
         raise WorkerFailure("invalid_request", "Invalid mesh size or dimension")
+    if policy not in ("preserve", "conformal", "independent") or not isinstance(local_sizes, dict):
+        raise WorkerFailure("invalid_request", "Invalid interface policy or local sizing mapping")
+    if local_sizes and source.suffix.lower() != ".xao":
+        raise WorkerFailure("invalid_request", "Local sizing requires persisted XAO entity identities")
+    for identifier, value in local_sizes.items():
+        if _uuid(identifier) != identifier or type(value) not in (int, float) or not math.isfinite(value) or not 0 < value <= size:
+            raise WorkerFailure("invalid_request", "Invalid local refinement size or entity UUID")
     if not source.is_file():
         raise WorkerFailure("invalid_request", "CAD input does not exist")
     if source.suffix.lower() not in {".step", ".stp", ".brep", ".brp", ".iges", ".igs", ".xao"}:
@@ -110,6 +248,7 @@ def generate(request):
         except (AttributeError, OSError) as exc:
             raise WorkerFailure("dependency_error", f"Gmsh native library cannot initialize: {exc}") from exc
         gmsh.option.setNumber("General.Terminal", 1)
+        gmsh.logger.start()
         gmsh.option.setNumber("General.NumThreads", 1)
         gmsh.option.setString("Geometry.OCCTargetUnit", "MM")
         gmsh.option.setNumber("Mesh.MeshSizeMin", size)
@@ -124,11 +263,13 @@ def generate(request):
         else:
             gmsh.model.occ.importShapes(str(source))
         gmsh.model.occ.synchronize()
+        preparation, closures = _prepare_interfaces(gmsh, policy, source.suffix.lower())
         surface_tags = [int(tag) for _, tag in gmsh.model.getEntities(2)]
         volume_tags = [int(tag) for _, tag in gmsh.model.getEntities(3)]
         if not surface_tags or dimension == 3 and not volume_tags:
             raise WorkerFailure("geometry_error", "Input does not contain geometry suitable for the requested mesh dimension")
         resource_uuid, revision, unit, entity_uuids = _identity(gmsh, surface_tags, volume_tags, source.suffix.lower())
+        applied_sizes = _apply_local_sizes(gmsh, local_sizes, entity_uuids, size)
         gmsh.model.mesh.generate(dimension)
         node_ids, xyz, _ = gmsh.model.mesh.getNodes()
         if not len(node_ids):
@@ -146,6 +287,7 @@ def generate(request):
                                    "connectivity": [flat[i:i+count] for i in range(0, len(flat), count)]})
         if not any(b["dimension"] == dimension and b["ids"] for b in blocks):
             raise WorkerFailure("mesh_error", "No elements generated for the requested dimension")
+        interface_checks = _check_mesh_interfaces(gmsh, closures, blocks, entity_uuids, policy) if dimension == 3 else []
         by_uuid = {}
         for block in blocks:
             by_uuid.setdefault(block["entity_uuid"], []).extend(block["ids"])
@@ -180,6 +322,10 @@ def generate(request):
         xao, msh, metadata = out / "geometry.xao", out / "mesh.msh", out / "metadata.json"
         gmsh.write(str(xao))
         gmsh.write(str(msh))
+        sdk_messages = list(gmsh.logger.get())
+        sdk_errors = [message for message in sdk_messages if message.startswith("Error:")]
+        if sdk_errors:
+            raise WorkerFailure("sdk_error", "Gmsh logged errors: " + "; ".join(sdk_errors[-5:]))
         coordinates = [float(x) for x in xyz]
         diagnostics = []
         if unit == "unknown":
@@ -201,6 +347,12 @@ def generate(request):
                        "surface_facets": sum(len(b["ids"]) for b in blocks if b["dimension"] == 2),
                        "surfaces": len(surfaces), "volumes": len(volumes)},
             "diagnostics": diagnostics,
+            "recipe": {"global_size": size, "dimension": dimension, "interface_policy": policy,
+                       "independent_is_preflight_only": True, "local_sizes": applied_sizes,
+                       "topology_preparation": preparation,
+                       "local_size_rule": "Minimum of global and entity targets, including entity boundaries; shared boundaries may refine adjacent parts"},
+            "interface_checks": interface_checks,
+            "sdk_error_count": len(sdk_errors),
             "identity_policy": "XAO named groups preserve geometry/entity UUIDs within this resource; backend tags and node IDs are session/mesh-local. New external CAD imports get new identities. No automatic cross-revision remapping is performed.",
         }
         temporary = metadata.with_suffix(".json.tmp")

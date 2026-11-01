@@ -88,7 +88,8 @@ class GmshBackend:
             raise GmshBackendError("invalid_request", "timeout must be finite and positive")
         self.timeout = float(timeout)
 
-    def generate(self, source_path, output_dir, mesh_size, *, dimension=3, cancel_event=None) -> dict:
+    def generate(self, source_path, output_dir, mesh_size, *, dimension=3, cancel_event=None,
+                 interface_policy="preserve", local_sizes=None) -> dict:
         """Import generic CAD and produce immutable, candidate geometry/mesh assets.
 
         ``mesh_size`` is in millimetres for STEP/IGES input (SDK normalization),
@@ -96,6 +97,14 @@ class GmshBackend:
         never silently declared to be millimetres. Output is placed in a new child
         directory so that repeated jobs cannot overwrite earlier candidates.
         Cancellation/timeout terminate and reap the actual worker process.
+
+        ``interface_policy`` is ``preserve`` (keep input topology), ``conformal``
+        (fragment a new external multi-solid import before assigning UUIDs), or
+        ``independent`` (preflight only: reject any shared topology/nodes; never
+        detach or merge entities). Conformal preparation is not performed on
+        persisted XAO identities. Already prepared XAO uses ``preserve``.
+        ``local_sizes`` maps persisted XAO surface/volume UUIDs to target sizes;
+        target refinement includes entity boundaries and may affect neighbours.
         """
         source = Path(source_path).expanduser().resolve()
         if not source.is_file():
@@ -110,6 +119,26 @@ class GmshBackend:
             raise GmshBackendError("invalid_request", "mesh_size must be finite and positive") from exc
         if isinstance(mesh_size, bool) or not math.isfinite(size) or size <= 0:
             raise GmshBackendError("invalid_request", "mesh_size must be finite and positive")
+        if interface_policy not in ("preserve", "conformal", "independent"):
+            raise GmshBackendError("invalid_request", "Unknown interface policy")
+        if interface_policy == "conformal" and source.suffix.lower() == ".xao":
+            raise GmshBackendError("topology_identity", "Use preserve for prepared XAO; conformal preparation requires a fresh external CAD import")
+        sizes = {}
+        if local_sizes is not None:
+            if not isinstance(local_sizes, dict) or local_sizes and source.suffix.lower() != ".xao":
+                raise GmshBackendError("invalid_request", "local_sizes requires a mapping of persisted XAO entity UUIDs to sizes")
+            for identifier, requested_size in local_sizes.items():
+                try:
+                    key, value = str(uuid.UUID(identifier)), float(requested_size)
+                except (ValueError, TypeError, AttributeError) as exc:
+                    raise GmshBackendError("invalid_request", "local_sizes requires valid UUIDs and finite positive sizes") from exc
+                if isinstance(requested_size, bool) or not math.isfinite(value) or value <= 0:
+                    raise GmshBackendError("invalid_request", "Local mesh size must be finite and positive")
+                if value > size:
+                    raise GmshBackendError("invalid_request", "Local refinement size cannot exceed the global target size")
+                if key in sizes:
+                    raise GmshBackendError("invalid_request", "Duplicate local sizing entity")
+                sizes[key] = value
         if cancel_event is not None and cancel_event.is_set():
             raise CancelledError("cancelled", "Meshing cancelled before starting")
         destination = Path(output_dir).expanduser().resolve()
@@ -123,7 +152,8 @@ class GmshBackend:
         with captured.open("rb") as stream:
             digest = hashlib.file_digest(stream, "sha256").hexdigest()
         request = {"source": str(captured), "original_source": str(source), "source_sha256": digest,
-                   "output_dir": str(workdir), "mesh_size": size, "dimension": int(dimension)}
+                   "output_dir": str(workdir), "mesh_size": size, "dimension": int(dimension),
+                   "interface_policy": interface_policy, "local_sizes": sizes}
         request_file = workdir / "request.json"
         request_file.write_text(json.dumps(request), encoding="utf-8")
         env = os.environ.copy()
