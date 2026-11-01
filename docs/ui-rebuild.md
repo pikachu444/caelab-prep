@@ -1,5 +1,7 @@
 # Prep UI rebuild — 2026-10-31
 
+2026-11-01 보존 정리: 최신 게시·병합 승인 범위와 미해결 진도는 [실행 단계 19절](execution-stages.md#19-문서와-작업-상태의-관리)을 따른다. 아래의 이전 게시 보류는 보존 통합에 한해 대체됐으며, 실제 Windows/GPU·제품 품질 검증 보류는 유지한다.
+
 2026-11-01 follow-up: the user expanded the scope to separate working
 program-specific approaches. See [the current implementation, source map and
 remaining fidelity limits](ui-reference-variants.md). The historical rebuild

@@ -144,4 +144,3 @@ class CurveDraftAdapter:
             event.accept()
         else:
             super().keyPressEvent(event)
-

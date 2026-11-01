@@ -510,7 +510,7 @@ class PrepController:
         task = self._task_factory(function, operation_id=label)
         task.signals.stateChanged.connect(self._operation_changed)
         self._active_task = task
-    
+
         def done(result):
             self._busy = False
             self._active_task = None
@@ -526,7 +526,7 @@ class PrepController:
                 self.operationFinished.emit(label, False)
             else:
                 self.operationFinished.emit(label, True)
-    
+
         def failed(exc):
             self._busy = False
             self._active_task = None
@@ -535,7 +535,7 @@ class PrepController:
             self.file_edits.save_failed()
             self._show_error(exc)
             self.operationFinished.emit(label, False)
-    
+
         task.signals.complete.connect(done)
         task.signals.failed.connect(failed)
         QThreadPool.globalInstance().start(task)
