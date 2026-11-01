@@ -140,7 +140,9 @@ def load_block(identifier, name, group, curve, direction, scale, *, newline="\n"
     integer(identifier)
     if direction not in ("X", "Y", "Z", "XX", "YY", "ZZ"):
         raise PrepError("invalid_value", "Load direction must be X, Y, Z, XX, YY or ZZ.")
-    row = integer(curve) + f"{direction:>10}{0:10d}{0:10d}" + integer(group) + " " * 10 + real(1) + real(scale)
+    scale_field = real(scale)
+    reject_default_zero(scale, "scale")
+    row = integer(curve) + f"{direction:>10}{0:10d}{0:10d}" + integer(group) + " " * 10 + real(1) + scale_field
     return newline.join((f"/CLOAD/{identifier}", title(name), row, ""))
 
 
@@ -191,3 +193,35 @@ def engine_input(run_name, end_time, output_interval):
     if float(interval) > float(end):
         raise PrepError("invalid_value", "Output interval must not exceed the end time.")
     return f"#RADIOSS ENGINE\n/RUN/{run_name}/1\n{end}\n/ANIM/DT\n0 {interval}\n".encode("ascii")
+
+
+def condition_scalar_default(keyword, field, rows):
+    """Return (blank default, whether numeric zero selects that default).
+
+    Radioss 2024 CLOAD and TYPE7 reference tables; blank/zero behaviour was
+    checked against the installed Starter reader. `rows` excludes comments
+    and begins with the native title. Keep this separate from writing values:
+    requesting physical zero must not silently emit a solver-default sentinel.
+    """
+    words = keyword.upper().split("/")
+    if words[1] == "CLOAD" and field == "scale":
+        return 1.0, True
+    if words[1:3] == ["INTER", "TYPE7"] and field == "friction":
+        try:
+            curvature = int(rows[1][80:90].strip() or "0")
+            if curvature not in (0, 1, 2, 3): raise ValueError()
+            option_row = 7 if curvature in (1, 2) else 6
+            function_id = int(rows[option_row][60:70].strip() or "0")
+        except (ValueError, IndexError):
+            raise PrepError("invalid_card", "Cannot determine the TYPE7 friction default without its function-reference row.") from None
+        return (1.0, True) if function_id else (0.0, False)
+    if words[1:3] == ["INTER", "TYPE24"] and field == "friction":
+        return 0.0, False
+    raise PrepError("unsupported_operation", "No verified scalar default is defined for this condition field.")
+
+
+def reject_default_zero(value, field):
+    if float(value) == 0:
+        remedy = ("Use a zero-valued friction function or configure constant friction instead."
+                  if field == "friction" else "Use a zero-valued load curve or remove the load to obtain zero loading.")
+        raise PrepError("native_default_value", "Radioss interprets zero in this scale field as the default 1.0. " + remedy + " Enter a nonzero scale here.", {"field": field})

@@ -14,6 +14,7 @@ import re
 from uuid import UUID, uuid4, uuid5
 
 from ..cae_core.errors import PrepError
+from .modeling import condition_scalar_default, reject_default_zero
 
 
 def number(value: str) -> float:
@@ -43,6 +44,8 @@ class Field:
     maximum: float | None = None
     strict_minimum: bool = False
     strict_maximum: bool = False
+    blank_default: float | None = None
+    zero_default: bool = False
 
 
 class DeckResource:
@@ -176,13 +179,18 @@ class DeckResource:
                 if curvature not in (0, 1, 2, 3): return []
                 if curvature in (1, 2): row = 5
             if len(data) > row:
-                fields = [Field("friction", "마찰계수", "float", data[row], 20, 40, 0)]
+                try:
+                    default, zero_default = condition_scalar_default(card.keyword, "friction", [self.lines[index] for index in data])
+                except PrepError:
+                    return []
+                fields = [Field("friction", "마찰계수", "float", data[row], 20, 40, 0,
+                                blank_default=default, zero_default=zero_default)]
         elif len(key) > 1 and key[1] == "FUNCT" and len(data) >= 2:
             for row, line in enumerate(data[1:]):
                 fields += [Field(f"point_{row}_x", f"곡선 {row + 1}: X (입력 덱 단위)", "float", line, 0, 20),
                            Field(f"point_{row}_y", f"곡선 {row + 1}: Y (입력 덱 단위)", "float", line, 20, 40)]
         elif len(key) > 2 and key[1:3] == ["INIVEL", "TRA"] and len(data) >= 2:
-            fields = [Field(name, label, "float", data[1], offset, offset + 20)
+            fields = [Field(name, label, "float", data[1], offset, offset + 20, blank_default=0.0)
                       for name, label, offset in [("vx", "초기 속도 X (입력 덱 단위)", 0),
                                                  ("vy", "초기 속도 Y (입력 덱 단위)", 20),
                                                  ("vz", "초기 속도 Z (입력 덱 단위)", 40)]]
@@ -205,7 +213,8 @@ class DeckResource:
             return text == "1"
         if field.type == "int":
             return int(text)
-        result = number(text)
+        result = field.blank_default if not text and field.blank_default is not None else number(text)
+        if field.zero_default and result == 0: result = field.blank_default
         if not math.isfinite(result):
             raise ValueError(text)
         return result
@@ -225,12 +234,15 @@ class DeckResource:
     def card_fields(self, card_id: str) -> list[dict]:
         card = self.card(card_id)
         patches = self._patches.get(card_id, {})
+        def effective(field):
+            value = patches.get(field.name, self._read_field(field))
+            return field.blank_default if field.zero_default and value == 0 else value
         return [{"name": f.name, "label": f.label, "type": f.type,
-                 "value": patches.get(f.name, self._read_field(f)), "writable": True,
+                 "value": effective(f), "writable": True,
                  "units": self.unit_context(card), "minimum": f.minimum, "maximum": f.maximum}
                 for f in self._schema(card)]
 
-    def _validated_value(self, field, value):
+    def _validated_value(self, field, value, *, _restore_default_zero=False):
         if field.type == "bool":
             if not isinstance(value, bool):
                 raise PrepError("invalid_value", "구속 값은 true 또는 false여야 합니다.")
@@ -246,6 +258,7 @@ class DeckResource:
                 if not math.isfinite(normalized): raise ValueError()
             except (TypeError, ValueError, OverflowError):
                 raise PrepError("invalid_value", "유한한 수치가 필요합니다.", {"field": field.name}) from None
+        if field.zero_default and not _restore_default_zero: reject_default_zero(normalized, field.name)
         if field.minimum is not None and (normalized < field.minimum or (field.strict_minimum and normalized == field.minimum)):
             raise PrepError("invalid_value", "허용 범위보다 작습니다.", {"field": field.name, "minimum": field.minimum})
         if field.maximum is not None and (normalized > field.maximum or (field.strict_maximum and normalized == field.maximum)):
@@ -258,7 +271,7 @@ class DeckResource:
     def patched_state(self, card_id: str, name: str, value: object) -> dict:
         return self.fields_state(card_id, {name: value})
 
-    def fields_state(self, card_id: str, values: dict) -> dict:
+    def fields_state(self, card_id: str, values: dict, *, _restore_default_zero=False) -> dict:
         schema = {field.name: field for field in self._schema(self.card(card_id))}
         result = self.snapshot()
         patches = result["patches"]
@@ -266,7 +279,10 @@ class DeckResource:
             field = schema.get(name)
             if field is None:
                 raise PrepError("field_not_writable", "이 필드는 원문 보존 전용입니다.", {"card_id": card_id, "field": name})
-            normalized = self._validated_value(field, value)
+            normalized = self._validated_value(field, value, _restore_default_zero=_restore_default_zero)
+            if (not _restore_default_zero and field.zero_default and patches.get(card_id, {}).get(name) == 0
+                    and normalized == field.blank_default):
+                continue  # Preserve a legacy raw-zero patch whose effective value already matches.
             if normalized != self._read_field(field):
                 patches.setdefault(card_id, {})[name] = normalized
             else:
@@ -339,7 +355,7 @@ class DeckResource:
         for card_id, values in state["patches"].items():
             if not isinstance(values, dict):
                 raise PrepError("invalid_project", "필드 패치 형식이 잘못됐습니다.")
-            candidate._patches = candidate.fields_state(card_id, values)["patches"]
+            candidate._patches = candidate.fields_state(card_id, values, _restore_default_zero=True)["patches"]
         self.__dict__.update(candidate.__dict__)
 
     def inserted_states(self, texts, *, card_ids=None):

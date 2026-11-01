@@ -18,7 +18,7 @@ from ..cae_core import CommandDispatcher, Document, PrepError, Selection, Select
 from ..radioss import DeckResource
 from ..radioss.deck import number
 from ..radioss.modeling import (native_identity, integer, material_block, shell_block, copy_block,
-    curve_points, curve_block, member_block, boundary_block, load_block, velocity_block, contact_block, title, real, solid_block, engine_input)
+    curve_points, curve_block, member_block, boundary_block, load_block, velocity_block, contact_block, title, real, solid_block, engine_input, condition_scalar_default, reject_default_zero)
 from .storage import write_container
 from .contracts import ObjectRef
 
@@ -928,12 +928,17 @@ class PrepSession:
             card = resource.card(card_id)
             _, layout = self._condition_layout(card)
             lines = resource.render().decode("latin1").splitlines()
+            native_rows = [lines[index] for index in card.data]
             result = {"card_id": card.id, "resource_id": resource.id, "diagnostics": []}
             for key, (row, start, stop, kind) in layout.items():
                 try:
                     raw = lines[card.data[row]][start:stop]
                     if kind == "str": value = raw.strip()
-                    elif kind == "float": value = number(raw.strip() or "0")
+                    elif kind == "float":
+                        default, zero_default = condition_scalar_default(card.keyword, key, native_rows)
+                        value = number(raw.strip()) if raw.strip() else default
+                        if zero_default and value == 0: value = default
+                        if key == "friction": result["friction_is_scale"] = zero_default
                     elif kind == "vector3": value = [number(raw[index:index + 20].strip() or "0") for index in (0, 20, 40)]
                     elif kind == "bool3":
                         bits = raw.strip()
@@ -991,6 +996,9 @@ class PrepSession:
                 text = velocity_block(identity[1], "Validated", self._group_reference(merged["group_id"]), merged["velocity"])
             else:
                 text = contact_block(identity[1], "Validated", self._group_reference(merged["secondary_group_id"]), self._surface_reference(merged["main_surface_id"]), merged["friction"])
+                rendered = resource.render().decode("latin1").splitlines()
+                _, zero_default = condition_scalar_default(card.keyword, "friction", [rendered[index] for index in card.data])
+                if zero_default: reject_default_zero(merged["friction"], "friction")
             canonical = text.splitlines()[1:]
             changed = []
             for key, value in values.items():

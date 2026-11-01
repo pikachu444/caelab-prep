@@ -134,3 +134,38 @@ def test_load_direction_change_does_not_bypass_per_card_unit_override(tmp_path):
         provider.submit(SetProperties(target, {"direction": "XX", "scale": 2}, revision, {"scale": "N·m"}))
     assert error.value.code == "invalid_unit"
     assert session.card_text(target.object_id) == before and session.describe()["revision"] == revision
+
+
+@pytest.mark.parametrize("function_id,friction_field,expected_label,expected_value", [
+    (0, "0.17", "Friction coefficient", .17),
+    (63, "", "Friction function scale", 1.),
+    (63, "0", "Friction function scale", 1.),
+])
+def test_type7_friction_label_tracks_native_function_and_stays_dimensionless(
+        tmp_path, function_id, friction_field, expected_label, expected_value):
+    from test_condition_workflow import _base_model, _create_conditions
+    session = PrepSession(); session.open_rad(str(_base_model(tmp_path / "input")))
+    _create_conditions(session)
+    source = tmp_path / "contact.rad"; session.export_rad(str(source))
+    # Independent fixed-column mutation of the ordinary TYPE7 source profile:
+    # data row 4 has Fric, data row 6 has fct_ID_F. Preserve every other byte.
+    lines = source.read_bytes().splitlines(keepends=True)
+    header = next(i for i, line in enumerate(lines) if line.rstrip(b"\r\n") == b"/INTER/TYPE7/97")
+    lines[header + 5] = lines[header + 5][:20] + friction_field.rjust(20).encode("ascii") + lines[header + 5][40:]
+    lines[header + 7] = lines[header + 7][:60] + f"{function_id:10d}".encode("ascii") + lines[header + 7][70:]
+    source.write_bytes(b"".join(lines))
+    session.open_rad(str(source)); provider = RadProvider(session)
+    target = provider.ref_for_card(next(card for card in session.list_cards() if card["keyword"] == "/INTER/TYPE7/97"))
+    for fields in (provider.properties(target), provider.operation_spec("object.edit", target).fields):
+        spec = next(field for field in fields if field.name == "friction")
+        assert spec.label == expected_label and spec.value == expected_value
+        assert spec.unit == "" and not spec.unit_choices and not spec.unit_scales
+    creation = next(field for field in provider.operation_spec("contact.create").fields if field.name == "friction")
+    assert creation.label == "Friction coefficient"
+    before = session.card_text(target.object_id); revision = session.describe()["revision"]
+    with pytest.raises(PrepError):
+        provider.submit(SetProperties(target, {"friction": 2}, revision, {"friction": "N"}))
+    if function_id:
+        with pytest.raises(PrepError):
+            provider.submit(SetProperties(target, {"friction": 0}, revision))
+    assert session.card_text(target.object_id) == before and session.describe()["revision"] == revision

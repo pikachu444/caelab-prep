@@ -336,9 +336,10 @@ class RadProvider:
             return (PropertySpec("velocity", "Initial velocity", tuple(values.get("velocity", (0., 0., 0.))),
                                  kind="vector", unit="input deck", components=("X", "Y", "Z")), group())
         if kind == "contact":
+            friction_label = "Friction function scale" if values.get("friction_is_scale", False) else "Friction coefficient"
             return (group("secondary_group_id", "Secondary node group"),
                     self._reference_field("main_surface_id", "Main shell surface", ("/SURF/PART/",), values.get("main_surface_id")),
-                    PropertySpec("friction", "Coulomb friction coefficient", values.get("friction", 0.0), minimum=0))
+                    PropertySpec("friction", friction_label, values.get("friction", 0.0), minimum=0))
         return ()
 
     def available_operations(self, target=None):
