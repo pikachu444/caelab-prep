@@ -239,8 +239,11 @@ def test_preopened_session_paths_projection_and_external_events(tmp_path, monkey
             self.projection = None
             self.current_selection = None
 
-        def set_mesh(self, projection):
+        def set_mesh(self, projection, *, reset_camera=True):
             self.projection = projection
+
+        def show_all_parts(self):
+            pass
 
         def set_selection(self, selection):
             self.current_selection = selection

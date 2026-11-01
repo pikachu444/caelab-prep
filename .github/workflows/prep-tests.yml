@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e ".[dev]"
-      - run: python -m pytest tests/test_document_core.py tests/test_radioss_editing.py tests/test_project_roundtrip.py tests/test_cli_workflow.py tests/test_application_contracts.py tests/test_rad_provider.py
+      - run: python -m pytest tests/test_document_core.py tests/test_radioss_editing.py tests/test_project_roundtrip.py tests/test_cli_workflow.py tests/test_application_contracts.py tests/test_rad_provider.py tests/test_radioss_modeling.py tests/test_radioss_defaults.py tests/test_modeling_workflow.py tests/test_modeling_commands.py tests/test_condition_workflow.py tests/test_rad_display_units.py
 
   qt-document:
     runs-on: ubuntu-latest
@@ -34,20 +34,106 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libglu1-mesa libgl1 libegl1 libxcb-cursor0 libxkbcommon0 libfontconfig1
       - run: python -m pip install -e ".[gui,dev]"
       - name: Qt document flow
-        run: python -m pytest -vv tests/test_gui_document_flow.py tests/test_common_widgets.py tests/test_prep_presentation.py tests/test_curve_plot_scale.py tests/test_program_comparison.py tests/test_property_presentations.py tests/test_reference_adapters.py
+        run: python -m pytest -vv tests/test_gui_document_flow.py tests/test_common_widgets.py tests/test_prep_presentation.py tests/test_curve_plot_scale.py tests/test_program_comparison.py tests/test_property_presentations.py tests/test_reference_adapters.py tests/test_modeling_ui.py tests/test_viewport_visibility.py tests/test_conditions_ui.py tests/test_collection_editors.py tests/test_numeric_units.py tests/test_native_units_ui.py tests/test_groups_ui.py tests/test_responsive_inspector.py tests/test_selection_menu.py
 
   cad-worker:
+    runs-on: ubuntu-latest
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y libglu1-mesa libgl1 libegl1 libxkbcommon0 libfontconfig1
+      # OCP generates independent test CAD. Its VTK 9.3 requirement must not
+      # constrain the product GUI environment (VTK 9.4+).
+      - run: python -m pip install -e ".[cad,widgets,dev]" cadquery-ocp==7.8.1.1.post1
+      - name: Require real SDKs
+        run: python -c "import gmsh, OCP; gmsh.initialize(interruptible=False); gmsh.finalize()"
+      - name: Real CAD worker and asset checks
+        run: python -m pytest tests/test_gmsh_adapter.py tests/test_mesh_candidates.py tests/test_mesh_adoption.py tests/test_mesh_workflow_ui.py
+
+  native-render:
+    runs-on: ubuntu-24.04
+    env:
+      QT_QPA_PLATFORM: xcb
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      CAELAB_TEST_NATIVE_RENDER: '1'
+      CAELAB_NATIVE_RENDER_ARTIFACT_DIR: ${{ github.workspace }}/render-evidence
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y xvfb xauth libglu1-mesa libgl1 libegl1 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxkbcommon-x11-0 libfontconfig1 fonts-noto-cjk
+      - run: python -m pip install -e ".[gui,dev]"
+      - name: Require the XCB plugin and an actual X11 Qt window system
+        run: |
+          python - <<'PYCODE'
+          from pathlib import Path
+          import subprocess
+          from PySide6.QtCore import QLibraryInfo
+          plugin = Path(QLibraryInfo.path(QLibraryInfo.PluginsPath)) / "platforms/libqxcb.so"
+          result = subprocess.run(["ldd", str(plugin)], capture_output=True, text=True)
+          print(result.stdout, result.stderr, flush=True)
+          assert result.returncode == 0 and "not found" not in result.stdout
+          PYCODE
+          QT_DEBUG_PLUGINS=1 xvfb-run -a -s "-screen 0 1920x1080x24" python -u -c 'from PySide6.QtWidgets import QApplication; app = QApplication([]); print(app.platformName(), app.primaryScreen().geometry(), flush=True); assert app.platformName() == "xcb"'
+      - name: Actual Qt VTK rendering and picking
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -s tests/test_native_render.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-linux-render
+          path: render-evidence/
+
+  wheel:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: python -m pip wheel . --no-deps --wheel-dir dist
+      - name: Install wheel in a new environment and create a working document
+        run: |
+          python -m venv wheel-check
+          wheel-check/bin/python -m pip install dist/*.whl
+          wheel-check/bin/caelab-prep new --name "Wheel smoke" --mass Mg --length mm --time s --output wheel-check/smoke.caeprep
+          wheel-check/bin/caelab-prep inspect wheel-check/smoke.caeprep
+      - uses: actions/upload-artifact@v4
+        with:
+          name: caelab-prep-wheel
+          path: dist/*.whl
+
+  solver-smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: sudo apt-get update && sudo apt-get install -y libglu1-mesa libgl1
-      # OCP generates independent test CAD. Its VTK 9.3 requirement must not
-      # constrain the product GUI environment (VTK 9.4+).
       - run: python -m pip install -e ".[cad,dev]" cadquery-ocp==7.8.1.1.post1
-      - name: Require real SDKs
-        run: python -c "import gmsh, OCP; gmsh.initialize(interruptible=False); gmsh.finalize()"
-      - name: Real CAD worker and asset checks
-        run: python -m pytest tests/test_gmsh_adapter.py
+      - name: Obtain the pinned official OpenCourant release
+        run: |
+          curl --fail --location --retry 2 https://github.com/OpenCourant/OpenCourant/releases/download/latest-20261011/OpenCourant_linux64.zip --output opencourant.zip
+          echo "6cb419677ca36d73acb96218cc0cf5e4f7d50494d9c7812ba27935e3c0f8ec94  opencourant.zip" | sha256sum --check
+          unzip -q opencourant.zip -d solver
+          chmod +x solver/OpenCourant/exec/*
+      - name: Generated inputs and independent physical invariants
+        run: |
+          export OPENCOURANT_PATH="$PWD/solver/OpenCourant"
+          export RAD_CFG_PATH="$OPENCOURANT_PATH/hm_cfg_files"
+          export RAD_H3D_PATH="$OPENCOURANT_PATH/extlib/h3d/lib/linux64"
+          export LD_LIBRARY_PATH="$OPENCOURANT_PATH/extlib/hm_reader/linux64:$RAD_H3D_PATH"
+          export OMP_NUM_THREADS=1 OMP_STACKSIZE=400m
+          export CAELAB_STARTER="$OPENCOURANT_PATH/exec/starter_linux64_gf"
+          export CAELAB_ENGINE="$OPENCOURANT_PATH/exec/engine_linux64_gf"
+          python -m pytest -q tests/test_solver_generation.py --basetemp=solver-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: solver-generation-evidence
+          path: solver-evidence/

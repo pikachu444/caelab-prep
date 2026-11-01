@@ -7,7 +7,7 @@ from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QDialogButtonBox,
                               QFrame, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
-                              QPlainTextEdit, QPushButton, QTableWidget,
+                              QPlainTextEdit, QPushButton, QTableWidget, QTableWidgetItem,
                               QVBoxLayout, QWidget)
 
 from ._curve_data import CurveDraftAdapter, validate_points
@@ -32,10 +32,11 @@ class CurveTable(CurveDraftAdapter, QWidget):
     draftChanged = Signal()
     selectedRowsChanged = Signal(object)
 
-    def __init__(self, parent=None, *, minimum_points=1, require_increasing_x=False):
+    def __init__(self, parent=None, *, minimum_points=1, maximum_points=None, require_increasing_x=False):
         super().__init__(parent)
         self.setObjectName("curveTable")
         self.minimum_points, self.require_increasing_x = minimum_points, require_increasing_x
+        self.maximum_points = maximum_points
         self._committed, self.paste_text_buffer = (), ""
         self._loading, self._paste_error = False, False
         worksheet = QVBoxLayout(self)
@@ -49,6 +50,18 @@ class CurveTable(CurveDraftAdapter, QWidget):
         heading = QLabel("Curve data")
         heading.setObjectName("groupTitle")
         commands.addWidget(heading, 1)
+        self.add_button = QPushButton("+")
+        self.add_button.setAccessibleName("Add curve row")
+        self.add_button.setToolTip("Add a blank row after the current row")
+        self.add_button.setFixedWidth(28)
+        self.add_button.clicked.connect(self.add_row)
+        commands.addWidget(self.add_button)
+        self.remove_button = QPushButton("−")
+        self.remove_button.setAccessibleName("Remove selected curve rows")
+        self.remove_button.setToolTip("Remove selected rows")
+        self.remove_button.setFixedWidth(28)
+        self.remove_button.clicked.connect(self.remove_selected_rows)
+        commands.addWidget(self.remove_button)
         self.paste_button = QPushButton("Paste…")
         self.paste_button.setAccessibleName("Paste curve points")
         self.paste_button.setToolTip("Paste curve points (Ctrl+V)")
@@ -111,6 +124,39 @@ class CurveTable(CurveDraftAdapter, QWidget):
         if hasattr(self, "selection_label"):
             self.selection_label.setText(f"{len(rows)} selected" if rows else "")
         self.selectedRowsChanged.emit(rows)
+        self.remove_button.setEnabled(bool(rows))
+
+    def add_row(self):
+        """Add an intentionally blank draft; the host validates the whole table."""
+        self.flush_editor()
+        current = self.table.currentRow()
+        row = current + 1 if current >= 0 else self.table.rowCount()
+        self._loading = True
+        try:
+            self.table.insertRow(row)
+            for column in range(2):
+                item = QTableWidgetItem("")
+                item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                self.table.setItem(row, column, item)
+            self.table.setCurrentCell(row, 0)
+        finally:
+            self._loading = False
+        self._changed()
+        self.table.scrollToItem(self.table.item(row, 0))
+
+    def remove_selected_rows(self):
+        self.flush_editor()
+        rows = sorted({index.row() for index in self.table.selectedIndexes()}, reverse=True)
+        if not rows:
+            return
+        self._loading = True
+        try:
+            for row in rows:
+                self.table.removeRow(row)
+        finally:
+            self._loading = False
+        self._changed()
+        self._selection_changed()
 
     def _paste_dialog(self):
         dialog = QDialog(self)

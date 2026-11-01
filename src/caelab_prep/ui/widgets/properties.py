@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout, QHB
                               QHeaderView, QLabel, QScrollArea, QSizePolicy,
                               QTabWidget, QVBoxLayout, QWidget)
 
-from ._editing import bind_units, create_editor, editor_raw_value, editor_value
-from .numeric import NumericEdit
+from ._editing import bind_units, create_editor, editor_raw_value, editor_value, restore_editor_raw_value
+from .numeric import NumericEdit, VectorEdit
 from .tree import field
 from ..design import TOKENS
 
@@ -38,6 +38,7 @@ class _PropertyRow(QFrame):
         value_layout.addWidget(editor, 1)
         grid.addWidget(self.value_cell, 0, 1)
         self.editor, self.unit_widget = editor, unit_widget
+        self.multiline = bool(getattr(editor, "is_multiline", False))
         self.unit_cell = QWidget()
         unit_layout = QHBoxLayout(self.unit_cell)
         unit_layout.setContentsMargins(3, 0, 3, 0)
@@ -89,13 +90,17 @@ class _PropertyRow(QFrame):
         self.grid.removeWidget(self.label)
         self.grid.addWidget(self.label, 0, 0)
         self.grid.removeWidget(self.value_cell)
-        self.grid.addWidget(self.value_cell, 1, 0)
+        self.grid.addWidget(self.value_cell, 1, 0, 1, 2 if self.multiline else 1)
         self.grid.setVerticalSpacing(3)
         self.grid.setColumnStretch(0, 1)
         self.grid.setContentsMargins(6, 4, 6, 5)
         self.label.setContentsMargins(4, 0, 0, 0)
         self.grid.removeWidget(self.unit_cell)
-        self.pair_unit()
+        if self.multiline:
+            self.grid.addWidget(self.unit_cell, 0, 1)
+            self.unit_cell.show()
+        else:
+            self.pair_unit()
 
     def settings_label(self, width):
         self.label.setFixedWidth(width)
@@ -157,18 +162,24 @@ class _ColumnPresentation:
         self.headers = ("Name", "Value") if paired else ("Name", "Value", "Unit")
 
     def compose(self, rows, specs):
-        if self.paired:
-            for row in rows.values():
+        for row in rows.values():
+            if row.multiline:
+                row.stack_label()
+            elif self.paired:
                 row.pair_unit()
         return _grouped_body(rows, specs)
 
     def fit(self, panel):
         widths = panel._column_sizes[:len(self.headers)]
         available = panel.scroll.viewport().width()
-        minimum = max((row.value_cell.minimumSizeHint().width() for row in panel._rows.values()), default=100)
+        minimum = max((row.value_cell.minimumSizeHint().width() for row in panel._rows.values()
+                       if not row.multiline), default=100)
         if not self.paired:
-            widths[2] = max(widths[2], max((row.unit_cell.minimumSizeHint().width()
-                                          for row in panel._rows.values()), default=64))
+            has_units = any(row.unit_widget is not None for row in panel._rows.values())
+            panel.column_header.setSectionHidden(2, not has_units)
+            widths[2] = (max(widths[2], max((row.unit_cell.minimumSizeHint().width()
+                                           for row in panel._rows.values()), default=64))
+                         if has_units else 0)
         if not panel._columns_changed:
             widths[0] = max(96, min(156, round(available * .40)))
             widths[1] = max(110, available - widths[0] - sum(widths[2:]))
@@ -178,7 +189,10 @@ class _ColumnPresentation:
         for index, size in enumerate(widths):
             panel.column_header.resizeSection(index, size)
         for row in panel._rows.values():
-            row.set_columns(widths, paired=self.paired)
+            if row.multiline:
+                row.setFixedWidth(max(available, sum(widths)))
+            else:
+                row.set_columns(widths, paired=self.paired)
         panel.scroll.widget().setMinimumWidth(sum(widths))
         panel.column_header.setFixedHeight(panel.column_header.sizeHint().height())
 
@@ -203,11 +217,23 @@ class _SettingsPresentation:
 
     def compose(self, rows, specs):
         for row in rows.values():
-            row.settings_label(148)
+            row.stack_label() if row.multiline else row.settings_label(148)
+            row._settings_stacked = row.multiline
         return _grouped_body(rows, specs)
 
     def fit(self, panel):
-        pass
+        # A narrow Settings dock must keep the complete value and its unit
+        # visible. Only the label placement changes; the editors/draft survive.
+        for row in panel._rows.values():
+            stacked = row.multiline or panel.scroll.viewport().width() < 360
+            if getattr(row, "_settings_stacked", None) == stacked:
+                continue
+            row.reset_layout()
+            if stacked:
+                row.stack_label()
+            else:
+                row.settings_label(148)
+            row._settings_stacked = stacked
 
 
 _PRESENTATIONS = {
@@ -234,6 +260,8 @@ class PropertyEditor(QWidget):
             f"QLabel#propertyLabel[invalid='true'] {{ color: {TOKENS['error']}; font-weight: bold; }}")
         self.editors, self.specs, self.errors, self.unit_selectors = {}, {}, {}, {}
         self._rows = {}
+        self._quantity_drafts = {}
+        self.context_changed = False
         self.presentation = "columns"
         self._presentation = _ColumnPresentation()
         self._spec_sequence = ()
@@ -343,7 +371,10 @@ class PropertyEditor(QWidget):
         elif self.edit_state.text() == "Invalid draft":
             self.edit_state.setText("Draft")
 
-    def set_fields(self, specs, values=None, *, title="", subtitle=""):
+    def set_fields(self, specs, values=None, *, title="", subtitle="", preserve_context=False):
+        if not preserve_context:
+            self._quantity_drafts = {}
+            self.context_changed = False
         specs = tuple(specs)
         self._spec_sequence = specs
         if title:
@@ -369,6 +400,56 @@ class PropertyEditor(QWidget):
             row = _PropertyRow(label, editor, self._unit_widget(name, spec, editor, label))
             self._rows[name], self.errors[name] = row, row.error
         self._compose_rows()
+
+    def refresh_context(self, specs):
+        """Switch provider-defined quantities without inventing a conversion.
+
+        Unrelated inputs retain their exact drafts. A previously visited quantity
+        restores its own draft; a new quantity requires a fresh value and unit.
+        """
+        specs = tuple(specs)
+        changed = {field(spec, "name") for spec in specs
+                   if field(spec, "name") in self.specs and
+                   field(spec, "unit_context", {}).get("quantity") !=
+                   field(self.specs[field(spec, "name")], "unit_context", {}).get("quantity")}
+        if not changed:
+            return False
+        raw, units = self.raw_values(), self.units()
+        for name in changed:
+            quantity = field(self.specs[name], "unit_context", {}).get("quantity")
+            self._quantity_drafts[(name, quantity)] = (raw[name], units.get(name))
+        self.set_fields(specs, title=self.title.text(), subtitle=self.subtitle.text(), preserve_context=True)
+        self.context_changed = True
+        for name, editor in self.editors.items():
+            selector = self.unit_selectors.get(name)
+            if name in changed:
+                quantity = field(self.specs[name], "unit_context", {}).get("quantity")
+                cached = self._quantity_drafts.get((name, quantity))
+                value, unit = cached if cached is not None else ("", None)
+                if isinstance(editor, NumericEdit):
+                    editor.accept_value("")
+                if selector is not None:
+                    blocked = QSignalBlocker(selector)
+                    selector.insertItem(0, "Select a unit", None)
+                    selector.setCurrentIndex(0)
+                    selector.setProperty("unitChoiceRequired", True)
+                    del blocked
+                    if unit is not None:
+                        selector.setCurrentText(unit)
+                restore_editor_raw_value(editor, value)
+                self.set_error(name, "Enter a value and choose its unit for the new quantity" if cached is None else "")
+            elif name in raw:
+                if selector is not None and name in units and selector.findText(units[name]) >= 0:
+                    selector.setCurrentText(units[name])
+                restore_editor_raw_value(editor, raw[name])
+        self.draftChanged.emit()
+        return True
+
+    def context_draft_state(self):
+        return dict(self._quantity_drafts)
+
+    def restore_context_drafts(self, state):
+        self._quantity_drafts.update(state)
 
     def _compose_rows(self):
         # Detach retained drafts before disposing of their former containers.
@@ -409,7 +490,7 @@ class PropertyEditor(QWidget):
             selector.currentTextChanged.connect(selector.setToolTip)
             selector.setEnabled(bool(field(spec, "editable", True)))
             scales = dict(field(spec, "unit_scales", ()))
-            if scales and isinstance(editor, NumericEdit):
+            if scales and isinstance(editor, (NumericEdit, VectorEdit)):
                 self._connect_units(name, editor, selector, scales, unit)
             selector.currentTextChanged.connect(self.draftChanged)
             self.unit_selectors[name] = selector
@@ -417,6 +498,10 @@ class PropertyEditor(QWidget):
         if unit:
             label = QLabel(unit)
             label.setObjectName("unitsNote")
+            reason = field(spec, "unit_context", {}).get("reason", "")
+            if reason:
+                label.setToolTip(reason)
+                label.setAccessibleDescription(reason)
             return label
         return None
 
@@ -429,6 +514,9 @@ class PropertyEditor(QWidget):
                 continue
             try:
                 values[name] = editor_value(editor)
+                selector = self.unit_selectors.get(name)
+                if selector is not None and selector.property("unitChoiceRequired"):
+                    raise ValueError("Choose a display unit for this quantity")
                 self.set_error(name, "")
             except ValueError as exc:
                 self.set_error(name, str(exc))

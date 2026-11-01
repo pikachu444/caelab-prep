@@ -6,6 +6,34 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel, QStackedLayout, QWidget
 
 
+def part_key(reference):
+    """A part belongs to a resource and native scope, never an integer alone."""
+    if isinstance(reference, dict):
+        resource, scope = reference.get("resource_id"), reference.get("native_scope")
+    elif isinstance(reference, tuple) and len(reference) == 2:
+        resource, scope = reference
+    else:
+        resource = getattr(reference, "resource_id", None)
+        scope = getattr(reference, "native_scope", None)
+    if not isinstance(resource, str) or not resource or not isinstance(scope, str):
+        raise ValueError("A resource-qualified PART reference is required")
+    segments = scope.upper().split("/")
+    if (len(segments) not in (3, 4) or segments[:2] != ["", "PART"] or
+            not segments[2].isdigit() or (len(segments) == 4 and not segments[3].isdigit())):
+        raise ValueError("A PART native scope is required")
+    return resource, f"/PART/{int(segments[2])}"
+
+
+def cell_part_key(cell):
+    """Prefer the resolved PART owner over the element's INCLUDE resource."""
+    reference = cell.get("part_ref") if "part_ref" in cell else (
+        cell.get("resource_id"), f"/PART/{cell.get('part_id')}")
+    try:
+        return part_key(reference)
+    except ValueError:
+        return None
+
+
 def pick_candidate(projection, kind, entity_id=None, resource_id=None):
     """Keep the original projection identity with a queued renderer candidate."""
     result = {key: projection.get(key) for key in ("document_id", "document_epoch", "revision", "projection_revision")}
@@ -32,6 +60,10 @@ class MeshViewport(QWidget):
         self._document_id = None
         self._projection_stamp = {}
         self._node_resources = {}
+        self._hidden_parts = set()
+        self._selection = {}
+        self._visible_indices = []
+        self._visible_grid = vtk.vtkUnstructuredGrid()
         self._render_failed = False
         self._pick_mode = "element"
         self._grid = vtk.vtkUnstructuredGrid()
@@ -102,6 +134,11 @@ class MeshViewport(QWidget):
 
     def set_mesh(self, projection: dict, *, reset_camera=True):
         vtk = self.vtk
+        identity = (projection.get("document_id"), projection.get("document_epoch"))
+        previous = (self._projection_stamp.get("document_id"), self._projection_stamp.get("document_epoch"))
+        if identity != previous:
+            self._hidden_parts.clear()
+            self._selection = {}
         self._document_id = projection.get("document_id")
         self._projection_stamp = {key: projection.get(key) for key in
             ("document_id", "document_epoch", "revision", "projection_revision")}
@@ -143,25 +180,119 @@ class MeshViewport(QWidget):
                 ids.InsertNextId(id_to_index[node_id])
             grid.InsertNextCell(spec[0], ids)
             self._cells.append(dict(cell))
-            part = cell.get("part_id", 0)
+            part = cell_part_key(cell)
             if part not in part_colors:
                 part_colors[part] = palette[len(part_colors) % len(palette)]
             colors.InsertNextTuple3(*part_colors[part])
         grid.GetCellData().SetScalars(colors)
+        for attributes, count, name in ((grid.GetPointData(), len(self._node_ids), "ProjectionPointIndex"),
+                                        (grid.GetCellData(), len(self._cells), "ProjectionCellIndex")):
+            indices = vtk.vtkIdTypeArray()
+            indices.SetName(name)
+            for index in range(count):
+                indices.InsertNextValue(index)
+            attributes.AddArray(indices)
         self._grid = grid
-        self._mapper.SetInputData(grid)
         self._mapper.SetScalarModeToUseCellData()
         self._mapper.SetColorModeToDirectScalars()
         self._mapper.ScalarVisibilityOn()
-        self._highlight.SetVisibility(False)
-        if not self._render_failed:
-            self._hint.setVisible(grid.GetNumberOfCells() == 0)
-            self._hint.setText("No displayable elements" if coordinates else "No model")
+        self._apply_visibility()
         if omitted:
             self.diagnostic.emit(f"The 3D view omitted {omitted} unsupported or unresolved elements. The deck is preserved.")
         if reset_camera and grid.GetNumberOfPoints():
             self.isometric_view()
         self.render()
+
+    def _part_keys(self, references):
+        keys = set()
+        for reference in references:
+            document_id = reference.get("document_id") if isinstance(reference, dict) else getattr(reference, "document_id", None)
+            if document_id is not None and document_id != self._document_id:
+                raise ValueError("The part belongs to another document")
+            keys.add(part_key(reference))
+        return keys
+
+    def hide_parts(self, part_refs):
+        """Hide qualified parts without changing document selection or history."""
+        self._hidden_parts.update(self._part_keys(part_refs))
+        self._apply_visibility()
+
+    def isolate_parts(self, part_refs):
+        """Show only the specified parts; an empty selection is a no-op."""
+        keys = self._part_keys(part_refs)
+        if not keys:
+            return
+        available = {cell_part_key(cell) for cell in self._cells}
+        if not keys & available:
+            raise ValueError("None of the requested parts is present in the mesh")
+        self._hidden_parts = available - keys
+        self._apply_visibility()
+
+    def show_all_parts(self):
+        self._hidden_parts.clear()
+        self._apply_visibility()
+
+    def _apply_visibility(self):
+        self._visible_indices = [i for i, cell in enumerate(self._cells)
+                                 if cell_part_key(cell) not in self._hidden_parts]
+        ids = self.vtk.vtkIdList()
+        for index in self._visible_indices:
+            ids.InsertNextId(index)
+        extract = self.vtk.vtkExtractCells()
+        extract.SetInputData(self._grid)
+        extract.SetCellList(ids)
+        extract.Update()
+        self._visible_grid = extract.GetOutput()
+        self._mapper.SetInputData(self._visible_grid)
+        if not self._render_failed:
+            self._hint.setVisible(not self._visible_indices)
+            self._hint.setText("All elements hidden" if self._cells else
+                               ("No displayable elements" if self._node_ids else "No model"))
+        self.set_selection(self._selection)
+
+    def _selection_cell_indices(self, selection):
+        if any(selection.get(key) != self._projection_stamp.get(key) for key in
+               ("document_id", "document_epoch", "projection_revision")):
+            return []
+        keys = {(ref.get("resource_id"), ref.get("local_id")) for ref in selection.get("refs", [])
+                if ref.get("entity_kind") == "element"}
+        matches = [i for i, cell in enumerate(self._cells) if (cell.get("resource_id"), cell["id"]) in keys]
+        if not keys or len(matches) != len(keys):
+            return []
+        visible = set(getattr(self, "_visible_indices", range(len(self._cells))))
+        return [i for i in matches if i in visible]
+
+    def _selection_node_indices(self, selection):
+        visible_nodes = {node for i in getattr(self, "_visible_indices", range(len(self._cells)))
+                         for node in self._cells[i].get("nodes", [])}
+        refs = {(ref.get("resource_id"), ref.get("local_id")) for ref in selection.get("refs", [])
+                if ref.get("entity_kind") == "node"}
+        return [i for i, node in enumerate(self._node_ids) if node in visible_nodes and
+                any((resource, node) in refs for resource in self._node_resources.get(node, []))]
+
+    def fit_selection(self, selection=None):
+        """Fit the visible portion of an approved selection, without revealing it."""
+        selection = self._selection if selection is None else selection
+        if any(selection.get(key) != self._projection_stamp.get(key) for key in
+               ("document_id", "document_epoch", "projection_revision")):
+            return False
+        if selection.get("kind") == "node":
+            indices = self._selection_node_indices(selection)
+        elif selection.get("kind") == "element":
+            indices = {node for index in self._selection_cell_indices(selection)
+                       for node in self._cells[index]["nodes"]}
+            indices = [i for i, node in enumerate(self._node_ids) if node in indices]
+        else:
+            return False
+        if not indices:
+            return False
+        points = [self._grid.GetPoint(i) for i in indices]
+        bounds = tuple(value for axis in range(3) for value in
+                       (min(point[axis] for point in points), max(point[axis] for point in points)))
+        self._renderer.ResetCamera(bounds)
+        self._renderer.ResetCameraClippingRange()
+        self.render()
+        return True
 
     def set_pick_mode(self, mode: str):
         self._pick_mode = mode
@@ -171,9 +302,12 @@ class MeshViewport(QWidget):
         self.render()
 
     def fit_view(self):
-        self._renderer.ResetCamera()
+        if not self._visible_indices:
+            return False
+        self._renderer.ResetCamera(self._visible_grid.GetBounds())
         self._renderer.ResetCameraClippingRange()
         self.render()
+        return True
 
     def isometric_view(self):
         camera = self._renderer.GetActiveCamera()
@@ -204,7 +338,9 @@ class MeshViewport(QWidget):
             picker.PickFromListOn()
             if picker.Pick(x, y, 0, self._renderer):
                 point_id = picker.GetPointId()
-                if 0 <= point_id < len(self._node_ids):
+                indices = self._visible_grid.GetPointData().GetArray("ProjectionPointIndex")
+                if indices is not None and 0 <= point_id < indices.GetNumberOfTuples():
+                    point_id = int(indices.GetValue(point_id))
                     identifier = self._node_ids[point_id]
                     resources = self._node_resources.get(identifier, [])
                     self.entityPicked.emit(pick_candidate(self._projection_stamp, "node", identifier,
@@ -220,6 +356,10 @@ class MeshViewport(QWidget):
             self.entityPicked.emit(pick_candidate(self._projection_stamp, None))
             return
         index = picker.GetCellId()
+        indices = self._visible_grid.GetCellData().GetArray("ProjectionCellIndex")
+        if indices is None or not 0 <= index < indices.GetNumberOfTuples():
+            return
+        index = int(indices.GetValue(index))
         if not 0 <= index < len(self._cells):
             return
         cell = self._cells[index]
@@ -231,8 +371,10 @@ class MeshViewport(QWidget):
         self._highlight.SetVisibility(False)
         if any(selection.get(key) != self._projection_stamp.get(key) for key in
                ("document_id", "document_epoch", "projection_revision")):
+            self._selection = {}
             self.render()
             return
+        self._selection = dict(selection)
         # Scalar edits do not rebuild geometry, but future picks use current tokens.
         self._projection_stamp["revision"] = selection.get("revision")
         self._projection_stamp["resource_revisions"] = dict(selection.get("resource_revisions", {}))
@@ -241,21 +383,25 @@ class MeshViewport(QWidget):
             self.render()
             return
         if selection.get("kind") == "node":
-            try:
-                index = self._node_ids.index(ids[0])
-            except ValueError:
+            indices = MeshViewport._selection_node_indices(self, selection)
+            if not indices:
                 self.render()
                 return
-            point = self._grid.GetPoint(index)
-            bounds = self._grid.GetBounds()
+            bounds = getattr(self, "_visible_grid", self._grid).GetBounds()
             span = max(bounds[1] - bounds[0], bounds[3] - bounds[2], bounds[5] - bounds[4], 1e-9)
+            points = self.vtk.vtkPoints()
+            for index in indices:
+                points.InsertNextPoint(self._grid.GetPoint(index))
+            nodes = self.vtk.vtkPolyData()
+            nodes.SetPoints(points)
             sphere = self.vtk.vtkSphereSource()
-            sphere.SetCenter(*point)
             sphere.SetRadius(span * 0.012)
             sphere.SetThetaResolution(16)
             sphere.SetPhiResolution(12)
-            mapper = self.vtk.vtkPolyDataMapper()
-            mapper.SetInputConnection(sphere.GetOutputPort())
+            mapper = self.vtk.vtkGlyph3DMapper()
+            mapper.SetInputData(nodes)
+            mapper.SetSourceConnection(sphere.GetOutputPort())
+            mapper.ScalingOff()
             self._highlight.GetProperty().SetRepresentationToSurface()
             self._highlight.SetMapper(mapper)
             self._highlight.SetVisibility(True)
@@ -264,10 +410,8 @@ class MeshViewport(QWidget):
         if selection.get("kind") != "element":
             self.render()
             return
-        refs = selection.get("refs", [])
-        keys = {(ref.get("resource_id"), ref.get("local_id")) for ref in refs if ref.get("entity_kind") == "element"}
-        indices = [i for i, cell in enumerate(self._cells) if (cell.get("resource_id"), cell["id"]) in keys]
-        if not keys or len(indices) != len(keys):
+        indices = MeshViewport._selection_cell_indices(self, selection)
+        if not indices:
             self.render()
             return
         vtk = self.vtk

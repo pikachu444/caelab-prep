@@ -21,6 +21,7 @@ from PySide6.QtWidgets import QCheckBox, QComboBox, QLineEdit, QTreeWidgetItem
 
 from .actions import ActionRegistry
 from .shell import FileEditCoordinator
+from .widgets._editing import editor_value, restore_editor_raw_value
 from ..application.contracts import ActionSpec, SetProperties
 from ..application.rad_provider import RadProvider
 
@@ -74,7 +75,7 @@ class PrepController:
         self._field_specs = {}
         self.actions = ActionRegistry(self)
         self.file_edits = FileEditCoordinator(
-            self, has_draft=lambda: bool(self._text_drafts()) or self._replacement_conflict,
+            self, has_draft=lambda: bool(self._text_drafts()) or self._replacement_conflict or self.modeling.active,
             finish=self._finish_pending_edits, discard=self._discard_pending_edits,
             is_dirty=lambda: bool(self._summary().get("dirty")),
             save=lambda continuation: self.save_project_dialog(on_saved=continuation),
@@ -103,6 +104,20 @@ class PrepController:
         self.edges_action = self._action("edges", "Show mesh edges", self._toggle_edges, checkable=True, action_id="view.edges", contexts=("mesh",))
         self.edges_action.setChecked(True)
         self.close_action = self._action("card", "Exit", self.close, QKeySequence.StandardKey.Quit, action_id="file.close")
+        from .modeling import ModelingActions, display_state
+        self.modeling = ModelingActions(self)
+        self._display_state = display_state(self.session)
+        self._display_state.changed.connect(self._apply_display_state)
+        self.hide_selected_action = self._action("part", "Hide selected", self._hide_selected,
+                                                action_id="view.hide_selected", contexts=("mesh",))
+        self.isolate_action = self._action("part", "Isolate selected", self._isolate_selected,
+                                          action_id="view.isolate", contexts=("mesh",))
+        self.show_all_action = self._action("part", "Show all parts", self._show_all_parts,
+                                           action_id="view.show_all", contexts=("mesh",))
+        self.fit_selected_action = self._action("fit", "Fit selected", self._fit_selected,
+                                               action_id="view.fit_selected", contexts=("mesh",))
+        from .mesh_workflow import MeshWorkflow
+        self.mesh_workflow = MeshWorkflow(self)
 
     def _summary(self):
         return self.session.describe()
@@ -125,8 +140,10 @@ class PrepController:
                     self.statusBar().showMessage("Selection changed. Finish or reload the current property draft before showing the selected object.")
                     return
                 self._selected_card_id = target_id
-                self._focus_tree_card(target_id)
                 self._refresh_fields()
+            self._restore_approved_selection()
+            self._refresh_target_roles()
+            self._refresh_actions()
             return
         if kind == "field" and same_document and event.get("revision", -1) <= self._last_presented_revision:
             return
@@ -140,7 +157,7 @@ class PrepController:
             self._refresh_actions()
             return
         draft_revision = self._editor_revision
-        self.refresh_document(rebuild_viewport=kind == "document")
+        self.refresh_document(rebuild_viewport=kind in ("document", "structure"))
         self._restore_text_drafts(drafts)
         if drafts:
             self._editor_revision = draft_revision
@@ -151,17 +168,21 @@ class PrepController:
         if self._busy or self._replacement_conflict:
             return
         summary = self._summary()
+        self._display_state.reset(summary.get("document_epoch"))
         self._project_path = Path(summary["project_path"]) if summary.get("project_path") else None
         self._source_path = Path(summary["source_path"]) if summary.get("source_path") else None
         self._updating = True
         try:
             self._present_document(summary)
             self._refresh_tree()
+            self._restore_approved_selection()
             self._refresh_fields()
             self._refresh_actions(summary)
             if rebuild_viewport and self.viewport is not None and summary.get("document_id"):
                 try:
-                    self.viewport.set_mesh(self.session.mesh_view())
+                    self.viewport.set_mesh(self.session.mesh_view(), reset_camera=
+                                           summary.get("document_epoch") != self._last_presented_epoch)
+                    self._apply_display_state()
                 except Exception as exc:
                     self._viewport_diagnostic(f"Mesh display failed: {exc}")
             if self.viewport is not None and summary.get("document_id"):
@@ -194,37 +215,162 @@ class PrepController:
             action.setEnabled(action.isEnabled() and editable)
         self._present_command_priority(open_primary=not loaded and not self._busy,
                                        save_primary=loaded and editable and bool(summary.get("dirty")))
+        self.modeling.refresh()
+        self.mesh_workflow.mesh_action.setEnabled(loaded and editable)
+        self.mesh_workflow.export_action.setEnabled(loaded and editable)
+        selected_parts = self._selected_part_refs() if loaded else ()
+        self.hide_selected_action.setEnabled(bool(selected_parts) and loaded and editable and self.viewport is not None)
+        self.isolate_action.setEnabled(self.hide_selected_action.isEnabled())
+        self.show_all_action.setEnabled(bool(self._display_state.hidden) and loaded and editable and self.viewport is not None)
+        self.fit_selected_action.setEnabled(bool(loaded and editable and self.viewport is not None and
+                                                 self.session.selection().get("ids")))
 
     def _card_selected(self, ref):
         if self._updating or self._busy or not self._summary().get("document_id"):
             return
         target_id = ref.object_id if ref else None
         if not self._finish_pending_edits():
-            self._focus_tree_card(self._selected_card_id)
+            self._restore_approved_selection()
             return
         try:
-            self._activate_card(ref)
+            parts = self._selected_part_refs()
+            if ref in parts and len(parts) > 1:
+                self.provider.select_many(parts, active=ref)
+            else:
+                self._activate_card(ref)
         except Exception as exc:
-            self._focus_tree_card(self._selected_card_id)
+            self._restore_approved_selection()
             self._show_error(exc)
             return
         self._selected_card_id = target_id
-        self._focus_tree_card(target_id)
         self._refresh_fields()
+
+    def _objects_selected(self, refs):
+        if self._updating or self._busy or not self._summary().get("document_id"):
+            return
+        if self.modeling.active or self._text_drafts():
+            if not self._finish_pending_edits():
+                self._restore_approved_selection()
+                return
+        parts = self._selected_part_refs()
+        active = self.model_tree.selected_ref()
+        if not refs:
+            self.provider.select(None)
+            self._selected_card_id = None
+            self._refresh_fields()
+        elif parts and len(parts) == len(refs):
+            try:
+                self.provider.select_many(parts, active=active if active in parts else parts[-1])
+                if self.viewport:
+                    self.viewport.set_selection(self.session.selection())
+                self.selectionChanged.emit(self.session.selection())
+                if len(parts) > 1:
+                    self.statusBar().showMessage(f"{len(parts)} parts selected; properties show the active part")
+            except Exception as exc:
+                self._show_error(exc)
+        elif len(refs) > 1:
+            ref = active if active in refs else refs[-1]
+            self._activate_card(ref)
+            self._focus_tree_card(ref.object_id)
+            self._selected_card_id = ref.object_id
+            self._refresh_fields()
+            self.statusBar().showMessage("Multiple selection is available for parts", 5000)
+        self._refresh_actions()
+
+    def _selected_part_refs(self):
+        if not hasattr(self, "model_tree"):
+            return ()
+        part_ids = {node.ref.object_id for node in self._tree_nodes if node.group == "Parts"}
+        return tuple(ref for ref in self.model_tree.selected_refs() if ref.object_id in part_ids)
+
+    def _refresh_target_roles(self):
+        if not hasattr(self, "target_role_selector"):
+            return
+        ref = self._card_refs.get(self._selected_card_id)
+        try:
+            roles = self.provider.target_roles(ref) if ref is not None else ()
+        except Exception as exc:
+            roles = ()
+            self.target_role_selector.setToolTip(str(getattr(exc, "message", exc)))
+        selector = self.target_role_selector
+        blocked = selector.blockSignals(True)
+        selector.clear()
+        for key, label in roles:
+            selector.addItem("Display: " + label, key)
+        active = self.session.selection().get("active_target_role") if roles else None
+        if active is not None:
+            selector.setCurrentIndex(selector.findData(active))
+        selector.setVisible(bool(roles))
+        selector.setEnabled(self.viewport is not None and not self._busy)
+        selector.blockSignals(blocked)
+
+    def _condition_target_selected(self, index):
+        if self._updating or index < 0 or self._busy or not self._finish_pending_edits():
+            self._refresh_target_roles()
+            return
+        target = self._card_refs.get(self._selected_card_id)
+        if target is not None:
+            try:
+                self.provider.select_target(target, self.target_role_selector.itemData(index))
+                if self.viewport is not None:
+                    self.viewport.set_selection(self.session.selection())
+                self.selectionChanged.emit(self.session.selection())
+            except Exception as exc:
+                self._show_error(exc)
+            self._refresh_target_roles()
+
+    def _apply_display_state(self):
+        if self._closed or self.viewport is None or not self._summary().get("document_id"):
+            return
+        self.viewport.show_all_parts()
+        if self._display_state.hidden:
+            self.viewport.hide_parts(tuple(self._display_state.hidden))
+        self._refresh_actions()
+
+    def _hide_selected(self):
+        if self.viewport is not None and self._finish_pending_edits():
+            keys = {(ref.resource_id, ref.native_scope) for ref in self._selected_part_refs()}
+            self._display_state.set_hidden(self._display_state.hidden | keys)
+
+    def _isolate_selected(self):
+        if self.viewport is not None and self._finish_pending_edits():
+            selected = {(ref.resource_id, ref.native_scope) for ref in self._selected_part_refs()}
+            if selected:
+                all_parts = {(node.ref.resource_id, node.ref.native_scope) for node in self._tree_nodes if node.group == "Parts"}
+                self._display_state.set_hidden(all_parts - selected)
+
+    def _show_all_parts(self):
+        if self.viewport is not None:
+            self._display_state.set_hidden(())
+
+    def _fit_selected(self):
+        if self.viewport is not None:
+            if not self.viewport.fit_selection(self.session.selection()):
+                self.statusBar().showMessage("The selection has no visible geometry", 5000)
 
     def _focus_tree_card(self, card_id):
         """Restore selection after a rejected draft without rebuilding rows."""
         ref = self._card_refs.get(card_id)
-        if ref is None:
-            self.model_tree.blockSignals(True)
-            self.model_tree.clearSelection()
-            self.model_tree.selectionModel().clearCurrentIndex()
-            self.model_tree.blockSignals(False)
-            return False
-        self.model_tree.blockSignals(True)
-        self.model_tree.select_ref(ref)
-        self.model_tree.blockSignals(False)
-        return True
+        blocked = self.model_tree.blockSignals(True)
+        try:
+            self.model_tree.select_refs((ref,) if ref else (), active=ref)
+        finally:
+            self.model_tree.blockSignals(blocked)
+        return ref is not None
+
+    def _restore_approved_selection(self):
+        """Present canonical multi-selection without issuing another model command."""
+        active = self.provider.active_object()
+        refs = self.session.selected_objects()
+        if not refs and active is not None:
+            refs = (active,)
+        refs = tuple(ref for ref in refs if ref.object_id in self._card_refs)
+        self._selected_card_id = active.object_id if active else None
+        blocked = self.model_tree.blockSignals(True)
+        try:
+            self.model_tree.select_refs(refs, active=active)
+        finally:
+            self.model_tree.blockSignals(blocked)
 
     def _activate_card(self, ref):
         self.provider.select(ref)
@@ -255,11 +401,8 @@ class PrepController:
             return True
         if name in ("vx", "vy", "vz") and "velocity" in self.property_editor.editors:
             return self._commit_vector()
-        spec = self._field_specs[name]
         try:
-            text = editor.text().strip()
-            field_type = spec.get("type")
-            value = editor.numeric_value() if hasattr(editor, "numeric_value") else float(text) if field_type in ("float", "number") else int(text) if field_type in ("int", "integer") else text
+            value = editor_value(editor)
             if isinstance(value, float) and not math.isfinite(value):
                 raise ValueError("Enter a finite number")
         except (TypeError, ValueError) as exc:
@@ -270,7 +413,39 @@ class PrepController:
 
     def _submit_properties(self, values):
         ref = self._card_refs[self._selected_card_id]
-        return self.provider.submit(SetProperties(ref, values, self._editor_revision))
+        units = {name: unit for name, unit in self.property_editor.units().items() if name in values}
+        return self.provider.submit(SetProperties(ref, values, self._editor_revision, units=units))
+
+    def _native_display_unit(self, name):
+        spec = self.property_editor.specs.get(name)
+        return spec is None or self.property_editor.units().get(name, spec.unit) == spec.unit
+
+    def _refresh_property_context(self, choices):
+        ref = self._card_refs.get(self._selected_card_id)
+        if ref is None or not choices:
+            return False
+        specs = self.provider.properties(ref, draft_values=choices)
+        if not self.property_editor.refresh_context(specs):
+            return False
+        self.field_editors = dict(self.property_editor.editors)
+        self._field_specs.update({spec.name: {"name": spec.name, "label": spec.label,
+                                            "value": spec.value, "type": spec.kind} for spec in specs})
+        self._connect_property_inputs()
+        return True
+
+    def _property_choice_changed(self, name, editor):
+        if self._updating or self._busy:
+            return
+        try:
+            choices = {key: self.property_editor.editors[key].currentData()
+                       for key, spec in self.property_editor.specs.items() if spec.kind == "choice"}
+            if self._refresh_property_context(choices):
+                return
+            if (not getattr(getattr(self, "reference_adapter", None), "defer_scalars", False)
+                    and not self.property_editor.context_changed):
+                self._commit_field(name, editor.currentData())
+        except Exception as exc:
+            self._show_error(exc)
 
     def _commit_vector(self):
         if self._updating or self._busy:
@@ -282,8 +457,8 @@ class PrepController:
             self.property_editor.set_error("velocity", str(exc))
             self._append_message(str(exc), "Error")
             return False
-        previous = tuple(self._field_specs[name]["value"] for name in ("vx", "vy", "vz"))
-        if value == previous:
+        previous = self.property_editor.specs["velocity"].value
+        if value == previous and self._native_display_unit("velocity"):
             self.property_editor.set_error("velocity", "")
             for child in editor.editors:
                 child.setModified(False)
@@ -298,6 +473,12 @@ class PrepController:
         self._consume_pending_selection()
         self.statusBar().showMessage("Initial velocity updated", 5000)
         return True
+
+    def _apply_properties(self):
+        if self._finish_pending_edits():
+            self.statusBar().showMessage("Properties updated", 5000)
+            return True
+        return False
 
     def _commit_curve(self, points):
         if self._updating or self._busy:
@@ -321,7 +502,7 @@ class PrepController:
         if self._updating or self._busy:
             return False
         spec = self._field_specs.get(name, {})
-        if value == spec.get("value"):
+        if value == spec.get("value") and self._native_display_unit(name):
             self.property_editor.set_error(name, "")
             editor = self.field_editors.get(name)
             if isinstance(editor, QLineEdit):
@@ -348,28 +529,36 @@ class PrepController:
                   if key != exclude and isinstance(editor, QLineEdit) and editor.isModified()}
         if self._curve_active and self.curve_table.has_draft():
             drafts["@curve"] = self.curve_table.draft_state()
-        if getattr(getattr(self, "reference_adapter", None), "defer_scalars", False):
-            raw = self.property_editor.raw_values()
-            if raw != self._native_property_baseline:
-                drafts["@properties"] = raw
+        raw = self.property_editor.raw_values()
+        units = self.property_editor.units()
+        changed = {name: value for name, value in raw.items()
+                   if name != exclude and value != getattr(self, "_native_property_baseline", {}).get(name)}
+        changed_units = {name: unit for name, unit in units.items() if name != exclude and
+                         (name in changed or unit != getattr(self, "_native_unit_baseline", {}).get(name))}
+        if changed or changed_units:
+            drafts["@properties"] = changed
+            drafts["@units"] = changed_units
+        if self.property_editor.context_changed:
+            drafts["@quantities"] = self.property_editor.context_draft_state()
         return drafts
 
     def _restore_text_drafts(self, drafts):
+        choices = {name: value for name, value in drafts.get("@properties", {}).items()
+                   if name in self.property_editor.specs and self.property_editor.specs[name].kind == "choice"}
+        self._refresh_property_context(choices)
+        self.property_editor.restore_context_drafts(drafts.get("@quantities", {}))
+        for name, unit in drafts.get("@units", {}).items():
+            selector = self.property_editor.unit_selectors.get(name)
+            if selector is not None and selector.findText(unit) >= 0:
+                selector.setCurrentText(unit)
         for key, text in drafts.items():
+            if key in ("@units", "@quantities"):
+                continue
             if key == "@properties":
                 for name, raw in text.items():
                     editor = self.property_editor.editors.get(name)
-                    if isinstance(editor, QLineEdit):
-                        editor.setText(raw)
-                        editor.setModified(True)
-                    elif isinstance(editor, QCheckBox):
-                        editor.setChecked(raw)
-                    elif isinstance(editor, QComboBox):
-                        editor.setCurrentIndex(editor.findData(raw))
-                    elif hasattr(editor, "editors"):
-                        for child, value in zip(editor.editors, raw):
-                            child.setText(value)
-                            child.setModified(True)
+                    if editor is not None:
+                        restore_editor_raw_value(editor, raw)
                 continue
             if key == "@curve":
                 self.curve_table.restore_draft(text)
@@ -424,16 +613,19 @@ class PrepController:
 
     def _finish_pending_edits(self):
         """A validator's intermediate text must never be silently discarded by Save."""
+        if not self.modeling.finish():
+            return False
         if self._replacement_conflict:
             self._show_error(ValueError("Reload properties (Ctrl+R) before continuing with the replaced document."))
             return False
-        if getattr(getattr(self, "reference_adapter", None), "defer_scalars", False):
+        if self._deferred_property_drafts():
             try:
                 values = self.property_editor.values()
                 if values:
                     current = {spec.name: spec.value for spec in self.provider.properties(
                         self._card_refs[self._selected_card_id])}
-                    changed = {name: value for name, value in values.items() if value != current[name]}
+                    changed = {name: value for name, value in values.items()
+                               if value != current[name] or not self._native_display_unit(name)}
                     if changed:
                         self._submit_properties(changed)
                         self.refresh_document()
@@ -472,7 +664,15 @@ class PrepController:
         self._consume_pending_selection()
         return True
 
+    def _deferred_property_drafts(self):
+        return (getattr(getattr(self, "reference_adapter", None), "defer_scalars", False) or
+                any(hasattr(editor, "raw_value") for editor in self.property_editor.editors.values()) or
+                self.property_editor.context_changed or
+                self.property_editor.raw_values() != getattr(self, "_native_property_baseline", {}) or
+                self.property_editor.units() != getattr(self, "_native_unit_baseline", {}))
+
     def _discard_pending_edits(self):
+        self.modeling.cancel()
         self._replacement_conflict = False
         self.refresh_document(rebuild_viewport=True)
         self._consume_pending_selection()
@@ -632,6 +832,9 @@ class PrepController:
         if self._busy or self._replacement_conflict or not self._summary().get("document_id"):
             return
         try:
+            if self.modeling.active:
+                self.modeling.finish()
+                return
             if self._text_drafts():
                 if not self._finish_pending_edits():
                     return
@@ -674,6 +877,9 @@ class PrepController:
             self.viewport.set_edges_visible(visible)
 
     def closeEvent(self, event: QCloseEvent):
+        if self._closed:
+            event.accept()
+            return
         if self._busy:
             self.statusBar().showMessage("Wait for the current file operation to finish")
             event.ignore()
@@ -694,6 +900,7 @@ class PrepController:
         if self.viewport:
             self.viewport.shutdown()
         self._unsubscribe()
+        self._display_state.changed.disconnect(self._apply_display_state)
         self._closed = True
         event.accept()
 

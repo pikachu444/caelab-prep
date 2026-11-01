@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import json
+from itertools import combinations
+import math
 import os
 from pathlib import Path
 import subprocess
 import sys
 import threading
+from statistics import median
 
 import pytest
 
@@ -132,3 +135,140 @@ def test_real_worker_cancel_is_reaped(cad, tmp_path):
                 os.kill(error.value.details["pid"], 0)
     finally:
         timer.cancel()
+
+
+def _touching_cad(directory, kind):
+    """Fixed normal cases, two harder/holdout cases, and one unsupported input."""
+    require_sdk()
+    pytest.importorskip("OCP")
+    from OCP.BRep import BRep_Builder
+    from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCylinder
+    from OCP.gp import gp_Ax2, gp_Dir, gp_Pnt
+    from OCP.STEPControl import STEPControl_AsIs, STEPControl_Writer
+    from OCP.TopoDS import TopoDS_Compound
+    if kind == "curved-boundary":
+        first = BRepPrimAPI_MakeCylinder(2, 2).Shape()
+        second = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(0, 0, 2), gp_Dir(0, 0, 1)), 2, 3).Shape()
+    else:
+        first = BRepPrimAPI_MakeBox(4, 3, 2).Shape()
+        location, dimensions = {
+            "full-x": ((4, 0, 0), (4, 3, 2)),
+            "full-y": ((0, 3, 0), (4, 3, 2)),
+            "full-z": ((0, 0, 2), (4, 3, 2)),
+            "partial-face": ((4, 1, .5), (2, 1, 1)),
+            "overlap": ((2, 0, 0), (4, 3, 2)),
+        }[kind]
+        second = BRepPrimAPI_MakeBox(gp_Pnt(*location), *dimensions).Shape()
+    compound = TopoDS_Compound()
+    builder = BRep_Builder()
+    builder.MakeCompound(compound)
+    builder.Add(compound, first)
+    builder.Add(compound, second)
+    path = directory / (kind + ".step")
+    writer = STEPControl_Writer()
+    writer.Transfer(compound, STEPControl_AsIs)
+    assert int(writer.Write(str(path))) == 1
+    return path
+
+
+def _part_nodes(result, volume):
+    return {node for block in result["mesh"]["element_blocks"] if block["entity_uuid"] == volume["uuid"]
+            for conn in block["connectivity"] for node in conn}
+
+
+@pytest.mark.parametrize("kind", ["full-x", "full-y", "full-z", "partial-face", "curved-boundary", "overlap"])
+def test_conformal_recipe_fixed_cad_matrix(tmp_path, kind):
+    from caelab_prep.application.mesh_candidates import read_mesh_candidate
+    source = _touching_cad(tmp_path, kind)
+    if kind == "overlap":
+        with pytest.raises(GmshBackendError) as error:
+            GmshBackend().generate(source, tmp_path / "assets", 1., interface_policy="conformal")
+        assert error.value.code == "topology_mapping"
+        return
+    result = GmshBackend().generate(source, tmp_path / "assets", 1., interface_policy="conformal")
+    candidate = read_mesh_candidate(result)
+    assert candidate.quality.passed, candidate.quality.problem_ids
+    assert len(candidate.to_native_mesh().parts) == 2
+    assert result["recipe"]["topology_preparation"]["operation"] == "occ.fragment"
+    mapping = result["recipe"]["topology_preparation"]["source_volume_map"]
+    assert len(mapping) == len({item["backend_tag"] for item in mapping}) == 2
+    assert result["sdk_error_count"] == 0
+    surfaces = [s for s in result["surfaces"] if len(s["orientation_by_volume"]) == 2]
+    assert len(surfaces) == 1
+    surface = surfaces[0]
+    assert {item["sign"] for item in surface["orientation_by_volume"]} == {-1, 1}
+    left, right = result["volumes"]
+    common = _part_nodes(result, left) & _part_nodes(result, right)
+    assert common == set(surface["node_ids"])
+    assert result["interface_checks"][0]["shared_node_count"] == len(common) > 0
+    facets = {tuple(sorted(conn)) for block in result["mesh"]["element_blocks"]
+              if block["entity_uuid"] == surface["uuid"] for conn in block["connectivity"]}
+    for volume in (left, right):
+        tetra_faces = {tuple(sorted(face)) for block in result["mesh"]["element_blocks"]
+                       if block["entity_uuid"] == volume["uuid"]
+                       for conn in block["connectivity"] for face in combinations(conn, 3)}
+        assert facets <= tetra_faces
+    coordinates = [tuple(round(value, 9) for value in point) for point in result["mesh"]["nodes"]["coordinates"]]
+    assert len(coordinates) == len(set(coordinates)), "Conformal interface must not duplicate coincident node IDs"
+
+
+def test_independent_is_preflight_and_keeps_coincident_interfaces_disconnected(tmp_path):
+    source = _touching_cad(tmp_path, "full-x")
+    backend = GmshBackend()
+    independent = backend.generate(source, tmp_path / "assets", 1., interface_policy="independent")
+    left, right = independent["volumes"]
+    assert not _part_nodes(independent, left) & _part_nodes(independent, right)
+    coordinates = dict(zip(independent["mesh"]["nodes"]["ids"], independent["mesh"]["nodes"]["coordinates"]))
+    by_part = [{tuple(round(value, 9) for value in coordinates[node]) for node in _part_nodes(independent, volume)}
+               for volume in (left, right)]
+    assert by_part[0] & by_part[1], "Coincident geometry must remain independently numbered"
+    assert independent["recipe"]["independent_is_preflight_only"]
+    shared = backend.generate(source, tmp_path / "assets", 1., interface_policy="conformal")
+    with pytest.raises(GmshBackendError) as error:
+        backend.generate(shared["assets"]["xao"], tmp_path / "assets", 1., interface_policy="independent")
+    assert error.value.code == "shared_topology"
+    with pytest.raises(GmshBackendError) as error:
+        backend.generate(shared["assets"]["xao"], tmp_path / "assets", 1., interface_policy="conformal")
+    assert error.value.code == "topology_identity"
+
+
+def _edge_median(result, entity_uuid):
+    coordinates = dict(zip(result["mesh"]["nodes"]["ids"], result["mesh"]["nodes"]["coordinates"]))
+    return median(math.dist(coordinates[a], coordinates[b]) for block in result["mesh"]["element_blocks"]
+                  if block["entity_uuid"] == entity_uuid for conn in block["connectivity"] for a, b in combinations(conn, 2))
+
+
+@pytest.mark.parametrize("kind", ["full-x", "full-y", "full-z", "partial-face", "curved-boundary"])
+@pytest.mark.parametrize("dimension", [2, 3])
+def test_entity_local_size_changes_actual_target_density_preserving_uuid_and_interface(tmp_path, dimension, kind):
+    from caelab_prep.application.mesh_candidates import read_mesh_candidate
+    source = _touching_cad(tmp_path, kind)
+    backend = GmshBackend()
+    baseline = backend.generate(source, tmp_path / "assets", 1.4, interface_policy="conformal")
+    target = (next(s for s in baseline["surfaces"] if len(s["orientation_by_volume"]) == 2)
+              if dimension == 2 else baseline["volumes"][0])
+    refined = backend.generate(baseline["assets"]["xao"], tmp_path / "assets", 1.4,
+                               local_sizes={target["uuid"]: .45})
+    assert refined["geometry_resource_uuid"] == baseline["geometry_resource_uuid"]
+    assert {s["uuid"] for s in refined["surfaces"]} == {s["uuid"] for s in baseline["surfaces"]}
+    assert {v["uuid"] for v in refined["volumes"]} == {v["uuid"] for v in baseline["volumes"]}
+    before_count = sum(len(block["ids"]) for block in baseline["mesh"]["element_blocks"] if block["entity_uuid"] == target["uuid"])
+    after_count = sum(len(block["ids"]) for block in refined["mesh"]["element_blocks"] if block["entity_uuid"] == target["uuid"])
+    assert after_count > 2 * before_count
+    assert _edge_median(refined, target["uuid"]) < .75 * _edge_median(baseline, target["uuid"])
+    assert refined["recipe"]["local_sizes"][0]["entity_uuid"] == target["uuid"]
+    assert refined["interface_checks"][0]["shared_node_count"] > 0
+    assert refined["sdk_error_count"] == 0
+    candidate = read_mesh_candidate(refined)
+    assert candidate.quality.passed, candidate.quality.problem_ids
+    assert len(candidate.to_native_mesh().parts) == 2
+
+
+def test_stale_local_reference_is_rejected_by_worker(tmp_path):
+    source = _touching_cad(tmp_path, "full-x")
+    backend = GmshBackend()
+    initial = backend.generate(source, tmp_path / "assets", 1.)
+    with pytest.raises(GmshBackendError) as error:
+        backend.generate(initial["assets"]["xao"], tmp_path / "assets", 1.,
+                         local_sizes={"00000000-0000-4000-8000-000000000001": .5})
+    assert error.value.code == "sizing_reference"

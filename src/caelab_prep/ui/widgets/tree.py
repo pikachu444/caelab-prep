@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import QRectF, QSize, Qt, Signal
+from PySide6.QtCore import QItemSelectionModel, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (QAbstractItemView, QHeaderView, QStyledItemDelegate,
                               QStyleOptionViewItem, QTreeView)
@@ -59,6 +59,7 @@ class _TreeViewState:
     """Compatibility adapter for selection, user expansion and scroll position."""
 
     selected: object
+    active: object
     expanded: dict
     widths: tuple
     scroll: int
@@ -66,7 +67,7 @@ class _TreeViewState:
     @classmethod
     def capture(cls, tree):
         model = tree.model()
-        return cls(tree.selected_ref(),
+        return cls(tree.selected_refs(), tree.selected_ref(),
                    {model.item(row).text(): tree.isExpanded(model.item(row).index())
                     for row in range(model.rowCount())},
                    tuple(tree.columnWidth(column) for column in range(3)) if model.rowCount() else (210, 72, 80),
@@ -77,14 +78,13 @@ class _TreeViewState:
             tree.setColumnWidth(column, width)
         for label, item in groups.items():
             tree.setExpanded(item.index(), self.expanded.get(label, True))
-        selected = tree._indices.get(self.selected)
-        if selected is not None:
-            tree.setCurrentIndex(selected.index())
+        tree.select_refs(self.selected, self.active)
         tree.verticalScrollBar().setValue(self.scroll)
 
 
 class ModelTree(QTreeView):
     nodeSelected = Signal(object)
+    selectedRefsChanged = Signal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -112,6 +112,7 @@ class ModelTree(QTreeView):
         self.header().setMinimumSectionSize(45)
         self._indices, self._resetting = {}, False
         self.selectionModel().currentChanged.connect(self._selected)
+        self.selectionModel().selectionChanged.connect(self._selection_changed)
 
     def set_nodes(self, nodes):
         nodes = list(nodes)
@@ -151,6 +152,28 @@ class ModelTree(QTreeView):
 
     def selected_ref(self):
         return self.currentIndex().siblingAtColumn(0).data(Qt.ItemDataRole.UserRole)
+
+    def selected_refs(self):
+        return tuple(ref for index in self.selectionModel().selectedRows(0)
+                     if (ref := index.data(Qt.ItemDataRole.UserRole)) is not None)
+
+    def select_refs(self, refs, active=None):
+        refs = tuple(refs)
+        self.selectionModel().clearSelection()
+        for ref in refs:
+            item = self._indices.get(ref)
+            if item is not None:
+                self.selectionModel().select(item.index(), QItemSelectionModel.SelectionFlag.Select |
+                                             QItemSelectionModel.SelectionFlag.Rows)
+        current = self._indices.get(active)
+        if current is not None:
+            self.selectionModel().setCurrentIndex(current.index(), QItemSelectionModel.SelectionFlag.NoUpdate)
+        else:
+            self.selectionModel().clearCurrentIndex()
+
+    def _selection_changed(self, selected, deselected):
+        if not self._resetting:
+            self.selectedRefsChanged.emit(self.selected_refs())
 
     def select_ref(self, ref):
         item = self._indices.get(ref)

@@ -37,6 +37,8 @@ class PropertySpec:
     coordinate_frame: str | None = None
     unit_scales: tuple[tuple[str, float], ...] = ()
     choice_labels: tuple[str, ...] = ()
+    minimum_rows: int = 0
+    maximum_rows: int | None = None
 
 
 @dataclass(frozen=True)
@@ -54,6 +56,37 @@ class SetProperties:
     values: dict[str, object]
     expected_revision: int
     units: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class OperationSpec:
+    """A host-owned operation form; widgets only hold its uncommitted inputs."""
+    key: str
+    title: str
+    fields: tuple[PropertySpec, ...]
+    document_id: str
+    expected_revision: int
+    target: ObjectRef | None = None
+    destructive: bool = False
+    description: str = ""
+
+
+@dataclass(frozen=True)
+class OperationRequest:
+    key: str
+    values: dict[str, object]
+    document_id: str
+    expected_revision: int
+    target: ObjectRef | None = None
+    units: dict[str, str] = field(default_factory=dict)
+
+
+@runtime_checkable
+class ModelingHost(Protocol):
+    def available_operations(self, target: ObjectRef | None = None) -> tuple[str, ...]: ...
+    def operation_spec(self, key: str, target: ObjectRef | None = None,
+                       draft_values: dict[str, object] | None = None) -> OperationSpec: ...
+    def execute_operation(self, request: OperationRequest) -> dict: ...
 
 
 @dataclass(frozen=True)

@@ -161,7 +161,7 @@ def test_empty_session_has_no_model_errors_or_executable_model_commands(monkeypa
     assert window.model_tree.isColumnHidden(1)
     assert not window.model_tree.isColumnHidden(2)
     for key, action in window.actions.actions.items():
-        assert action.isEnabled() == (key in {"file.open", "file.open_project", "file.close"}), key
+        assert action.isEnabled() == (key in {"file.new", "file.open", "file.open_project", "file.close"}), key
     assert window.document_toolbar.widgetForAction(window.open_rad_action).property("primaryCommand")
 
 

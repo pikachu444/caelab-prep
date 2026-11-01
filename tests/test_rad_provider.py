@@ -27,7 +27,7 @@ def test_rad_provider_scalar_contract_and_native_unit_context():
     assert isinstance(provider, DocumentSession)
     target = node(provider, "/MAT/LAW1/1").ref
     specs = {spec.name: spec for spec in provider.properties(target)}
-    assert specs["young_modulus"].unit == "input deck"
+    assert specs["young_modulus"].unit == "MPa"
     assert provider.unit_context(target)["global"] == {"mass": "Mg", "length": "mm", "time": "s"}
     provider.submit(SetProperties(target, {"young_modulus": 199000}, 0))
     assert provider.properties(target)[1].value == 199000
@@ -61,7 +61,7 @@ def test_vector_and_existing_curve_table_each_have_one_undo():
     ("/INIVEL/TRA/1", {"velocity": (10, 20, float("nan"))}),
     ("/INIVEL/TRA/1", {"velocity": (10, 20)}),
     ("/FUNCT/1", {"points": ((0, 10), (.1, 20), (.3, float("inf")))}),
-    ("/FUNCT/1", {"points": ((0, 10), (.1, 20))}),
+    ("/FUNCT/1", {"points": ((0, 10), (0, 20))}),
 ])
 def test_invalid_vector_or_table_never_commits_valid_prefix(keyword, values):
     session, provider = opened()
@@ -82,7 +82,7 @@ def test_rejected_command_never_changes_part_of_a_card(change):
     units = {}
     values = {"density": 8e-9, "young_modulus": 199000}
     revision = 0
-    if change == "unit": units = {"young_modulus": "Pa"}
+    if change == "unit": units = {"young_modulus": "mm"}
     elif change == "document": target = replace(target, document_id="old-document")
     elif change == "resource": target = replace(target, resource_id="other-resource")
     elif change == "kind": target = replace(target, kind="curve")
@@ -142,7 +142,10 @@ def test_material_override_and_unknown_basis_remain_descriptive(tmp_path):
     session.open_rad(source)
     provider = RadProvider(session)
     target = node(provider, "/MAT/LAW1/12/77").ref
-    assert provider.properties(target)[0].unit_context == {"basis": "input_deck", "global": None, "unit_id": "77"}
+    context = provider.properties(target)[0].unit_context
+    assert {key: context[key] for key in ("basis", "global", "unit_id")} == {"basis": "input_deck", "global": None, "unit_id": "77"}
+    assert context["display_conversion"] == "unavailable"
+    assert "override" in context["reason"]
     with pytest.raises(PrepError) as error:
         provider.submit(SetProperties(target, {"density": 1}, 0, None))
     assert error.value.code == "invalid_unit"
@@ -219,8 +222,11 @@ def test_part_activation_shares_typed_target_and_existing_native_mesh_relation(t
     assert related
     assert set(session.selection()["ids"]) == {cell["id"] for cell in related}
     assert {ref["resource_id"] for ref in session.selection()["refs"]} == {cell["resource_id"] for cell in related}
-    assert provider.properties(target), "Part activation must expose actual read-only properties"
-    assert all(not spec.editable for spec in provider.properties(target))
+    specs = {spec.name: spec for spec in provider.properties(target)}
+    assert not specs["part_id"].editable and not specs["element_count"].editable
+    assert specs["material"].kind == specs["property"].kind == "reference"
+    assert specs["material"].editable and specs["property"].editable
+    assert specs["material"].value.document_id == target.document_id
     before = session.selection()
     with pytest.raises(PrepError):
         provider.select(replace(target, resource_id="missing-resource"))

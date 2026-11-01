@@ -80,6 +80,7 @@ class _Entry:
     after: Any
     label: str
     object_ids: tuple[str, ...]
+    kind: str = "field"
 
 
 class CommandDispatcher:
@@ -104,9 +105,9 @@ class CommandDispatcher:
         self._listeners.append(listener)
         return lambda: self._listeners.remove(listener) if listener in self._listeners else None
 
-    def _emit(self, label: str, resource_id: str, objects: tuple[str, ...]) -> ChangeSet:
+    def _emit(self, label: str, resource_id: str, objects: tuple[str, ...], kind: str = "field") -> ChangeSet:
         self.document.revision += 1
-        event = ChangeSet(self.document.id, self.document.revision, label, (resource_id,), objects)
+        event = ChangeSet(self.document.id, self.document.revision, label, (resource_id,), objects, kind)
         self.last_change = event
         for listener in tuple(self._listeners):
             # Observers cannot roll back an already committed model command.
@@ -117,7 +118,8 @@ class CommandDispatcher:
         return event
 
     def execute(self, resource_id: str, state: Any, label: str, *,
-                object_ids: tuple[str, ...] = (), expected_revision: int | None = None) -> ChangeSet | None:
+                object_ids: tuple[str, ...] = (), expected_revision: int | None = None,
+                kind: str = "field") -> ChangeSet | None:
         if expected_revision is not None and expected_revision != self.document.revision:
             raise PrepError("revision_conflict", "모델이 변경됐습니다. 현재 값을 다시 읽어 주세요.",
                             {"expected": expected_revision, "actual": self.document.revision})
@@ -131,9 +133,9 @@ class CommandDispatcher:
         except Exception:
             resource.restore(before)
             raise
-        self._undo.append(_Entry(resource_id, before, resource.snapshot(), label, object_ids))
+        self._undo.append(_Entry(resource_id, before, resource.snapshot(), label, object_ids, kind))
         self._redo.clear()
-        return self._emit(label, resource_id, object_ids)
+        return self._emit(label, resource_id, object_ids, kind)
 
     def undo(self) -> ChangeSet:
         if not self._undo:
@@ -142,7 +144,7 @@ class CommandDispatcher:
         self.document.resources[entry.resource_id].restore(entry.before)
         self._undo.pop()
         self._redo.append(entry)
-        return self._emit("실행 취소: " + entry.label, entry.resource_id, entry.object_ids)
+        return self._emit("실행 취소: " + entry.label, entry.resource_id, entry.object_ids, entry.kind)
 
     def redo(self) -> ChangeSet:
         if not self._redo:
@@ -151,4 +153,4 @@ class CommandDispatcher:
         self.document.resources[entry.resource_id].restore(entry.after)
         self._redo.pop()
         self._undo.append(entry)
-        return self._emit("다시 실행: " + entry.label, entry.resource_id, entry.object_ids)
+        return self._emit("다시 실행: " + entry.label, entry.resource_id, entry.object_ids, entry.kind)

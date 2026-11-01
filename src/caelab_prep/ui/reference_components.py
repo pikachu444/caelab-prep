@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDockWidget,
-    QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QSplitter,
+    QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMenu, QPushButton, QSizePolicy, QSplitter,
     QStyledItemDelegate, QTabWidget, QToolBar, QToolButton, QTreeView, QVBoxLayout, QWidget)
 
 from .reference_profiles import profile
@@ -36,6 +36,8 @@ class ReferenceBindings:
     viewport: QWidget | None = None
     dialog: QDialog | None = None
     curve_pages: QWidget | None = None
+    edit_action: QAction | None = None
+    dialog_buttons: QWidget | None = None
 
 
 def reference_style(key):
@@ -52,6 +54,62 @@ def reference_style(key):
     QLabel#commandGroup { color: #52606a; font-size: 11px; }
     QTabWidget#referenceCommands::pane { border: 0; }
     """
+
+
+class _CommandGroup(QWidget):
+    """Keep direct commands when they fit, with named group menus when narrow."""
+
+    def __init__(self, key, actions, kind, parent=None):
+        super().__init__(parent)
+        self.setObjectName("referenceCommandGroup")
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        stack = QVBoxLayout(self)
+        stack.setContentsMargins(3, 0, 3, 0)
+        stack.setSpacing(0)
+        self.buttons = QWidget()
+        commands = QHBoxLayout(self.buttons)
+        commands.setContentsMargins(2, 1, 2, 1)
+        for action in actions:
+            button = QToolButton()
+            button.setDefaultAction(action)
+            button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+                if kind == "ribbon" else Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+            button.setIconSize(QSize(24, 24) if kind == "ribbon" else QSize(16, 16))
+            commands.addWidget(button)
+        stack.addWidget(self.buttons)
+        self.menu_button = QToolButton()
+        self.menu_button.setObjectName("referenceGroupMenu")
+        self.menu_button.setText(key)
+        self.menu_button.setAccessibleName(key + " commands")
+        self.menu_button.setToolTip(key + " commands")
+        self.menu_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        menu = QMenu(self.menu_button)
+        menu.addActions(actions)
+        self.menu_button.setMenu(menu)
+        stack.addWidget(self.menu_button, 0, Qt.AlignmentFlag.AlignHCenter)
+        self.menu_button.hide()
+        caption = QLabel(key)
+        caption.setObjectName("commandGroup")
+        caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        stack.addWidget(caption)
+        self.ensurePolished()
+        for widget in self.findChildren(QWidget):
+            widget.ensurePolished()
+        self._preferred = super().sizeHint()
+        self._minimum = QSize(self.menu_button.sizeHint().width() + 6, self._preferred.height())
+        self.setMinimumWidth(self._minimum.width())
+
+    def sizeHint(self):
+        return self._preferred if hasattr(self, "_preferred") else super().sizeHint()
+
+    def minimumSizeHint(self):
+        return self._minimum if hasattr(self, "_minimum") else super().minimumSizeHint()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        narrow = self.width() < self._preferred.width()
+        self.buttons.setVisible(not narrow)
+        self.menu_button.setVisible(narrow)
 
 
 @dataclass(frozen=True)
@@ -89,33 +147,18 @@ class CommandSurface:
                 b.toolbar.addWidget(QLabel("Module:"))
                 b.toolbar.addWidget(context)
             return
-        tabs = QTabWidget()
+        tabs = QTabWidget(contextual_bar)
         tabs.setObjectName("referenceCommands")
         for title, keys in self.pages:
-            page = QWidget()
+            if not any(b.commands.get(key) for key in keys):
+                continue
+            page = QWidget(tabs)
             row = QHBoxLayout(page)
             row.setContentsMargins(0, 0, 0, 0)
             for key in keys:
-                group = QWidget()
-                stack = QVBoxLayout(group)
-                stack.setContentsMargins(3, 0, 3, 0)
-                stack.setSpacing(0)
-                buttons = QWidget()
-                commands = QHBoxLayout(buttons)
-                commands.setContentsMargins(2, 1, 2, 1)
-                for action in b.commands.get(key, ()):
-                    button = QToolButton()
-                    button.setDefaultAction(action)
-                    button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon
-                        if self.kind == "ribbon" else Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-                    button.setIconSize(QSize(24, 24) if self.kind == "ribbon" else QSize(16, 16))
-                    commands.addWidget(button)
-                stack.addWidget(buttons)
-                caption = QLabel(key)
-                caption.setObjectName("commandGroup")
-                caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                stack.addWidget(caption)
-                row.addWidget(group)
+                if not b.commands.get(key):
+                    continue
+                row.addWidget(_CommandGroup(key, b.commands[key], self.kind, page))
             row.addStretch()
             tabs.addTab(page, title)
         contextual_bar.addWidget(tabs)
@@ -183,11 +226,13 @@ class EditorInteraction:
         dialog.setObjectName("referencePropertyDialog")
         dialog.setWindowTitle(self.title + " — CAELab Prep")
         dialog.setWindowModality(Qt.WindowModality.WindowModal)
-        dialog.resize(540, 620)
+        dialog.resize(540, 560)
         column = QVBoxLayout(dialog)
         column.addWidget(panel)
         panel.show()
-        row = QHBoxLayout()
+        buttons = QWidget()
+        row = QHBoxLayout(buttons)
+        row.setContentsMargins(0, 0, 0, 0)
         row.addStretch()
         ok, cancel = QPushButton("OK"), QPushButton("Cancel")
         ok.setObjectName("primaryAction")
@@ -199,7 +244,8 @@ class EditorInteraction:
         dialog.rejected.connect(b.revert)
         row.addWidget(ok)
         row.addWidget(cancel)
-        column.addLayout(row)
+        column.addWidget(buttons)
+        b.dialog_buttons = buttons
         b.dialog = dialog
         b.tree.doubleClicked.connect(lambda _: dialog.open())
 
@@ -274,10 +320,22 @@ class ReferenceAdapter:
         self.docks.install(b)
         self.curves.install(b)
         self.interaction.install(b)
-        edit = b.commands["Material"][0]
+        edit = b.edit_action or b.commands["Material"][0]
         edit.triggered.connect(lambda: b.dialog.open() if b.dialog else b.properties_dock.show())
         menu = b.window.menuBar().addMenu("Property" if self.commands.kind in ("icons", "module") else "Material")
-        menu.addAction(edit)
+        for group in ("Material", "Section", "Object", "Assignment"):
+            group_actions = b.commands.get(group, ())
+            if group_actions:
+                if menu.actions():
+                    menu.addSeparator()
+                menu.addActions(group_actions)
+        if b.commands.get("Selection"):
+            b.window.menuBar().addMenu("Selection").addActions(b.commands["Selection"])
+        if b.commands.get("Conditions"):
+            conditions = b.window.menuBar().addMenu("Conditions")
+            conditions.addActions(b.commands.get("Curve", ()))
+            conditions.addSeparator()
+            conditions.addActions(b.commands["Conditions"])
         if b.property_tabs is not None:
             b.property_tabs.setTabText(0, self.docks.property_title)
             b.property_tabs.setTabText(1, self.docks.source_title)
@@ -301,9 +359,12 @@ class ReferenceAdapter:
         if self.docks.adjacent:
             width = max(800, b.window.width())
             b.window.resizeDocks([b.model_dock, b.properties_dock],
-                [round(width * .17), round(width * .27)], Qt.Orientation.Horizontal)
+                [round(width * .17), max(320, round(width * .27))], Qt.Orientation.Horizontal)
         else:
-            b.window.resizeDocks([b.model_dock], [round(b.window.width() * profile(self.key).tree_fraction)], Qt.Orientation.Horizontal)
+            width = round(b.window.width() * profile(self.key).tree_fraction)
+            if self.interaction.mode != "dialog":
+                width = max(340, width)
+            b.window.resizeDocks([b.model_dock], [width], Qt.Orientation.Horizontal)
         if self.docks.outline_fraction is not None:
             # Initial arrangement only: the host calls resize before its first
             # show, so subsequent user splitter changes remain untouched.
@@ -319,12 +380,12 @@ class ReferenceAdapter:
 
 # Independent command, docking, editing and curve choices at one shared seam.
 ADAPTERS = {
-    "hypermesh": ReferenceAdapter("hypermesh", CommandSurface("compact", (("Home", ("Document", "History")), ("Materials", ("Material",)))), DockArrangement("Model", "Entity Editor"), EditorInteraction("inline"), CurveArrangement("side")),
+    "hypermesh": ReferenceAdapter("hypermesh", CommandSurface("compact", (("Home", ("Document", "History")), ("Materials", ("Material", "Section", "Assignment", "Object")), ("Sets", ("Selection",)), ("Conditions", ("Curve", "Conditions")))), DockArrangement("Model", "Entity Editor"), EditorInteraction("inline"), CurveArrangement("side")),
     "prepomax": ReferenceAdapter("prepomax", CommandSurface("icons"), DockArrangement("FE Model", "Properties", output=True, row_height=19, output_below_viewport=True), EditorInteraction("dialog", "Edit material / curve"), CurveArrangement("stacked"), "global", selection_icons=True),
     "abaqus": ReferenceAdapter("abaqus", CommandSurface("module"), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "Edit Material"), CurveArrangement("pages")),
-    "comsol": ReferenceAdapter("comsol", CommandSurface("ribbon", (("Home", ("Document", "History", "Material")),)), DockArrangement("Model Builder", "Settings", adjacent=True), EditorInteraction("settings"), CurveArrangement("stacked")),
-    "nfx": ReferenceAdapter("nfx", CommandSurface("ribbon", (("파일", ("Document", "History")), ("모델", ("Material",)))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "재료"), CurveArrangement("stacked")),
-    "meshfree": ReferenceAdapter("meshfree", CommandSurface("ribbon", (("Home", ("Document", "History")), ("Material", ("Material",)))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "Material"), CurveArrangement("pages", ("Spreadsheet", "Graph"))),
-    "naksha": ReferenceAdapter("naksha", CommandSurface("ribbon", (("Materials", ("Material",)),), quick_groups=("Document", "History")), DockArrangement("Outline", "Details", outline_fraction=.57), EditorInteraction("details"), CurveArrangement("side"), "global"),
-    "beidprep": ReferenceAdapter("beidprep", CommandSurface("compact", (("MODEL", ("Document", "History", "Material")),)), DockArrangement("MODEL", "FORM", adjacent=True, source_title="TEXT"), EditorInteraction("adjacent"), CurveArrangement("stacked"), "bottom"),
+    "comsol": ReferenceAdapter("comsol", CommandSurface("ribbon", (("Home", ("Document", "History")), ("Model", ("Material", "Section", "Assignment", "Object")), ("Definitions", ("Selection", "Curve")), ("Physics", ("Conditions",)))), DockArrangement("Model Builder", "Settings", adjacent=True), EditorInteraction("settings"), CurveArrangement("stacked")),
+    "nfx": ReferenceAdapter("nfx", CommandSurface("ribbon", (("파일", ("Document", "History")), ("모델", ("Material", "Section", "Assignment", "Object")), ("선택", ("Selection",)), ("조건", ("Curve", "Conditions")))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "재료"), CurveArrangement("stacked")),
+    "meshfree": ReferenceAdapter("meshfree", CommandSurface("ribbon", (("Home", ("Document", "History")), ("Material", ("Material", "Section", "Assignment", "Object")), ("Selection", ("Selection",)), ("Analysis", ("Curve", "Conditions")))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "Material"), CurveArrangement("pages", ("Spreadsheet", "Graph"))),
+    "naksha": ReferenceAdapter("naksha", CommandSurface("ribbon", (("Materials", ("Material", "Section", "Assignment", "Object")), ("Selections", ("Selection",)), ("Conditions", ("Curve", "Conditions"))), quick_groups=("Document", "History")), DockArrangement("Outline", "Details", outline_fraction=.57), EditorInteraction("details"), CurveArrangement("side"), "global"),
+    "beidprep": ReferenceAdapter("beidprep", CommandSurface("compact", (("MODEL", ("Document", "History", "Material", "Section", "Assignment", "Object")), ("SET", ("Selection",)), ("CONDITION", ("Curve", "Conditions")))), DockArrangement("MODEL", "FORM", adjacent=True, source_title="TEXT"), EditorInteraction("adjacent"), CurveArrangement("stacked"), "bottom"),
 }
