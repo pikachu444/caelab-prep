@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from copy import deepcopy
 import os
 from pathlib import Path, PurePosixPath
@@ -52,6 +53,7 @@ class PrepSession:
         self._listeners = []
         self._active_object: ObjectRef | None = None
         self._selected_objects: tuple[ObjectRef, ...] = ()
+        self._active_target_role = None
         self._document_epoch = str(uuid4())
         self._projection_revision = 0
 
@@ -108,6 +110,7 @@ class PrepSession:
         self._source_path = source_path
         self._active_object = None
         self._selected_objects = ()
+        self._active_target_role = None
         self._document_epoch = str(uuid4())
         self._projection_revision += 1
 
@@ -207,6 +210,7 @@ class PrepSession:
                     "source_path": self._source_path,
                     "last_change": self.dispatcher.last_change.to_dict() if self.dispatcher.last_change else None,
                     "active_object": asdict(self._active_object) if self._active_object else None,
+                    "active_target_role": self._active_target_role,
                     "selected_objects": [asdict(ref) for ref in self._selected_objects],
                     "document_epoch": self._document_epoch, "projection_revision": self._projection_revision}
 
@@ -214,10 +218,13 @@ class PrepSession:
     def capabilities() -> dict:
         return {"save": True, "undo": True, "radioss_raw_preservation": True, "project_format": PROJECT_FORMAT,
                 "project_version": PROJECT_VERSION, "material_edit": ["LAW1/ELAST", "LAW36/PLAS_TAB"],
-                "constraint_edit": ["BCS"], "contact_edit": ["INTER/TYPE24 friction"],
-                "curve_edit": ["FUNCT existing points"], "initial_velocity_edit": ["INIVEL/TRA"],
-                "shell_edit": ["PROP/SHELL thickness"], "create_cards": ["MAT/LAW1", "PROP/SHELL"],
-                "copy_delete_cards": ["MAT/LAW1", "MAT/LAW36", "PROP/SHELL"], "part_assignment": True,
+                "constraint_edit": ["BCS"], "contact_edit": ["INTER/TYPE7 targets and friction", "INTER/TYPE24 friction"],
+                "curve_edit": ["FUNCT point values and row count"], "initial_velocity_edit": ["INIVEL/TRA"],
+                "shell_edit": ["PROP/SHELL thickness"],
+                "create_cards": ["MAT/LAW1", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
+                "copy_delete_cards": ["MAT/LAW1", "MAT/LAW36", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
+                "part_assignment": True, "new_document": True, "mesh_adoption": ["triangle3", "tetra4"],
+                "mesh_replacement": "adoption-owned parts without dependent groups/surfaces or unknown references", "solver_input_export": True,
                 "cad_import": False, "meshing": False, "solver_execution": False,
                 "projection_only": True, "include_base": "root-deck-working-directory",
                 "unsupported_cards": "read-only, original bytes preserved"}
@@ -295,6 +302,9 @@ class PrepSession:
                     self.document.selection = Selection()
             self._selected_objects = tuple(ref for ref in self._selected_objects
                 if ref.resource_id in self.document.resources and ref.object_id in self.document.resources[ref.resource_id]._by_id)
+            if self._active_object is not None and self._active_target_role is not None:
+                self.document.selection, self._active_target_role = self._condition_selection(
+                    self._active_object.object_id, self._active_target_role)
         self._notify(change.kind, change=change.to_dict())
 
     def _check_model_edit(self, expected_revision, expected_document_id):
@@ -384,6 +394,95 @@ class PrepSession:
             return self._insert_model_card(resource, solid_block(identifier, name, newline=resource.newline),
                                            "Create linear tetra4 property", expected_revision)
 
+    def _mesh_replacement_state(self, part_ids):
+        """Remove only proven adoption-owned geometry; protect external node use."""
+        self._member_sequence(part_ids)
+        resource = self._model_resource(None)
+        selected, batches, blockers, unknown = {}, set(), [], []
+        for part_id in part_ids:
+            owner, card, identity = self._unique_card(part_id, "PART")
+            marker = re.search(r"^# CAELab adopted mesh ([0-9a-f-]+); part ([0-9a-f-]+)$", self.card_text(part_id), re.M)
+            if owner.id != resource.id or marker is None:
+                raise PrepError("mesh_replacement_unsupported", "Only parts created by mesh adoption in the root resource have proven geometry ownership.", {"card_id": part_id})
+            selected[identity[1]] = card
+            batches.add(marker.group(1))
+            dependents, unverified = self._dependency_inventory(part_id)
+            blockers.extend(dependents)
+            unknown.extend(unverified)
+        cells = [cell for item in self._require().resources.values() for cell in item.mesh_projection()["cells"]]
+        selected_nodes = {node for cell in cells if cell.get("part_id") in selected for node in cell["nodes"]}
+        shared_nodes = selected_nodes & {node for cell in cells if cell.get("part_id") not in selected for node in cell["nodes"]}
+        potentially_removed = set(selected_nodes)
+        for card in resource.cards:
+            if card.keyword.upper().split("/")[1] != "NODE": continue
+            marker = re.search(r"^# CAELab mesh ([0-9a-f-]+); geometry ", self.card_text(card.id), re.M)
+            if marker is None or marker.group(1) not in batches: continue
+            remaining = [item for item in resource.cards if item.id not in part_ids and item.keyword.upper().startswith("/PART/")
+                and f"# CAELab adopted mesh {marker.group(1)}; part " in self.card_text(item.id)]
+            if not remaining:
+                for index in card.data:
+                    try: potentially_removed.add(int(resource.lines[index][:10]))
+                    except ValueError:
+                        raise PrepError("mesh_inventory_incomplete", "An owned node ID cannot be parsed.") from None
+        for item in self.list_cards():
+            if item["keyword"].upper().startswith("/GRNOD/NODE/"):
+                owner = self._find_card(item["id"])
+                try: nodes = self._integer_members(owner, owner.card(item["id"]))
+                except PrepError:
+                    unknown.append(item)
+                    continue
+                if potentially_removed.intersection(nodes): blockers.append(item)
+        if blockers or unknown:
+            raise PrepError("mesh_replacement_in_use", "Replacement is blocked by existing groups/surfaces/conditions or unverified references.",
+                            {"dependents": list({item["id"]: item for item in blockers}.values()),
+                             "unverified": list({item["id"]: item for item in unknown}.values())})
+        state = resource.snapshot()
+        removed_cards, removed_nodes = [], set()
+        def remove(card):
+            if any(item["id"] == card.id for item in state["created"]):
+                state["created"] = [item for item in state["created"] if item["id"] != card.id]
+            else: state["deleted"].append(card.id)
+            state["patches"].pop(card.id, None)
+            state["replaced"].pop(card.id, None)
+            removed_cards.append(card.id)
+        for card in selected.values(): remove(card)
+        element_roots = {"SHELL", "SH3N", "BRICK", "TETRA4", "TETRA", "BEAM", "TRUSS"}
+        for owner in self._require().resources.values():
+            for card in owner.cards:
+                words = card.keyword.upper().split("/")
+                if words[1] in element_roots and len(words) > 2 and words[2].isdigit() and int(words[2]) in selected:
+                    marker = re.search(r"^# CAELab adopted mesh ([0-9a-f-]+); part ([0-9a-f-]+)$", self.card_text(card.id), re.M)
+                    if owner.id != resource.id or marker is None or marker.group(1) not in batches:
+                        raise PrepError("mesh_replacement_unsupported", "An element block has no proven ownership by the selected adopted mesh.", {"card_id": card.id})
+                    remove(card)
+        used_elsewhere = {node for cell in cells if cell.get("part_id") not in selected for node in cell["nodes"]}
+        for card in resource.cards:
+            if card.keyword.upper().split("/")[1] != "NODE": continue
+            text = self.card_text(card.id)
+            marker = re.search(r"^# CAELab mesh ([0-9a-f-]+); geometry ", text, re.M)
+            if marker is None or marker.group(1) not in batches: continue
+            other_batch_parts = [item for item in resource.cards if item.id not in removed_cards and item.keyword.upper().startswith("/PART/")
+                and f"# CAELab adopted mesh {marker.group(1)}; part " in self.card_text(item.id)]
+            lines = text.splitlines(keepends=True)
+            remove_rows = set()
+            for index in card.data:
+                try: node = int(resource.lines[index][:10])
+                except ValueError:
+                    raise PrepError("mesh_inventory_incomplete", "An owned node row has an invalid ID.", {"card_id": card.id}) from None
+                if node not in used_elsewhere and (node in selected_nodes or not other_batch_parts):
+                    remove_rows.add(index - card.start)
+                    removed_nodes.add(node)
+            if len(remove_rows) == len(card.data): remove(card)
+            elif remove_rows:
+                replacement = "".join(line for index, line in enumerate(lines) if index not in remove_rows)
+                resource._validate_replacement(card.keyword, replacement)
+                created = next((item for item in state["created"] if item["id"] == card.id), None)
+                if created is not None: created["text"] = replacement
+                else: state["replaced"][card.id] = replacement
+                state["patches"].pop(card.id, None)
+        return state, {"replaced_part_ids": list(part_ids), "removed_card_ids": removed_cards,
+                       "removed_node_ids": sorted(removed_nodes), "preserved_shared_node_ids": sorted(shared_nodes)}
+
     def adopt_mesh_candidate(self, native_mesh, *, material_id, property_id, name=None,
                              replace_part_ids=None, expected_revision=None, expected_document_id=None):
         """Adopt a verified candidate into one atomic native resource command.
@@ -391,17 +490,13 @@ class PrepSession:
         No unit inference, automatic constitutive numbers or orphan PARTs. Native
         IDs are mapped explicitly; source CAD identifiers remain provenance only.
         """
-        from .mesh_candidates import validate_native_mesh
+        from .mesh_candidates import validate_native_mesh, triangle_quality, tetrahedron_quality
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
-            if replace_part_ids is not None:
-                self._member_sequence(replace_part_ids)
-                affected = []
-                for part_id in replace_part_ids:
-                    _, card, _ = self._unique_card(part_id, "PART")
-                    dependents, unverified = self._dependency_inventory(part_id)
-                    affected.append({"card_id": card.id, "dependents": dependents, "unverified": unverified})
-                raise PrepError("mesh_replacement_unsupported", "Mesh replacement requires an explicit remapping of existing node groups, surfaces and conditions; append the candidate instead.", {"affected_parts": affected})
+            if any(card["keyword"].upper().startswith("/TRANSFORM") for card in self.list_cards()):
+                raise PrepError("unsupported_mesh_transform", "Mesh adoption does not reinterpret existing native transformation scopes.")
+            replacement_state, replacement_details = (self._mesh_replacement_state(replace_part_ids)
+                if replace_part_ids is not None else (None, {}))
             native_mesh = validate_native_mesh(native_mesh)
             resource = self._model_resource(None)
             units = resource.unit_context().get("global")
@@ -424,12 +519,14 @@ class PrepSession:
             for source in self._require().resources.values():
                 for card in source.cards:
                     root = card.keyword.upper().split("/")[1]
-                    if root not in element_roots and root != "NODE": continue
                     used = used_nodes if root == "NODE" else used_elements
                     for index in card.data:
                         try: used.add(int(source.lines[index][:10]))
                         except ValueError:
-                            raise PrepError("mesh_inventory_incomplete", "An existing native mesh ID cannot be parsed safely; resolve it before adoption.", {"card_id": card.id}) from None
+                            if root in element_roots or root == "NODE":
+                                raise PrepError("mesh_inventory_incomplete", "An existing native mesh ID cannot be parsed safely; resolve it before adoption.", {"card_id": card.id}) from None
+                    # Reserving leading integers of unrecognised cards is
+                    # conservative: other element families still own their IDs.
             def remap(identifiers, used):
                 result, next_id = {}, 1
                 for identifier in identifiers:
@@ -452,6 +549,12 @@ class PrepSession:
                 part_native[part.uuid] = identifier
                 used_parts.add(identifier)
             newline = resource.newline
+            encoded_coordinates = {node.id: tuple(float(real(value)) for value in node.xyz) for node in native_mesh.nodes}
+            for cell in native_mesh.elements:
+                points = [encoded_coordinates[node] for node in cell.node_ids]
+                q, measure, normalized = (triangle_quality(points) if native_mesh.dimension == 2 else tetrahedron_quality(points))
+                if (not all(math.isfinite(value) for value in (q, measure, normalized)) or normalized <= 1e-12 or q < .1):
+                    raise PrepError("native_precision", "Native field rounding would violate the mesh quality admission limits.", {"element_id": cell.id})
             node_rows = [integer(node_map[node.id]) + "".join(real(value) for value in node.xyz) for node in native_mesh.nodes]
             provenance = [f"# CAELab mesh {native_mesh.mesh_uuid}; geometry {native_mesh.geometry_resource_uuid}",
                           f"# Length unit {native_mesh.length_unit}; omitted boundary cells {native_mesh.omitted_boundary_cells}"]
@@ -463,13 +566,18 @@ class PrepSession:
                 part_name = name if name is not None and len(native_mesh.parts) == 1 else part.name
                 if name is not None and len(native_mesh.parts) > 1: part_name = f"{name}: {part.name}"
                 part_positions[part.uuid] = len(texts)
-                texts.append(newline.join([f"/PART/{identifier}", title(part_name),
+                marker = f"# CAELab adopted mesh {native_mesh.mesh_uuid}; part {part.uuid}"
+                texts.append(newline.join([f"/PART/{identifier}", title(part_name), marker,
                     integer(prop[1]) + integer(material[1]) + f"{0:10d}", ""]))
                 keyword = "SH3N" if native_mesh.dimension == 2 else "TETRA4"
                 cells = [cell for cell in native_mesh.elements if cell.part_uuid == part.uuid]
                 rows = [integer(element_map[cell.id]) + "".join(integer(node_map[node]) for node in cell.node_ids) for cell in cells]
-                texts.append(newline.join([f"/{keyword}/{identifier}", *rows, ""]))
-            state, card_ids = resource.inserted_states(texts)
+                texts.append(newline.join([f"/{keyword}/{identifier}", marker, *rows, ""]))
+            if replacement_state is None:
+                state, card_ids = resource.inserted_states(texts)
+            else:
+                state, card_ids = replacement_state, [str(uuid4()) for _ in texts]
+                state["created"].extend({"id": card_id, "text": text} for card_id, text in zip(card_ids, texts))
             part_map = {key: card_ids[position] for key, position in part_positions.items()}
             change = self.dispatcher.execute(resource.id, state, "Adopt mesh candidate", object_ids=tuple(card_ids),
                                              expected_revision=expected_revision, kind="structure")
@@ -477,7 +585,7 @@ class PrepSession:
                 card_ids=card_ids, part_ids=list(part_map.values()), part_id_map=part_map,
                 node_id_map=node_map, element_id_map=element_map,
                 mesh_uuid=native_mesh.mesh_uuid, geometry_resource_uuid=native_mesh.geometry_resource_uuid,
-                omitted_boundary_cells=native_mesh.omitted_boundary_cells, unused_node_ids=list(native_mesh.unused_node_ids))
+                omitted_boundary_cells=native_mesh.omitted_boundary_cells, unused_node_ids=list(native_mesh.unused_node_ids), **replacement_details)
 
     def create_curve(self, name, points, *, resource_id=None, native_id=None,
                      expected_revision=None, expected_document_id=None):
@@ -724,7 +832,8 @@ class PrepSession:
             family, layout = self._condition_layout(card)
             if not isinstance(values, dict) or not values or set(values) - set(layout):
                 raise PrepError("invalid_command", "Choose supported condition fields only.")
-            merged = {**self.condition_values(card_id), **values}
+            current = self.condition_values(card_id)
+            merged = {**current, **values}
             for key, (_, _, _, kind) in layout.items():
                 if kind in ("GRNOD", "FUNCT", "SURF") and merged[key] is None:
                     raise PrepError("invalid_reference", "Replace unresolved condition references before applying.", {"field": key})
@@ -737,8 +846,16 @@ class PrepSession:
             else:
                 text = contact_block(identity[1], "Validated", self._group_reference(merged["secondary_group_id"]), self._surface_reference(merged["main_surface_id"]), merged["friction"])
             canonical = text.splitlines()[1:]
+            changed = []
+            for key, value in values.items():
+                kind = layout[key][3]
+                normalized = (float(value) if kind == "float" else [float(item) for item in value] if kind == "vector3"
+                              else list(value) if kind == "bool3" else value)
+                if normalized != current[key]: changed.append(key)
+            if not changed:
+                return self._model_result(resource, card_id, None)
             lines = self.card_text(card_id).splitlines(keepends=True)
-            for key in values:
+            for key in changed:
                 row, start, stop, _ = layout[key]
                 index = card.data[row] - card.start
                 old = lines[index]
@@ -1021,6 +1138,85 @@ class PrepSession:
             cells = self._part_cells(target)
             return {"part_id": part_id, "element_count": len(cells)}
 
+    def condition_targets(self, card_id):
+        """Read role-specific native targets; UI code need not interpret solver IDs."""
+        with self._lock:
+            resource = self._find_card(card_id)
+            card = resource.card(card_id)
+            words = card.keyword.upper().split("/")
+            root, pair = words[1], tuple(words[1:3])
+            result = {"card_id": card_id, "resource_id": resource.id, "roles": [], "diagnostics": []}
+            if self._projection_cache is None: self.mesh_view()
+            def nodes(group_id):
+                self._group_reference(group_id)
+                owner = self._find_card(group_id)
+                identifiers = self._integer_members(owner, owner.card(group_id))
+                refs = []
+                for identifier in identifiers:
+                    resources = self._projection_cache["node_resources"].get(identifier, [])
+                    if len(resources) != 1:
+                        raise PrepError("invalid_reference", "A target node is not uniquely displayable.", {"node_id": identifier})
+                    refs.append(SelectionRef(resources[0], "node", identifier))
+                return refs
+            def elements(surface_id):
+                self._surface_reference(surface_id)
+                owner = self._find_card(surface_id)
+                refs = []
+                for identifier in self._integer_members(owner, owner.card(surface_id)):
+                    part = self._native_matches("PART", identifier)[0]
+                    target = ObjectRef(self.document.id, part["resource_id"], part["id"], "rad-card", part["keyword"])
+                    refs.extend(SelectionRef(cell["resource_id"], "element", cell["id"]) for cell in self._part_cells(target))
+                return list(dict.fromkeys(refs))
+            specs = []
+            try:
+                if pair == ("GRNOD", "NODE"):
+                    specs = [("nodes", "Group nodes", "node", nodes, card_id)]
+                elif pair == ("SURF", "PART"):
+                    specs = [("elements", "Surface elements", "element", elements, card_id)]
+                elif root in ("BCS", "CLOAD") or pair == ("INIVEL", "TRA"):
+                    values = self.condition_values(card_id)
+                    result["diagnostics"].extend(values["diagnostics"])
+                    specs = [("nodes", "Target nodes", "node", nodes, values["group_id"])]
+                elif pair == ("INTER", "TYPE7"):
+                    values = self.condition_values(card_id)
+                    result["diagnostics"].extend(values["diagnostics"])
+                    specs = [("secondary_nodes", "Secondary nodes", "node", nodes, values["secondary_group_id"]),
+                             ("main_elements", "Main surface", "element", elements, values["main_surface_id"])]
+            except PrepError as exc:
+                result["diagnostics"].append({"code": exc.code, "message": exc.message, **exc.details})
+            for key, label, kind, resolver, identity in specs:
+                try: refs = resolver(identity)
+                except PrepError as exc:
+                    refs = []
+                    result["diagnostics"].append({"code": exc.code, "message": exc.message, "role": key, **exc.details})
+                result["roles"].append({"key": key, "label": label, "kind": kind,
+                    "ids": [ref.local_id for ref in refs], "refs": [asdict(ref) for ref in refs]})
+            return result
+
+    def _condition_selection(self, card_id, role=None):
+        targets = self.condition_targets(card_id)
+        choices = targets["roles"]
+        selected = next((item for item in choices if item["key"] == role), None) if role is not None else (choices[0] if choices else None)
+        if selected is None:
+            return Selection(), None
+        refs = tuple(SelectionRef(**item) for item in selected["refs"])
+        return (Selection(selected["kind"], tuple(selected["ids"]), refs) if refs else Selection()), selected["key"]
+
+    def select_condition_target(self, card_id, role):
+        with self._lock:
+            resource = self._find_card(card_id)
+            card = resource.card(card_id)
+            selection, selected_role = self._condition_selection(card_id, role)
+            if selected_role is None or not selection.refs:
+                raise PrepError("invalid_selection", "The requested condition target cannot be resolved for display.",
+                                {"role": role, "diagnostics": self.condition_targets(card_id)["diagnostics"]})
+            target = ObjectRef(self.document.id, resource.id, card.id, "rad-card", card.keyword)
+            self._active_object, self._selected_objects = target, (target,)
+            self._active_target_role = selected_role
+            self.document.selection = selection
+            self._notify("selection")
+            return self.selection()
+
     def activate_object(self, target: ObjectRef | None) -> dict:
         with self._lock:
             document = self._require()
@@ -1028,10 +1224,15 @@ class PrepSession:
             if target is not None:
                 self._object_card(target)
                 cells = self._part_cells(target)
+            selection = Selection("element", tuple(cell["id"] for cell in cells),
+                tuple(SelectionRef(cell["resource_id"], "element", cell["id"]) for cell in cells)) if cells else Selection()
+            active_role = None
+            if target is not None and not cells:
+                selection, active_role = self._condition_selection(target.object_id)
             self._active_object = target
             self._selected_objects = (target,) if target is not None else ()
-            document.selection = Selection("element", tuple(cell["id"] for cell in cells),
-                tuple(SelectionRef(cell["resource_id"], "element", cell["id"]) for cell in cells)) if cells else Selection()
+            self._active_target_role = active_role
+            document.selection = selection
             self._notify("selection")
             return self.selection()
 
@@ -1062,6 +1263,7 @@ class PrepSession:
             entity_refs = tuple(dict.fromkeys(SelectionRef(cell["resource_id"], "element", cell["id"]) for cell in cells))
             selection = Selection("element", tuple(ref.local_id for ref in entity_refs), entity_refs) if entity_refs else Selection()
             self._selected_objects = tuple(normalized)
+            self._active_target_role = None
             self._active_object = active
             document.selection = selection
             self._notify("selection")
@@ -1108,6 +1310,7 @@ class PrepSession:
                 raise PrepError("ambiguous_selection", "여러 자원에 같은 ID가 있어 선택 대상을 확정할 수 없습니다.", {"kind": kind, "id": entity_id})
             document.selection = Selection(kind, (int(entity_id),), (SelectionRef(resources[0], kind, int(entity_id)),))
             self._active_object = None
+            self._active_target_role = None
             if kind == "element":
                 cell = next(cell for cell in self._projection_cache["cells"] if cell["id"] == entity_id)
                 parts = [item for item in self.list_cards() if self._native_part_id(item["keyword"]) == cell.get("part_id")]
@@ -1123,6 +1326,7 @@ class PrepSession:
             self._require().selection = Selection()
             self._active_object = None
             self._selected_objects = ()
+            self._active_target_role = None
             self._notify("selection")
             return self.selection()
 
@@ -1134,6 +1338,7 @@ class PrepSession:
                     "document_epoch": self._document_epoch, "projection_revision": self._projection_revision,
                     "resource_revisions": {key: resource.state_token() for key, resource in document.resources.items()},
                     "active_object": asdict(self._active_object) if self._active_object else None,
+                    "active_target_role": self._active_target_role,
                     "selected_objects": [asdict(ref) for ref in self._selected_objects],
                     "refs": [{"resource_id": r.resource_id, "entity_kind": r.entity_kind, "local_id": r.local_id}
                              for r in document.selection.refs]}
@@ -1324,9 +1529,13 @@ class PrepSession:
             if str(engine).casefold() in {str(destination).casefold() for destination, _ in outputs}:
                 raise PrepError("export_path_collision", "Engine filename conflicts with an INCLUDE output.")
             root = self._model_resource(None)
-            units = root.unit_context().get("global")
-            if not units or any(not units.get(key) for key in ("mass", "length", "time")):
-                raise PrepError("invalid_units", "Explicit Starter working units are required for generated Engine times.")
+            begin = next((card for card in root.cards if card.keyword.upper() == "/BEGIN"), None)
+            tokens = root.lines[begin.data[3]].split() if begin is not None and len(begin.data) >= 4 else []
+            if len(tokens) != 3:
+                raise PrepError("invalid_units", "Declare the second BEGIN unit row explicitly; Engine times use working units, not inferred input units.")
+            units = dict(zip(("mass", "length", "time"), tokens))
+            if units["time"] not in ("s", "ms", "mus"):
+                raise PrepError("invalid_units", "The declared working time unit is outside the supported solver export profile.")
             # Native export preserves raw files. Run export can add the mandatory
             # solver header to its OUTPUT only, without changing the document.
             added_header = False

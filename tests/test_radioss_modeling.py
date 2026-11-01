@@ -200,10 +200,11 @@ def test_replacement_overlay_is_compatible_with_v2_and_invalidates_cached_state_
     assert resource.state_token() != saved
 
 
-def test_original_curve_replacement_and_scalar_edits_preserve_card_identity(tmp_path):
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+def test_original_curve_replacement_and_scalar_edits_preserve_card_identity(tmp_path, newline):
     source = tmp_path / "original.rad"
-    source.write_text("/BEGIN\nOriginal\n/FUNCT/4\nMeasured\n# retained comment\n" +
-                      f"{0:20g}{0:20g}\n{1:20g}{1:20g}\n/END\n")
+    source.write_bytes(("/BEGIN\nOriginal\n/FUNCT/4\nMeasured\n# retained comment\n" +
+                      f"{0:20g}{0:20g}\n{1:20g}{1:20g}\n/END\n").replace("\n", newline).encode("ascii"))
     session = opened(source)
     card = lookup(session, "/FUNCT/4")
     resource = session.document.resources[card["resource_id"]]
@@ -216,7 +217,7 @@ def test_original_curve_replacement_and_scalar_edits_preserve_card_identity(tmp_
     session.undo()
     assert resource.render() == old
     session.redo()
-    assert "# retained comment\n" in session.card_text(card["id"])
+    assert "# retained comment" + newline in session.card_text(card["id"])
     assert len(resource.snapshot()["replaced"]) == 1
 
 
@@ -247,3 +248,37 @@ def test_group_rejects_duplicate_native_node_inside_one_source(tmp_path):
         session.create_node_group("Ambiguous node", [42])
     assert caught.value.code == "ambiguous_reference"
     assert session.describe()["revision"] == 0
+
+
+def test_condition_target_roles_follow_reference_edit_and_undo(tmp_path):
+    from caelab_prep.application.contracts import ObjectRef
+    session = known_only(tmp_path)
+    a = session.create_node_group("Secondary", [10, 11, 12])["card_id"]
+    surface_a = session.create_surface("Main A", [lookup(session, "/PART/1")["id"]])["card_id"]
+    surface_b = session.create_surface("Main B", [lookup(session, "/PART/2")["id"]])["card_id"]
+    contact = session.create_contact("Contact", a, surface_a, .1)
+    card = next(item for item in session.list_cards() if item["id"] == contact["card_id"])
+    target = ObjectRef(session.describe()["document_id"], card["resource_id"], card["id"], "rad-card", card["keyword"])
+    session.activate_object(target)
+    assert session.selection()["kind"] == "node" and session.selection()["ids"] == [10, 11, 12]
+    session.select_condition_target(card["id"], "main_elements")
+    assert session.selection()["kind"] == "element" and session.selection()["ids"] == [1, 2, 3, 4]
+    events = []
+    session.subscribe(events.append)
+    session.set_condition_values(card["id"], {"main_surface_id": surface_b})
+    assert len(events) == 1 and events[0]["kind"] == "structure"
+    assert session.selection()["ids"] == [5, 6, 7, 8]
+    assert session.selection()["active_target_role"] == "main_elements"
+    session.undo()
+    assert session.selection()["ids"] == [1, 2, 3, 4]
+    assert session.active_object() == target
+
+
+def test_unchanged_condition_values_do_not_reformat_original_native_bytes(tmp_path):
+    session = known_only(tmp_path)
+    card = lookup(session, "/INIVEL/TRA/1")
+    original = session.card_text(card["id"])
+    current = session.condition_values(card["id"])
+    result = session.set_condition_values(card["id"], {"velocity": tuple(current["velocity"]), "group_id": current["group_id"]})
+    assert result["change"] is None
+    assert session.card_text(card["id"]) == original and session.describe()["revision"] == 0
