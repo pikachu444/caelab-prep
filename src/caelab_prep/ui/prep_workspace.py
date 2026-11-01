@@ -14,7 +14,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QFrame, QHeaderView, QLabel, QLineEdit, QMenu,
     QPlainTextEdit, QProgressBar, QPushButton, QScrollArea, QSizePolicy,
-    QTabWidget, QToolBar, QToolButton, QTreeWidget, QVBoxLayout, QWidget,
+    QStackedWidget, QTabWidget, QToolBar, QToolButton, QTreeWidget, QVBoxLayout, QWidget,
 )
 
 from .shell import ViewportFrame, create_dock
@@ -49,9 +49,15 @@ class PrepWorkspace:
             ("&File", ((self.open_rad_action, self.open_project_action),
                        (self.save_action, self.save_as_action, self.export_action), (self.close_action,))),
             ("&Edit", ((self.undo_action, self.redo_action), (self.reload_properties_action,))),
-            ("&View", ((self.fit_action, self.iso_action, *self.standard_view_actions, self.edges_action),)),
+            ("&Model", ((self.modeling.actions["material.create"], self.modeling.actions["section.create"]),
+                        (self.modeling.actions["object.copy"], self.modeling.actions["object.delete"]),
+                        (self.modeling.actions["part.assign"],))),
+            ("&View", ((self.fit_action, self.fit_selected_action, self.iso_action, *self.standard_view_actions, self.edges_action),
+                       (self.hide_selected_action, self.isolate_action, self.show_all_action))),
         )
         for name, sections in groups:
+            if name == "&Model" and self.presentation:
+                continue
             menu = self.menuBar().addMenu(name)
             for index, actions in enumerate(sections):
                 if index:
@@ -83,6 +89,10 @@ class PrepWorkspace:
         open_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         bar.addSeparator()
         bar.addActions([self.undo_action, self.redo_action])
+        if not self.presentation:
+            bar.addSeparator()
+            bar.addActions([self.modeling.actions["material.create"], self.modeling.actions["section.create"],
+                            self.modeling.actions["part.assign"]])
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         bar.addWidget(spacer)
@@ -131,6 +141,12 @@ class PrepWorkspace:
         orientation.setMenu(views)
         orientation.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         bar.addSeparator()
+        for action, label in ((self.fit_selected_action, "Fit selection"),
+                              (self.hide_selected_action, "Hide"), (self.isolate_action, "Isolate"),
+                              (self.show_all_action, "Show all")):
+            action.setIconText(label)
+            bar.addAction(action)
+        bar.addSeparator()
         self.pick_mode = QComboBox()
         self.pick_mode.setObjectName("pickMode")
         self.pick_mode.setAccessibleName("Mesh selection type")
@@ -152,15 +168,32 @@ class PrepWorkspace:
         self.model_filter.setClearButtonEnabled(True)
         self.model_filter.textChanged.connect(self._filter_model)
         self.model_tree = ModelTree()
+        self.model_tree.setSelectionMode(ModelTree.SelectionMode.ExtendedSelection)
         self.model_tree.model().setHorizontalHeaderLabels(["Name", "Type", "Card"])
         self.model_tree.setColumnHidden(1, True)
         self.model_tree.setColumnHidden(2, False)
         self.model_tree.nodeSelected.connect(self._card_selected)
+        self.model_tree.selectedRefsChanged.connect(self._objects_selected)
+        self.model_tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.model_tree.customContextMenuRequested.connect(self._model_context_menu)
         layout.addWidget(self.model_filter)
         layout.addWidget(self.model_tree, 1)
         self.model_dock = create_dock(self, "modelDock", "Model browser", browser,
                                      Qt.DockWidgetArea.LeftDockWidgetArea, self._view_menu)
         self.model_dock.setMinimumWidth(300)
+
+    def _model_context_menu(self, position):
+        index = self.model_tree.indexAt(position)
+        if index.isValid():
+            ref = index.siblingAtColumn(0).data(Qt.ItemDataRole.UserRole)
+            if ref is not None and ref not in self.model_tree.selected_refs():
+                self.select_card(ref.object_id)
+        self.modeling.refresh()
+        menu = QMenu(self.model_tree)
+        menu.addActions([self.hide_selected_action, self.isolate_action, self.show_all_action, self.fit_selected_action])
+        menu.addSeparator()
+        menu.addActions(list(self.modeling.actions.values()))
+        menu.exec(self.model_tree.viewport().mapToGlobal(position))
 
     def _install_inspector(self):
         self.property_tabs = QTabWidget()
@@ -201,7 +234,10 @@ class PrepWorkspace:
         self.raw_source.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.property_tabs.addTab(form_scroll, "Properties")
         self.property_tabs.addTab(self.raw_source, "Card source")
-        self.properties_dock = create_dock(self, "propertiesDock", "Inspector", self.property_tabs,
+        self.inspector_stack = QStackedWidget()
+        self.inspector_stack.addWidget(self.property_tabs)
+        self.modeling.mount(self.inspector_stack)
+        self.properties_dock = create_dock(self, "propertiesDock", "Inspector", self.inspector_stack,
                                           Qt.DockWidgetArea.LeftDockWidgetArea, self._view_menu)
         self.properties_dock.setMinimumWidth(300)
         self.properties_dock.setMinimumHeight(290)
@@ -281,7 +317,7 @@ class PrepWorkspace:
             self.model_tree.model().setHeaderData(2, Qt.Orientation.Horizontal, "Card")
             if self._selected_card_id not in self._card_refs:
                 self._selected_card_id = None
-            self._focus_tree_card(self._selected_card_id)
+            self._restore_approved_selection()
             self._filter_model(self.model_filter.text())
         finally:
             self.model_tree.blockSignals(False)
@@ -327,6 +363,7 @@ class PrepWorkspace:
             self.property_title.setText("No object selected")
             self.property_subtitle.clear()
             self.raw_source.clear()
+            self.modeling.refresh()
             return
         ref = self._card_refs[self._selected_card_id]
         specs = self.provider.properties(ref)
@@ -352,6 +389,7 @@ class PrepWorkspace:
             self.property_subtitle.setText(str(card.get("keyword") or "") + "  /  Read-only")
             if specs:
                 self.units_note.clear()
+        self.modeling.refresh()
 
     def _connect_property_inputs(self):
         deferred = getattr(getattr(self, "reference_adapter", None), "defer_scalars", False)

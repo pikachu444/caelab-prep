@@ -1,9 +1,23 @@
 """Preserved typed-draft bindings for the rebuilt native presentation."""
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QCheckBox, QComboBox, QLineEdit
 
 from .numeric import NumericEdit, VectorEdit
 from .tree import field
+
+
+class ReferenceComboBox(QComboBox):
+    """Qt's opaque Python user data compares identity, but references use value identity."""
+
+    def findData(self, data, role=Qt.ItemDataRole.UserRole,
+                 flags=Qt.MatchFlag.MatchExactly | Qt.MatchFlag.MatchCaseSensitive):
+        if role == Qt.ItemDataRole.UserRole:
+            for index in range(self.count()):
+                if self.itemData(index, role) == data:
+                    return index
+            return -1
+        return super().findData(data, role, flags)
 
 
 def create_editor(spec, value, changed):
@@ -20,7 +34,7 @@ def create_editor(spec, value, changed):
         editor.setChecked(bool(value))
         editor.toggled.connect(changed)
     elif kind in ("choice", "reference"):
-        editor = QComboBox()
+        editor = ReferenceComboBox() if kind == "reference" else QComboBox()
         labels = field(spec, "choice_labels", ())
         for index, choice in enumerate(field(spec, "choices", ())):
             label = labels[index] if index < len(labels) else str(field(choice, "object_id", choice))

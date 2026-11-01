@@ -21,7 +21,7 @@ class ComparisonWindow(QMainWindow):
         self._allow_close = False
         self.setWindowTitle("CAELab Prep — Program UI comparison")
         self.resize(1360, 900)
-        self.setMinimumSize(960, 680)
+        self.setMinimumSize(960, 640)
         body = QWidget()
         layout = QVBoxLayout(body)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -83,8 +83,8 @@ class ComparisonWindow(QMainWindow):
             view.close_action.triggered.connect(self.close)
             self.stack.addWidget(view)
             self.views[key] = view
-            if selected is not None:
-                view.select_card(selected.object_id) if self.native else view.select_ref(selected)
+            if selected is not None and not self.native:
+                view.select_ref(selected)
             elif not self.native:
                 self.session.select(None)
                 view._pending_selection = True
@@ -94,8 +94,6 @@ class ComparisonWindow(QMainWindow):
             view = self.views[key]
             if self.native:
                 view.refresh_document()
-                if selected is not None:
-                    view.select_card(selected.object_id)
             else:
                 view.reload_values()
                 if selected is not None:

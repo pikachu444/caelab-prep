@@ -36,6 +36,8 @@ class ReferenceBindings:
     viewport: QWidget | None = None
     dialog: QDialog | None = None
     curve_pages: QWidget | None = None
+    edit_action: QAction | None = None
+    dialog_buttons: QWidget | None = None
 
 
 def reference_style(key):
@@ -96,6 +98,8 @@ class CommandSurface:
             row = QHBoxLayout(page)
             row.setContentsMargins(0, 0, 0, 0)
             for key in keys:
+                if not b.commands.get(key):
+                    continue
                 group = QWidget()
                 stack = QVBoxLayout(group)
                 stack.setContentsMargins(3, 0, 3, 0)
@@ -183,11 +187,13 @@ class EditorInteraction:
         dialog.setObjectName("referencePropertyDialog")
         dialog.setWindowTitle(self.title + " — CAELab Prep")
         dialog.setWindowModality(Qt.WindowModality.WindowModal)
-        dialog.resize(540, 620)
+        dialog.resize(540, 560)
         column = QVBoxLayout(dialog)
         column.addWidget(panel)
         panel.show()
-        row = QHBoxLayout()
+        buttons = QWidget()
+        row = QHBoxLayout(buttons)
+        row.setContentsMargins(0, 0, 0, 0)
         row.addStretch()
         ok, cancel = QPushButton("OK"), QPushButton("Cancel")
         ok.setObjectName("primaryAction")
@@ -199,7 +205,8 @@ class EditorInteraction:
         dialog.rejected.connect(b.revert)
         row.addWidget(ok)
         row.addWidget(cancel)
-        column.addLayout(row)
+        column.addWidget(buttons)
+        b.dialog_buttons = buttons
         b.dialog = dialog
         b.tree.doubleClicked.connect(lambda _: dialog.open())
 
@@ -274,10 +281,15 @@ class ReferenceAdapter:
         self.docks.install(b)
         self.curves.install(b)
         self.interaction.install(b)
-        edit = b.commands["Material"][0]
+        edit = b.edit_action or b.commands["Material"][0]
         edit.triggered.connect(lambda: b.dialog.open() if b.dialog else b.properties_dock.show())
         menu = b.window.menuBar().addMenu("Property" if self.commands.kind in ("icons", "module") else "Material")
-        menu.addAction(edit)
+        for group in ("Material", "Section", "Object", "Assignment"):
+            group_actions = b.commands.get(group, ())
+            if group_actions:
+                if menu.actions():
+                    menu.addSeparator()
+                menu.addActions(group_actions)
         if b.property_tabs is not None:
             b.property_tabs.setTabText(0, self.docks.property_title)
             b.property_tabs.setTabText(1, self.docks.source_title)
@@ -319,12 +331,12 @@ class ReferenceAdapter:
 
 # Independent command, docking, editing and curve choices at one shared seam.
 ADAPTERS = {
-    "hypermesh": ReferenceAdapter("hypermesh", CommandSurface("compact", (("Home", ("Document", "History")), ("Materials", ("Material",)))), DockArrangement("Model", "Entity Editor"), EditorInteraction("inline"), CurveArrangement("side")),
+    "hypermesh": ReferenceAdapter("hypermesh", CommandSurface("compact", (("Home", ("Document", "History")), ("Materials", ("Material", "Section", "Assignment", "Object")))), DockArrangement("Model", "Entity Editor"), EditorInteraction("inline"), CurveArrangement("side")),
     "prepomax": ReferenceAdapter("prepomax", CommandSurface("icons"), DockArrangement("FE Model", "Properties", output=True, row_height=19, output_below_viewport=True), EditorInteraction("dialog", "Edit material / curve"), CurveArrangement("stacked"), "global", selection_icons=True),
     "abaqus": ReferenceAdapter("abaqus", CommandSurface("module"), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "Edit Material"), CurveArrangement("pages")),
-    "comsol": ReferenceAdapter("comsol", CommandSurface("ribbon", (("Home", ("Document", "History", "Material")),)), DockArrangement("Model Builder", "Settings", adjacent=True), EditorInteraction("settings"), CurveArrangement("stacked")),
-    "nfx": ReferenceAdapter("nfx", CommandSurface("ribbon", (("파일", ("Document", "History")), ("모델", ("Material",)))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "재료"), CurveArrangement("stacked")),
-    "meshfree": ReferenceAdapter("meshfree", CommandSurface("ribbon", (("Home", ("Document", "History")), ("Material", ("Material",)))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "Material"), CurveArrangement("pages", ("Spreadsheet", "Graph"))),
-    "naksha": ReferenceAdapter("naksha", CommandSurface("ribbon", (("Materials", ("Material",)),), quick_groups=("Document", "History")), DockArrangement("Outline", "Details", outline_fraction=.57), EditorInteraction("details"), CurveArrangement("side"), "global"),
-    "beidprep": ReferenceAdapter("beidprep", CommandSurface("compact", (("MODEL", ("Document", "History", "Material")),)), DockArrangement("MODEL", "FORM", adjacent=True, source_title="TEXT"), EditorInteraction("adjacent"), CurveArrangement("stacked"), "bottom"),
+    "comsol": ReferenceAdapter("comsol", CommandSurface("ribbon", (("Home", ("Document", "History")), ("Model", ("Material", "Section", "Assignment", "Object")))), DockArrangement("Model Builder", "Settings", adjacent=True), EditorInteraction("settings"), CurveArrangement("stacked")),
+    "nfx": ReferenceAdapter("nfx", CommandSurface("ribbon", (("파일", ("Document", "History")), ("모델", ("Material", "Section", "Assignment", "Object")))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "재료"), CurveArrangement("stacked")),
+    "meshfree": ReferenceAdapter("meshfree", CommandSurface("ribbon", (("Home", ("Document", "History")), ("Material", ("Material", "Section", "Assignment", "Object")))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "Material"), CurveArrangement("pages", ("Spreadsheet", "Graph"))),
+    "naksha": ReferenceAdapter("naksha", CommandSurface("ribbon", (("Materials", ("Material", "Section", "Assignment", "Object")),), quick_groups=("Document", "History")), DockArrangement("Outline", "Details", outline_fraction=.57), EditorInteraction("details"), CurveArrangement("side"), "global"),
+    "beidprep": ReferenceAdapter("beidprep", CommandSurface("compact", (("MODEL", ("Document", "History", "Material", "Section", "Assignment", "Object")),)), DockArrangement("MODEL", "FORM", adjacent=True, source_title="TEXT"), EditorInteraction("adjacent"), CurveArrangement("stacked"), "bottom"),
 }

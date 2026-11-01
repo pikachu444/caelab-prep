@@ -204,10 +204,22 @@ class _SettingsPresentation:
     def compose(self, rows, specs):
         for row in rows.values():
             row.settings_label(148)
+            row._settings_stacked = False
         return _grouped_body(rows, specs)
 
     def fit(self, panel):
-        pass
+        # A narrow Settings dock must keep the complete value and its unit
+        # visible. Only the label placement changes; the editors/draft survive.
+        stacked = panel.scroll.viewport().width() < 360
+        for row in panel._rows.values():
+            if getattr(row, "_settings_stacked", None) == stacked:
+                continue
+            row.reset_layout()
+            if stacked:
+                row.stack_label()
+            else:
+                row.settings_label(148)
+            row._settings_stacked = stacked
 
 
 _PRESENTATIONS = {

@@ -37,6 +37,8 @@ class PropertySpec:
     coordinate_frame: str | None = None
     unit_scales: tuple[tuple[str, float], ...] = ()
     choice_labels: tuple[str, ...] = ()
+    minimum_rows: int = 0
+    maximum_rows: int | None = None
 
 
 @dataclass(frozen=True)
