@@ -239,3 +239,23 @@ def test_condition_targets_drive_real_node_and_element_highlights_and_keep_conta
     assert session.selection()["ids"] == [9007]
     window.undo_action.trigger(); pump()
     assert session.selection()["active_target_role"] == "main_elements" and session.selection()["ids"] == [7001]
+
+
+@pytest.mark.parametrize("target_kind,field", (("load", "curve_id"), ("part", "material")))
+def test_invalid_inline_reference_is_a_guarded_draft(model, tmp_path, target_kind, field):
+    session = model[0]
+    created = _create_conditions(session)
+    target = created["load"] if target_kind == "load" else _card(session, "/PART/902")["id"]
+    window = MainWindow(session, presentation="hypermesh", enable_viewport=False)
+    window._allow_close = True
+    window.show(); pump()
+    assert window.select_card(target)
+    before = session.describe()["revision"]
+    combo = window.field_editors[field]
+    combo.setCurrentIndex(0)
+    combo.activated.emit(0); pump()
+    assert session.describe()["revision"] == before
+    assert window._text_drafts()
+    assert not window.save_project_file(tmp_path / "invalid-reference.caeprep")
+    assert session.describe()["revision"] == before
+    assert window.field_editors[field].currentData() is None

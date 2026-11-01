@@ -441,7 +441,8 @@ class PrepController:
                        for key, spec in self.property_editor.specs.items() if spec.kind == "choice"}
             if self._refresh_property_context(choices):
                 return
-            if not self._deferred_property_drafts():
+            if (not getattr(getattr(self, "reference_adapter", None), "defer_scalars", False)
+                    and not self.property_editor.context_changed):
                 self._commit_field(name, editor.currentData())
         except Exception as exc:
             self._show_error(exc)
@@ -528,16 +529,15 @@ class PrepController:
                   if key != exclude and isinstance(editor, QLineEdit) and editor.isModified()}
         if self._curve_active and self.curve_table.has_draft():
             drafts["@curve"] = self.curve_table.draft_state()
-        if self._deferred_property_drafts() or self.property_editor.unit_selectors:
-            raw = self.property_editor.raw_values()
-            units = self.property_editor.units()
-            changed = {name: value for name, value in raw.items()
-                       if name != exclude and value != self._native_property_baseline.get(name)}
-            changed_units = {name: unit for name, unit in units.items() if name != exclude and
-                             (name in changed or unit != getattr(self, "_native_unit_baseline", {}).get(name))}
-            if changed or changed_units:
-                drafts["@properties"] = changed
-                drafts["@units"] = changed_units
+        raw = self.property_editor.raw_values()
+        units = self.property_editor.units()
+        changed = {name: value for name, value in raw.items()
+                   if name != exclude and value != getattr(self, "_native_property_baseline", {}).get(name)}
+        changed_units = {name: unit for name, unit in units.items() if name != exclude and
+                         (name in changed or unit != getattr(self, "_native_unit_baseline", {}).get(name))}
+        if changed or changed_units:
+            drafts["@properties"] = changed
+            drafts["@units"] = changed_units
         if self.property_editor.context_changed:
             drafts["@quantities"] = self.property_editor.context_draft_state()
         return drafts
@@ -668,6 +668,7 @@ class PrepController:
         return (getattr(getattr(self, "reference_adapter", None), "defer_scalars", False) or
                 any(hasattr(editor, "raw_value") for editor in self.property_editor.editors.values()) or
                 self.property_editor.context_changed or
+                self.property_editor.raw_values() != getattr(self, "_native_property_baseline", {}) or
                 self.property_editor.units() != getattr(self, "_native_unit_baseline", {}))
 
     def _discard_pending_edits(self):

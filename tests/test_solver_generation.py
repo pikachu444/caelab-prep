@@ -36,12 +36,19 @@ def test_actual_solver_mass_velocity_force_and_energy_balance(real_candidate, tm
     native = candidate.to_native_mesh()
     session, material, section = _session(native)
     adopted = session.adopt_mesh_candidate(native, material_id=material, property_id=section)
+    element_members = [{"resource_id": cell["resource_id"], "entity_kind": "element", "local_id": cell["id"]}
+                       for cell in session.mesh_view()["cells"][:5]]
+    session.create_element_group("Explicit native elements", element_members, native_id=137)
     group = session.create_node_group("All physical nodes", list(adopted["node_id_map"].values()))["card_id"]
     session.create_boundary_condition("Guide in global X", group, [False, True, True], [True, True, True])
     session.create_initial_velocity("Uniform speed", group, [2.5, 0, 0])
     curve = session.create_curve("Constant per-node force", [(0, 1), (1e-5, 1)])["card_id"]
     session.create_load("Each node +1e-7 N", group, curve, "X", 1e-7)
     output = session.export_solver_inputs(str(tmp_path / "motion_0000.rad"), 1e-5, 1e-6)
+    lines = Path(output["starter_path"]).read_text().splitlines()
+    header = "/GRSH3N/SH3N/137" if native.dimension == 2 else "/GRBRIC/BRIC/137"
+    member_row = lines[lines.index(header) + 2]
+    assert [int(member_row[i:i+10]) for i in range(0, len(member_row), 10)] == [r["local_id"] for r in element_members]
     engine = Path(output["engine_path"])
     # Preserve the exact generated Engine. Add only observation frequency;
     # neither model definitions nor the integration controls are changed.

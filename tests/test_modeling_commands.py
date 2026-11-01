@@ -78,6 +78,49 @@ def test_cli_describe_and_invalid_form_do_not_create_output(tmp_path):
     assert code == 1 and "error" in result and not output.exists()
 
 
+def test_selected_element_group_and_cli_membership_roundtrip(tmp_path):
+    session = PrepSession(); session.open_rad(str(MODEL)); provider = RadProvider(session)
+    session.select_entity("element", 2)
+    spec = provider.operation_spec("element_group.create")
+    values = {field.name: field.value for field in spec.fields}
+    assert values["element_refs"] == tuple(session.selection()["refs"])
+    values.update(name="Selected shells", native_id=73)
+    created = provider.execute_operation(OperationRequest(spec.key, values, spec.document_id, spec.expected_revision))
+    assert created["object"].native_scope == "/GRSHEL/SHEL/73"
+    provider.select(created["object"])
+    assert session.selection()["ids"] == [2]
+    source = tmp_path / "source.caeprep"; session.save_project(str(source))
+    refs = {cell["id"]: {"resource_id": cell["resource_id"], "entity_kind": "element", "local_id": cell["id"]}
+            for cell in session.mesh_view()["cells"]}
+    second = tmp_path / "second.caeprep"
+    code, result = cli("model", source, "element_group.create", "--set", "native_id=74",
+                       "--set", "element_refs=" + json.dumps([refs[1]]), "--output", second)
+    assert code == 0, result
+    edited = tmp_path / "edited.caeprep"
+    code, result = cli("model", second, "object.edit", "--target", "/GRSHEL/SHEL/73",
+                       "--set", "element_refs=" + json.dumps([refs[3], refs[6]]), "--output", edited)
+    assert code == 0, result
+    invalid = tmp_path / "invalid.caeprep"
+    code, result = cli("model", edited, "object.edit", "--target", "/GRSHEL/SHEL/73",
+                       "--set", "element_refs=" + json.dumps([{**refs[3], "resource_id": "another-resource"}]),
+                       "--output", invalid)
+    assert code == 1 and not invalid.exists()
+    session.open_project(str(edited))
+    first = next(c for c in session.list_cards() if c["keyword"] == "/GRSHEL/SHEL/73")
+    target = provider.ref_for_card(first); before = session.card_text(first["id"])
+    from caelab_prep.application.contracts import SetProperties
+    provider.select(target)
+    provider.submit(SetProperties(target, {"element_refs": [refs[9]]}, session.describe()["revision"]))
+    assert session.selection()["ids"] == [9]
+    session.undo()
+    assert session.card_text(first["id"]) == before and session.selection()["ids"] == [3, 6]
+    output = tmp_path / "groups.rad"; session.export_rad(str(output))
+    from test_condition_workflow import _block
+    for header, expected in (("/GRSHEL/SHEL/73", [3, 6]), ("/GRSHEL/SHEL/74", [1])):
+        rows = _block(output.read_bytes(), header)[1:]
+        assert [int(row[i:i+10]) for row in rows for i in range(0, len(row), 10) if row[i:i+10].strip()] == expected
+
+
 def test_cli_conditions_use_typed_refs_json_tables_and_real_reopened_native_output(tmp_path):
     from test_condition_workflow import _base_model, _block
 
@@ -162,8 +205,15 @@ def test_cli_new_real_candidate_adoption_conditions_and_engine_export(real_candi
     assert code == 0, result
     assert result["quality"]["limits"]["minimum_tetrahedron"] == .1
     nodes = list(result["adoption"]["node_id_map"].values())
+    element_ids = list(result["adoption"]["element_id_map"].values())[:5]
+    element_refs = [{"resource_id": result["adoption"]["resource_id"], "entity_kind": "element", "local_id": identifier}
+                    for identifier in element_ids]
+    element_grouped = tmp_path / "element-grouped.caeprep"
+    code, result = cli("model", current, "element_group.create", "--set", "native_id=137",
+                       "--set", "element_refs=" + json.dumps(element_refs), "--output", element_grouped)
+    assert code == 0, result
     grouped = tmp_path / "grouped.caeprep"
-    code, result = cli("model", current, "group.create", "--set", "native_id=47",
+    code, result = cli("model", element_grouped, "group.create", "--set", "native_id=47",
                        "--set", "node_ids=" + json.dumps(nodes), "--output", grouped)
     assert code == 0, result
     conditioned = tmp_path / "conditioned.caeprep"
@@ -179,6 +229,10 @@ def test_cli_new_real_candidate_adoption_conditions_and_engine_export(real_candi
     assert len(native_nodes) == len(candidate.nodes)
     assert len(native_elements) == len(candidate.to_native_mesh().elements)
     assert set(parts.values()) == {(207, 41)}
+    from test_condition_workflow import _block
+    header = "/GRSH3N/SH3N/137" if candidate.dimension == 2 else "/GRBRIC/BRIC/137"
+    row = _block(exported.read_bytes(), header)[1]
+    assert [int(row[i:i+10]) for i in range(0, len(row), 10)] == element_ids
     engine = exported.with_name("candidate_0001.rad").read_text().splitlines()
     assert engine[1] == "/RUN/candidate/1" and float(engine[2]) == 1e-5
     assert engine[3] == "/ANIM/DT" and list(map(float, engine[4].split())) == [0, 1e-6]

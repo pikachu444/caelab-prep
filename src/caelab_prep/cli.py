@@ -225,8 +225,9 @@ def main(argv=None):
                 elif fields[name].kind == "references":
                     if not isinstance(value, list):
                         raise ValueError("Multiple references require a JSON list")
-                    value = [reference(item) if isinstance(item, str) else ObjectRef(**item) if isinstance(item, dict) else item
-                             for item in value]
+                    if fields[name].unit_context.get("reference_kind") != "mesh-element":
+                        value = [reference(item) if isinstance(item, str) else ObjectRef(**item) if isinstance(item, dict) else item
+                                 for item in value]
                 values[name] = value
             units = {}
             for item in args.unit:

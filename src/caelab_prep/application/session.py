@@ -221,8 +221,8 @@ class PrepSession:
                 "constraint_edit": ["BCS"], "contact_edit": ["INTER/TYPE7 targets and friction", "INTER/TYPE24 friction"],
                 "curve_edit": ["FUNCT point values and row count"], "initial_velocity_edit": ["INIVEL/TRA"],
                 "shell_edit": ["PROP/SHELL thickness"],
-                "create_cards": ["MAT/LAW1", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
-                "copy_delete_cards": ["MAT/LAW1", "MAT/LAW36", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
+                "create_cards": ["MAT/LAW1", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
+                "copy_delete_cards": ["MAT/LAW1", "MAT/LAW36", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
                 "part_assignment": True, "new_document": True, "mesh_adoption": ["triangle3", "tetra4"],
                 "mesh_replacement": "adoption-owned parts without dependent groups/surfaces or unknown references", "solver_input_export": True,
                 "cad_import": False, "meshing": False, "solver_execution": False,
@@ -568,7 +568,8 @@ class PrepSession:
                           f"# Length unit {native_mesh.length_unit}; omitted boundary cells {native_mesh.omitted_boundary_cells}"]
             provenance.extend(f"# Source {asset.kind} sha256 {asset.sha256}" for asset in native_mesh.assets)
             texts = [newline.join(["/NODE", *provenance, *node_rows, ""])]
-            part_positions = {}
+            part_positions, cells_by_part = {}, {}
+            for cell in native_mesh.elements: cells_by_part.setdefault(cell.part_uuid, []).append(cell)
             for part in native_mesh.parts:
                 identifier = part_native[part.uuid]
                 part_name = name if name is not None and len(native_mesh.parts) == 1 else part.name
@@ -578,7 +579,7 @@ class PrepSession:
                 texts.append(newline.join([f"/PART/{identifier}", title(part_name), marker,
                     integer(prop[1]) + integer(material[1]) + f"{0:10d}", ""]))
                 keyword = "SH3N" if native_mesh.dimension == 2 else "TETRA4"
-                cells = [cell for cell in native_mesh.elements if cell.part_uuid == part.uuid]
+                cells = cells_by_part.get(part.uuid, [])
                 rows = [integer(element_map[cell.id]) + "".join(integer(node_map[node]) for node in cell.node_ids) for cell in cells]
                 texts.append(newline.join([f"/{keyword}/{identifier}", marker, *rows, ""]))
             if replacement_state is None:
@@ -589,6 +590,7 @@ class PrepSession:
             part_map = {key: card_ids[position] for key, position in part_positions.items()}
             change = self.dispatcher.execute(resource.id, state, "Adopt mesh candidate", object_ids=tuple(card_ids),
                                              expected_revision=expected_revision, kind="structure")
+            self._source_paths.update(str(Path(asset.path).resolve()) for asset in native_mesh.assets)
             return self._model_result(resource, next(iter(part_map.values()), None), change,
                 card_ids=card_ids, part_ids=list(part_map.values()), part_id_map=part_map,
                 node_id_map=node_map, element_id_map=element_map,
@@ -696,9 +698,11 @@ class PrepSession:
         identifiers = []
         # Read all cells, even those the display omitted for missing nodes.
         cells = [cell for resource in self._require().resources.values() for cell in resource.mesh_projection()["cells"]]
+        kinds_by_part = {}
+        for cell in cells: kinds_by_part.setdefault(cell.get("part_id"), set()).add(cell["type"])
         for part_id in part_ids:
             _, _, identity = self._unique_card(part_id, "PART")
-            kinds = {cell["type"] for cell in cells if cell.get("part_id") == identity[1]}
+            kinds = kinds_by_part.get(identity[1], set())
             if not kinds or kinds - {"quad", "triangle"}:
                 raise PrepError("incompatible_surface", "SURF/PART supports nonempty shell/triangle parts; solid faces need a different surface definition.")
             identifiers.append(identity[1])
@@ -713,7 +717,10 @@ class PrepSession:
         if not isinstance(members, (tuple, list)) or not members:
             raise PrepError("invalid_reference", "Choose at least one typed element reference.")
         if self._projection_cache is None: self.mesh_view()
-        references, identifiers, families = [], [], set()
+        references, identifiers, families, seen = [], [], set(), set()
+        cells_by_id = {}
+        for cell in self._projection_cache["cells"]:
+            cells_by_id.setdefault(cell["id"], []).append(cell)
         for value in members:
             if isinstance(value, SelectionRef): ref = value
             elif isinstance(value, dict) and set(value) == {"resource_id", "entity_kind", "local_id"}:
@@ -723,7 +730,7 @@ class PrepSession:
             if ref.entity_kind != "element" or not isinstance(ref.resource_id, str):
                 raise PrepError("invalid_reference", "A typed element reference is required.")
             integer(ref.local_id)
-            matches = [cell for cell in self._projection_cache["cells"] if cell["id"] == ref.local_id]
+            matches = cells_by_id.get(ref.local_id, [])
             if len(matches) != 1:
                 raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "Element IDs in a native group must resolve uniquely across resources.", {"element_id": ref.local_id})
             cell = matches[0]
@@ -732,8 +739,9 @@ class PrepSession:
             kind = self._element_group_family(cell["type"])
             if kind is None:
                 raise PrepError("unsupported_operation", "Element groups support triangle3, quad4 and supported solid cells.")
-            if ref in references:
+            if ref in seen:
                 raise PrepError("invalid_reference", "Group members must be distinct.")
+            seen.add(ref)
             references.append(ref)
             identifiers.append(ref.local_id)
             families.add(kind)
@@ -774,9 +782,11 @@ class PrepSession:
                         refs.append(SelectionRef(owners[0], "node", identifier))
                 else:
                     if self._projection_cache is None: self.mesh_view()
-                    refs = []
+                    refs, cells_by_id = [], {}
+                    for cell in self._projection_cache["cells"]:
+                        cells_by_id.setdefault(cell["id"], []).append(cell)
                     for identifier in identifiers:
-                        matches = [cell for cell in self._projection_cache["cells"] if cell["id"] == identifier]
+                        matches = cells_by_id.get(identifier, [])
                         if len(matches) != 1:
                             raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "A group element cannot be resolved uniquely.", {"element_id": identifier})
                         refs.append(SelectionRef(matches[0]["resource_id"], "element", identifier))
@@ -801,7 +811,8 @@ class PrepSession:
                     identifiers = []
                     for member in members:
                         ref = member if isinstance(member, SelectionRef) else SelectionRef(**member) if isinstance(member, dict) and set(member) == {"resource_id", "entity_kind", "local_id"} else None
-                        if ref is None or ref.entity_kind != "node" or self._projection_cache["node_resources"].get(ref.local_id) != [ref.resource_id]:
+                        if (ref is None or ref.entity_kind != "node" or type(ref.local_id) is not int
+                                or self._projection_cache["node_resources"].get(ref.local_id) != [ref.resource_id]):
                             raise PrepError("invalid_reference", "A uniquely owned node reference is required.")
                         identifiers.append(ref.local_id)
                     identifiers = self._node_members(identifiers)
@@ -1062,12 +1073,15 @@ class PrepSession:
         independent = {"BEGIN", "END", "NODE", "SHELL", "SH3N", "BRICK", "TETRA4", "TETRA",
                        "BEAM", "TRUSS", "FUNCT", "UNIT"}
         independent_pairs = {("MAT", "LAW1"), ("MAT", "ELAST"), ("PROP", "SHELL"), ("PROP", "TYPE1"), ("PROP", "SOLID"), ("PROP", "TYPE14")}
+        rendered_by_resource = {}
         for item in self.list_cards():
             words = item["keyword"].upper().split("/")
             root, pair = words[1], tuple(words[1:3])
             resource = self._find_card(item["id"])
             card = resource.card(item["id"])
-            rendered = resource.render().decode("latin1").splitlines()
+            if resource.id not in rendered_by_resource:
+                rendered_by_resource[resource.id] = resource.render().decode("latin1").splitlines()
+            rendered = rendered_by_resource[resource.id]
             rows = [rendered[index] for index in card.data]
             references = []
             def at(row, start, stop):

@@ -31,6 +31,7 @@ CREATE_OPERATIONS = {
     "solid_section.create": ("Create solid section", "create_solid_property"),
     "curve.create": ("Create load curve", "create_curve"),
     "group.create": ("Create node group", "create_node_group"),
+    "element_group.create": ("Create element group", "create_element_group"),
     "surface.create": ("Create shell surface", "create_surface"),
     "constraint.create": ("Create boundary condition", "create_boundary_condition"),
     "load.create": ("Create per-node load", "create_load"),
@@ -141,6 +142,11 @@ class RadProvider:
         values = {field["name"]: field["value"] for field in fields}
         context = self.unit_context(ref)
         words = card["keyword"].upper().split("/")
+        if self._group_kind(card) and callable(getattr(self.session, "group_members", None)):
+            membership = self.session.group_members(card["id"])
+            if membership["kind"] == "node":
+                return (PropertySpec("node_ids", "Native node IDs", tuple(membership["member_ids"]), kind="integer_list"),)
+            return (self._element_members_field(membership["members"]),)
         if len(words) in (3, 4) and words[1] == "PART" and words[2].isdigit():
             summary = self.session.part_summary(ref)
             return (PropertySpec("part_id", "Native part ID", summary["part_id"], editable=False),
@@ -204,6 +210,9 @@ class RadProvider:
                     "expected_document_id": command.target.document_id}
         if set(command.values) == {"points"}:
             return self.session.set_curve_points(command.target.object_id, command.values["points"], **expected)
+        if self._group_kind(self._card(command.target)):
+            key = "node_ids" if self._group_kind(self._card(command.target)) == "node" else "element_refs"
+            return self.session.set_group_members(command.target.object_id, command.values[key], **expected)
         if self._condition_kind(self._card(command.target)):
             values = dict(command.values)
             for name, value in values.items():
@@ -262,8 +271,28 @@ class RadProvider:
         return (len(words) >= 4 and
                 ((words[1] == "MAT" and words[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB")) or
                  (words[1] == "PROP" and words[2] in ("SHELL", "TYPE1", "SOLID", "TYPE14")) or
-                 tuple(words[1:3]) in (("GRNOD", "NODE"), ("SURF", "PART"), ("INIVEL", "TRA"), ("INTER", "TYPE7")))) or (
+                 tuple(words[1:3]) in (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"),
+                                      ("SURF", "PART"), ("INIVEL", "TRA"), ("INTER", "TYPE7")))) or (
                     len(words) >= 3 and words[1] in ("FUNCT", "BCS", "CLOAD") and words[2].isdigit())
+
+    @staticmethod
+    def _group_kind(card):
+        words = card["keyword"].upper().split("/")
+        family = tuple(words[1:3])
+        return "node" if family == ("GRNOD", "NODE") else "element" if family in (
+            ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC")) else None
+
+    def _element_members_field(self, value=None):
+        cells = self.session.mesh_view()["cells"]
+        refs = tuple({"resource_id": cell["resource_id"], "entity_kind": "element", "local_id": cell["id"]}
+                     for cell in cells)
+        if value is None:
+            selection = self.session.selection()
+            value = selection["refs"] if selection["kind"] == "element" else ()
+        names = {card["resource_id"]: card["resource_name"] for card in self.session.list_cards()}
+        return PropertySpec("element_refs", "Element members", tuple(value), kind="references", choices=refs,
+            choice_labels=tuple(f"Element {cell['id']} · {names.get(cell['resource_id'], cell['resource_id'])} · {cell['type']}"
+                                for cell in cells), unit_context={"reference_kind": "mesh-element"})
 
     @staticmethod
     def _condition_kind(card):
@@ -315,7 +344,7 @@ class RadProvider:
     def available_operations(self, target=None):
         if not self.describe().get("document_id"):
             return ()
-        keys = list(CREATE_OPERATIONS)
+        keys = [key for key, (_, method) in CREATE_OPERATIONS.items() if callable(getattr(self.session, method, None))]
         if target is not None:
             card = self._card(target)
             if self._creatable_card(card):
@@ -373,7 +402,12 @@ class RadProvider:
                                             components=("X", "Y"), unit="input deck", minimum_rows=2),)
                     description += " X values must strictly increase; values outside the range are linearly extrapolated."
                 elif key == "group.create":
-                    fields += (PropertySpec("node_ids", "Native node IDs", (), kind="integer_list"),)
+                    selection = self.session.selection()
+                    selected = tuple(selection["ids"]) if selection["kind"] == "node" else ()
+                    fields += (PropertySpec("node_ids", "Native node IDs", selected, kind="integer_list"),)
+                elif key == "element_group.create":
+                    fields += (self._element_members_field(),)
+                    description += " Explicit element members must share one native family: triangles, quadrilaterals, or solids."
                 elif key == "surface.create":
                     fields += (self._reference_field("part_ids", "Shell parts", ("/PART/",), multiple=True),)
                     description += " Select nonempty shell or triangular shell parts. Solid faces require another surface type."
@@ -442,7 +476,8 @@ class RadProvider:
                     elif field.kind == "references":
                         if not isinstance(values[field.name], (list, tuple)):
                             raise PrepError("invalid_reference", "Choose a list of object references.")
-                        values[field.name] = [self._card(ref)["id"] for ref in values[field.name]]
+                        if field.unit_context.get("reference_kind") != "mesh-element":
+                            values[field.name] = [self._card(ref)["id"] for ref in values[field.name]]
                 method = getattr(self.session, CREATE_OPERATIONS[request.key][1])
                 result = method(**values, native_id=native_id or None, **expected)
             elif request.key == "object.edit":
