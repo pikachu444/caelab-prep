@@ -178,3 +178,72 @@ def test_multiple_parts_select_union_once_and_invalid_target_keeps_selection():
     session.select_objects((), active=None)
     assert not session.selection()["refs"] and not session.selected_objects()
     assert session.active_object() is None and len(events) == 2
+
+
+def test_replacement_overlay_is_compatible_with_v2_and_invalidates_cached_state_token(tmp_path):
+    session = known_only(tmp_path)
+    curve = session.create_curve("Measured curve", [(0, 0), (1, 1)])
+    resource = session.document.resources[curve["resource_id"]]
+    v2 = resource.snapshot()
+    v2.pop("replaced")
+    v2["state_version"] = 2
+    restored = DeckResource(resource.raw, resource_id=resource.id)
+    restored.restore(v2)
+    assert restored.render() == resource.render()
+    saved = resource.state_token()
+    assert resource.state_token() == saved
+    session.set_curve_points(curve["card_id"], [(0, 0), (.5, 2), (1, 1)])
+    assert resource.state_token() != saved
+    session.undo()
+    assert resource.state_token() == saved
+    session.redo()
+    assert resource.state_token() != saved
+
+
+def test_original_curve_replacement_and_scalar_edits_preserve_card_identity(tmp_path):
+    source = tmp_path / "original.rad"
+    source.write_text("/BEGIN\nOriginal\n/FUNCT/4\nMeasured\n# retained comment\n" +
+                      f"{0:20g}{0:20g}\n{1:20g}{1:20g}\n/END\n")
+    session = opened(source)
+    card = lookup(session, "/FUNCT/4")
+    resource = session.document.resources[card["resource_id"]]
+    old = resource.render()
+    session.set_curve_points(card["id"], [(0, 2), (.5, 3), (1, 1)])
+    session.set_field(card["id"], "point_1_y", 6)
+    assert lookup(session, "/FUNCT/4")["id"] == card["id"]
+    assert next(f["value"] for f in session.card_fields(card["id"]) if f["name"] == "point_1_y") == 6
+    session.undo()
+    session.undo()
+    assert resource.render() == old
+    session.redo()
+    assert "# retained comment\n" in session.card_text(card["id"])
+    assert len(resource.snapshot()["replaced"]) == 1
+
+
+def test_scalar_curve_edit_cannot_bypass_order_validation(tmp_path):
+    session = known_only(tmp_path)
+    curve = session.create_curve("C", [(0, 0), (1, 1)])["card_id"]
+    before = session.describe()["revision"], session.card_text(curve)
+    with pytest.raises(PrepError, match="strictly increasing"):
+        session.set_field(curve, "point_1_x", -1)
+    assert (session.describe()["revision"], session.card_text(curve)) == before
+
+
+def test_submodel_offsets_block_identity_changes_without_mutation(tmp_path):
+    source = tmp_path / "scoped.rad"
+    source.write_text("/BEGIN\nScoped\n/SUBMODEL/1\nScoped resource\n/END\n")
+    session = opened(source)
+    with pytest.raises(PrepError) as caught:
+        session.create_curve("C", [(0, 0), (1, 1)])
+    assert caught.value.code == "unsupported_submodel"
+    assert session.describe()["revision"] == 0 and not session.describe()["dirty"]
+
+
+def test_group_rejects_duplicate_native_node_inside_one_source(tmp_path):
+    source = tmp_path / "nodes.rad"
+    source.write_text("/BEGIN\nNodes\n/NODE\n" + (f"{42:10d}{0:20g}{0:20g}{0:20g}\n" * 2) + "/END\n")
+    session = opened(source)
+    with pytest.raises(PrepError) as caught:
+        session.create_node_group("Ambiguous node", [42])
+    assert caught.value.code == "ambiguous_reference"
+    assert session.describe()["revision"] == 0

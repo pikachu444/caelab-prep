@@ -45,7 +45,7 @@ def user_model(tmp_path):
             "/PROP/SHELL/19\r\nExisting section\r\n"
             "        24         4         2         2\r\n"
             "                   0                   0                   0                   0               0.015\r\n"
-            "         0                           1.7       0.83333333333         2         0\r\n"
+            "         0                           1.7       0.83333333333                   2         0\r\n"
             "/PART/902\r\nTarget plate\r\n"
             f"{19:10d}{17:10d}{0:10d}{3.25:20g}\r\n"
             "/FUTURE/OPAQUE/77\r\nUntouched unsupported block  \r\n  9.876D+05  opaque  \r\n"
@@ -119,7 +119,9 @@ def test_create_assign_undo_save_reopen_export_user_model(user_model, tmp_path):
     assert not shell[3][10:20].strip()  # 2024 reserved; not legacy ISTRAIN.
     assert float(shell[3][20:40]) == pytest.approx(2.375)
     assert float(shell[3][40:60]) == pytest.approx(5 / 6)
-    assert int(shell[3][60:70]) == 2
+    assert not shell[3][60:70].strip()  # Reserved field after Ashear.
+    assert int(shell[3][70:80]) == 2
+    assert int(shell[3][80:90]) == 0
     actual = _data(emitted, "/PART/902")[1]
     assert (int(actual[:10]), int(actual[10:20]), float(actual[30:50])) == (207, 41, 3.25)
     # Reopen native output through a fresh public session as a second check.

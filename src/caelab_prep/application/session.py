@@ -14,7 +14,8 @@ from functools import wraps
 
 from ..cae_core import CommandDispatcher, Document, PrepError, Selection, SelectionRef
 from ..radioss import DeckResource
-from ..radioss.modeling import native_identity, integer, material_block, shell_block, copy_block
+from ..radioss.modeling import (native_identity, integer, material_block, shell_block, copy_block,
+    curve_points, curve_block, member_block, boundary_block, load_block, velocity_block, contact_block)
 from .storage import write_container
 from .contracts import ObjectRef
 
@@ -284,6 +285,8 @@ class PrepSession:
                             {"expected": expected_revision, "actual": document.revision})
         if any(item.get("unresolved_include") for item in self._diagnostics):
             raise PrepError("unresolved_include", "Resolve INCLUDE files before changing native identities or references.")
+        if any(card["keyword"].upper().startswith(("/SUBMODEL", "/SUBDOMAIN")) for card in self.list_cards()):
+            raise PrepError("unsupported_submodel", "Native identity and reference changes are unavailable for SUBMODEL/SUBDOMAIN decks because their offset scopes are not implemented.")
         return document
 
     def _native_matches(self, namespace, identifier):
@@ -351,11 +354,185 @@ class PrepSession:
             text = shell_block(identifier, name, thickness, newline=resource.newline)
             return self._insert_model_card(resource, text, "Create shell property", expected_revision)
 
+    def create_curve(self, name, points, *, resource_id=None, native_id=None,
+                     expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            resource = self._model_resource(resource_id)
+            identifier = self._allocate_native_id("FUNCT", native_id)
+            return self._insert_model_card(resource, curve_block(identifier, name, points, newline=resource.newline),
+                                           "Create curve", expected_revision)
+
+    def set_curve_points(self, card_id, points, *, expected_revision=None, expected_document_id=None):
+        """Replace numeric rows, preserving card identity, title, comments and other cards."""
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            resource, card, _ = self._unique_card(card_id, "FUNCT")
+            if card.keyword.upper().split("/")[1] != "FUNCT" or len(card.data) < 2:
+                raise PrepError("unsupported_operation", "Only ordinary FUNCT curve rows can be replaced.")
+            rows = curve_points(points)
+            lines = self.card_text(card_id).splitlines(keepends=True)
+            point_rows = {index - card.start for index in card.data[1:]}
+            result, cursor = [], 0
+            last = max(point_rows)
+            for index, line in enumerate(lines):
+                if index not in point_rows:
+                    result.append(line)
+                elif cursor < len(rows):
+                    ending = "\r\n" if line.endswith("\r\n") else "\r" if line.endswith("\r") else "\n"
+                    result.append(rows[cursor] + ending)
+                    cursor += 1
+                if index == last:
+                    result.extend(row + resource.newline for row in rows[cursor:])
+                    cursor = len(rows)
+            state = resource.replaced_state(card_id, "".join(result))
+            change = self.dispatcher.execute(resource.id, state, "Edit curve points", object_ids=(card_id,),
+                                             expected_revision=expected_revision, kind="structure")
+            return self._model_result(resource, card_id, change)
+
+    @staticmethod
+    def _member_sequence(values):
+        if not isinstance(values, (list, tuple)) or not values:
+            raise PrepError("invalid_reference", "Choose at least one member.")
+        if any(not isinstance(value, (str, int)) or isinstance(value, bool) for value in values) or len(set(values)) != len(values):
+            raise PrepError("invalid_reference", "Members must be distinct typed identities.")
+        return values
+
+    def _node_members(self, values):
+        self._member_sequence(values)
+        for value in values: integer(value)
+        # Inspect raw native IDs, including duplicates within one NODE block; the
+        # display projection intentionally removes these and cannot be an oracle.
+        counts = {}
+        for resource in self._require().resources.values():
+            for card in resource.cards:
+                if card.keyword.upper().split("/")[1] != "NODE": continue
+                for index in card.data:
+                    try: node = int(resource.lines[index][:10])
+                    except ValueError: continue
+                    counts[node] = counts.get(node, 0) + 1
+        for value in values:
+            if counts.get(value, 0) != 1:
+                raise PrepError("dangling_reference" if not counts.get(value) else "ambiguous_reference",
+                                "Each group node must exist exactly once in the assembled document.", {"node_id": value})
+        return list(values)
+
+    def _supported_reference(self, card_id, namespace, allowed):
+        resource, card, identity = self._unique_card(card_id, namespace)
+        words = card.keyword.upper().split("/")
+        family = words[2] if len(words) > 2 and namespace not in ("FUNCT", "BCS", "CLOAD") else words[1]
+        if family not in allowed or (namespace == "FUNCT" and words[1] != "FUNCT"):
+            raise PrepError("unsupported_operation", "This reference uses an unsupported native card family.")
+        return resource, card, identity
+
+    def _group_reference(self, card_id):
+        resource, card, identity = self._supported_reference(card_id, "GRNOD", {"NODE"})
+        self._node_members(self._integer_members(resource, card))
+        return identity[1]
+
+    @staticmethod
+    def _integer_members(resource, card):
+        lines = resource.render().decode("latin1").splitlines()
+        try:
+            values = [int(lines[index][offset:offset + 10]) for index in card.data[1:]
+                      for offset in range(0, len(lines[index].rstrip()), 10) if lines[index][offset:offset + 10].strip()]
+        except ValueError:
+            raise PrepError("invalid_reference", "The member list is not a supported fixed-width integer list.") from None
+        return values
+
+    def create_node_group(self, name, node_ids, *, resource_id=None, native_id=None,
+                          expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            members = self._node_members(node_ids)
+            resource = self._model_resource(resource_id)
+            identifier = self._allocate_native_id("GRNOD", native_id)
+            return self._insert_model_card(resource, member_block("GRNOD/NODE", identifier, name, members, newline=resource.newline),
+                                           "Create node group", expected_revision)
+
+    def _surface_part_ids(self, part_ids):
+        self._member_sequence(part_ids)
+        identifiers = []
+        # Read all cells, even those the display omitted for missing nodes.
+        cells = [cell for resource in self._require().resources.values() for cell in resource.mesh_projection()["cells"]]
+        for part_id in part_ids:
+            _, _, identity = self._unique_card(part_id, "PART")
+            kinds = {cell["type"] for cell in cells if cell.get("part_id") == identity[1]}
+            if not kinds or kinds - {"quad", "triangle"}:
+                raise PrepError("incompatible_surface", "SURF/PART supports nonempty shell/triangle parts; solid faces need a different surface definition.")
+            identifiers.append(identity[1])
+        return identifiers
+
+    def create_surface(self, name, part_ids, *, resource_id=None, native_id=None,
+                       expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            members = self._surface_part_ids(part_ids)
+            resource = self._model_resource(resource_id)
+            identifier = self._allocate_native_id("SURF", native_id)
+            return self._insert_model_card(resource, member_block("SURF/PART", identifier, name, members, newline=resource.newline),
+                                           "Create shell surface", expected_revision)
+
+    def create_boundary_condition(self, name, group_id, translations, rotations, *, resource_id=None, native_id=None,
+                                  expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            group = self._group_reference(group_id)
+            resource = self._model_resource(resource_id)
+            identifier = self._allocate_native_id("BCS", native_id)
+            return self._insert_model_card(resource, boundary_block(identifier, name, group, translations, rotations, newline=resource.newline),
+                                           "Create boundary condition", expected_revision)
+
+    def create_load(self, name, group_id, curve_id, direction, scale, *, resource_id=None, native_id=None,
+                    expected_revision=None, expected_document_id=None):
+        """CLOAD scale is the load at EACH group node, not the group resultant."""
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            group = self._group_reference(group_id)
+            curve_resource, curve_card, curve = self._supported_reference(curve_id, "FUNCT", {"FUNCT"})
+            fields = curve_resource.card_fields(curve_id)
+            point_values = {field["name"]: field["value"] for field in fields}
+            curve_points([(point_values.get(f"point_{i}_x"), point_values.get(f"point_{i}_y")) for i in range(len(curve_card.data) - 1)])
+            resource = self._model_resource(resource_id)
+            identifier = self._allocate_native_id("CLOAD", native_id)
+            return self._insert_model_card(resource, load_block(identifier, name, group, curve[1], direction, scale, newline=resource.newline),
+                                           "Create per-node load", expected_revision)
+
+    def create_initial_velocity(self, name, group_id, velocity, *, resource_id=None, native_id=None,
+                                expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            group = self._group_reference(group_id)
+            resource = self._model_resource(resource_id)
+            identifier = self._allocate_native_id("INIVEL", native_id)
+            return self._insert_model_card(resource, velocity_block(identifier, name, group, velocity, newline=resource.newline),
+                                           "Create initial velocity", expected_revision)
+
+    def create_contact(self, name, secondary_group_id, main_surface_id, friction, *, resource_id=None, native_id=None,
+                       expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            secondary = self._group_reference(secondary_group_id)
+            surface_resource, surface_card, surface = self._supported_reference(main_surface_id, "SURF", {"PART"})
+            parts = []
+            for native_part in self._integer_members(surface_resource, surface_card):
+                matches = self._native_matches("PART", native_part)
+                if len(matches) != 1:
+                    raise PrepError("invalid_reference", "The surface contains an unresolved or ambiguous PART.")
+                parts.append(matches[0]["id"])
+            self._surface_part_ids(parts)
+            resource = self._model_resource(resource_id)
+            identifier = self._allocate_native_id("INTER", native_id)
+            return self._insert_model_card(resource, contact_block(identifier, name, secondary, surface[1], friction, newline=resource.newline),
+                                           "Create TYPE7 contact", expected_revision)
+
     @staticmethod
     def _supported_model_card(card):
         words = card.keyword.upper().split("/")
         return len(words) >= 4 and ((words[1] == "MAT" and words[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB"))
-                                  or (words[1] == "PROP" and words[2] in ("SHELL", "TYPE1")))
+                                  or (words[1] == "PROP" and words[2] in ("SHELL", "TYPE1"))) or (
+                words[1] in ("FUNCT", "BCS", "CLOAD") or tuple(words[1:3]) in
+                (("GRNOD", "NODE"), ("SURF", "PART"), ("INIVEL", "TRA"), ("INTER", "TYPE7")))
 
     def copy_card(self, card_id, *, name=None, resource_id=None, native_id=None,
                   expected_revision=None, expected_document_id=None):
@@ -364,7 +541,7 @@ class PrepSession:
             self._check_model_edit(expected_revision, expected_document_id)
             source, card, identity = self._unique_card(card_id)
             if not self._supported_model_card(card):
-                raise PrepError("unsupported_operation", "Copy supports LAW1/LAW36 materials and SHELL properties only.")
+                raise PrepError("unsupported_operation", "Copy supports the verified material, shell property and condition card families only.")
             destination = self._model_resource(resource_id if resource_id is not None else source.id)
             identifier = self._allocate_native_id(identity[0], native_id)
             text = copy_block(self.card_text(card_id), identifier, name=name, newline=destination.newline)
@@ -404,46 +581,55 @@ class PrepSession:
 
     def _dependency_inventory(self, card_id):
         _, _, identity = self._unique_card(card_id)
-        if identity[0] not in ("MAT", "PROP"):
-            return [], []
         dependents, unverified = [], []
-        # These card families have no direct material/property references. Their
-        # other references (nodes, groups, functions, frames) are outside this query.
         independent = {"BEGIN", "END", "NODE", "SHELL", "SH3N", "BRICK", "TETRA4", "TETRA",
-                       "BEAM", "TRUSS", "FUNCT", "UNIT", "BCS"}
-        independent_pairs = {("MAT", "LAW1"), ("MAT", "ELAST"), ("MAT", "LAW36"), ("MAT", "PLAS_TAB"),
-                             ("PROP", "SHELL"), ("PROP", "TYPE1"), ("GRNOD", "NODE"),
-                             ("GRNOD", "PART"), ("INIVEL", "TRA")}
+                       "BEAM", "TRUSS", "FUNCT", "UNIT"}
+        independent_pairs = {("MAT", "LAW1"), ("MAT", "ELAST"), ("PROP", "SHELL"), ("PROP", "TYPE1")}
         for item in self.list_cards():
             words = item["keyword"].upper().split("/")
-            root = words[1] if len(words) > 1 else ""
-            pair = tuple(words[1:3])
-            native = native_identity(item["keyword"])
-            if root == "PART":
-                try:
+            root, pair = words[1], tuple(words[1:3])
+            resource = self._find_card(item["id"])
+            card = resource.card(item["id"])
+            rendered = resource.render().decode("latin1").splitlines()
+            rows = [rendered[index] for index in card.data]
+            references = []
+            def at(row, start, stop):
+                return int(rows[row][start:stop].strip() or "0")
+            try:
+                if root == "PART":
                     _, _, refs = self._part_native_references(item["id"])
-                except PrepError:
-                    unverified.append(item)
-                    continue
-                key = "native_material_id" if identity[0] == "MAT" else "native_property_id"
-                if refs[key] == identity[1]: dependents.append(item)
-            elif pair in (("PROP", "PLY"), ("PROP", "TYPE19")):
-                if identity[0] == "MAT":
-                    resource = self._find_card(item["id"])
-                    card = resource.card(item["id"])
-                    try:
-                        line = resource.render().decode("latin1").splitlines()[card.data[1]]
-                        material = int(line[:10])
-                    except (ValueError, IndexError):
+                    references = [("MAT", refs["native_material_id"]), ("PROP", refs["native_property_id"])]
+                elif pair in (("PROP", "PLY"), ("PROP", "TYPE19")):
+                    references = [("MAT", at(1, 0, 10))]
+                elif root == "BCS":
+                    references = [("GRNOD", at(1, 20, 30))]
+                elif root == "CLOAD":
+                    references = [("FUNCT", at(1, 0, 10)), ("GRNOD", at(1, 40, 50))]
+                elif pair == ("INIVEL", "TRA"):
+                    references = [("GRNOD", at(1, 60, 70))]
+                elif pair == ("INTER", "TYPE7"):
+                    references = [("GRNOD", at(1, 0, 10)), ("SURF", at(1, 10, 20)), ("FUNCT", at(6, 60, 70))]
+                    # Thermal/friction-law options add conditional rows. Their
+                    # references are not guessed by the supported mechanical profile.
+                    if identity[0] == "FUNCT" and (at(1, 30, 40) or at(6, 0, 10)):
                         unverified.append(item)
-                    else:
-                        if material == identity[1]: dependents.append(item)
-            elif root not in independent and pair not in independent_pairs:
+                elif pair in (("SURF", "PART"), ("GRNOD", "PART")):
+                    references = [("PART", value) for value in self._integer_members(resource, card)]
+                elif pair == ("GRNOD", "NODE"):
+                    pass  # Node identities are not card-level deletable objects.
+                elif pair in (("MAT", "LAW36"), ("MAT", "PLAS_TAB")):
+                    if identity[0] == "FUNCT": unverified.append(item)
+                elif root not in independent and pair not in independent_pairs:
+                    unverified.append(item)
+            except (PrepError, ValueError, IndexError):
                 unverified.append(item)
+                continue
+            if identity in references:
+                dependents.append(item)
         return dependents, unverified
 
     def card_dependents(self, card_id):
-        """Known PART/PLY references; deletion additionally requires a complete scan."""
+        """Known typed references; deletion additionally requires a complete native scan."""
         with self._lock:
             return self._dependency_inventory(card_id)[0]
 
@@ -453,13 +639,13 @@ class PrepSession:
             self._check_model_edit(expected_revision, expected_document_id)
             resource, card, identity = self._unique_card(card_id)
             if not self._supported_model_card(card):
-                raise PrepError("unsupported_operation", "Delete supports LAW1/LAW36 materials and SHELL properties only.")
+                raise PrepError("unsupported_operation", "Delete supports the verified material, shell property and condition card families only.")
             dependents, unverified = self._dependency_inventory(card_id)
             if dependents:
-                raise PrepError("card_in_use", "Reassign the dependent parts before deleting this card.",
+                raise PrepError("card_in_use", "Remove or reassign the dependent cards before deleting this card.",
                                 {"dependents": dependents})
             if unverified:
-                raise PrepError("dependency_scan_incomplete", "Deletion is blocked because some cards have unverified material/property references.",
+                raise PrepError("dependency_scan_incomplete", "Deletion is blocked because some cards have unverified native references.",
                                 {"cards": unverified})
             state = resource.deleted_state(card_id)
             change = self.dispatcher.execute(resource.id, state, "Delete " + card.keyword,
