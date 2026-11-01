@@ -162,7 +162,7 @@ G1-a–e는 PR #15 착수 당시의 구현 순서로 [19절](#current-progress)�
 
 ## 8. P4 — 독립 곡선 앱과 파일 재사용
 
-**현재:** 부분 구현이다. RAD의 FUNCT 행/CSV/plot·조건 참조는 연결됐지만 중립 갤러리의 CSV 입출력과 plot 직접 drag 미리보기/확정/취소는 없다. N15로 추적하며 이미 있는 표·행·단위 편집을 다시 미구현으로 세지 않는다.
+**현재:** 부분 구현이다. RAD와 중립 앱은 행 편집·텍스트 붙여넣기·plot 표시를 제공하지만 **양쪽 모두 CSV 파일 입출력이 없다**. RAD의 조건 참조는 연결됐지만 plot 직접 drag 미리보기/확정/취소도 없다. 기존 CSV 완료 주장은 `paste_text` 검사와 파일 입출력을 혼동한 잘못된 보고였다. N15로 추적하며 이미 있는 표·행·단위 편집을 다시 미구현으로 세지 않는다.
 
 **선행/입력:** P3/A의 계약·container, 축/단위가 알려진 서로 다른 curve 2개와 CSV.
 
@@ -374,9 +374,9 @@ caelab-prep mesh INPUT.step --output OUT --size 2.0 --dimension 3
 
 ### 현재 남은 작업 — 새 세션은 이 표부터 확인
 
-**기준:** Prep main `a48d3b4383603aee3843b7f73db4d0ebdc61cda6` / [PR #15](https://github.com/pikachu444/caelab-prep/pull/15), Workbench main `d6f05a3b1abc0cb9e83e7e96311f743e626ab086` / [PR #54](https://github.com/pikachu444/caelab-workbench/pull/54). 두 PR은 병합됐지만 G0–G4 전체 납품은 끝나지 않았다. 문서 정리는 제품 기능 완료가 아니다.
+**기준:** Prep main `a1eba527132bf45b9f66365f8bfefbc9c1ecf398` / [문서 PR #16](https://github.com/pikachu444/caelab-prep/pull/16), 제품 코드는 [PR #15](https://github.com/pikachu444/caelab-prep/pull/15)와 동일, Workbench main `d6f05a3b1abc0cb9e83e7e96311f743e626ab086` / [PR #54](https://github.com/pikachu444/caelab-workbench/pull/54). 두 PR은 병합됐지만 G0–G4 전체 납품은 끝나지 않았다. 문서 정리는 제품 기능 완료가 아니다.
 
-**잔여 26개 = 현재 납품 목표 14개 + 보존한 기존 구현 요구 7개 + 조건부 실증·연결 5개.** 이는 각각 닫을 수 있는 작업 묶음의 수이며 같은 크기·예상 일수·완료율이 아니다. 한 행에서 결함 수정이 필요하면 그 행에 포함한다. 기존 P/B/G 번호를 다시 더하지 않는다. N15–N21도 기존 미완료 요구이며 선택적으로 버릴 추가 기능이 아니다. N22–N26의 no-go는 실증 판정이지 기능 완료가 아니다.
+**잔여 26개 = 현재 납품 목표 15개(N01–N15) + 보존한 기존 구현 요구 6개(N16–N21) + 조건부 실증·연결 5개.** 이는 각각 닫을 수 있는 작업 묶음의 수이며 같은 크기·예상 일수·완료율이 아니다. 한 행에서 결함 수정이 필요하면 그 행에 포함한다. 기존 P/B/G 번호를 다시 더하지 않는다. N15의 CSV 누락은 G2/T3에도 속하므로 현재 목표로 재분류했다. 총 26개는 그대로다. N16–N21도 기존 미완료 요구이며 선택적으로 버릴 추가 기능이 아니다. N22–N26의 no-go는 실증 판정이지 기능 완료가 아니다.
 
 | ID | 남은 작업 / 기존 요구 | 현재 상태와 완료 판단 기준 |
 |---|---|---|
@@ -394,7 +394,7 @@ caelab-prep mesh INPUT.step --output OUT --size 2.0 --dimension 3
 | N12 | Windows GUI 실측 / R4·G1–G4 | **후속 미확인.** 현 버전의 실제 입력·한글/IME·DPI 100/150/200%·작은 창·도킹/재시작·GPU와 T1–T6 연속 작업을 확인한다. QTest/OS 입력을 구별하고 과거 A7·Linux 결과로 대체하지 않는다. |
 | N13 | Windows 배포 묶음·새 설치 / G4·P9 | **미완료, Windows 후속.** 배포 형식 하나와 의존/고지를 고정하고 깨끗한 환경의 설치→실제 파일 작업→재시작→제거 또는 portable 이동을 확인한다. wheel 설치/CLI 성공만으로 닫지 않는다. |
 | N14 | Windows 실제 Workbench W1/W2 / G4 | **후속 미확인.** 병합된 두 앱으로 숫자 입력/오류 복원, 독립 Prep 열기·문서 전달·재시작·변경/손상 파일·한글/공백 경로를 확인한다. host의 모델/이력과 JobManager 소유를 유지한다. |
-| N15 | 독립 곡선 앱 완성 / P4 | **부분 구현.** RAD CSV/행/plot은 있다. 중립 갤러리 CSV 입출력과 직접 plot drag의 preview/commit/cancel·한 gesture 한 Undo를 구현하고 VTK/RAD 없는 실행·단위/참조·작업문서/CSV 왕복을 확인한다. |
+| N15 | RAD·중립 CSV와 곡선 앱 완성 / G2 T3·P4 | **부분 구현·누락 재확인.** 양쪽 모두 행 편집·텍스트 붙여넣기·plot 표시만 있고 CSV 파일 입출력은 없다. 공용 CSV 파일 reader/writer와 두 host의 import/export, 직접 plot drag의 preview/commit/cancel·한 gesture 한 Undo를 구현한다. 두 곡선의 파일/작업문서 왕복·단위/참조·오류 batch·VTK/RAD 없는 실행을 확인한다. |
 | N16 | 혼합 조립·다중 자원 관계 / P6b·B1–B4/B6 | **부분 기반.** 지원 RAD 카드 관계를 재사용해 두 혼합 조립의 공유/독립 ID·활성 성분·좌표·집합/접촉·케이스·참조 영향과 다중 자원 원자 변경/실패 복원을 확인한다. 기본 케이스는 N01을 재사용한다. |
 | N17 | 대용량 배열·지연 UI·저장 / P6c·B5 | **미완료.** 100만 실제 요소·100 part·20 source, 고정 장비/생성기로 4절 예산과 B1–B6을 충족한다. 전체 배열 중복·cache 수명·취소를 계측하고 작은 모델/actor 복제로 대체하지 않는다. |
 | N18 | 일반 메시 수정·조건 재연결 / P7b | **미완료.** 14절의 여섯 작업(이동·공차 병합·삭제·법선 반전·재배정·크기 재메시)을 두 자료에서 품질/참조/Undo/파일/native까지 확인한다. 미복구 집합/조건은 stale로 남겨 정상 출력하지 않는다. 현재 무참조 메시 교체만으로 닫지 않는다. |
@@ -411,6 +411,18 @@ caelab-prep mesh INPUT.step --output OUT --size 2.0 --dimension 3
 
 **새 세션의 실행 순서:** README → DESIGN의 R/T/G → 이 표 → 관련 기술 절/코드를 읽고 실제 HEAD와 dirty를 확인한다. 다음은 N01, N02의 공통 명령→파일→한 실제 GUI→8방식 연결이다. 원제품/Windows 접근 대기 동안 독립 가능한 N15, N19와 배포 준비를 진행할 수 있다. N16→N17 및 관계를 쓰는 N18, IPC→MCP, Workbench 소유 W3의 선행 관계를 지킨다. 조건부 다섯 항목은 각각 F0–F2를 먼저 판정한다. Windows 실측을 나중에 일괄 한다는 사용자 지시는 유지한다.
 
+**현재 재개 지시:** `followup-execution-20261101-01`은 직전 `feasibility-check-20261101-01`의 개발 중지 제한을 해제했다. 핵심 R1–R4/T1–T6와 N01–N26을 유지하며, 구현 가능한 작업을 실행하고 독립 검토·해당 CI가 통과한 체크포인트는 재승인 없이 PR/병합한다. Windows N12–N14의 실제 GUI·새 설치 확인은 후속 일괄 검증이며 Linux 구현의 선행 조건이 아니다.
+
+| 이번 실행 순서 | 구체적 산출물·종료 판단 | 차단 조건의 처리 |
+|---|---|---|
+| N01·N02·N15 | 공용 명령과 파일 계약 → 실제 GUI 진입/오류/취소 → 8방식 소비 → 서로 다른 두 입력의 저장·재열기·native 또는 CSV 결과. N01은 조건 활성·해석 시간까지 영속 케이스로, N02는 CAD 없는 MSH 2.2/4.1 ASCII tri3/tet4 전체 inventory로, N15는 실제 파일로 확인 | 형식/단위/ID·지원 요소를 명시하고 미지원 입력은 전체 거부한다. 화면 없는 코어 체크포인트를 기능 전체 완료로 닫지 않음 |
+| N21 병행 → N19 → N20 | 기존 Workbench JobManager의 RAD snapshot/Starter→Engine 실제 두 단계; 별도 client에서 열린 GUI의 동일 문서/epoch/초안/취소; 이후 실제 MCP client 한 종류 | 직접 solver 실행을 WB 통합으로, 독립 CLI를 열린 GUI IPC로, 테스트 모형을 실제 MCP client로 보고하지 않음 |
+| N16 → N18·N17 | 두 혼합 조립/다중 자원 실패 복원 후 여섯 메시 수정·참조 재연결, 실제 100만 요소의 배열/이력/저장/UI 예산 측정 | 다중 자원 계약과 실제 성능은 구현·측정 전 성공 미확정. 작은 입력 통과로 대체하지 않음 |
+| N22–N26 | 각각 기존 roadmap의 F0–F2를 먼저 실제 SDK로 재현하고, 통과한 기능을 F3 제품 작업과 F4 형상군으로 연결 | 실패한 recipe는 원인·대안과 함께 해당 N 행에 차단으로 유지. no-go를 기능 완료나 원목표 삭제로 계산하지 않음 |
+| N03–N14 | 실제 원제품 실행 접근·대표 모델·Windows 환경이 확보된 항목부터 같은 T1–T6의 실제 작업으로 검증 | 원제품별 버전/실행 권한·접근이 현재 미확인. 상용 라이선스가 모든 제품에 반드시 필요하다고 단정하지 않음. Windows 후속과 원제품 비교는 독립 기록 |
+
+**세션 인계 조건:** 이번 요청은 Android ChatGPT 앱에서 열 수 있는 새 작업 세션과 실제 생성 확인을 요구한다. 현재 제공 도구에는 대화/작업 세션 생성 API가 없고, Browser 연결은 originating browser context 부재 오류, 클라우드 ChatGPT는 로그아웃 화면까지 확인했다. 새 사용자 세션은 생성하지 않았으며 새 작업 링크/Android 표시도 미확인이다. 로컬 `codex://`, 내부 agent ID, PR 링크를 새 ChatGPT 세션이라고 보고하지 않는다. 현재 대화에서 진행한 코드/PR은 이 표에 연결하고, 실제 새 세션이 열리면 최신 main/작업 브랜치의 HEAD·dirty와 이 지시를 다시 읽어 이어간다. 이 문서 갱신 자체는 개발 완료가 아니다.
+
 **갱신 규칙:** 작업 시작 때 해당 N 행에 좁은 입력·산출물·파일 소유·검사를 고정한다. 실행 가능한 체크포인트를 커밋/PR로 보존하고 독립 검토·해당 CI를 통과하면 이미 승인된 범위에서 병합한 뒤 다음 미완료 작업으로 이어간다. 완료 행은 삭제하지 않고 SHA·입출력/화면 보관처·지적 재확인·PR 링크를 붙여 닫으며 위 세 그룹의 잔여 개수를 갱신한다. 새로 발견한 기존 누락/회귀는 다시 열고 이유를 적는다. 한 PR이나 문서 정리만 끝내고 전체 목표 완료라고 보고하지 않는다.
 
 ### 병합된 구현과 검증의 근거
@@ -424,7 +436,7 @@ caelab-prep mesh INPUT.step --output OUT --size 2.0 --dimension 3
 | 묶음 | 이번에 연결한 사용자 작업 | 확인 근거 / 남는 한계 |
 |---|---|---|
 | G1 / T1·T2 | 두 개 이상 PART의 재료·shell/solid 단면 생성, 복제·안전 삭제·할당·교체. 다중 선택·검색·숨김/격리·fit. Undo/Redo·작업문서·native 출력 | `test_modeling_workflow.py`, `test_modeling_commands.py`, `test_modeling_ui.py`에서 다른 ID/형상/INCLUDE 입력과 8방식을 사용. 실제 창·원제품 비교는 아래와 별도 판정 |
-| G2 / T3·T4 | FUNCT 행/CSV/plot, 절점·요소 집합과 멤버 편집, shell PART 표면, BCS·절점별 CLOAD·INIVEL/TRA·검증한 TYPE7 프로파일 생성/참조. 대상 역할별 3D 강조. 검증된 덱 단위 표시 변환 | `test_condition_workflow.py`, `test_groups_ui.py`, `test_conditions_ui.py`, `test_native_units_ui.py`, `test_rad_display_units.py`. 케이스/영속 해석 설정(N01)은 미구현. 모든 카드·재료법칙·임의 solid 표면은 미지원; FUNCT 축 차원/미해석 카드 단위 추정 안 함 |
+| G2 / T3·T4 | FUNCT 행/텍스트 붙여넣기/plot, 절점·요소 집합과 멤버 편집, shell PART 표면, BCS·절점별 CLOAD·INIVEL/TRA·검증한 TYPE7 프로파일 생성/참조. 대상 역할별 3D 강조. 검증된 덱 단위 표시 변환 | `test_condition_workflow.py`, `test_groups_ui.py`, `test_conditions_ui.py`, `test_native_units_ui.py`, `test_rad_display_units.py`. 케이스/영속 해석 설정(N01)은 미구현. 모든 카드·재료법칙·임의 solid 표면은 미지원; FUNCT 축 차원/미해석 카드 단위 추정 안 함 |
 | G3 / T5·T6 | 단위 명시 새 문서→Gmsh 후보→품질·공유 경계·국부 크기→검토/취소/채택→조건→새 Starter/Engine. 참조 없는 소유 메시 교체 | `test_gmsh_adapter.py`, `test_mesh_candidates.py`, `test_mesh_adoption.py`, `test_mesh_workflow_ui.py`, `test_solver_generation.py`. 외부 독립 메시 import(N02)는 미구현. tri3/tet4만 채택; 조건 재매핑이 필요한 일반 재메시는 차단. 원 CAD/XAO/MSH는 별도 후보 폴더로 유지 |
 | G4 재사용·전달 | 8방식의 같은 명령/API/CLI, wheel 새 환경 설치. 실제 Workbench MDO의 NumericEdit 소비, RAD 작업 문서 독립 Prep 프로세스 전달 | [Workbench #54](https://github.com/pikachu444/caelab-workbench/pull/54) 병합 `d6f05a3`; 새 clone tree가 후보 `853b079`과 동일, 관련 검사 19 passed. host 서비스/history와 기존 JobManager 유지. live IPC/MCP·Windows 설치형 배포는 별도 |
 
