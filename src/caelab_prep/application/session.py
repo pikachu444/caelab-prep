@@ -432,6 +432,14 @@ class PrepSession:
                     unknown.append(item)
                     continue
                 if potentially_removed.intersection(nodes): blockers.append(item)
+            elif tuple(item["keyword"].upper().split("/")[1:3]) in (("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC")):
+                owner = self._find_card(item["id"])
+                try: identifiers = self._integer_members(owner, owner.card(item["id"]))
+                except PrepError:
+                    unknown.append(item)
+                    continue
+                selected_elements = {cell["id"] for cell in cells if cell.get("part_id") in selected}
+                if selected_elements.intersection(identifiers): blockers.append(item)
         if blockers or unknown:
             raise PrepError("mesh_replacement_in_use", "Replacement is blocked by existing groups/surfaces/conditions or unverified references.",
                             {"dependents": list({item["id"]: item for item in blockers}.values()),
@@ -696,6 +704,133 @@ class PrepSession:
             identifiers.append(identity[1])
         return identifiers
 
+    @staticmethod
+    def _element_group_family(kind):
+        return {"triangle": "GRSH3N/SH3N", "quad": "GRSHEL/SHEL", "tetra": "GRBRIC/BRIC",
+                "hexahedron": "GRBRIC/BRIC", "wedge": "GRBRIC/BRIC", "pyramid": "GRBRIC/BRIC"}.get(kind)
+
+    def _element_members(self, members, family=None):
+        if not isinstance(members, (tuple, list)) or not members:
+            raise PrepError("invalid_reference", "Choose at least one typed element reference.")
+        if self._projection_cache is None: self.mesh_view()
+        references, identifiers, families = [], [], set()
+        for value in members:
+            if isinstance(value, SelectionRef): ref = value
+            elif isinstance(value, dict) and set(value) == {"resource_id", "entity_kind", "local_id"}:
+                ref = SelectionRef(**value)
+            else:
+                raise PrepError("invalid_reference", "Element members require resource_id, entity_kind and local_id.")
+            if ref.entity_kind != "element" or not isinstance(ref.resource_id, str):
+                raise PrepError("invalid_reference", "A typed element reference is required.")
+            integer(ref.local_id)
+            matches = [cell for cell in self._projection_cache["cells"] if cell["id"] == ref.local_id]
+            if len(matches) != 1:
+                raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "Element IDs in a native group must resolve uniquely across resources.", {"element_id": ref.local_id})
+            cell = matches[0]
+            if cell["resource_id"] != ref.resource_id:
+                raise PrepError("invalid_reference", "The element does not belong to the stated resource.")
+            kind = self._element_group_family(cell["type"])
+            if kind is None:
+                raise PrepError("unsupported_operation", "Element groups support triangle3, quad4 and supported solid cells.")
+            if ref in references:
+                raise PrepError("invalid_reference", "Group members must be distinct.")
+            references.append(ref)
+            identifiers.append(ref.local_id)
+            families.add(kind)
+        if len(families) != 1 or (family is not None and families != {family}):
+            raise PrepError("incompatible_group", "A native element group must keep its triangle, quad or solid family; mixed shell families require separate groups.")
+        return identifiers, references, next(iter(families))
+
+    def create_element_group(self, name, element_refs, *, resource_id=None, native_id=None,
+                             expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            members, _, family = self._element_members(element_refs)
+            resource = self._model_resource(resource_id)
+            identifier = self._allocate_native_id(family.split("/")[0], native_id)
+            return self._insert_model_card(resource, member_block(family, identifier, name, members, newline=resource.newline),
+                                           "Create element group", expected_revision)
+
+    def group_members(self, card_id):
+        with self._lock:
+            resource = self._find_card(card_id)
+            card = resource.card(card_id)
+            family = "/".join(card.keyword.upper().split("/")[1:3])
+            if family not in ("GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC"):
+                raise PrepError("unsupported_operation", "Group membership editing supports explicit node, triangle, quad and solid ID lists.")
+            result = {"card_id": card_id, "resource_id": resource.id, "kind": "node" if family == "GRNOD/NODE" else "element",
+                      "members": [], "member_ids": [], "diagnostics": []}
+            try:
+                identifiers = self._integer_members(resource, card)
+                result["member_ids"] = identifiers
+                if family == "GRNOD/NODE":
+                    self._node_members(identifiers)
+                    if self._projection_cache is None: self.mesh_view()
+                    refs = []
+                    for identifier in identifiers:
+                        owners = self._projection_cache["node_resources"].get(identifier, [])
+                        if len(owners) != 1:
+                            raise PrepError("invalid_reference", "A group node cannot be displayed uniquely.")
+                        refs.append(SelectionRef(owners[0], "node", identifier))
+                else:
+                    if self._projection_cache is None: self.mesh_view()
+                    refs = []
+                    for identifier in identifiers:
+                        matches = [cell for cell in self._projection_cache["cells"] if cell["id"] == identifier]
+                        if len(matches) != 1:
+                            raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "A group element cannot be resolved uniquely.", {"element_id": identifier})
+                        refs.append(SelectionRef(matches[0]["resource_id"], "element", identifier))
+                    _, refs, _ = self._element_members(refs, family)
+                result["members"] = [asdict(ref) for ref in refs]
+            except PrepError as exc:
+                result["diagnostics"].append({"code": exc.code, "message": exc.message, **exc.details})
+            return result
+
+    def set_group_members(self, card_id, members, *, expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            resource, card, _ = self._unique_card(card_id)
+            family = "/".join(card.keyword.upper().split("/")[1:3])
+            if family == "GRNOD/NODE":
+                if isinstance(members, (list, tuple)) and members and all(type(member) is int for member in members):
+                    identifiers = self._node_members(members)
+                else:
+                    if not isinstance(members, (list, tuple)) or not members:
+                        raise PrepError("invalid_reference", "Choose at least one node.")
+                    if self._projection_cache is None: self.mesh_view()
+                    identifiers = []
+                    for member in members:
+                        ref = member if isinstance(member, SelectionRef) else SelectionRef(**member) if isinstance(member, dict) and set(member) == {"resource_id", "entity_kind", "local_id"} else None
+                        if ref is None or ref.entity_kind != "node" or self._projection_cache["node_resources"].get(ref.local_id) != [ref.resource_id]:
+                            raise PrepError("invalid_reference", "A uniquely owned node reference is required.")
+                        identifiers.append(ref.local_id)
+                    identifiers = self._node_members(identifiers)
+            elif family in ("GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC"):
+                identifiers, _, _ = self._element_members(members, family)
+            else:
+                raise PrepError("unsupported_operation", "This native group does not have an editable explicit member list.")
+            if identifiers == self._integer_members(resource, card):
+                return self._model_result(resource, card_id, None)
+            if len(card.data) < 2:
+                raise PrepError("invalid_card", "The group has no native member rows.")
+            rows = ["".join(integer(identifier) for identifier in identifiers[index:index + 10]) for index in range(0, len(identifiers), 10)]
+            lines = self.card_text(card_id).splitlines(keepends=True)
+            member_rows = {index - card.start for index in card.data[1:]}
+            result, cursor = [], 0
+            for index, line in enumerate(lines):
+                if index not in member_rows: result.append(line)
+                elif cursor < len(rows):
+                    ending = "\r\n" if line.endswith("\r\n") else "\r" if line.endswith("\r") else "\n"
+                    result.append(rows[cursor] + ending)
+                    cursor += 1
+                if index == max(member_rows):
+                    result.extend(row + resource.newline for row in rows[cursor:])
+                    cursor = len(rows)
+            state = resource.replaced_state(card_id, "".join(result))
+            change = self.dispatcher.execute(resource.id, state, "Edit group members", object_ids=(card_id,),
+                                             expected_revision=expected_revision, kind="structure")
+            return self._model_result(resource, card_id, change)
+
     def create_surface(self, name, part_ids, *, resource_id=None, native_id=None,
                        expected_revision=None, expected_document_id=None):
         with self._lock:
@@ -873,7 +1008,8 @@ class PrepSession:
         return len(words) >= 4 and ((words[1] == "MAT" and words[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB"))
                                   or (words[1] == "PROP" and words[2] in ("SHELL", "TYPE1", "SOLID", "TYPE14"))) or (
                 words[1] in ("FUNCT", "BCS", "CLOAD") or tuple(words[1:3]) in
-                (("GRNOD", "NODE"), ("SURF", "PART"), ("INIVEL", "TRA"), ("INTER", "TYPE7")))
+                (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"),
+                 ("SURF", "PART"), ("INIVEL", "TRA"), ("INTER", "TYPE7")))
 
     def copy_card(self, card_id, *, name=None, resource_id=None, native_id=None,
                   expected_revision=None, expected_document_id=None):
@@ -959,8 +1095,8 @@ class PrepSession:
                         unverified.append(item)
                 elif pair in (("SURF", "PART"), ("GRNOD", "PART")):
                     references = [("PART", value) for value in self._integer_members(resource, card)]
-                elif pair == ("GRNOD", "NODE"):
-                    pass  # Node identities are not card-level deletable objects.
+                elif pair in (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC")):
+                    pass  # Node/element identities are not card-level deletable objects.
                 elif pair in (("MAT", "LAW36"), ("MAT", "PLAS_TAB")):
                     if identity[0] == "FUNCT": unverified.append(item)
                 elif root not in independent and pair not in independent_pairs:
@@ -1173,6 +1309,13 @@ class PrepSession:
                     specs = [("nodes", "Group nodes", "node", nodes, card_id)]
                 elif pair == ("SURF", "PART"):
                     specs = [("elements", "Surface elements", "element", elements, card_id)]
+                elif pair in (("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC")):
+                    def group_elements(group_id):
+                        group = self.group_members(group_id)
+                        if group["diagnostics"]:
+                            raise PrepError("invalid_reference", "Element group targets cannot be resolved uniquely.", {"diagnostics": group["diagnostics"]})
+                        return [SelectionRef(**item) for item in group["members"]]
+                    specs = [("elements", "Group elements", "element", group_elements, card_id)]
                 elif root in ("BCS", "CLOAD") or pair == ("INIVEL", "TRA"):
                     values = self.condition_values(card_id)
                     result["diagnostics"].extend(values["diagnostics"])

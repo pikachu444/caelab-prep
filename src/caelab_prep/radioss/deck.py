@@ -137,6 +137,7 @@ class DeckResource:
                 "TETRA4": "Elements", "TETRA": "Elements", "BEAM": "Elements", "TRUSS": "Elements",
                 "MAT": "Materials", "PROP": "Properties", "PART": "Parts", "BCS": "Constraints",
                 "INTER": "Contacts", "FUNCT": "Curves", "GRNOD": "Groups", "SURF": "Groups",
+                "GRSH3N": "Groups", "GRSHEL": "Groups", "GRBRIC": "Groups",
                 "PLOAD": "Loads", "CLOAD": "Loads", "INIVEL": "Initial conditions"}.get(root, "Other cards")
 
     def card(self, card_id: str) -> Card:

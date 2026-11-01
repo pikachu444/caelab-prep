@@ -282,3 +282,43 @@ def test_unchanged_condition_values_do_not_reformat_original_native_bytes(tmp_pa
     result = session.set_condition_values(card["id"], {"velocity": tuple(current["velocity"]), "group_id": current["group_id"]})
     assert result["change"] is None
     assert session.card_text(card["id"]) == original and session.describe()["revision"] == 0
+
+
+def test_element_group_membership_is_typed_atomic_and_selected_after_edit(tmp_path):
+    from caelab_prep.application.contracts import ObjectRef
+    session = known_only(tmp_path)
+    owner = session.describe()["document_id"]
+    cells = session.mesh_view()["cells"]
+    refs = [dict(resource_id=cell["resource_id"], entity_kind="element", local_id=cell["id"]) for cell in cells]
+    group = session.create_element_group("Selected quads", refs[:3], native_id=97)
+    card = next(item for item in session.list_cards() if item["id"] == group["card_id"])
+    assert card["keyword"] == "/GRSHEL/SHEL/97"
+    target = ObjectRef(owner, card["resource_id"], card["id"], "rad-card", card["keyword"])
+    session.activate_object(target)
+    assert session.selection()["ids"] == [1, 2, 3]
+    before = session.card_text(card["id"])
+    session.set_group_members(card["id"], refs[3:])
+    assert session.group_members(card["id"])["members"] == refs[3:]
+    assert session.selection()["ids"] == list(range(4, 13))
+    session.undo()
+    assert session.card_text(card["id"]) == before and session.selection()["ids"] == [1, 2, 3]
+    duplicate = session.copy_card(card["id"], native_id=99)
+    assert session.group_members(duplicate["card_id"])["member_ids"] == [1, 2, 3]
+    session.delete_card(duplicate["card_id"])
+    session.undo()
+    assert session.group_members(duplicate["card_id"])["member_ids"] == [1, 2, 3]
+    old = session.describe()["revision"], session.card_text(card["id"])
+    for invalid in ([1, 2], [refs[0], refs[0]], [{**refs[0], "entity_kind": "node"}], [{**refs[0], "local_id": 999999}]):
+        with pytest.raises(PrepError): session.set_group_members(card["id"], invalid)
+        assert (session.describe()["revision"], session.card_text(card["id"])) == old
+
+
+def test_node_group_rows_can_be_edited_without_changing_group_identity(tmp_path):
+    session = known_only(tmp_path)
+    group = lookup(session, "/GRNOD/NODE/1")
+    before = session.card_text(group["id"])
+    session.set_group_members(group["id"], list(range(1, 16)))
+    assert session.group_members(group["id"])["member_ids"] == list(range(1, 16))
+    assert len(session.card_text(group["id"]).splitlines()) == 4
+    session.undo()
+    assert session.card_text(group["id"]) == before
