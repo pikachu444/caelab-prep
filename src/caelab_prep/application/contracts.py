@@ -78,12 +78,14 @@ class OperationRequest:
     document_id: str
     expected_revision: int
     target: ObjectRef | None = None
+    units: dict[str, str] = field(default_factory=dict)
 
 
 @runtime_checkable
 class ModelingHost(Protocol):
     def available_operations(self, target: ObjectRef | None = None) -> tuple[str, ...]: ...
-    def operation_spec(self, key: str, target: ObjectRef | None = None) -> OperationSpec: ...
+    def operation_spec(self, key: str, target: ObjectRef | None = None,
+                       draft_values: dict[str, object] | None = None) -> OperationSpec: ...
     def execute_operation(self, request: OperationRequest) -> dict: ...
 
 

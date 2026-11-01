@@ -387,17 +387,21 @@ class MeshViewport(QWidget):
             if not indices:
                 self.render()
                 return
-            index = indices[0]
-            point = self._grid.GetPoint(index)
             bounds = getattr(self, "_visible_grid", self._grid).GetBounds()
             span = max(bounds[1] - bounds[0], bounds[3] - bounds[2], bounds[5] - bounds[4], 1e-9)
+            points = self.vtk.vtkPoints()
+            for index in indices:
+                points.InsertNextPoint(self._grid.GetPoint(index))
+            nodes = self.vtk.vtkPolyData()
+            nodes.SetPoints(points)
             sphere = self.vtk.vtkSphereSource()
-            sphere.SetCenter(*point)
             sphere.SetRadius(span * 0.012)
             sphere.SetThetaResolution(16)
             sphere.SetPhiResolution(12)
-            mapper = self.vtk.vtkPolyDataMapper()
-            mapper.SetInputConnection(sphere.GetOutputPort())
+            mapper = self.vtk.vtkGlyph3DMapper()
+            mapper.SetInputData(nodes)
+            mapper.SetSourceConnection(sphere.GetOutputPort())
+            mapper.ScalingOff()
             self._highlight.GetProperty().SetRepresentationToSurface()
             self._highlight.SetMapper(mapper)
             self._highlight.SetVisibility(True)

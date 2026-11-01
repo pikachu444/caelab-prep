@@ -150,8 +150,12 @@ def test_node_highlight_and_fit_exclude_hidden_and_unused_nodes():
     visible = selection(view, kind="node", ids=(1, 4))
     view.set_selection(visible)
     assert view._highlight.GetVisibility()
+    assert view._highlight.GetMapper().GetInput().GetNumberOfPoints() == 1
     assert view.fit_selection()
     assert view._renderer.GetActiveCamera().GetFocalPoint() == (100, 0, 0)
+    view.show_all_parts()
+    view.set_selection(selection(view, kind="node", ids=(1, 4, 7)))
+    assert view._highlight.GetMapper().GetInput().GetNumberOfPoints() == 2
 
 
 def test_fit_rejects_stale_selection_and_ambiguous_element_ids():
