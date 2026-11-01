@@ -168,7 +168,14 @@ class DeckResource:
                           ("tz", "병진 Z 고정", t + 2), ("rx", "회전 X 고정", r),
                           ("ry", "회전 Y 고정", r + 1), ("rz", "회전 Z 고정", r + 2)]]
         elif len(key) > 2 and key[1] == "INTER" and key[2] in ("TYPE24", "TYPE7") and len(data) >= 5:
-            fields = [Field("friction", "마찰계수", "float", data[4], 20, 40, 0)]
+            row = 4
+            if key[2] == "TYPE7":
+                try: curvature = int(self.lines[data[1]][80:90].strip() or "0")
+                except ValueError: curvature = None
+                if curvature not in (0, 1, 2, 3): return []
+                if curvature in (1, 2): row = 5
+            if len(data) > row:
+                fields = [Field("friction", "마찰계수", "float", data[row], 20, 40, 0)]
         elif len(key) > 1 and key[1] == "FUNCT" and len(data) >= 2:
             for row, line in enumerate(data[1:]):
                 fields += [Field(f"point_{row}_x", f"곡선 {row + 1}: X (입력 덱 단위)", "float", line, 0, 20),
@@ -334,13 +341,20 @@ class DeckResource:
             candidate._patches = candidate.fields_state(card_id, values)["patches"]
         self.__dict__.update(candidate.__dict__)
 
-    def inserted_state(self, text: str, *, card_id=None):
-        identity = card_id or str(uuid4())
+    def inserted_states(self, texts, *, card_ids=None):
+        """Prepare a batch in one resource; the dispatcher commits it once."""
+        identities = list(card_ids) if card_ids is not None else [str(uuid4()) for _ in texts]
+        if len(identities) != len(texts):
+            raise PrepError("invalid_command", "Every inserted block needs one identity.")
         state = self.snapshot()
-        state["created"].append({"id": identity, "text": text})
+        state["created"].extend({"id": identity, "text": text} for identity, text in zip(identities, texts))
         candidate = copy(self)
         candidate.restore(state)
-        return state, identity
+        return state, identities
+
+    def inserted_state(self, text: str, *, card_id=None):
+        state, identities = self.inserted_states([text], card_ids=[card_id or str(uuid4())])
+        return state, identities[0]
 
     def deleted_state(self, card_id):
         self.card(card_id)

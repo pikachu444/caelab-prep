@@ -247,3 +247,31 @@ def test_surface_rejects_solid_part_instead_of_silently_ignoring_volume_elements
     with pytest.raises(PrepError):
         session.create_surface("Mixed shell and solid", [_card(session, "/PART/903")["id"]])
     assert _snapshot(session) == before
+
+
+def test_existing_curved_type7_friction_edit_preserves_optional_node_row(model, tmp_path):
+    session, _ = model
+    _create_conditions(session)
+    output = tmp_path / "curved" / "conditions_0000.rad"
+    session.export_rad(str(output))
+    lines = output.read_text().splitlines()
+    header = lines.index("/INTER/TYPE7/97")
+    data_indices = [i for i in range(header + 1, len(lines)) if lines[i].strip() and not lines[i].startswith("#")]
+    first = data_indices[1]
+    lines[first] = lines[first][:80] + _i(2) + lines[first][90:]
+    # Icurv=2 inserts node identifiers before the Stfac/Fric row.
+    lines.insert(data_indices[4], _i(101, 205))
+    output.write_text("\n".join(lines) + "\n")
+    edited = PrepSession()
+    edited.open_rad(str(output))
+    contact = _card(edited, "/INTER/TYPE7/97")
+    before = edited.card_text(contact["id"])
+    assert edited.condition_values(contact["id"])["friction"] == .17
+    edited.set_condition_values(contact["id"], {"friction": .29})
+    result = _block(edited.card_text(contact["id"]).encode("latin1"), "/INTER/TYPE7/97")
+    assert result[4] == _i(101, 205)
+    assert float(result[5][20:40]) == .29
+    original_rows = _block(before.encode("latin1"), "/INTER/TYPE7/97")
+    assert result[:5] == original_rows[:5] and result[6:] == original_rows[6:]
+    edited.undo()
+    assert edited.card_text(contact["id"]) == before

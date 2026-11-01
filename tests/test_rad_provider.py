@@ -61,7 +61,7 @@ def test_vector_and_existing_curve_table_each_have_one_undo():
     ("/INIVEL/TRA/1", {"velocity": (10, 20, float("nan"))}),
     ("/INIVEL/TRA/1", {"velocity": (10, 20)}),
     ("/FUNCT/1", {"points": ((0, 10), (.1, 20), (.3, float("inf")))}),
-    ("/FUNCT/1", {"points": ((0, 10), (.1, 20))}),
+    ("/FUNCT/1", {"points": ((0, 10), (0, 20))}),
 ])
 def test_invalid_vector_or_table_never_commits_valid_prefix(keyword, values):
     session, provider = opened()

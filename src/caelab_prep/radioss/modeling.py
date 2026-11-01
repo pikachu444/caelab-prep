@@ -169,3 +169,25 @@ def contact_block(identifier, name, secondary, main, friction, *, newline="\n"):
             "       000" + " " * 20 + f"{1000:10d}" + real(.05) + real(1) + real(.2),
             f"{0:10d}{0:10d}" + real(0) + f"{2:10d}{0:10d}{0:10d}" + real(1) + f"{0:10d}"]
     return newline.join([f"/INTER/TYPE7/{identifier}", title(name), *rows, ""])
+
+
+def solid_block(identifier, name, *, newline="\n"):
+    """2024 TYPE14 explicit linear tetra4 profile, verified with Starter/Engine.
+
+    prop_type14_solid_starter_r.htm; FORMAT(radioss2023) prop_p14_solid.cfg.
+    """
+    integer(identifier)
+    return newline.join([f"/PROP/SOLID/{identifier}", title(name),
+        "".join(f"{value:10d}" for value in (1, 4, 0, 0, 0, 0, 1000, 1)) + real(0),
+        "".join(real(value) for value in (1.1, .05, .1, 0, 0)), real(0) * 5, ""])
+
+
+def engine_input(run_name, end_time, output_interval):
+    """One explicit run with animation output, in the Starter's working units."""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", run_name):
+        raise PrepError("invalid_export_name", "Use an ASCII solver basename containing letters, numbers, _, - or . only.")
+    end = real(end_time, positive=True).strip()
+    interval = real(output_interval, positive=True).strip()
+    if float(interval) > float(end):
+        raise PrepError("invalid_value", "Output interval must not exceed the end time.")
+    return f"#RADIOSS ENGINE\n/RUN/{run_name}/1\n{end}\n/ANIM/DT\n0 {interval}\n".encode("ascii")
