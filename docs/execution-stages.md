@@ -343,7 +343,34 @@ caelab-prep mesh INPUT.step --output OUT --size 2.0 --dimension 3
 
 ## 19. 문서와 작업 상태의 관리
 
-### 2026-11-02 현재 진도와 바로 다음 작업
+### G1–G4 구현 통합 기록 — PR #15 / Workbench #54
+
+이 기록은 아래 착수 표 이후의 실제 구현이다. [Prep PR #15](https://github.com/pikachu444/caelab-prep/pull/15)의 체크포인트 커밋을 기준으로 검토하며, Windows GUI 납품과 8개 원제품의 동일 작업 비교는 계속 미확인이다. 1–18절을 일괄 완료로 바꾸지 않는다.
+
+| 묶음 | 이번에 연결한 사용자 작업 | 확인 근거 / 남는 한계 |
+|---|---|---|
+| G1 / T1·T2 | 두 개 이상 PART의 재료·shell/solid 단면 생성, 복제·안전 삭제·할당·교체. 다중 선택·검색·숨김/격리·fit. Undo/Redo·작업문서·native 출력 | `test_modeling_workflow.py`, `test_modeling_commands.py`, `test_modeling_ui.py`에서 다른 ID/형상/INCLUDE 입력과 8방식을 사용. 실제 창·원제품 비교는 아래와 별도 판정 |
+| G2 / T3·T4 | FUNCT 행/CSV/plot, 절점·요소 집합과 멤버 편집, shell PART 표면, BCS·절점별 CLOAD·INIVEL/TRA·검증한 TYPE7 프로파일 생성/참조. 대상 역할별 3D 강조. 검증된 덱 단위 표시 변환 | `test_condition_workflow.py`, `test_groups_ui.py`, `test_conditions_ui.py`, `test_native_units_ui.py`, `test_rad_display_units.py`. 모든 카드·재료법칙·임의 solid 표면은 미지원; FUNCT 축 차원/미해석 카드 단위 추정 안 함 |
+| G3 / T5·T6 | 단위 명시 새 문서→Gmsh 후보→품질·공유 경계·국부 크기→검토/취소/채택→조건→새 Starter/Engine. 참조 없는 소유 메시 교체 | `test_gmsh_adapter.py`, `test_mesh_candidates.py`, `test_mesh_adoption.py`, `test_mesh_workflow_ui.py`, `test_solver_generation.py`. tri3/tet4만 채택; 조건 재매핑이 필요한 일반 재메시는 차단. 원 CAD/XAO/MSH는 별도 후보 폴더로 유지 |
+| G4 재사용·전달 | 8방식의 같은 명령/API/CLI, wheel 새 환경 설치. 실제 Workbench MDO의 NumericEdit 소비, RAD 작업 문서 독립 Prep 프로세스 전달 | [Workbench #54](https://github.com/pikachu444/caelab-workbench/pull/54) 병합 `d6f05a3`; 새 clone tree가 후보 `853b079`과 동일, 관련 검사 19 passed. host 서비스/history와 기존 JobManager 유지. live IPC/MCP·Windows 설치형 배포는 별도 |
+
+**기능 정확성과 해석 결과:** 공식 OpenCourant `latest-20261011` Linux 배포의 CI 고정 SHA256은 `6cb419677ca36d73acb96218cc0cf5e4f7d50494d9c7812ba27935e3c0f8ec94`이다. 독립 CAD 세 종류(surface 62 tri, cylinder 236 tet, two solids 310 tet)에서 생성한 덱을 실제 Starter/Engine으로 실행했다. 질량·운동량·에너지의 독립 기대값과 상대 오차 문턱 `1e-5 / 1e-5 / 1e-4`를 검사한다. 로컬 관측 최대 상대 오차는 `2.734e-7 / 3.730e-7 / 1.117e-5`였다. 작은 강체 병진 검증이며 응력 수렴·범용 접촉 정확성/해석 적합성 검증이 아니다. 기존 TYPE7 수동 입력과 생성 입력의 CSV 일치 및 1374 cycle 실행은 직렬화 동등성 근거다. 그 접촉 예제의 후반 energy error 약 -66.2%를 물리 품질 합격으로 세지 않았다.
+
+**실제 실행 환경 구분:** 이 작업 공간의 PID namespace와 `/proc` PID가 일치하지 않아 Starter의 `/proc/<getpid>/status` 읽기가 ERROR760을 냈다. 정확히 자기 프로세스 status만 `/proc/self/status`로 읽는 외부 실행 shim으로 원인을 확인했다(8회/8회). 제품·입력·솔버 계산·오차 문턱을 바꾸지 않았고 shim은 제품에 포함하지 않는다. [CI 41330637438](https://github.com/pikachu444/caelab-prep/actions/runs/41330637438) 및 [41331386525](https://github.com/pikachu444/caelab-prep/actions/runs/41331386525)의 `solver-smoke`는 **shim 없이 공식 실행 파일로 통과**했다. Qt offscreen 폼 검증은 3D 검증이 아니다. 별도 native-render job은 X11 Qt 창의 실제 VTK 메시 픽셀과 마우스 선택, 8방식×2창 크기를 요구하며 캡처와 JSON을 artifact로 남긴다.
+
+**구체적인 지적과 수정:** 구현자의 선언을 그대로 승인하지 않고 다음 오류를 실제 입력·화면·솔버로 다시 열었다.
+
+- SHELL 예약 열 누락과 TYPE7 Icurv에 따른 필드 행 위치를 실제 reader로 발견해 writer/layout을 수정했다. `test_solver_generation.py`와 곡선형 TYPE7 원문 검사에 반영했다.
+- [공식 CLOAD 명세](https://2024.help.altair.com/2024/hwsolvers/rad/topics/solvers/rad/cload_starter_r.htm)와 독립 리뷰에서 CLOAD의 빈 배율이 화면 0/솔버 1로 달라지는 문제를 재현했다. blank와 명시 0의 solver 기본값을 따로 읽고, 다른 필드 편집 시 원문을 보존한다. 사용자가 실제 0 배율을 요구하면 솔버가 1로 읽는 값을 조용히 출력하지 않고 명시 거부한다. TYPE7 온도 함수 배율도 실제 의미·표시명을 구분한다. `test_radioss_defaults.py`가 표시·편집·Undo·재출력·구형 저장 호환을 검사한다.
+- 메시 후보 창의 200% 작업영역 하단 잘림, 경계 품질 행의 보이지 않는 대상, pick→국부 크기 미연결, 생성 실패 후 이전 후보 잔류, 채택 중 입력 변경, 미지원 요소가 품질 목록 뒤에 숨는 여섯 지적을 수정하고 원 검토자가 재확인했다. `test_mesh_workflow_ui.py`에 해당 동작을 고정했다.
+- 단위/typed 참조의 잘못된 초안이 저장으로 우회되는 경로를 차단했다. Workbench 숫자 입력은 domain 왕복 뒤 Escape 복원과 오류 칸 초점 유지, 손상 ZIP은 failed 상태·프로세스 0회를 원 지적자가 재현해 확인했다.
+- CI의 CRLF 실패 두 건은 원문을 보존한 제품의 오류가 아닌 LF 고정 기대값이었다. 원문을 명시 bytes로 만드는 LF/CRLF 두 경우를 검사하도록 바꿨다. 빈 문서의 새 모델 Action을 금지하던 과거 기대값도 실제 생성 기능에 맞춰 수정했다. native-render 초기 중단은 실행 전 `ldd`/QApplication 진단을 추가해 XCB 의존성(`icccm`, `keysyms`, `shape`)을 확인하고 해결했다. 이후 실제 창 16개가 통과했다. 픽셀 검토에서 별도로 찾은 작은 속성 패널의 값 가림과 NFX 한글 글꼴 누락은 후속 수정·원 검토자 재확인 대상으로 남겼다.
+
+**검증 판정은 최종 후보 CI에 연결한다.** 중간 `9fc35bc`의 로컬 전체 검사는 465 passed / 5 skipped / 1 failed였다. 실패는 앞의 빈 문서 Action 기대값으로 수정 후 관련 35건을 확인했다. 그 결과만으로 이후 수정 전체를 통과 처리하지 않는다. 기본값 수정 후보 `3f24dcb`의 로컬 전체 검사는 **490 passed / 5 skipped**였다. skip은 opt-in native-render 1, 실제 솔버 환경변수 미설정 3, EGL opt-in 1이며 각 별도 CI 결과로 구분한다. [CI 41331744495](https://github.com/pikachu444/caelab-prep/actions/runs/41331744495)는 Linux/Windows 문서·Qt 문서·CAD·실제 native 렌더·wheel·실제 솔버 **7개 job 모두 통과**했다. 최종 화면 보완 이후의 SHA/CI/시각 재확인은 이 기록에 추가한다. Workbench 후보 `853b079`은 [CI 41329583782](https://github.com/pikachu444/caelab-workbench/actions/runs/41329583782)의 Python 3.11/3.12 전체 제품 회귀·실제 CalculiX를 통과했다. Prep를 실제 설치한 별도 공유 위젯/문서 연결 검사와 선택 의존성 없는 일반 CI의 skip은 구분한다.
+
+**후속의 구체적 완료 기준:** Windows는 같은 최종 코드로 새 설치→빈 문서/CAD/RAD→생성·선택·단위·오류 복구→Undo·저장·재시작·솔버 입력을 실제 창에서 수행하고 100/150/200%·작은 창·IME·도킹·GPU 캡처와 결과 파일을 확인한다. 원제품 비교는 8개 각각에서 같은 입력·객체·작업을 실행해 조작·가독성·결과를 대조해야 닫는다. 일반 재메시는 조건/집합 재연결과 실패 원자성, 대용량은 별도 B의 자원·성능 기준, live IPC/MCP는 열린 문서 revision과 실제 화면 반영으로 각각 판단한다. 현재 코어/CLI·소형 native 흐름 통과로 이 항목을 자동 승인하지 않는다.
+
+### 2026-11-02 착수 시점의 간극과 실행 순서
 
 목표는 DESIGN의 G0–G4를 유지하며 **실제 구현을 재개한다**. 아래 표는 `0b4d6bb` 착수 시점의 간극이다. 해당 커밋의 제품 코드는 `f4d12d0`와 같고 목표 문서가 갱신된 상태였다. 구현 후에는 실제 변경과 검증 결과를 이 절에 추가하며 계획만으로 상태를 통과로 바꾸지 않는다. 1–18절은 현재 기능·기술 계획·역사적 기록이 섞여 있으므로 각 절의 근거와 범위를 읽어야 한다.
 

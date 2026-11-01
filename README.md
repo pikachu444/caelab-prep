@@ -4,9 +4,9 @@
 
 **OpenRadioss / OpenCourant는 첫 번째 적용 대상입니다.** 공용 기반을 사용하는 첫 응용 프로그램으로 독립 데스크톱 전처리기를 개발합니다. 이 앱에서는 형상·메시를 불러와 재료·단면·접촉·하중·구속·초기조건과 해석 제어를 편집하고 Starter/Engine 파일을 작성하는 흐름을 목표로 합니다. 다른 CAE 프로그램의 재사용은 공용 기반의 설계 범위에 포함되며, 현재 여러 솔버를 지원한다는 뜻은 아닙니다.
 
-**2026-11-02 목표 수정:** [달성 목표와 제품 완료 기준](DESIGN.md#delivery-goals)에 실무 작업(T1–T6), 8제품별 방식, 실제 공통 재사용과 Windows 품질을 함께 정의했습니다. 첫 납품 G1은 **사용자 메시의 여러 파트에 재료 2개·단면 2개 생성/할당 → 수정·Undo/Redo → 저장·새 프로세스 재열기 → native 값/관계 확인**이며, HyperMesh·PrePoMax·Naksha·Abaqus/CAE·COMSOL·midas NFX·MIDAS MeshFree·BeidPrep의 8방식으로 수행하는 것이 목표입니다. 곡선·조건(G2), CAD/메시와 Starter/Engine(G3), 실제 host 재사용·API·배포(G4)까지 남겨 둡니다. 아래 현재 기능이 이 목표를 달성한 상태는 아닙니다. 현재 진도는 [작업서 19절](docs/execution-stages.md#current-progress)에서 관리합니다.
+**현재 구현:** 사용자 RAD의 재료·단면·파트 관계를 편집하고, 새 문서에서 CAD 메시 후보를 검토·채택해 조건과 Starter/Engine을 작성할 수 있습니다. 같은 문서·명령·편집 부품을 8개 프로그램별 표현에서 사용합니다. 재료/단면 2쌍의 생성·할당, 곡선·집합·구속·하중·초기속도·접촉, 단위 표시 변환, Undo/Redo·저장·재열기를 연결했습니다. 실제 Workbench는 공용 숫자 입력 부품과 독립 Prep 문서 열기를 사용합니다.
 
-**현재 상태: 재료·단면 생성과 파트 할당을 공통 명령에 연결했습니다.** LAW1 탄성 재료와 shell 단면을 생성·복사하고, 실제 PART에 할당·교체하여 Undo/Redo·저장·재열기·RAD 출력까지 수행합니다. 지원 객체의 삭제는 참조를 확인하며, 의미를 확인하지 못한 카드가 있으면 삭제를 차단합니다. 같은 작업 폼과 명령을 8개 방식에서 공유합니다.  새 레이아웃의 실제 Windows 입력·전체 GPU 화면 검증은 캡처/활성화 실패로 보류이며, 기존 검증 기록을 이번 변경의 합격 증거로 사용하지 않습니다. [재구현 기록](docs/ui-rebuild.md)을 참고하세요. 트리·그룹 속성·수치/단위·벡터·표/기본 곡선·Action·도킹을 공유합니다. 기존 RAD 편집·Undo/Redo·작업 문서·RAD 출력은 유지하고, 중립 재료/곡선 문서도 RAD 없이 저장·재열기합니다. 아래 Windows 입력·배율 확인 기록은 재구현 전 버전에 한정합니다. CAD에서 새 해석 모델 전체를 구성하는 기능은 후속입니다.
+[달성 목표](DESIGN.md#delivery-goals)와 [검증·남은 범위](docs/execution-stages.md#current-progress)를 구분합니다. 원제품 8종과의 동일 과업 실행 비교는 미확인이고 Windows 실제 창·IME·DPI·배포 검증은 사용자 지시에 따라 후속 일괄 검사로 남깁니다. 이 구현을 상용 CAE 전체 기능·품질과 동등하다고 주장하지 않습니다.
 
 공용 부품은 `ui/design`, `ui/widgets`, `ui/actions.py`, `ui/shell.py`에 있고 갤러리와 실제 전처리기가 같은 코드를 사용합니다. 솔버별 카드 의미·단위·원문·출력은 RAD adapter/session에 남습니다. 모든 솔버의 FE 스키마나 전체 CAE 기반이 완성됐다는 뜻은 아닙니다.
 
@@ -15,6 +15,73 @@
 ![실제 Qt/VTK 네이티브 편집기](docs/native-editor.png)
 
 소형 RAD를 실제 Linux Qt/VTK 창에서 열어 편집·Undo/Redo·저장·재열기·출력과 마우스 절점/요소 선택을 확인한 기존 화면입니다. 별도 입력의 재료·구속 편집 출력은 OpenCourant Starter에서도 값이 유지됐습니다. 새 Windows 실행의 범위와 화면은 [Windows 검증 기록](docs/native-windows-validation.md)에 있습니다. 설치형 배포와 대용량 성능은 후속입니다.
+
+## 첫 적용 앱 실행
+
+Python 3.11 이상에서 저장소를 설치합니다. GUI에는 Qt/VTK와 정상적인 데스크톱 OpenGL 환경이 필요합니다. Linux에서는 Qt XCB 런타임과 한글 글꼴도 필요합니다. Ubuntu 기준 의존성은 CI `native-render`의 설치 목록을 따르며 `fonts-noto-cjk`를 포함합니다.
+
+```sh
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# Linux/macOS: source .venv/bin/activate
+python -m pip install -e ".[gui,cad]"
+caelab-prep gui
+caelab-prep gui path/to/model_0000.rad
+```
+
+앱에서 RAD를 열고 트리의 지원 카드를 선택해 값을 바꿉니다. Enter로 적용하며 Undo/Redo를 사용할 수 있습니다. **저장**은 원문과 편집을 포함하는 `.caeprep` 작업 문서를 만들고, **RAD 내보내기**는 솔버용 덱을 별도로 작성합니다. 새 세션에서 `.caeprep`을 열어 계속 편집할 수 있습니다. 원본 RAD는 덮어쓰지 않습니다.
+
+CAD에서 시작할 때는 **File → New model**에서 이름과 질량·길이·시간 단위를 명시하고 재료와 shell/solid 단면을 만듭니다. **Mesh → CAD / mesh candidate**에서 CAD·후보 저장 폴더·요소 크기를 선택해 생성합니다. 후보의 품질과 문제 요소를 검토하고 재료/단면을 지정한 뒤 **Adopt candidate**로 한 번에 채택합니다. 3D의 요소를 선택하면 해당 면/체적의 국부 크기를 설정할 수 있으며, 경계면 보기에서는 면을 선택합니다. 조건을 작성한 뒤 **File → Export Starter and Engine**에서 종료 시간·출력 간격과 새 `*_0000.rad` 경로를 지정합니다. 내보내기는 계산 실행과 별도입니다.
+
+PART를 선택하면 원래 파트 ID·표시 요소 수·현재 재료/단면 참조와 연결된 요소 강조가 같은 active object를 따릅니다. Material / Section / Assignment의 생성·할당 작업은 Create 또는 Apply로 한 번에 확정하며 Cancel은 문서를 변경하지 않습니다. 미확정 생성/삭제 작업은 저장·방식 전환으로 암묵 실행하지 않습니다. 렌더러 pick은 문서 세대·문서/자원/투영 개정을 검사해, 같은 파일을 다시 연 뒤 도착한 이전 pick도 거부합니다. 잘못된 초안을 남긴 채 닫으면 Save/Discard/Cancel을 먼저 선택하며 Discard는 검증 없이 명시적으로 폐기합니다.
+
+| 현재 기능 | 범위 |
+|---|---|
+| 탐색·표시 | 트리/3D 선택, 파트 다중 선택·검색·필터·숨김/격리·fit, 조건 대상의 역할별 강조 |
+| 모델 작성 | LAW1 재료, SHELL/TYPE1 및 SOLID/TYPE14 단면, 생성·복사·안전 삭제·PART 할당·교체 |
+| 조건 | FUNCT 행/CSV/plot, 절점·요소 집합 생성/멤버 편집·shell 파트 표면, BCS, 절점별 CLOAD, INIVEL/TRA, 검증한 TYPE7 프로파일 생성과 참조 편집 |
+| 단위 | 명시된 덱 단위의 탄성계수·밀도·길이·속도·힘/모멘트 표시 변환. 미해석 카드별 단위와 FUNCT 축의 물리 차원은 추정하지 않음 |
+| CAD/메시 | 별도 Gmsh worker의 tri3/tet4 후보, 품질 문턱·공유 경계·국부 크기, 후보 취소·채택·참조 없는 소유 메시의 안전 교체 |
+| 문서·출력 | 원문/구조 편집·Undo/Redo·revision, `.caeprep` v2와 v1 읽기, INCLUDE 묶음과 새 Starter/Engine 출력 |
+| 실제 공통화 | 8 native 표현의 같은 provider/명령/위젯, 중립 문서, Workbench의 NumericEdit 소비와 독립 프로세스 파일 전달 |
+
+미지원 카드는 원문으로 보존합니다. 알 수 없는 참조가 있는 삭제·교체는 차단하며 전체 Radioss 카드, 일반 재메시의 조건 자동 재연결, 모든 요소·재료법칙을 지원하지 않습니다. 채택한 native 메시와 출처 해시는 작업문서에 남지만 재메시에 필요한 CAD/XAO/MSH 원자산은 별도로 보관한 후보 폴더를 유지해야 합니다. 임의 all-hex·중립면·대용량·live GUI IPC/MCP·Windows 설치형 배포는 별도 남은 범위입니다. 솔버 실행·후처리의 Workbench 소유권은 유지합니다.
+
+GUI 없이 같은 세션 API를 사용하는 독립 CLI도 제공합니다. 실행 간 문서를 전달하려면 작업 파일을 저장해야 합니다.
+
+```sh
+caelab-prep inspect model_0000.rad
+caelab-prep fields model_0000.rad
+caelab-prep fields model_0000.rad --card /MAT/LAW1/1
+caelab-prep edit model_0000.rad --card /MAT/LAW1/1 --field young_modulus --value 205000 --output edited.caeprep
+caelab-prep export edited.caeprep --output output/edited_0000.rad
+```
+
+생성·할당 CLI도 GUI와 같은 provider 명령을 사용합니다. `--describe`로 현재 작업의 입력 항목을 조회할 수 있습니다. 기본값은 입력 덱 단위이며 지원 필드는 `--unit FIELD=UNIT`로 표시 단위를 명시합니다. ID `0`은 자동 배정입니다.
+
+```sh
+caelab-prep model model_0000.rad material.create --describe
+caelab-prep model model_0000.rad material.create --set "name=Steel" --set density=7.85e-9 --set young_modulus=210000 --set poisson_ratio=0.3 --output material.caeprep
+caelab-prep model material.caeprep section.create --set "name=Sheet" --set thickness=2 --output section.caeprep
+```
+
+위 수치는 Mg/mm/s 입력의 예시입니다. 다른 단위를 선택하려면 선언된 덱 단위와 지원되는 표시 단위를 확인합니다. `mesh` 출력의 실제 metadata 경로와 `fields`에 표시된 실제 카드 ID를 `adopt`에 전달합니다. 새 ID/참조는 출력과 `fields`에서 조회합니다. `part.assign --target /PART/… --set material=/MAT/LAW1/… --set property=/PROP/SHELL/… --output assigned.caeprep`는 두 관계를 한 명령으로 바꿉니다. native ID가 모호하거나 참조/요소 타입이 맞지 않으면 적용하지 않습니다. 이 지원표가 모든 재료법칙·property·SUBMODEL offset의 호환성을 뜻하지 않습니다.
+
+닫힌 solid CAD에서 새 모델을 만드는 순서는 다음과 같습니다. `part.step`은 사용자 CAD이고, `gmsh-ID`는 `mesh`가 출력한 실제 후보 디렉터리 이름으로 바꿉니다. 이 예시는 메시와 재료를 연결해 입력을 생성합니다. 구속·하중·초기조건과 해석 목적에 맞는 설정은 별도로 작성합니다.
+
+```sh
+python -m pip install -e ".[cad]"
+caelab-prep new --name "User model" --mass Mg --length mm --time s --output model.caeprep
+caelab-prep model model.caeprep material.create --set name=Steel --set native_id=41 --set density=7.85e-9 --set young_modulus=210000 --set poisson_ratio=0.3 --output material.caeprep
+caelab-prep model material.caeprep solid_section.create --set name=Solid --set native_id=207 --output section.caeprep
+caelab-prep mesh part.step --output mesh-assets --size 2.0 --interface-policy conformal
+caelab-prep adopt section.caeprep --candidate mesh-assets/gmsh-ID/metadata.json --material /MAT/LAW1/41 --property /PROP/SOLID/207 --output meshed.caeprep
+caelab-prep export meshed.caeprep --engine --end-time 0.001 --output-interval 0.0001 --output run/model_0000.rad
+```
+
+`--card`는 해당 파일의 실제 고유 헤더 또는 작업 문서의 카드 ID를 받습니다. 값은 덱의 단위계를 따릅니다. Gmsh는 시스템에 맞는 공유 라이브러리도 필요할 수 있습니다.
+
+개발 검사는 CI와 같이 환경을 나눕니다. 코어/CLI는 `.[dev]`, Qt 문서 검사는 `.[gui,dev]`, CAD worker 검사는 별도 가상환경에 `.[cad,dev]`와 `cadquery-ocp==7.8.1.1.post1`을 설치합니다. 해당 OCP는 테스트 입력 생성용이며 VTK 9.3.1을 요구하므로 GUI 환경의 VTK 9.4 이상과 분리합니다. OCP는 제품 의존성이 아닙니다. Qt offscreen 검사는 폼·문서 연결을, 별도 `native-render` CI는 Xvfb/X11에서 실제 Qt+VTK 화면·마우스 선택을 검사합니다. `solver-smoke`는 고정된 공식 OpenCourant로 새 tri/tet 입력의 질량·운동량·에너지를 검사합니다. CI의 wheel 산출물은 새 가상환경에 설치해 CLI를 확인하며 Windows GUI 납품과 구분합니다. 각 실행의 성공 여부는 해당 커밋의 CI 결과와 작업서 기록을 따릅니다.
 
 ## 공용 부품과 갤러리 실행
 
@@ -36,7 +103,7 @@ caelab-prep catalogue
 
 기본 화면은 실제 중립 문서를 편집하는 **재료/곡선 작업 공간**입니다. 재료 또는 곡선을 선택하고 해당 **Apply**로 확정합니다. 잘못된 숫자·표는 초안으로 유지되며 Revert 또는 Escape로 취소합니다. 단위 선택은 알려진 단위 사이에서 표시값을 변환합니다. 표 붙여넣기는 전체 검증 후 미리보기로 남고 Apply 한 번이 Undo 한 번입니다. 재료의 **Associated curve**에서는 실제 곡선 참조를 선택·Undo·저장·재열기할 수 있습니다. 이는 중립 문서의 연결이며 솔버 구성 법칙을 새로 정의하지 않습니다.
 
-개발자 보조 도구는 `caelab-prep catalogue`로 별도 실행합니다. 재료/곡선 창에서는 **Developer → Browse component catalogue**, **View**의 도크 토글 또는 **Ctrl+Shift+G**로 열 수 있습니다. 부품·디자인 토큰·의미별 아이콘을 선택하면 의미 키, 용도, 소스 위치, 실제 사용 장면, 구현 상태와 출처/허용 조건이 나옵니다. 숫자 오류/비활성/포커스, 단위/벡터, 그룹 속성/참조, 트리, 표/곡선, 메뉴/버튼, 메시지를 해당 부품으로 직접 조작합니다. 지원하지 않는 모델링 기능이 아이콘 미리보기에서 실행되지는 않습니다. 현재 새 RAD 생성은 LAW1 재료와 SHELL 단면을 지원합니다. 곡선/조건 생성과 CAD 채택은 별도 후속 작업입니다.
+개발자 보조 도구는 `caelab-prep catalogue`로 별도 실행합니다. 재료/곡선 창에서는 **Developer → Browse component catalogue**, **View**의 도크 토글 또는 **Ctrl+Shift+G**로 열 수 있습니다. 부품·디자인 토큰·의미별 아이콘을 선택하면 의미 키, 용도, 소스 위치, 실제 사용 장면, 구현 상태와 출처/허용 조건이 나옵니다. 숫자 오류/비활성/포커스, 단위/벡터, 그룹 속성/참조, 트리, 표/곡선, 메뉴/버튼, 메시지를 해당 부품으로 직접 조작합니다. 지원하지 않는 모델링 기능이 아이콘 미리보기에서 실행되지는 않습니다. 현재 생성·편집 지원표는 아래 첫 적용 앱의 범위를 따릅니다. 카탈로그 자체를 실제 모델링 과업의 완료로 세지 않습니다.
 
 ![실제 갤러리에서 카탈로그를 연 Qt offscreen 미리보기](docs/catalogue-preview.png)
 
@@ -45,59 +112,6 @@ caelab-prep catalogue
 위 두 그림은 설치된 Windows 글꼴을 QA 프로세스에 로드한 **Qt offscreen 렌더**입니다. 아래는 실제 Windows QPA 창에서 입력 검증한 갤러리의 자체 위젯 캡처입니다. 전체 데스크톱 캡처는 아니며, VTK는 별도 실제 OpenGL framebuffer로 확인했습니다. OS 모니터 DPI 설정은 바꾸지 않았습니다. 배율·작은 창·실행 방법은 [Windows 검증 기록](docs/native-windows-validation.md)에 구분합니다.
 
 ![실제 Windows 갤러리에서 탐색형 카탈로그 조작](docs/native-windows/catalogue-100.png)
-
-## 첫 적용 앱 실행
-
-Python 3.11 이상에서 저장소를 설치합니다. GUI에는 Qt/VTK와 정상적인 데스크톱 OpenGL 환경이 필요합니다.
-
-```sh
-python -m venv .venv
-# Windows: .venv\Scripts\activate
-# Linux/macOS: source .venv/bin/activate
-python -m pip install -e ".[gui]"
-caelab-prep gui
-caelab-prep gui path/to/model_0000.rad
-```
-
-앱에서 RAD를 열고 트리의 지원 카드를 선택해 값을 바꿉니다. Enter로 적용하며 Undo/Redo를 사용할 수 있습니다. **저장**은 원문과 편집을 포함하는 `.caeprep` 작업 문서를 만들고, **RAD 내보내기**는 솔버용 덱을 별도로 작성합니다. 새 세션에서 `.caeprep`을 열어 계속 편집할 수 있습니다. 원본 RAD는 덮어쓰지 않습니다.
-
-PART를 선택하면 원래 파트 ID·표시 요소 수·현재 재료/단면 참조와 연결된 요소 강조가 같은 active object를 따릅니다. Material / Section / Assignment의 생성·할당 작업은 Create 또는 Apply로 한 번에 확정하며 Cancel은 문서를 변경하지 않습니다. 미확정 생성/삭제 작업은 저장·방식 전환으로 암묵 실행하지 않습니다. 렌더러 pick은 문서 세대·문서/자원/투영 개정을 검사해, 같은 파일을 다시 연 뒤 도착한 이전 pick도 거부합니다. 잘못된 초안을 남긴 채 닫으면 Save/Discard/Cancel을 먼저 선택하며 Discard는 검증 없이 명시적으로 폐기합니다.
-
-| 현재 기능 | 범위 |
-|---|---|
-| 문서·3D | RAD/작업 문서 열기, 모델 트리, 지원 요소의 메시 표시·절점/요소 선택, 원문 조회 |
-| 필드 편집 | LAW1/ELAST·LAW36/PLAS_TAB의 밀도/E/ν, BCS 6자유도, TYPE24 마찰, 기존 FUNCT 좌표, INIVEL/TRA 속도, PROP/SHELL 두께 |
-| 모델 작성 | LAW1 재료·SHELL 단면 생성/복사, 지원 MAT/PROP의 참조 검사 후 삭제, 실제 PART 재료/단면 할당·교체 |
-| 저장·출력 | 변경 명령·Undo/Redo·dirty/revision, 원문·필드 patch·구조 편집을 동봉한 `.caeprep` v2(v1 읽기 지원), 안전하게 해결한 INCLUDE를 포함한 RAD 출력 |
-| CAD/메시 | 선택 설치한 Gmsh SDK를 별도 프로세스로 사용해 STEP/IGES/BREP/XAO에서 XAO·MSH·연결 메타데이터 생성. 현재 CLI/API의 독립 후보 자산 |
-
-미지원 카드는 원문으로 보존합니다. 모든 Radioss 카드의 의미·표시·편집을 지원하는 것은 아닙니다. 지원 범위 밖의 카드/조건 생성, CAD 메시를 GUI 해석 문서로 채택하기, Engine 생성, 솔버 실행·후처리, MCP/열린 GUI 접속, Windows 설치형 배포는 남은 범위입니다. 상대 INCLUDE 지원 범위와 저장 구조는 [ARCHITECTURE.md](ARCHITECTURE.md)를 참고하세요.
-
-GUI 없이 같은 세션 API를 사용하는 독립 CLI도 제공합니다. 실행 간 문서를 전달하려면 작업 파일을 저장해야 합니다.
-
-```sh
-caelab-prep inspect model_0000.rad
-caelab-prep fields model_0000.rad
-caelab-prep fields model_0000.rad --card /MAT/LAW1/1
-caelab-prep edit model_0000.rad --card /MAT/LAW1/1 --field young_modulus --value 205000 --output edited.caeprep
-caelab-prep export edited.caeprep --output output/edited_0000.rad
-python -m pip install -e ".[cad]"
-caelab-prep mesh part.step --output mesh-assets --size 2.0
-```
-
-생성·할당 CLI도 GUI와 같은 provider 명령을 사용합니다. `--describe`로 현재 작업의 입력 항목을 조회할 수 있습니다. 값은 입력 덱 단위이며 ID `0`은 자동 배정입니다.
-
-```sh
-caelab-prep model model_0000.rad material.create --describe
-caelab-prep model model_0000.rad material.create --set "name=Steel" --set density=7.85e-9 --set young_modulus=210000 --set poisson_ratio=0.3 --output material.caeprep
-caelab-prep model material.caeprep section.create --set "name=Sheet" --set thickness=2 --output section.caeprep
-```
-
-위 수치는 Mg/mm/s 입력의 예시이며 다른 덱의 단위로 자동 변환하지 않습니다. 새 ID/참조는 출력과 `fields`에서 조회합니다. `part.assign --target /PART/… --set material=/MAT/LAW1/… --set property=/PROP/SHELL/… --output assigned.caeprep`는 두 관계를 한 명령으로 바꿉니다. native ID가 모호하거나 참조/요소 타입이 맞지 않으면 적용하지 않습니다. 이 지원표가 모든 재료법칙·property·SUBMODEL offset의 호환성을 뜻하지 않습니다.
-
-`--card`는 해당 파일의 실제 고유 헤더 또는 작업 문서의 카드 ID를 받습니다. 값은 덱의 단위계를 따릅니다. Gmsh는 시스템에 맞는 공유 라이브러리도 필요할 수 있습니다.
-
-개발 검사는 CI와 같이 환경을 나눕니다. 코어/CLI는 `.[dev]`, Qt 문서 검사는 `.[gui,dev]`, CAD worker 검사는 별도 가상환경에 `.[cad,dev]`와 `cadquery-ocp==7.8.1.1.post1`을 설치합니다. 해당 OCP는 테스트 입력 생성용이며 VTK 9.3.1을 요구하므로 GUI 환경의 VTK 9.4 이상과 분리합니다. OCP는 제품 의존성이 아닙니다. CI의 Qt 검사는 실제 폼·문서 연결을 확인하며 3D 렌더링이나 Windows GUI 검증을 대신하지 않습니다.
 
 ## 저장소의 역할
 

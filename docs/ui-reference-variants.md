@@ -40,6 +40,14 @@ The comparison header's **Reference / differences** button explains each
 approach's source scenes and deviations. Product names identify references;
 these are CAELab Prep views, not vendor software or endorsed implementations.
 
+## G1–G4 implementation update
+
+[PR #15](https://github.com/pikachu444/caelab-prep/pull/15) connects native material/section creation, copy/delete and PART assignment; curve rows/CSV and typed node/element group membership; supported BCS/CLOAD/initial velocity/TYPE7 conditions; verified display-unit conversion; CAD candidate adoption and Starter/Engine export. The eight adapters consume the same provider commands and typed editors. `test_modeling_ui.py`, `test_conditions_ui.py`, `test_groups_ui.py` and `test_native_units_ui.py` exercise the corresponding tasks and invalid drafts across all eight approaches. This replaces the old provider's scalar-only limitation; it does not supply vendor-native formats or all vendor features.
+
+The original source map below is a **handoff-era observation**, not the present feature support table. Its statements that creation, assignment or set operations were absent describe `f4d12d0`. Current supported commands are listed in [README](../README.md); source-product operation/appearance gaps remain unverified. Offscreen UI checks and the separate X11 Qt/VTK render/pick job are reported separately in section 19.
+
+Actual external reuse is now implemented in [Workbench PR #54](https://github.com/pikachu444/caelab-workbench/pull/54): MDO consumes `NumericEdit` while retaining its own service/history; RAD `.caeprep` files open in independent Prep processes through the existing program/file/JobManager boundary. This is stronger than the old host seam fixture but is not live GUI IPC/MCP or Windows acceptance.
+
 ## Source-to-implementation map
 
 The authoritative collected scenes remain in
@@ -72,8 +80,8 @@ Prep safety rules are retained and disclosed where original behavior is unknown.
 HyperMesh-style scalar edits complete immediately; Prep vectors retain explicit
 Apply/Revert for an atomic three-component command and one Undo.
 
-These differences are real presentation and interaction seams, but the current
-limited provider actions do not satisfy the current product goal. G1 requires
+At the handoff these were real presentation and interaction seams, but the
+limited provider actions did not satisfy the product goal. G1 requires
 T1–T2 in all eight approaches on actual parts with material/section creation and
 assignment; G2 adds T3–T4 with real curve and condition relationships. Existing
 scalar editing or a neutral `Associated curve` reference does not demonstrate
