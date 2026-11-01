@@ -2,6 +2,18 @@
 
 이 저장소는 여러 CAE 프로그램에서 재사용할 개발 자산과 기반을 만든다. OpenRadioss/OpenCourant는 첫 적용 대상이며, 현재 RAD 편집기는 공용 기반을 실제 작업에 연결한 첫 사용처다. 이 문서는 공용 자산의 경계와 현재 구현의 파일 계약을 구분해 설명한다. 목표와 후보 비교는 [DESIGN](DESIGN.md), 후속 모듈·계약·코드 이행과 작업 단위는 [상세 실행 계획](docs/shared-cae-foundation-plan.md)에 둔다. 상세 계획의 경로와 인터페이스를 현재 구현으로 해석하지 않는다.
 
+2026-11-02의 현재 납품 기준은 [DESIGN의 R1–R4/T1–T6/G0–G4](DESIGN.md#delivery-goals)를 따른다. 이 문서는 `f4d12d0`에서 확인한 코드와 앞으로 보완할 책임을 구분한다. 목표 수정으로 생성·할당·8제품 충실도·Windows 검증이 새로 구현된 것은 아니다.
+
+| 보존할 구현 | 실제 한계 | 현재 목표를 위해 필요한 보완 |
+|---|---|---|
+| `Document/CommandDispatcher`, typed ref, 초안·Undo·저장 | 기존 단일 resource 상태 변경 중심 | G1의 객체 생성/삭제·파트 참조 할당과 다중 자원 원자 변경, 실패 시 전체 복원 |
+| `RadProvider`, 원문 patch·INCLUDE·native 출력 | 일부 기존 필드 편집, PART 관계는 읽기 전용 | G1/G2의 새 native 객체·ID/참조 생성, G3의 Starter/Engine 출력; 원문 보존 경로 유지 |
+| `CurveSession`, 공용 속성·표·곡선 위젯 | 재료 하나와 곡선 목록의 제한 host | sample은 개발용 유지; 제품의 다중 재료·단면·조건 모델과 실제 곡선 참조는 domain provider가 소유 |
+| `reference_components`의 composition과 8 adapter | 공통 Edit 중심 명령, 배치·일부 확정 방식 차이 | T1–T6 과업별 명령 진입·선택·확정/취소·오류 복구; 공용 명령/문서는 공유, host별 모델 사본 금지 |
+| `gmsh_backend`의 별도 worker | 독립 후보 생성이며 GUI 문서와 단절 | G3 품질·채택/교체·관계 영향·Undo·저장 연결 |
+
+표현 adapter는 초안과 작업 흐름을 조합하고 공용 명령/API는 객체·관계·값·검증·Undo·저장을 소유한다. 제품 이름별로 생성/할당 알고리즘을 복제하지 않는다. 실제 Workbench host는 기존 서비스와 파일/연구 소유권을 유지한다. 대용량·배열 저장 및 복합 transaction 상세는 기존 모델 데이터 설계를 따르되 최소 G1 관계 구현에 필요한 부분부터 연결한다.
+
 ## 공용 자산의 경계와 현재 상태
 
 다중 파트·배치·혼합 자유도·케이스·대용량 자료의 목표 소유 구조와 완료 범위는 [모델·데이터 설계](docs/cae-model-data-design.md)에 둔다. 실제 구현 단계·종료 판단은 [작업서](docs/execution-stages.md), 외부 소비자의 소유·의존·파일 전달 경계는 [Workbench 재사용 계획](docs/workbench-reuse-plan.md)을 따른다. 아래 현재 코드가 그 목표를 이미 구현했다는 뜻은 아니다.
@@ -10,7 +22,7 @@
 
 `cae_core`는 솔버와 GUI를 모르는 문서·명령·선택 기반이다. `application.contracts`의 PropertyHost/DocumentSession·ObjectRef·PropertySpec·SetProperties는 Qt/RAD/VTK 없이 로드된다. `RadProvider`가 기존 PrepSession을 이 계약에 연결하고 `CurveSession`은 중립 재료/곡선 문서를 제공한다. 공용 위젯과 갤러리는 RAD와 VTK 없이 로드되며 기존 `ui.MainWindow`와 `application.PrepSession` export는 지연 로딩으로 호환한다. 기존 PrepSession 자체는 RAD/INCLUDE·원문·출력을 소유하는 솔버별 구현으로 남는다.
 
-`ui/design`은 자체 SVG·토큰·상태 스타일, `ui/widgets`는 model/view 트리·그룹 속성·숫자/단위·벡터·곡선 표/plot을 소유한다. `ui/actions`와 `ui/shell`은 동일 Action·도킹·renderer frame·비동기 FileTask를 제공하며 실제 전처리기와 갤러리가 공유한다. 위젯은 초안만 소유하고 provider/session이 확정 값·검증·Undo를 소유한다. 묶음 A의 실제 Windows 입력·배율·도킹 확인은 [검증 기록](docs/native-windows-validation.md)에 환경·입력 방법·화면과 함께 남겼다.
+`ui/design`은 자체 SVG·토큰·상태 스타일, `ui/widgets`는 model/view 트리·그룹 속성·숫자/단위·벡터·곡선 표/plot을 소유한다. `ui/actions`와 `ui/shell`은 동일 Action·도킹·renderer frame·비동기 FileTask를 제공하며 실제 전처리기와 갤러리가 공유한다. 위젯은 초안만 소유하고 provider/session이 확정 값·검증·Undo를 소유한다. [Windows 검증 기록](docs/native-windows-validation.md)은 PR #12 시기의 재구현 전 묶음 A에 한정된다. 현재 8방식 UI/G 목표의 Windows 합격 증거가 아니다.
 
 ## 이번 구현의 결정
 
@@ -85,7 +97,7 @@ Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 p
 
 현재 첫 적용 대상은 OpenRadioss/OpenCourant이고, 실행 가능한 사용 앱은 RAD 원문 편집기다. 공용 자산과 네이티브 갤러리는 이 저장소의 정식 개발 산출물이며 실제 편집 흐름과 함께 개발한다. 서로 다른 사용처에서 같은 코어·위젯을 사용하는 확인은 재사용 품질을 판단하는 기준이고, 공용 자산 개발을 시작하기 위한 전제 조건이 아니다.
 
-첫 공용 위젯·셸 부품·갤러리·최소 세션 계약을 실제 RAD와 중립 재료/곡선 문서에 연결했고, 관련 자동 검사와 범위를 고정한 Windows 실제 창 검증을 수행했다. 기존 RAD 사용처의 새 카드 생성, CAD 메시와 Radioss 조건의 GUI 통합, 고급 메시/중립면/접촉 생성, MCP/IPC, 솔버 실행·후처리, 설치형 배포는 후속이다. 이 목록이 모든 솔버 기능을 동시에 구현하거나 상용 CAE 전체를 재현하라는 범위는 아니다.
+첫 공용 위젯·셸 부품·갤러리·최소 세션 계약을 실제 RAD와 중립 재료/곡선 문서에 연결했다. 과거 Windows 검증은 위에 한정한 구버전 자료이며 현재 UI는 별도 확인이 필요하다. 새 카드·파트 관계 생성/할당은 G1, 실제 곡선/조건/접촉 작성은 G2, CAD/메시 채택·Starter/Engine은 G3, host 재사용·API/배포는 G4의 남은 목표다. MCP/IPC는 P8c, 고급 메시/중립면·대용량은 기존 별도 단계로 유지한다. 솔버 실행·후처리의 Workbench 소유는 바꾸지 않는다.
 
 
 
