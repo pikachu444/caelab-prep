@@ -53,7 +53,7 @@ _GLYPHS = {
 
 def icon(name):
     svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-           f'<g fill="none" stroke="{TOKENS["icon_stroke"]}" stroke-width="1.6" '
+            f'<g fill="none" stroke="{TOKENS["icon_stroke"]}" stroke-width="{TOKENS["icon_stroke_width"]}" '
            'stroke-linecap="round" stroke-linejoin="round">'
            + _GLYPHS.get(name, _GLYPHS["card"]) + '</g></svg>')
     renderer = QSvgRenderer(QByteArray(svg.encode("utf-8")))

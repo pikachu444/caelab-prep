@@ -42,6 +42,7 @@ class MaterialsWorkspace:
         host.menuBar().addMenu("&Developer").addAction(host.catalogue_action)
 
         strip = QToolBar("Document", host)
+        host.document_toolbar = strip
         strip.setObjectName("galleryDocumentToolbar")
         strip.setMovable(False)
         strip.setIconSize(QSize(18, 18))

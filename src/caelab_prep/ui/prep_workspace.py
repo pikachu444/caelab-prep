@@ -251,14 +251,17 @@ class PrepWorkspace:
     def _present_command_priority(self, *, open_primary, save_primary):
         for action, primary in ((self.open_rad_action, open_primary), (self.save_action, save_primary)):
             action.setProperty("primaryCommand", primary)
-            button = self.document_toolbar.widgetForAction(action)
-            if button.property("primaryCommand") != primary:
-                button.setProperty("primaryCommand", primary)
-                button.style().unpolish(button)
-                button.style().polish(button)
-                button.update()
+            for button in self.document_toolbar.findChildren(QToolButton):
+                if button.defaultAction() is action and button.property("primaryCommand") != primary:
+                    button.setProperty("primaryCommand", primary)
+                    button.style().unpolish(button)
+                    button.style().polish(button)
+                    button.update()
 
     def _size_initial_sidebar(self):
+        if hasattr(self, "reference_adapter"):
+            self.reference_adapter.resize(self.reference_bindings)
+            return
         width = max(350, min(420, round(self.width() * .20)))
         self.resizeDocks([self.model_dock], [width], Qt.Orientation.Horizontal)
 
@@ -301,6 +304,7 @@ class PrepWorkspace:
                 self.model_tree.expand(parent)
 
     def _clear_form(self):
+        self._curve_active = False
         self.property_editor.set_fields(())
         self.property_editor.setMinimumHeight(0)
         self.property_editor.scroll.show()
@@ -309,6 +313,10 @@ class PrepWorkspace:
             widget.hide()
         self.units_note.clear()
         self.field_editors, self._field_specs = {}, {}
+        self._native_property_baseline = {}
+        bindings = getattr(self, "reference_bindings", None)
+        if bindings is not None and bindings.curve_pages is not None:
+            bindings.curve_pages.hide()
 
     def _refresh_fields(self):
         self._clear_form()
@@ -329,6 +337,7 @@ class PrepWorkspace:
                                         title=str(card.get("title") or "Properties"),
                                         subtitle=str(card.get("keyword") or ""))
         self.field_editors = dict(self.property_editor.editors)
+        self._native_property_baseline = self.property_editor.raw_values()
         self._connect_property_inputs()
         source = self.session.card_text(self._selected_card_id)
         if len(source) > 100_000:
@@ -345,6 +354,7 @@ class PrepWorkspace:
                 self.units_note.clear()
 
     def _connect_property_inputs(self):
+        deferred = getattr(getattr(self, "reference_adapter", None), "defer_scalars", False)
         for name, editor in self.property_editor.editors.items():
             if not editor.isEnabled():
                 continue
@@ -353,18 +363,23 @@ class PrepWorkspace:
                 for component, child in zip(("vx", "vy", "vz"), editor.editors):
                     self.field_editors[component] = child
                     child.setObjectName("field_" + component)
-                    child.returnPressed.connect(lambda n=component, e=child: self._commit_text(n, e))
+                    if not deferred:
+                        child.returnPressed.connect(lambda n=component, e=child: self._commit_text(n, e))
                 self.apply_vector_button.setToolTip("Apply all three velocity components together (Enter)")
-                self.apply_vector_button.show()
+                self.apply_vector_button.setVisible(not deferred)
             elif isinstance(editor, QCheckBox):
-                editor.toggled.connect(lambda checked, n=name: self._commit_field(n, checked))
+                if not deferred:
+                    editor.toggled.connect(lambda checked, n=name: self._commit_field(n, checked))
             elif isinstance(editor, QComboBox):
-                editor.activated.connect(lambda index, n=name, e=editor: self._commit_field(n, e.itemData(index)))
+                if not deferred:
+                    editor.activated.connect(lambda index, n=name, e=editor: self._commit_field(n, e.itemData(index)))
             elif isinstance(editor, QLineEdit):
                 editor.setObjectName("field_" + name)
-                editor.editingFinished.connect(lambda n=name, e=editor: self._commit_text(n, e))
+                if not deferred:
+                    editor.editingFinished.connect(lambda n=name, e=editor: self._commit_text(n, e))
 
     def _present_curve(self, points):
+        self._curve_active = True
         self.property_editor.scroll.hide()
         self.property_editor.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.curve_table.set_points(points)
@@ -375,6 +390,9 @@ class PrepWorkspace:
         self.curve_plot.set_points(points, x_label="X (input deck)", y_label="Y (input deck)")
         self.curve_table.show()
         self.curve_plot.show()
+        bindings = getattr(self, "reference_bindings", None)
+        if bindings is not None and bindings.curve_pages is not None:
+            bindings.curve_pages.show()
 
     @staticmethod
     def _unit_caption(units):

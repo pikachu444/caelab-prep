@@ -20,8 +20,9 @@ class GalleryWindow(QMainWindow):
     operationFinished = Signal(str, bool)
     LAYOUT_VERSION = 2
 
-    def __init__(self, session=None):
+    def __init__(self, session=None, *, presentation=None):
         super().__init__()
+        self.presentation = presentation
         self.session = session or CurveSession()
         self._target = None
         self._curve_ref = None
@@ -44,7 +45,7 @@ class GalleryWindow(QMainWindow):
             is_dirty=lambda: bool(self.session.describe()["dirty"]),
             save=lambda continuation: self.save_dialog(on_success=continuation),
             capture=self._capture_drafts, restore=self._restore_drafts)
-        self._settings = QSettings("CAELab", "ComponentGallery")
+        self._settings = QSettings("CAELab", "ComponentGallery" + ("-" + presentation if presentation else ""))
         self.setObjectName("caelabGallery")
         self.setWindowTitle("CAELab Materials")
         self.resize(1280, 800)
@@ -84,8 +85,12 @@ class GalleryWindow(QMainWindow):
         self.close_action = register("file.close", "Exit", self.close, QKeySequence.StandardKey.Quit, icon="card")
 
     def _build_workspace(self):
-        from .materials_workspace import MaterialsWorkspace
-        self.workspace = MaterialsWorkspace(self)
+        if self.presentation:
+            from .reference_workspace import ReferenceMaterialsWorkspace
+            self.workspace = ReferenceMaterialsWorkspace(self)
+        else:
+            from .materials_workspace import MaterialsWorkspace
+            self.workspace = MaterialsWorkspace(self)
         self.workspace.build()
 
     def _show_catalogue(self):
@@ -136,6 +141,8 @@ class GalleryWindow(QMainWindow):
         self._document_epoch = self.session.describe().get("document_epoch")
         self._baseline = self.properties.raw_values()
         self._baseline_units = self.properties.units()
+        if hasattr(self, "reference_adapter"):
+            self.reference_adapter.bind_fields(self.field_editors, self.apply_properties, self.reference_bindings)
 
     def _load_curve(self):
         if self._curve_ref is None:

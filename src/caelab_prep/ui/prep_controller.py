@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QThreadPool
 from PySide6.QtGui import QCloseEvent, QKeySequence
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QCheckBox, QComboBox, QLineEdit, QTreeWidgetItem
 
 from .actions import ActionRegistry
 from .shell import FileEditCoordinator
@@ -346,12 +346,31 @@ class PrepController:
     def _text_drafts(self, *, exclude=None):
         drafts = {key: editor.text() for key, editor in self.field_editors.items()
                   if key != exclude and isinstance(editor, QLineEdit) and editor.isModified()}
-        if not self.curve_table.isHidden() and self.curve_table.has_draft():
+        if self._curve_active and self.curve_table.has_draft():
             drafts["@curve"] = self.curve_table.draft_state()
+        if getattr(getattr(self, "reference_adapter", None), "defer_scalars", False):
+            raw = self.property_editor.raw_values()
+            if raw != self._native_property_baseline:
+                drafts["@properties"] = raw
         return drafts
 
     def _restore_text_drafts(self, drafts):
         for key, text in drafts.items():
+            if key == "@properties":
+                for name, raw in text.items():
+                    editor = self.property_editor.editors.get(name)
+                    if isinstance(editor, QLineEdit):
+                        editor.setText(raw)
+                        editor.setModified(True)
+                    elif isinstance(editor, QCheckBox):
+                        editor.setChecked(raw)
+                    elif isinstance(editor, QComboBox):
+                        editor.setCurrentIndex(editor.findData(raw))
+                    elif hasattr(editor, "editors"):
+                        for child, value in zip(editor.editors, raw):
+                            child.setText(value)
+                            child.setModified(True)
+                continue
             if key == "@curve":
                 self.curve_table.restore_draft(text)
                 continue
@@ -408,6 +427,25 @@ class PrepController:
         if self._replacement_conflict:
             self._show_error(ValueError("Reload properties (Ctrl+R) before continuing with the replaced document."))
             return False
+        if getattr(getattr(self, "reference_adapter", None), "defer_scalars", False):
+            try:
+                values = self.property_editor.values()
+                if values:
+                    current = {spec.name: spec.value for spec in self.provider.properties(
+                        self._card_refs[self._selected_card_id])}
+                    changed = {name: value for name, value in values.items() if value != current[name]}
+                    if changed:
+                        self._submit_properties(changed)
+                        self.refresh_document()
+            except Exception as exc:
+                self.property_tabs.setCurrentIndex(0)
+                invalid = next((name for name, error in self.property_editor.errors.items() if error.text()), None)
+                if invalid:
+                    editor = self.property_editor.editors[invalid]
+                    self.property_editor.scroll.ensureWidgetVisible(editor)
+                    editor.setFocus()
+                self._show_error(exc)
+                return False
         for name in list(self.field_editors):
             editor = self.field_editors.get(name)
             if isinstance(editor, QLineEdit) and editor.isModified():
@@ -418,7 +456,7 @@ class PrepController:
                     editor.setFocus()
                     self.statusBar().showMessage("Correct the highlighted property before continuing", 8000)
                     return False
-        if not self.curve_table.isHidden() and self.curve_table.has_draft():
+        if self._curve_active and self.curve_table.has_draft():
             try:
                 points = self.curve_table.points()
             except ValueError as exc:

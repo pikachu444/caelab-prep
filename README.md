@@ -16,6 +16,13 @@
 
 ## 공용 부품과 갤러리 실행
 
+프로그램별 방식의 실제 편집 비교는 `caelab-prep compare`로 엽니다.
+같은 문서·선택·값·참조·Undo를 유지하며 8개 표현을 전환합니다.
+RAD는 `caelab-prep compare --rad model_0000.rad`로 엽니다.
+[프로그램별 근거·구현·차이](docs/ui-reference-variants.md)를 먼저 확인하세요.
+원본 화면이 확보되지 않은 상세는 충실 재현 합격으로 표시하지 않으며,
+offscreen 비교는 실제 Windows/GPU 입력 확인을 대신하지 않습니다.
+
 Qt 부품과 재료/곡선 갤러리는 VTK 없이 실행합니다.
 
 ```sh

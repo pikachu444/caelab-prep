@@ -1,5 +1,11 @@
 # Prep UI rebuild — 2026-10-31
 
+2026-11-01 follow-up: the user expanded the scope to separate working
+program-specific approaches. See [the current implementation, source map and
+remaining fidelity limits](ui-reference-variants.md). The historical rebuild
+record below is preserved; its 121/11 results are not the new session's tests.
+The follow-up retains native-input/publication holds.
+
 Status: second presentation implementation and code regression review complete; native interaction and visual acceptance remain open. Native input/capture is on parent-directed hold pending the user's lock-state check and desktop coordination. This local branch must not merge on the strength of automated tests alone.
 
 ## Scope and implementation

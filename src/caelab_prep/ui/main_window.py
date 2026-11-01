@@ -20,17 +20,21 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
     _sessionEvent = Signal(object)
     LAYOUT_VERSION = 3
 
-    def __init__(self, session=None, *, enable_viewport: bool = True):
+    def __init__(self, session=None, *, enable_viewport: bool = True, presentation=None):
         super().__init__()
+        self.presentation = presentation
         if session is None:
             from ..application.session import PrepSession
             session = PrepSession()
         self.initialize_controller(
             session, file_dialog=lambda: QFileDialog, message_box=lambda: QMessageBox,
             task_factory=lambda *args, **kwargs: _FileTask(*args, **kwargs))
-        self._settings = QSettings("CAELab", "Prep")
+        self._settings = QSettings("CAELab", "Prep" + ("-" + presentation if presentation else ""))
         self._register_commands()
         self.build_workspace(enable_viewport=enable_viewport)
+        if presentation:
+            from .reference_workspace import configure_native
+            configure_native(self, presentation)
         geometry = self._settings.value("windowGeometry")
         state = self._settings.value("windowState")
         if geometry:
@@ -38,7 +42,7 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
         restored = bool(state) and self.restoreState(state, self.LAYOUT_VERSION)
         self._initial_sidebar_pending = not restored
         if not restored:
-            self.messages_dock.hide()
+            self.messages_dock.setVisible(bool(presentation and self.reference_adapter.docks.output))
             self._size_initial_sidebar()
         self._sessionEvent.connect(self._session_changed, Qt.ConnectionType.QueuedConnection)
         self._unsubscribe = self.session.subscribe(self._sessionEvent.emit)
