@@ -1,6 +1,8 @@
 # 메셔의 구현 가능성과 도입 로드맵
 
-기준일: 2026-10-30. 상태: **공개 코드·알고리즘·상용 매뉴얼 조사와 제한된 SDK 실험을 반영한 개발 계획**. Astra의 독립 아키텍처 검토, shell/midsurface 조사, hex/hybrid 조사, 상용 작업 흐름 조사를 통합했다. 제품 메셔·GUI·Windows 연결을 이번에 구현한 것은 아니다.
+조사·SDK 실험 기준일: 2026-10-30. 제품 구현 대조: 2026-11-02, Prep 병합 `a48d3b4`. 상태: **기존 조사 기록과 구현된 tri/tet 경로, 미실증 고급 메시 계획의 구분**. 아래 외부 후보·논문·상용 매뉴얼과 4절 실험은 10월 30일에 확인한 범위이며 이번 문서 갱신에서 재조사·재실행하지 않았다. 이후 tri/tet 후보 생성·국부 크기·interface 정책·품질·GUI 채택·native/solver 경로가 구현됐으나 Windows 납품과 고급 메시 기능은 별도다.
+
+현재 코드·실행 근거는 [작업서 19절](execution-stages.md#current-progress)을 따른다. 일반 수정/재연결은 [중앙 잔여 N18](execution-stages.md#remaining-work), 선/준비면·중립면·quad·sweep·hybrid는 N22–N26이다. 이들 조건부 기능은 F0–F2 실증 후 제품 연결 여부를 결정하며 새로운 자동 커널의 구현 가능성이나 납기를 약속하지 않는다.
 
 ## 1. 앞선 계획에서 바로잡는 판단
 
@@ -14,7 +16,7 @@
 
 | 기반 | 확인한 실제 제공물 | 현재 도입 판단과 한계 |
 |---|---|---|
-| Gmsh 4.15.2 | CAD/FE meshing SDK·공개 소스·Python/C++ API. tri/tet, size fields, Blossom/recombined·quasi-structured quad, transfinite/extrusion, experimental hybrid | 기본 엔진 유지. 우리 worker에는 uniform 2D/3D만 있으므로 나머지 기능은 실증 후 확장. SDK 기능 존재를 Prep 기능 완료로 세지 않음 |
+| Gmsh 4.15.2 | CAD/FE meshing SDK·공개 소스·Python/C++ API. tri/tet, size fields, Blossom/recombined·quasi-structured quad, transfinite/extrusion, experimental hybrid | 기본 엔진 유지. 현재 worker는 선형 tri/tet, XAO UUID 기반 face/volume local size와 preserve/conformal/independent 정책을 제공한다. native 채택은 tri3/tet4만 지원하며 quad/sweep/hybrid는 아래 실증 뒤 확장. SDK 기능 존재를 Prep 기능 완료로 세지 않음 |
 | SALOME SMESH/HEXABLOCK | FE 메시 설정·submesh·그룹·품질·수정, 구조화 block/매핑의 공개 구현과 Python 경로 | 작업 설계·선택적 worker 비교 후보. 전체 SALOME embedding이나 경량 SDK 추출 성공은 아직 미확인 |
 | SALOME SHAPER midsurface | 실제 macro·source·tests. 두 큰 면 또는 plane/cylinder 등 canonical geometry를 이용하는 제한적 추출 | 공식 문서가 추출면의 미연결과 후속 접합 작업을 명시. 범용 rib/boss·가변두께 커널로 채택하지 않음 |
 | OCCT | STEP/BRep, 거리·투영·offset·boolean·sewing·shape repair | 수동/반자동 준비면과 partition의 기반. 맞은편 면 선택·두께장·junction 추론은 별도 개발. healing이 형상/위상/공차를 바꿀 수 있음 |
@@ -44,9 +46,9 @@ HyperMesh Map은 복잡 solid의 사전 분할과 mappable 여부를 요구하�
 
 BeidPrep 2.0의 공식 페이지·자체 평가도 참고했다. 자체 synthetic 8종 평가에서 쉬운 6종과 freeform housing 2종의 coverage 차이와 잔여 불량 요소를 공개한다. 현재 제품 설명은 solid mesh 생성 미지원을 명시한다. 유용한 통합 제품 사례이지만 공개 커널 또는 범용 상용 동등성의 증거로 해석하지 않는다. 이는 1.0.1의 이전 Windows 시험과 다른, 이번 웹 자료 조사다.
 
-## 4. 이번에 직접 실행한 SDK 실험
+## 4. 2026-10-30에 직접 실행한 SDK 실험 기록
 
-Linux x86_64, Python 3.12.14, Gmsh 4.15.2, 요청 thread=1. 작은 합성 형상 4개를 각 새 프로세스와 120초 제한으로 실행했다. GUI·작업 문서 채택·STEP roundtrip·RAD native·Windows는 이 실험 범위가 아니다. 속도는 작은 사례의 관측값이며 제품 성능 목표나 상용 비교가 아니다.
+이 절의 당시 환경은 Linux x86_64, Python 3.12.14, Gmsh 4.15.2, 요청 thread=1이었다. 작은 합성 형상 4개를 각 새 프로세스와 120초 제한으로 실행했다. GUI·작업 문서 채택·STEP roundtrip·RAD native·Windows는 이 실험 범위가 아니다. 속도는 작은 사례의 관측값이며 제품 성능 목표나 상용 비교가 아니다.
 
 | 실험/고정 recipe | 관측된 요소/품질 | 판정 |
 |---|---|---|
@@ -59,22 +61,22 @@ hybrid의 최초 계측 실패 뒤 계측 처리만 한 번 보정하여 재실�
 
 현재 확인한 Gmsh 4.15.2 공식 문서에서 3D recombination/conformity는 experimental이고 기본 conformity는 nonconforming이다. 공식 source의 `-hybrid` 설정은 Algorithm2D=9, Algorithm3D=9, Recombine3DAll=1이다. HXT=10을 켰다는 사실만으로 hex/hybrid를 시험했다고 하지 않는다. source의 trihedron(type140) 같은 전이 형식은 목표 solver 지원을 확인하지 못하면 native export를 차단한다. 이번 metadata 오류의 원인을 type140이라고 확정한 것은 아니다.
 
-## 5. 기능별 개발 착수 판단
+## 5. 현재 구현과 기능별 착수 판단
 
 | 기능 | 지금 가능한 결정 | 다음 작업과 넘어갈 조건 |
 |---|---|---|
-| 문서/배열/채택·GUI/품질/수정/저장 | 기존 구현과 명확한 앱 엔지니어링 경로가 있음 | 준비된 mesh부터 P6a/공용 부품 개발. 실제 기능·실패·Undo/파일 조건으로 닫음 |
-| 기본 tri/tet 생성 연결 | 기존 worker 이력과 이번 tet 재현 근거가 있음 | C의 문서/native 연결. local sizing·conformal은 별도 미실증 항목으로 추적 |
+| 문서/채택·GUI/품질/저장 | 검증한 Gmsh 후보의 품질·원자 채택·Undo·작업문서·native 출력은 구현 | 외부 메시 입력 N02, 일반 수정/재연결 N18, 대형 배열/codec N17은 별도 잔여 |
+| 기본 tri/tet 생성 연결 | 현재 GUI/API에서 국부 크기·공유/독립 interface 검토·후보 채택·조건·Starter/Engine까지 연결 | 실제 SDK/solver 확인은 작업서 19절의 입력과 CI에 한정. 일반 형상 robustness·원제품 비교·Windows 완료로 확대하지 않음 |
 | 준비된 shell 면의 quad | 실제 공개 kernel·논문·작은 quad 재현이 있음 | 아래 F1/F2에서 곡면·holes·seed·두께/법선/면 대응을 확인한 뒤 H-Q/S에 연결 |
-| 제한 sweep/hex | 실제 API/공식 예제가 있으나 이번 recipe는 정상 통과 못함 | 공식 recipe 재현과 원인 분리부터 진행. supported geometry/seed/layer·오류 0·실제 conformity가 확인되기 전 H-S 제품 구현을 확정하지 않음 |
-| hex–tet hybrid | 공개/상용 후보가 있으나 이번 Gmsh 결과는 전체 검사 실패 | 지원 cell/전이 topology부터 실증하고 native 변환을 별도 확인. 연구용 cell을 삭제·퇴화 변환해 통과시키지 않음 |
+| 제한 sweep/hex | 실제 API/공식 예제가 있으나 10월 30일 recipe는 정상 통과 못함 | 공식 recipe 재현과 원인 분리부터 진행. supported geometry/seed/layer·오류 0·실제 conformity가 확인되기 전 H-S 제품 구현을 확정하지 않음 |
+| hex–tet hybrid | 공개/상용 후보가 있으나 10월 30일 Gmsh 결과는 전체 검사 실패 | 지원 cell/전이 topology부터 실증하고 native 변환을 별도 확인. 연구용 cell을 삭제·퇴화 변환해 통과시키지 않음 |
 | 반자동 중립면 | OCCT 연산과 제한 SHAPER reference 존재 | 사용자가 source/opposed face를 지정하는 일정두께 plane/cylinder부터 별도 F1/F2. 자동 복잡 pairing을 전제로 하지 않음 |
 | rib/boss·가변두께·freeform 자동 중립면 | 현재 실제 사용할 범용 kernel을 확보/재현하지 못함 | 공개 구현 확보·논문 재현 연구·SDK/외부 앱 평가 중 하나를 선택. 확정 제품 backlog/납기에서 제외 |
 | 일반 CAD 자동 all-hex | 공개 연구 구현은 존재. 실제 목표 CAD/assembly 검증 없음 | HybridOctree 등 제한 연구만 F0부터. 실패하면 외부 mesher import/상용 SDK 또는 보류. 상용 동등성을 모델 능력으로 약속하지 않음 |
 
-특히 C의 face/volume local size는 현재 uniform min/max worker에 UI만 추가하면 구현되지 않는다. Gmsh `setSize`는 point 대상이며 field/restriction·경계 전파와 실제 크기 분포 확인이 필요하다. `occ.fragment`는 conformal 인터페이스를 만드는 경로가 있지만 boolean 뒤 tag/면 대응은 달라질 수 있다. part·UUID·하중/접촉의 의미 보존은 Prep의 추가 책임이다.
+현재 `GmshBackend.generate()`는 `local_sizes`를 보존된 XAO의 surface/volume UUID에만 적용한다. `interface_policy=conformal`은 새 CAD에서 OCC fragment와 소유/경계 검사를 사용하고, 기존 XAO는 preserve로 identity를 유지한다. `independent`는 공유 topology/node가 있으면 거절하는 preflight이며 자동 분리 기능이 아니다. 후보의 recipe와 전체 cell inventory·품질·경계 검사를 거쳐 명시적으로 채택한다. 변경된 CAD의 면에 기존 하중/접촉을 자동 재연결하는 기능은 이 구현에 포함되지 않는다.
 
-C의 필수 local/conformal 조건을 통과하지 못하면 C 완료가 아니다. 작은 결과를 먼저 배포할 때는 “기본 tri/tet 연결 완료 / local·conformal 보류”로 정확히 나누며 C의 원래 조건을 조용히 완화하지 않는다.
+10월 30일 당시의 local/conformal 미실증 판정은 위 후속 구현 기록으로 갱신한다. 그렇더라도 C/G3의 전체 입력 규모·실무 연속 작업·Windows 조건을 현재 소형 성공으로 일괄 통과시키지 않는다. 현재 미확인 범위와 완료 기준은 중앙 목록을 사용하며 기존 조건을 조용히 완화하지 않는다.
 
 ## 6. 구현 가능성을 먼저 확인하는 유한 단계
 
@@ -124,4 +126,4 @@ Codex/Astra는 공개 API 연결, 자료구조·UI/명령·파일/실패 처리,
 - 비교 제품의 자체 범위: [BeidPrep 2.0](https://beidersim.com/beidprep.html), [midsurface 자체 평가](https://beidersim.com/validation-midsurface.html), [Naksha](https://agentnaksha.com/). 웹 자료 조사이며 이번에 두 제품을 실행한 결과가 아니다.
 - [한국저작권위원회: 아이디어와 표현](https://www.copyright.or.kr/information-materials/common-sense/knowledge-for-netizen/index.do).
 
-이번 결과로 끝낼 것은 근거 없는 확정 개발 약속이다. 다음 실제 작업은 기본 공용 자산/문서 구현과 병행하여 **준비면 quad·제한 sweep·반자동 중립면 중 한 기능의 F1/F2**를 명시적으로 수행하는 것이다. 하나의 기능이 go가 되면 제품 연결로 이동하고, 실패하면 그 원인과 대안으로 조사 작업을 닫는다.
+이 조사 기록의 역할은 근거 없는 확정 개발 약속을 막는 것이다. 기본 공용 자산과 tri/tet 경로는 이미 구현돼 있으므로 다시 처음부터 만들지 않는다. 고급 메시 N22–N26을 착수할 때에는 해당 기능의 F0–F2만 유한하게 수행한다. 하나의 기능이 go가 되면 제품 연결로 이동하고, 실패하면 원인과 대안으로 조사 작업을 닫는다. 문서 최신화가 이 새 실증의 착수나 완료를 뜻하지 않는다.

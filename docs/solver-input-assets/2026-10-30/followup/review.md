@@ -1,5 +1,7 @@
 # 입력 생성 자산 후속 독립 검토
 
+> 2026-10-30 자료 묶음의 후속 원문 검토 기록이다. 아래 `analysis/`, `analysis-only/`, `tmp/`는 그 조사 환경의 분석 경로이며 현재 clone의 파일 경로나 배포 링크가 아니다. 이 검토의 미실행 범위와 후속 제품의 RAD 생성·소형 solver 결과는 구분한다. 현재 지원·잔여 작업은 [작업서](../../../execution-stages.md#remaining-work)를 따른다.
+
 기존 PR10의 RAD 미독해 descriptor/semantic reader와 MSC 완전 예제는 공개 취득 경로를 소진한 결과가 아니었다. RAD 상세 문서 대부분은 미독해였고 MSC 추가 조사는 5분으로 한정됐다. 이번 후속에서 실제 새 writer와 MIT 완전 RAD 모델까지 나왔으므로 이 부분을 접근 불가나 권리 문제로 묶어 종료해서는 안 된다. 실제 제약은 특정 CFG의 제한적 조건, upstream QA의 NC 조건, MSC matching-version 설치 예제·실행 환경·재배포 권리다.
 
 RAD `rad/assets/opencourant-readers/starter/source/properties/shell/hm_read_prop01.F`, `loads/general/cload/hm_read_cload.F`, `materials/mat/mat001/hm_read_mat01.F`를 직접 읽었다. SHELL의 ISHELL/ISMSTR/ITHK/IPLAS는 DEFAULTS_SHELL 상속과 sentinel 변환이 있고, NIP==-1은 이 함수의 NPTS_D=0으로 치환되며 NIP>10은 오류다. CLOAD의 zero skew는 submodel skew를 상속하고 zero xscale/magnitude는 단위 처리 경로의 FAC_FCX/FAC_FCY로 치환된다. LAW1은 zero reference density를 initial density로 대체하고 E<=0 오류, ν=0.5 내부 보정이 있다. 이 원문은 실제 의미 규칙이며 폼 설명·검증에 쓸 수 있다. reader 자체가 writer나 완성 schema는 아니고 solver 내부 보정을 exporter의 강제 치환으로 옮겨서는 안 된다. 담당자에게 DEFAULTS/CFG 연결을 요청했고 NIP 기본값의 출처와 상속을 구별하도록 직접 토론했다.

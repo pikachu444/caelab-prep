@@ -1,6 +1,15 @@
-# Independent code and regression-risk review — current final verdict
+# Independent code and regression-risk review — 2026-10-31 milestone
 
-**Current verdict: final product source/native behavior/documentation remain accepted, and the concrete Qt ownership-root cleanup correction is approved by source review. No remaining scoped source blocker in the new correction. Required CI on the exact new commit SHA is still pending; merge remains gated until it passes.** The 0952d66 PR segmentation fault is retained as a real failure and is not closed by its same-head green push run or by a retry.
+**Historical scope notice, 2026-11-01:** this report reviews the bounded
+`feat/shared-gui-foundation` / PR #12 candidate, not merged PR #15 (`a48d3b4`).
+Its accepted Windows A7 campaign, source ranges, test counts and CI gates belong
+to that candidate. Later modeling, conditions, CAD adoption, eight-view UI and
+Workbench changes require their own evidence. See [current execution evidence](../execution-stages.md#current-progress)
+and [remaining work](../execution-stages.md#remaining-work). The verdict and
+failures below are preserved as review history, not current product acceptance
+or instructions to stop or approve a new merge.
+
+**Verdict at this milestone: final product source/native behavior/documentation remain accepted, and the concrete Qt ownership-root cleanup correction is approved by source review. No remaining scoped source blocker in the new correction. Required CI on the exact new commit SHA is still pending; merge remains gated until it passes.** The 0952d66 PR segmentation fault is retained as a real failure and is not closed by its same-head green push run or by a retry.
 
 This verdict supersedes every earlier pending-Windows/A7/teardown/size-caveat verdict below. The earlier material native acceptance gap is now addressed through the user's explicitly approved own-process Windows QPA/QTest route. It is not an OS SendInput, manual-human-input, OS-monitor-DPI-change, oversized-full-screen-input, floating-caption-redock, installer, B/C or all-feature-combinations claim.
 

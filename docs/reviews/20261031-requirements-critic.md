@@ -1,10 +1,19 @@
-# Requirements critic review
+# Requirements critic review — 2026-10-31 milestone
+
+**Historical scope notice, 2026-11-01:** this is the bounded P1–P3/A review for
+the PR #12 implementation, not a verdict on merged PR #15 (`a48d3b4`) or the full practical
+CAE goal. Its scope exclusions, finite Windows acceptance and pending CI gates
+are retained as statements made at that milestone. They neither close current
+Windows/source-product comparison work nor authorize narrowing later user
+requirements. Current status and concrete completion criteria are in
+[execution evidence](../execution-stages.md#current-progress) and
+[remaining work](../execution-stages.md#remaining-work).
 
 Reviewed the candidate against baseline `6a2c96e` on `feat/shared-gui-foundation`. Read-only source, evidence and image review; this report is the only reviewer edit. Implementation changes were committed in `70a2baf`, followed by Qt-test teardown in `c23149e`; the final narrow-catalogue correction and evidence are awaiting the integrator's final commit at this review point.
 
 Authority: `AGENTS.md`, README/DESIGN, `docs/shared-cae-foundation-plan.md:53–64,117–142,161–175,232–243`, P1–P3 in `docs/execution-stages.md`, benchmark common-assets and Workbench consumer boundaries. No second layout, search, exhaustive state combinations, B/C, new RAD cards or new solver laws were added to acceptance.
 
-## Final verdict
+## Final verdict at this milestone
 
 **The six agreed implementation corrections and the finite original A7 native acceptance campaign are accepted. No scoped implementation or important native-verification blocker remains. Required CI for the exact final commit remains an integrator-owned merge gate.** This is a requirements review, not a GitHub approval or permission to bypass protection.
 

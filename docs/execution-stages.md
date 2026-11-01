@@ -1,6 +1,6 @@
 # Prep 단계별 개발 작업·종료 조건
 
-현재 목표 수정: 2026-11-02, 구현 재개 기준 `0b4d6bb`. 제품 목표의 원본은 [DESIGN의 R1–R4/T1–T6/G0–G4](../DESIGN.md#delivery-goals), 현재 진도와 다음 작업은 [19절](#current-progress)이다. 이 문서는 기술 작업 P0–P9와 기존 B1–B6의 상세를 연결한다. 과거 A1–A8/C의 한정된 판정을 현재 8방식 실무 목표의 완료로 쓰지 않는다. **후속 구현 요청에 따라 19절의 작은 체크포인트로 코드와 실제 결과를 연결한다. 19절은 미해결 사항과 기록을 모은 절이며 1–18절 또는 G0–G4의 완료를 뜻하지 않는다.**
+문서 상태 정리: 2026-11-02. 제품 코드 기준은 Prep main `a48d3b4`(PR #15)와 Workbench main `d6f05a3`(PR #54)다. 제품 목표의 원본은 [DESIGN의 R1–R4/T1–T6/G0–G4](../DESIGN.md#delivery-goals), 현재 상태·잔여 개수·다음 작업·완료 기준은 [19절 남은 작업표](#remaining-work)다. 이 문서는 기술 작업 P0–P9와 기존 B1–B6의 상세를 연결한다. 과거 A1–A8/C의 한정된 판정을 현재 8방식 실무 목표의 완료로 쓰지 않는다. **후속 구현 요청에 따라 19절의 작은 체크포인트로 코드와 실제 결과를 연결한다. 19절은 미해결 사항과 기록을 모은 절이며 1–18절 또는 G0–G4의 완료를 뜻하지 않는다.**
 
 초기 작업서 기준은 `5d16e81c7ec7c92499401d63208039424bf73cc9`, 2026-10-29였다. 아래 날짜가 붙은 선택·결과·승인 설명은 해당 시점의 저장소 기록으로 보존하며 새 작업의 승인이나 독립 검증으로 전용하지 않는다. [공용 기반 설계](shared-cae-foundation-plan.md), [모델·데이터 설계](cae-model-data-design.md), [Workbench 재사용 계획](workbench-reuse-plan.md)의 기술 경계를 함께 따른다.
 
@@ -10,9 +10,9 @@
 
 ## 1. 검토 결론과 수정할 선행 관계
 
-현재 우선순위는 **실제 사용자 과업을 8제품별 방식으로 끝내는 것**이다. 갤러리·하나의 조합 화면·기존 scalar 수정으로 첫 납품을 대체하지 않는다. 이미 있는 공용 계약/위젯은 유지하고 G1의 생성·삭제·할당에 필요한 부분부터 연결한다. P5는 선택적 후속 배치가 아니라 G1의 필수 8방식 상호작용이다. 다만 공통 명령을 만들기 전에 8개 화면을 동시에 구현하지 않으며, 한 실제 UI에서 명령·초안·파일 연결을 확인한 뒤 같은 명령을 다른 adapter로 확대한다.
+현재 우선순위는 **실제 사용자 과업을 8제품별 방식으로 끝내는 것**이다. 갤러리·하나의 조합 화면·기존 scalar 수정으로 첫 납품을 대체하지 않는다. PR #15에서 연결한 공용 계약/위젯과 생성·삭제·할당은 유지하고 N01 케이스/영속 해석 설정, N02 외부 독립 메시 import부터 보완한다. P5는 선택적 후속 배치가 아니라 G1의 필수 8방식 상호작용이다. 다만 공통 명령을 만들기 전에 8개 화면을 동시에 구현하지 않으며, 한 실제 UI에서 명령·초안·파일 연결을 확인한 뒤 같은 명령을 다른 adapter로 확대한다.
 
-실행 순서는 `G0 → G1(T1/T2) → G2(T3/T4) → G3(T5/T6)`이며 G4의 실제 소비·API·Windows 배포는 사용할 기능부터 병행한다. G1 첫 작업은 DESIGN에 정의한 **2파트 이상·재료 2개·단면 2개의 생성/할당/교체와 Undo·저장·재열기·native 관계 확인**이다. 전체 대용량 B를 G1 또는 첫 CAD 연결의 선행 조건으로 삼지 않는다. B의 다중 자원·성능, P7b의 일반 수정/재메시와 P7c의 조건부 고급 메시, P8c live IPC/MCP는 별도 미완료 범위로 유지한다.
+아래는 납품 묶음의 의존 순서이며 현재 잔여 목록이 아니다. 원래 실행 순서는 `G0 → G1(T1/T2) → G2(T3/T4) → G3(T5/T6)`이며 G4의 실제 소비·API·Windows 배포는 사용할 기능부터 병행한다. G1 첫 작업은 DESIGN에 정의한 **2파트 이상·재료 2개·단면 2개의 생성/할당/교체와 Undo·저장·재열기·native 관계 확인**이다. 전체 대용량 B를 G1 또는 첫 CAD 연결의 선행 조건으로 삼지 않는다. B의 다중 자원·성능, P7b의 일반 수정/재메시와 P7c의 조건부 고급 메시, P8c live IPC/MCP는 별도 미완료 범위로 유지한다.
 
 | 순서와 기술 단계 | 끝낼 작업 | 단계 종료의 핵심 |
 |---|---|---|
@@ -21,15 +21,15 @@
 | G2 / P4·P5·P6b | 곡선·집합·조건·케이스의 생성과 실제 참조 | T3/T4의 값·단위·대상·물리 의미, 8방식 사용과 파일 보존 |
 | G3 / P6a·P7a/C 확장·P5 | CAD/메시 후보·채택에서 Starter/Engine까지 | C의 tri/tet 품질·세 입력 기준 유지, G1/G2 관계와 새 Engine 생성·입력 검사 연결 |
 | G4 / W1·W2·P8a/b·P9 | 실제 host 재사용·공용 API/CLI·Windows 전달 | 실제 소비자와 새 설치에서 이미 완성한 작업을 수행; W1/W2 별도 판정 |
-| 독립 확장 / B·P7b | 혼합 자유도·대용량·일반 수정/재메시 | B1–B6 시간/메모리와 관계 기준을 별도로 통과 |
+| 보존한 기존 요구 / B·P7b | 혼합 자유도·대용량·일반 수정/재메시 | B1–B6 시간/메모리와 관계 기준을 별도로 통과 |
 | 조건부 확장 / P7c | 중립면・sweep/hex·자동 커널 연구 | 실제 코드/API → 독립 재현 → 지원 형상군 실증 뒤 제품 연결. no-go와 기능 완료 구분 |
 | P8c | 열린 GUI의 live IPC/MCP | 실제 클라이언트의 handle·revision·화면 반영. CLI 새 프로세스로 대체 불가 |
 
-G0에서 첫 작업 계약을 고정하면 새 계획 문서 대신 기존 코드를 보완해 G1을 구현한다. [19절의 G1-a–e](#current-progress)는 이 납품 목표를 달성하기 위한 구현 체크포인트이며 최종 목표를 대체하지 않는다. 작업을 나눌 때 R/T 번호·동일 입력·종료 상태·공통 계약·파일 소유·검증 증거를 함께 전달한다. 관련 없는 플랫폼 확인 보류로 독립 구현을 멈추지는 않지만 보류된 납품을 완료로 쓰지 않는다. 이 문서를 작성한 것만으로 위 구현 단계가 완료된 것은 아니다.
+G1-a–e는 PR #15 착수 당시의 구현 순서로 [19절](#current-progress)에 보존했다. 새 세션은 이를 처음부터 반복하지 않고 [현재 N 항목](#remaining-work)을 진행한다. 체크포인트는 최종 목표를 대체하지 않는다. 작업을 나눌 때 R/T 번호·동일 입력·종료 상태·공통 계약·파일 소유·검증 증거를 함께 전달한다. 관련 없는 플랫폼 확인 보류로 독립 구현을 멈추지는 않지만 보류된 납품을 완료로 쓰지 않는다. 이 문서를 작성한 것만으로 위 구현 단계가 완료된 것은 아니다.
 
 ## 2. 코드 출발점과 실제 간극
 
-아래 표는 초기 2026-10-29 분석의 출발점을 보존한다. `f4d12d0`에는 이후 Action·선택·셸·공용 위젯·RAD/중립 provider·atomic storage가 추가됐다. 따라서 표의 모든 추출 작업을 처음부터 재개발하지 않는다. 현재 유지/확장 경계는 [ARCHITECTURE](../ARCHITECTURE.md), 납품 상태는 [19절](#current-progress)을 따른다. 생성/삭제·파트 할당·CAD 채택·새 native 생성의 간극은 현재도 남아 있다.
+아래 표는 초기 2026-10-29 분석의 출발점을 보존한다. `f4d12d0`에는 이후 Action·선택·셸·공용 위젯·RAD/중립 provider·atomic storage가 추가됐다. 따라서 표의 모든 추출 작업을 처음부터 재개발하지 않는다. 현재 유지/확장 경계는 [ARCHITECTURE](../ARCHITECTURE.md), 납품 상태는 [19절](#current-progress)을 따른다. 생성/삭제·파트 할당·CAD 채택·새 native 생성은 PR #15에서 지원 범위를 연결했으며 아래 초기 간극 전체를 현재 미구현으로 읽지 않는다.
 
 | 출발점 | 이미 있는 것 | 후속 작업에서 반드시 추가할 것 |
 |---|---|---|
@@ -40,7 +40,7 @@ G0에서 첫 작업 계약을 고정하면 새 계획 문서 대신 기존 코�
 | `gmsh_worker.py` | 균일 mesh-size, dimension 2/3, 1차 요소, XAO/MSH/연결 metadata, process 경계 | 품질 측정·표시, 문서 채택, native 생성; 대용량에는 전체 coordinates/connectivity JSON list 중복 전달 제거 |
 | 기존 검사 | document/RAD/roundtrip/CLI/Qt 문서/CAD worker 테스트 | 공용 계약·자원 채택·모델 관계·실 GUI·실 solver에 대한 해당 단계 검사 |
 
-기존 RAD reader가 tri/tet를 표시할 수 있다는 사실은 새 tri/tet의 native 카드 생성 기능이 있다는 뜻이 아니다. CAD 후보의 tet 외피 facet은 경계 표현이며, 이를 shell 물리요소로 함께 채택하지 않는다. `.caeprep` v1이 RAD 원문과 patch를 저장한다는 사실도 임의 메시/재료를 저장할 공용 codec이 완성됐다는 뜻이 아니다.
+초기 분석에서는 tri/tet 표시만으로 native 생성을 완료 처리하지 않았다. 현재 writer/채택/solver 검사의 근거는 19절에 별도로 연결한다. CAD 후보의 tet 외피 facet은 경계 표현이며, 이를 shell 물리요소로 함께 채택하지 않는다. `.caeprep` v1이 RAD 원문과 patch를 저장한다는 사실도 임의 메시/재료를 저장할 공용 codec이 완성됐다는 뜻이 아니다.
 
 ## 3. 모든 작업에 적용할 종료 규칙
 
@@ -152,7 +152,7 @@ G0에서 첫 작업 계약을 고정하면 새 계획 문서 대신 기존 코�
 
 **선행/입력:** P1/P2, A용 RAD 2개와 중립 재료/곡선 자료.
 
-**작업/산출물:** 현재 main_window의 Action·트리·폼·도킹·초안/닫기/저장을 공용 셸과 RAD provider로 옮긴다. 공용 viewport frame에 VTK adapter를 앱 조립 지점에서 주입한다. 기계 전처리 공간과 재료/곡선 공간을 완성한다. 공용 atomic container 절차와 RAD v1/중립 curve codec을 제공한다. 최소 작업/취소/파일 오류 계약을 실제 UI에 연결한다. 기본 gallery/곡선 장면을 VTK 없이 실행할 설치 경로를 제공하고 기존 `.[gui]` 경로는 유지한다.
+**작업/산출물:** 현재 main_window의 Action·트리·폼·도킹·초안/닫기/저장을 공용 셸과 RAD provider로 옮긴다. 공용 viewport frame에 VTK adapter를 앱 조립 지점에서 주입한다. 기계 전처리 공간과 재료/곡선 공간을 완성한다. 공용 atomic container 절차와 RAD/중립 curve codec을 제공한다. 현재 두 writer는 v2를 쓰고 각 v1 읽기를 유지한다. 최소 작업/취소/파일 오류 계약을 실제 UI에 연결한다. 기본 gallery/곡선 장면을 VTK 없이 실행할 설치 경로를 제공하고 기존 `.[gui]` 경로는 유지한다.
 
 **지정 확인:** 기존 5개 코어/Qt 테스트와 새 계약/위젯/중립 codec 관련 검사. 실제 Windows에서 A1–A8의 고정 작업을 한 차례 연속 수행한다: 파일 열기 → 객체 선택 → 값 오류 → 수정 → Undo/Redo → 저장 → process 종료 → 새 process 재열기 → RAD export. 다른 제공자의 curve도 같은 공용 저장으로 재열고 RAD import가 없어야 한다. 잘못된 숫자, 외부 revision 변경, 저장 실패, 닫기 취소는 기존 값·초안을 보존한다.
 
@@ -161,6 +161,8 @@ G0에서 첫 작업 계약을 고정하면 새 계획 문서 대신 기존 코�
 **과거 A의 제외:** 새 RAD 카드 생성, CAD 채택, B 규모, 완전한 curve 앱/리본, 열린 GUI MCP였다. 현재 G1은 새 재료/단면 카드와 참조 생성을 포함한다. 나머지는 G2/G3 및 B/P8c의 명시 범위로 유지한다.
 
 ## 8. P4 — 독립 곡선 앱과 파일 재사용
+
+**현재:** 부분 구현이다. RAD의 FUNCT 행/CSV/plot·조건 참조는 연결됐지만 중립 갤러리의 CSV 입출력과 plot 직접 drag 미리보기/확정/취소는 없다. N15로 추적하며 이미 있는 표·행·단위 편집을 다시 미구현으로 세지 않는다.
 
 **선행/입력:** P3/A의 계약·container, 축/단위가 알려진 서로 다른 curve 2개와 CSV.
 
@@ -186,6 +188,8 @@ G0에서 첫 작업 계약을 고정하면 새 계획 문서 대신 기존 코�
 
 ## 10. P6a — G1/G3에 필요한 최소 모델 자원·원자적 변경
 
+**현재:** 단일 RAD 자원 안의 구조 변경과 후보 채택/Undo는 구현했다. 아래 목표의 독립 GeometryResource/MeshResource, 다중 자원 원자 변경·대형 배열 공유를 모두 완료한 것은 아니다. 남은 관계·배열 책임은 N16/N17에서 확인한다.
+
 G1의 객체 생성/삭제·할당과 G2의 조건 관계에 필요한 작은 복합 명령부터 앞당겨 사용한다. 아래 메시 후보/배열 전체를 G1의 선행 조건으로 만들지 않는다.
 
 **선행/입력:** P1 계약과 기존 P3의 공용 부품. G1의 새 화면 전체 완료를 코어 명령 구현의 선행 조건으로 삼지 않는다. G1은 파트/재료/단면 입력을 사용하고, G3 채택 확장에는 C용 tri/tet 후보·native 번호가 겹치는 두 source·기존 RAD 보존 입력을 쓴다.
@@ -200,6 +204,8 @@ G1의 객체 생성/삭제·할당과 G2의 조건 관계에 필요한 작은 �
 
 ## 11. P7a/C — 첫 CAD→메시→문서→native 경로
 
+**현재:** tri3/tet4 후보·품질·국부 size·제한된 conformal/independent 경계·채택·참조 없는 교체·Starter/Engine은 연결됐다. 실제 solver 세 입력은 62/236/310 요소의 소형 사례다. 아래 2만–10만 요소 입력·120초 예산 및 대표 사용자 모델의 연속 native 작업은 이 소형 결과로 통과시키지 않으며 N11에서 확인한다. 외부 독립 메시 import는 N02다.
+
 아래 C는 Starter 읽기까지의 기술 하위 단계다. **현재 G3는 C에 G1/G2 조건·새 Engine/INCLUDE 생성과 실제 선택 solver의 입력 검사·짧은 실행을 더한 목표**다. C의 Engine 제외는 G3에 적용하지 않으며 C만 통과해 G3 완료라고 쓰지 않는다. tri/tet 지원·품질·세 입력 기준은 유지한다.
 
 **선행/입력:** P6a, 기존 worker, C의 고정 CAD/단위/메시 크기/element 범위, 고정 OpenCourant Starter 버전. C는 열린 CAD surface의 tri3 shell과 closed solid의 tet4를 구별한다.
@@ -208,7 +214,7 @@ G1의 객체 생성/삭제·할당과 G2의 조건 관계에 필요한 작은 �
 
 **작업/산출물:**
 
-1. GUI에서 CAD import와 dimension/전역 mesh-size/명시 길이단위를 선택하고 Gmsh worker로 후보를 생성한다. C에서 선택한 face/volume에 국소 size를 지정하는 최소 조절도 추가한다. 현재 worker의 uniform min/max보다 확장되는 기능이며, geometry UUID에 속하는 meshing recipe로 저장하고 preview·재생성에 반영한다. edge UUID/1D seed와 자동 adaptive sizing은 후속이다. XAO/MSH/metadata를 한 candidate 묶음으로 다룬다. 후보 생성은 문서 변경이 아니다.
+1. GUI에서 CAD import와 dimension/전역 mesh-size/명시 길이단위를 선택하고 Gmsh worker로 후보를 생성한다. C에서 선택한 face/volume에 국소 size를 지정하는 최소 조절도 추가한다. 초기 worker의 uniform min/max에서 확장한 기능이며, geometry UUID에 속하는 meshing recipe로 저장하고 preview·재생성에 반영한다. edge UUID/1D seed와 자동 adaptive sizing은 후속이다. XAO/MSH/metadata를 한 candidate 묶음으로 다룬다. 후보 생성은 문서 변경이 아니다.
 2. 다중 volume의 관계는 conformal 공유 interface와 독립 contact interface를 구별해 meshing recipe에 명시한다. 고정 CAD에는 실제 공유 절점이 필요한 인접 volume 한 쌍과 동일/인접 좌표여도 독립이어야 하는 접촉면 사례를 포함한다. conformal 경계는 node 정체성과 양쪽 element 연결을 실제로 검사하고, independent 경계는 좌표만 같다는 이유로 merge하지 않는다. 기존 backend가 공통 topology를 만들지 못하면 그 준비 동작을 C에서 추가하거나 해당 후보를 거절한다. candidate preview와 element 수·part/source·품질 통계·문제 요소 선택을 표시한다. 명시 단위가 없으면 native export 전에 입력받거나 오류를 반환한다. Gmsh tag를 영속 참조로 사용하지 않는다.
 3. `adopt_candidate`를 공용 명령으로 제공한다. expected document/resource revision 검사 후 geometry/mesh/component/연결을 원자 채택한다. Undo는 원래 문서로 돌아가고 실패·취소·문서 교체 뒤 지연 도착한 결과는 정본에 합쳐지지 않는다.
 4. 첫 RAD 생성 provider에 새 node/tri3/tet4, part, 탄성 material, shell/solid property와 최소 대상집합/구속을 작성하는 지원 mapping을 명시한다. 현재 patch 경로와 구별하고 새 카드/ID 생성 자체를 C 산출물에 포함한다. node/element만 있는 파일을 완성된 해석 모델이라고 부르지 않는다.
@@ -226,6 +232,8 @@ G1의 객체 생성/삭제·할당과 G2의 조건 관계에 필요한 작은 �
 
 ## 12. P6b — 다중 파트·혼합 필드·집합·조건 관계
 
+**현재:** G1/G2의 지원 카드 관계는 연결됐으나 아래 B 혼합 조립·자원 간 의미 관계는 미완료(N16)다. 기본 케이스/해석 설정은 N01에서 구현하고 N16은 그 재사용·복합 관계를 검증한다.
+
 G1에는 재료/단면 생성·복사·삭제 영향·파트 할당을, G2에는 집합·조건·곡선의 최소 실제 관계를 먼저 연결한다. 아래 혼합 조립 B 전체 완료를 이 두 작업의 선행 조건으로 삼지 않는다.
 
 **선행/입력:** P6a와 B의 혼합 조립 자료 2개. P7a/C는 권장 선행이지만 실제 B 의미 구현의 기술적 필수는 아니다.
@@ -240,6 +248,8 @@ G1에는 재료/단면 생성·복사·삭제 영향·파트 할당을, G2에는
 
 ## 13. P6c/B — 배열·지연 UI·저장과 규모 예산
 
+**현재:** 미완료(N17). 현재 소형 RAD/메시 검사와 렌더 결과는 아래 100만 요소·100 part·20 source의 예산 충족 근거가 아니다.
+
 **선행/입력:** P6b, P0에서 확정한 B 장비/정확한 generator/예산. 이 단계부터 input 규모·budget을 구현 통과 목적으로 완화하지 않는다.
 
 **작업/산출물:** indexed lookup, lazy tree/table, versioned projection cache, 부분 invalidation과 typed payload codec. 문서·VTK·worker·저장 간 사본의 소유자/수명/해제를 정한다. Gmsh worker의 전체 JSON arrays 중복을 large-mesh 경로에서 binary payload + metadata로 이행하되 현재 작은 후보 API의 호환성 정책을 둔다. compressed ZIP의 직접 mmap을 가정하지 않고 독립 binary chunk 또는 관리되는 불변 파일 중 한 경로를 고른다. HDF5/Zarr/mmap을 모두 도입하지 않는다.
@@ -251,6 +261,8 @@ G1에는 재료/단면 생성·복사·삭제 영향·파트 할당을, G2에는
 **이번에 안 함:** 더 큰 임의 모델, 모든 GPU/원격 파일시스템, 모든 배열 저장 backend, 계산 자유도 숫자 추정.
 
 ## 14. P7b — 일반 mesh 변경과 재메시 재연결
+
+**현재:** N18 미완료다. 참조 없는 소유 메시를 안전하게 교체하는 현재 기능은 아래 여섯 일반 수정과 조건/집합 재연결을 대체하지 않는다.
 
 **선행/입력:** 전체 P7b에는 P6b와 C의 자원·관계·native 경계를 모두 사용한다. 순수 메시 수정 일부는 먼저 착수할 수 있으나, 조건 재연결까지 포함한 P7b 완료와 구분한다. part 경계·shared nodes·sets/conditions가 있는 고정 mesh 2개와 이전/교체 CAD 한 쌍을 사용한다.
 
@@ -265,6 +277,8 @@ G1에는 재료/단면 생성·복사·삭제 영향·파트 할당을, G2에는
 **이번에 안 함:** 임의 mesh 수술 전체, 모든 CAD topology 변경 추적, 모든 손상 geometry 치유.
 
 ## 15. P7c — 실증 후 착수할 메시 확장과 별도 연구
+
+**현재:** N22–N26의 조건부 다섯 항목이다. 아래 요구를 삭제하지 않되 F0–F2가 통과하지 않은 기능의 제품 구현 가능성·납기를 확약하지 않는다.
 
 P7c는 하나의 무기한 연구 과제가 아니다. `P7c-S`, `P7c-M`, `P7c-H`를 독립적으로 착수/종료한다. P7c-S는 자동 중립면 구현을 기다리지 않고 준비된 선/면을 사용해 먼저 끝낼 수 있다. 한 기능이 실패해도 C/B나 다른 P7c 기능 완료를 취소하지 않는다.
 
@@ -281,6 +295,8 @@ H-T는 **중립 생성·편집 완료**와 **RAD native 완료**를 분리한다
 backend 조사 **최대 3개 집중 작업일**은 F0의 실제 source/API·접근성·도입 경로 판정에만 적용한다. F1의 독립 재현과 F2의 고정 형상군·품질/기하/연결 검사를 통과하기 전에는 “지원하므로 구현 가능”으로 바꾸지 않는다. 통과한 버전/recipe/지원 범위를 고정한 뒤 제품 연결을 한다. 실패하면 원인과 제한/SDK/외부 도구/연구 중 다음 경로 하나를 남기고 평가를 닫는다. 조사 기한 종료나 문서 정합성 검토를 기능 완료로 쓰지 않는다. 처음부터 CAD kernel이나 범용 mesh generator를 직접 작성하는 계획으로 자동 전환하지 않는다.
 
 ## 16. P8 — 작업·자동화와 Workbench 경계
+
+**현재:** 파일/CAD worker 상태·실제 취소와 지원 작업의 공용 API/독립 CLI는 연결했다. 열린 GUI IPC(N19)와 실제 MCP 클라이언트(N20)는 미구현이다. 실제 Workbench W1/W2 연결과 RAD 계산 W3(N21)도 구분한다.
 
 P8을 C 뒤에 전부 몰지 않는다. `P8a`의 progress/cancel/error/artifact/result/adoption 자료와 세션 직렬화는 P1/P3에 최소형을 두고 C에서 실제 worker와 연결한다. `P8b`의 독립 API/CLI는 각 명령이 구현될 때 추가한다. `P8c`의 열린 GUI IPC/MCP만 계약 안정 이후 후속으로 둔다.
 
@@ -305,7 +321,9 @@ P8c의 첫 범위는 문서 하나의 조회, 지원 scalar 수정, 저장과 C 
 
 ## 17. P9 — 각 완료 묶음의 배포
 
-**선행/입력:** A 또는 C/B 등 명시한 완료 묶음. 필수 native Windows 확인은 해당 묶음의 조건대로 수행한다.
+**현재:** Python wheel의 새 환경 설치/CLI CI는 통과했다. Windows 실행 묶음과 깨끗한 사용자 환경의 GUI 설치·이동·제거 검증은 미완료(N13)이며 현재 버전 GUI/Workbench 실제 입력은 N12/N14다.
+
+**선행/입력:** 배포할 기능 묶음과 의존 버전을 고정한다. 패키징 준비는 진행할 수 있으며 Windows 실측은 사용자 지시대로 일괄 후속 검증한다. 납품 판정에는 해당 Windows 결과가 필요하다.
 
 **작업/산출물:** 선택 설치 옵션(core/common-Qt/VTK/CAD)과 public API 사용 예, gallery, 독립 RAD 앱, 필요한 CLI, Windows 실행 묶음. 사용자 설정·작업파일·임시 후보·log 위치와 오류 안내를 정한다. installer 선택은 dependency/asset/license 조건을 확인한 뒤 한 경로로 고정한다.
 
@@ -337,21 +355,77 @@ python -m pytest tests/test_gmsh_adapter.py
 caelab-prep mesh INPUT.step --output OUT --size 2.0 --dimension 3
 ```
 
-`test_application_contracts.py`, `test_common_widgets.py`, `test_rad_provider.py`와 `caelab-prep gallery`는 첫 구현에서 추가했다. 나머지 단계의 `test_curve_workflow.py`, `test_layout_profiles.py`, `test_model_resources.py`, `test_resource_transactions.py`, `test_candidate_adoption.py`, `test_mesh_quality.py`, `test_radioss_generation.py`, `test_model_relations.py`, `test_condition_fields.py`, `test_model_roundtrip.py`, `test_large_model_behavior.py`, `test_mesh_operations.py`, `test_remesh_relations.py`, `tools/benchmark_model.py`는 **후속 작업에서 추가할 산출물 이름**이다. 이 나머지 항목을 현재 실행 가능한 것으로 기재하지 않는다. 같은 책임의 기존 검사가 있으면 그 파일에 합친다.
+위 명령은 기본 경계 검사이며 전체 구현 확인 명령이 아니다. 현재 CI의 환경·실행 목록은 [prep-tests.yml](../.github/workflows/prep-tests.yml)을 따른다. 실제 검사와 초기 계획 이름의 대응은 다음과 같다.
+
+| 현재 책임 | 실제 검사 파일 | 범위의 한계 |
+|---|---|---|
+| 생성·할당·원문·관계 | `test_modeling_commands.py`, `test_modeling_workflow.py`, `test_radioss_modeling.py`, `test_radioss_defaults.py` | 모든 B 다중 자원 관계 아님 |
+| 조건·집합·단위·8방식 | `test_condition_workflow.py`, `test_conditions_ui.py`, `test_groups_ui.py`, `test_native_units_ui.py`, `test_modeling_ui.py` | 케이스/독립 메시와 원제품 비교를 증명하지 않음 |
+| 후보 품질·채택·native 생성 | `test_gmsh_adapter.py`, `test_mesh_candidates.py`, `test_mesh_adoption.py`, `test_mesh_workflow_ui.py`, `test_solver_generation.py` | 소형 지원 tri/tet·명시 조건에 한정 |
+| 8방식 구성·실제 렌더 | `test_reference_adapters.py`, `test_program_comparison.py`, `test_native_render.py` | offscreen과 opt-in X11 실제 렌더/pick을 구별; Windows/원제품 아님 |
+
+앞 절의 `test_candidate_adoption.py`, `test_mesh_quality.py`, `test_radioss_generation.py`는 초기 제안 이름이며 해당 책임은 위 실제 파일에 구현했다. `test_curve_workflow.py`, `test_layout_profiles.py`, `test_model_resources.py`, `test_resource_transactions.py`, `test_model_relations.py`, `test_condition_fields.py`, `test_model_roundtrip.py`, `test_large_model_behavior.py`, `test_mesh_operations.py`, `test_remesh_relations.py`, `tools/benchmark_model.py`는 현재 없는 계획 이름이다. 파일명 신설 자체는 완료 조건이 아니며 기존 검사가 같은 동작을 다루면 그 경로를 확장한다.
 
 <a id="current-progress"></a>
 
 ## 19. 문서와 작업 상태의 관리
 
+<a id="remaining-work"></a>
+
+### 현재 남은 작업 — 새 세션은 이 표부터 확인
+
+**기준:** Prep main `a48d3b4383603aee3843b7f73db4d0ebdc61cda6` / [PR #15](https://github.com/pikachu444/caelab-prep/pull/15), Workbench main `d6f05a3b1abc0cb9e83e7e96311f743e626ab086` / [PR #54](https://github.com/pikachu444/caelab-workbench/pull/54). 두 PR은 병합됐지만 G0–G4 전체 납품은 끝나지 않았다. 문서 정리는 제품 기능 완료가 아니다.
+
+**잔여 26개 = 현재 납품 목표 14개 + 보존한 기존 구현 요구 7개 + 조건부 실증·연결 5개.** 이는 각각 닫을 수 있는 작업 묶음의 수이며 같은 크기·예상 일수·완료율이 아니다. 한 행에서 결함 수정이 필요하면 그 행에 포함한다. 기존 P/B/G 번호를 다시 더하지 않는다. N15–N21도 기존 미완료 요구이며 선택적으로 버릴 추가 기능이 아니다. N22–N26의 no-go는 실증 판정이지 기능 완료가 아니다.
+
+| ID | 남은 작업 / 기존 요구 | 현재 상태와 완료 판단 기준 |
+|---|---|---|
+| N01 | 케이스·영속 해석 설정 / G2 T4 | **미구현.** Export 창 인자만 있다. 케이스 생성·수정·조건 활성/대상과 종료 시간·출력 설정을 같은 API/8방식에서 편집하고 Undo·저장·새 프로세스 재열기·Starter/Engine 의미를 확인한다. |
+| N02 | 외부 독립 메시 import / G3 T5 | **미구현.** RAD 열기와 자체 CAD 후보만 있다. 첫 외부 형식/요소를 명시하고 CAD/XAO 없는 메시의 단위·ID·파트/그룹·품질·미지원 요소를 검사해 취소/채택·한 Undo·재열기·native 출력까지 연결한다. 조용한 요소 누락은 실패다. |
+| N03 | HyperMesh 동일 과업 비교·UI 보완 / R2·R4 | **미확인.** 아래 공통 비교 기준을 이 제품에서 실제 수행하고 발견한 조작·가독성 결함을 수정·재확인한다. |
+| N04 | PrePoMax 동일 과업 비교·UI 보완 / R2·R4 | **미확인.** 같은 공통 비교 기준. 과거 main/library 그림만으로 material 작업을 통과시키지 않는다. |
+| N05 | Naksha 동일 과업 비교·UI 보완 / R2·R4 | **미확인.** 같은 공통 비교 기준. 비어 있는 Details 그림으로 확정 동작을 추정하지 않는다. |
+| N06 | Abaqus/CAE 동일 과업 비교·UI 보완 / R2·R4 | **미확인.** 같은 공통 비교 기준. 해당 법칙·조건과 RAD 의미 대응을 명시한다. |
+| N07 | COMSOL 동일 과업 비교·UI 보완 / R2·R4 | **미확인.** 같은 공통 비교 기준. Settings 관찰을 실제 Build/조건 작업으로 세지 않는다. |
+| N08 | midas NFX 동일 과업 비교·UI 보완 / R2·R4 | **미확인.** 같은 공통 비교 기준. 서로 다른 교육자료를 한 연속 실행으로 세지 않는다. |
+| N09 | MIDAS MeshFree 동일 과업 비교·UI 보완 / R2·R4 | **미확인.** 같은 공통 비교 기준. FE 메시와 다른 표현의 물리 의미·비대응을 기록하고 임의 N/A로 닫지 않는다. |
+| N10 | BeidPrep 동일 과업 비교·UI 보완 / R2·R4 | **미확인.** 같은 공통 비교 기준. 1.0.1의 소형 저장 시험과 Web 2.0 화면 관찰을 구별한다. |
+| N11 | 대표 사용자 모델의 연속 native 작업 / G1–G3 | **부분 확인.** 소형 회귀/solver와 2요소 native 선택을 확인했다. 다른 이름·ID·형상 입력 두 개 이상과 대표 사용자 모델에서 생성→할당→조건→후보→저장→새 프로세스→native 읽기/짧은 실행을 실제 창으로 수행한다. C의 2만–10만 요소·품질·국부/공유 경계·120초 예산도 기준 장비/recipe를 고정해 확인한다. |
+| N12 | Windows GUI 실측 / R4·G1–G4 | **후속 미확인.** 현 버전의 실제 입력·한글/IME·DPI 100/150/200%·작은 창·도킹/재시작·GPU와 T1–T6 연속 작업을 확인한다. QTest/OS 입력을 구별하고 과거 A7·Linux 결과로 대체하지 않는다. |
+| N13 | Windows 배포 묶음·새 설치 / G4·P9 | **미완료, Windows 후속.** 배포 형식 하나와 의존/고지를 고정하고 깨끗한 환경의 설치→실제 파일 작업→재시작→제거 또는 portable 이동을 확인한다. wheel 설치/CLI 성공만으로 닫지 않는다. |
+| N14 | Windows 실제 Workbench W1/W2 / G4 | **후속 미확인.** 병합된 두 앱으로 숫자 입력/오류 복원, 독립 Prep 열기·문서 전달·재시작·변경/손상 파일·한글/공백 경로를 확인한다. host의 모델/이력과 JobManager 소유를 유지한다. |
+| N15 | 독립 곡선 앱 완성 / P4 | **부분 구현.** RAD CSV/행/plot은 있다. 중립 갤러리 CSV 입출력과 직접 plot drag의 preview/commit/cancel·한 gesture 한 Undo를 구현하고 VTK/RAD 없는 실행·단위/참조·작업문서/CSV 왕복을 확인한다. |
+| N16 | 혼합 조립·다중 자원 관계 / P6b·B1–B4/B6 | **부분 기반.** 지원 RAD 카드 관계를 재사용해 두 혼합 조립의 공유/독립 ID·활성 성분·좌표·집합/접촉·케이스·참조 영향과 다중 자원 원자 변경/실패 복원을 확인한다. 기본 케이스는 N01을 재사용한다. |
+| N17 | 대용량 배열·지연 UI·저장 / P6c·B5 | **미완료.** 100만 실제 요소·100 part·20 source, 고정 장비/생성기로 4절 예산과 B1–B6을 충족한다. 전체 배열 중복·cache 수명·취소를 계측하고 작은 모델/actor 복제로 대체하지 않는다. |
+| N18 | 일반 메시 수정·조건 재연결 / P7b | **미완료.** 14절의 여섯 작업(이동·공차 병합·삭제·법선 반전·재배정·크기 재메시)을 두 자료에서 품질/참조/Undo/파일/native까지 확인한다. 미복구 집합/조건은 stale로 남겨 정상 출력하지 않는다. 현재 무참조 메시 교체만으로 닫지 않는다. |
+| N19 | 열린 GUI IPC / P8c-IPC | **미구현.** 같은 열린 문서의 조회·지원 값 변경·저장과 메시 job 상태/취소를 실제 연결한다. handle/revision·초안 충돌·disconnect/reconnect·화면 반영을 확인한다. |
+| N20 | 실제 MCP 클라이언트 연결 / P8c-MCP | **미구현.** N19와 같은 API를 목표 클라이언트 한 종류에서 호출해 대상 문서·오류·취소·파일·시각 반영을 확인한다. 독립 CLI 프로세스나 도구 등록만으로 닫지 않는다. |
+| N21 | Workbench RAD 실행 입력·계산 / W3 | **미구현.** Starter/Engine/INCLUDE 이름·상대 경로를 보존한 snapshot과 실제 두 단계 실행을 기존 JobManager/RunStore에 연결한다. 준비/실행/실패/취소/재실행·변경된 원본 상태를 확인하며 두 번째 실행 관리자는 만들지 않는다. |
+| N22 | 선/beam/truss·준비 shell면 / P7c-S | **조건부 실증.** F0–F2 후 고정 선/면 입력의 단면·방향·두께/offset과 native mapping을 채택·Undo·저장·실제 reader까지 확인한다. 자동 중립면은 이 행의 선행 조건이 아니다. |
+| N23 | 제한된 일정 두께 중립면 / P7c-M | **조건부 실증.** 고정 plate/절곡/단순 접합에서 위치·두께·연결 공차를 충족하는 backend 한 경로를 실증한 뒤 수동 보정·shell 채택·native 왕복을 연결한다. |
+| N24 | mapped/recombined quad / P7c-H-Q | **조건부 실증.** 면 두 개의 실제 recipe·품질·연결성·방향·native family를 실증한 뒤 채택·Undo·저장·reader를 확인한다. |
+| N25 | sweep hex / P7c-H-S | **조건부 실증.** block/원통·분할 volume의 seed/layer·공유 경계·품질을 실증하고 지원 native mapping·채택·Undo·재열기를 확인한다. |
+| N26 | hex/tet/prism/pyramid 전이 / P7c-H-T | **조건부 실증.** 고정 전이 모델의 연결·품질·중립 편집/저장을 먼저 확인한다. 지원 family 전부의 실제 native 출력/reader를 별도 통과해야 전체 종료하며 미지원 요소를 버리거나 임의 퇴화 요소로 바꾸지 않는다. |
+
+**N03–N10의 공통 비교 기준:** DESIGN의 같은 T1–T6 작업·대응 물리 객체와 입력/목표 상태를 고정하고 각 원제품의 실제 버전에서 조작한다. 같은 유효 작업영역의 전체 화면·모달·오류/취소와 클릭/키 입력 수, 가독성·대상/값·참조·파일 결과를 Prep와 대조한다. 차이는 이유와 사용자 영향을 기록하고 결함은 작성자 외 검토자가 재확인한다. 원제품 접근·미지원 기능의 대응을 확보하지 못하면 정확한 칸을 보류하며 스크린샷 관찰/내부 회귀만으로 비교 통과를 선언하지 않는다. Windows 측정은 N12에 한 번 기록하고 제품별 비교가 참조한다.
+
+**새 세션의 실행 순서:** README → DESIGN의 R/T/G → 이 표 → 관련 기술 절/코드를 읽고 실제 HEAD와 dirty를 확인한다. 다음은 N01, N02의 공통 명령→파일→한 실제 GUI→8방식 연결이다. 원제품/Windows 접근 대기 동안 독립 가능한 N15, N19와 배포 준비를 진행할 수 있다. N16→N17 및 관계를 쓰는 N18, IPC→MCP, Workbench 소유 W3의 선행 관계를 지킨다. 조건부 다섯 항목은 각각 F0–F2를 먼저 판정한다. Windows 실측을 나중에 일괄 한다는 사용자 지시는 유지한다.
+
+**갱신 규칙:** 작업 시작 때 해당 N 행에 좁은 입력·산출물·파일 소유·검사를 고정한다. 실행 가능한 체크포인트를 커밋/PR로 보존하고 독립 검토·해당 CI를 통과하면 이미 승인된 범위에서 병합한 뒤 다음 미완료 작업으로 이어간다. 완료 행은 삭제하지 않고 SHA·입출력/화면 보관처·지적 재확인·PR 링크를 붙여 닫으며 위 세 그룹의 잔여 개수를 갱신한다. 새로 발견한 기존 누락/회귀는 다시 열고 이유를 적는다. 한 PR이나 문서 정리만 끝내고 전체 목표 완료라고 보고하지 않는다.
+
+### 병합된 구현과 검증의 근거
+
+아래는 현재 표를 뒷받침하는 구현 기록이다. 이후의 날짜별 착수/리뷰 기록은 역사적 근거이며 현재 남은 수를 계산하는 별도 목록이 아니다.
+
 ### G1–G4 구현 통합 기록 — PR #15 / Workbench #54
 
-이 기록은 아래 착수 표 이후의 실제 구현이다. [Prep PR #15](https://github.com/pikachu444/caelab-prep/pull/15)의 체크포인트 커밋을 기준으로 검토하며, Windows GUI 납품과 8개 원제품의 동일 작업 비교는 계속 미확인이다. 1–18절을 일괄 완료로 바꾸지 않는다.
+이 기록은 아래 착수 표 이후 PR #15로 병합한 실제 구현이다. [Prep PR #15](https://github.com/pikachu444/caelab-prep/pull/15)의 체크포인트 커밋을 기준으로 검토하며, Windows GUI 납품과 8개 원제품의 동일 작업 비교는 계속 미확인이다. 1–18절을 일괄 완료로 바꾸지 않는다.
 
 | 묶음 | 이번에 연결한 사용자 작업 | 확인 근거 / 남는 한계 |
 |---|---|---|
 | G1 / T1·T2 | 두 개 이상 PART의 재료·shell/solid 단면 생성, 복제·안전 삭제·할당·교체. 다중 선택·검색·숨김/격리·fit. Undo/Redo·작업문서·native 출력 | `test_modeling_workflow.py`, `test_modeling_commands.py`, `test_modeling_ui.py`에서 다른 ID/형상/INCLUDE 입력과 8방식을 사용. 실제 창·원제품 비교는 아래와 별도 판정 |
-| G2 / T3·T4 | FUNCT 행/CSV/plot, 절점·요소 집합과 멤버 편집, shell PART 표면, BCS·절점별 CLOAD·INIVEL/TRA·검증한 TYPE7 프로파일 생성/참조. 대상 역할별 3D 강조. 검증된 덱 단위 표시 변환 | `test_condition_workflow.py`, `test_groups_ui.py`, `test_conditions_ui.py`, `test_native_units_ui.py`, `test_rad_display_units.py`. 모든 카드·재료법칙·임의 solid 표면은 미지원; FUNCT 축 차원/미해석 카드 단위 추정 안 함 |
-| G3 / T5·T6 | 단위 명시 새 문서→Gmsh 후보→품질·공유 경계·국부 크기→검토/취소/채택→조건→새 Starter/Engine. 참조 없는 소유 메시 교체 | `test_gmsh_adapter.py`, `test_mesh_candidates.py`, `test_mesh_adoption.py`, `test_mesh_workflow_ui.py`, `test_solver_generation.py`. tri3/tet4만 채택; 조건 재매핑이 필요한 일반 재메시는 차단. 원 CAD/XAO/MSH는 별도 후보 폴더로 유지 |
+| G2 / T3·T4 | FUNCT 행/CSV/plot, 절점·요소 집합과 멤버 편집, shell PART 표면, BCS·절점별 CLOAD·INIVEL/TRA·검증한 TYPE7 프로파일 생성/참조. 대상 역할별 3D 강조. 검증된 덱 단위 표시 변환 | `test_condition_workflow.py`, `test_groups_ui.py`, `test_conditions_ui.py`, `test_native_units_ui.py`, `test_rad_display_units.py`. 케이스/영속 해석 설정(N01)은 미구현. 모든 카드·재료법칙·임의 solid 표면은 미지원; FUNCT 축 차원/미해석 카드 단위 추정 안 함 |
+| G3 / T5·T6 | 단위 명시 새 문서→Gmsh 후보→품질·공유 경계·국부 크기→검토/취소/채택→조건→새 Starter/Engine. 참조 없는 소유 메시 교체 | `test_gmsh_adapter.py`, `test_mesh_candidates.py`, `test_mesh_adoption.py`, `test_mesh_workflow_ui.py`, `test_solver_generation.py`. 외부 독립 메시 import(N02)는 미구현. tri3/tet4만 채택; 조건 재매핑이 필요한 일반 재메시는 차단. 원 CAD/XAO/MSH는 별도 후보 폴더로 유지 |
 | G4 재사용·전달 | 8방식의 같은 명령/API/CLI, wheel 새 환경 설치. 실제 Workbench MDO의 NumericEdit 소비, RAD 작업 문서 독립 Prep 프로세스 전달 | [Workbench #54](https://github.com/pikachu444/caelab-workbench/pull/54) 병합 `d6f05a3`; 새 clone tree가 후보 `853b079`과 동일, 관련 검사 19 passed. host 서비스/history와 기존 JobManager 유지. live IPC/MCP·Windows 설치형 배포는 별도 |
 
 **기능 정확성과 해석 결과:** 공식 OpenCourant `latest-20261011` Linux 배포의 CI 고정 SHA256은 `6cb419677ca36d73acb96218cc0cf5e4f7d50494d9c7812ba27935e3c0f8ec94`이다. 독립 CAD 세 종류(surface 62 tri, cylinder 236 tet, two solids 310 tet)에서 생성한 덱을 실제 Starter/Engine으로 실행했다. 질량·운동량·에너지의 독립 기대값과 상대 오차 문턱 `1e-5 / 1e-5 / 1e-4`를 검사한다. 로컬 관측 최대 상대 오차는 `2.734e-7 / 3.730e-7 / 1.117e-5`였다. 작은 강체 병진 검증이며 응력 수렴·범용 접촉 정확성/해석 적합성 검증이 아니다. 기존 TYPE7 수동 입력과 생성 입력의 CSV 일치 및 1374 cycle 실행은 직렬화 동등성 근거다. 그 접촉 예제의 후반 energy error 약 -66.2%를 물리 품질 합격으로 세지 않았다.
@@ -366,13 +440,13 @@ caelab-prep mesh INPUT.step --output OUT --size 2.0 --dimension 3
 - 단위/typed 참조의 잘못된 초안이 저장으로 우회되는 경로를 차단했다. Workbench 숫자 입력은 domain 왕복 뒤 Escape 복원과 오류 칸 초점 유지, 손상 ZIP은 failed 상태·프로세스 0회를 원 지적자가 재현해 확인했다.
 - CI의 CRLF 실패 두 건은 원문을 보존한 제품의 오류가 아닌 LF 고정 기대값이었다. 원문을 명시 bytes로 만드는 LF/CRLF 두 경우를 검사하도록 바꿨다. 빈 문서의 새 모델 Action을 금지하던 과거 기대값도 실제 생성 기능에 맞춰 수정했다. native-render 초기 중단은 실행 전 `ldd`/QApplication 진단을 추가해 XCB 의존성(`icccm`, `keysyms`, `shape`)을 확인하고 해결했다. 이후 실제 창 16개가 통과했다. 픽셀 검토에서 별도로 찾은 작은 속성 패널의 값 가림은 참조 입력의 불필요한 최소 폭·빈 단위 열·기본 dock 폭을 수정해 해결했다. 좁은 BeidPrep 명령은 같은 QAction의 이름 있는 그룹 메뉴로 전환하고, toolbar overflow에 콤보가 나타나지 않는 여섯 방식에는 공통 View → Selection type 경로를 제공한다. NFX 한글은 native CI의 CJK 글꼴을 설치해 확인했다. 원 검토자가 새 실제 창 16장과 JSON을 다시 검토해 세 지적을 종결했다.
 
-**검증 판정은 최종 후보 CI에 연결한다.** 중간 `9fc35bc`의 로컬 전체 검사는 465 passed / 5 skipped / 1 failed였다. 실패는 앞의 빈 문서 Action 기대값으로 수정 후 관련 35건을 확인했다. 그 결과만으로 이후 수정 전체를 통과 처리하지 않는다. 기본값 수정 후보 `3f24dcb`의 로컬 전체 검사는 **490 passed / 5 skipped**였다. skip은 opt-in native-render 1, 실제 솔버 환경변수 미설정 3, EGL opt-in 1이며 각 별도 CI 결과로 구분한다. [CI 41331744495](https://github.com/pikachu444/caelab-prep/actions/runs/41331744495)는 Linux/Windows 문서·Qt 문서·CAD·실제 native 렌더·wheel·실제 솔버 **7개 job 모두 통과**했다. 화면 보완을 포함한 최종 구현 후보 `017b8a30475693cd8d324a9fbdf34ee92faa8e1b`는 [CI 41332612612](https://github.com/pikachu444/caelab-prep/actions/runs/41332612612)의 7개 job을 모두 통과했다. Qt 문서/8방식/반응형·메뉴 검사 243 passed / 1 skipped, 실제 CAD 93 passed, native 렌더 16 passed, 실제 솔버 3 passed를 각각 확인했다. 통합 담당의 변경 영향 검사 32건과 원 화면 검토자의 독립 반응형/메뉴 13건도 통과했다. [실제 창·framebuffer·선택 JSON 묶음](https://github.com/pikachu444/caelab-prep/actions/runs/41332612612/artifacts/13093619198)은 SHA256 `77e1d13f4909fe0099ec4633e6001bad94cc6cd9bdf6c6e165e177a1b4645bd2`, 보관 만료 예정일 2027-01-30이며 `test_native_render.py`와 workflow로 재생성한다. 시각 재확인은 두 요소 장면의 렌더·선택과 기본 배치에 한정한다. 이 기록을 붙이는 후속 커밋은 문서만 변경하며 PR의 최종 CI가 통과한 뒤 병합한다. Workbench 후보 `853b079`은 [CI 41329583782](https://github.com/pikachu444/caelab-workbench/actions/runs/41329583782)의 Python 3.11/3.12 전체 제품 회귀·실제 CalculiX를 통과했다. Prep를 실제 설치한 별도 공유 위젯/문서 연결 검사와 선택 의존성 없는 일반 CI의 skip은 구분한다.
+**검증 판정은 최종 후보 CI에 연결한다.** 중간 `9fc35bc`의 로컬 전체 검사는 465 passed / 5 skipped / 1 failed였다. 실패는 앞의 빈 문서 Action 기대값으로 수정 후 관련 35건을 확인했다. 그 결과만으로 이후 수정 전체를 통과 처리하지 않는다. 기본값 수정 후보 `3f24dcb`의 로컬 전체 검사는 **490 passed / 5 skipped**였다. skip은 opt-in native-render 1, 실제 솔버 환경변수 미설정 3, EGL opt-in 1이며 각 별도 CI 결과로 구분한다. [CI 41331744495](https://github.com/pikachu444/caelab-prep/actions/runs/41331744495)는 Linux/Windows 문서·Qt 문서·CAD·실제 native 렌더·wheel·실제 솔버 **7개 job 모두 통과**했다. 화면 보완을 포함한 최종 구현 후보 `017b8a30475693cd8d324a9fbdf34ee92faa8e1b`는 [CI 41332612612](https://github.com/pikachu444/caelab-prep/actions/runs/41332612612)의 7개 job을 모두 통과했다. Qt 문서/8방식/반응형·메뉴 검사 243 passed / 1 skipped, 실제 CAD 93 passed, native 렌더 16 passed, 실제 솔버 3 passed를 각각 확인했다. 통합 담당의 변경 영향 검사 32건과 원 화면 검토자의 독립 반응형/메뉴 13건도 통과했다. [실제 창·framebuffer·선택 JSON 묶음](https://github.com/pikachu444/caelab-prep/actions/runs/41332612612/artifacts/13093619198)은 SHA256 `77e1d13f4909fe0099ec4633e6001bad94cc6cd9bdf6c6e165e177a1b4645bd2`, 보관 만료 예정일 2027-01-30이며 `test_native_render.py`와 workflow로 재생성한다. 시각 재확인은 두 요소 장면의 렌더·선택과 기본 배치에 한정한다. 이 기록을 붙인 문서 후보 `f8a976a`도 [최종 CI 41332979070](https://github.com/pikachu444/caelab-prep/actions/runs/41332979070)의 7개 job을 통과한 뒤 main `a48d3b4`로 병합됐다. 병합 뒤 새 main checkout의 tree가 최종 후보와 같은 것을 확인했고 Prep 관련 63건과 두 저장소의 Workbench 연결 관련 19건을 통과했다. 이는 전체 GUI 작업이나 남은 N 항목의 완료 증거가 아니다. Workbench 후보 `853b079`은 [CI 41329583782](https://github.com/pikachu444/caelab-workbench/actions/runs/41329583782)의 Python 3.11/3.12 전체 제품 회귀·실제 CalculiX를 통과했다. Prep를 실제 설치한 별도 공유 위젯/문서 연결 검사와 선택 의존성 없는 일반 CI의 skip은 구분한다.
 
 **후속의 구체적 완료 기준:** Windows는 같은 최종 코드로 새 설치→빈 문서/CAD/RAD→생성·선택·단위·오류 복구→Undo·저장·재시작·솔버 입력을 실제 창에서 수행하고 100/150/200%·작은 창·IME·도킹·GPU 캡처와 결과 파일을 확인한다. 원제품 비교는 8개 각각에서 같은 입력·객체·작업을 실행해 조작·가독성·결과를 대조해야 닫는다. 일반 재메시는 조건/집합 재연결과 실패 원자성, 대용량은 별도 B의 자원·성능 기준, live IPC/MCP는 열린 문서 revision과 실제 화면 반영으로 각각 판단한다. 현재 코어/CLI·소형 native 흐름 통과로 이 항목을 자동 승인하지 않는다.
 
-### 2026-11-02 착수 시점의 간극과 실행 순서
+### 2026-11-02 착수 시점의 간극과 실행 순서 — 과거 기록
 
-목표는 DESIGN의 G0–G4를 유지하며 **실제 구현을 재개한다**. 아래 표는 `0b4d6bb` 착수 시점의 간극이다. 해당 커밋의 제품 코드는 `f4d12d0`와 같고 목표 문서가 갱신된 상태였다. 구현 후에는 실제 변경과 검증 결과를 이 절에 추가하며 계획만으로 상태를 통과로 바꾸지 않는다. 1–18절은 현재 기능·기술 계획·역사적 기록이 섞여 있으므로 각 절의 근거와 범위를 읽어야 한다.
+아래는 DESIGN의 G0–G4를 유지하며 구현을 재개한 당시의 작업 계약이다. 아래 표는 `0b4d6bb` 착수 시점의 간극이며 현재 미구현 표가 아니다. 해당 커밋의 제품 코드는 `f4d12d0`와 같고 목표 문서가 갱신된 상태였다. 현재 변경·검증 근거와 잔여 작업은 위 표에서 관리하며 계획만으로 상태를 통과로 바꾸지 않는다. 1–18절은 현재 기능·기술 계획·역사적 기록이 섞여 있으므로 각 절의 근거와 범위를 읽어야 한다.
 
 **최신 사용자 실행 지시 반영:** Windows 확인은 일괄 후속 검증으로 분리한다. 현재는 Linux에서 가능한 동작·렌더·파일 결과를 확인하며 구현과 리뷰/CI를 진행한다. 중간 커밋·PR로 보존하고, 검토·해당 CI를 통과한 문제 없는 묶음은 통합 담당이 추가 질문 없이 병합한다. 아래 착수 표의 Windows 미확인은 현재 단계 진행이나 병합을 막지 않는다.
 
@@ -412,7 +486,7 @@ G2–G4도 같은 원칙으로 나눈다. G2는 곡선 생성/행/저장 후 실
 
 ### 2026-11-01 보존 통합과 미해결 진도 — 당시 기록
 
-최신 사용자 지시에 따라 로컬의 프로그램별 UI 작업을 main에 **보존 통합**하고 로컬·원격 저장소를 정리한다. 이는 제품 완성, A7 납품 또는 상용 프로그램 동등성 승인이 아니다. 이 최신 승인은 보존 통합에 한해서 이전 게시·병합 보류를 대체하며, 실제 Windows/GPU 확인 및 제품 품질 납품 보류는 유지한다. 아래 항목은 다음 작업자가 근거와 진행에 맞춰 수정·삭제·완료 처리하는 일반 진도 목록이다. [현재 구현과 차이](ui-reference-variants.md)를 함께 대조한다.
+최신 사용자 지시에 따라 로컬의 프로그램별 UI 작업을 main에 **보존 통합**하고 로컬·원격 저장소를 정리한다. 이는 제품 완성, A7 납품 또는 상용 프로그램 동등성 승인이 아니다. 이 최신 승인은 보존 통합에 한해서 이전 게시·병합 보류를 대체하며, 실제 Windows/GPU 확인 및 제품 품질 납품 보류는 유지한다. 아래 체크박스는 당시의 미해결 목록을 보존한 것이다. 현재 잔여 수는 위 N 표만 사용하며 이 기록을 다시 세거나 현재 상태로 수정하지 않는다. [현재 구현과 차이](ui-reference-variants.md)를 함께 대조한다.
 
 - [ ] **UI 품질:** 현재 전문 CAE 프로그램 대비 정보 밀도·배치·아이콘/버튼·활성 상태 대비가 미달하며 작은 흐릿한 조작부와 불필요한 안내/오류 문구가 남아 있다. 실제 작업 화면에서 크기·간격·가독성과 문구를 개선한다. **완료 기준:** 같은 기능·창 크기의 원본/구현을 비교하고 정상·비활성·선택·오류 상태를 독립 검토자가 통과시킨다.
 - [ ] **프로그램별 같은 기능과 재사용:** HyperMesh, PrePoMax, Naksha, Abaqus/CAE, COMSOL, midas NFX, MIDAS MeshFree, BeidPrep 각각의 작업 방식을 비교 가능한 구현으로 유지한다. 하나를 임의 선정하거나 외형을 섞지 않고 공통 데이터/동작 코어와 교체 가능한 컴포넌트·adapter를 사용한다. **완료 기준:** 동일 객체·값·참조·오류·Undo·저장 조건에서 각 방식이 실제 동작하고 복사 붙여넣기 없이 공통 계약과 다른 호스트의 재사용을 확인한다.
@@ -461,6 +535,10 @@ CI workflow는 기존에 빠졌던 application contracts/RAD provider를 core ma
 초기에는 CUA/sky/node_repl을 사용할 수 없어 Windows 확인을 보류했다. 이후 지원되는 로컬 실행 도구의 정식 승인을 통해 설치된 PySide6의 자체 앱 네이티브 입력 경로를 실행했다. 이전 CUA 승인 시간초과를 우회하거나 잠금 화면에 접근하지 않았다. 리뷰팀은 실제 좁은 카탈로그 가림을 발견해 수정시켰고, 설정 격리 오해·곡선 delegate 진입 방식·Windows의 큰 창 크기 제한도 증거에서 바로잡았다. 초기 설정 시험은 앱의 네 가지 레이아웃 선호값을 읽고 썼을 수 있으며 백업 없는 이전 값을 임의 복원/삭제하지 않았다. 최종 격리 실행과 pytest에서는 실제 설정 값이 전후 같았다.
 
 최신 사용자 지시는 원범위 차단과 중요한 미검증이 해소되고 정확한 최종 SHA의 필수 CI가 통과하면 PR/main 병합을 허용하는 **조건부 승인**이다. 리뷰팀 세 명이 원요구·실제 코드·최종 native 화면/입력 근거를 대조하며 타당한 지적의 수정을 재검토한다. native 기록과 CI는 서로를 대체하지 않는다. 별도 GitHub APPROVE·보호 규칙 우회·자동 병합은 수행하지 않는다.
+
+#### 당시 문서 정합성 작업의 범위 — 현재 수정 지시가 아님
+
+아래는 2026-10-31 당시 문서 작업의 설명이다. 현재 문서는 병합된 구현과 N 작업표를 반영하며 이 옛 목록의 “미구현 native 생성”이나 “제품코드 변경 없음”을 현재 기능 상태로 적용하지 않는다.
 
 - `shared-cae-foundation-plan.md`: P0–P9 번호와 A1–A8은 유지. 9절 P6/P7/P8 표의 세부 단계·선행 관계, 10절 묶음 C와 종료 상태, 12절 미확정 처리의 유한 결정을 반영한다. 단계별 실행·검사는 본 작업서에서 관리하고 기존 문서에는 링크와 묶음 표만 둔다.
 - `cae-model-data-design.md`: 7절의 P6→P6a/b/c, P7→P7a/b/c 설명을 맞추고 8절 B1–B6은 그대로 유지한다. P6a/C가 B나 반복 instance 편집 완료가 아님을 명시한다. P7 일반 재메시라는 기존 문구는 P7b로 구체화한다.

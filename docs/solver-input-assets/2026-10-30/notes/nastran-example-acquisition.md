@@ -1,5 +1,7 @@
 # Nastran 공식 예제 한정 추가 조사
 
+> 아래는 2026-10-30 초기 한정 조사의 기록이다. 이후 [MSC 후속 확보](../followup/msc/README.md)에서 2024.2 완전 listing과 별도 판본의 공식 raw 모델을 확보했으므로 초기의 “완전 예제 미확보”를 현재 상태로 읽지 않는다. 동일판 설치 raw·실행 결과와 제품 지원은 여전히 별개이며 [현 상태·잔여 작업](../../../execution-stages.md#remaining-work)을 따른다.
+
 2026-10-30. MSC Nastran 2024.2 QRG 수집을 보완하기 위해 공식 complete analysis deck를 최대 5분 추가 조사했다. **NASA 공식 NASTRAN-95 예제 한 묶음은 실제 취득했다. MSC 2024.2 덱/실행 검증은 확보하지 못했다.**
 
 ## 실제 확보

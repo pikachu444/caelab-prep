@@ -30,4 +30,4 @@
 
 이번 종료 대상은 고정 범위의 전체 목록/대조, Q01–Q12의 근거·부분·공백, 실제 예제/코드 역할, 판본·취득·권리·해시와 독립 지적의 수정이다. 이것이 통과하면 자료 수집은 닫는다. 대표 그림/몇 개 카드만 찾은 상태와는 구분한다.
 
-전수 field/conditional/dependency schema, 모든 옵션의 의미 검토, native writer의 실제 이식, 정상·오류·경계 deck 생성과 solver read/run은 미완료다. MSC2024.2 고유 complete deck은 미확보이며 NASA95 예제는 보조 자료다. 일부 권리·접근 제한은 원장에 남긴다. 다음 개발은 기존 단계의 선언된 기능/solver/version 범위에서 필요한 명세와 시험을 구체화하며, 이번 문헌 조사로 기능 완료를 선언하지 않는다.
+초기 수집 종료 시점에는 전수 field/conditional/dependency schema, 모든 옵션의 의미 검토, native writer 이식, 정상·오류·경계 deck 생성과 solver read/run을 수행하지 않았다. 당시 MSC2024.2 완전 입력 예제도 미확보여서 NASA95를 보조 자료로 분류했다. 이후 [MSC 후속 확보](../followup/msc/README.md)에서 2024.2 완전 listing과 별도 판본의 공식 raw 모델을 확보했으므로 초기 결손을 현재 상태로 반복하지 않는다. 후속 RAD 생성·소형 실행 검증과 현재 미완료 작업은 [현 상태와 N01–N26](../../../execution-stages.md#remaining-work)을 따른다. 이 자료 수집의 원장·권리·접근 기록을 제품 기능 완료나 다른 솔버의 실행 성공으로 바꾸지 않는다.

@@ -1,5 +1,7 @@
 # RAD 파일 생성을 개발할 때 실제로 볼 자산
 
+> 이 문서는 2026-10-30 수집 묶음의 후속 자산 안내다. 이후 제품의 제한된 RAD writer·후보 채택·Starter/Engine과 소형 실행 검증은 구현됐다. 아래 전수 schema·후보 writer 도입의 공백과 현재 제품의 미완료 작업을 동일시하지 않으며, 현 상태는 [잔여 작업 N01–N26](../../../../execution-stages.md#remaining-work)을 따른다. `solver-input-research/tmp/`·`analysis/`는 당시 조사 환경 경로이며 현재 clone에 동봉됐다는 뜻이 아니다.
+
 PR #10에서 ‘전수 필드 명세 미완성’을 공식 필드 설명이 없는 상태처럼 읽히게 한 점을 구분한다. **공식 카드별 생성 규칙은 이미 전체 HTML에 있고, CFG에는 타입·default·단위·조건부·버전별 FORMAT이 있다.** 아직 없는 것은 이를 우리 제품의 모든 카드 생성 기능으로 구현하고 검증한 상태다. CFG는 별도 이용 조건이 있어 공용 자유 schema로 재배포하지 않는다.
 
 바로 열기: [Python RAD writer](assets/meshioplusplus/src/python/meshioplusplus/radioss/_radioss.py) · [k2rad Starter/Engine 조립](assets/k2rad/k2rad/writer/assembly.py) · [기본값 처리](assets/opencourant-readers/starter/source/modules/defaults_mod.F90) · [완전 Starter](assets/meshioplusplus/tests/python/meshes/radioss_th/column/column_0000.rad) · [Engine](assets/meshioplusplus/tests/python/meshes/radioss_th/column/column_0001.rad)
@@ -17,7 +19,7 @@ MIT 원문과 고정판 source는 `assets/meshioplusplus/`, `assets/k2rad/`에 �
 
 ## 어떤 새 카드를 추가하든 찾아갈 공식 규칙과 reader
 
-기존 [전체 카드 목록](../../catalogues/radioss.csv)의 원문 이름에서 해당 공식 Format/Definition/Comments로 들어가면 행 순서·필드·optional/조건·ID/단위·예제가 있다. 현재 조사 환경의 804개 실제 원본은 `solver-input-research/tmp/radioss/keywords2024/`에 있다. 새 keyword마다 대표 몇 장을 다시 찾는 대신 이 전체 원문을 사용한다.
+기존 [전체 카드 목록](../../catalogues/radioss.csv)의 원문 이름에서 해당 공식 Format/Definition/Comments로 들어가면 행 순서·필드·optional/조건·ID/단위·예제가 있다. 당시 조사 환경에는 실제 원본 804개를 `solver-input-research/tmp/radioss/keywords2024/`에 보관했다. 공개 clone에는 원문 전문을 동봉하지 않으므로 목록의 공식 locator로 접근한다. 새 keyword의 생성 규칙을 대표 몇 장의 예제만으로 추정하지 않는다.
 
 고정 OpenCourant source ZIP에는 전체 `starter/source/`가 이미 있다. 이 후속 작업은 전체를 조사 환경의 `analysis/opencourant/starter/source/`로 풀어 어떤 카드를 구현할 때 어느 reader/dispatch/default를 읽는지 연결했다. 선택한 다음 파일은 AGPL 고지와 함께 `assets/opencourant-readers/`에도 담았다.
 
