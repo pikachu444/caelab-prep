@@ -43,6 +43,11 @@ def parser():
     gui.add_argument("path", nargs="?")
     gallery = commands.add_parser("gallery", help="Open the shared Qt material/curve gallery (no VTK required)")
     gallery.add_argument("path", nargs="?", help="Neutral material/curve working document")
+    compare = commands.add_parser("compare", help="Compare program-specific working views of one document")
+    compare.add_argument("path", nargs="?", help="Neutral working document; use --rad for a native RAD/project")
+    compare.add_argument("--rad", action="store_true", help="Use the existing RAD document/provider")
+    compare.add_argument("--no-3d", action="store_true", help="Disable VTK (layout inspection only)")
+    commands.add_parser("catalogue", help="Open the developer component catalogue (no VTK required)")
     inspect = commands.add_parser("inspect", help="Read a RAD/project in an independent session")
     inspect.add_argument("path")
     schema = commands.add_parser("fields", help="List native cards or query an editable card")
@@ -68,6 +73,36 @@ def parser():
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
+        if args.command == "compare":
+            from PySide6.QtWidgets import QApplication
+            from .ui.comparison import ComparisonWindow
+            if args.rad:
+                session = _session(args.path) if args.path else None
+                if session is None:
+                    from .application.session import PrepSession
+                    session = PrepSession()
+            else:
+                from .application.neutral import CurveSession
+                session = CurveSession()
+                if args.path:
+                    session.open_project(args.path)
+            app = QApplication.instance() or QApplication(sys.argv[:1])
+            window = ComparisonWindow(session, native=args.rad, enable_viewport=not args.no_3d)
+            window.show()
+            return app.exec()
+        if args.command == "catalogue":
+            from PySide6.QtWidgets import QApplication, QMainWindow
+            from .ui.catalogue import CatalogueWidget
+            from .ui.theme import STYLESHEET
+
+            app = QApplication.instance() or QApplication(sys.argv[:1])
+            window = QMainWindow()
+            window.setWindowTitle("CAELab Components — Developer catalogue")
+            window.setStyleSheet(STYLESHEET)
+            window.setCentralWidget(CatalogueWidget())
+            window.resize(1120, 760)
+            window.show()
+            return app.exec()
         if args.command == "gallery":
             from PySide6.QtWidgets import QApplication
             from .application.neutral import CurveSession

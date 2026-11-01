@@ -1,35 +1,17 @@
-"""Atomic tabular curve drafts and a lightweight Qt-only engineering plot."""
+"""Native curve worksheet and a scale-aware, dependency-free plot presentation."""
 
-from __future__ import annotations
-
+from decimal import Decimal, ROUND_CEILING
 import math
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPainterPath, QPen
-from PySide6.QtWidgets import (QAbstractItemDelegate, QAbstractItemView, QApplication, QDialog, QDialogButtonBox,
-                              QHBoxLayout, QHeaderView, QLabel, QPlainTextEdit, QPushButton,
-                              QLineEdit, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QDialogButtonBox,
+                              QFrame, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
+                              QPlainTextEdit, QPushButton, QTableWidget,
+                              QVBoxLayout, QWidget)
 
+from ._curve_data import CurveDraftAdapter, validate_points
 from ..design import TOKENS
-
-
-def validate_points(points, *, minimum_points=1, require_increasing_x=False):
-    result = []
-    for row, point in enumerate(points, 1):
-        if len(point) != 2:
-            raise ValueError(f"Row {row}: expected two columns")
-        try:
-            pair = tuple(float(v) for v in point)
-        except (TypeError, ValueError, OverflowError) as exc:
-            raise ValueError(f"Row {row}: enter two valid numbers") from exc
-        if not all(math.isfinite(v) for v in pair):
-            raise ValueError(f"Row {row}: enter finite numbers")
-        result.append(pair)
-    if len(result) < minimum_points:
-        raise ValueError(f"A curve needs at least {minimum_points} point(s)")
-    if require_increasing_x and any(b[0] <= a[0] for a, b in zip(result, result[1:])):
-        raise ValueError("X values must increase strictly; no rows were applied")
-    return tuple(result)
 
 
 class _CurveGrid(QTableWidget):
@@ -39,138 +21,121 @@ class _CurveGrid(QTableWidget):
         if event.matches(QKeySequence.StandardKey.Paste):
             self.pasteRequested.emit(QApplication.clipboard().text())
             event.accept()
-        else:
-            super().keyPressEvent(event)
+            return
+        super().keyPressEvent(event)
 
 
-class CurveTable(QWidget):
-    """Table edits are a preview until Apply; a host handles one emitted command."""
+class CurveTable(CurveDraftAdapter, QWidget):
+    """A worksheet that publishes one complete validated draft on Apply."""
 
     pointsEdited = Signal(object)
     draftChanged = Signal()
+    selectedRowsChanged = Signal(object)
 
     def __init__(self, parent=None, *, minimum_points=1, require_increasing_x=False):
         super().__init__(parent)
-        self._committed = ()
-        self.minimum_points = minimum_points
-        self.require_increasing_x = require_increasing_x
-        self._loading = False
-        self._paste_error = False
-        self.paste_text_buffer = ""
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(*([TOKENS["form_column_gap"]] * 4))
-        layout.setSpacing(TOKENS["space_md"])
+        self.setObjectName("curveTable")
+        self.minimum_points, self.require_increasing_x = minimum_points, require_increasing_x
+        self._committed, self.paste_text_buffer = (), ""
+        self._loading, self._paste_error = False, False
+        worksheet = QVBoxLayout(self)
+        worksheet.setContentsMargins(0, 0, 0, 0)
+        worksheet.setSpacing(0)
+        toolbar = QFrame()
+        toolbar.setObjectName("curveCommands")
+        commands = QHBoxLayout(toolbar)
+        commands.setContentsMargins(8, 4, 8, 4)
+        commands.setSpacing(4)
+        heading = QLabel("Curve data")
+        heading.setObjectName("groupTitle")
+        commands.addWidget(heading, 1)
+        self.paste_button = QPushButton("Paste…")
+        self.paste_button.setAccessibleName("Paste curve points")
+        self.paste_button.setToolTip("Paste curve points (Ctrl+V)")
+        self.paste_button.clicked.connect(self._paste_dialog)
+        commands.addWidget(self.paste_button)
+        worksheet.addWidget(toolbar)
+
         self.table = _CurveGrid(0, 2)
         self.table.setAccessibleName("Curve points")
         self.table.setAlternatingRowColors(True)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked |
+                                   QAbstractItemView.EditTrigger.EditKeyPressed |
+                                   QAbstractItemView.EditTrigger.AnyKeyPressed)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.horizontalHeader().setMinimumSectionSize(70)
         self.table.verticalHeader().setDefaultSectionSize(TOKENS["row_height"])
+        self.table.verticalHeader().setMinimumWidth(28)
         self.table.itemChanged.connect(self._changed)
         self.table.pasteRequested.connect(self._paste_clipboard)
-        layout.addWidget(self.table, 1)
-        self.message = QLabel("Table and plot share the committed curve")
-        self.message.setWordWrap(True)
+        self.table.itemSelectionChanged.connect(self._selection_changed)
+        worksheet.addWidget(self.table, 1)
+
+        footer = QFrame()
+        footer.setObjectName("curveCommands")
+        status = QGridLayout(footer)
+        status.setContentsMargins(8, 5, 8, 5)
+        status.setHorizontalSpacing(6)
+        status.setVerticalSpacing(4)
+        self.message = QLabel()
         self.message.setObjectName("propertySubtitle")
-        layout.addWidget(self.message)
-        row = QHBoxLayout()
-        self.paste_button = QPushButton("Paste points…")
-        self.paste_button.clicked.connect(self._paste_dialog)
+        self.message.setWordWrap(True)
+        status.addWidget(self.message, 0, 0, 1, 3)
+        self.selection_label = QLabel()
+        self.selection_label.setObjectName("unitsNote")
+        status.addWidget(self.selection_label, 1, 0)
         self.revert_button = QPushButton("Revert")
         self.revert_button.clicked.connect(self.revert)
-        self.apply_button = QPushButton("Apply curve")
+        self.apply_button = QPushButton("Apply")
         self.apply_button.setObjectName("primaryAction")
+        self.apply_button.setAccessibleName("Apply curve")
         self.apply_button.clicked.connect(self.apply_changes)
-        row.addWidget(self.paste_button)
-        row.addStretch()
-        row.addWidget(self.revert_button)
-        row.addWidget(self.apply_button)
-        layout.addLayout(row)
+        status.addWidget(self.revert_button, 1, 1)
+        status.addWidget(self.apply_button, 1, 2)
+        status.setColumnStretch(0, 1)
+        worksheet.addWidget(footer)
         self.set_points((), headers=("X", "Y"))
+        self._selection_changed()
 
-    def set_points(self, points, headers=None):
-        self._committed = tuple(tuple(p) for p in points)
-        self._display_points(self._committed)
-        if headers:
-            self.table.setHorizontalHeaderLabels(list(headers))
-        self._paste_error = False
-        self.paste_text_buffer = ""
-        self.message.setText(f"{len(self._committed)} points · committed values")
-        self.message.setObjectName("propertySubtitle")
-        self.apply_button.setEnabled(False)
-        self.revert_button.setEnabled(False)
+    def _set_status(self, text, *, invalid=False):
+        self.message.setText(text)
+        self.message.setProperty("invalid", invalid)
+        self.message.setAccessibleDescription("Curve input error" if invalid else "Curve draft status")
+        self.message.style().unpolish(self.message)
+        self.message.style().polish(self.message)
 
-    def _display_points(self, points):
-        self._loading = True
-        self.table.setRowCount(len(points))
-        for row, point in enumerate(points):
-            for column, value in enumerate(point):
-                item = QTableWidgetItem(str(value))
-                item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-                self.table.setItem(row, column, item)
-        self._loading = False
-
-    def points(self):
-        self.flush_editor()
-        if self._paste_error:
-            raise ValueError(self.message.text())
-        rows = [[self.table.item(r, c).text() if self.table.item(r, c) else ""
-                 for c in range(2)] for r in range(self.table.rowCount())]
-        return validate_points(rows, minimum_points=self.minimum_points,
-                               require_increasing_x=self.require_increasing_x)
-
-    def _changed(self):
-        if self._loading:
-            return
-        self._paste_error = False
-        self.message.setText("Draft values · Apply curve to update the document and plot")
-        self.apply_button.setEnabled(True)
-        self.revert_button.setEnabled(True)
-        self.draftChanged.emit()
-
-    def paste_text(self, text):
-        self.paste_text_buffer = text
-        lines = text.strip().splitlines()
-        rows = [line.split("\t") if "\t" in line else line.split(",") if "," in line else line.split()
-                for line in lines]
-        try:
-            candidate = validate_points(rows, minimum_points=self.minimum_points,
-                                        require_increasing_x=self.require_increasing_x)
-        except ValueError as exc:
-            self._paste_error = True
-            self.message.setText(str(exc))
-            self.apply_button.setEnabled(False)
-            self.revert_button.setEnabled(True)
-            raise
-        self._display_points(candidate)
-        self._changed()
-        self.message.setText(f"Preview: {len(candidate)} points · Apply curve to replace all points")
-        return candidate
-
-    def _paste_clipboard(self, text):
-        try:
-            self.paste_text(text)
-        except ValueError:
-            self._paste_dialog()
+    def _selection_changed(self):
+        rows = tuple(sorted({index.row() for index in self.table.selectedIndexes()}))
+        if hasattr(self, "selection_label"):
+            self.selection_label.setText(f"{len(rows)} selected" if rows else "")
+        self.selectedRowsChanged.emit(rows)
 
     def _paste_dialog(self):
         dialog = QDialog(self)
         dialog.setWindowTitle("Paste curve points")
-        dialog.resize(430, 320)
-        layout = QVBoxLayout(dialog)
-        label = QLabel("Two numeric columns, separated by tabs, commas or spaces.\nAll rows are checked before the table preview changes.")
-        label.setWordWrap(True)
-        layout.addWidget(label)
+        dialog.resize(460, 340)
+        form = QVBoxLayout(dialog)
+        form.setSpacing(8)
+        title = QLabel("Curve points")
+        title.setObjectName("propertyTitle")
+        form.addWidget(title)
         edit = QPlainTextEdit(self.paste_text_buffer or QApplication.clipboard().text())
         edit.setAccessibleName("Pasted curve data")
-        layout.addWidget(edit)
+        edit.setPlaceholderText("X\tY\n0\t0\n1\t100")
+        form.addWidget(edit, 1)
+        format_label = QLabel("Two columns: tab, comma or space separated")
+        format_label.setObjectName("unitsNote")
+        form.addWidget(format_label)
         error = QLabel()
         error.setObjectName("inputError")
         error.setWordWrap(True)
-        layout.addWidget(error)
+        form.addWidget(error)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Preview")
-        layout.addWidget(buttons)
+        form.addWidget(buttons)
+
         def preview():
             try:
                 self.paste_text(edit.toPlainText())
@@ -178,126 +143,134 @@ class CurveTable(QWidget):
                 error.setText(str(exc))
             else:
                 dialog.accept()
+
         buttons.accepted.connect(preview)
         buttons.rejected.connect(dialog.reject)
         dialog.exec()
 
-    def apply_changes(self):
-        if self._paste_error:
-            return False
-        try:
-            points = self.points()
-        except ValueError as exc:
-            self.message.setText(str(exc))
-            return False
-        self.pointsEdited.emit(points)
-        return True
 
-    def revert(self):
-        self.set_points(self._committed)
-        self.draftChanged.emit()
+class _Axis:
+    """Subtract decimal offsets before converting a bounded fraction to float."""
 
-    def has_draft(self):
-        self.flush_editor()
-        if self._paste_error:
-            return True
-        try:
-            return self.points() != self._committed
-        except ValueError:
-            return bool(self.table.rowCount())
+    def __init__(self, values):
+        values = [Decimal(str(value)) for value in values] or [Decimal(0), Decimal(1)]
+        self.low, self.high = min(values), max(values)
+        if self.low == self.high:
+            padding = abs(self.low) / 10 or Decimal("0.1")
+            self.low -= padding
+            self.high += padding
+        self._span = self.high - self.low
 
-    def draft_state(self):
-        self.flush_editor()
-        return {"cells": [[self.table.item(r, c).text() if self.table.item(r, c) else ""
-                            for c in range(2)] for r in range(self.table.rowCount())],
-                "paste": self.paste_text_buffer, "paste_error": self._paste_error,
-                "message": self.message.text()}
+    def fraction(self, value):
+        return float((Decimal(str(value)) - self.low) / self._span)
 
-    def flush_editor(self):
-        """Finish the actual delegate draft before a host tests/reads table data."""
-        editor = self.table.focusWidget()
-        if isinstance(editor, QLineEdit) and self.table.isAncestorOf(editor):
-            self.table.commitData(editor)
-            self.table.closeEditor(editor, QAbstractItemDelegate.EndEditHint.NoHint)
-
-    def restore_draft(self, state):
-        self._display_points(state["cells"])
-        self.paste_text_buffer = state["paste"]
-        self._paste_error = state["paste_error"]
-        self.message.setText(state["message"])
-        self.apply_button.setEnabled(not self._paste_error)
-        self.revert_button.setEnabled(True)
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Escape:
-            self.revert()
-            event.accept()
-        else:
-            super().keyPressEvent(event)
+    def ticks(self, count):
+        distance = self._span / count
+        base = Decimal(10) ** distance.adjusted()
+        step = next(candidate * base for candidate in (1, 2, 5, 10) if candidate * base >= distance)
+        start = (self.low / step).to_integral_value(rounding=ROUND_CEILING) * step
+        ticks = []
+        previous = None
+        for index in range(count + 2):
+            value = start + index * step
+            if value > self.high:
+                break
+            numeric = float(value)
+            if not math.isfinite(numeric) or (previous is not None and numeric <= previous):
+                continue
+            represented = Decimal(str(numeric))
+            if not self.low <= represented <= self.high:
+                continue
+            # Round-trip strings retain close values; multiple mathematical
+            # ticks that round to the same representable float share one mark.
+            label = str(numeric)
+            if label.endswith(".0"):
+                label = label[:-2]
+            ticks.append((self.fraction(numeric), label))
+            previous = numeric
+        return ticks
 
 
 class CurvePlot(QWidget):
-    """Small real-value plot; no rendering backend or plotting dependency required."""
+    """Plot current document values; optional row emphasis is view state only."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._points = ()
-        self.x_label, self.y_label = "X", "Y"
-        self.setMinimumSize(TOKENS["plot_min_width"], TOKENS["plot_min_height"])
+        self.setObjectName("curvePlot")
         self.setAccessibleName("Curve plot")
+        self.setMinimumSize(TOKENS["plot_min_width"], TOKENS["plot_min_height"])
+        self._points, self._selected_rows = (), set()
+        self.x_label, self.y_label = "X", "Y"
 
     def set_points(self, points, *, x_label=None, y_label=None):
-        self._points = tuple(tuple(p) for p in points)
-        if x_label is not None:
-            self.x_label = x_label
-        if y_label is not None:
-            self.y_label = y_label
+        self._points = tuple(tuple(point) for point in points)
+        self.set_labels(x_label if x_label is not None else self.x_label,
+                        y_label if y_label is not None else self.y_label)
         self.setAccessibleDescription(f"{len(self._points)} curve points; {self.x_label}, {self.y_label}")
-        self.update()
 
     def set_labels(self, x, y):
         self.x_label, self.y_label = x, y
+        self.setToolTip(f"{y}\n{x}")
+        self.update()
+
+    def set_selected_rows(self, rows):
+        self._selected_rows = set(rows)
         self.update()
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.fillRect(self.rect(), QColor(TOKENS["surface"]))
-        area = QRectF(TOKENS["plot_left"], TOKENS["plot_top"],
-                      max(TOKENS["space_lg"], self.width()-TOKENS["plot_left"]-TOKENS["plot_right"]),
-                      max(TOKENS["space_lg"], self.height()-TOKENS["plot_top"]-TOKENS["plot_bottom"]))
-        painter.setPen(QColor(TOKENS["plot_text"]))
-        painter.drawText(QRectF(12, 3, self.width()-24, 23), Qt.AlignmentFlag.AlignLeft, self.y_label)
-        painter.drawText(QRectF(64, self.height()-27, self.width()-88, 20), Qt.AlignmentFlag.AlignCenter, self.x_label)
         if not self._points:
-            painter.drawText(area, Qt.AlignmentFlag.AlignCenter, "Select a curve")
+            painter.setPen(QColor(TOKENS["muted"]))
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "No curve selected")
             return
-        xs, ys = zip(*self._points)
-        x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
-        if x0 == x1:
-            x1 = x0 + 1
-        if y0 == y1:
-            y1 = y0 + 1
-        for step in range(5):
-            fraction = step/4
-            x = area.left()+fraction*area.width()
-            y = area.bottom()-fraction*area.height()
-            painter.setPen(QColor(TOKENS["plot_grid"]))
-            painter.drawLine(QPointF(x, area.top()), QPointF(x, area.bottom()))
-            painter.drawLine(QPointF(area.left(), y), QPointF(area.right(), y))
+        x_axis = _Axis([point[0] for point in self._points])
+        y_axis = _Axis([point[1] for point in self._points])
+        y_ticks = y_axis.ticks(max(2, min(6, self.height() // 70)))
+        metrics = painter.fontMetrics()
+        left = 30 + max((metrics.horizontalAdvance(label) for _, label in y_ticks), default=30)
+        plot = QRectF(left, 24, max(20, self.width() - left - 28), max(20, self.height() - 78))
+        x_ticks = x_axis.ticks(max(2, min(7, int(plot.width() // 100))))
+        self._draw_axes(painter, plot, x_ticks, y_ticks)
+        painter.save()
+        painter.setClipRect(plot.adjusted(-5, -5, 5, 5))
+        points = [QPointF(plot.left() + x_axis.fraction(x) * plot.width(),
+                         plot.bottom() - y_axis.fraction(y) * plot.height()) for x, y in self._points]
+        line = QPainterPath(points[0])
+        for point in points[1:]:
+            line.lineTo(point)
+        painter.setPen(QPen(QColor(TOKENS["accent"]), 1.8))
+        painter.drawPath(line)
+        for row, point in enumerate(points):
+            selected = row in self._selected_rows
+            painter.setBrush(QColor(TOKENS["accent"] if selected else TOKENS["surface"]))
+            radius = 4.5 if selected else 2.8
+            painter.drawEllipse(point, radius, radius)
+        painter.restore()
+
+    def _draw_axes(self, painter, plot, x_ticks, y_ticks):
+        for fraction, label in y_ticks:
+            y = plot.bottom() - fraction * plot.height()
+            painter.setPen(QPen(QColor(TOKENS["plot_grid"]), 1))
+            painter.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y))
             painter.setPen(QColor(TOKENS["plot_text"]))
-            painter.drawText(QRectF(x-34, area.bottom()+7, 68, 18), Qt.AlignmentFlag.AlignHCenter, f"{x0+fraction*(x1-x0):.3g}")
-            painter.drawText(QRectF(2, y-9, 55, 18), Qt.AlignmentFlag.AlignRight, f"{y0+fraction*(y1-y0):.3g}")
-        painter.setPen(QPen(QColor(TOKENS["plot_border"]), TOKENS["border_width"]))
-        painter.drawRect(area)
-        path = QPainterPath()
-        coordinates = [QPointF(area.left()+(x-x0)/(x1-x0)*area.width(), area.bottom()-(y-y0)/(y1-y0)*area.height())
-                       for x, y in self._points]
-        path.moveTo(coordinates[0])
-        for point in coordinates[1:]:
-            path.lineTo(point)
-        painter.setPen(QPen(QColor(TOKENS["accent"]), TOKENS["plot_line_width"]))
-        painter.drawPath(path)
-        painter.setBrush(QColor(TOKENS["surface"]))
-        for point in coordinates:
-            painter.drawEllipse(point, TOKENS["plot_marker_radius"], TOKENS["plot_marker_radius"])
+            painter.drawText(QRectF(23, y - 10, plot.left() - 31, 20), Qt.AlignmentFlag.AlignRight, label)
+        for fraction, label in x_ticks:
+            x = plot.left() + fraction * plot.width()
+            painter.setPen(QPen(QColor(TOKENS["plot_grid"]), 1, Qt.PenStyle.DotLine))
+            painter.drawLine(QPointF(x, plot.top()), QPointF(x, plot.bottom()))
+            painter.setPen(QColor(TOKENS["plot_text"]))
+            painter.drawText(QRectF(x - 40, plot.bottom() + 7, 80, 20), Qt.AlignmentFlag.AlignHCenter, label)
+        painter.setPen(QPen(QColor(TOKENS["plot_border"]), 1))
+        painter.drawLine(plot.bottomLeft(), plot.bottomRight())
+        painter.drawLine(plot.bottomLeft(), plot.topLeft())
+        painter.setPen(QColor(TOKENS["plot_text"]))
+        painter.drawText(QRectF(plot.left(), self.height() - 26, plot.width(), 20), Qt.AlignmentFlag.AlignCenter,
+                         painter.fontMetrics().elidedText(self.x_label, Qt.TextElideMode.ElideRight, int(plot.width())))
+        painter.save()
+        painter.translate(13, plot.center().y())
+        painter.rotate(-90)
+        painter.drawText(QRectF(-plot.height() / 2, -10, plot.height(), 20), Qt.AlignmentFlag.AlignCenter,
+                         painter.fontMetrics().elidedText(self.y_label, Qt.TextElideMode.ElideRight, int(plot.height())))
+        painter.restore()

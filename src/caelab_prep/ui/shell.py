@@ -2,9 +2,10 @@
 
 from uuid import uuid4
 
-from PySide6.QtCore import QObject, QRunnable, Signal
+from PySide6.QtCore import QObject, QRunnable, QSize, Qt, Signal
+from PySide6.QtGui import QPainter
 
-from PySide6.QtWidgets import QDockWidget, QFrame, QHBoxLayout, QLabel, QMessageBox, QVBoxLayout
+from PySide6.QtWidgets import QDockWidget, QFrame, QHBoxLayout, QLabel, QMessageBox, QSizePolicy, QToolButton, QVBoxLayout
 
 from ..application.contracts import OperationState
 
@@ -98,10 +99,32 @@ def create_dock(window, name, title, widget, area, menu=None):
     dock.setObjectName(name)
     dock.setWidget(widget)
     dock.setMinimumWidth(160)
+    dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
     window.addDockWidget(area, dock)
     if menu is not None:
         menu.addAction(dock.toggleViewAction())
     return dock
+
+
+class _ViewContext(QLabel):
+    """Keep optional view metadata readable without setting the workspace width."""
+
+    def setText(self, text):
+        super().setText(text)
+        self.setToolTip(text)
+
+    def sizeHint(self):
+        hint = super().sizeHint()
+        return QSize(min(hint.width(), 280), hint.height())
+
+    def minimumSizeHint(self):
+        return QSize(0, super().minimumSizeHint().height())
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setPen(self.palette().color(self.foregroundRole()))
+        text = self.fontMetrics().elidedText(self.text(), Qt.TextElideMode.ElideRight, self.width())
+        painter.drawText(self.rect(), self.alignment(), text)
 
 
 class ViewportFrame(QFrame):
@@ -113,16 +136,31 @@ class ViewportFrame(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        bar = QFrame()
-        bar.setObjectName("viewportBar")
-        header = QHBoxLayout(bar)
-        header.setContentsMargins(10, 7, 10, 7)
-        self.title = QLabel(title)
+        self.bar = QFrame()
+        self.bar.setObjectName("viewportBar")
+        self.header = QHBoxLayout(self.bar)
+        header = self.header
+        header.setContentsMargins(8, 3, 6, 3)
+        header.setSpacing(6)
+        self.title = _ViewContext(title)
         self.title.setObjectName("groupTitle")
-        self.context = QLabel(context)
+        self.title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.context = _ViewContext(context)
         self.context.setObjectName("propertySubtitle")
+        self.context.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.context.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        self.context.setToolTip(context)
         header.addWidget(self.title)
         header.addStretch()
         header.addWidget(self.context)
-        layout.addWidget(bar)
+        layout.addWidget(self.bar)
         layout.addWidget(content, 1)
+
+    def add_action(self, action):
+        """Place a host-owned command beside the active view's title."""
+        button = QToolButton(self.bar)
+        button.setDefaultAction(action)
+        button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        button.setIconSize(QSize(16, 16))
+        self.header.addWidget(button)
+        return button

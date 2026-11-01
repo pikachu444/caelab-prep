@@ -5,13 +5,13 @@ from __future__ import annotations
 import math
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from ..design import TOKENS
 
 
 class NumericEdit(QLineEdit):
-    """A numeric draft that allows incomplete text and reports errors on Apply."""
+    """Preserved QLineEdit draft adapter: incomplete text remains valid input state."""
 
     draftChanged = Signal()
 
@@ -99,17 +99,26 @@ class VectorEdit(QWidget):
 
     def __init__(self, values=(0, 0, 0), *, unit="", components=("X", "Y", "Z"), parent=None):
         super().__init__(parent)
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(TOKENS["space_sm"])
+        self.setObjectName("vectorEdit")
+        stack = QVBoxLayout(self)
+        stack.setContentsMargins(0, 0, 0, 0)
+        stack.setSpacing(3)
         editors = []
         for component, value in zip(components, values, strict=True):
-            label = QLabel(component)
+            cell = QFrame()
+            row = QHBoxLayout(cell)
+            row.setContentsMargins(0, 0, 0, 0)
+            row.setSpacing(0)
+            label = QLabel(str(component))
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            label.setFixedWidth(22)
+            label.setStyleSheet(f"background: {TOKENS['raised']}; color: {TOKENS['muted']}; padding: 5px 0;")
             editor = NumericEdit(value, unit=unit)
             editor.setAccessibleName(component)
             label.setBuddy(editor)
-            layout.addWidget(label)
-            layout.addWidget(editor, 1)
+            row.addWidget(label)
+            row.addWidget(editor, 1)
+            stack.addWidget(cell)
             editor.draftChanged.connect(self.draftChanged)
             editors.append(editor)
         self.editors = tuple(editors)

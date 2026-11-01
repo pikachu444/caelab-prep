@@ -36,11 +36,25 @@ class MeshViewport(QWidget):
         self._pick_mode = "element"
         self._grid = vtk.vtkUnstructuredGrid()
         self._renderer = vtk.vtkRenderer()
-        self._renderer.SetBackground(0.955, 0.967, 0.98)
+        self._renderer.SetBackground(0.84, 0.87, 0.90)
+        self._renderer.SetBackground2(0.97, 0.98, 0.985)
+        self._renderer.GradientBackgroundOn()
         self._renderer.GetActiveCamera().ParallelProjectionOn()
         self._widget = QVTKRenderWindowInteractor(self)
         self._widget.GetRenderWindow().AddRenderer(self._renderer)
         self._widget.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+        self._axes = vtk.vtkAxesActor()
+        self._axes.SetShaftTypeToCylinder()
+        self._axes.SetCylinderRadius(0.025)
+        self._axes.SetConeRadius(0.12)
+        for caption in (self._axes.GetXAxisCaptionActor2D(), self._axes.GetYAxisCaptionActor2D(), self._axes.GetZAxisCaptionActor2D()):
+            caption.GetCaptionTextProperty().SetColor(0.16, 0.20, 0.24)
+            caption.GetCaptionTextProperty().ShadowOff()
+            caption.GetCaptionTextProperty().ItalicOff()
+        self._orientation = vtk.vtkOrientationMarkerWidget()
+        self._orientation.SetOrientationMarker(self._axes)
+        self._orientation.SetInteractor(self._widget)
+        self._orientation.SetViewport(0.0, 0.0, 0.15, 0.19)
         self._widget.AddObserver("LeftButtonPressEvent", self._on_pick, 1.0)
         self._mapper = vtk.vtkDataSetMapper()
         self._mapper.SetInputData(self._grid)
@@ -57,7 +71,7 @@ class MeshViewport(QWidget):
         self._highlight.SetVisibility(False)
         self._renderer.AddActor(self._highlight)
 
-        self._hint = QLabel("Open a Radioss model to begin", self)
+        self._hint = QLabel("No model", self)
         self._hint.setObjectName("viewportHint")
         self._hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._hint.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
@@ -82,6 +96,8 @@ class MeshViewport(QWidget):
         super().showEvent(event)
         if not self._initialized:
             self._widget.Initialize()
+            self._orientation.SetEnabled(1)
+            self._orientation.InteractiveOff()
             self._initialized = True
 
     def set_mesh(self, projection: dict, *, reset_camera=True):
@@ -140,7 +156,7 @@ class MeshViewport(QWidget):
         self._highlight.SetVisibility(False)
         if not self._render_failed:
             self._hint.setVisible(grid.GetNumberOfCells() == 0)
-            self._hint.setText("No supported mesh elements to display" if coordinates else "Open a Radioss model to begin")
+            self._hint.setText("No displayable elements" if coordinates else "No model")
         if omitted:
             self.diagnostic.emit(f"The 3D view omitted {omitted} unsupported or unresolved elements. The deck is preserved.")
         if reset_camera and grid.GetNumberOfPoints():
@@ -164,6 +180,18 @@ class MeshViewport(QWidget):
         camera.SetPosition(1, -1, 0.8)
         camera.SetFocalPoint(0, 0, 0)
         camera.SetViewUp(0, 0, 1)
+        self.fit_view()
+
+    def standard_view(self, axis: str):
+        camera = self._renderer.GetActiveCamera()
+        position, up = {
+            "front": ((0, -1, 0), (0, 0, 1)),
+            "top": ((0, 0, 1), (0, 1, 0)),
+            "right": ((1, 0, 0), (0, 0, 1)),
+        }[axis]
+        camera.SetPosition(*position)
+        camera.SetFocalPoint(0, 0, 0)
+        camera.SetViewUp(*up)
         self.fit_view()
 
     def _on_pick(self, caller, event):
@@ -266,5 +294,6 @@ class MeshViewport(QWidget):
             self._output_window.RemoveObserver(self._error_observer)
             self._error_observer = None
         if self._initialized:
+            self._orientation.SetEnabled(0)
             self._widget.GetRenderWindow().Finalize()
             self._initialized = False

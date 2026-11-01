@@ -12,3 +12,4 @@ beidprep-trial/
 *.zip
 .test-tmp/
 .pytest_cache/
+.review/

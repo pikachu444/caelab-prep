@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QSettings, QSize, Qt, QThreadPool, Signal
+from PySide6.QtCore import QSettings, Qt, QThreadPool, Signal
 from PySide6.QtGui import QKeySequence
-from PySide6.QtWidgets import (QApplication, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QMainWindow,
-                              QMessageBox, QPlainTextEdit, QPushButton, QSplitter, QToolBar,
-                              QVBoxLayout, QWidget)
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox
 
 from ..application.contracts import ActionSpec, SetProperties
 from ..application.neutral import CurveSession
 from .actions import ActionRegistry
-from .shell import FileEditCoordinator, FileTask, ViewportFrame, create_dock
+from .shell import FileEditCoordinator, FileTask
 from .theme import STYLESHEET
-from .widgets import CurvePlot, CurveTable, ModelTree, PropertyEditor
 
 
 class GalleryWindow(QMainWindow):
@@ -21,9 +18,11 @@ class GalleryWindow(QMainWindow):
 
     _sessionEvent = Signal(object)
     operationFinished = Signal(str, bool)
+    LAYOUT_VERSION = 2
 
-    def __init__(self, session=None):
+    def __init__(self, session=None, *, presentation=None):
         super().__init__()
+        self.presentation = presentation
         self.session = session or CurveSession()
         self._target = None
         self._curve_ref = None
@@ -46,9 +45,9 @@ class GalleryWindow(QMainWindow):
             is_dirty=lambda: bool(self.session.describe()["dirty"]),
             save=lambda continuation: self.save_dialog(on_success=continuation),
             capture=self._capture_drafts, restore=self._restore_drafts)
-        self._settings = QSettings("CAELab", "ComponentGallery")
+        self._settings = QSettings("CAELab", "ComponentGallery" + ("-" + presentation if presentation else ""))
         self.setObjectName("caelabGallery")
-        self.setWindowTitle("CAELab Materials — Composition workspace")
+        self.setWindowTitle("CAELab Materials")
         self.resize(1280, 800)
         self.setMinimumSize(800, 560)
         self.setStyleSheet(STYLESHEET)
@@ -62,7 +61,7 @@ class GalleryWindow(QMainWindow):
         if geometry:
             self.restoreGeometry(geometry)
         if layout:
-            self.restoreState(layout, 1)
+            self.restoreState(layout, self.LAYOUT_VERSION)
         self._refresh_tree()
         curves = [node.ref for node in self.session.tree_nodes() if node.ref.kind == "curve"]
         if curves:
@@ -84,83 +83,15 @@ class GalleryWindow(QMainWindow):
         self.unsupported_action = register("analysis.run", "Run solver — unavailable for this provider", lambda: None, icon="mesh", capability="solver_execution")
         self.catalogue_action = register("view.catalogue", "Browse component catalogue", self._show_catalogue, "Ctrl+Shift+G", icon="card")
         self.close_action = register("file.close", "Exit", self.close, QKeySequence.StandardKey.Quit, icon="card")
-        file_menu = self.menuBar().addMenu("&File")
-        file_menu.addActions([self.open_action, self.save_action, self.save_as_action])
-        file_menu.addSeparator()
-        file_menu.addAction(self.close_action)
-        edit = self.menuBar().addMenu("&Edit")
-        edit.addActions([self.undo_action, self.redo_action, self.reload_action])
-        self.view_menu = self.menuBar().addMenu("&View")
-        self.view_menu.addAction(self.catalogue_action)
-        toolbar = QToolBar("Document", self)
-        toolbar.setObjectName("galleryDocumentToolbar")
-        toolbar.setMovable(False)
-        toolbar.setIconSize(QSize(20, 20))
-        toolbar.addActions([self.open_action, self.save_action])
-        toolbar.addSeparator()
-        toolbar.addActions([self.undo_action, self.redo_action])
-        toolbar.addSeparator()
-        toolbar.addAction(self.unsupported_action)
-        toolbar.addSeparator()
-        toolbar.addAction(self.catalogue_action)
-        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
-        toolbar.widgetForAction(self.catalogue_action).setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.addToolBar(toolbar)
 
     def _build_workspace(self):
-        self.tree = ModelTree()
-        self.tree.nodeSelected.connect(self._select_target)
-        self.model_dock = create_dock(self, "galleryObjects", "Model", self.tree,
-                                      Qt.DockWidgetArea.LeftDockWidgetArea, self.view_menu)
-        property_body = QWidget()
-        layout = QVBoxLayout(property_body)
-        layout.setContentsMargins(0, 0, 0, 8)
-        self.properties = PropertyEditor()
-        self.property_editor = self.properties
-        layout.addWidget(self.properties, 1)
-        row = QHBoxLayout()
-        row.setContentsMargins(10, 0, 10, 0)
-        self.revert_button = QPushButton("Revert")
-        self.revert_button.clicked.connect(self.reload_action.trigger)
-        self.reload_action.changed.connect(lambda: self.revert_button.setEnabled(self.reload_action.isEnabled()))
-        self.apply_button = QPushButton("Apply properties")
-        self.apply_button.setObjectName("primaryAction")
-        self.apply_button.clicked.connect(self.apply_action.trigger)
-        self.apply_action.changed.connect(lambda: self.apply_button.setEnabled(self.apply_action.isEnabled()))
-        row.addWidget(self.revert_button)
-        row.addWidget(self.apply_button)
-        layout.addLayout(row)
-        self.properties_dock = create_dock(self, "galleryProperties", "Properties", property_body,
-                                           Qt.DockWidgetArea.RightDockWidgetArea, self.view_menu)
-        self.curve_table = CurveTable()
-        self.curve_table.pointsEdited.connect(self._commit_curve)
-        self.plot = CurvePlot()
-        splitter = QSplitter(Qt.Orientation.Vertical)
-        splitter.addWidget(self.plot)
-        splitter.addWidget(self.curve_table)
-        splitter.setSizes([350, 250])
-        self.viewport_frame = ViewportFrame(splitter, "Material curve", "Composition example · material and curve editing")
-        self.setCentralWidget(self.viewport_frame)
-        self.messages = QPlainTextEdit()
-        self.messages.setReadOnly(True)
-        self.messages.setMaximumBlockCount(200)
-        self.messages.setAccessibleName("Operation messages")
-        self.messages.setPlainText("Material and curve composition example\nSelect a material or curve. Apply validates the entire draft; Undo restores one edit.\nBrowse component catalogue to inspect reusable controls and their states.")
-        self.messages_dock = create_dock(self, "galleryMessages", "Messages", self.messages,
-                                        Qt.DockWidgetArea.BottomDockWidgetArea, self.view_menu)
-        self._build_asset_inspector()
-        self.resizeDocks([self.model_dock, self.properties_dock], [260, 330], Qt.Orientation.Horizontal)
-        self.resizeDocks([self.messages_dock], [95], Qt.Orientation.Vertical)
-        self.status = QLabel()
-        self.statusBar().addWidget(self.status, 1)
-
-    def _build_asset_inspector(self):
-        from .catalogue import CatalogueWidget
-        self.catalogue = CatalogueWidget()
-        self.assets_dock = create_dock(self, "galleryAssets", "Component catalogue", self.catalogue,
-                                       Qt.DockWidgetArea.RightDockWidgetArea, self.view_menu)
-        self.tabifyDockWidget(self.properties_dock, self.assets_dock)
-        self.assets_dock.hide()
+        if self.presentation:
+            from .reference_workspace import ReferenceMaterialsWorkspace
+            self.workspace = ReferenceMaterialsWorkspace(self)
+        else:
+            from .materials_workspace import MaterialsWorkspace
+            self.workspace = MaterialsWorkspace(self)
+        self.workspace.build()
 
     def _show_catalogue(self):
         self.assets_dock.show()
@@ -210,6 +141,8 @@ class GalleryWindow(QMainWindow):
         self._document_epoch = self.session.describe().get("document_epoch")
         self._baseline = self.properties.raw_values()
         self._baseline_units = self.properties.units()
+        if hasattr(self, "reference_adapter"):
+            self.reference_adapter.bind_fields(self.field_editors, self.apply_properties, self.reference_bindings)
 
     def _load_curve(self):
         if self._curve_ref is None:
@@ -408,8 +341,11 @@ class GalleryWindow(QMainWindow):
             return
         description = self.session.describe()
         dirty = " · Modified" if description["dirty"] else ""
-        self.setWindowTitle(f"{description['name']}{dirty} — CAELab Materials · Composition workspace")
-        self.status.setText(f"Revision {description['revision']}{dirty}    Qt-only material / curve provider")
+        self.setWindowTitle(f"{description['name']}{dirty} — CAELab Materials")
+        nodes = self.session.tree_nodes()
+        materials = sum(node.ref.kind == "material" for node in nodes)
+        curves = sum(node.ref.kind == "curve" for node in nodes)
+        self.status.setText(f"{materials} materials   {curves} curves" + ("   Modified" if dirty else ""))
         self._refresh_actions(description)
 
     def _refresh_actions(self, description=None):
@@ -434,6 +370,7 @@ class GalleryWindow(QMainWindow):
             self.messages.appendPlainText("File operation succeeded" + (": " + ", ".join(state.artifacts) if state.artifacts else ""))
         elif state.error:
             self.messages.appendPlainText(state.error["message"])
+            self.messages_dock.show()
 
     def _start_file_operation(self, label, function, on_success=None, *, artifacts=()):
         if self._busy:
@@ -518,7 +455,7 @@ class GalleryWindow(QMainWindow):
                 event.ignore()
                 return
         self._settings.setValue("geometry", self.saveGeometry())
-        self._settings.setValue("layout", self.saveState(1))
+        self._settings.setValue("layout", self.saveState(self.LAYOUT_VERSION))
         self._closed = True
         self._unsubscribe()
         event.accept()
