@@ -8,6 +8,7 @@ from ..cae_core import PrepError
 from ..radioss.assembly import ELEMENTS, GROUPS, inspect
 from ..radioss.deck import number
 from ..radioss.modeling import native_identity
+from ..radioss.relations import coordinate_frame
 from . import mesh_edit_candidates as edits
 
 
@@ -91,7 +92,7 @@ class NodeMoveCommands:
                                 if key in values)
                 kind = {"BCS": "constraint", "CLOAD": "load", "INIVEL": "constraint", "INTER": "contact"}[family]
                 uses.append(edits.ReferenceUse(edits.Ref(resource.id, "condition", card.id), kind, targets,
-                                               family == "INTER"))
+                                               family == "INTER" or values.get("coordinate_system_id") is not None))
         snapshot = edits.MeshSnapshot(stamp, units["length"], tuple(nodes), tuple(cells), tuple(parts), tuple(groups), tuple(uses), True)
         self._node_move_snapshot_cache = snapshot
         return snapshot
@@ -119,6 +120,7 @@ class NodeMoveCommands:
                 states = self._node_move_states(candidate)
                 self._validate_dependent_condition_states({rid: state for rid, state in states.items()
                                                            if rid != self._relations_resource().id})
+                load_coefficients = self._node_move_load_coefficients(candidate)
             except edits.MeshEditError as exc:
                 raise PrepError(exc.code, str(exc)) from exc
             except (KeyError, TypeError, ValueError) as exc:
@@ -132,7 +134,46 @@ class NodeMoveCommands:
                     "quality_before": [asdict(item) for item in candidate.quality_before],
                     "quality_after": [asdict(item) for item in candidate.quality_after],
                     "impacts": [asdict(item) for item in candidate.impacts],
+                    "load_coefficients": load_coefficients,
                     "stale_targets": deepcopy(states[self._relations_resource().id]["stale_targets"])}
+
+    def _node_move_load_coefficients(self, candidate):
+        affected = {impact.target for impact in candidate.impacts}
+        result = []
+        for use in candidate.base.uses:
+            if use.kind != "load" or use.ref not in affected:
+                continue
+            values = self.condition_values(use.ref.local_id)
+            frame = coordinate_frame(self._deck_resources(), self._coordinate_reference(values["coordinate_system_id"]))
+            direction = values["direction"]
+            axis = frame["axes"]["XYZ".index(direction[0])]
+            targets = set().union(*(edits._members_as_nodes(candidate.base, candidate.base._sets[ref])
+                                    for ref in use.targets))
+            curve_id = values["curve_id"]
+            # FUNCT and its native time scaling are not evaluated by a geometry preview.
+            result.append({"condition_id": use.ref.local_id,
+                "quantity": "moment" if len(direction) == 2 else "force",
+                "curve_ref": {"resource_id": self._find_card(curve_id).id, "card_id": curve_id},
+                "frame_ref": ({"resource_id": frame["resource_id"], "card_id": frame["card_id"]}
+                              if frame["card_id"] is not None else None),
+                "native_direction": direction, "global_unit_axis": list(axis), "scale": values["scale"],
+                "target_count": len(targets),
+                "summed_multiplier": [len(targets) * values["scale"] * component for component in axis],
+                "value_basis": "unevaluated_native_curve_multiplier", "time_scaling": "native_not_evaluated",
+                "application_point_moments": "not_evaluated"})
+        return result
+
+    def _node_move_group_dependencies(self, candidate, group, generations):
+        owners = {member.resource_id for member in group.members}
+        if group.member_kind != "node":
+            cells = ([candidate.base._cells[ref] for ref in group.members] if group.member_kind == "element"
+                     else [cell for cell in candidate.base.cells if cell.part in group.members])
+            for cell in cells:
+                owners.add(cell.ref.resource_id)
+                owners.update(node.resource_id for node in cell.nodes)
+                if cell.orientation_node is not None:
+                    owners.add(cell.orientation_node.resource_id)
+        return {rid: generations[rid] for rid in sorted(owners & generations.keys())}
 
     def _node_move_states(self, candidate):
         grouped = defaultdict(dict)
@@ -142,16 +183,17 @@ class NodeMoveCommands:
         relations = self._relations_resource().snapshot()
         generations = {rid: relations["mesh_revisions"].get(rid, 0) + 1 for rid in candidate.mesh_revision_resources}
         relations["mesh_revisions"].update(generations)
-        primary = next(iter(sorted(grouped)))
         for impact in candidate.impacts:
             if impact.target.entity_kind != "set":
                 continue
             resource = self.document.resources[impact.target.resource_id]
             card = resource.card(impact.target.local_id)
             family = "/".join(card.keyword.upper().strip("/").split("/")[:2])
+            dependencies = self._node_move_group_dependencies(candidate, candidate.base._sets[impact.target], generations)
+            primary = next(iter(dependencies))
             relations["stale_targets"][card.id] = {"resource_id": resource.id, "mesh_resource_id": primary,
                 "mesh_revision": generations[primary], "family": family, "members": self._integer_members(resource, card),
-                "reason": "geometry_review_required", "mesh_dependencies": dict(generations)}
+                "reason": "geometry_review_required", "mesh_dependencies": dependencies}
         states[self._relations_resource().id] = relations
         return states
 

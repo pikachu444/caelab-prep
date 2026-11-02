@@ -86,7 +86,6 @@ class PrepWorkspace:
         self.resizeDocks([self.messages_dock], [125], Qt.Orientation.Vertical)
 
     def _install_command_surfaces(self):
-        self._command_menus = []
         groups = (
             ("&File", ((self.mesh_workflow.new_action, self.open_rad_action, self.open_project_action),
                        (self.source_models_action,),
@@ -110,8 +109,8 @@ class PrepWorkspace:
         for name, sections in groups:
             if name in ("&Model", "&Conditions") and self.presentation:
                 continue
-            menu = self.menuBar().addMenu(name)
-            self._command_menus.append(menu)
+            menu = QMenu(name, self.menuBar())
+            self.menuBar().addMenu(menu)
             for index, actions in enumerate(sections):
                 if index:
                     menu.addSeparator()

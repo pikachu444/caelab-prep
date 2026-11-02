@@ -221,14 +221,52 @@ def test_independent_same_id_sources_move_by_owner_and_keep_archives(tmp_path):
     session.undo()
     # One request may affect multiple source generations, tracked together.
     group = session.create_node_group("Two source attachments", [1, second_ids[3]])["card_id"]
+    first_group = session.create_node_group("First source only", [1])["card_id"]
+    second_group = session.create_node_group("Second source only", [second_ids[3]])["card_id"]
+    cell = second_mesh.mesh_projection()["cells"][0]
+    second_elements = session.create_element_group("Second source elements", [
+        {"resource_id": second_mesh.id, "entity_kind": "element", "local_id": cell["id"]}])["card_id"]
+    part = session.resolve_part_reference(cell["part_id"])["card_id"]
+    second_surface = session.create_surface("Second source surface", [part])["card_id"]
     request = updates(session, {1: (-1, 0, 0), second_ids[3]: (-1, 10, 0)})
     node_move = session.plan_node_move(request, length_unit="mm")
     session.apply_node_move(node_move["plan_id"])
     record = session.mesh_relationships()["stale_targets"][group]
     assert set(record["mesh_dependencies"]) == {first_mesh.id, second_mesh.id}
+    for card_id, mesh in ((first_group, first_mesh), (second_group, second_mesh),
+                          (second_elements, second_mesh), (second_surface, second_mesh)):
+        own = session.mesh_relationships()["stale_targets"][card_id]
+        assert own["mesh_resource_id"] == mesh.id
+        assert own["mesh_dependencies"] == {mesh.id: own["mesh_revision"]}
     project = tmp_path / "two-sources.caeprep"
     session.save_project(project)
     reopened = PrepSession()
     reopened.open_project(project)
     assert reopened.mesh_relationships()["stale_targets"][group] == record
     assert reopened.document.resources[archive.id].files == original_archive
+
+
+@pytest.mark.parametrize("direction,quantity,axis,total", [
+    ("X", "force", [0., 1., 0.], [0., 6., 0.]),
+    ("ZZ", "moment", [1., 0., 0.], [6., 0., 0.]),
+])
+def test_load_preview_keeps_native_curve_and_skew_without_evaluating_time(direction, quantity, axis, total):
+    session = opened("beam_shell_tet")
+    group = session.create_node_group("Loaded nodes", [1, 2])["card_id"]
+    curve = session.create_curve("Nonconstant force history", [(0, 2), (1, 4)])["card_id"]
+    frame = session.create_coordinate_system("Offset fixed axes", (100, 200, 300), (0, 0, 1), (1, 0, 0))["card_id"]
+    load = session.create_load("Local load", group, curve, direction, 3, coordinate_system_id=frame)["card_id"]
+    before = session.describe(), session.document.tokens(), session.condition_values(load)
+    plan = session.plan_node_move(updates(session, {2: (11, 0, 0)}), length_unit="mm")
+    coefficients = next(item for item in plan["load_coefficients"] if item["condition_id"] == load)
+    assert coefficients["quantity"] == quantity
+    assert coefficients["curve_ref"]["card_id"] == curve and coefficients["frame_ref"]["card_id"] == frame
+    assert coefficients["native_direction"] == direction and coefficients["global_unit_axis"] == axis
+    assert coefficients["scale"] == 3 and coefficients["target_count"] == 2
+    assert coefficients["summed_multiplier"] == total
+    assert coefficients["value_basis"] == "unevaluated_native_curve_multiplier"
+    assert coefficients["time_scaling"] == "native_not_evaluated"
+    assert coefficients["application_point_moments"] == "not_evaluated"
+    use = next(item for item in session._node_move_snapshot().uses if item.ref.local_id == load)
+    assert use.orientation_sensitive and use.per_node_value is None
+    assert before == (session.describe(), session.document.tokens(), session.condition_values(load))
