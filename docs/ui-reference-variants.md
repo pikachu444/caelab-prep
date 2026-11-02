@@ -41,20 +41,59 @@ The comparison header's **Reference / differences** button explains each
 approach's source scenes and deviations. Product names identify references;
 these are CAELab Prep views, not vendor software or endorsed implementations.
 
-## Current implementation and missing tasks
+## Merged baseline and current checkpoint
 
-[PR #15](https://github.com/pikachu444/caelab-prep/pull/15) connects native material/section creation, copy/delete and PART assignment; curve rows/CSV and typed node/element group membership; supported BCS/CLOAD/initial velocity/TYPE7 conditions; verified display-unit conversion; CAD candidate adoption and Starter/Engine export. The eight adapters consume the same provider commands and typed editors. `test_modeling_ui.py`, `test_conditions_ui.py`, `test_groups_ui.py` and `test_native_units_ui.py` exercise the corresponding tasks and invalid drafts across all eight approaches. This replaces the old provider's scalar-only limitation; it does not supply vendor-native formats or all vendor features.
+[PR #15](https://github.com/pikachu444/caelab-prep/pull/15) connects native material/section creation, copy/delete and PART assignment; curve rows/text paste and typed node/element group membership; supported BCS/CLOAD/initial velocity/TYPE7 conditions; verified display-unit conversion; CAD candidate adoption and Starter/Engine export. It did not implement CSV file import/export: the earlier CSV claim confused pasted comma-separated text with file operations. The eight adapters consume the same provider commands and typed editors. `test_modeling_ui.py`, `test_conditions_ui.py`, `test_groups_ui.py` and `test_native_units_ui.py` exercise the corresponding tasks and invalid drafts across all eight approaches. This replaces the old provider's scalar-only limitation; it does not supply vendor-native formats or all vendor features.
 
-Case/persistent analysis settings (N01) and standalone external mesh import
-(N02) are still absent. RAD CSV/row editing does not complete the neutral
-gallery CSV and direct plot-drag work (N15). The eight same-task source-product
-comparisons and resulting UI corrections remain N03–N10; none is closed by
-adapter counts or internal tests. Windows GUI and actual Workbench validation
-remain N12–N14.
+The ongoing N01/N02/N15 checkpoint adds persistent analysis cases, standalone
+external mesh import and shared CSV-file/plot-drag editing in RAD and neutral
+hosts. Its exact code, execution and review status belongs in
+[section 19](execution-stages.md#remaining-work), rather than being inferred
+from this source map. The eight same-task source-product comparisons and
+resulting UI corrections remain N03–N10; none is closed by adapter counts or
+internal tests. Windows GUI and actual Workbench validation remain N12–N14.
 
 The original source map below is a **handoff-era observation**, not the present feature support table. Its statements that creation, assignment or set operations were absent describe `f4d12d0`. Current supported commands are listed in [README](../README.md); source-product operation/appearance gaps remain unverified. Offscreen UI checks and the separate X11 Qt/VTK render/pick job are reported separately in section 19.
 
 Actual external reuse is now implemented in [Workbench PR #54](https://github.com/pikachu444/caelab-workbench/pull/54): MDO consumes `NumericEdit` while retaining its own service/history; RAD `.caeprep` files open in independent Prep processes through the existing program/file/JobManager boundary. This is stronger than the old host seam fixture but is not live GUI IPC/MCP or Windows acceptance.
+
+<a id="product-access"></a>
+
+## Original-product access checked on 2026-11-02
+
+**No new original-product T1–T6 execution was completed in this access check.**
+An official download page, tutorial, screenshot or free edition is not a running
+editor. The workspace/PATH inspection found no installed executable or installation
+archive for these eight products and no Wine, Mono or .NET command. This is a
+check of the Linux workspace, not of the user's Windows PC. The current host is
+Ubuntu 24.04.3 with software GL. Windows GUI work remains deferred under the
+user's instruction; no trial application, email, account creation or purchase
+was submitted.
+
+| ID / product | Verified acquisition and runtime path | Unresolved condition / next executable step |
+|---|---|---|
+| N03 HyperMesh | [Official 2026 platform requirements](https://help.altair.com/hwsolvers/altair_help/topics/getting_started/platform_support_r.htm) list RHEL/CIQ Rocky 9.4 and dedicated NVIDIA for Linux GUI. [Altair One trial](https://2025.help.altair.com/altairone/topics/marketplace/application_try_free.htm) and [eligible student edition](https://www.siemens.com/en-us/company/academic-future-workforce/engineering-student-resources/engineering-student-software/altair-student-edition/) are acquisition paths, not existing entitlements. | Obtain an authorized build and suitable runtime. The user's **2024.1** baseline, collected 2025/2025.1 scenes and current 2026 download documentation are three different versions; do not silently substitute one. Current Ubuntu/software GL is not the documented 2026 support combination. |
+| N04 PrePoMax | [Official portable ZIP/source downloads](https://prepomax.fs.um.si/downloads/): GPLv3, .NET Framework 4.8, Windows EXE and Win64 ActiViz dependency. 2.5.0 remains available; 2.6.0 stable and 3.0.0 RC2 are also listed. [2.6.0 manual p.3](https://prepomax.fs.um.si/wp-content/uploads/2026/09/PrePoMax-v2.6.0-manual.pdf) describes VM/emulator/Wine for Linux. | No paid-license barrier was found. Download a fixed version and prove the Windows runtime or Wine compatibility; Wine is absent here. Public source does not establish a working native Linux build. Material creation/assignment/cancel must be run, not inferred from library or contour figures. |
+| N05 Naksha | The live [product page](https://agentnaksha.com/product.html) identifies a **Windows/Linux desktop app**. Clicking “Get Naksha free” opens the [name/work-email request form](https://agentnaksha.com/contact.html?interest=free); the vendor says Free includes commercial use and is sent on request. | No public runnable web editor, installer or source build was obtained. A Linux build must be supplied through the official distribution path and its exact build/terms recorded. The old 0.5.07 image with empty Details cannot establish scalar layout or commit/cancel behavior. |
+| N06 Abaqus/CAE | [Learning Edition 2026](https://3dswym.3dexperience.3ds.com/wiki/simulia-community/learning-edition-software-downloads__NXifU43Q7yHzTiCX9yEaw) is free, Windows-only, limited to 1,000 structural nodes and personal/educational use. [Commercial download rights](https://www.3ds.com/about/company/facts-and-faqs) require a company-associated 3DEXPERIENCE ID and software entitlement; [supported platforms](https://www.3ds.com/support/hardware-and-software/simulia-systems-information) are version-specific. | Establish a permitted license/use path and runtime. Confirm that the permitted use covers this product-development comparison. Compare Property → material → section → assignment, units and errors with a declared physical mapping; a RAD law is not automatically an Abaqus law. |
+| N07 COMSOL | [Current download](https://www.comsol.com/product-download) lists 6.4.0.429 and requires COMSOL Access with an attached subscription license or sales-provided trial; 6.3 is still selectable. [6.4 requirements](https://www.comsol.com/system-requirements/64/general) support Ubuntu 24.04. | The host OS is supported, but no entitled installer/runtime was obtained. Confirm modules, graphics and a fixed version after access. COMSOL Runtime or a published simulation app is not the editable Model Builder required for T1–T6. RAD export/solver execution is not COMSOL Build/Compute. |
+| N08 midas NFX | [2026R1 installation page](https://support.midasuser.com/hc/en-us/articles/34146232208793-NFX-Installation-Files), [Windows requirements](https://support.midasuser.com/hc/ko/articles/17928004837273-NFX-시스템-요구사항), and [current 14-day trial](https://www.midasmts.com/en/trial-demo): form → emailed activation key → download → activate. | Windows and an existing entitlement or issued trial are missing here. Use one fixed running version for the continuous task; separate 2024 education and curve HTML sources do not prove it. |
+| N09 MIDAS MeshFree | [2026R1 installation page](https://support.midasuser.com/hc/ko/articles/34285656928921-MESHFREE-설치-파일-및-개정-내용), [Windows requirements](https://support.midasuser.com/hc/en-us/articles/17928026014745-System-Requirement-Specifications-for-MESHFREE), and the same [current 14-day trial](https://www.midasmts.com/en/trial-demo); [official request entry](https://landing.midasuser.com/en/gate/mech/trials/mf/step1). | Windows and an issued entitlement/trial are missing. Old 90-day offers are not the current verified path. Before execution, map geometry/body regions, material, units, discretization, conditions and case/result meaning; an FE element operation must have an explicit engineering-equivalent flow or remain an unresolved mismatch, not automatic N/A. |
+| N10 BeidPrep | Live [official 2.0 beta page](https://beidersim.com/beidprep.html): Windows 10/11, 218 MB installer, offline/no account, all features free through 2026-12-31, [download without signup](https://beidersim.com/download). [Official repository](https://github.com/BeiderSim/BeidPrep) publishes documentation, not application source; its older v1.0 README states proprietary source. | The download was actually clicked. The browser returned a path, but the file did not exist in either shared filesystem, so receipt/hash verification failed; a direct HTTP request returned 403 without evidence of a bot block. Windows runtime is separately absent. This is not a paywall conclusion. The existing [1.0.1 small-deck execution](beidprep-evaluation.md) and 2.0 website images are distinct; neither completes T1–T6. |
+
+The two inspected acquisition screens are preserved as
+[Naksha request form](benchmarks/2026-11-02-access/naksha-access.jpg) and
+[BeidPrep no-signup/Windows download page](benchmarks/2026-11-02-access/beidprep-access.jpg).
+They prove the observed distribution UI only. The browser extension lacked its
+originating context; the independent public-page actions used the cloud browser.
+No Android display, user-local session or native vendor application was observed.
+
+When access is available, retain the same two parts, two material/section pairs,
+curve and condition/case goals and record full-window/modal/error/cancel behavior,
+input count and saved/native results. State each product's physical mapping and
+unsupported result explicitly. BeidPrep's selection APPLY must not be treated as
+card commit; MeshFree's discretization must not be fabricated as a RAD FE mesh.
+Acquisition progress leaves all eight comparison rows open.
 
 ## Source-to-implementation map
 

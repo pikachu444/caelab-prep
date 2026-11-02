@@ -6,7 +6,7 @@
 
 **목표는 사용자 CAD·메시·RAD로 실제 해석 모델을 구성하는 독립 Prep, 같은 작업을 수행하는 8제품별 GUI 방식, 다른 프로그램에서도 쓰는 공용 기반을 함께 완성하는 것이다.** 이 절은 독립 진단 뒤 사용자의 목표 수정 요청에 따라 정한 현재 개발 기준이다. 과거 단일 조합 화면/P1–P3/A의 좁은 범위로 현재 제품 목표를 축소하지 않는다. 후속 구현 요청에 따라 작업을 작은 체크포인트로 실행하되, 이 목표 정의나 일부 체크포인트의 종료는 아래 제품 목표의 구현·검증 완료 선언이 아니다.
 
-**현재 상태 기준:** Prep main `a1eba52`(문서 PR #16, 제품 코드 PR #15와 동일), Workbench main `d6f05a3`(PR #54). 이 문서의 R/T/G는 요구와 종료 조건이며 완료 목록이 아니다. 구현·미구현·미확인·다음 작업은 [19절의 남은 작업표](docs/execution-stages.md#remaining-work)에서 관리한다. 특히 T4의 케이스/영속 해석 설정과 T5의 외부 독립 메시 import는 미구현이다.
+**현재 상태 기준:** Prep main `a1eba52`(문서 PR #16, 제품 코드 PR #15와 동일), Workbench main `d6f05a3`(PR #54). 이 문서의 R/T/G는 요구와 종료 조건이며 완료 목록이 아니다. 구현·미구현·미확인·다음 작업은 [19절의 남은 작업표](docs/execution-stages.md#remaining-work)에서 관리한다. PR #17 `0aaada4`는 T4의 영속 케이스, T5의 첫 독립 MSH 경로, T3의 CSV/plot drag 구현 후보이며 로컬 실제 검사와 원격 CI를 구분해 같은 N 행에서 판정한다. Workbench PR #55 `6541847`은 N21의 두 단계 실행 후보다. main 병합 및 전체 납품 완료와 혼동하지 않는다.
 
 사용자의 요구를 다음 네 항목으로 유지한다. 위임·구현·리뷰는 해당 요구 ID와 아래 과업 ID를 함께 따른다.
 
@@ -186,7 +186,7 @@ PrePoMax 3.0의 공식 Python/API·MCP·journal 문서와 FreeCAD MCP의 실제 
 
 아래는 현재 Radioss 적용 앱의 계약이다. 공용 기반이 모든 파일 형식과 솔버에 이 저장 형식·카드 규칙을 강제하는 것은 아니다.
 
-1. CAD 원본, 교환 형상/메시, 전처리 편집 문서, Starter/Engine 출력의 역할을 구분한다. 현재 RAD 편집 문서는 원문·필드 patch·추가/삭제 카드 구조 상태를 동봉한 `.caeprep` v2 ZIP이며 v1도 읽는다. CLI와 실제 지원 범위는 [README](README.md), 내부 계약은 [ARCHITECTURE](ARCHITECTURE.md)에 공개한다. `export_solver_inputs`는 명시한 종료 시간·출력 간격으로 새 Engine을 작성한다. 원본 Engine 편집과 영속 케이스/해석 설정은 구현하지 않았다.
+1. CAD 원본, 교환 형상/메시, 전처리 편집 문서, Starter/Engine 출력의 역할을 구분한다. 현재 RAD 편집 문서는 원문·필드 patch·추가/삭제 카드 구조 상태를 동봉한 `.caeprep` v3 ZIP이며 v1/v2도 읽는다. CLI와 실제 지원 범위는 [README](README.md), 내부 계약은 [ARCHITECTURE](ARCHITECTURE.md)에 공개한다. `export_solver_inputs`는 명시한 종료 시간·출력 간격으로 새 Engine을 작성한다. 원본 Engine 편집은 지원하지 않으며, 영속 케이스/해석 설정은 PR #17의 별도 케이스 자원·활성 조건 참조·단위 설정으로 구현했다.
 2. 원 RAD의 카드 순서·주석·미편집 필드·미지원 카드와 INCLUDE 파일 관계를 보존한다. 미지원 카드는 읽기 전용 원문으로 남기고 지원하지 않는 편집은 명시한다. 이해하지 못한 필드를 기본값으로 덮어쓰지 않는다.
 3. 형식 지정은 공개 솔버 규격에 맞추며 ID 참조와 단위 선언을 유지한다. 공통 GUI가 솔버 고유 옵션을 제거하지 않게 한다.
 4. 메뉴·툴바·단축키·추후 자동화는 같은 명령을 사용한다. 선택 → 속성 수정 → Undo/Redo → 저장/취소가 같은 문서에 반영돼야 한다.
@@ -198,7 +198,7 @@ PrePoMax 3.0의 공식 Python/API·MCP·journal 문서와 FreeCAD MCP의 실제 
 
 참조 근거는 [여러 CAE 제품 비교](docs/gui-reference-matrix.md), 복잡한 파트·자유도·데이터 소유는 [별도 설계](docs/cae-model-data-design.md)로 구체화한다. 실제 순서·진도는 [단계별 작업서](docs/execution-stages.md), Workbench 소비자 경계는 [재사용 계획](docs/workbench-reuse-plan.md)을 따른다. 과거 A/B/C의 한정된 통과 기록은 보존하되 현재 G 목표의 완료로 승격하지 않는다. 기존 요구 누락·잘못된 합격은 새 범위라는 이유로 제외하지 않는다.
 
-다음 구현은 [남은 작업표](docs/execution-stages.md#remaining-work)의 N01 케이스/영속 해석 설정과 N02 외부 독립 메시 import다. PR #15에서 연결한 G1 생성/할당·G2 곡선/조건·G3 후보 채택/출력·G4 API/CLI와 실제 Workbench 소비는 재사용한다. 기존 P4·B·P7b·P8c·W3의 미완료 요구도 유지하며 조건부 P7c는 실증 후 진행한다. 전체 대용량 B를 작은 독립 기능의 선행 조건으로 만들지 않는다. Windows 후속은 사용자 지시대로 일괄 검증하며 현재 독립 구현과 중간 통합은 계속할 수 있다.
+[남은 작업표](docs/execution-stages.md#remaining-work)의 N01/N02/N15는 PR #17 구현과 CI를 연결하고, 다음 N16 다중 자원 관계→N18, N19 IPC→N20 실제 MCP, 병행 N17 계측/N21 Workbench 실행을 진행한다. PR #15에서 연결한 G1 생성/할당·G2 곡선/조건·G3 후보 채택/출력·G4 API/CLI와 실제 Workbench 소비는 재사용한다. 기존 P4·B·P7b·P8c·W3의 미완료 요구도 유지하며 조건부 P7c는 실증 후 진행한다. 전체 대용량 B를 작은 독립 기능의 선행 조건으로 만들지 않는다. Windows 후속은 사용자 지시대로 일괄 검증하며 현재 독립 구현과 중간 통합은 계속할 수 있다.
 
 메셔의 확대는 [실현 가능성 로드맵](docs/mesher-feasibility-roadmap.md)을 선행한다. 기존 엔진을 연결하는 앱 개발과 복잡한 신규 자동 커널 개발을 구분한다. 상용 매뉴얼은 작업/입출력·수정 흐름의 명세로 사용하고, 실제 코드/API→독립 재현→고정 형상군 실증을 통과한 기능만 제품 연결한다. 미실증 일반 all-hex·복잡 자동 중립면·robust hybrid는 확정 구현 항목으로 세지 않는다.
 
