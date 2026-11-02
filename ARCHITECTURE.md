@@ -2,7 +2,7 @@
 
 이 저장소는 여러 CAE 프로그램에서 재사용할 개발 자산과 기반을 만든다. OpenRadioss/OpenCourant는 첫 적용 대상이며, 현재 RAD 모델 작성·편집 앱은 공용 기반을 실제 작업에 연결한 첫 사용처다. 이 문서는 공용 자산의 경계와 현재 구현의 파일 계약을 구분해 설명한다. 목표와 후보 비교는 [DESIGN](DESIGN.md), 후속 모듈·계약·코드 이행과 작업 단위는 [상세 실행 계획](docs/shared-cae-foundation-plan.md)에 둔다. 상세 계획의 경로와 인터페이스를 현재 구현으로 해석하지 않는다.
 
-2026-11-02의 현재 납품 기준은 [DESIGN의 R1–R4/T1–T6/G0–G4](DESIGN.md#delivery-goals)를 따른다. 제품 코드 기준은 Prep main `a48d3b4`와 Workbench main `d6f05a3`다. 아래 출발점 표는 `f4d12d0` 진단 기준이며 현재 구현은 이어지는 PR #15 변경 설명과 [남은 작업표](docs/execution-stages.md#remaining-work)를 따른다. 원제품 충실도와 Windows 검증은 구현 자체와 별도로 남는다.
+2026-11-02의 현재 납품 기준은 [DESIGN의 R1–R4/T1–T6/G0–G4](DESIGN.md#delivery-goals)를 따른다. 병합 기준은 Prep main `6ca09c2`(PR #17/#18)와 Workbench main `865ee15`이며, 아래 설명은 별도 N19/N20 구현 후보를 포함한다. Workbench PR #55 최종 `a328253`은 실제 두 입력과 필수 CI를 통과해 병합했으며 전체 납품 완료가 아니다. 아래 출발점 표는 `f4d12d0` 진단 기준이며 현재 구현은 이어지는 PR #15 변경 설명과 [남은 작업표](docs/execution-stages.md#remaining-work)를 따른다. 원제품 충실도와 Windows 검증은 구현 자체와 별도로 남는다.
 
 | 보존할 구현 | 실제 한계 | 현재 목표를 위해 필요한 보완 |
 |---|---|---|
@@ -36,7 +36,7 @@ Gmsh는 CAD/메시 엔진이고 문서의 정본이 아니다. OCP/OCAF와 Gmsh 
 
 계획상 첫 CAD/메시 C는 최소 자원·배열·채택 명령(P6a)만 선행하고 P7a에서 연결한다. 완전한 다중 파트·대용량 B를 선행 조건으로 삼지 않는다. 후보 생성과 문서 변경을 구분하고, 품질 확인 뒤 채택/교체를 하나의 명령으로 적용한다. 외피 facet과 물리 shell 요소, Gmsh tag와 지속 객체 참조를 구분한다. `radioss/modeling.py`가 신규 native writer를 소유한다. tri3는 SH3N/SHELL 단면, tet4는 TETRA4/SOLID 단면에 연결하며 외피 facet을 별도 shell로 중복 채택하지 않는다. 일반 재메시의 조건 자동 재연결은 구현하지 않았고 참조가 있으면 교체를 거부한다.
 
-Workbench는 현재 자체 PySide6 앱이며 FreeCAD를 외부 프로그램으로 사용한다. 공용 위젯에는 Workbench 서비스 adapter를 주입하고 프로젝트/연구의 소유권을 유지한다. 독립 Prep 문서와 Workbench 프로젝트는 파일 역할·개정으로 연결하며, 두 명령 이력이나 문서 정본을 겹치지 않는다. Workbench W1의 NumericEdit 소비와 W2의 RAD/작업문서 독립 Prep 열기는 구현됐다. 현재 INP용 실행 입력 복사 규칙을 RAD의 Starter/Engine/INCLUDE snapshot과 두 단계 실행에 적용하는 W3는 후속 N21이다.
+Workbench는 현재 자체 PySide6 앱이며 FreeCAD를 외부 프로그램으로 사용한다. 공용 위젯에는 Workbench 서비스 adapter를 주입하고 프로젝트/연구의 소유권을 유지한다. 독립 Prep 문서와 Workbench 프로젝트는 파일 역할·개정으로 연결하며, 두 명령 이력이나 문서 정본을 겹치지 않는다. Workbench W1의 NumericEdit 소비와 W2의 RAD/작업문서 독립 Prep 열기는 구현됐다. 현재 INP용 실행 입력 복사 규칙을 RAD의 Starter/Engine/INCLUDE snapshot과 두 단계 실행에 적용하는 W3는 Workbench PR #55에서 solver별 snapshot·기존 JobManager의 Starter→Engine 단계로 구현해 CI에서 두 실제 입력을 검증 중이다. Prep에 실행 관리자를 추가하지 않는다.
 
 ## 계층과 의존 방향
 
@@ -60,19 +60,19 @@ flowchart TB
 | `application.session` | 현재 RAD용 PrepSession. RAD 자원 조합, 조회·편집·Undo·INCLUDE·저장·내보내기 API, 호출 직렬화. 공용 세션 계약 전체가 완성된 상태는 아님 |
 | `application.contracts` / `rad_provider` / `neutral` | 최소 host 계약, 기존 RAD adapter, 독립 재료/곡선 provider와 codec. 범용 FE 스키마를 강제하지 않음 |
 | `application.mesh_candidates` / `ui.mesh_workflow` | SDK inventory·해시·tri/tet 품질과 후보 검토 UI. 채택은 PrepSession의 원자 명령이며 다른 문서 사본을 만들지 않음 |
-| `application.storage` | codec과 독립인 atomic ZIP writer와 bounded reader. RAD v2 manifest·원문/구조 편집(v1 읽기 호환)과 중립 codec의 의미는 각각 유지 |
+| `application.storage` | codec과 독립인 atomic ZIP writer와 bounded reader. RAD v3 manifest·원문/구조 편집·케이스(v1/v2 읽기 호환)과 중립 codec의 의미는 각각 유지 |
 | `ui/design`, `ui/widgets`, `ui/actions`, `ui/shell` | 공용 디자인·입력 초안·트리·표/plot·Action·도킹·renderer frame·실제 FileTask 상태/오류/산출물 |
 | `ui/main_window`, `ui/gallery` | 앱별 조립과 초안/선택/파일 작업 조정. 모델 값의 정본은 주입한 provider/session |
 | `cli` | 현재 RAD 세션 API를 호출하는 명시적인 독립 프로세스 진입점 |
 | `adapters.gmsh_backend` / `gmsh_worker` | 별도 SDK 프로세스, 시간 제한·취소, 입력 CAD에서 독립 후보 자산 생성 |
 
-MCP 서버·열린 GUI에 접속하는 IPC는 아직 구현하지 않았다. CLI가 같은 클래스를 사용한다는 사실은 이미 열린 GUI 문서를 공유한다는 뜻이 아니다. 추후 MCP/IPC는 앱이 소유한 같은 문서·명령/API로 연결하며 별도 모델 사본을 몰래 수정하지 않는다. 현재 RAD 사용처에서는 그 경로가 PrepSession이며, 이 솔버별 구현을 공용 API의 전부로 고정하지 않는다.
+N19의 `application/live_transport.py`는 명시적으로 켠 loopback TCP endpoint와 private descriptor를 제공한다. `ui/live_control.py`가 Qt 주 스레드 queue에서 실제 소유 Session/provider 명령을 호출하며 doc/epoch/revision·초안/busy·request ID replay를 검사한다. GUI 후속 Generate/Open/Adopt도 같은 workflow의 세대·상태·취소 권한에 연결한다. N20의 `application/mcp_server.py`는 이 검증된 명령을 stdio MCP로 노출하며 Qt나 새 Session을 생성하지 않는다. 독립 파일 CLI, 열린 GUI IPC, 실제 MCP 클라이언트 상호운용은 각각 검증한다. [live 계약](docs/live-control.md)과 [MCP 근거·미확인 사항](docs/mcp-client.md)을 따른다.
 
 ## 문서와 명령
 
 문서 ID와 resource ID는 렌더링 배열 인덱스·Gmsh tag와 구분한다. 명령 성공과 Undo/Redo는 revision을 증가시키고 저장 기준점과 현재 자원 상태로 dirty를 판단한다. `expected_revision`이 맞지 않거나 필드 검사가 실패하면 모델을 부분 변경하지 않는다. ChangeSet과 구조화 오류로 실제 변경을 전달한다.
 
-현재 Undo는 한 resource의 필드 및 카드 구조 상태 변경을 다룬다. 카드 생성/삭제를 resource 생성/삭제와 혼동하지 않는다. 여러 resource에 걸친 트랜잭션은 아직 없다. 같은 PrepSession의 변경 알림은 호출 스레드에서 발생하고 GUI는 Qt 신호로 UI 스레드에 전달한다. 별도 CLI 프로세스에는 이 구독이 공유되지 않는다.
+현재 Undo는 한 resource의 필드 및 카드 구조 상태 변경을 다룬다. 카드 생성/삭제를 resource 생성/삭제와 혼동하지 않는다. 여러 resource에 걸친 트랜잭션은 아직 없다. 같은 PrepSession의 변경 알림은 호출 스레드에서 발생하고 GUI는 Qt 신호로 UI 스레드에 전달한다. 파일 기반 CLI에는 이 구독이 공유되지 않는다. live IPC는 열린 GUI owner의 이벤트를 sequence로 조회하며 transport 스레드가 직접 Qt나 문서를 수정하지 않는다.
 
 Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 patch하며 미편집 필드·주석·카드 순서·개행을 다시 정규화하지 않는다. VTK 메시 투영은 반환된 복사본이며 편집 원본이 아니다. 원 절점·요소 ID와 pick 인덱스는 별도로 매핑한다. `/TRANSFORM` 등 표시에서 해석하지 않은 조건은 진단으로 남긴다.
 
@@ -80,11 +80,11 @@ Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 p
 
 ## 작업 파일과 native 덱
 
-`.caeprep`은 버전 있는 ZIP 문서다. RAD writer는 manifest version 2를 쓰고 v1도 읽는다. `manifest.json`에 문서 ID·revision·논리 경로·자원 ID·필드 patch와 stable ID를 가진 추가/삭제 카드 구조 상태를 기록하고 `raw/<resource-id>.rad`에 원문을 동봉한다. 외부 원본 경로만 저장하는 형식이나 pickle이 아니다. 임시 파일을 작성한 뒤 원자적으로 교체한다. 재시작 후 Undo 기록을 복원하는 기능은 현재 범위가 아니다.
+`.caeprep`은 버전 있는 ZIP 문서다. RAD writer는 manifest version 3을 쓰고 v1/v2도 읽는다. `AnalysisCasesResource`가 영속 UUID·조건 UUID 집합·단위 있는 종료/출력 설정과 활성 케이스를 별도 소유하고 같은 dispatcher로 편집한다. manifest의 `analysis_cases`에 이 상태를 보존하며 이전 파일은 빈 케이스 상태로 읽는다. `manifest.json`에 문서 ID·revision·논리 경로·자원 ID·필드 patch와 stable ID를 가진 추가/삭제 카드 구조 상태를 기록하고 `raw/<resource-id>.rad`에 원문을 동봉한다. 외부 원본 경로만 저장하는 형식이나 pickle이 아니다. 임시 파일을 작성한 뒤 원자적으로 교체한다. 재시작 후 Undo 기록을 복원하는 기능은 현재 범위가 아니다.
 
 이는 현재 RAD 사용 앱의 저장 계약이다. 다른 솔버의 모델을 RAD 원문이나 하나의 공통 FE 스키마로 강제하는 공용 저장 규격이 이미 완성됐다는 뜻은 아니다.
 
-중립 재료/곡선은 같은 원자 저장 절차를 쓰되 manifest `format=caelab-material-curves`, `version=2`와 `material-curves.json` payload를 사용한다. 이전 중립 v1도 읽는다. v2는 재료의 기존 곡선 참조를 저장하며 provider는 표시명/typed ObjectRef 후보를 제공하고 실제 명령이 문서·자원·종류·존재를 검증한다. 이 codec은 RAD를 import하지 않는다. `gallery [path]`로 열고 저장하며 RAD 문서는 v2로 저장하고 이전 v1은 읽기 호환한다. 이전 앱이 새 구조 편집 문서를 v1으로 오해하도록 버전을 숨기지 않는다. 양쪽 모두 파일 작업 실패 시 기존 파일과 dirty 상태를 보존한다. 비동기 FileTask는 running/succeeded/failed·구조화 오류·실제 산출물 경로를 반환하고 저장/열기는 취소 불가능으로 표시한다. 지원하지 않는 Cancel 동작을 제공하지 않는다.
+중립 재료/곡선은 같은 원자 저장 절차를 쓰되 manifest `format=caelab-material-curves`, `version=2`와 `material-curves.json` payload를 사용한다. 이전 중립 v1도 읽는다. v2는 재료의 기존 곡선 참조를 저장하며 provider는 표시명/typed ObjectRef 후보를 제공하고 실제 명령이 문서·자원·종류·존재를 검증한다. 이 codec은 RAD를 import하지 않는다. `gallery [path]`로 열고 저장하며 RAD 문서는 v3로 저장하고 이전 v1/v2는 읽기 호환한다. 이전 앱이 새 구조 편집 문서를 v1으로 오해하도록 버전을 숨기지 않는다. 양쪽 모두 파일 작업 실패 시 기존 파일과 dirty 상태를 보존한다. 비동기 FileTask는 running/succeeded/failed·구조화 오류·실제 산출물 경로를 반환하고 저장/열기는 취소 불가능으로 표시한다. 지원하지 않는 Cancel 동작을 제공하지 않는다.
 
 `SelectionProvider.select/active_object`는 두 provider/window의 활성 객체를 연결한다. 첫 RAD 관계는 기존 PART와 투영의 part_id가 연결된 요소이며 중복 native ID는 거부한다. 영속 ObjectRef ID는 재열기 뒤에도 유지하지만 renderer pick은 설치마다 바뀌는 document_epoch, 문서 revision, resource state token, projection_revision을 함께 검사한다. 스칼라 수정 뒤 표시 형상을 재생성하지 않고 pick stamp를 갱신한다. 둘 이상의 승인된 요소는 모든 resource/local-ID 쌍을 강조한다.
 
@@ -92,11 +92,11 @@ Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 p
 
 `#include`는 지시문으로 식별한다. 이번 구현은 처음 입력 덱의 작업 폴더를 기준으로 안전하게 해석 가능한 상대 파일들을 묶는다. 절대 경로·상위 경로·누락·순환 등 처리하지 못한 참조는 보존하고 부분 읽기 진단을 반환한다. 해결되지 않은 INCLUDE가 있는 문서는 독립 native 출력 묶음으로 내보내지 않는다. 이 제한은 사용자의 원본 덱 실행 가능성을 판정하는 솔버 허용 목록이 아니다.
 
-내보내기는 작업 문서 저장과 별개다. 원본 입력 파일을 덮어쓰지 않으며 root 덱과 해결된 INCLUDE를 전달한다. `export_rad`는 기존 native 출력만 만들며 `export_solver_inputs`는 명시된 종료 시간·출력 간격으로 새 Engine을 함께 만든다. 원본 Engine을 수정하거나 계산을 실행하지 않는다. 종료 시간·출력 간격은 export 호출 인자이며 문서에 저장되는 케이스/해석 설정 모델이 아니다. T4의 해당 누락은 N01이다.
+내보내기는 작업 문서 저장과 별개다. 원본 입력 파일을 덮어쓰지 않으며 root 덱과 해결된 INCLUDE를 전달한다. `export_rad`는 기존 native 출력만 만들며 `export_solver_inputs`는 명시된 종료 시간·출력 간격으로 새 Engine을 함께 만든다. 원본 Engine을 수정하거나 계산을 실행하지 않는다. 기존 호출 인자 출력 외에 `export_analysis_case`가 저장된 케이스의 단위·조건 활성 집합을 native 출력 사본에 적용한다. 미지원 물리 조건/오래된 문서 ID·revision은 거부하며 소스 문서는 변형하지 않는다. 현재 케이스 활성 family는 BCS/CLOAD/INIVEL/TRA/INTER/TYPE7이다.
 
 ## CAD/메시 후보 자산
 
-공개 Gmsh 4.15.2 SDK를 별도 worker에서 사용한다. `gmsh_backend`의 import 대상은 CAD이며 `mesh_candidates`는 자체 CAD/XAO/MSH/metadata 후보 묶음을 검증한다. 외부 MSH만으로 가져오는 일반 독립 메시 import(N02)는 없다. 호출 프로세스에 Gmsh를 import해 전역 모델을 공유하지 않는다. 후보의 CAD XAO, 메시 MSH, 연결 메타데이터를 함께 보관한다. Gmsh backend tag는 작업 중 주소이고 UUID·자원 개정과 구분한다. 외부 STEP/BREP를 새로 가져오면 새 형상 자원이다.
+공개 Gmsh 4.15.2 SDK를 별도 worker에서 사용한다. `gmsh_backend`의 import 대상은 CAD이며 `mesh_candidates`는 자체 CAD/XAO/MSH/metadata 후보 묶음을 검증한다. N02는 `application/external_mesh.py`와 `adapters/msh_worker.py`에서 독립 MSH 출처를 별도로 검증한다. CAD identity는 `None`, `source_kind=standalone_msh`이며 실제 MSH+manifest만 요구한다. 엄격한 원본 preflight→기존 SDK `_inspect_msh`→전체 node/element/group 대조 후 공통 `NativeMesh`와 품질·채택 경로를 사용한다. 기존 CAD 네 자산 validator는 느슨하게 풀지 않는다. 호출 프로세스에 Gmsh를 import해 전역 모델을 공유하지 않는다. 후보의 CAD XAO, 메시 MSH, 연결 메타데이터를 함께 보관한다. Gmsh backend tag는 작업 중 주소이고 UUID·자원 개정과 구분한다. 외부 STEP/BREP를 새로 가져오면 새 형상 자원이다.
 
 실제 시험에서 MSH만 재열면 CAD는 discrete entity가 되었고 BREP만으로는 physical group이 보존되지 않았다. XAO의 named group과 별도 메시 자산을 함께 다루는 정책이 필요하다. 또한 재메시 전후 같은 node ID의 좌표가 달라질 수 있었다. 따라서 explicit node/element 선택을 새 메시로 자동 전용하지 않는다. `application/mesh_candidates.py`는 공식 SDK로 MSH 전체 inventory를 읽어 metadata와 대조하고 품질을 계산한다. Qt의 `mesh_workflow`는 후보와 문서의 identity를 분리해 표시하고, 비동기 생성·취소·검토·채택을 연결한다. 소유 메시의 안전 교체는 조건/집합 참조가 없을 때만 가능하며 공유 노드는 보존한다. 새 문서는 모든 작업 단위를 명시해야 한다. 채택한 메시의 최종 native ID·PART 출처 UUID·자산 해시는 `.caeprep`의 native 자원에 보존한다. 원본→native 절점/요소 ID 대응은 채택 명령의 반환값이며 작업문서에 별도 매핑으로 저장하지 않는다. 원 CAD/XAO/MSH 번들은 별도 후보 폴더를 유지해야 재메시할 수 있다.
 
@@ -104,4 +104,4 @@ Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 p
 
 현재 첫 적용 대상은 OpenRadioss/OpenCourant이고, 실행 가능한 사용 앱은 RAD 원문 편집과 지원 모델 생성 앱이다. 공용 자산과 네이티브 갤러리는 이 저장소의 정식 개발 산출물이며 실제 편집 흐름과 함께 개발한다. 서로 다른 사용처에서 같은 코어·위젯을 사용하는 확인은 재사용 품질을 판단하는 기준이고, 공용 자산 개발을 시작하기 위한 전제 조건이 아니다.
 
-첫 공용 위젯·셸 부품·갤러리·최소 세션 계약을 실제 RAD와 중립 재료/곡선 문서에 연결했다. 과거 Windows 검증은 위에 한정한 구버전 자료이며 현재 UI는 별도 확인이 필요하다. G1 생성/할당과 G2 곡선·조건·집합, G3 후보 채택·Starter/Engine을 같은 native 문서에 연결했다. G4는 Workbench의 기존 MDO 서비스가 Prep NumericEdit를 실제 사용하고, 기존 연결/JobManager가 독립 Prep 프로세스와 문서·출력 파일을 전달한다. 두 앱의 이력·모델은 합치지 않는다. 현재 기능·UI·원제품 비교·플랫폼의 통과 범위는 실행 기록에 따르며 Windows 납품은 후속이다. 현재 `CurvePlot`은 표의 선택/값을 그리며 직접 plot drag는 없다. RAD와 중립 갤러리 모두 행 편집·텍스트 붙여넣기만 제공하며 CSV 파일 입출력은 없다(N15, G2/T3에도 해당). 쉼표 텍스트 붙여넣기를 CSV 파일 왕복으로 보고했던 주장을 정정한다. MCP/IPC는 P8c(N19–N20), 다중 자원·대용량·일반 재메시는 N16–N18, 조건부 메시/중립면은 N22–N26으로 유지한다. 솔버 실행·후처리의 Workbench 소유는 바꾸지 않는다.
+첫 공용 위젯·셸 부품·갤러리·최소 세션 계약을 실제 RAD와 중립 재료/곡선 문서에 연결했다. 과거 Windows 검증은 위에 한정한 구버전 자료이며 현재 UI는 별도 확인이 필요하다. G1 생성/할당과 G2 곡선·조건·집합, G3 후보 채택·Starter/Engine을 같은 native 문서에 연결했다. G4는 Workbench의 기존 MDO 서비스가 Prep NumericEdit를 실제 사용하고, 기존 연결/JobManager가 독립 Prep 프로세스와 문서·출력 파일을 전달한다. 두 앱의 이력·모델은 합치지 않는다. 현재 기능·UI·원제품 비교·플랫폼의 통과 범위는 실행 기록에 따르며 Windows 납품은 후속이다. PR #17의 `application/curve_csv.py`는 RAD/VTK 없는 실제 CSV reader/writer이며 두 host가 같은 `CurveTableEditor/CurvePlot`과 provider 명령을 사용한다. drag preview는 초안이며 release 한 번이 한 Undo, Escape/오래된 대상/잘못된 x 순서는 취소한다. CSV의 두 숫자 열은 단위·참조를 담지 않으므로 표시 단위 정책을 확인하고 작업문서는 단위·참조를 보존한다. 과거 쉼표 텍스트 붙여넣기를 CSV 파일 왕복이라고 했던 주장은 당시 과장이며 새 구현의 근거로 소급하지 않는다. MCP/IPC는 P8c(N19–N20), 다중 자원·대용량·일반 재메시는 N16–N18, 조건부 메시/중립면은 N22–N26으로 유지한다. 솔버 실행·후처리의 Workbench 소유는 바꾸지 않는다.

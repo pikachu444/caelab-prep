@@ -58,7 +58,7 @@ def _inspect(resources):
             if root == "NODE" and len(words) != 1:
                 raise PrepError("unsupported_source_units", "NODE unit overrides are not supported by this mapping profile.")
             expected_segments = 2 if root in ("PART", "FUNCT", "BCS", "CLOAD") else 3
-            if header_id and len(words) != expected_segments:
+            if header_id and len(words) != expected_segments and not (root=="PART" and len(words)==3 and words[-1]=="0"):
                 raise PrepError("unsupported_source_units", "Per-card unit overrides are not remapped by this profile.", {"keyword": card.keyword})
             if root in ("BEGIN", "END"):
                 omitted[rid].update((card.start, *card.data)); continue
@@ -66,12 +66,14 @@ def _inspect(resources):
             if root == "NODE":
                 for row in card.data: define("NODE", _int(lines[row][:10]), rid, row, 0)
             elif root in ELEMENTS:
-                if len(words) != 2: raise PrepError("unsupported_source_units", "Element unit overrides are not supported.")
+                if len(words) != 2:
+                    raise PrepError("unsupported_source_units", "Element unit overrides are not supported.")
                 reference("PART", _int(words[1]), rid, card.start, -1)
                 for row in card.data:
                     define("E:" + ELEMENT_NAMESPACE[root], _int(lines[row][:10]), rid, row, 0)
                     for index in range(1, ELEMENTS[root] + 1):
-                        reference("NODE", _int(lines[row][index * 10:(index + 1) * 10]), rid, row, index * 10)
+                        optional = root == "BEAM" and index == 3
+                        reference("NODE", _int(lines[row][index * 10:(index + 1) * 10], zero=optional), rid, row, index * 10, optional)
             elif root == "PART":
                 if len(card.data) != 2: raise PrepError("unsupported_source_profile", "PART requires the standard title and assignment row.")
                 row = card.data[1]
@@ -106,7 +108,10 @@ def _inspect(resources):
                 reference("GRNOD", _int(lines[row][:10]), rid, row, 0)
                 reference("SURF", _int(lines[row][10:20]), rid, row, 10)
                 last = lines[card.data[6]]
-                if any(_int(last[s:s + 10], zero=True) for s in (0, 10, 50, 80)):
+                # Row 6: Ifric, Ifiltr, Xfreq(20), Iform, sens_ID,
+                # fct_ID_F, Ascale_F(20), fric_ID. The scale is real data,
+                # never an ID; all unimplemented function/friction refs block.
+                if any(_int(last[s:s + 10], zero=True) for s in (0, 10, 50, 60, 90)):
                     raise PrepError("unsupported_source_profile", "TYPE7 function/sensor options require their own mapping profile.")
     missing = sorted(set(refs) - set(definitions))
     if missing:

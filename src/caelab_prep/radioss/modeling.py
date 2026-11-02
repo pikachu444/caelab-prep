@@ -131,27 +131,27 @@ def bool_vector(value):
     return "".join("1" if item else "0" for item in value)
 
 
-def boundary_block(identifier, name, group, translations, rotations, *, newline="\n"):
+def boundary_block(identifier, name, group, translations, rotations, *, skew=0, newline="\n"):
     integer(identifier)
-    row = "   " + bool_vector(translations) + " " + bool_vector(rotations) + f"{0:10d}" + integer(group)
+    row = "   " + bool_vector(translations) + " " + bool_vector(rotations) + f"{skew:10d}" + integer(group)
     return newline.join((f"/BCS/{identifier}", title(name), row, ""))
 
 
-def load_block(identifier, name, group, curve, direction, scale, *, newline="\n"):
+def load_block(identifier, name, group, curve, direction, scale, *, skew=0, newline="\n"):
     integer(identifier)
     if direction not in ("X", "Y", "Z", "XX", "YY", "ZZ"):
         raise PrepError("invalid_value", "Load direction must be X, Y, Z, XX, YY or ZZ.")
     scale_field = real(scale)
     reject_default_zero(scale, "scale")
-    row = integer(curve) + f"{direction:>10}{0:10d}{0:10d}" + integer(group) + " " * 10 + real(1) + scale_field
+    row = integer(curve) + f"{direction:>10}{skew:10d}{0:10d}" + integer(group) + " " * 10 + real(1) + scale_field
     return newline.join((f"/CLOAD/{identifier}", title(name), row, ""))
 
 
-def velocity_block(identifier, name, group, velocity, *, newline="\n"):
+def velocity_block(identifier, name, group, velocity, *, skew=0, newline="\n"):
     integer(identifier)
     if not isinstance(velocity, (list, tuple)) or len(velocity) != 3:
         raise PrepError("invalid_value", "Initial velocity requires three finite components.")
-    row = "".join(real(value) for value in velocity) + integer(group) + f"{0:10d}"
+    row = "".join(real(value) for value in velocity) + integer(group) + f"{skew:10d}"
     return newline.join((f"/INIVEL/TRA/{identifier}", title(name), row, ""))
 
 

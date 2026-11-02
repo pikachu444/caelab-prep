@@ -140,7 +140,7 @@ class DeckResource:
                 "TETRA4": "Elements", "TETRA": "Elements", "BEAM": "Elements", "TRUSS": "Elements",
                 "MAT": "Materials", "PROP": "Properties", "PART": "Parts", "BCS": "Constraints",
                 "INTER": "Contacts", "FUNCT": "Curves", "GRNOD": "Groups", "SURF": "Groups",
-                "GRSH3N": "Groups", "GRSHEL": "Groups", "GRBRIC": "Groups",
+                "GRSH3N": "Groups", "GRSHEL": "Groups", "GRBRIC": "Groups", "GRBEAM": "Groups", "GRTRUS": "Groups", "SKEW": "Coordinate systems",
                 "PLOAD": "Loads", "CLOAD": "Loads", "INIVEL": "Initial conditions"}.get(root, "Other cards")
 
     def card(self, card_id: str) -> Card:
@@ -196,6 +196,13 @@ class DeckResource:
                                                  ("vz", "초기 속도 Z (입력 덱 단위)", 40)]]
         elif len(key) > 2 and key[1] == "PROP" and key[2] in ("SHELL", "TYPE1") and len(data) >= 4:
             fields = [Field("thickness", "두께 (입력 덱 단위)", "float", data[3], 20, 40, 0, strict_minimum=True)]
+        elif len(key) > 2 and key[1] == "PROP" and key[2] in ("BEAM", "TYPE3") and len(data) >= 5:
+            fields = [Field(name, label, "float", data[3], start, start+20, 0, strict_minimum=True)
+                      for name, label, start in (("area", "Beam area", 0), ("iyy", "Beam IYY", 20),
+                                                 ("izz", "Beam IZZ", 40), ("ixx", "Beam IXX", 60))]
+        elif len(key) > 2 and key[1] == "PROP" and key[2] in ("TRUSS", "TYPE2") and len(data) >= 2:
+            fields = [Field("area", "Truss area", "float", data[1], 0, 20, 0, strict_minimum=True),
+                      Field("initial_gap", "Initial truss gap", "float", data[1], 20, 40, 0, blank_default=0.)]
         valid = []
         for field in fields:
             try:

@@ -48,7 +48,7 @@ def test_two_cases_undo_save_fresh_process_and_independent_exports(model, tmp_pa
     session.save_project(str(project)); assert not session.document.dirty
     with zipfile.ZipFile(project) as archive:
         manifest = json.loads(archive.read("manifest.json"))
-        assert manifest["version"] == 4 and len(manifest["analysis_cases"]["cases"]) == 2
+        assert manifest["version"] == 5 and len(manifest["analysis_cases"]["cases"]) == 2
     code = ("from caelab_prep.application import PrepSession; import json,sys; "
             "s=PrepSession();s.open_project(sys.argv[1]);print(json.dumps(s.analysis_cases()));"
             "s.export_analysis_case(sys.argv[2]);s.export_analysis_case(sys.argv[3],sys.argv[4])")

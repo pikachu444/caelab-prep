@@ -1,4 +1,4 @@
-"""Visibility uses real VTK data without constructing a Qt/OpenGL window.
+"""Visibility uses the actual unshown MeshViewport and its VTK data pipeline.
 
 The opt-in EGL test is a separate rendering check, not Windows GUI acceptance.
 """
@@ -8,7 +8,6 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-from types import MethodType, SimpleNamespace
 
 import pytest
 
@@ -16,6 +15,18 @@ vtk = pytest.importorskip("vtk")
 
 from caelab_prep.application.contracts import ObjectRef
 from caelab_prep.ui.viewport import MeshViewport, cell_part_key, part_key
+
+pytestmark = pytest.mark.usefixtures("qt_widgets")
+_views = []
+
+
+@pytest.fixture(autouse=True)
+def close_viewports(qt_widgets):
+    yield
+    while _views:
+        view = _views.pop()
+        view.shutdown()
+        view.close()
 
 
 def projection():
@@ -37,24 +48,9 @@ def projection():
 
 
 def viewport(data=None):
-    """Use production methods and VTK pipeline; deliberately never call Render."""
-    view = SimpleNamespace(
-        vtk=vtk, _node_ids=[], _cells=[], _document_id=None, _projection_stamp={},
-        _node_resources={}, _hidden_parts=set(), _selection={}, _visible_indices=[],
-        _render_failed=False, _grid=vtk.vtkUnstructuredGrid(), _visible_grid=vtk.vtkUnstructuredGrid(),
-        _mapper=vtk.vtkDataSetMapper(), _actor=vtk.vtkActor(), _highlight=vtk.vtkActor(),
-        _renderer=vtk.vtkRenderer(), render=lambda: None,
-        diagnostic=SimpleNamespace(emit=lambda message: None),
-    )
-    view._hint = SimpleNamespace(setVisible=lambda value: setattr(view, "hint_visible", value),
-                                 setText=lambda value: setattr(view, "hint_text", value))
-    for name in ("set_mesh", "_part_keys", "hide_parts", "isolate_parts", "show_all_parts",
-                 "_apply_visibility", "_selection_cell_indices", "_selection_node_indices",
-                 "fit_selection", "fit_view", "set_selection", "_on_pick"):
-        setattr(view, name, MethodType(getattr(MeshViewport, name), view))
-    view._actor.SetMapper(view._mapper)
-    view._renderer.AddActor(view._actor)
-    view._renderer.AddActor(view._highlight)
+    """Construct the real widget; an unshown viewport naturally does not Render."""
+    view = MeshViewport()
+    _views.append(view)
     view.set_mesh(projection() if data is None else data, reset_camera=False)
     return view
 
@@ -84,10 +80,10 @@ def test_hide_part_is_resource_scoped_and_does_not_mutate_projection_or_selectio
     view.set_selection(approved)
     ref = ObjectRef("document", "part-a", "card-a", "rad-card", "/PART/1")
     view.hide_parts([ref])
-    assert view._visible_indices == [1]
+    assert view.visible_cell_indices() == [1]
     assert view._visible_grid.GetNumberOfCells() == 1
     assert view._visible_grid.GetNumberOfPoints() == 3
-    assert view._visible_grid.GetBounds() == (100, 102, 0, 2, 0, 0)
+    assert view._visible_bounds() == (100, 102, 0, 2, 0, 0)
     view._highlight.GetMapper().Update()
     assert view._highlight.GetMapper().GetInput().GetNumberOfCells() == 1
     assert view._selection == approved
@@ -99,12 +95,12 @@ def test_visibility_survives_same_document_reprojection_and_resets_for_new_epoch
     view = viewport()
     view.hide_parts([("part-a", "/PART/1")])
     view.set_mesh(projection() | {"projection_revision": 1}, reset_camera=False)
-    assert view._visible_indices == [1]
+    assert view.visible_cell_indices() == [1]
     view.set_mesh(projection() | {"document_epoch": "reopened"}, reset_camera=False)
-    assert view._visible_indices == [0, 1]
+    assert view.visible_cell_indices() == [0, 1]
     with pytest.raises(ValueError, match="another document"):
         view.hide_parts([ObjectRef("old", "part-a", "card-a", "rad-card", "/PART/1")])
-    assert view._visible_indices == [0, 1]
+    assert view.visible_cell_indices() == [0, 1]
 
 
 def test_isolate_show_all_and_hidden_selection_fit():
@@ -117,15 +113,15 @@ def test_isolate_show_all_and_hidden_selection_fit():
     assert view.fit_view()
     assert view._renderer.GetActiveCamera().GetFocalPoint() == (101, 1, 0)
     view.isolate_parts([])
-    assert view._visible_indices == [1]
+    assert view.visible_cell_indices() == [1]
     view.show_all_parts()
-    assert view._visible_indices == [0, 1]
+    assert view.visible_cell_indices() == [0, 1]
     assert view._highlight.GetVisibility()
     assert view.fit_selection()
     assert view._renderer.GetActiveCamera().GetFocalPoint() == (1, 1, 0)
     with pytest.raises(ValueError, match="present"):
         view.isolate_parts([("missing", "/PART/1")])
-    assert view._visible_indices == [0, 1]
+    assert view.visible_cell_indices() == [0, 1]
 
 
 def test_all_hidden_is_empty_and_does_not_reset_camera_to_hidden_model():
@@ -137,7 +133,7 @@ def test_all_hidden_is_empty_and_does_not_reset_camera_to_hidden_model():
     assert view._visible_grid.GetNumberOfPoints() == 0
     assert not view.fit_view()
     assert view._renderer.GetActiveCamera().GetPosition() == camera_position
-    assert view.hint_visible and view.hint_text == "All elements hidden"
+    assert not view._hint.isHidden() and view._hint.text() == "All elements hidden"
 
 
 def test_node_highlight_and_fit_exclude_hidden_and_unused_nodes():
@@ -167,24 +163,6 @@ def test_fit_rejects_stale_selection_and_ambiguous_element_ids():
     assert not view._highlight.GetVisibility()
 
 
-def test_pick_maps_extracted_indices_to_original_ids():
-    view = viewport()
-    view.hide_parts([("part-a", "/PART/1")])
-    events = []
-    view.entityPicked = SimpleNamespace(emit=events.append)
-    view._widget = SimpleNamespace(GetEventPosition=lambda: (0, 0))
-    picker = SimpleNamespace(SetTolerance=lambda value: None, AddPickList=lambda actor: None,
-                             PickFromListOn=lambda: None, Pick=lambda *args: True,
-                             GetCellId=lambda: 0, GetPointId=lambda: 0)
-    view.vtk = SimpleNamespace(vtkCellPicker=lambda: picker, vtkPointPicker=lambda: picker)
-    view._pick_mode = "element"
-    view._on_pick(None, None)
-    assert events[-1]["id"] == 12 and events[-1]["resource_id"] == "elements"
-    view._pick_mode = "node"
-    view._on_pick(None, None)
-    assert events[-1]["id"] == 4 and events[-1]["resource_id"] == "nodes"
-
-
 @pytest.mark.skipif(os.environ.get("CAELAB_TEST_EGL") != "1", reason="Opt-in EGL rendering, separate from dataset tests")
 def test_egl_render_and_pick_visible_cells():
     # Driver failures must fail this check without terminating the entire suite.
@@ -194,6 +172,8 @@ def test_egl_render_and_pick_visible_cells():
 
 
 def _egl_render_and_pick():
+    from PySide6.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])
     view = viewport()
     view._renderer.SetBackground(0, 0, 0)
     window = vtk.vtkRenderWindow()  # Let VTK select the supported offscreen backend.
@@ -212,11 +192,26 @@ def _egl_render_and_pick():
         picker.AddPickList(view._actor)
         picker.PickFromListOn()
         assert picker.Pick(x, y, 0, view._renderer)
-        originals = view._visible_grid.GetCellData().GetArray("ProjectionCellIndex")
+        originals = picker.GetDataSet().GetCellData().GetArray("ProjectionCellIndex")
         assert originals.GetValue(picker.GetCellId()) == 1
+        events = []
+        view.entityPicked.connect(events.append)
+        view._widget.SetEventPosition(round(x), round(y))
+        view.set_pick_mode("element")
+        view._on_pick(None, None)
+        assert events[-1]["id"] == 12 and events[-1]["resource_id"] == "elements"
+        view._renderer.SetWorldPoint(100, 0, 0, 1)
+        view._renderer.WorldToDisplay()
+        nx, ny, _ = view._renderer.GetDisplayPoint()
+        view._widget.SetEventPosition(round(nx), round(ny))
+        view.set_pick_mode("node")
+        view._on_pick(None, None)
+        assert events[-1]["id"] == 4 and events[-1]["resource_id"] == "nodes"
         view._renderer.SetWorldPoint(0.5, 0.5, 0, 1)
         view._renderer.WorldToDisplay()
         x, y, _ = view._renderer.GetDisplayPoint()
         assert not picker.Pick(x, y, 0, view._renderer)
     finally:
         window.Finalize()
+        view.shutdown()
+        view.close()

@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+from threading import Event, Thread
 import zipfile
 
 import pytest
@@ -109,12 +110,15 @@ def test_compound_native_and_case_edit_validates_all_before_single_commit(tmp_pa
     assert session.card_fields(material["id"])[1]["value"] == 210000 and session.analysis_case(case)["end_time"] == 1
 
 
-def test_v4_requires_source_registry_and_rejects_missing_archive_bytes(tmp_path):
+@pytest.mark.parametrize("version", [4, 5])
+def test_source_formats_require_registry_and_reject_missing_archive_bytes(tmp_path, version):
     session = PrepSession(); session.open_rad(model(tmp_path / "source"))
     session.import_source(session.plan_import_source(model(tmp_path / "other"))["plan_id"])
     project = tmp_path / "good.caeprep"; session.save_project(project)
     with zipfile.ZipFile(project) as archive:
         members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"]); manifest["version"] = version
+    members["manifest.json"] = json.dumps(manifest).encode()
     for kind in ("registry", "payload"):
         altered = dict(members)
         if kind == "registry":
@@ -128,3 +132,51 @@ def test_v4_requires_source_registry_and_rejects_missing_archive_bytes(tmp_path)
         before = session.describe()
         with pytest.raises(PrepError): session.open_project(bad)
         assert session.describe() == before
+
+
+def test_standard_type7_import_maps_targets_and_never_treats_scale_as_id(tmp_path):
+    source = model(tmp_path / "source")
+    edited = PrepSession(); edited.open_rad(source)
+    group = edited.create_node_group("Secondary", [1,2], native_id=59)["card_id"]
+    part = next(card for card in edited.list_cards() if card["keyword"] == "/PART/9")
+    surface = edited.create_surface("Main", [part["id"]], native_id=71)["card_id"]
+    edited.create_contact("Contact", group, surface, .17, native_id=97)
+    native = tmp_path / "with-contact" / "model_0000.rad"; edited.export_rad(native)
+    session = PrepSession(); session.open_rad(model(tmp_path / "base"))
+    plan = session.plan_import_source(native); session.import_source(plan["plan_id"])
+    contact = next(card for card in session.list_cards() if card["keyword"] == "/INTER/TYPE7/97")
+    values = session.condition_values(contact["id"])
+    assert values["friction"] == .17 and values["diagnostics"] == []
+    # A temperature friction function must never silently acquire an unmapped ID.
+    text = native.read_text().splitlines(keepends=True)
+    index = next(i for i,line in enumerate(text) if line.startswith("/INTER/TYPE7/")) + 7
+    body = text[index].rstrip("\n")
+    text[index] = body[:60] + f"{63:10}" + " "*20 + body[90:] + "\n"
+    native.write_text("".join(text))
+    with pytest.raises(PrepError) as error: session.plan_import_source(native)
+    assert error.value.code == "unsupported_source_profile"
+
+
+def test_source_planning_does_not_hold_live_owner_lock_and_rechecks_revision(tmp_path, monkeypatch):
+    first,second=model(tmp_path/"first"),model(tmp_path/"second")
+    session=PrepSession();session.open_rad(first)
+    entered,released,edited=Event(),Event(),Event(); errors=[]
+    original=Path.read_bytes
+    def delayed(path):
+        if path == second:
+            entered.set()
+            if not released.wait(3): raise RuntimeError("test input was not released")
+        return original(path)
+    monkeypatch.setattr(Path,"read_bytes",delayed)
+    def prepare():
+        try:session.plan_import_source(second)
+        except Exception as exc:errors.append(exc)
+    worker=Thread(target=prepare);worker.start();assert entered.wait(1)
+    material=next(card for card in session.list_cards() if card["keyword"]=="/MAT/LAW1/41")
+    def change():
+        session.set_field(material["id"],"young_modulus",190000);edited.set()
+    edit=Thread(target=change);edit.start()
+    try:assert edited.wait(1),"Live edit waited for background source parsing"
+    finally:released.set();worker.join(3);edit.join(3)
+    assert len(errors)==1 and isinstance(errors[0],PrepError) and errors[0].code=="stale_import_plan"
+    assert session.document.revision==1 and session.source_models()==[]

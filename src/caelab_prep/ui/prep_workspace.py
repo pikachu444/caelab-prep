@@ -88,10 +88,11 @@ class PrepWorkspace:
     def _install_command_surfaces(self):
         groups = (
             ("&File", ((self.mesh_workflow.new_action, self.open_rad_action, self.open_project_action),
+                       (self.source_models_action,),
                        (self.save_action, self.save_as_action, self.export_action, self.mesh_workflow.export_action), (self.close_action,))),
             ("&Edit", ((self.undo_action, self.redo_action), (self.reload_properties_action,))),
             ("&Model", ((self.modeling.actions["material.create"], self.modeling.actions["section.create"]),
-                        (self.modeling.actions["solid_section.create"],),
+                        (self.modeling.actions["solid_section.create"], self.modeling.actions["coordinate_system.create"]),
                         (self.modeling.actions["group.create"], self.modeling.actions["element_group.create"], self.modeling.actions["surface.create"]),
                         (self.modeling.actions["object.edit"],),
                         (self.modeling.actions["object.copy"], self.modeling.actions["object.delete"]),
@@ -100,7 +101,8 @@ class PrepWorkspace:
                              tuple(self.modeling.actions[key + ".create"] for key in
                                    ("constraint", "load", "velocity", "contact")),
                              (self.mesh_workflow.cases_action,))),
-            ("&Mesh", ((self.mesh_import.action, self.mesh_workflow.mesh_action),)),
+            ("&Mesh", ((self.mesh_import.action, self.mesh_workflow.mesh_action),
+                       (self.prepared_mesh_action,))),
             ("&View", ((self.fit_action, self.fit_selected_action, self.iso_action, *self.standard_view_actions, self.edges_action),
                        (self.hide_selected_action, self.isolate_action, self.show_all_action))),
         )

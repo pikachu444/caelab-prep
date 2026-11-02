@@ -73,6 +73,74 @@ class SourceArchiveResource:
 
 
 class SourceModelCommands:
+    @staticmethod
+    def _instance_source(document, root_id, source_id):
+        archives = [r for r in document.resources.values() if isinstance(r, SourceArchiveResource)]
+        if source_id is None:
+            imported = {item["resource_id"] for archive in archives for item in archive.metadata["files"]}
+            return root_id, tuple(r.id for r in document.resources.values() if isinstance(r, DeckResource) and r.id not in imported)
+        if not isinstance(source_id, str):
+            raise PrepError("invalid_reference", "A source archive UUID or the base model is required.")
+        archive = document.resources.get(source_id)
+        if not isinstance(archive, SourceArchiveResource):
+            raise PrepError("invalid_reference", "Choose the base model or an imported source archive.")
+        return archive.metadata["root_resource_id"], tuple(item["resource_id"] for item in archive.metadata["files"])
+
+    @classmethod
+    def _validate_instance_references(cls, document, root_id, records):
+        for record in records.values():
+            expected_root, owners = cls._instance_source(document, root_id, record["source_id"])
+            if record["root_resource_id"] != expected_root or not set(record["resource_ids"]).issubset(owners):
+                raise PrepError("invalid_reference", "Instance resource references do not belong to the declared source.")
+
+    def instance_references(self):
+        """Reference-only metadata; no placement, geometry copies or native expansion."""
+        with self._lock:
+            return [{**record, "resource_ids": list(record["resource_ids"])}
+                    for record in self._relations_resource().snapshot()["instances"].values()]
+
+    def create_instance_reference(self, name, source_id=None, *, resource_ids=None,
+                                  expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            root_id, owners = self._instance_source(self.document, self._root_id, source_id)
+            if not isinstance(name, str) or not name.strip() or any(ord(c) < 32 for c in name):
+                raise PrepError("invalid_instance_reference", "Provide a nonempty instance reference name without control characters.")
+            members = owners if resource_ids is None else resource_ids
+            if not isinstance(members, (list, tuple)) or not members or any(not isinstance(rid, str) for rid in members) or len(set(members)) != len(members) or not set(members).issubset(owners):
+                raise PrepError("invalid_reference", "Choose distinct resources belonging to this source.")
+            identifier = str(uuid4()); resource = self._relations_resource(); state = resource.snapshot()
+            state["instances"][identifier] = dict(id=identifier, name=name.strip(), source_id=source_id,
+                root_resource_id=root_id, resource_ids=tuple(members), status="not-expanded")
+            change = self.dispatcher.execute(resource.id, state, "Create unexpanded instance reference",
+                object_ids=(identifier,), expected_revision=expected_revision, kind="model_relation")
+            return {**self.describe(), "instance_id": identifier, "resource_id": resource.id, "change": change.to_dict() if change else None}
+
+    def delete_instance_reference(self, instance_id, *, expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            resource = self._relations_resource(); state = resource.snapshot()
+            if not isinstance(instance_id, str) or instance_id not in state["instances"]:
+                raise PrepError("invalid_reference", "The instance reference no longer exists.")
+            del state["instances"][instance_id]
+            change = self.dispatcher.execute(resource.id, state, "Delete instance reference",
+                object_ids=(instance_id,), expected_revision=expected_revision, kind="model_relation")
+            return {**self.describe(), "instance_id": instance_id, "resource_id": resource.id, "change": change.to_dict() if change else None}
+
+    def _require_expanded_instances(self):
+        instances = self.instance_references()
+        if instances:
+            raise PrepError("unexpanded_instances", "Instance references have no native placement/expansion. Remove them before native export; they are not silently omitted.",
+                            {"instances": [record["id"] for record in instances]})
+
+    def _planning_snapshot(self):
+        """Brief owner lock only; native parsing/remapping runs on sparse clones."""
+        candidate = copy(self); candidate._lock = RLock(); candidate._listeners = []
+        candidate.document = copy(self._require())
+        candidate.document.resources = {key: copy(resource) for key,resource in self.document.resources.items()}
+        candidate._paths = dict(self._paths); candidate._source_paths = set(self._source_paths)
+        return candidate
+
     def source_models(self):
         with self._lock:
             return [resource.manifest() for resource in self._require().resources.values() if isinstance(resource, SourceArchiveResource)]
@@ -89,6 +157,18 @@ class SourceModelCommands:
                 self._paths.update({item["resource_id"]: item["logical_path"] for item in resource.metadata["files"]})
 
     def plan_import_source(self, path, *, shared_node_map=None):
+        from copy import deepcopy
+        with self._lock:
+            candidate = self._planning_snapshot()
+            requested = deepcopy(shared_node_map)
+        result = candidate._prepare_import_source(path, shared_node_map=requested)
+        with self._lock:
+            if (self.document.id, self.document.revision, self._document_epoch) != (result["document_id"], result["revision"], result["document_epoch"]):
+                raise PrepError("stale_import_plan", "The document changed while preparing the source mapping.")
+            self._import_plan = candidate._import_plan
+        return result
+
+    def _prepare_import_source(self, path, *, shared_node_map=None):
         """Snapshot the input and propose every remapped ID without changing the model.
 
         ``shared_node_map`` maps an ORIGINAL source node ID to an existing typed
@@ -149,7 +229,8 @@ class SourceModelCommands:
                 if identifier in used:
                     collisions.append([namespace, original])
                     pool = "ELEMENT" if namespace.startswith("E:") else namespace
-                    identifier = max(next_ids.get(pool, 1), max(used, default=0) + 1)
+                    if pool not in next_ids: next_ids[pool] = max(used, default=0) + 1
+                    identifier = next_ids[pool]
                     while identifier in used: identifier += 1
                     next_ids[pool] = identifier + 1
                 if identifier > 9999999999: raise PrepError("native_id_exhausted", "Native ID capacity is exhausted.")
@@ -194,11 +275,13 @@ class SourceModelCommands:
         """Validate domain operations on sparse candidate resources, then publish once."""
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
-            allowed = {"set_fields", "set_condition_values", "set_group_members", "assign_part", "set_analysis_case",
-                       "create_analysis_case", "delete_analysis_case", "select_analysis_case"}
+            allowed = {"set_fields", "set_condition_values", "set_coordinate_system_values", "set_group_members", "assign_part", "set_analysis_case",
+                       "create_analysis_case", "delete_analysis_case", "select_analysis_case",
+                       "create_instance_reference", "delete_instance_reference"}
             if not isinstance(commands, list) or not commands:
                 raise PrepError("invalid_command", "Provide a nonempty list of domain commands.")
             candidate = copy(self); candidate._lock = RLock(); candidate._listeners = []
+            candidate._defer_relation_validation = True
             candidate.document = copy(self.document)
             candidate.document.resources = {key: copy(resource) for key, resource in self.document.resources.items()}
             candidate.dispatcher = CommandDispatcher(candidate.document)
@@ -216,6 +299,15 @@ class SourceModelCommands:
             for case in candidate.analysis_cases()["cases"]: candidate._validate_case_refs(case)
             states = {key: resource.snapshot() for key, resource in candidate.document.resources.items()
                       if resource.state_token() != self.document.resources[key].state_token()}
+            self._validate_dependent_condition_states(states)
+            for command in commands:
+                if command["operation"] == "set_condition_values":
+                    card_id = command["arguments"]["card_id"]
+                    card = candidate._find_card(card_id).card(card_id)
+                    if card.keyword.upper().startswith(("/CLOAD/", "/INIVEL/TRA/")):
+                        support = candidate.condition_support(card_id)
+                        if support["status"] != "supported":
+                            raise PrepError("unsupported_condition_dof", "The final compound condition targets unsupported mechanical fields.", {"card_id":card_id,"diagnostics":support["diagnostics"]})
             kind = "structure" if any(item.kind == "structure" for item in candidate_changes) else "field"
             change = self.dispatcher.execute_many(states, label, expected_revision=self.document.revision, kind=kind)
             return {**self.describe(), "change": change.to_dict() if change else None,

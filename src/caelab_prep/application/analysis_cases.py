@@ -193,13 +193,17 @@ class AnalysisCaseCommands:
     def validate_analysis_case(self, case_id=None):
         with self._lock:
             case = self.analysis_case(case_id)
+            self._require_expanded_instances()
+            stale = self._relations_resource().snapshot()["stale_targets"]
+            if stale:
+                raise PrepError("stale_mesh_targets", "Reconnect the explicit targets of the replaced mesh before case export.", {"targets": stale})
             self._validate_case_refs(case)
             # The activation scope is deliberately closed. Unknown physics or
             # sensor/activation cards must never silently survive as active.
-            neutral_roots = {"BEGIN", "END", "NODE", "SHELL", "SH3N", "TETRA4", "BRICK", "PART", "FUNCT", "UNIT"}
+            neutral_roots = {"BEGIN", "END", "NODE", "BEAM", "TRUSS", "SHELL", "SH3N", "TETRA4", "BRICK", "PART", "FUNCT", "UNIT"}
             neutral_pairs = {("MAT", "LAW1"), ("MAT", "ELAST"), ("MAT", "LAW36"), ("MAT", "PLAS_TAB"),
-                ("PROP", "SHELL"), ("PROP", "TYPE1"), ("PROP", "SOLID"), ("PROP", "TYPE14"),
-                ("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("SURF", "PART")}
+                ("PROP", "BEAM"), ("PROP", "TYPE3"), ("PROP", "TRUSS"), ("PROP", "TYPE2"), ("SKEW", "FIX"), ("PROP", "SHELL"), ("PROP", "TYPE1"), ("PROP", "SOLID"), ("PROP", "TYPE14"),
+                ("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS"), ("SURF", "PART")}
             unsupported = []
             conditions = []
             for item in self.list_cards():

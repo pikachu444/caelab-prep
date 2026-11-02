@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 
 from PySide6.QtCore import QSettings, Qt, Signal
-from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QLabel
 
 from .shell import FileTask as _FileTask
 from .prep_controller import PrepController
@@ -47,6 +47,55 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
         self._sessionEvent.connect(self._session_changed, Qt.ConnectionType.QueuedConnection)
         self._unsubscribe = self.session.subscribe(self._sessionEvent.emit)
         self.refresh_document(rebuild_viewport=bool(self._summary().get("document_id")))
+        self._live_control = None
+        self._live_label = QLabel("Live control: off")
+        self.statusBar().addPermanentWidget(self._live_label)
+        menu = self.menuBar().addMenu("&Automation")
+        self.start_live_action = menu.addAction("Start live control…", self._start_live_dialog)
+        self.stop_live_action = menu.addAction("Stop live control", self.stop_live_ipc)
+        self.stop_live_action.setEnabled(False)
+
+    def _start_live_dialog(self):
+        path, _ = QFileDialog.getSaveFileName(self, "New live-control connection file", "prep-connection.json", "Connection file (*.json)")
+        if path:
+            try: self.start_live_ipc(path)
+            except Exception as exc: self._show_error(exc)
+
+    def start_live_ipc(self, descriptor_path):
+        """Explicitly share this owner; a connection file contains its local credential."""
+        from .live_control import LiveControl
+        if self._live_control is not None and self._live_control.status()["status"] != "closed":
+            raise ValueError("Live control is already running; stop it before starting another endpoint.")
+        self._live_control = LiveControl(self, descriptor_path)
+        self._live_control.changed.connect(self._live_status_changed)
+        self._live_status_changed({})
+        return self.live_ipc_status()
+
+    def live_ipc_status(self):
+        return self._live_control.status() if self._live_control else {"status": "closed"}
+
+    def _live_status_changed(self, _):
+        state = self.live_ipc_status()
+        active = state["status"] != "closed"
+        text = f"Live control: {state['host']}:{state['port']}" if active else "Live control: off"
+        if state["status"] == "stopping": text = "Live control: stopping worker…"
+        elif state.get("active_jobs"): text += " · meshing"
+        self._live_label.setText(text)
+        self._live_label.setToolTip(state.get("descriptor_path", ""))
+        self.start_live_action.setEnabled(not active); self.stop_live_action.setEnabled(active)
+
+    def stop_live_ipc(self):
+        result = self._live_control.close() if self._live_control else True
+        self._live_status_changed({})
+        return result
+
+    def closeEvent(self, event):
+        if self._live_control and self._live_control.status().get("active_jobs"):
+            self.stop_live_ipc()
+            self.statusBar().showMessage("Stopping the live mesh worker. Close after it has stopped.")
+            event.ignore(); return
+        super().closeEvent(event)
+        if event.isAccepted(): self.stop_live_ipc()
 
     def showEvent(self, event):
         super().showEvent(event)
