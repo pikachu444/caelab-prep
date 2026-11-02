@@ -92,8 +92,10 @@ class MaterialsWorkspace:
     def _curve(self):
         host = self.host
         host.plot = CurvePlot()
-        host.curve_table = CurveTable()
+        host.curve_table = CurveTable(require_increasing_x=True)
         host.curve_table.pointsEdited.connect(host._commit_curve)
+        host.curve_table.bind_plot(host.plot, commit=host._commit_curve,
+                                   context=host._curve_edit_context, can_edit=host._curve_editable)
         surface = QSplitter(Qt.Orientation.Vertical)
         surface.setObjectName("curveWorkspace")
         surface.setChildrenCollapsible(False)

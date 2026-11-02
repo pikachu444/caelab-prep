@@ -31,6 +31,9 @@ class CurveDraftAdapter:
     """Keep complete draft validation, host Apply, rollback and editor flushing."""
 
     def set_points(self, points, headers=None):
+        if getattr(self, "_plot", None) is not None:
+            self._plot.cancel_drag(restore=False)
+        self._generation = getattr(self, "_generation", 0) + 1
         self._committed = tuple(tuple(p) for p in points)
         self._display_points(self._committed)
         if headers:
@@ -40,6 +43,7 @@ class CurveDraftAdapter:
         self._set_status(f"{len(self._committed)} points")
         self.apply_button.setEnabled(False)
         self.revert_button.setEnabled(False)
+        self._sync_plot()
 
     def _display_points(self, points):
         self._loading = True
@@ -52,6 +56,8 @@ class CurveDraftAdapter:
         self._loading = False
 
     def points(self):
+        if getattr(self, "_gesture_active", False):
+            raise ValueError("Finish the point drag or press Escape before another operation.")
         self.flush_editor()
         if self._paste_error:
             raise ValueError(self.message.text())
@@ -69,6 +75,17 @@ class CurveDraftAdapter:
         self.apply_button.setEnabled(True)
         self.revert_button.setEnabled(True)
         self.draftChanged.emit()
+        self._sync_plot()
+
+    def _sync_plot(self):
+        plot = getattr(self, "_plot", None)
+        if plot is not None and not getattr(self, "_gesture_active", False):
+            try:
+                points = self.points()
+                plot.set_points(points)
+                plot.set_preview(points != self._committed)
+            except ValueError:
+                pass
 
     def paste_text(self, text):
         self.paste_text_buffer = text
@@ -112,6 +129,8 @@ class CurveDraftAdapter:
         self.draftChanged.emit()
 
     def has_draft(self):
+        if getattr(self, "_gesture_active", False):
+            return True
         self.flush_editor()
         if self._paste_error:
             return True
@@ -143,6 +162,7 @@ class CurveDraftAdapter:
         self._set_status(state["message"], invalid=self._paste_error)
         self.apply_button.setEnabled(not self._paste_error)
         self.revert_button.setEnabled(True)
+        self._sync_plot()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:

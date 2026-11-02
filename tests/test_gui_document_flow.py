@@ -358,7 +358,8 @@ def test_shared_curve_vector_atomic_edits_and_file_roundtrip(tmp_path, filename)
         points = ((0., 10.), (.1, 40.), (.3, 90.))
         window.curve_table.paste_text("0 10\n.1 40\n.3 90")
         assert session.describe()["revision"] == 0
-        assert window.curve_plot._points == original
+        assert window.curve_plot._points == points and window.curve_plot._preview
+        assert window.provider.properties(window._card_refs[curve["id"]])[0].value == original
         window.curve_table.apply_button.click()
         assert session.describe()["revision"] == 1
         assert window.curve_plot._points == points

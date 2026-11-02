@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e ".[dev]"
-      - run: python -m pytest tests/test_document_core.py tests/test_radioss_editing.py tests/test_project_roundtrip.py tests/test_cli_workflow.py tests/test_application_contracts.py tests/test_rad_provider.py tests/test_radioss_modeling.py tests/test_radioss_defaults.py tests/test_modeling_workflow.py tests/test_modeling_commands.py tests/test_condition_workflow.py tests/test_rad_display_units.py
+      - run: python -m pytest tests/test_document_core.py tests/test_radioss_editing.py tests/test_project_roundtrip.py tests/test_cli_workflow.py tests/test_application_contracts.py tests/test_rad_provider.py tests/test_radioss_modeling.py tests/test_radioss_defaults.py tests/test_modeling_workflow.py tests/test_modeling_commands.py tests/test_condition_workflow.py tests/test_rad_display_units.py tests/test_analysis_cases.py tests/test_curve_csv.py
 
   qt-document:
     runs-on: ubuntu-latest
@@ -34,7 +34,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libglu1-mesa libgl1 libegl1 libxcb-cursor0 libxkbcommon0 libfontconfig1
       - run: python -m pip install -e ".[gui,dev]"
       - name: Qt document flow
-        run: python -m pytest -vv tests/test_gui_document_flow.py tests/test_common_widgets.py tests/test_prep_presentation.py tests/test_curve_plot_scale.py tests/test_program_comparison.py tests/test_property_presentations.py tests/test_reference_adapters.py tests/test_modeling_ui.py tests/test_viewport_visibility.py tests/test_conditions_ui.py tests/test_collection_editors.py tests/test_numeric_units.py tests/test_native_units_ui.py tests/test_groups_ui.py tests/test_responsive_inspector.py tests/test_selection_menu.py
+        run: python -m pytest -vv tests/test_gui_document_flow.py tests/test_common_widgets.py tests/test_prep_presentation.py tests/test_curve_plot_scale.py tests/test_program_comparison.py tests/test_property_presentations.py tests/test_reference_adapters.py tests/test_modeling_ui.py tests/test_viewport_visibility.py tests/test_conditions_ui.py tests/test_collection_editors.py tests/test_numeric_units.py tests/test_native_units_ui.py tests/test_groups_ui.py tests/test_responsive_inspector.py tests/test_selection_menu.py tests/test_analysis_cases_ui.py tests/test_case_entrypoints.py tests/test_curve_workflow.py
 
   cad-worker:
     runs-on: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
       - name: Require real SDKs
         run: python -c "import gmsh, OCP; gmsh.initialize(interruptible=False); gmsh.finalize()"
       - name: Real CAD worker and asset checks
-        run: python -m pytest tests/test_gmsh_adapter.py tests/test_mesh_candidates.py tests/test_mesh_adoption.py tests/test_mesh_workflow_ui.py
+        run: python -m pytest tests/test_gmsh_adapter.py tests/test_mesh_candidates.py tests/test_mesh_adoption.py tests/test_mesh_workflow_ui.py tests/test_external_mesh.py tests/test_external_mesh_sdk.py tests/test_external_mesh_ui.py
 
   native-render:
     runs-on: ubuntu-24.04
@@ -61,13 +61,14 @@ jobs:
       LIBGL_ALWAYS_SOFTWARE: '1'
       CAELAB_TEST_NATIVE_RENDER: '1'
       CAELAB_NATIVE_RENDER_ARTIFACT_DIR: ${{ github.workspace }}/render-evidence
+      CAELAB_CURVE_CAPTURE_DIR: ${{ github.workspace }}/render-evidence/curves
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: sudo apt-get update && sudo apt-get install -y xvfb xauth libglu1-mesa libgl1 libegl1 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxkbcommon-x11-0 libfontconfig1 fonts-noto-cjk
-      - run: python -m pip install -e ".[gui,dev]"
+      - run: python -m pip install -e ".[gui,cad,dev]"
       - name: Require the XCB plugin and an actual X11 Qt window system
         run: |
           python - <<'PYCODE'
@@ -81,7 +82,7 @@ jobs:
           PYCODE
           QT_DEBUG_PLUGINS=1 xvfb-run -a -s "-screen 0 1920x1080x24" python -u -c 'from PySide6.QtWidgets import QApplication; app = QApplication([]); print(app.platformName(), app.primaryScreen().geometry(), flush=True); assert app.platformName() == "xcb"'
       - name: Actual Qt VTK rendering and picking
-        run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -s tests/test_native_render.py
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -s tests/test_native_render.py tests/test_case_entrypoints.py tests/test_curve_workflow.py tests/test_external_mesh_native.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -131,7 +132,7 @@ jobs:
           export OMP_NUM_THREADS=1 OMP_STACKSIZE=400m
           export CAELAB_STARTER="$OPENCOURANT_PATH/exec/starter_linux64_gf"
           export CAELAB_ENGINE="$OPENCOURANT_PATH/exec/engine_linux64_gf"
-          python -m pytest -q tests/test_solver_generation.py --basetemp=solver-evidence
+          python -m pytest -q tests/test_solver_generation.py tests/test_analysis_cases_solver.py tests/test_external_mesh_solver.py --basetemp=solver-evidence
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -21,10 +21,11 @@ from ..radioss.modeling import (native_identity, integer, material_block, shell_
     curve_points, curve_block, member_block, boundary_block, load_block, velocity_block, contact_block, title, real, solid_block, engine_input, condition_scalar_default, reject_default_zero)
 from .storage import write_container
 from .contracts import ObjectRef
+from .analysis_cases import AnalysisCasesResource, AnalysisCaseCommands, condition_kind
 
 
 PROJECT_FORMAT = "caelab-prep-project"
-PROJECT_VERSION = 2
+PROJECT_VERSION = 3
 
 
 def _file_boundary(function):
@@ -39,7 +40,7 @@ def _file_boundary(function):
     return wrapped
 
 
-class PrepSession:
+class PrepSession(AnalysisCaseCommands):
     def __init__(self):
         self._lock = RLock()
         self.document: Document | None = None
@@ -85,6 +86,9 @@ class PrepSession:
             raise PrepError("no_document", "먼저 Radioss 덱이나 작업 문서를 열어 주세요.")
         return self.document
 
+    def _deck_resources(self, document=None):
+        return [r for r in (document or self._require()).resources.values() if isinstance(r, DeckResource)]
+
     @staticmethod
     def _include_relative(value: str) -> PurePosixPath:
         if not isinstance(value, str):
@@ -99,6 +103,10 @@ class PrepSession:
                  source_paths: set[str], diagnostics: list[dict], source_path: str | None = None) -> None:
         if self.document is not None and self.document.id == document.id:
             document.revision = max(self.document.revision + 1, document.revision)
+        if not any(isinstance(r, AnalysisCasesResource) for r in document.resources.values()):
+            cases = AnalysisCasesResource(document.id)
+            document.resources[cases.id] = cases
+            document.mark_saved(document.save_state.path)
         self.document = document
         self.dispatcher = CommandDispatcher(document)
         self.dispatcher.subscribe(self._command_changed)
@@ -196,7 +204,7 @@ class PrepSession:
                 return {"document_id": None, "revision": 0, "dirty": False, "name": "새 작업",
                         "can_undo": False, "can_redo": False, "node_count": 0, "element_count": 0,
                         "capabilities": self.capabilities(), "diagnostics": [], "source_path": None,
-                        "project_path": None, "last_change": None, "active_object": None, "selected_objects": [],
+                        "project_path": None, "last_change": None, "active_object": None, "selected_objects": [], "active_case_id": None,
                         "document_epoch": self._document_epoch, "projection_revision": self._projection_revision}
             if self._projection_cache is None:
                 self.mesh_view()
@@ -208,6 +216,7 @@ class PrepSession:
                     "element_count": len(projection["cells"]), "capabilities": self.capabilities(),
                     "diagnostics": self.diagnostics(), "project_path": document.save_state.path,
                     "source_path": self._source_path,
+                    "active_case_id": self._cases_resource().snapshot()["active_case_id"],
                     "last_change": self.dispatcher.last_change.to_dict() if self.dispatcher.last_change else None,
                     "active_object": asdict(self._active_object) if self._active_object else None,
                     "active_target_role": self._active_target_role,
@@ -217,7 +226,7 @@ class PrepSession:
     @staticmethod
     def capabilities() -> dict:
         return {"save": True, "undo": True, "radioss_raw_preservation": True, "project_format": PROJECT_FORMAT,
-                "project_version": PROJECT_VERSION, "material_edit": ["LAW1/ELAST", "LAW36/PLAS_TAB"],
+                "project_version": PROJECT_VERSION, "analysis_cases": ["BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"], "material_edit": ["LAW1/ELAST", "LAW36/PLAS_TAB"],
                 "constraint_edit": ["BCS"], "contact_edit": ["INTER/TYPE7 targets and friction", "INTER/TYPE24 friction"],
                 "curve_edit": ["FUNCT point values and row count"], "initial_velocity_edit": ["INIVEL/TRA"],
                 "shell_edit": ["PROP/SHELL thickness"],
@@ -233,7 +242,7 @@ class PrepSession:
         with self._lock:
             document = self._require()
             result = list(self._diagnostics)
-            for resource in document.resources.values(): result.extend(resource.diagnostics)
+            for resource in self._deck_resources(document): result.extend(resource.diagnostics)
             if self._projection_cache is None: self.mesh_view()
             result.extend(self._projection_cache.get("diagnostics", []))
             # Diagnostics can contain export guards; never expose their internal objects.
@@ -242,12 +251,12 @@ class PrepSession:
     def list_cards(self) -> list[dict]:
         with self._lock:
             document = self._require()
-            return [card for resource in document.resources.values() for card in resource.list_cards()]
+            return [card for resource in self._deck_resources(document) for card in resource.list_cards()]
 
     def _find_card(self, card_id: str) -> DeckResource:
         if not isinstance(card_id, str):
             raise PrepError("invalid_reference", "A card UUID is required.")
-        for resource in self._require().resources.values():
+        for resource in self._deck_resources():
             if card_id in resource._by_id:
                 return resource
         raise PrepError("card_not_found", "카드를 찾을 수 없습니다.", {"card_id": card_id})
@@ -340,7 +349,7 @@ class PrepSession:
         if not isinstance(identity, str):
             raise PrepError("invalid_reference", "A resource UUID is required.")
         resource = self._require().resources.get(identity)
-        if resource is None:
+        if not isinstance(resource, DeckResource):
             raise PrepError("invalid_reference", "The target deck resource does not exist.")
         return resource
 
@@ -409,7 +418,7 @@ class PrepSession:
             dependents, unverified = self._dependency_inventory(part_id)
             blockers.extend(dependents)
             unknown.extend(unverified)
-        cells = [cell for item in self._require().resources.values() for cell in item.mesh_projection()["cells"]]
+        cells = [cell for item in self._deck_resources() for cell in item.mesh_projection()["cells"]]
         selected_nodes = {node for cell in cells if cell.get("part_id") in selected for node in cell["nodes"]}
         shared_nodes = selected_nodes & {node for cell in cells if cell.get("part_id") not in selected for node in cell["nodes"]}
         potentially_removed = set(selected_nodes)
@@ -455,7 +464,7 @@ class PrepSession:
             removed_cards.append(card.id)
         for card in selected.values(): remove(card)
         element_roots = {"SHELL", "SH3N", "BRICK", "TETRA4", "TETRA", "BEAM", "TRUSS"}
-        for owner in self._require().resources.values():
+        for owner in self._deck_resources():
             for card in owner.cards:
                 words = card.keyword.upper().split("/")
                 if words[1] in element_roots and len(words) > 2 and words[2].isdigit() and int(words[2]) in selected:
@@ -524,7 +533,7 @@ class PrepSession:
             # rows omitted by the display projection because their geometry is bad.
             used_nodes, used_elements = set(), set()
             element_roots = {"SHELL", "SH3N", "BRICK", "TETRA4", "TETRA", "BEAM", "TRUSS"}
-            for source in self._require().resources.values():
+            for source in self._deck_resources():
                 for card in source.cards:
                     root = card.keyword.upper().split("/")[1]
                     used = used_nodes if root == "NODE" else used_elements
@@ -582,17 +591,43 @@ class PrepSession:
                 cells = cells_by_part.get(part.uuid, [])
                 rows = [integer(element_map[cell.id]) + "".join(integer(node_map[node]) for node in cell.node_ids) for cell in cells]
                 texts.append(newline.join([f"/{keyword}/{identifier}", marker, *rows, ""]))
+            group_positions = {}
+            group_reserved = {}
+            for group in getattr(native_mesh, "groups", ()):
+                if group.key in group_positions:
+                    raise PrepError("invalid_reference", "Imported group keys must be distinct.")
+                if group.kind == "node":
+                    family, mapping = "GRNOD/NODE", node_map
+                elif group.kind == "element":
+                    family = "GRSH3N/SH3N" if native_mesh.dimension == 2 else "GRBRIC/BRIC"
+                    mapping = element_map
+                else:
+                    raise PrepError("invalid_reference", "Imported groups must contain nodes or physical elements.")
+                if not group.member_ids or len(set(group.member_ids)) != len(group.member_ids) or any(type(item) is not int or item not in mapping for item in group.member_ids):
+                    raise PrepError("invalid_reference", "An imported group contains duplicate or unadopted members.", {"group_key": group.key})
+                namespace = family.split("/")[0]
+                if namespace not in group_reserved:
+                    group_reserved[namespace] = {identity[1] for card in self.list_cards()
+                        if (identity := native_identity(card["keyword"])) and identity[0] == namespace}
+                identifier = 1
+                while identifier in group_reserved[namespace]: identifier += 1
+                group_reserved[namespace].add(identifier)
+                group_positions[group.key] = len(texts)
+                texts.append(member_block(family, identifier, group.name,
+                    [mapping[item] for item in group.member_ids], newline=newline))
             if replacement_state is None:
                 state, card_ids = resource.inserted_states(texts)
             else:
                 state, card_ids = replacement_state, [str(uuid4()) for _ in texts]
                 state["created"].extend({"id": card_id, "text": text} for card_id, text in zip(card_ids, texts))
             part_map = {key: card_ids[position] for key, position in part_positions.items()}
+            group_map = {key: card_ids[position] for key, position in group_positions.items()}
             change = self.dispatcher.execute(resource.id, state, "Adopt mesh candidate", object_ids=tuple(card_ids),
                                              expected_revision=expected_revision, kind="structure")
             self._source_paths.update(str(Path(asset.path).resolve()) for asset in native_mesh.assets)
             return self._model_result(resource, next(iter(part_map.values()), None), change,
                 card_ids=card_ids, part_ids=list(part_map.values()), part_id_map=part_map,
+                group_id_map=group_map, source_kind=getattr(native_mesh, "source_kind", "cad_gmsh"),
                 node_id_map=node_map, element_id_map=element_map,
                 mesh_uuid=native_mesh.mesh_uuid, geometry_resource_uuid=native_mesh.geometry_resource_uuid,
                 omitted_boundary_cells=native_mesh.omitted_boundary_cells, unused_node_ids=list(native_mesh.unused_node_ids), **replacement_details)
@@ -647,7 +682,7 @@ class PrepSession:
         # Inspect raw native IDs, including duplicates within one NODE block; the
         # display projection intentionally removes these and cannot be an oracle.
         counts = {}
-        for resource in self._require().resources.values():
+        for resource in self._deck_resources():
             for card in resource.cards:
                 if card.keyword.upper().split("/")[1] != "NODE": continue
                 for index in card.data:
@@ -697,7 +732,7 @@ class PrepSession:
         self._member_sequence(part_ids)
         identifiers = []
         # Read all cells, even those the display omitted for missing nodes.
-        cells = [cell for resource in self._require().resources.values() for cell in resource.mesh_projection()["cells"]]
+        cells = [cell for resource in self._deck_resources() for cell in resource.mesh_projection()["cells"]]
         kinds_by_part = {}
         for cell in cells: kinds_by_part.setdefault(cell.get("part_id"), set()).add(cell["type"])
         for part_id in part_ids:
@@ -1142,6 +1177,9 @@ class PrepSession:
             resource, card, identity = self._unique_card(card_id)
             if not self._supported_model_card(card):
                 raise PrepError("unsupported_operation", "Delete supports the verified material, shell property and condition card families only.")
+            cases = [case for case in self.analysis_cases()["cases"] if card_id in case["condition_ids"]]
+            if cases:
+                raise PrepError("card_in_use", "Remove the condition from these analysis cases before deleting it: " + ", ".join(case["name"] for case in cases), {"analysis_cases": cases})
             dependents, unverified = self._dependency_inventory(card_id)
             if dependents:
                 raise PrepError("card_in_use", "Remove or reassign the dependent cards before deleting this card.",
@@ -1208,7 +1246,7 @@ class PrepSession:
             document = self._require()
             if self._projection_cache is None:
                 nodes: dict[int, list[float]] = {}; node_resources: dict[int, list[str]] = {}; cells = []; diagnostics = []
-                for resource in document.resources.values():
+                for resource in self._deck_resources(document):
                     projection = resource.mesh_projection()
                     for identifier, point in zip(projection["node_ids"], projection["points"]):
                         node_resources.setdefault(identifier, []).append(resource.id)
@@ -1227,7 +1265,7 @@ class PrepSession:
                             "message": f"요소 {cell['id']}의 참조 절점이 없어 표시하지 못했습니다."})
                 identifiers = sorted(nodes)
                 parts = {}
-                for resource in document.resources.values():
+                for resource in self._deck_resources(document):
                     for card in resource.cards:
                         identity = native_identity(card.keyword)
                         if identity and identity[0] == "PART":
@@ -1254,7 +1292,7 @@ class PrepSession:
         if not isinstance(target, ObjectRef) or target.document_id != document.id or target.kind != "rad-card":
             raise PrepError("invalid_reference", "A card in the current document is required.")
         resource = document.resources.get(target.resource_id)
-        if resource is None:
+        if not isinstance(resource, DeckResource):
             raise PrepError("invalid_reference", "The target resource does not exist.")
         card = resource.card(target.object_id)
         if target.native_scope != card.keyword or target.mesh_revision is not None:
@@ -1527,10 +1565,11 @@ class PrepSession:
                         "source_paths": sorted(self._source_paths), "diagnostics": self._diagnostics,
                         "resources": [{"id": r.id, "kind": r.kind, "name": r.name,
                             "logical_path": self._paths[r.id], "raw_member": f"raw/{r.id}.rad",
-                            "state": r.snapshot()} for r in document.resources.values()]}
+                            "state": r.snapshot()} for r in self._deck_resources(document)],
+                        "analysis_cases": self._cases_resource().snapshot()}
             try:
                 write_container(target, manifest, {f"raw/{resource.id}.rad": resource.raw
-                                                  for resource in document.resources.values()})
+                                                  for resource in self._deck_resources(document)})
             except (OSError, zipfile.BadZipFile) as exc:
                 raise PrepError("project_write_error", "작업 문서를 저장하지 못했습니다.", {"reason": str(exc)}) from exc
             document.mark_saved(str(target))
@@ -1550,7 +1589,7 @@ class PrepSession:
                     manifest = json.loads(archive.read("manifest.json"))
                     if not isinstance(manifest, dict):
                         raise PrepError("invalid_project", "작업 문서의 manifest는 객체여야 합니다.")
-                    if manifest.get("format") != PROJECT_FORMAT or type(manifest.get("version")) is not int or manifest.get("version") not in (1, PROJECT_VERSION):
+                    if manifest.get("format") != PROJECT_FORMAT or type(manifest.get("version")) is not int or manifest.get("version") not in (1, 2, PROJECT_VERSION):
                         raise PrepError("project_version", "지원하지 않는 작업 문서 형식/버전입니다.")
                     if not isinstance(manifest["document_id"], str): raise ValueError("invalid document ID")
                     UUID(manifest["document_id"])
@@ -1578,6 +1617,16 @@ class PrepSession:
                     if not isinstance(manifest.get("source_paths", []), list) or not all(isinstance(p, str) for p in manifest.get("source_paths", [])):
                         raise ValueError("invalid source path metadata")
                     diagnostics = self._project_include_diagnostics(document, paths, manifest["root_id"])
+                    if manifest["version"] >= 3:
+                        cases = AnalysisCasesResource(document.id, manifest["analysis_cases"])
+                        if cases.id in document.resources:
+                            raise ValueError("analysis case resource identity collision")
+                        cards = {card.id: card for resource in self._deck_resources(document) for card in resource.cards}
+                        for case in cases.snapshot()["cases"]:
+                            for identity in case["condition_ids"]:
+                                if identity not in cards or condition_kind(cards[identity].keyword) is None:
+                                    raise PrepError("invalid_project", "An analysis case references a missing or unsupported condition.", {"case_id": case["id"], "card_id": identity})
+                        document.resources[cases.id] = cases
                     document.mark_saved(str(source))
                     self._install(document, manifest["root_id"], paths, set(manifest.get("source_paths", [])), diagnostics)
             except PrepError:
@@ -1612,11 +1661,11 @@ class PrepSession:
                         "unresolved_include": True, "resource_id": resource_id, **reference})
 
         visit(root_id, ())
-        if reached != set(document.resources):
+        if reached != set(paths):
             raise PrepError("invalid_project", "루트 입력에서 참조하지 않는 자원이 작업 문서에 있습니다.")
         return diagnostics
 
-    def _rad_outputs(self, target):
+    def _rad_outputs(self, target, inactive_condition_ids=()):
         document = self._require()
         if any(d.get("unresolved_include") for d in self._diagnostics):
             raise PrepError("unresolved_include", "미해결 INCLUDE가 있어 독립 입력 파일을 내보낼 수 없습니다.",
@@ -1625,7 +1674,7 @@ class PrepSession:
             raise PrepError("project_overwrite", "작업 문서를 솔버 입력으로 덮어쓸 수 없습니다.")
         outputs = []
         targets = set()
-        for resource in document.resources.values():
+        for resource in self._deck_resources(document):
             destination = target if resource.id == self._root_id else target.parent / self._paths[resource.id]
             destination = destination.resolve()
             if self._protected(destination):
@@ -1633,7 +1682,15 @@ class PrepSession:
             key = str(destination).casefold()
             if key in targets: raise PrepError("export_path_collision", "출력 파일 경로가 충돌합니다.")
             targets.add(key)
+            excluded = [identity for identity in inactive_condition_ids if identity in resource._by_id]
             payload = resource.render()
+            if excluded:
+                # INCLUDE directives are comments in the block layout. Retain
+                # them and all comments, even when they follow an omitted card.
+                omitted = {index for identity in excluded for index in
+                           (resource.card(identity).start, *resource.card(identity).data)}
+                payload = "".join(line for index, line in enumerate(payload.decode("latin1").splitlines(keepends=True))
+                                  if index not in omitted).encode("latin1")
             if resource.id != self._root_id and destination.exists() and destination.read_bytes() != payload:
                 raise PrepError("include_output_collision", "기존 INCLUDE 출력과 내용이 다릅니다. 빈 출력 폴더를 선택해 주세요.", {"path": str(destination)})
             outputs.append((destination, payload))
@@ -1678,7 +1735,7 @@ class PrepSession:
                     "diagnostics": self.diagnostics(), "engine_companion": "not generated or rewritten"}
 
     @_file_boundary
-    def export_solver_inputs(self, path, end_time, output_interval):
+    def export_solver_inputs(self, path, end_time, output_interval, *, _inactive_condition_ids=()):
         """Export preserved Starter inputs and a separately generated Engine deck."""
         with self._lock:
             document = self._require()
@@ -1688,19 +1745,13 @@ class PrepSession:
             run_name = target.name[:-9]
             engine = target.with_name(run_name + "_0001.rad")
             engine_bytes = engine_input(run_name, end_time, output_interval)
-            outputs = self._rad_outputs(target)
+            outputs = self._rad_outputs(target, _inactive_condition_ids)
             if self._protected(engine) or (document.save_state.path and engine == Path(document.save_state.path)):
                 raise PrepError("source_overwrite", "Choose a new directory for generated solver inputs.")
             if str(engine).casefold() in {str(destination).casefold() for destination, _ in outputs}:
                 raise PrepError("export_path_collision", "Engine filename conflicts with an INCLUDE output.")
             root = self._model_resource(None)
-            begin = next((card for card in root.cards if card.keyword.upper() == "/BEGIN"), None)
-            tokens = root.lines[begin.data[3]].split() if begin is not None and len(begin.data) >= 4 else []
-            if len(tokens) != 3:
-                raise PrepError("invalid_units", "Declare the second BEGIN unit row explicitly; Engine times use working units, not inferred input units.")
-            units = dict(zip(("mass", "length", "time"), tokens))
-            if units["time"] not in ("s", "ms", "mus"):
-                raise PrepError("invalid_units", "The declared working time unit is outside the supported solver export profile.")
+            units = self._solver_work_units()
             # Native export preserves raw files. Run export can add the mandatory
             # solver header to its OUTPUT only, without changing the document.
             added_header = False
@@ -1715,3 +1766,14 @@ class PrepSession:
                     "revision": document.revision, "units": units, "added_starter_header": added_header,
                     "end_time": float(end_time), "output_interval": float(output_interval),
                     "diagnostics": self.diagnostics(), "engine_companion": "generated explicit run and animation interval"}
+
+    def _solver_work_units(self):
+        root = self._model_resource(None)
+        begin = next((card for card in root.cards if card.keyword.upper() == "/BEGIN"), None)
+        tokens = root.lines[begin.data[3]].split() if begin is not None and len(begin.data) >= 4 else []
+        if len(tokens) != 3:
+            raise PrepError("invalid_units", "Declare the second BEGIN unit row explicitly; Engine times use working units, not inferred input units.")
+        units = dict(zip(("mass", "length", "time"), tokens))
+        if units["time"] not in ("s", "ms", "mus"):
+            raise PrepError("invalid_units", "The declared working time unit is outside the supported solver export profile.")
+        return units

@@ -118,6 +118,8 @@ class PrepController:
                                                action_id="view.fit_selected", contexts=("mesh",))
         from .mesh_workflow import MeshWorkflow
         self.mesh_workflow = MeshWorkflow(self)
+        from .mesh_import import MeshImportWorkflow
+        self.mesh_import = MeshImportWorkflow(self)
 
     def _summary(self):
         return self.session.describe()
@@ -218,6 +220,8 @@ class PrepController:
         self.modeling.refresh()
         self.mesh_workflow.mesh_action.setEnabled(loaded and editable)
         self.mesh_workflow.export_action.setEnabled(loaded and editable)
+        self.mesh_workflow.cases_action.setEnabled(loaded and editable)
+        self.mesh_import.action.setEnabled(loaded and editable)
         selected_parts = self._selected_part_refs() if loaded else ()
         self.hide_selected_action.setEnabled(bool(selected_parts) and loaded and editable and self.viewport is not None)
         self.isolate_action.setEnabled(self.hide_selected_action.isEnabled())
@@ -479,6 +483,19 @@ class PrepController:
             self.statusBar().showMessage("Properties updated", 5000)
             return True
         return False
+
+    def _curve_edit_context(self):
+        description = self._summary()
+        return (description.get("document_epoch"), description.get("document_id"), description.get("revision"),
+                self._selected_card_id, self.provider.active_object())
+
+    def _curve_editable(self):
+        description = self._summary()
+        active = self.provider.active_object()
+        return (not self._updating and not self._busy and not self._replacement_conflict
+                and self._curve_active and active is not None and active.object_id == self._selected_card_id
+                and description.get("revision") == self._editor_revision
+                and description.get("document_epoch") == self._last_presented_epoch)
 
     def _commit_curve(self, points):
         if self._updating or self._busy:

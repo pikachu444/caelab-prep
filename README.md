@@ -6,7 +6,7 @@
 
 **현재 구현:** 사용자 RAD의 재료·단면·파트 관계를 편집하고, 새 문서에서 CAD 메시 후보를 검토·채택해 조건과 Starter/Engine을 작성할 수 있습니다. 같은 문서·명령·편집 부품을 8개 프로그램별 표현에서 사용합니다. 재료/단면 2쌍의 생성·할당, 곡선·집합·구속·하중·초기속도·접촉, 단위 표시 변환, Undo/Redo·저장·재열기를 연결했습니다. 실제 Workbench는 공용 숫자 입력 부품과 독립 Prep 문서 열기를 사용합니다.
 
-**새 세션의 시작점:** [남은 작업 26개와 각각의 완료 기준](docs/execution-stages.md#remaining-work)을 확인하세요. 현재 목표 14개, 보존한 기존 구현 요구 7개, 실증이 선행되는 조건부 5개입니다. 작업 크기가 같은 26개나 완료율을 뜻하지 않습니다. 다음 구현은 **N01 케이스·영속 해석 설정, N02 외부 독립 메시 import**입니다. 두 기능은 아직 없으며, 남은 일이 검증뿐인 상태가 아닙니다.
+**새 세션의 시작점:** [남은 작업 26개와 각각의 완료 기준](docs/execution-stages.md#remaining-work)을 확인하세요. 현재 목표 15개, 보존한 기존 구현 요구 6개, 실증이 선행되는 조건부 5개입니다. 작업 크기가 같은 26개나 완료율을 뜻하지 않습니다. **PR #17 (`0aaada4`)은 N01 케이스·영속 해석 설정, N02 독립 MSH 가져오기, N15 두 앱의 CSV 파일·plot drag를 구현한 검증 대상**입니다. 실제 Linux 화면·파일·소형 솔버 결과를 확인했고 해당 SHA의 CI와 문서 대조 뒤 병합합니다. 다음 구현은 N16 다중 자원 관계, N19→N20 live 제어이며 N17 대용량 계측과 Workbench N21을 병행합니다. 나머지 행의 미완료 기능과 외부 검증은 유지합니다.
 
 [달성 목표](DESIGN.md#delivery-goals)와 [구현·검증 근거](docs/execution-stages.md#current-progress)를 구분합니다. 원제품 8종과의 동일 과업 실행 비교는 미확인이고 Windows 실제 창·IME·DPI·배포 검증은 사용자 지시에 따라 후속 일괄 검사로 남깁니다. 이 구현을 상용 CAE 전체 기능·품질과 동등하다고 주장하지 않습니다.
 
@@ -41,13 +41,16 @@ PART를 선택하면 원래 파트 ID·표시 요소 수·현재 재료/단면 �
 |---|---|
 | 탐색·표시 | 트리/3D 선택, 파트 다중 선택·검색·필터·숨김/격리·fit, 조건 대상의 역할별 강조 |
 | 모델 작성 | LAW1 재료, SHELL/TYPE1 및 SOLID/TYPE14 단면, 생성·복사·안전 삭제·PART 할당·교체 |
-| 조건 | FUNCT 행/CSV/plot, 절점·요소 집합 생성/멤버 편집·shell 파트 표면, BCS, 절점별 CLOAD, INIVEL/TRA, 검증한 TYPE7 프로파일 생성과 참조 편집 |
+| 조건 | FUNCT 행/텍스트 붙여넣기/CSV 파일/plot drag, 절점·요소 집합 생성/멤버 편집·shell 파트 표면, BCS, 절점별 CLOAD, INIVEL/TRA, 검증한 TYPE7 프로파일 생성과 참조 편집 |
 | 단위 | 명시된 덱 단위의 탄성계수·밀도·길이·속도·힘/모멘트 표시 변환. 미해석 카드별 단위와 FUNCT 축의 물리 차원은 추정하지 않음 |
 | CAD/메시 | 별도 Gmsh worker의 tri3/tet4 후보, 품질 문턱·공유 경계·국부 크기, 후보 취소·채택·참조 없는 소유 메시의 안전 교체 |
-| 문서·출력 | 원문/구조 편집·Undo/Redo·revision, `.caeprep` v2와 v1 읽기, INCLUDE 묶음과 새 Starter/Engine 출력 |
+| 케이스 | 영속 UUID·조건 참조/활성 집합·단위 있는 시간/출력 설정, 생성·복사·선택·삭제·한 Undo, 선택 케이스 native 출력 |
+| 문서·출력 | 원문/구조 편집·Undo/Redo·revision, `.caeprep` v3와 v1/v2 읽기, INCLUDE 묶음과 새 Starter/Engine 출력 |
 | 실제 공통화 | 8 native 표현의 같은 provider/명령/위젯, 중립 문서, Workbench의 NumericEdit 소비와 독립 프로세스 파일 전달 |
 
-현재 CAD 후보 경로는 자체 생성한 CAD/XAO/MSH/metadata 묶음을 요구합니다. 외부 MSH 같은 독립 메시를 직접 여는 기능은 없으며 RAD 메시 열기와 구별합니다. Export 창의 종료 시간·출력 간격은 그 내보내기 호출의 인자이며 저장·재열기 가능한 케이스/해석 설정이 아닙니다.
+**Mesh → Import mesh**는 CAD 없이 MSH 2.2/4.1 ASCII를 가져옵니다. `[cad]`의 Gmsh 4.15.2와 공유 라이브러리가 필요하며 소스 길이 단위 mm/cm/m를 직접 지정해야 합니다. 문서와 단위가 다르면 거부하고 좌표를 자동 환산하지 않습니다. 원본 해시와 SDK 전체 요소 목록을 대조하고 tri3/tet4의 품질·그룹·파트를 검토한 뒤 채택합니다. 중첩 physical group은 집합으로 유지하고 멤버 조합별 파트로 나눠 요소 중복을 피합니다. 무그룹 요소는 명시적 파트가 됩니다. 하위 차원 경계는 별도 shell/beam이 아닌 node 집합이며, 지원하지 않는 family가 있으면 전체 채택을 막습니다. binary/partition/periodic/data/parametric MSH는 아직 지원하지 않습니다. CAD 후보의 실제 source/metadata/msh/xao 검증은 별도 경로에서 그대로 유지합니다.
+
+**Conditions → Analysis cases**에서 이름·활성 조건·시간 단위·종료 시간·출력 간격을 저장합니다. 지원 활성 조건은 BCS/CLOAD/INIVEL/TRA/INTER/TYPE7이며 해석하지 못한 물리 조건이 있으면 선택 케이스 출력을 막습니다. Export 창은 저장된 활성 케이스를 기본으로 선택하며 수동 설정 출력도 구분합니다. 원본 Engine을 편집하거나 Prep에서 솔버를 실행하지 않습니다.
 
 미지원 카드는 원문으로 보존합니다. 알 수 없는 참조가 있는 삭제·교체는 차단하며 전체 Radioss 카드, 일반 재메시의 조건 자동 재연결, 모든 요소·재료법칙을 지원하지 않습니다. 채택한 native 메시와 출처 해시는 작업문서에 남지만 재메시에 필요한 CAD/XAO/MSH 원자산은 별도로 보관한 후보 폴더를 유지해야 합니다. 임의 all-hex·중립면·대용량·live GUI IPC/MCP·Windows 설치형 배포는 별도 남은 범위입니다. 솔버 실행·후처리의 Workbench 소유권은 유지합니다.
 
@@ -83,6 +86,15 @@ caelab-prep adopt section.caeprep --candidate mesh-assets/gmsh-ID/metadata.json 
 caelab-prep export meshed.caeprep --engine --end-time 0.001 --output-interval 0.0001 --output run/model_0000.rad
 ```
 
+외부 MSH와 영속 케이스도 같은 API를 호출합니다. 아래 `--no-conditions`는 의도적으로 조건을 하나도 활성화하지 않습니다. 실제 해석에는 `case list`와 조건 목록에서 확인한 UUID를 `--condition`으로 지정합니다.
+
+```sh
+caelab-prep import-mesh section.caeprep input.msh --assets mesh-assets --length-unit mm --material /MAT/LAW1/41 --property /PROP/SOLID/207 --output meshed.caeprep
+caelab-prep case meshed.caeprep create --name Free-flight --no-conditions --end-time 1 --output-interval 0.1 --time-unit ms --output case.caeprep
+caelab-prep case case.caeprep list
+caelab-prep case case.caeprep export --output run/case_0000.rad
+```
+
 `--card`는 해당 파일의 실제 고유 헤더 또는 작업 문서의 카드 ID를 받습니다. 값은 덱의 단위계를 따릅니다. Gmsh는 시스템에 맞는 공유 라이브러리도 필요할 수 있습니다.
 
 개발 검사는 CI와 같이 환경을 나눕니다. 코어/CLI는 `.[dev]`, Qt 문서 검사는 `.[gui,dev]`, CAD worker 검사는 별도 가상환경에 `.[cad,dev]`와 `cadquery-ocp==7.8.1.1.post1`을 설치합니다. 해당 OCP는 테스트 입력 생성용이며 VTK 9.3.1을 요구하므로 GUI 환경의 VTK 9.4 이상과 분리합니다. OCP는 제품 의존성이 아닙니다. Qt offscreen 검사는 폼·문서 연결을, 별도 `native-render` CI는 Xvfb/X11에서 실제 Qt+VTK 화면·마우스 선택을 검사합니다. `solver-smoke`는 고정된 공식 OpenCourant로 새 tri/tet 입력의 질량·운동량·에너지를 검사합니다. CI의 wheel 산출물은 새 가상환경에 설치해 CLI를 확인하며 Windows GUI 납품과 구분합니다. 각 실행의 성공 여부는 해당 커밋의 CI 결과와 작업서 기록을 따릅니다.
@@ -105,7 +117,7 @@ caelab-prep gallery path/to/material-curves.caeprep
 caelab-prep catalogue
 ```
 
-기본 화면은 실제 중립 문서를 편집하는 **재료/곡선 작업 공간**입니다. 재료 또는 곡선을 선택하고 해당 **Apply**로 확정합니다. 잘못된 숫자·표는 초안으로 유지되며 Revert 또는 Escape로 취소합니다. 단위 선택은 알려진 단위 사이에서 표시값을 변환합니다. 표 붙여넣기는 전체 검증 후 미리보기로 남고 Apply 한 번이 Undo 한 번입니다. 재료의 **Associated curve**에서는 실제 곡선 참조를 선택·Undo·저장·재열기할 수 있습니다. 이는 중립 문서의 연결이며 솔버 구성 법칙을 새로 정의하지 않습니다.
+기본 화면은 실제 중립 문서를 편집하는 **재료/곡선 작업 공간**입니다. 재료 또는 곡선을 선택하고 해당 **Apply**로 확정합니다. 잘못된 숫자·표는 초안으로 유지되며 Revert 또는 Escape로 취소합니다. 단위 선택은 알려진 단위 사이에서 표시값을 변환합니다. 표 붙여넣기와 **Import CSV**는 전체 검증 후 미리보기로 남고 Apply 한 번이 Undo 한 번입니다. CSV는 UTF-8/BOM, 두 수치 열과 선택적 `x,y` 헤더를 받으며 단위·객체 ID·참조를 포함하지 않습니다. 표시 축 단위 정책을 확인하고 가져오거나 내보냅니다. **Export CSV**는 실제 파일을 원자적으로 쓰며 기존 파일 덮어쓰기는 확인합니다. plot의 점을 끌면 preview만 바뀌고 release가 한 명령/Undo이며 Escape는 취소합니다. 단위·참조는 `.caeprep` 작업문서에 보존됩니다. 재료의 **Associated curve**에서는 실제 곡선 참조를 선택·Undo·저장·재열기할 수 있습니다. 이는 중립 문서의 연결이며 솔버 구성 법칙을 새로 정의하지 않습니다.
 
 개발자 보조 도구는 `caelab-prep catalogue`로 별도 실행합니다. 재료/곡선 창에서는 **Developer → Browse component catalogue**, **View**의 도크 토글 또는 **Ctrl+Shift+G**로 열 수 있습니다. 부품·디자인 토큰·의미별 아이콘을 선택하면 의미 키, 용도, 소스 위치, 실제 사용 장면, 구현 상태와 출처/허용 조건이 나옵니다. 숫자 오류/비활성/포커스, 단위/벡터, 그룹 속성/참조, 트리, 표/곡선, 메뉴/버튼, 메시지를 해당 부품으로 직접 조작합니다. 지원하지 않는 모델링 기능이 아이콘 미리보기에서 실행되지는 않습니다. 현재 생성·편집 지원표는 아래 첫 적용 앱의 범위를 따릅니다. 카탈로그 자체를 실제 모델링 과업의 완료로 세지 않습니다.
 

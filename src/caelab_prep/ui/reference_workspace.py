@@ -46,7 +46,7 @@ def configure_native(h, key):
          "Selection": (h.modeling.actions["group.create"], h.modeling.actions["element_group.create"], h.modeling.actions["surface.create"]),
          "Curve": (h.modeling.actions["curve.create"],),
          "Conditions": tuple(h.modeling.actions[key + ".create"] for key in
-                              ("constraint", "load", "velocity", "contact"))},
+                              ("constraint", "load", "velocity", "contact")) + (h.mesh_workflow.cases_action,)},
         h._finish_pending_edits, h._discard_pending_edits,
         h.curve_table, h.curve_plot, h.curve_plot.parentWidget(), property_tabs=h.property_tabs,
         selection_tools=h.viewport_frame.findChild(QToolBar, "modelViewCommands"), viewport=h.viewport_frame,

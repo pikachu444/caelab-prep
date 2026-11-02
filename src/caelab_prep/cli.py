@@ -38,6 +38,47 @@ def _resolve_card(session, identifier):
     return matches[0]["id"]
 
 
+def _case_command(session, args):
+    """The command line uses the same persisted cases as the desktop editor."""
+    operation = args.case_operation
+    changed = {name: getattr(args, name) for name in
+               ("name", "end_time", "output_interval", "time_unit")
+               if getattr(args, name) is not None}
+    if args.condition is not None or args.no_conditions:
+        changed["condition_ids"] = [_resolve_card(session, value) for value in (args.condition or [])]
+    if operation == "list":
+        if changed or args.case_id or args.output:
+            raise ValueError("case list accepts only the input document")
+        return session.analysis_cases()
+    if not args.output:
+        raise ValueError("--output is required for a case change or export")
+    if operation == "export":
+        if changed:
+            raise ValueError("Export uses saved case settings; update the case first")
+        return session.export_analysis_case(args.output, args.case_id)
+    state = session.describe()
+    guard = dict(expected_revision=state["revision"], expected_document_id=state["document_id"])
+    if operation == "create":
+        if args.case_id or set(changed) != {"name", "end_time", "output_interval", "time_unit", "condition_ids"}:
+            raise ValueError("Create requires --name, --end-time, --output-interval, --time-unit and either --condition or --no-conditions")
+        result = session.create_analysis_case(**changed, **guard)
+    else:
+        if not args.case_id:
+            raise ValueError("Use --case-id from case list for this operation")
+        if operation == "update":
+            result = session.set_analysis_case(args.case_id, changed, **guard)
+        elif operation == "copy":
+            if set(changed) - {"name"}:
+                raise ValueError("Copy accepts only an optional --name; edit the new case separately")
+            result = session.copy_analysis_case(args.case_id, args.name, **guard)
+        else:
+            if changed:
+                raise ValueError("Select/delete do not accept case setting changes")
+            method = session.select_analysis_case if operation == "select" else session.delete_analysis_case
+            result = method(args.case_id, **guard)
+    return {"operation": result, "saved": session.save_project(args.output)}
+
+
 def parser():
     result = argparse.ArgumentParser(description="CAELab Prep native document editor")
     commands = result.add_subparsers(dest="command")
@@ -58,6 +99,18 @@ def parser():
     new.add_argument("--length", required=True, choices=("mm", "cm", "m"))
     new.add_argument("--time", required=True, choices=("s", "ms"))
     new.add_argument("--output", required=True)
+    case = commands.add_parser("case", help="Manage persisted analysis cases using the desktop session API")
+    case.add_argument("path")
+    case.add_argument("case_operation", choices=("list", "create", "update", "copy", "select", "delete", "export"))
+    case.add_argument("--case-id", help="Exact case UUID from case list; export defaults to the saved active case")
+    case.add_argument("--name")
+    case.add_argument("--end-time", type=float)
+    case.add_argument("--output-interval", type=float)
+    case.add_argument("--time-unit", choices=("s", "ms", "mus"))
+    conditions = case.add_mutually_exclusive_group()
+    conditions.add_argument("--condition", action="append", help="Active condition UUID or unique native header; repeat to activate more than one")
+    conditions.add_argument("--no-conditions", action="store_true", help="Explicitly activate no supported native conditions")
+    case.add_argument("--output", help="Working document for changes, or new *_0000.rad path for export")
     adopt = commands.add_parser("adopt", help="Validate a Gmsh candidate and adopt its native mesh")
     adopt.add_argument("path")
     adopt.add_argument("--candidate", required=True, help="Persisted metadata.json")
@@ -68,6 +121,14 @@ def parser():
     adopt.add_argument("--minimum-triangle", type=float, default=.1)
     adopt.add_argument("--minimum-tetrahedron", type=float, default=.1)
     adopt.add_argument("--output", required=True)
+    imported = commands.add_parser("import-mesh", help="Review and adopt a CAD-free Gmsh 2.2/4.1 ASCII mesh")
+    imported.add_argument("path", help="Working RAD document or .caeprep")
+    imported.add_argument("source", help="Standalone .msh file")
+    imported.add_argument("--assets", required=True, help="Keep the source and inspected import manifest here")
+    imported.add_argument("--length-unit", required=True, choices=("mm", "cm", "m"), help="Explicit source length unit; must match the model, no guessed coordinate conversion")
+    imported.add_argument("--material", required=True, help="Existing material UUID or unique native header")
+    imported.add_argument("--property", required=True, help="Existing shell/solid section UUID or unique native header")
+    imported.add_argument("--output", required=True, help="Save the adopted working document")
     schema = commands.add_parser("fields", help="List native cards or query an editable card")
     schema.add_argument("path")
     schema.add_argument("--card", help="Project card ID or exact unique native header")
@@ -180,7 +241,9 @@ def main(argv=None):
             _print(session.save_project(args.output))
             return 0
         session = _session(args.path)
-        if args.command == "inspect":
+        if args.command == "case":
+            _print(_case_command(session, args))
+        elif args.command == "inspect":
             _print(session.describe())
         elif args.command == "fields":
             _print(session.card_fields(_resolve_card(session, args.card)) if args.card else session.list_cards())
@@ -258,6 +321,16 @@ def main(argv=None):
                 replace_part_ids=[_resolve_card(session, part) for part in args.replace_part] or None,
                 expected_revision=state["revision"], expected_document_id=state["document_id"])
             _print({"adoption": result, "quality": candidate.quality, "saved": session.save_project(args.output)})
+        elif args.command == "import-mesh":
+            from .application.external_mesh import import_standalone_mesh
+            material = _resolve_card(session, args.material)
+            section = _resolve_card(session, args.property)
+            candidate = import_standalone_mesh(args.source, args.assets, length_unit=args.length_unit)
+            state = session.describe()
+            result = session.adopt_mesh_candidate(candidate.to_native_mesh(), material_id=material,
+                property_id=section, expected_revision=state["revision"], expected_document_id=state["document_id"])
+            _print({"adoption": result, "quality": candidate.quality, "manifest": str(candidate.manifest_path),
+                    "saved": session.save_project(args.output)})
         return 0
     except Exception as exc:
         error = exc.to_dict() if callable(getattr(exc, "to_dict", None)) else {
