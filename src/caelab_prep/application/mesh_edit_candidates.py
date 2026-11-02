@@ -350,12 +350,17 @@ def _finish(candidate,affected_cells,*,normal_flip=False,contact_dependencies=()
             fail('duplicate_elements','Edit creates coincident duplicate element connectivity.',(signatures[signature],c.ref))
         signatures[signature]=c.ref
     changed_nodes=set(node_updates)|deleted_nodes
+    affected_node_support=set()
+    for ref in affected_cells:
+        affected_node_support.update(base._cells[ref].nodes)
+        if ref not in deleted_cells:
+            affected_node_support.update((cell_updates.get(ref) or base._cells[ref]).nodes)
     resources={r.resource_id for r in changed_nodes|affected_cells|deleted_cells}
     affected_parts={base._cells[r].part for r in affected_cells}|{c.part for c in candidate.cell_updates}
     updated_sets={s.ref:s for s in candidate.set_updates};mapping=dict(candidate.merge_map);impacts=[];set_impacts={}
     contact_sets={ref for use in base.uses if use.ref in contact_dependencies for ref in use.targets}
     for group in base.sets:
-        hits=(set(group.members)&(changed_nodes|affected_cells|affected_parts))
+        hits=(set(group.members)&(changed_nodes|affected_node_support|affected_cells|affected_parts))
         # Mesh generations invalidate explicit memberships even when a number survives.
         generation_hit=any(r.resource_id in resources for r in group.members)
         if not hits and not generation_hit and group.ref not in updated_sets and group.ref not in contact_sets: continue
