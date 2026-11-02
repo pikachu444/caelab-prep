@@ -115,7 +115,7 @@ class GroupMemberReviewDialog(QDialog):
             return
         if any(event.get(key) != self.plan[key] for key in ("document_id", "revision", "document_epoch")):
             self.apply_button.setEnabled(False)
-            self.error.setText("The model changed. Cancel this review and prepare a fresh preview.")
+            self.error.setText("The model changed. Cancel this review, then reopen the group edit before preparing another preview.")
             self.session.cancel_group_members(self.plan["plan_id"])
 
     def apply_review(self):
