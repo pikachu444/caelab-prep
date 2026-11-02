@@ -184,7 +184,7 @@ def test_existing_inspector_dimension_switch_requires_explicit_value_and_unit(mo
     window.show(); pump()
     assert window.select_card(created["load"])
     revision = session.describe()["revision"]
-    window.property_editor.editors["direction"].setCurrentText("ZZ"); pump()
+    window.property_editor.editors["direction"].setCurrentText("XX"); pump()
     assert session.describe()["revision"] == revision
     assert window.field_editors["scale"].text() == ""
     assert not window.save_project_file(tmp_path / "missing-scale.caeprep")
@@ -193,6 +193,6 @@ def test_existing_inspector_dimension_switch_requires_explicit_value_and_unit(mo
     window.field_editors["scale"].setText(".04")
     assert window._finish_pending_edits()
     values = session.condition_values(created["load"])
-    assert values["direction"] == "ZZ" and values["scale"] == 40
+    assert values["direction"] == "XX" and values["scale"] == 40
     assert session.describe()["revision"] == revision + 1
     assert window.property_editor.unit_selectors["scale"].currentText() == "N·m"

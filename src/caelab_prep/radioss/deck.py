@@ -140,7 +140,7 @@ class DeckResource:
                 "TETRA4": "Elements", "TETRA": "Elements", "BEAM": "Elements", "TRUSS": "Elements",
                 "MAT": "Materials", "PROP": "Properties", "PART": "Parts", "BCS": "Constraints",
                 "INTER": "Contacts", "FUNCT": "Curves", "GRNOD": "Groups", "SURF": "Groups",
-                "GRSH3N": "Groups", "GRSHEL": "Groups", "GRBRIC": "Groups",
+                "GRSH3N": "Groups", "GRSHEL": "Groups", "GRBRIC": "Groups", "GRBEAM": "Groups", "GRTRUS": "Groups", "SKEW": "Coordinate systems",
                 "PLOAD": "Loads", "CLOAD": "Loads", "INIVEL": "Initial conditions"}.get(root, "Other cards")
 
     def card(self, card_id: str) -> Card:
@@ -196,6 +196,13 @@ class DeckResource:
                                                  ("vz", "초기 속도 Z (입력 덱 단위)", 40)]]
         elif len(key) > 2 and key[1] == "PROP" and key[2] in ("SHELL", "TYPE1") and len(data) >= 4:
             fields = [Field("thickness", "두께 (입력 덱 단위)", "float", data[3], 20, 40, 0, strict_minimum=True)]
+        elif len(key) > 2 and key[1] == "PROP" and key[2] in ("BEAM", "TYPE3") and len(data) >= 5:
+            fields = [Field(name, label, "float", data[3], start, start+20, 0, strict_minimum=True)
+                      for name, label, start in (("area", "Beam area", 0), ("iyy", "Beam IYY", 20),
+                                                 ("izz", "Beam IZZ", 40), ("ixx", "Beam IXX", 60))]
+        elif len(key) > 2 and key[1] == "PROP" and key[2] in ("TRUSS", "TYPE2") and len(data) >= 2:
+            fields = [Field("area", "Truss area", "float", data[1], 0, 20, 0, strict_minimum=True),
+                      Field("initial_gap", "Initial truss gap", "float", data[1], 20, 40, 0, blank_default=0.)]
         valid = []
         for field in fields:
             try:
@@ -298,6 +305,11 @@ class DeckResource:
         return {"state_version": 3, "patches": {key: dict(value) for key, value in self._patches.items()},
                 "created": [dict(item) for item in self._created], "deleted": sorted(self._deleted),
                 "replaced": dict(self._replaced)}
+
+    def prepare_state(self, state):
+        candidate = copy(self)
+        candidate.restore(state)
+        return candidate.snapshot()
 
     def restore(self, state: dict) -> None:
         """Validate a candidate before replacing live state; legacy patch dictionaries still read."""
@@ -484,7 +496,7 @@ class DeckResource:
                     line = self.lines[index].rstrip("\r\n")
                     try:
                         values = [int(line[p:p + 10]) for p in range(0, (count + 1) * 10, 10)]
-                        cells.append({"id": values[0], "type": kind, "nodes": values[1:], "part_id": part,
+                        cells.append({"id": values[0], "type": kind, "formulation": key[1], "nodes": values[1:], "part_id": part,
                                       "card_id": card.id, "resource_id": self.id})
                     except ValueError:
                         diagnostics.append({"severity": "warning", "code": "element_display_parse", "message": "일부 요소 행을 표시하지 못했습니다.", "line": index + 1})

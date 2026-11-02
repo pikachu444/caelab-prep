@@ -22,10 +22,14 @@ from ..radioss.modeling import (native_identity, integer, material_block, shell_
 from .storage import write_container
 from .contracts import ObjectRef
 from .analysis_cases import AnalysisCasesResource, AnalysisCaseCommands, condition_kind
+from .projection import readonly, mutable as mutable_projection, freeze_mesh_payload
+from .source_models import SourceArchiveResource, SourceModelCommands
+from .model_relations import ModelRelationCommands
+from .mesh_relations import ModelRelationsResource, MeshRelationCommands
 
 
 PROJECT_FORMAT = "caelab-prep-project"
-PROJECT_VERSION = 3
+PROJECT_VERSION = 5
 
 
 def _file_boundary(function):
@@ -40,7 +44,7 @@ def _file_boundary(function):
     return wrapped
 
 
-class PrepSession(AnalysisCaseCommands):
+class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationCommands, MeshRelationCommands):
     def __init__(self):
         self._lock = RLock()
         self.document: Document | None = None
@@ -50,6 +54,7 @@ class PrepSession(AnalysisCaseCommands):
         self._source_paths: set[str] = set()
         self._diagnostics: list[dict] = []
         self._projection_cache: dict | None = None
+        self._projection_index = {}
         self._source_path: str | None = None
         self._listeners = []
         self._active_object: ObjectRef | None = None
@@ -107,6 +112,10 @@ class PrepSession(AnalysisCaseCommands):
             cases = AnalysisCasesResource(document.id)
             document.resources[cases.id] = cases
             document.mark_saved(document.save_state.path)
+        if not any(isinstance(r, ModelRelationsResource) for r in document.resources.values()):
+            relations = ModelRelationsResource(document.id)
+            document.resources[relations.id] = relations
+            document.mark_saved(document.save_state.path)
         self.document = document
         self.dispatcher = CommandDispatcher(document)
         self.dispatcher.subscribe(self._command_changed)
@@ -115,12 +124,15 @@ class PrepSession(AnalysisCaseCommands):
         self._source_paths = source_paths
         self._diagnostics = diagnostics
         self._projection_cache = None
+        self._projection_index = {}
         self._source_path = source_path
         self._active_object = None
         self._selected_objects = ()
         self._active_target_role = None
         self._document_epoch = str(uuid4())
         self._projection_revision += 1
+        self._import_plan = None
+        self._mesh_replacement_plan = None
 
     @staticmethod
     def _path_collisions(paths: dict[str, str]) -> list[list[str]]:
@@ -230,10 +242,14 @@ class PrepSession(AnalysisCaseCommands):
                 "constraint_edit": ["BCS"], "contact_edit": ["INTER/TYPE7 targets and friction", "INTER/TYPE24 friction"],
                 "curve_edit": ["FUNCT point values and row count"], "initial_velocity_edit": ["INIVEL/TRA"],
                 "shell_edit": ["PROP/SHELL thickness"],
-                "create_cards": ["MAT/LAW1", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
-                "copy_delete_cards": ["MAT/LAW1", "MAT/LAW36", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
+                "create_cards": ["MAT/LAW1", "PROP/SHELL", "PROP/SOLID", "SKEW/FIX", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
+                "copy_delete_cards": ["MAT/LAW1", "MAT/LAW36", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
                 "part_assignment": True, "new_document": True, "mesh_adoption": ["triangle3", "tetra4"],
                 "mesh_replacement": "adoption-owned parts without dependent groups/surfaces or unknown references", "solver_input_export": True,
+                "source_import": "explicit native ID mapping and source archive within the closed initial profile",
+                "prepared_mesh_replacement": "mesh-only INCLUDE with unchanged component headers; explicit stale-target reconnection",
+                "instance_references": "metadata only; not-expanded references block native export",
+                "multi_resource_commands": True,
                 "cad_import": False, "meshing": False, "solver_execution": False,
                 "projection_only": True, "include_base": "root-deck-working-directory",
                 "unsupported_cards": "read-only, original bytes preserved"}
@@ -246,7 +262,7 @@ class PrepSession(AnalysisCaseCommands):
             if self._projection_cache is None: self.mesh_view()
             result.extend(self._projection_cache.get("diagnostics", []))
             # Diagnostics can contain export guards; never expose their internal objects.
-            return deepcopy(result)
+            return mutable_projection(result)
 
     def list_cards(self) -> list[dict]:
         with self._lock:
@@ -295,6 +311,8 @@ class PrepSession(AnalysisCaseCommands):
             if native_identity(resource.card(card_id).keyword) and resource.card(card_id).keyword.upper().startswith("/PART/"):
                 raise PrepError("reference_command_required", "Use assign_part with material/property card identities.")
             state = resource.fields_state(card_id, values)
+            if resource.card(card_id).keyword.upper().startswith("/PROP/"):
+                self._validate_dependent_condition_states({resource.id:state})
             assert self.dispatcher is not None
             self.dispatcher.execute(resource.id, state, f"{resource.card(card_id).keyword}: {', '.join(values)}",
                                     object_ids=(card_id,), expected_revision=expected_revision)
@@ -302,15 +320,17 @@ class PrepSession(AnalysisCaseCommands):
 
     def _command_changed(self, change):
         if change.kind == "structure":
+            self._sync_source_paths()
             self._projection_cache = None
+            self._projection_index = {}
             self._projection_revision += 1
             if self._active_object is not None:
                 resource = self.document.resources.get(self._active_object.resource_id)
-                if resource is None or self._active_object.object_id not in resource._by_id:
+                if resource is None or self._active_object.object_id not in getattr(resource, "_by_id", {}):
                     self._active_object = None
                     self.document.selection = Selection()
             self._selected_objects = tuple(ref for ref in self._selected_objects
-                if ref.resource_id in self.document.resources and ref.object_id in self.document.resources[ref.resource_id]._by_id)
+                if ref.resource_id in self.document.resources and ref.object_id in getattr(self.document.resources[ref.resource_id], "_by_id", {}))
             if self._active_object is not None and self._active_target_role is not None:
                 self.document.selection, self._active_target_role = self._condition_selection(
                     self._active_object.object_id, self._active_target_role)
@@ -441,7 +461,7 @@ class PrepSession(AnalysisCaseCommands):
                     unknown.append(item)
                     continue
                 if potentially_removed.intersection(nodes): blockers.append(item)
-            elif tuple(item["keyword"].upper().split("/")[1:3]) in (("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC")):
+            elif tuple(item["keyword"].upper().split("/")[1:3]) in (("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS")):
                 owner = self._find_card(item["id"])
                 try: identifiers = self._integer_members(owner, owner.card(item["id"]))
                 except PrepError:
@@ -704,6 +724,8 @@ class PrepSession(AnalysisCaseCommands):
         return resource, card, identity
 
     def _group_reference(self, card_id):
+        if card_id in self._relations_resource().snapshot()["stale_targets"]:
+            raise PrepError("stale_mesh_target", "Reconnect this node group's explicit correspondence before assigning it to a condition.")
         resource, card, identity = self._supported_reference(card_id, "GRNOD", {"NODE"})
         self._node_members(self._integer_members(resource, card))
         return identity[1]
@@ -744,7 +766,8 @@ class PrepSession(AnalysisCaseCommands):
         return identifiers
 
     @staticmethod
-    def _element_group_family(kind):
+    def _element_group_family(kind, formulation=None):
+        if kind == "line": return {"BEAM": "GRBEAM/BEAM", "TRUSS": "GRTRUS/TRUS"}.get(formulation)
         return {"triangle": "GRSH3N/SH3N", "quad": "GRSHEL/SHEL", "tetra": "GRBRIC/BRIC",
                 "hexahedron": "GRBRIC/BRIC", "wedge": "GRBRIC/BRIC", "pyramid": "GRBRIC/BRIC"}.get(kind)
 
@@ -753,9 +776,7 @@ class PrepSession(AnalysisCaseCommands):
             raise PrepError("invalid_reference", "Choose at least one typed element reference.")
         if self._projection_cache is None: self.mesh_view()
         references, identifiers, families, seen = [], [], set(), set()
-        cells_by_id = {}
-        for cell in self._projection_cache["cells"]:
-            cells_by_id.setdefault(cell["id"], []).append(cell)
+        cells_by_id = self._projection_index["cells_by_id"]
         for value in members:
             if isinstance(value, SelectionRef): ref = value
             elif isinstance(value, dict) and set(value) == {"resource_id", "entity_kind", "local_id"}:
@@ -771,7 +792,7 @@ class PrepSession(AnalysisCaseCommands):
             cell = matches[0]
             if cell["resource_id"] != ref.resource_id:
                 raise PrepError("invalid_reference", "The element does not belong to the stated resource.")
-            kind = self._element_group_family(cell["type"])
+            kind = self._element_group_family(cell["type"], cell.get("formulation"))
             if kind is None:
                 raise PrepError("unsupported_operation", "Element groups support triangle3, quad4 and supported solid cells.")
             if ref in seen:
@@ -799,10 +820,14 @@ class PrepSession(AnalysisCaseCommands):
             resource = self._find_card(card_id)
             card = resource.card(card_id)
             family = "/".join(card.keyword.upper().split("/")[1:3])
-            if family not in ("GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC"):
+            if family not in ("GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS"):
                 raise PrepError("unsupported_operation", "Group membership editing supports explicit node, triangle, quad and solid ID lists.")
             result = {"card_id": card_id, "resource_id": resource.id, "kind": "node" if family == "GRNOD/NODE" else "element",
                       "members": [], "member_ids": [], "diagnostics": []}
+            stale = self._relations_resource().snapshot()["stale_targets"].get(card_id)
+            if stale:
+                result["diagnostics"].append({"code": "stale_mesh_target", "message": "Explicit correspondence to the replacement mesh has not been accepted.",
+                    "mesh_resource_id": stale["mesh_resource_id"], "mesh_revision": stale["mesh_revision"]})
             try:
                 identifiers = self._integer_members(resource, card)
                 result["member_ids"] = identifiers
@@ -847,11 +872,11 @@ class PrepSession(AnalysisCaseCommands):
                     for member in members:
                         ref = member if isinstance(member, SelectionRef) else SelectionRef(**member) if isinstance(member, dict) and set(member) == {"resource_id", "entity_kind", "local_id"} else None
                         if (ref is None or ref.entity_kind != "node" or type(ref.local_id) is not int
-                                or self._projection_cache["node_resources"].get(ref.local_id) != [ref.resource_id]):
+                                or self._projection_cache["node_resources"].get(ref.local_id) != (ref.resource_id,)):
                             raise PrepError("invalid_reference", "A uniquely owned node reference is required.")
                         identifiers.append(ref.local_id)
                     identifiers = self._node_members(identifiers)
-            elif family in ("GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC"):
+            elif family in ("GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS"):
                 identifiers, _, _ = self._element_members(members, family)
             else:
                 raise PrepError("unsupported_operation", "This native group does not have an editable explicit member list.")
@@ -873,6 +898,7 @@ class PrepSession(AnalysisCaseCommands):
                     result.extend(row + resource.newline for row in rows[cursor:])
                     cursor = len(rows)
             state = resource.replaced_state(card_id, "".join(result))
+            self._validate_dependent_condition_states({resource.id:state})
             change = self.dispatcher.execute(resource.id, state, "Edit group members", object_ids=(card_id,),
                                              expected_revision=expected_revision, kind="structure")
             return self._model_result(resource, card_id, change)
@@ -887,36 +913,45 @@ class PrepSession(AnalysisCaseCommands):
             return self._insert_model_card(resource, member_block("SURF/PART", identifier, name, members, newline=resource.newline),
                                            "Create shell surface", expected_revision)
 
-    def create_boundary_condition(self, name, group_id, translations, rotations, *, resource_id=None, native_id=None,
+    def create_boundary_condition(self, name, group_id, translations, rotations, *, coordinate_system_id=None, resource_id=None, native_id=None,
                                   expected_revision=None, expected_document_id=None):
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             group = self._group_reference(group_id)
+            # Native BCS permits fixing an inactive rotation. Report the field
+            # applicability separately; do not reject a valid all-fixed deck.
+            self._validate_condition_components(group_id, translations=translations, rotations=rotations, coordinate_system_id=coordinate_system_id, enforce=False)
             resource = self._model_resource(resource_id)
             identifier = self._allocate_native_id("BCS", native_id)
-            return self._insert_model_card(resource, boundary_block(identifier, name, group, translations, rotations, newline=resource.newline),
+            return self._insert_model_card(resource, boundary_block(identifier, name, group, translations, rotations,
+                skew=self._coordinate_reference(coordinate_system_id), newline=resource.newline),
                                            "Create boundary condition", expected_revision)
 
-    def create_load(self, name, group_id, curve_id, direction, scale, *, resource_id=None, native_id=None,
+    def create_load(self, name, group_id, curve_id, direction, scale, *, coordinate_system_id=None, resource_id=None, native_id=None,
                     expected_revision=None, expected_document_id=None):
         """CLOAD scale is the load at EACH group node, not the group resultant."""
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             group = self._group_reference(group_id)
             curve = self._curve_reference(curve_id)
+            self._validate_condition_components(group_id, translations=tuple(direction == value for value in ("X","Y","Z")),
+                rotations=tuple(direction == value for value in ("XX","YY","ZZ")), coordinate_system_id=coordinate_system_id)
             resource = self._model_resource(resource_id)
             identifier = self._allocate_native_id("CLOAD", native_id)
-            return self._insert_model_card(resource, load_block(identifier, name, group, curve, direction, scale, newline=resource.newline),
+            return self._insert_model_card(resource, load_block(identifier, name, group, curve, direction, scale,
+                skew=self._coordinate_reference(coordinate_system_id), newline=resource.newline),
                                            "Create per-node load", expected_revision)
 
-    def create_initial_velocity(self, name, group_id, velocity, *, resource_id=None, native_id=None,
+    def create_initial_velocity(self, name, group_id, velocity, *, coordinate_system_id=None, resource_id=None, native_id=None,
                                 expected_revision=None, expected_document_id=None):
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             group = self._group_reference(group_id)
+            self._validate_condition_components(group_id, translations=(True,True,True), coordinate_system_id=coordinate_system_id)
             resource = self._model_resource(resource_id)
             identifier = self._allocate_native_id("INIVEL", native_id)
-            return self._insert_model_card(resource, velocity_block(identifier, name, group, velocity, newline=resource.newline),
+            return self._insert_model_card(resource, velocity_block(identifier, name, group, velocity,
+                skew=self._coordinate_reference(coordinate_system_id), newline=resource.newline),
                                            "Create initial velocity", expected_revision)
 
     def create_contact(self, name, secondary_group_id, main_surface_id, friction, *, resource_id=None, native_id=None,
@@ -934,10 +969,10 @@ class PrepSession(AnalysisCaseCommands):
         words = card.keyword.upper().split("/")
         family = "/".join(words[1:3]) if words[1] in ("INIVEL", "INTER") else words[1]
         layouts = {
-            "BCS": {"translations": (1, 0, 6, "bool3"), "rotations": (1, 6, 10, "bool3"), "group_id": (1, 20, 30, "GRNOD")},
+            "BCS": {"translations": (1, 0, 6, "bool3"), "rotations": (1, 6, 10, "bool3"), "group_id": (1, 20, 30, "GRNOD"), "coordinate_system_id": (1,10,20,"SKEW")},
             "CLOAD": {"curve_id": (1, 0, 10, "FUNCT"), "direction": (1, 10, 20, "str"),
-                      "group_id": (1, 40, 50, "GRNOD"), "scale": (1, 80, 100, "float")},
-            "INIVEL/TRA": {"velocity": (1, 0, 60, "vector3"), "group_id": (1, 60, 70, "GRNOD")},
+                      "group_id": (1, 40, 50, "GRNOD"), "scale": (1, 80, 100, "float"), "coordinate_system_id": (1,20,30,"SKEW")},
+            "INIVEL/TRA": {"velocity": (1, 0, 60, "vector3"), "group_id": (1, 60, 70, "GRNOD"), "coordinate_system_id": (1,70,80,"SKEW")},
             "INTER/TYPE7": {"secondary_group_id": (1, 0, 10, "GRNOD"), "main_surface_id": (1, 10, 20, "SURF"),
                             "friction": (4, 20, 40, "float")},
         }
@@ -981,6 +1016,9 @@ class PrepSession(AnalysisCaseCommands):
                         value = [bit == "1" for bit in bits]
                     else:
                         native_id = int(raw.strip() or "0")
+                        if kind == "SKEW" and native_id == 0:
+                            result[key] = None
+                            continue
                         matches = self._native_matches(kind, native_id)
                         value = matches[0]["id"] if len(matches) == 1 else None
                         if value is None:
@@ -1000,6 +1038,8 @@ class PrepSession(AnalysisCaseCommands):
         return identity[1]
 
     def _surface_reference(self, card_id):
+        if card_id in self._relations_resource().snapshot()["stale_targets"]:
+            raise PrepError("stale_mesh_target", "Reconnect this surface before assigning it to a contact.")
         resource, card, identity = self._supported_reference(card_id, "SURF", {"PART"})
         parts = []
         for native_part in self._integer_members(resource, card):
@@ -1024,11 +1064,14 @@ class PrepSession(AnalysisCaseCommands):
                 if kind in ("GRNOD", "FUNCT", "SURF") and merged[key] is None:
                     raise PrepError("invalid_reference", "Replace unresolved condition references before applying.", {"field": key})
             if family == "BCS":
-                text = boundary_block(identity[1], "Validated", self._group_reference(merged["group_id"]), merged["translations"], merged["rotations"])
+                self._validate_condition_components(merged["group_id"], translations=merged["translations"], rotations=merged["rotations"], coordinate_system_id=merged["coordinate_system_id"], enforce=False)
+                text = boundary_block(identity[1], "Validated", self._group_reference(merged["group_id"]), merged["translations"], merged["rotations"], skew=self._coordinate_reference(merged["coordinate_system_id"]))
             elif family == "CLOAD":
-                text = load_block(identity[1], "Validated", self._group_reference(merged["group_id"]), self._curve_reference(merged["curve_id"]), merged["direction"], merged["scale"])
+                self._validate_condition_components(merged["group_id"], translations=tuple(merged["direction"] == value for value in ("X","Y","Z")), rotations=tuple(merged["direction"] == value for value in ("XX","YY","ZZ")), coordinate_system_id=merged["coordinate_system_id"])
+                text = load_block(identity[1], "Validated", self._group_reference(merged["group_id"]), self._curve_reference(merged["curve_id"]), merged["direction"], merged["scale"], skew=self._coordinate_reference(merged["coordinate_system_id"]))
             elif family == "INIVEL/TRA":
-                text = velocity_block(identity[1], "Validated", self._group_reference(merged["group_id"]), merged["velocity"])
+                self._validate_condition_components(merged["group_id"], translations=(True,True,True), coordinate_system_id=merged["coordinate_system_id"])
+                text = velocity_block(identity[1], "Validated", self._group_reference(merged["group_id"]), merged["velocity"], skew=self._coordinate_reference(merged["coordinate_system_id"]))
             else:
                 text = contact_block(identity[1], "Validated", self._group_reference(merged["secondary_group_id"]), self._surface_reference(merged["main_surface_id"]), merged["friction"])
                 rendered = resource.render().decode("latin1").splitlines()
@@ -1062,7 +1105,7 @@ class PrepSession(AnalysisCaseCommands):
         return len(words) >= 4 and ((words[1] == "MAT" and words[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB"))
                                   or (words[1] == "PROP" and words[2] in ("SHELL", "TYPE1", "SOLID", "TYPE14"))) or (
                 words[1] in ("FUNCT", "BCS", "CLOAD") or tuple(words[1:3]) in
-                (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"),
+                (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS"),
                  ("SURF", "PART"), ("INIVEL", "TRA"), ("INTER", "TYPE7")))
 
     def copy_card(self, card_id, *, name=None, resource_id=None, native_id=None,
@@ -1152,7 +1195,7 @@ class PrepSession(AnalysisCaseCommands):
                         unverified.append(item)
                 elif pair in (("SURF", "PART"), ("GRNOD", "PART")):
                     references = [("PART", value) for value in self._integer_members(resource, card)]
-                elif pair in (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC")):
+                elif pair in (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS")):
                     pass  # Node/element identities are not card-level deletable objects.
                 elif pair in (("MAT", "LAW36"), ("MAT", "PLAS_TAB")):
                     if identity[0] == "FUNCT": unverified.append(item)
@@ -1215,14 +1258,20 @@ class PrepSession(AnalysisCaseCommands):
                 if key == "property_id":
                     family = target_card.keyword.upper().split("/")[2]
                     compatible = ({"quad", "triangle"} if family in ("SHELL", "TYPE1") else
-                                  {"tetra", "hexahedron", "wedge", "pyramid"} if family in ("SOLID", "TYPE14") else None)
+                                  {"tetra", "hexahedron", "wedge", "pyramid"} if family in ("SOLID", "TYPE14") else
+                                  {"line"} if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2") else None)
                     if compatible is None and identity[1] != refs["native_property_id"]:
                         raise PrepError("unsupported_operation", "Assignment supports SHELL and SOLID property families only.")
                     if self._projection_cache is None: self.mesh_view()
                     kinds = {cell["type"] for cell in self._projection_cache["cells"] if cell.get("part_id") == refs["native_part_id"]}
                     if compatible is not None and kinds - compatible:
                         raise PrepError("incompatible_property", "The property family does not match the part's element types.")
+                    if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2"):
+                        expected = "BEAM" if family in ("BEAM", "TYPE3") else "TRUSS"
+                        if any(cell.get("formulation") != expected for cell in self._projection_index["cells_by_part"].get(refs["native_part_id"], ())):
+                            raise PrepError("incompatible_property", "Beam and truss sections have different native mechanical formulations.")
             state = resource.fields_state(card_id, values)
+            self._validate_dependent_condition_states({resource.id:state})
             change = self.dispatcher.execute(resource.id, state, "Assign material / property",
                 object_ids=(card_id,), expected_revision=expected_revision)
             return self._model_result(resource, card_id, change)
@@ -1241,7 +1290,14 @@ class PrepSession(AnalysisCaseCommands):
             self.dispatcher.redo()
             return self.describe()
 
-    def mesh_view(self) -> dict:
+    def mesh_view(self, *, mutable: bool = False) -> dict:
+        """Return shared, nested read-only geometry plus current small stamps.
+
+        Geometry identity is stable until a structural command, Undo/Redo of
+        that command, or document replacement. ``mutable=True`` explicitly
+        materializes detached lists/dicts for editing or JSON serialization.
+        Neither form permits mutations of the document through this view.
+        """
         with self._lock:
             document = self._require()
             if self._projection_cache is None:
@@ -1270,22 +1326,24 @@ class PrepSession(AnalysisCaseCommands):
                         identity = native_identity(card.keyword)
                         if identity and identity[0] == "PART":
                             parts.setdefault(identity[1], []).append((resource.id, card))
-                for cell in valid:
-                    matches = parts.get(cell.get("part_id"), [])
-                    cell["part_ref"] = ({"resource_id": matches[0][0], "native_scope": matches[0][1].keyword}
-                                        if len(matches) == 1 else None)
-                self._projection_cache = {"points": [nodes[i] for i in identifiers], "node_ids": identifiers,
-                    "cells": valid, "diagnostics": diagnostics, "immutable_projection": True,
-                    "document_id": document.id, "node_resources": node_resources}
-            # The caller may render or serialize this projection, never mutate the model through it.
-            return {"points": [list(p) for p in self._projection_cache["points"]],
-                    "node_ids": list(self._projection_cache["node_ids"]),
-                    "cells": [{**c, "nodes": list(c["nodes"]), "part_ref": dict(c["part_ref"]) if c.get("part_ref") else None} for c in self._projection_cache["cells"]],
-                    "diagnostics": [dict(d) for d in self._projection_cache["diagnostics"]],
-                    "immutable_projection": True, "document_id": document.id, "revision": document.revision,
+                part_refs = {identifier: readonly({"resource_id": matches[0][0], "native_scope": matches[0][1].keyword})
+                             for identifier,matches in parts.items() if len(matches)==1}
+                for cell in valid: cell["part_ref"] = part_refs.get(cell.get("part_id"))
+                cache = freeze_mesh_payload(points=(nodes[i] for i in identifiers), node_ids=identifiers,
+                    cells=valid, diagnostics=diagnostics, document_id=document.id, node_resources=node_resources)
+                by_id, by_part = {}, {}
+                for cell in cache["cells"]:
+                    by_id[cell["id"]] = (*by_id.get(cell["id"], ()), cell)
+                    by_part.setdefault(cell.get("part_id"), []).append(cell)
+                self._projection_cache = cache
+                self._projection_index = {"cells_by_id": by_id, "cells_by_part": by_part}
+            result = {**self._projection_cache, "revision": document.revision,
                     "document_epoch": self._document_epoch, "projection_revision": self._projection_revision,
-                    "resource_revisions": {key: resource.state_token() for key, resource in document.resources.items()},
-                    "node_resources": deepcopy(self._projection_cache["node_resources"])}
+                    "resource_revisions": readonly({key: resource.state_token() for key, resource in document.resources.items()})}
+            if mutable:
+                result = mutable_projection(result)
+                result["immutable_projection"] = False
+            return result
 
     def _object_card(self, target: ObjectRef):
         document = self._require()
@@ -1319,7 +1377,7 @@ class PrepSession(AnalysisCaseCommands):
             raise PrepError("ambiguous_selection", "The PART ID is repeated across resources.")
         if self._projection_cache is None:
             self.mesh_view()
-        cells = [cell for cell in self._projection_cache["cells"] if cell.get("part_id") == part_id]
+        cells = self._projection_index["cells_by_part"].get(part_id, [])
         keys = [(cell["resource_id"], cell["id"]) for cell in cells]
         if len(keys) != len(set(keys)):
             raise PrepError("ambiguous_selection", "The part contains repeated element IDs.")
@@ -1342,6 +1400,11 @@ class PrepSession(AnalysisCaseCommands):
             words = card.keyword.upper().split("/")
             root, pair = words[1], tuple(words[1:3])
             result = {"card_id": card_id, "resource_id": resource.id, "roles": [], "diagnostics": []}
+            stale = self._relations_resource().snapshot()["stale_targets"]
+            conditions = self._stale_conditions() if stale else []
+            if card_id in stale or any(item["card_id"] == card_id for item in conditions):
+                result["diagnostics"].append({"code": "stale_mesh_target", "message": "Reconnect explicit targets before displaying them as current selections."})
+                return result
             if self._projection_cache is None: self.mesh_view()
             def nodes(group_id):
                 self._group_reference(group_id)
@@ -1369,7 +1432,7 @@ class PrepSession(AnalysisCaseCommands):
                     specs = [("nodes", "Group nodes", "node", nodes, card_id)]
                 elif pair == ("SURF", "PART"):
                     specs = [("elements", "Surface elements", "element", elements, card_id)]
-                elif pair in (("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC")):
+                elif pair in (("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS")):
                     def group_elements(group_id):
                         group = self.group_members(group_id)
                         if group["diagnostics"]:
@@ -1494,8 +1557,8 @@ class PrepSession(AnalysisCaseCommands):
             entity_id = candidate.get("id")
             if self._projection_cache is None:
                 self.mesh_view()
-            resources = self._projection_cache["node_resources"].get(entity_id, []) if kind == "node" else [
-                cell["resource_id"] for cell in self._projection_cache["cells"] if cell["id"] == entity_id]
+            resources = self._projection_cache["node_resources"].get(entity_id, ()) if kind == "node" else [
+                cell["resource_id"] for cell in self._projection_index["cells_by_id"].get(entity_id, ())]
             if resource_id not in resources:
                 raise PrepError("invalid_selection", "The entity does not belong to the displayed resource.")
             return self.select_entity(kind, entity_id)
@@ -1506,7 +1569,7 @@ class PrepSession(AnalysisCaseCommands):
             if kind not in ("node", "element") or type(entity_id) is not int:
                 raise PrepError("invalid_selection", "선택에는 node/element와 정수 원본 ID가 필요합니다.")
             if self._projection_cache is None: self.mesh_view()
-            resources = self._projection_cache["node_resources"].get(entity_id, []) if kind == "node" else [c["resource_id"] for c in self._projection_cache["cells"] if c["id"] == entity_id]
+            resources = self._projection_cache["node_resources"].get(entity_id, ()) if kind == "node" else [c["resource_id"] for c in self._projection_index["cells_by_id"].get(entity_id, ())]
             if isinstance(entity_id, bool) or not resources:
                 raise PrepError("invalid_selection", "선택한 모델 객체를 찾을 수 없습니다.", {"kind": kind, "id": entity_id})
             if len(resources) != 1:
@@ -1515,7 +1578,7 @@ class PrepSession(AnalysisCaseCommands):
             self._active_object = None
             self._active_target_role = None
             if kind == "element":
-                cell = next(cell for cell in self._projection_cache["cells"] if cell["id"] == entity_id)
+                cell = self._projection_index["cells_by_id"][entity_id][0]
                 parts = [item for item in self.list_cards() if self._native_part_id(item["keyword"]) == cell.get("part_id")]
                 if len(parts) == 1:
                     card = parts[0]
@@ -1560,16 +1623,23 @@ class PrepSession(AnalysisCaseCommands):
             if collisions:
                 raise PrepError("project_path_collision", "대소문자만 다른 경로를 작업 문서에 함께 저장할 수 없습니다.", {"paths": collisions})
             target.parent.mkdir(parents=True, exist_ok=True)
+            if any(not isinstance(resource, (DeckResource, AnalysisCasesResource, SourceArchiveResource, ModelRelationsResource)) for resource in document.resources.values()):
+                raise PrepError("unsupported_project_resource", "A resource has no registered native-project codec; nothing was saved.")
+            sources = [r for r in document.resources.values() if isinstance(r, SourceArchiveResource)]
             manifest = {"format": PROJECT_FORMAT, "version": PROJECT_VERSION, "document_id": document.id,
                         "name": document.name, "revision": document.revision, "root_id": self._root_id,
                         "source_paths": sorted(self._source_paths), "diagnostics": self._diagnostics,
                         "resources": [{"id": r.id, "kind": r.kind, "name": r.name,
                             "logical_path": self._paths[r.id], "raw_member": f"raw/{r.id}.rad",
                             "state": r.snapshot()} for r in self._deck_resources(document)],
-                        "analysis_cases": self._cases_resource().snapshot()}
+                        "analysis_cases": self._cases_resource().snapshot(),
+                        "source_models": [resource.manifest() for resource in sources],
+                        "model_relations": self._relations_resource().snapshot()}
             try:
-                write_container(target, manifest, {f"raw/{resource.id}.rad": resource.raw
-                                                  for resource in self._deck_resources(document)})
+                members = {f"raw/{resource.id}.rad": resource.raw for resource in self._deck_resources(document)}
+                members.update({f"sources/{resource.id}/{original_id}.rad": raw
+                                for resource in sources for original_id, raw in resource.files.items()})
+                write_container(target, manifest, members)
             except (OSError, zipfile.BadZipFile) as exc:
                 raise PrepError("project_write_error", "작업 문서를 저장하지 못했습니다.", {"reason": str(exc)}) from exc
             document.mark_saved(str(target))
@@ -1589,7 +1659,7 @@ class PrepSession(AnalysisCaseCommands):
                     manifest = json.loads(archive.read("manifest.json"))
                     if not isinstance(manifest, dict):
                         raise PrepError("invalid_project", "작업 문서의 manifest는 객체여야 합니다.")
-                    if manifest.get("format") != PROJECT_FORMAT or type(manifest.get("version")) is not int or manifest.get("version") not in (1, 2, PROJECT_VERSION):
+                    if manifest.get("format") != PROJECT_FORMAT or type(manifest.get("version")) is not int or manifest.get("version") not in (1, 2, 3, 4, PROJECT_VERSION):
                         raise PrepError("project_version", "지원하지 않는 작업 문서 형식/버전입니다.")
                     if not isinstance(manifest["document_id"], str): raise ValueError("invalid document ID")
                     UUID(manifest["document_id"])
@@ -1614,6 +1684,44 @@ class PrepSession(AnalysisCaseCommands):
                         resource.restore(item["patches"] if manifest["version"] == 1 else item["state"])
                         document.resources[resource.id] = resource; paths[resource.id] = logical
                     if manifest["root_id"] not in document.resources: raise ValueError("missing root resource")
+                    if manifest["version"] >= 4:
+                        # The first v4 checkpoint stored independent source
+                        # archives before prepared-mesh/instance relationships.
+                        # Its absent registry means empty; v5 requires it. A
+                        # present v4 registry is still validated, never ignored.
+                        relation_state = manifest["model_relations"] if manifest["version"] >= 5 else manifest.get("model_relations")
+                        if "model_relations" in manifest and not isinstance(relation_state, dict):
+                            raise ValueError("invalid model relation registry")
+                        relations = ModelRelationsResource(document.id, relation_state)
+                        if relations.id in document.resources: raise ValueError("relation resource identity collision")
+                        for rid in relations.snapshot()["mesh_revisions"]:
+                            if rid not in paths: raise ValueError("relation mesh resource is missing")
+                        for card_id, record in relations.snapshot()["stale_targets"].items():
+                            owner = document.resources.get(record["resource_id"])
+                            if not isinstance(owner, DeckResource) or card_id not in owner._by_id or record["mesh_resource_id"] not in paths:
+                                raise ValueError("stale relation target does not exist")
+                        document.resources[relations.id] = relations
+                        if not isinstance(manifest["source_models"], list): raise ValueError("invalid source model registry")
+                        owned = set()
+                        for metadata in manifest["source_models"]:
+                            source_id = metadata["id"]; UUID(source_id)
+                            files = {item["original_resource_id"]: archive.read(f"sources/{source_id}/{item['original_resource_id']}.rad")
+                                     for item in metadata["files"]}
+                            source_resource = SourceArchiveResource(metadata, files)
+                            if source_resource.id in document.resources: raise ValueError("duplicate source identity")
+                            for item in metadata["files"]:
+                                rid = item["resource_id"]
+                                if rid == manifest["root_id"] or rid in owned or rid not in paths or paths[rid] != item["logical_path"]:
+                                    raise ValueError("invalid mapped resource ownership")
+                                self._include_relative(item["original_path"])
+                                if not paths[rid].startswith(f"sources/{source_id}/"):
+                                    raise ValueError("source path escapes its namespace")
+                                owned.add(rid)
+                            document.resources[source_resource.id] = source_resource
+                        for source_resource in document.resources.values():
+                            if isinstance(source_resource, SourceArchiveResource):
+                                source_resource.validate_mapped_payloads(document)
+                        self._validate_instance_references(document, manifest["root_id"], relations.snapshot()["instances"])
                     if not isinstance(manifest.get("source_paths", []), list) or not all(isinstance(p, str) for p in manifest.get("source_paths", [])):
                         raise ValueError("invalid source path metadata")
                     diagnostics = self._project_include_diagnostics(document, paths, manifest["root_id"])
@@ -1661,12 +1769,18 @@ class PrepSession(AnalysisCaseCommands):
                         "unresolved_include": True, "resource_id": resource_id, **reference})
 
         visit(root_id, ())
+        for source_root in self._source_roots(document):
+            visit(source_root, (root_id,))
         if reached != set(paths):
             raise PrepError("invalid_project", "루트 입력에서 참조하지 않는 자원이 작업 문서에 있습니다.")
         return diagnostics
 
     def _rad_outputs(self, target, inactive_condition_ids=()):
         document = self._require()
+        self._require_expanded_instances()
+        stale = self._relations_resource().snapshot()["stale_targets"]
+        if stale:
+            raise PrepError("stale_mesh_targets", "Reconnect the explicit mesh targets before native export; same-number nodes are not a correspondence.", {"targets": stale})
         if any(d.get("unresolved_include") for d in self._diagnostics):
             raise PrepError("unresolved_include", "미해결 INCLUDE가 있어 독립 입력 파일을 내보낼 수 없습니다.",
                             {"diagnostics": self._diagnostics})
@@ -1684,6 +1798,12 @@ class PrepSession(AnalysisCaseCommands):
             targets.add(key)
             excluded = [identity for identity in inactive_condition_ids if identity in resource._by_id]
             payload = resource.render()
+            if resource.id == self._root_id and self._source_roots():
+                text = payload.decode("latin1").splitlines(keepends=True)
+                end = next((index for index, line in enumerate(text) if line.strip().upper() == "/END"), None)
+                if end is None: raise PrepError("invalid_deck", "Assembly export requires an explicit root /END.")
+                text[end:end] = [f"#include {self._paths[rid]}{resource.newline}" for rid in self._source_roots()]
+                payload = "".join(text).encode("latin1")
             if excluded:
                 # INCLUDE directives are comments in the block layout. Retain
                 # them and all comments, even when they follow an omitted card.

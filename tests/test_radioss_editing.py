@@ -66,7 +66,7 @@ def test_selection_tracks_resource_and_original_id_without_dirtying():
     assert result["refs"][0]["entity_kind"] == "element"
     assert result["refs"][0]["resource_id"]
     assert not session.describe()["dirty"] and session.describe()["revision"] == 0
-    view = session.mesh_view(); view["points"][0][0] = 12345
+    view = session.mesh_view(mutable=True); view["points"][0][0] = 12345
     assert session.mesh_view()["points"][0][0] == 0
 
 

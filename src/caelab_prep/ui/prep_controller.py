@@ -120,6 +120,53 @@ class PrepController:
         self.mesh_workflow = MeshWorkflow(self)
         from .mesh_import import MeshImportWorkflow
         self.mesh_import = MeshImportWorkflow(self)
+        self.source_models_dialog = None
+        self.prepared_mesh_dialog = None
+        self.source_models_action = self._action(
+            "project", "Source models / import RAD…", self.open_source_models,
+            action_id="model.sources")
+        self.prepared_mesh_action = self._action(
+            "mesh", "Replace prepared mesh / reconnect targets…", self.open_prepared_mesh,
+            action_id="mesh.replace_prepared")
+
+    def open_source_models(self):
+        from .source_models import SourceModelsDialog
+        return self._open_model_relation_dialog("source_models_dialog", SourceModelsDialog, "imported")
+
+    def open_prepared_mesh(self):
+        from .source_models import PreparedMeshDialog
+        return self._open_model_relation_dialog("prepared_mesh_dialog", PreparedMeshDialog, "changed")
+
+    def _open_model_relation_dialog(self, attribute, dialog_type, signal):
+        """Review relationships beside the model without committing its drafts."""
+        if self._closed or self._busy:
+            self.statusBar().showMessage("Wait for the current model operation to finish.", 8000)
+            return None
+        if not self._summary().get("document_id"):
+            self.statusBar().showMessage("Create or open a model before reviewing its relationships.", 8000)
+            return None
+        if self.file_edits.has_draft():
+            self.statusBar().showMessage(
+                "Apply, cancel or reload the unfinished model input before reviewing relationships.", 8000)
+            return None
+        dialog = getattr(self, attribute)
+        if dialog is None:
+            dialog = dialog_type(self.session, self, has_draft=self.file_edits.has_draft,
+                                 is_busy=lambda: self._closed or self._busy or self._replacement_conflict)
+            setattr(self, attribute, dialog)
+            getattr(dialog, signal).connect(lambda _result: self.refresh_document(rebuild_viewport=True))
+            dialog.finished.connect(lambda _result, d=dialog: self._release_model_relation_dialog(attribute, d))
+            dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
+        return dialog
+
+    def _release_model_relation_dialog(self, attribute, dialog):
+        if getattr(self, attribute) is dialog:
+            setattr(self, attribute, None)
+        # The dialog owns cancellation and its session subscription. A closed
+        # source table must not retain its rows until the main window closes.
+        dialog.deleteLater()
 
     def _summary(self):
         return self.session.describe()
@@ -222,6 +269,8 @@ class PrepController:
         self.mesh_workflow.export_action.setEnabled(loaded and editable)
         self.mesh_workflow.cases_action.setEnabled(loaded and editable)
         self.mesh_import.action.setEnabled(loaded and editable)
+        self.source_models_action.setEnabled(loaded and editable)
+        self.prepared_mesh_action.setEnabled(loaded and editable)
         selected_parts = self._selected_part_refs() if loaded else ()
         self.hide_selected_action.setEnabled(bool(selected_parts) and loaded and editable and self.viewport is not None)
         self.isolate_action.setEnabled(self.hide_selected_action.isEnabled())
@@ -914,6 +963,9 @@ class PrepController:
                 return
         self._settings.setValue("windowGeometry", self.saveGeometry())
         self._settings.setValue("windowState", self.saveState(self.LAYOUT_VERSION))
+        for dialog in (self.source_models_dialog, self.prepared_mesh_dialog):
+            if dialog is not None:
+                dialog.reject()
         if self.viewport:
             self.viewport.shutdown()
         self._unsubscribe()

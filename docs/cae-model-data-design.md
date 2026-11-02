@@ -1,14 +1,14 @@
 # 다중 파트·자유도·대용량 데이터 설계
 
-상태: 2026-10-29 원설계와 완료 조건을 보존하고, 2026-11-02에 Prep 병합 `a48d3b4`의 구현 경계를 대조했다. **목표 모델 전체가 구현됐다는 뜻은 아니다.** 적용 범위는 [공용 기반 설계](shared-cae-foundation-plan.md)의 P1/P3과 P6/P7, 구체적인 순서·입력·검사 종료는 [단계별 작업서](execution-stages.md), 현재 코드는 [ARCHITECTURE](../ARCHITECTURE.md)에 구분한다.
+상태: 2026-10-29 원설계와 완료 조건을 보존한다. 2026-11-02 `feat/model-relations`의 두 번째 검토 체크포인트에서 N16 관계와 N17 조회 변경을 아래 10절에 대조했다. **목표 모델 전체가 구현됐다는 뜻은 아니다.** 적용 범위는 [공용 기반 설계](shared-cae-foundation-plan.md)의 P1/P3과 P6/P7, 구체적인 순서·입력·검사 종료는 [단계별 작업서](execution-stages.md), 현재 코드는 [ARCHITECTURE](../ARCHITECTURE.md)에 구분한다.
 
 ## 1. 해결할 범위와 현재 제약
 
 공용 기반은 여러 파트·인스턴스·메시·재료·조건과 서로 다른 활성 자유도를 한 문서 안에서 관리해야 한다. 이를 위해 데이터 소유권·참조·변경·저장 방식을 먼저 정한다. GUI에 파트 항목을 여러 개 추가하는 것만으로 이 요구가 해결됐다고 보지 않는다.
 
-현재 코어는 자원·명령·선택을 제공하고 RAD provider는 재료/단면·PART 할당, 곡선·집합·조건 생성, tri/tet 후보의 원자 채택과 참조 없는 소유 메시 교체를 지원한다. 다중 PART 선택과 조건 역할별 대상 강조도 연결돼 있다. 다만 명령 이력은 한 자원 상태 단위이고, `PrepSession.mesh_view()`는 투영 cache가 있어도 반환 시 점/연결 목록을 복사하며 전역 native 절점 ID로 RAD 메시를 모은다. 중복을 진단하는 이 경로가 독립 모델·instance의 일반 namespace나 compact 배열 저장을 구현한 것은 아니다.
+기준 병합 `a48d3b4`의 코어는 자원·명령·선택을 제공하고 RAD provider는 재료/단면·PART 할당, 곡선·집합·조건 생성, tri/tet 후보의 원자 채택과 참조 없는 소유 메시 교체를 지원한다. 다중 PART 선택과 조건 역할별 대상 강조도 연결돼 있었다. 이 기준 코드의 명령 이력은 한 자원 상태 단위였고, `PrepSession.mesh_view()`는 투영 cache가 있어도 반환 시 점/연결 목록을 복사하며 전역 native 절점 ID로 RAD 메시를 모은다. 중복을 진단하는 이 경로가 독립 모델·instance의 일반 namespace나 compact 배열 저장을 구현한 것은 아니다.
 
-현재 작업의 케이스 정의/배정은 [중앙 잔여 N01](execution-stages.md#remaining-work), 이 설계의 혼합 관계/다중 자원은 N16, 규모·배열·codec은 N17, 일반 메시 변경/재연결은 N18로 관리한다. 이미 있는 G1–G3 기능을 B 전체와 함께 다시 미구현으로 세지 않으며, B1–B6는 납품 개수가 아니라 아래 유한 범위의 합격 조건이다.
+그 뒤 구현된 복합 명령과 읽기 전용 projection은 10절을 따른다. 현재 작업의 케이스 정의/배정은 [중앙 잔여 N01](execution-stages.md#remaining-work), 이 설계의 혼합 관계/다중 자원은 N16, 규모·배열·codec은 N17, 일반 메시 변경/재연결은 N18로 관리한다. 이미 있는 G1–G3 기능을 B 전체와 함께 다시 미구현으로 세지 않으며, B1–B6는 납품 개수가 아니라 아래 유한 범위의 합격 조건이다.
 
 이 문서는 모델 편집·저장·표시를 위한 설계다. 강성/질량 행렬 조립·방정식 번호·접촉 해법은 솔버가 소유한다. 큰 자유도를 처리하는 설계와 실제 솔버의 계산 능력을 구분한다.
 
@@ -139,3 +139,25 @@ Windows 기준 장비·자료 명세·초기 시간/메모리 목표와 측정 �
 
 구조를 적는 것만으로 모든 복잡한 모델에서 문제가 없다고 입증되지는 않는다. 위 유한한 사용 범위와 완료 조건을 통해 구현을 종료·확장할 기준을 둔다.
 
+
+## 10. N16/N17 검토 체크포인트의 실제 계약 (2026-11-02)
+
+이 절은 `feat/model-relations`의 실행 코드와 연결된 유한 범위다. B 전체나 성능 예산의 합격 선언이 아니다. 병합/정확한 검사 SHA와 중앙 잔여 판정은 [N16·N17 상태표](execution-stages.md#remaining-work)를 따른다.
+
+- `CommandDispatcher.execute_many`는 모든 자원 후보를 먼저 검증한다. 두 번째 자원 복원 실패도 이미 변경한 자원과 실패 자원 자체를 되돌리며, 실패 시 revision·dirty·Redo·관찰 event를 바꾸지 않는다. 성공은 하나의 ChangeSet·revision·Undo다. `PrepSession.execute_many`는 지원 native 명령을 sparse 후보에 적용하고 **최종** 관계를 검증하므로 유효한 재연결 묶음의 중간 상태 때문에 거절하지 않는다. 원문 bytes와 큰 기존 payload는 이력마다 복제하지 않는다.
+- 독립 RAD source는 `plan_import_source`의 전체 native ID 대응표와 명시적 shared-node 선택을 검토한 후 한 명령으로 채택한다. 같은 이름·번호·좌표만으로 합치지 않는다. 하나의 source 안의 INCLUDE는 같은 native namespace를 유지한다. 원본 파일 bytes·SHA-256과 **원본→최초 채택 native 번호** 대응표는 불변 archive로 저장한다. 이후 메시 교체의 현재 번호를 이 최초 대응표라고 보고하지 않는다.
+- 첫 import/remap profile은 동일한 명시 input/working 단위, LAW1/ELAST, BEAM/TYPE3·TRUSS/TYPE2·SHELL/TYPE1·SOLID/TYPE14, 대응 선형 요소, 명시적 node/element 집합·SURF/PART, FUNCT, BCS/CLOAD/INIVEL/TRA, 제한된 TYPE7, SKEW/FIX다. 원문 보존 가능 범위와 의미 remap 가능 범위는 다르다. 미확인 참조, 다른 단위, 비영(非零) per-card 단위 override는 import 전에 거절한다. 추가 header suffix 허용은 확인된 `/PART/id/0`에 한정한다.
+- `dof_support`/`condition_support`는 대상 절점에 연결된 formulation의 병진 성분과 **전역축에서 표현한 회전 부분공간**을 조회한다. 셸 접선 회전과 공유 보 절점의 합성을 다루며 전역 Z축을 일괄 금지하지 않는다. Idrill의 적용 formulation·막 요소·보의 release 및 기본 orientation을 구분한다. 지원 밖은 미확인으로 표시한다. 이는 편집기 적용 가능성 검사이며 솔버 방정식 수·강성 rank·과구속 판정이 아니다. 비활성 회전 flag를 포함한 기존 BCS는 허용/보존한다. 새 CLOAD 모멘트와 초기속도는 알려진 대상 성분을 검사하고, 좌표계·집합·property 변경 시 기존 지원 조건을 무효하게 만들면 원자 거절한다.
+- 정적 `/SKEW/FIX`는 원점·Y/Z 방향과 조건의 typed 좌표계 참조를 편집한다. 좌표계를 바꾸어도 절점 위치를 이동하지 않는다. 각 조건의 케이스 배정은 기존 N01 자원을 재사용하며 화면 숨김과 별개다.
+- 준비된 메시 교체는 **메시 전용 INCLUDE와 동일한 component header 집합**에 한정한다. 절점/요소 수와 번호는 바뀔 수 있다. source resource·generation을 기록하고 영향받은 node/element set·surface 및 참조 조건을 stale로 만든다. 같은 번호가 남아 있어도 자동 복구하지 않는다. old ID→현재 typed reference와 generation의 명시적 대응으로 재연결하며, 실패 시 부분 변경이 없다. stale 상태는 저장/재열기/Undo에 남고 native 출력은 차단한다. 일반 CAD 재메시·근접 대응·형상 기반 자동 복구는 구현하지 않았다.
+- `.caeprep` v5는 source archive와 model-relations 상태를 필수 구조로 저장하고 1/2/3/4 reader를 유지한다. 먼저 게시된 v4의 source archive 전용 구조는 빈 관계로 명시 이행하며, 이미 관계가 있는 v4는 검증하여 읽는다. v5에서 누락/null 관계는 거절한다. 모르는 자원을 저장에서 조용히 생략하지 않는다. 새 프로세스 왕복 검사에서 원문·native 대응·stale 상태를 확인한다. 반복 instance는 별도 stable UUID·base/imported source 참조·소유 resource 목록·`not-expanded` 상태로 표현/조회/저장한다. 생성/삭제는 각각 한 Undo이며 원형 bytes나 geometry를 복제하지 않는다. 독립 source archive와 다른 자료이고 일반 배치·변환·native 전개를 구현하지 않았다. 미전개 instance가 하나라도 있으면 native/Engine/case 출력을 명시적으로 거절하여 조용히 생략하지 않는다.
+
+Native GUI의 File → Source models / import RAD, Mesh → Replace prepared mesh / reconnect targets와 고정 좌표계 작성은 8개 presentation에서 같은 세션 명령을 사용한다. Source models의 Instance references 탭은 별도 참조 목록·자원 소유·미전개 상태를 표시하고, 생성/삭제/Undo는 geometry 복제 없이 정본 세션에 연결한다. 계획 준비는 sparse snapshot의 worker에서 수행하고 짧은 owner lock으로 문서/revision/epoch를 다시 검사한다. 미완성 입력·busy·문서 교체 중 적용을 거절한다. 대화상자 Cancel은 모델 변경을 만들지 않으며, 창 종료 시 구독과 화면 자료를 해제한다. 비동기라는 이유만으로 대형 import의 응답 예산을 통과했다고 보지는 않는다.
+
+실행 가능한 입력은 `scripts/evaluation/models/mixed-assemblies/beam_shell_tet`과 `truss_shell_hex`다. 각각 9절점/3요소/3PART이며, 하나는 beam+shell+tet, 다른 하나는 truss+shell+hex와 공유 절점을 갖는다. 두 입력을 함께 가져올 때 충돌 번호가 분리되고, 명시 shared mapping만 공유한다. `tests/test_mixed_relations.py`의 opt-in native 검사는 Starter/Engine 정상 종료, native 요소·PART·property 수와 부품 질량을 확인한다. 이 짧은 전부 고정 계산은 접촉 충돌·coupling 응답·응력 정확도 oracle이 아니다. `tests/test_multiresource_commands.py`, `test_source_models.py`, `test_instance_references.py`, `test_prepared_replacement.py`와 GUI/host 검사는 원자 실패·재열기·명시 재연결·8 presentation의 실제 명령 연결을 검사한다. Linux X11 확인을 Windows 또는 원제품 동일 과업 비교로 확대하지 않는다.
+
+N17에서는 `mesh_view()`가 중첩 읽기 전용 tuple/mapping을 공유하고 `mutable=True`만 분리된 변경 가능 JSON 사본을 만든다. CLI/IPC의 공개 작은 DTO는 JSON 계약을 유지한다. geometry와 scalar revision의 invalidation을 나누고 exact entity lookup·VTK geometry·PART surface를 재사용한다. 소유한 unpublished cell payload만 특별 seal 경로로 동결하며 일반 caller 자료의 alias를 허용하지 않는다. PART inspector와 action의 같은 epoch/revision/target 조회는 작은 assignment 문맥을 재사용한다. 조건의 draft 방향/단위 명세는 캐시하지 않으며, 캐시 반환의 mutable 단위 문맥은 분리한다. 그러나 전체 저장/초기 parsing과 DOF 적용 조회의 전체 순회가 모두 제거된 것은 아니다.
+
+고정 100만 요소의 한정 재계측에서 owned seal 이전/이후 core open은 20.013→12.084초, freeze는 10.348→1.890초, peak RSS는 2.643→1.626GB였다. index 구축은 0.220→1.011초로 증가했다. 이 값은 같은 입력의 **core 한정** 비교이며 새 seal 이후 GUI 합격 수치가 아니다. 앞선 GUI p95 선택 773ms, scalar 126ms, Undo 130ms, hide/show 724/750ms는 고정 예산을 넘는다. N17은 미완료이며 시간/자료/종료 기준을 바꾸지 않는다.
+
+후속 PART 조회 재사용을 포함한 같은 저장 문서의 8회 GUI 진단 평균은 scalar 105.455→73.066ms, Undo 105.136→73.124ms였다. PART assignment 조회가 한 refresh에서 3→1회로 줄었고 scalar/Undo의 실제 Render는 계속 0회였다. 선택 평균 598.266ms, hide/show 쌍 1201.031ms는 렌더링 병목이 남았음을 보인다. 서로 다른 snapshot의 한정 비교이며 100회 p95 예산 검사를 대체하지 않는다. 기존 v4 진단 문서의 필수 관계 누락 열기 실패를 보존했고, 같은 원본 파일을 v5 명시 migration으로 다시 열어 성공했다.
