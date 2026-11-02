@@ -86,6 +86,7 @@ def parser():
     gui.add_argument("path", nargs="?")
     gui.add_argument("--ipc", metavar="CONNECTION_JSON", help="Start authenticated loopback control of this GUI; create a new credential file")
     gui.add_argument("--no-3d", action="store_true", help="Open the real Qt editor without the optional VTK viewport")
+    gui.add_argument("--settings-file", type=Path, help="Use this INI file for layout preferences, without native user settings or fallbacks")
     live = commands.add_parser("live", help="Send a request to an already open GUI; never creates another document session")
     live.add_argument("--connection", required=True, help="GUI-created private connection JSON")
     live.add_argument("--method", default="document.describe")
@@ -96,6 +97,7 @@ def parser():
     mcp.add_argument("--connection", required=True, help="GUI-created private connection JSON")
     gallery = commands.add_parser("gallery", help="Open the shared Qt material/curve gallery (no VTK required)")
     gallery.add_argument("path", nargs="?", help="Neutral material/curve working document")
+    gallery.add_argument("--settings-file", type=Path, help="Use this INI file for gallery preferences, without native user settings or fallbacks")
     compare = commands.add_parser("compare", help="Compare program-specific working views of one document")
     compare.add_argument("path", nargs="?", help="Neutral working document; use --rad for a native RAD/project")
     compare.add_argument("--rad", action="store_true", help="Use the existing RAD document/provider")
@@ -217,23 +219,26 @@ def main(argv=None):
             from PySide6.QtWidgets import QApplication
             from .application.neutral import CurveSession
             from .ui.gallery import GalleryWindow
+            from .ui.settings import file_settings
 
             app = QApplication.instance() or QApplication(sys.argv[:1])
             app.setApplicationName("CAELab Prep Gallery")
             session = CurveSession()
             if args.path:
                 session.open_project(args.path)
-            window = GalleryWindow(session=session)
+            window = GalleryWindow(session=session, settings=file_settings(args.settings_file))
             window.show()
             return app.exec()
         if args.command in (None, "gui"):
             from PySide6.QtWidgets import QApplication
             from .ui.main_window import MainWindow
+            from .ui.settings import file_settings
 
             app = QApplication.instance() or QApplication(sys.argv[:1])
             app.setApplicationName("CAELab Prep")
             session = _session(args.path) if getattr(args, "path", None) else None
-            window = MainWindow(session=session, enable_viewport=not getattr(args, "no_3d", False))
+            window = MainWindow(session=session, enable_viewport=not getattr(args, "no_3d", False),
+                                settings=file_settings(getattr(args, "settings_file", None)))
             window.show()
             if getattr(args, "ipc", None): window.start_live_ipc(args.ipc)
             return app.exec()
