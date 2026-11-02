@@ -51,15 +51,15 @@ class GroupMemberCommands:
                     "resource_names": {resource.id: self._paths.get(resource.id, resource.id) for resource in self._deck_resources()},
                     "scope": "explicit membership review; not physical response or constraint sufficiency"}
 
-    def _group_member_conditions(self, candidate, planned):
+    def _group_member_conditions(self, candidate, planned, *, after_snapshot=None):
         snapshot = candidate.base
-        changes = {group.ref: group for group in candidate.set_updates}
+        changes = {group.ref: group for group in (after_snapshot.sets if after_snapshot is not None else candidate.set_updates)}
         affected = {impact.target for impact in candidate.impacts}
         groups = {group.ref.local_id: group for group in snapshot.sets}
 
         def nodes(group, after):
             group = changes.get(group.ref, group) if after else group
-            return edits._members_as_nodes(snapshot, group)
+            return edits._members_as_nodes(after_snapshot if after and after_snapshot is not None else snapshot, group)
 
         conditions, blocked, velocities = [], [], []
         for use in snapshot.uses:

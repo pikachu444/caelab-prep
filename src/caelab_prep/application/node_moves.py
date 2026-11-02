@@ -167,9 +167,17 @@ class NodeMoveCommands:
                 "value_basis": "unevaluated_native_curve_multiplier", "time_scaling": "native_not_evaluated",
                 "application_point_moments": "not_evaluated"}
 
-    def _node_move_group_dependencies(self, candidate, group, generations):
+    def _mesh_edit_group_dependencies(self, candidate, group, generations):
         owners = {member.resource_id for member in group.members}
-        if group.member_kind != "node":
+        if group.member_kind == "node":
+            members = set(group.members)
+            updates = {cell.ref: cell for cell in candidate.cell_updates}
+            for quality in candidate.quality_before:
+                previous = candidate.base._cells[quality.element]
+                current = updates.get(previous.ref, previous)
+                if members.intersection(previous.nodes + current.nodes):
+                    owners.add(previous.ref.resource_id)
+        else:
             cells = ([candidate.base._cells[ref] for ref in group.members] if group.member_kind == "element"
                      else [cell for cell in candidate.base.cells if cell.part in group.members])
             for cell in cells:
@@ -184,6 +192,10 @@ class NodeMoveCommands:
         for node in candidate.node_updates:
             grouped[node.ref.resource_id][str(node.ref.local_id)] = node.xyz
         states = {rid: self.document.resources[rid].node_positions_state(positions) for rid, positions in grouped.items()}
+        states[self._relations_resource().id] = self._mesh_edit_relations(candidate)
+        return states
+
+    def _mesh_edit_relations(self, candidate):
         relations = self._relations_resource().snapshot()
         generations = {rid: relations["mesh_revisions"].get(rid, 0) + 1 for rid in candidate.mesh_revision_resources}
         relations["mesh_revisions"].update(generations)
@@ -193,13 +205,22 @@ class NodeMoveCommands:
             resource = self.document.resources[impact.target.resource_id]
             card = resource.card(impact.target.local_id)
             family = "/".join(card.keyword.upper().strip("/").split("/")[:2])
-            dependencies = self._node_move_group_dependencies(candidate, candidate.base._sets[impact.target], generations)
+            dependencies = self._mesh_edit_group_dependencies(candidate, candidate.base._sets[impact.target], generations)
+            if not dependencies:
+                # A contact-role merge can invalidate the unchanged other role.
+                # Its cause is the changed partner mesh, not its own resource.
+                affected = {item.target for item in candidate.impacts}
+                for use in candidate.base.uses:
+                    if use.kind == "contact" and use.ref in affected and impact.target in use.targets:
+                        for ref in use.targets:
+                            dependencies.update(self._mesh_edit_group_dependencies(candidate, candidate.base._sets[ref], generations))
+            if not dependencies:
+                raise PrepError("unsupported_mesh_dependencies", "An affected target has no resolved changed mesh dependency.")
             primary = next(iter(dependencies))
             relations["stale_targets"][card.id] = {"resource_id": resource.id, "mesh_resource_id": primary,
                 "mesh_revision": generations[primary], "family": family, "members": self._integer_members(resource, card),
                 "reason": "geometry_review_required", "mesh_dependencies": dependencies}
-        states[self._relations_resource().id] = relations
-        return states
+        return relations
 
     def apply_node_move(self, plan_id, *, expected_revision=None, expected_document_id=None):
         with self._lock:
