@@ -66,6 +66,10 @@ N18의 첫 절대좌표 이동은 `application.node_moves`가 닫힌 native 참�
 
 좌표 상태와 `geometry_review_required` 집합·여러 source의 generation 의존성을 `execute_many` 한 번으로 게시한다. 이동한 멤버/조건 값을 바꾸지 않으며 명시 대응 검토 전에는 native 출력을 차단한다. 검사 trial은 옛 projection cache를 버려 새 형상으로 CLOAD 성분을 재판정한다. `ui.node_moves`는 같은 명령에 Preview/검토/Apply/취소를 연결한다. 새 문서·개정·입력 변경은 이전 preview를 적용할 수 없게 한다.
 
+N18의 `application.group_members`는 같은 mesh snapshot/stamp와 `mesh_edit_candidates.reassign_set`을 재사용한다. 공개 plan은 출처를 구분한 명시 절점·요소 멤버, 조건의 변경 전후 대상·필드 적용 가능성, 평가 전 CLOAD 계수, TYPE7 secondary/main 역할, INIVEL 중복과 저장 위치를 반환한다. 실제 시간함수·작용점 모멘트·유효 초기상태는 평가하지 않는다. sealed plan의 document/revision/epoch·source token·generation·digest를 확인한 뒤 기존 `set_group_members`와 dispatcher/Undo/v6 codec을 사용한다. 멤버만 바꾸므로 geometry generation이나 새 stale을 만들지 않으며 기존 stale은 preview 전에 차단한다. 새 geometry review 상태를 복제하지 않는다.
+
+`ui.modeling`은 같은 편집기의 optional host hook만 소유하며 RAD에 의존하지 않는다. RAD host의 `ui.group_members`는 읽기 전용 영향 요약을 표시하고, Cancel은 초안을 보존하며 성공한 Apply만 기존 완료 경로로 돌아간다. 모델 변경으로 무효가 된 preview는 집합 편집을 다시 열어야 한다. snapshot의 닫힌 native 참조 범위 밖에서는 새 preview를 거부하지만 기존 Apply/inspector의 지원 범위를 줄이지 않는다. 직접 Apply는 새 검토를 수행한 경로로 세지 않는다. part 소유 변경과 나머지 P7b 연산은 후속이다.
+
 선택적 `adapters.solidcraft_source`는 외부 CAD 실행 없이 저장 컨테이너·고정 인수·해시만 준비한다. 공급 STEP은 기존 Gmsh worker와 native 채택 gate를 사용한다. 채택 입력의 미검증 출처 선언은 이번에 생성한 NODE의 ASCII JSON 주석으로 저장하므로 별도 문서 정본/codec/Undo를 만들지 않는다. STEP 생성자 인증이나 CAD 면의 persistent identity는 이 선언이 제공하지 않는다.
 
 문서 ID와 resource ID는 렌더링 배열 인덱스·Gmsh tag와 구분한다. 명령 성공과 Undo/Redo는 revision을 증가시키고 저장 기준점과 현재 자원 상태로 dirty를 판단한다. `expected_revision`이 맞지 않거나 필드 검사가 실패하면 모델을 부분 변경하지 않는다. ChangeSet과 구조화 오류로 실제 변경을 전달한다.

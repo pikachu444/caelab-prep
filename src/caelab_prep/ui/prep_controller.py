@@ -477,6 +477,10 @@ class PrepController:
         units = {name: unit for name, unit in self.property_editor.units().items() if name in values}
         return self.provider.submit(SetProperties(ref, values, self._editor_revision, units=units))
 
+    def _review_membership(self, spec, values):
+        from .group_members import review_membership
+        return review_membership(self, spec, values)
+
     def _native_display_unit(self, name):
         spec = self.property_editor.specs.get(name)
         return spec is None or self.property_editor.units().get(name, spec.unit) == spec.unit

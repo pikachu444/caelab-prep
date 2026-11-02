@@ -7,31 +7,31 @@ from uuid import uuid4
 from ..cae_core import PrepError
 from ..radioss.assembly import ELEMENTS, GROUPS, inspect
 from ..radioss.deck import number
-from ..radioss.modeling import native_identity
+from ..radioss.modeling import native_identity, load_direction
 from ..radioss.relations import coordinate_frame
 from . import mesh_edit_candidates as edits
 
 
 class NodeMoveCommands:
-    def _node_move_stamp(self):
+    def _mesh_edit_stamp(self):
         relations = self._relations_resource().snapshot()
         return edits.SnapshotStamp(self.document.id, self.document.revision, self._document_epoch,
             tuple(edits.ResourceStamp(resource.id, resource.state_token(), relations["mesh_revisions"].get(resource.id, 0))
                   for resource in self.document.resources.values()))
 
-    def _node_move_snapshot(self):
+    def _mesh_edit_snapshot(self):
         resources = self._deck_resources()
         relations = self._relations_resource().snapshot()
         if relations["stale_targets"]:
-            raise PrepError("stale_mesh_targets", "Review existing mesh targets before another coordinate move.")
-        stamp = self._node_move_stamp()
-        cached = getattr(self, "_node_move_snapshot_cache", None)
+            raise PrepError("stale_mesh_targets", "Review existing mesh targets before another mesh edit.")
+        stamp = self._mesh_edit_stamp()
+        cached = getattr(self, "_mesh_edit_snapshot_cache", None)
         if cached is not None and cached.stamp == stamp:
             return cached
         definitions, _, _ = inspect(resources)
         units = self._model_resource(None).unit_context()["global"]
         if not units or units.get("length") not in ("mm", "cm", "m"):
-            raise PrepError("invalid_units", "Declare the native input length unit before moving nodes.")
+            raise PrepError("invalid_units", "Declare the native input length unit before previewing mesh changes.")
         nodes, cells, parts, groups, uses = [], [], [], [], []
         node_refs = {identifier: edits.Ref(rid, "node", identifier)
                      for (namespace, identifier), (rid, _) in definitions.items() if namespace == "NODE"}
@@ -87,14 +87,14 @@ class NodeMoveCommands:
                     continue
                 values = self.condition_values(card.id)
                 if values["diagnostics"]:
-                    raise PrepError("incomplete_mesh_references", "Every condition reference must resolve before moving nodes.")
+                    raise PrepError("incomplete_mesh_references", "Every condition reference must resolve before previewing mesh changes.")
                 targets = tuple(group_refs[values[key]] for key in ("group_id", "secondary_group_id", "main_surface_id")
                                 if key in values)
                 kind = {"BCS": "constraint", "CLOAD": "load", "INIVEL": "constraint", "INTER": "contact"}[family]
                 uses.append(edits.ReferenceUse(edits.Ref(resource.id, "condition", card.id), kind, targets,
                                                family == "INTER" or values.get("coordinate_system_id") is not None))
         snapshot = edits.MeshSnapshot(stamp, units["length"], tuple(nodes), tuple(cells), tuple(parts), tuple(groups), tuple(uses), True)
-        self._node_move_snapshot_cache = snapshot
+        self._mesh_edit_snapshot_cache = snapshot
         return snapshot
 
     def plan_node_move(self, updates, *, length_unit):
@@ -102,7 +102,7 @@ class NodeMoveCommands:
         with self._lock:
             self._check_model_edit(None, None)
             try:
-                snapshot = self._node_move_snapshot()
+                snapshot = self._mesh_edit_snapshot()
                 if not isinstance(updates, (list, tuple)) or not updates:
                     raise PrepError("invalid_node_move", "Provide node references and absolute coordinates.")
                 positions = {}
@@ -143,25 +143,29 @@ class NodeMoveCommands:
         for use in candidate.base.uses:
             if use.kind != "load" or use.ref not in affected:
                 continue
-            values = self.condition_values(use.ref.local_id)
-            frame = coordinate_frame(self._deck_resources(), self._coordinate_reference(values["coordinate_system_id"]))
-            direction = values["direction"]
-            axis = frame["axes"]["XYZ".index(direction[0])]
             targets = set().union(*(edits._members_as_nodes(candidate.base, candidate.base._sets[ref])
                                     for ref in use.targets))
-            curve_id = values["curve_id"]
-            # FUNCT and its native time scaling are not evaluated by a geometry preview.
-            result.append({"condition_id": use.ref.local_id,
+            result.append(self._mesh_load_coefficients(use.ref.local_id, targets))
+        return result
+
+    def _mesh_load_coefficients(self, condition_id, targets):
+        values = self.condition_values(condition_id)
+        frame = coordinate_frame(self._deck_resources(), self._coordinate_reference(values["coordinate_system_id"]))
+        direction = load_direction(values["direction"])
+        axis = frame["axes"]["XYZ".index(direction[0])]
+        curve_id = values["curve_id"]
+        count = len(set(targets))
+        # FUNCT and its native time scaling are not evaluated by a mesh preview.
+        return {"condition_id": condition_id,
                 "quantity": "moment" if len(direction) == 2 else "force",
                 "curve_ref": {"resource_id": self._find_card(curve_id).id, "card_id": curve_id},
                 "frame_ref": ({"resource_id": frame["resource_id"], "card_id": frame["card_id"]}
                               if frame["card_id"] is not None else None),
                 "native_direction": direction, "global_unit_axis": list(axis), "scale": values["scale"],
-                "target_count": len(targets),
-                "summed_multiplier": [len(targets) * values["scale"] * component for component in axis],
+                "target_count": count,
+                "summed_multiplier": [count * values["scale"] * component for component in axis],
                 "value_basis": "unevaluated_native_curve_multiplier", "time_scaling": "native_not_evaluated",
-                "application_point_moments": "not_evaluated"})
-        return result
+                "application_point_moments": "not_evaluated"}
 
     def _node_move_group_dependencies(self, candidate, group, generations):
         owners = {member.resource_id for member in group.members}
@@ -205,7 +209,7 @@ class NodeMoveCommands:
                 raise PrepError("stale_mesh_candidate", "Prepare a fresh coordinate preview.")
             _, candidate = plan
             try:
-                candidate.assert_current(self._node_move_stamp(), candidate.base.digest)
+                candidate.assert_current(self._mesh_edit_stamp(), candidate.base.digest)
             except edits.MeshEditError as exc:
                 raise PrepError(exc.code, str(exc)) from exc
             states = self._node_move_states(candidate)

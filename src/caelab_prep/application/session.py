@@ -27,6 +27,7 @@ from .source_models import SourceArchiveResource, SourceModelCommands
 from .model_relations import ModelRelationCommands
 from .mesh_relations import ModelRelationsResource, MeshRelationCommands
 from .node_moves import NodeMoveCommands
+from .group_members import GroupMemberCommands
 
 
 PROJECT_FORMAT = "caelab-prep-project"
@@ -45,7 +46,7 @@ def _file_boundary(function):
     return wrapped
 
 
-class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationCommands, MeshRelationCommands, NodeMoveCommands):
+class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationCommands, MeshRelationCommands, NodeMoveCommands, GroupMemberCommands):
     def __init__(self):
         self._lock = RLock()
         self.document: Document | None = None
@@ -911,48 +912,54 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 result["diagnostics"].append({"code": exc.code, "message": exc.message, **exc.details})
             return result
 
+    def _group_members_state(self, card_id, members):
+        """Prepare the existing native member-row edit without publishing it."""
+        resource, card, _ = self._unique_card(card_id)
+        family = "/".join(card.keyword.upper().split("/")[1:3])
+        if family == "GRNOD/NODE":
+            if isinstance(members, (list, tuple)) and members and all(type(member) is int for member in members):
+                identifiers = self._node_members(members)
+            else:
+                if not isinstance(members, (list, tuple)) or not members:
+                    raise PrepError("invalid_reference", "Choose at least one node.")
+                if self._projection_cache is None: self.mesh_view()
+                identifiers = []
+                for member in members:
+                    ref = member if isinstance(member, SelectionRef) else SelectionRef(**member) if isinstance(member, dict) and set(member) == {"resource_id", "entity_kind", "local_id"} else None
+                    if (ref is None or ref.entity_kind != "node" or type(ref.local_id) is not int
+                            or self._projection_cache["node_resources"].get(ref.local_id) != (ref.resource_id,)):
+                        raise PrepError("invalid_reference", "A uniquely owned node reference is required.")
+                    identifiers.append(ref.local_id)
+                identifiers = self._node_members(identifiers)
+        elif family in ("GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS"):
+            identifiers, _, _ = self._element_members(members, family)
+        else:
+            raise PrepError("unsupported_operation", "This native group does not have an editable explicit member list.")
+        if identifiers == self._integer_members(resource, card):
+            return resource, card, identifiers, None
+        if len(card.data) < 2:
+            raise PrepError("invalid_card", "The group has no native member rows.")
+        rows = ["".join(integer(identifier) for identifier in identifiers[index:index + 10]) for index in range(0, len(identifiers), 10)]
+        lines = self.card_text(card_id).splitlines(keepends=True)
+        member_rows = {index - card.start for index in card.data[1:]}
+        result, cursor = [], 0
+        for index, line in enumerate(lines):
+            if index not in member_rows: result.append(line)
+            elif cursor < len(rows):
+                ending = "\r\n" if line.endswith("\r\n") else "\r" if line.endswith("\r") else "\n"
+                result.append(rows[cursor] + ending)
+                cursor += 1
+            if index == max(member_rows):
+                result.extend(row + resource.newline for row in rows[cursor:])
+                cursor = len(rows)
+        return resource, card, identifiers, resource.replaced_state(card_id, "".join(result))
+
     def set_group_members(self, card_id, members, *, expected_revision=None, expected_document_id=None):
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
-            resource, card, _ = self._unique_card(card_id)
-            family = "/".join(card.keyword.upper().split("/")[1:3])
-            if family == "GRNOD/NODE":
-                if isinstance(members, (list, tuple)) and members and all(type(member) is int for member in members):
-                    identifiers = self._node_members(members)
-                else:
-                    if not isinstance(members, (list, tuple)) or not members:
-                        raise PrepError("invalid_reference", "Choose at least one node.")
-                    if self._projection_cache is None: self.mesh_view()
-                    identifiers = []
-                    for member in members:
-                        ref = member if isinstance(member, SelectionRef) else SelectionRef(**member) if isinstance(member, dict) and set(member) == {"resource_id", "entity_kind", "local_id"} else None
-                        if (ref is None or ref.entity_kind != "node" or type(ref.local_id) is not int
-                                or self._projection_cache["node_resources"].get(ref.local_id) != (ref.resource_id,)):
-                            raise PrepError("invalid_reference", "A uniquely owned node reference is required.")
-                        identifiers.append(ref.local_id)
-                    identifiers = self._node_members(identifiers)
-            elif family in ("GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS"):
-                identifiers, _, _ = self._element_members(members, family)
-            else:
-                raise PrepError("unsupported_operation", "This native group does not have an editable explicit member list.")
-            if identifiers == self._integer_members(resource, card):
+            resource, card, _, state = self._group_members_state(card_id, members)
+            if state is None:
                 return self._model_result(resource, card_id, None)
-            if len(card.data) < 2:
-                raise PrepError("invalid_card", "The group has no native member rows.")
-            rows = ["".join(integer(identifier) for identifier in identifiers[index:index + 10]) for index in range(0, len(identifiers), 10)]
-            lines = self.card_text(card_id).splitlines(keepends=True)
-            member_rows = {index - card.start for index in card.data[1:]}
-            result, cursor = [], 0
-            for index, line in enumerate(lines):
-                if index not in member_rows: result.append(line)
-                elif cursor < len(rows):
-                    ending = "\r\n" if line.endswith("\r\n") else "\r" if line.endswith("\r") else "\n"
-                    result.append(rows[cursor] + ending)
-                    cursor += 1
-                if index == max(member_rows):
-                    result.extend(row + resource.newline for row in rows[cursor:])
-                    cursor = len(rows)
-            state = resource.replaced_state(card_id, "".join(result))
             self._validate_dependent_condition_states({resource.id:state})
             change = self.dispatcher.execute(resource.id, state, "Edit group members", object_ids=(card_id,),
                                              expected_revision=expected_revision, kind="structure")
