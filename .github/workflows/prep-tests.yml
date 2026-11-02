@@ -130,6 +130,8 @@ jobs:
           PYCODE
           QT_DEBUG_PLUGINS=1 xvfb-run -a -s "-screen 0 1920x1080x24" python -u -c 'from PySide6.QtWidgets import QApplication; app = QApplication([]); print(app.platformName(), app.primaryScreen().geometry(), flush=True); assert app.platformName() == "xcb"'
       - name: Actual Qt VTK rendering and picking
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -s tests/test_structured_mesh_native.py
+      - name: Existing native rendering regression
         run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -s tests/test_native_render.py tests/test_case_entrypoints.py tests/test_curve_workflow.py tests/test_external_mesh_native.py tests/test_source_models_ui.py tests/test_prepared_replacement_ui.py tests/test_model_relations_host.py tests/test_large_integer_selection.py
       - uses: actions/upload-artifact@v4
         if: always()
