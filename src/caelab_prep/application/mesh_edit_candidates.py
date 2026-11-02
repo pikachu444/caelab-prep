@@ -438,6 +438,9 @@ def merge_nodes(snapshot,mapping,*,tolerance,length_unit,approvals=()):
     updates=[];affected=set()
     for cell in snapshot.cells:
         nodes=tuple(mapping.get(r,r) for r in cell.nodes);orientation=mapping.get(cell.orientation_node,cell.orientation_node)
+        if (cell.family=='BEAM' and cell.orientation_node is not None
+                and cell.orientation_node not in cell.nodes and orientation in nodes):
+            fail('beam_orientation_change','Merge would replace an explicit beam plane with the native default frame.',(cell.ref,))
         if nodes!=cell.nodes or orientation!=cell.orientation_node:
             updates.append(replace(cell,nodes=nodes,orientation_node=orientation));affected.add(cell.ref)
     candidate=MeshEditCandidate('merge_nodes',snapshot,snapshot.digest,cell_updates=tuple(updates),removed_nodes=sources,merge_map=tuple(zip(sources,keepers)),merge_tolerance=tolerance,merge_approvals=approvals)
