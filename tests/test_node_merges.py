@@ -166,14 +166,17 @@ def test_short_last_connectivity_field_keeps_next_element_and_line_ending(tmp_pa
     assert f"{78:10d}{8:10d}{4:10d}".encode("ascii") + ending + f"{80:10d}".encode("ascii") in resource.render()
 
 
-def test_cross_resource_contact_records_the_changed_other_role_dependency():
+@pytest.mark.parametrize("secondary_in_source", [True, False])
+def test_cross_resource_contact_records_the_changed_other_role_dependency(secondary_in_source):
     session = opened("truss_shell_hex")
     source = session.resolve_entity_reference("node", 9)["reference"]
     session.import_source(session.plan_import_source(MODELS / "beam_shell_tet" / "model_0000.rad")["plan_id"])
     snapshot = session._mesh_edit_snapshot()
     shell = next(c for c in snapshot.cells if c.family == "SHELL" and c.ref.resource_id != source["resource_id"])
     keeper = {"resource_id": shell.nodes[0].resource_id, "entity_kind": "node", "local_id": shell.nodes[0].local_id}
-    secondary = session.create_node_group("Source secondary", [9])["card_id"]
+    secondary_ref = source if secondary_in_source else {"resource_id": shell.nodes[1].resource_id,
+        "entity_kind": "node", "local_id": shell.nodes[1].local_id}
+    secondary = session.create_node_group("Reviewed secondary", [secondary_ref["local_id"]])["card_id"]
     main = session.create_surface("Other source main", [shell.part.local_id])["card_id"]
     contact = session.create_contact("Cross source pair", secondary, main, .2)["card_id"]
     pair = {"source": source, "keeper": keeper}
@@ -187,7 +190,8 @@ def test_cross_resource_contact_records_the_changed_other_role_dependency():
     assert review["stale_targets"][main]["mesh_dependencies"] == {source["resource_id"]: 1}
     row = next(c for c in review["conditions"] if c["reference"]["local_id"] == contact)
     roles = {r["role"]: r for r in row["roles"]}
-    assert roles["secondary"]["before_nodes"] == [source] and roles["secondary"]["after_nodes"] == [keeper]
+    assert roles["secondary"]["before_nodes"] == [secondary_ref]
+    assert roles["secondary"]["after_nodes"] == [keeper if secondary_in_source else secondary_ref]
     assert len(roles["main"]["before_nodes"]) == len(roles["main"]["after_nodes"]) == 4
     session.apply_node_merge(review["plan_id"])
     relationships = session.mesh_relationships()
@@ -237,3 +241,42 @@ def test_shared_foreign_node_load_is_rechecked_when_its_element_plane_changes(tm
     assert affected["after_support"]["status"] != "supported"
     with pytest.raises(PrepError) as error: session.apply_node_merge(review["plan_id"])
     assert error.value.code == "unsupported_merge_targets" and state(session) == before
+
+
+def test_two_deck_resources_prepare_atomically_and_keep_both_review_dependencies(tmp_path, monkeypatch):
+    shutil.copyfile(MODELS / "beam_shell_tet" / "model_0000.rad", tmp_path / "model_0000.rad")
+    def row(identifier, xyz):
+        return f"{identifier:10d}" + "".join(f"{value:20g}" for value in xyz) + "\n"
+    (tmp_path / "mesh.inc").write_text('#include "nodes.inc"\n'
+        + f"/SH3N/9\n{77:10d}{1:10d}{2:10d}{3:10d}\n", encoding="ascii")
+    (tmp_path / "nodes.inc").write_text("/NODE\n" + row(1, (0, 0, 0)) + row(2, (1, 0, 0))
+        + row(3, (0, 1, 0)) + row(4, (1, 0, .1)), encoding="ascii")
+    session = PrepSession(); session.open_rad(tmp_path / "model_0000.rad")
+    group = session.create_node_group("Unchanged force target", [1])["card_id"]
+    curve = session.create_curve("Force history", [(0, 0), (1, 1)])["card_id"]
+    load = session.create_load("Global Z force", group, curve, "Z", 1)["card_id"]
+    review = plan(session, 2, 4, tolerance=.2)
+    assert review["admissible"]
+    source_owner = session.resolve_entity_reference("node", 2)["reference"]["resource_id"]
+    cell_owner = next(c.ref.resource_id for c in session._mesh_edit_snapshot().cells)
+    assert source_owner != cell_owner
+    assert review["stale_targets"][group]["mesh_dependencies"] == {source_owner: 1, cell_owner: 1}
+    before = state(session); events = []; session.subscribe(events.append)
+    def fail_preparation(_): raise PrepError("injected_prepare_failure", "second native resource preparation failed")
+    with monkeypatch.context() as patch:
+        patch.setattr(session.document.resources[source_owner], "prepare_state", fail_preparation)
+        with pytest.raises(PrepError) as error: session.apply_node_merge(review["plan_id"])
+        assert error.value.code == "injected_prepare_failure"
+    assert state(session) == before and events == []
+    session.apply_node_merge(review["plan_id"])
+    assert len(events) == 1 and session.document.revision == before[0] + 1
+    changed = state(session)
+    session.undo(); assert state(session)[1:] == before[1:]
+    session.redo(); assert state(session)[1:] == changed[1:]
+    stale = session.mesh_relationships()["stale_targets"][group]
+    session.reconnect_mesh_targets({group: {"mesh_revision": stale["mesh_revision"], "mapping": {
+        1: session.resolve_entity_reference("node", 1)["reference"]}}})
+    assert session.condition_support(load)["status"] == "supported"
+    output = tmp_path / "export" / "two-resources_0000.rad"
+    output.parent.mkdir()
+    session.export_rad(output)

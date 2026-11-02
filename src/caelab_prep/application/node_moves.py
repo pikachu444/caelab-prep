@@ -206,12 +206,16 @@ class NodeMoveCommands:
             card = resource.card(impact.target.local_id)
             family = "/".join(card.keyword.upper().strip("/").split("/")[:2])
             dependencies = self._mesh_edit_group_dependencies(candidate, candidate.base._sets[impact.target], generations)
-            if not dependencies:
-                # A contact-role merge can invalidate the unchanged other role.
-                # Its cause is the changed partner mesh, not its own resource.
-                affected = {item.target for item in candidate.impacts}
-                for use in candidate.base.uses:
-                    if use.kind == "contact" and use.ref in affected and impact.target in use.targets:
+            affected = {item.target for item in candidate.impacts}
+            for use in candidate.base.uses:
+                if use.kind == "contact" and use.ref in affected and impact.target in use.targets:
+                    # Both roles can be unchanged while an approved external source
+                    # is merged into their keeper. Record that actual source edit.
+                    for approval in candidate.merge_approvals:
+                        rid = approval.source.resource_id
+                        if use.ref in approval.contacts and rid in generations:
+                            dependencies[rid] = generations[rid]
+                    if not dependencies:
                         for ref in use.targets:
                             dependencies.update(self._mesh_edit_group_dependencies(candidate, candidate.base._sets[ref], generations))
             if not dependencies:
