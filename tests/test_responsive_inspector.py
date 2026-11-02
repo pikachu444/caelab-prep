@@ -63,22 +63,37 @@ def test_narrow_command_groups_offer_full_action_names_and_expand_when_wide(user
         groups = page.findChildren(QToolButton, "referenceGroupMenu")
         collapsed = [button for button in groups if button.isVisible()]
         assert collapsed, "The crowded MODEL commands need a reachable group menu"
-        for button in collapsed:
-            assert button.width() >= button.sizeHint().width()
-            assert button.menu().actions()
-            assert all(action.text() for action in button.menu().actions())
-        # Each original command remains either a full direct button or an
-        # entry in its named group menu, never a squeezed unreadable label.
-        for group in page.findChildren(type(groups[0].parentWidget()), "referenceCommandGroup"):
-            if group.menu_button.isVisible():
-                assert not group.buttons.isVisible()
-            else:
-                assert group.buttons.isVisible()
-                for button in group.buttons.findChildren(QToolButton):
-                    assert button.width() >= button.sizeHint().width()
+
+        def assert_commands_reachable():
+            for group in page.findChildren(type(groups[0].parentWidget()), "referenceCommandGroup"):
+                buttons = group.buttons.findChildren(QToolButton)
+                original = {button.defaultAction() for button in buttons}
+                assert original and all(action.text() for action in original)
+                if group.menu_button.isVisible():
+                    assert not group.buttons.isVisible()
+                    assert original <= set(group.menu_button.menu().actions())
+                    visible = [group.menu_button]
+                else:
+                    assert group.buttons.isVisible()
+                    visible = buttons
+                for button in visible:
+                    assert button.isVisible() and button.width() >= button.sizeHint().width()
+                    position = button.mapTo(page, QPoint())
+                    assert 0 <= position.x() and position.x() + button.width() <= page.width()
+                    assert 0 <= position.y() and position.y() + button.height() <= page.height()
+
+        assert window.size().width() == 960 and window.size().height() == 640
+        assert_commands_reachable()
         window.resize(1920, 1080)
         pump()
+        assert window.size().width() == 1920 and window.size().height() == 1080
+        assert_commands_reachable()
+        # Native font metrics can require more than 1920 px for every full label.
+        wide = max(1920, window.width() + page.layout().sizeHint().width() - page.width())
+        window.resize(wide, 1080)
+        pump()
         assert not any(button.isVisible() for button in groups)
+        assert_commands_reachable()
     finally:
         window.close()
         window.deleteLater()

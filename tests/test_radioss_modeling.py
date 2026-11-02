@@ -186,7 +186,9 @@ def test_replacement_overlay_is_compatible_with_v2_and_invalidates_cached_state_
     resource = session.document.resources[curve["resource_id"]]
     v2 = resource.snapshot()
     v2.pop("replaced")
+    v2.pop("node_positions")
     v2["state_version"] = 2
+    assert set(v2) == {"state_version", "patches", "created", "deleted"}
     restored = DeckResource(resource.raw, resource_id=resource.id)
     restored.restore(v2)
     assert restored.render() == resource.render()

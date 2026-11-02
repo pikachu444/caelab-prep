@@ -322,7 +322,8 @@ class ReferenceAdapter:
         self.interaction.install(b)
         edit = b.edit_action or b.commands["Material"][0]
         edit.triggered.connect(lambda: b.dialog.open() if b.dialog else b.properties_dock.show())
-        menu = b.window.menuBar().addMenu("Property" if self.commands.kind in ("icons", "module") else "Material")
+        menu = QMenu("Property" if self.commands.kind in ("icons", "module") else "Material", b.window.menuBar())
+        b.window.menuBar().addMenu(menu)
         for group in ("Material", "Section", "Object", "Assignment"):
             group_actions = b.commands.get(group, ())
             if group_actions:
@@ -330,9 +331,12 @@ class ReferenceAdapter:
                     menu.addSeparator()
                 menu.addActions(group_actions)
         if b.commands.get("Selection"):
-            b.window.menuBar().addMenu("Selection").addActions(b.commands["Selection"])
+            selection = QMenu("Selection", b.window.menuBar())
+            b.window.menuBar().addMenu(selection)
+            selection.addActions(b.commands["Selection"])
         if b.commands.get("Conditions"):
-            conditions = b.window.menuBar().addMenu("Conditions")
+            conditions = QMenu("Conditions", b.window.menuBar())
+            b.window.menuBar().addMenu(conditions)
             conditions.addActions(b.commands.get("Curve", ()))
             conditions.addSeparator()
             conditions.addActions(b.commands["Conditions"])

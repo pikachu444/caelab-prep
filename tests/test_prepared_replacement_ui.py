@@ -56,7 +56,11 @@ def owner(request, tmp_path):
     source = SOURCE
     if getattr(request, "param", None) == "explicit_unit_zero":
         source = tmp_path / "unit_zero_0000.rad"
-        source.write_bytes(SOURCE.read_bytes().replace(b"/PART/9\n", b"/PART/9/0\n"))
+        raw = SOURCE.read_bytes()
+        newline = b"\r\n" if b"\r\n" in raw else b"\n"
+        original = b"/PART/9" + newline
+        assert raw.count(original) == 1
+        source.write_bytes(raw.replace(original, b"/PART/9/0" + newline))
         (tmp_path / "mesh.inc").write_bytes((SOURCE.parent / "mesh.inc").read_bytes())
     session = PrepSession()
     session.open_rad(source)
