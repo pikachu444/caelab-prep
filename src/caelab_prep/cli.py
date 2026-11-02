@@ -84,6 +84,16 @@ def parser():
     commands = result.add_subparsers(dest="command")
     gui = commands.add_parser("gui", help="Open the desktop editor")
     gui.add_argument("path", nargs="?")
+    gui.add_argument("--ipc", metavar="CONNECTION_JSON", help="Start authenticated loopback control of this GUI; create a new credential file")
+    gui.add_argument("--no-3d", action="store_true", help="Open the real Qt editor without the optional VTK viewport")
+    live = commands.add_parser("live", help="Send a request to an already open GUI; never creates another document session")
+    live.add_argument("--connection", required=True, help="GUI-created private connection JSON")
+    live.add_argument("--method", default="document.describe")
+    live.add_argument("--params", default="{}", help="Method parameters as a JSON object")
+    live.add_argument("--request-id", help="Reuse a UUID to retrieve a completed request without repeating its command")
+    live.add_argument("--timeout", type=float, default=30)
+    mcp = commands.add_parser("mcp", help="Run the optional stdio MCP adapter for an already open GUI; never opens a document copy")
+    mcp.add_argument("--connection", required=True, help="GUI-created private connection JSON")
     gallery = commands.add_parser("gallery", help="Open the shared Qt material/curve gallery (no VTK required)")
     gallery.add_argument("path", nargs="?", help="Neutral material/curve working document")
     compare = commands.add_parser("compare", help="Compare program-specific working views of one document")
@@ -169,6 +179,10 @@ def parser():
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
+        if args.command == "mcp":
+            from .application.mcp_server import create_server
+            create_server(args.connection).run(transport="stdio")
+            return 0
         if args.command == "compare":
             from PySide6.QtWidgets import QApplication
             from .ui.comparison import ComparisonWindow
@@ -219,9 +233,14 @@ def main(argv=None):
             app = QApplication.instance() or QApplication(sys.argv[:1])
             app.setApplicationName("CAELab Prep")
             session = _session(args.path) if getattr(args, "path", None) else None
-            window = MainWindow(session=session)
+            window = MainWindow(session=session, enable_viewport=not getattr(args, "no_3d", False))
             window.show()
+            if getattr(args, "ipc", None): window.start_live_ipc(args.ipc)
             return app.exec()
+        if args.command == "live":
+            from .application.live_transport import LiveClient
+            _print(LiveClient(args.connection, timeout=args.timeout).request(args.method, json.loads(args.params), request_id=args.request_id))
+            return 0
         if args.command == "mesh":
             from .adapters.gmsh_backend import GmshBackend
 
@@ -336,7 +355,10 @@ def main(argv=None):
         error = exc.to_dict() if callable(getattr(exc, "to_dict", None)) else {
             "code": type(exc).__name__, "message": str(exc)
         }
-        _print({"error": error})
+        if args.command == "mcp":
+            print(json.dumps({"error": error}, ensure_ascii=False), file=sys.stderr)
+        else:
+            _print({"error": error})
         return 1
 
 

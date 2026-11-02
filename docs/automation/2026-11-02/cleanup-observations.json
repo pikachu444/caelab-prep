@@ -1,0 +1,111 @@
+{
+  "original_observations": [
+    {
+      "path_relative_to_evidence": "work/test_published_client_edits_sa0/connection.json",
+      "owner_server_id": "8b2be4d4-9332-4a4e-94e7-79f76ef7eed1",
+      "matches_original_client_record": true,
+      "private_file_mode": "0600",
+      "initial_observation_time": "unknown (not recorded)",
+      "descriptor_file_mtime_unix": 1793579759.4492629,
+      "cleanup_probe_time_unix": 1793580139.2592168,
+      "endpoint_probe": {
+        "host": "127.0.0.1",
+        "connection_timeout_seconds": 0.1,
+        "reachable": false
+      },
+      "removed_at_observation": true,
+      "later_exec_reappeared": true,
+      "later_execution_observation_time": "unknown (not recorded)",
+      "final_sanitized_credential_notlive": true
+    },
+    {
+      "path_relative_to_evidence": "work/test_published_client_preserve0/connection.json",
+      "owner_server_id": "42c60618-7b28-4846-a251-c550d8b4da34",
+      "matches_original_client_record": true,
+      "private_file_mode": "0600",
+      "initial_observation_time": "unknown (not recorded)",
+      "descriptor_file_mtime_unix": 1793579784.5673323,
+      "cleanup_probe_time_unix": 1793580139.2594607,
+      "endpoint_probe": {
+        "host": "127.0.0.1",
+        "connection_timeout_seconds": 0.1,
+        "reachable": false
+      },
+      "removed_at_observation": true,
+      "later_exec_reappeared": true,
+      "later_execution_observation_time": "unknown (not recorded)",
+      "final_sanitized_credential_notlive": true
+    }
+  ],
+  "affected_workflow_replays": [
+    {
+      "scope": "First affected edit/undo/save/disconnect workflow",
+      "result": "1 passed, 2 deselected",
+      "seconds": 25.11,
+      "descriptor_read_exception": false,
+      "owner_id_match": "unknown (not instrumented in this replay)",
+      "descriptor_absent_assertion": true
+    },
+    {
+      "scope": "Second affected draft/stale workflow",
+      "result": "1 passed, 2 deselected",
+      "seconds": 18.85,
+      "descriptor_read_exception": false,
+      "owner_id_match": true,
+      "descriptor_missing_after_remove": true
+    },
+    {
+      "scope": "Second affected workflow with final strengthened fixture",
+      "result": "1 passed, 2 deselected",
+      "seconds": 20.4,
+      "descriptor_read_exception": false,
+      "owner_id_match": true,
+      "descriptor_missing_after_remove": true
+    }
+  ],
+  "final_fixture_teardown": {
+    "test": "test_published_client_preserves_drafts_and_rejects_stale_handles[fastmcp]",
+    "client": "fastmcp",
+    "event": "owner_teardown",
+    "started_at": 1793580133.2074037,
+    "finished_at": 1793580133.2302623,
+    "initial_stop_result": true,
+    "final_stop_acknowledged": true,
+    "owner_server_id": "f0178fb8-242e-4936-b2d2-2aff2d169d6f",
+    "original_descriptor_matches_owner": true,
+    "owner_status": "closed",
+    "active_jobs": [],
+    "descriptor_exists": false
+  },
+  "assessment": "Cause unknown. No product fix was made. In-process teardown replays confirmed absence, but later execution views listed inactive descriptor paths again after explicit unlink. Permanent removal is not claimed. All five then-visible test credentials were confirmed unreachable, sanitized and unlinked; publication is limited to the transcript, three PNGs and this JSON.",
+  "cross_execution_observation": {
+    "note": "Later execution views listed the inactive descriptor paths again after in-process absence assertions and an explicit unlink. Cause unknown; no product fix. Only allowlisted transcript, PNG and this JSON are publication artifacts; work directories are excluded.",
+    "sanitized_inactive_paths_before_unlink": [
+      {
+        "path": "<test-workspace>/n20-fastmcp-evidence/work/test_published_client_preserve0/connection.json",
+        "owner_server_id": "42c60618-7b28-4846-a251-c550d8b4da34",
+        "exists_immediately_after_unlink": false
+      },
+      {
+        "path": "<test-workspace>/n20-fastmcp-evidence/work/test_published_client_edits_sa0/connection.json",
+        "owner_server_id": "8b2be4d4-9332-4a4e-94e7-79f76ef7eed1",
+        "exists_immediately_after_unlink": false
+      },
+      {
+        "path": "<test-workspace>/n20-fastmcp-cleanup/draft-work/test_published_client_preserve0/connection.json",
+        "owner_server_id": "f201d80d-59a2-4050-87ec-ae2c0f74e077",
+        "exists_immediately_after_unlink": false
+      },
+      {
+        "path": "<test-workspace>/n20-fastmcp-cleanup/final-work/test_published_client_preserve0/connection.json",
+        "owner_server_id": "f0178fb8-242e-4936-b2d2-2aff2d169d6f",
+        "exists_immediately_after_unlink": false
+      },
+      {
+        "path": "<test-workspace>/n20-fastmcp-cleanup/work/test_published_client_edits_sa0/connection.json",
+        "owner_server_id": "19c5504f-28ce-43c8-a1f6-07208ea0babe",
+        "exists_immediately_after_unlink": false
+      }
+    ]
+  }
+}
