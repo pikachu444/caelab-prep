@@ -899,7 +899,6 @@
   "catalogue": {
     "files": [
       "catalogues/radioss.csv",
-      "catalogues/radioss.jsonl",
       "catalogues/radioss-reconciliation.json",
       "catalogues/radioss-detail-acquisition.json"
     ],

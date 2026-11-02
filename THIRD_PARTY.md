@@ -1,6 +1,6 @@
 # 공개 기반의 사용
 
-제작사 프로그램의 비공개 코드를 추출하거나 복사하지 않는다. 현재 제품 코드는 공개 API를 연결하며 아래 라이브러리의 실행 파일·소스 배포본은 Git에 넣지 않는다. 구현 기준은 Prep main `a48d3b4`이며 실제 설치 범위는 `pyproject.toml`, 실행 검증 버전은 [작업서 19절](docs/execution-stages.md#current-progress)을 따른다.
+제작사 프로그램의 비공개 코드를 추출하거나 복사하지 않는다. 현재 제품 코드는 공개 API를 연결하며 아래 라이브러리의 실행 파일·소스 배포본은 Git에 넣지 않는다. 구현 기준은 Prep main `a48d3b4`이며 실제 설치 범위는 `pyproject.toml`, 실행 검증 버전은 [작업서 19절](CURRENT_STATE.md#current-progress)을 따른다.
 
 | 기반 | 사용 방식 | 원문 |
 |---|---|---|

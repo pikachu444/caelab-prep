@@ -35,7 +35,5 @@ for stage,key,sid in [('starter','starter2024','radioss-D01'),('engine','engine2
 out=ROOT/'catalogues/radioss.csv'
 with out.open('w',newline='') as f:
     w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
-with (ROOT/'catalogues/radioss.jsonl').open('w') as f:
-    for row in rows:f.write(json.dumps(row,ensure_ascii=False)+'\n')
 (ROOT/'catalogues/radioss-reconciliation.json').write_text(json.dumps(reconcile,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps({'total_rows':len(rows),'stages':reconcile},ensure_ascii=False,indent=2))

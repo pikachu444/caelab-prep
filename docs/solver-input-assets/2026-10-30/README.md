@@ -4,7 +4,7 @@
 
 **이 문서는 2026-10-30 자료 수집과 후속 자산 보완의 기록이다.** 당시 작업은 자료 취득·목록 추출·관련 규칙 검토였으며 제품 구현이나 solver 실행을 수행하지 않았다. 원장의 수량·판본·`solver_executed=false`는 그 수집 대상과 시점의 증거로 유지한다.
 
-2026-11-02 제품 기준 `a48d3b4`에서는 지원 RAD 카드 생성·관계 편집, CAD tri3/tet4 후보 채택, 새 Starter/Engine 출력과 소형 실제 solver 검사가 구현됐다. 이 후속 결과를 아래 일곱 솔버 전체나 수집한 upstream 예제의 실행 성공으로 확대하지 않는다. 현재 지원은 [저장소 README](../../../README.md), 남은 구현·검증과 완료 기준은 [잔여 작업 N01–N26](../../execution-stages.md#remaining-work)을 따른다.
+2026-11-02 제품 기준 `a48d3b4`에서는 지원 RAD 카드 생성·관계 편집, CAD tri3/tet4 후보 채택, 새 Starter/Engine 출력과 소형 실제 solver 검사가 구현됐다. 이 후속 결과를 아래 일곱 솔버 전체나 수집한 upstream 예제의 실행 성공으로 확대하지 않는다. 현재 지원은 [저장소 README](../../../README.md), 남은 구현·검증과 완료 기준은 [잔여 작업 N01–N26](../../../CURRENT_STATE.md#remaining-work)을 따른다.
 
 ## PR #10 이후 실제로 보완한 자산
 
@@ -43,7 +43,7 @@ RAD를 먼저 개발할 때는 위 Starter/Engine 규칙과 `inp2rad.py`의 실�
 
 ## 필요한 자료 찾기
 
-위 기능 표에서 해당 솔버 노트로 들어가면 입력 규칙, 실제 예제, writer/schema의 경로와 부족한 부분을 볼 수 있다. 특정 키워드는 `index.html`에서 이름으로 찾거나 `catalogues/<solver>.csv`에서 공식 설명으로 이동한다. 세부 근거가 필요할 때만 `solvers/<solver>.json`을 본다.
+위 기능 표에서 해당 솔버 노트로 들어가면 입력 규칙, 실제 예제, writer/schema의 경로와 부족한 부분을 볼 수 있다. 특정 키워드는 `catalogues/<solver>.csv`에서 찾아 공식 설명으로 이동한다. HTML 색인과 집계는 아래 생성 명령으로 만든다. 세부 근거가 필요할 때만 `solvers/<solver>.json`을 본다.
 
 `tmp/` 경로는 수집 시 분석용 원본 위치다. 공개 Git과 다운로드 ZIP에는 상용 매뉴얼·재배포 불명 예제 전문을 넣지 않는다. URL·고정 버전·locator·크기·SHA·취득 manifest를 보존해 다시 찾을 수 있게 했다. HTML 원본 전체를 영구 오프라인 배포했다고 표현하지 않는다.
 
@@ -70,5 +70,14 @@ Workbench는 이 저장소에서 검증해 제공할 자산/API와 native 파일
 
 이 자료 묶음의 공백은 전수 생성 schema/API, 수집 대상 전체의 의도적 오류 예제·실행 oracle, 최신판 간 모든 차이, MSC2024.2 설치 raw·실행 결과의 동일판 쌍 및 일부 원문의 재배포 권리다. 후속 RAD의 제한된 오류/물리 oracle은 전체 공백의 해소를 뜻하지 않는다. 공식 필드 규칙 자체와 MSC 완전 입력 예제를 못 찾은 상태라고 표현하지 않는다. 접근 실패·불명확한 항목을 찾았다고 바꾸지 않았다.
 
-[사전 합의](discussion/protocol.md) · [토론·통합 결론](discussion/synthesis.md) · [독립 감사 기준](discussion/astra-checklist.md) · [독립 감사 결과](discussion/astra-findings.md) · [자료 집계](summary.json)
+[사전 합의](discussion/protocol.md) · [토론·통합 결론](discussion/synthesis.md) · [독립 감사 기준](discussion/astra-checklist.md) · [독립 감사 결과](discussion/astra-findings.md) · 집계는 아래 생성 명령의 `summary.json`
 
+## 파생 색인 만들기
+
+원장은 `solvers/*.json`, 찾아보기 표의 정본은 `catalogues/*.csv`다. `index.html`·`summary.json`과 두 CSV의 JSONL 거울은 Git에 중복 보관하지 않는다. HTML/집계는 다음 명령으로 로컬 생성하며 다운로드·solver 실행을 하지 않는다.
+
+```powershell
+python -c "import importlib.util; p='docs/solver-input-assets/2026-10-30/scripts/package_research.py'; s=importlib.util.spec_from_file_location('asset_index',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); m.build_index()"
+```
+
+배포 archive와 `stage_public_docs.py`는 필요한 HTML/집계를 먼저 생성한다. 생성 결과는 지원 카드 수나 현재 제품의 실행 검증으로 세지 않는다. source 원장에 적힌 참고 ZIP의 내부 경로와 현재 Git tree를 구분한다.

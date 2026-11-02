@@ -6,7 +6,7 @@
 
 ![실제 Windows Prep 창에서 연 beam·shell·tet 입력](docs/native-windows/2026-11-02-node-move/beam_shell_tet/windows-observed.png)
 
-2026-11-02 게시 코드 `adc9161`로 저장한 절점 이동 모델을 다시 연 실제 Windows Qt/VTK 앱의 클라이언트 영역입니다. 합성 이미지가 아니며, 제한된 입력 열기·좌표 이동·저장/재열기 흐름의 [화면과 확인 범위](docs/usage.md#node-move-images)를 구분해 안내합니다.
+2026-11-02 게시 코드 `adc9161`에서 저장된 절점 이동 모델을 다시 연 실제 Windows Qt/VTK 앱의 클라이언트 영역입니다. 합성 이미지가 아니며, 제한된 입력 열기·좌표 이동·저장/재열기 흐름의 [화면과 확인 범위](docs/usage.md#node-move-images)를 구분해 안내합니다.
 
 ## 현재 사용할 수 있는 기능
 
@@ -19,7 +19,7 @@
 | 공용 GUI | 같은 문서·명령을 사용하는 8개 프로그램별 표현, 단위 숫자·벡터·표·곡선 입력, 재료/곡선 갤러리와 부품 카탈로그 |
 | 자동화 | 독립 CLI, 열린 GUI에 접속하는 live 제어와 선택 설치 MCP adapter |
 
-이 작업 브랜치에는 **절대좌표 절점 이동의 첫 연결**도 있습니다. 요소 품질과 영향 대상을 미리 검토하고 한 Undo로 적용합니다. 영향 집합을 명시적으로 재검토하기 전에는 native 출력을 막습니다. 다중 자원별 검토 의존성을 보존하며, 하중 시간함수와 작용점 모멘트의 실제 평가는 별도로 확인해야 합니다. 일반 메시 편집 전체의 완료본은 아닙니다.
+main에는 **절대좌표 절점 이동의 첫 구현**도 있습니다. 요소 품질과 영향 대상을 미리 검토하고 한 Undo로 적용합니다. 영향 집합을 명시적으로 재검토하기 전에는 native 출력을 막습니다. 다중 자원별 검토 의존성을 보존하며, 하중 시간함수와 작용점 모멘트의 실제 평가는 별도로 확인해야 합니다. 일반 메시 편집 전체의 완료본은 아닙니다.
 
 전체 Radioss 카드, 모든 요소·재료법칙, 일반 재메시의 자동 조건 복구, 임의 all-hex·중립면 생성과 Windows 설치형 배포는 지원 완료 범위가 아닙니다. 8개 표현의 존재는 원제품 전체 기능·품질과의 동등성 검증을 뜻하지 않습니다. 선택적 SolidCraft 준비 adapter는 외부 CAD를 실행하지 않으며 실제 design→STEP 생성 관계는 미확인입니다.
 
@@ -47,6 +47,6 @@ python -m venv .venv
 
 ## 개발 자료
 
-[제품 목표](DESIGN.md#delivery-goals), [현재 코드 구조](ARCHITECTURE.md), [남은 작업과 완료 기준](docs/execution-stages.md#remaining-work), [Workbench 소비자 경계](docs/workbench-reuse-plan.md)를 따릅니다. 공용 자산과 갤러리는 정식 개발 산출물이며 다른 제품이 생길 때까지 개발을 미루지 않습니다.
+[제품 목표](DESIGN.md#delivery-goals), [현재 코드 구조](ARCHITECTURE.md), [남은 작업과 완료 기준](CURRENT_STATE.md#remaining-work), [Workbench 소비자 경계](docs/workbench-reuse-plan.md)를 따릅니다. 공용 자산과 갤러리는 정식 개발 산출물이며 다른 제품이 생길 때까지 개발을 미루지 않습니다.
 
 [공용 기반 실행 계획](docs/shared-cae-foundation-plan.md), [GUI 비교 자료](docs/benchmarks/2026-10-30/README.md), [솔버 입력 자산](docs/solver-input-assets/2026-10-30/README.md), [메셔 실증 범위](docs/mesher-feasibility-roadmap.md)는 개발 근거입니다. 사용자 설치·실행 절차는 위 사용 가이드를 이용하세요.

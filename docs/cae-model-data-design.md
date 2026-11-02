@@ -8,7 +8,7 @@
 
 기준 병합 `a48d3b4`의 코어는 자원·명령·선택을 제공하고 RAD provider는 재료/단면·PART 할당, 곡선·집합·조건 생성, tri/tet 후보의 원자 채택과 참조 없는 소유 메시 교체를 지원한다. 다중 PART 선택과 조건 역할별 대상 강조도 연결돼 있었다. 이 기준 코드의 명령 이력은 한 자원 상태 단위였고, `PrepSession.mesh_view()`는 투영 cache가 있어도 반환 시 점/연결 목록을 복사하며 전역 native 절점 ID로 RAD 메시를 모은다. 중복을 진단하는 이 경로가 독립 모델·instance의 일반 namespace나 compact 배열 저장을 구현한 것은 아니다.
 
-그 뒤 구현된 복합 명령과 읽기 전용 projection은 10절을 따른다. 현재 작업의 케이스 정의/배정은 [중앙 잔여 N01](execution-stages.md#remaining-work), 이 설계의 혼합 관계/다중 자원은 N16, 규모·배열·codec은 N17, 일반 메시 변경/재연결은 N18로 관리한다. 이미 있는 G1–G3 기능을 B 전체와 함께 다시 미구현으로 세지 않으며, B1–B6는 납품 개수가 아니라 아래 유한 범위의 합격 조건이다.
+그 뒤 구현된 복합 명령과 읽기 전용 projection은 10절을 따른다. 현재 작업의 케이스 정의/배정은 [중앙 잔여 N01](../CURRENT_STATE.md#remaining-work), 이 설계의 혼합 관계/다중 자원은 N16, 규모·배열·codec은 N17, 일반 메시 변경/재연결은 N18로 관리한다. 이미 있는 G1–G3 기능을 B 전체와 함께 다시 미구현으로 세지 않으며, B1–B6는 납품 개수가 아니라 아래 유한 범위의 합격 조건이다.
 
 이 문서는 모델 편집·저장·표시를 위한 설계다. 강성/질량 행렬 조립·방정식 번호·접촉 해법은 솔버가 소유한다. 큰 자유도를 처리하는 설계와 실제 솔버의 계산 능력을 구분한다.
 
@@ -142,7 +142,7 @@ Windows 기준 장비·자료 명세·초기 시간/메모리 목표와 측정 �
 
 ## 10. N16/N17 검토 체크포인트의 실제 계약 (2026-11-02)
 
-이 절은 `feat/model-relations`의 실행 코드와 연결된 유한 범위다. B 전체나 성능 예산의 합격 선언이 아니다. 병합/정확한 검사 SHA와 중앙 잔여 판정은 [N16·N17 상태표](execution-stages.md#remaining-work)를 따른다.
+이 절은 `feat/model-relations`의 실행 코드와 연결된 유한 범위다. B 전체나 성능 예산의 합격 선언이 아니다. 병합/정확한 검사 SHA와 중앙 잔여 판정은 [N16·N17 상태표](../CURRENT_STATE.md#remaining-work)를 따른다.
 
 - `CommandDispatcher.execute_many`는 모든 자원 후보를 먼저 검증한다. 두 번째 자원 복원 실패도 이미 변경한 자원과 실패 자원 자체를 되돌리며, 실패 시 revision·dirty·Redo·관찰 event를 바꾸지 않는다. 성공은 하나의 ChangeSet·revision·Undo다. `PrepSession.execute_many`는 지원 native 명령을 sparse 후보에 적용하고 **최종** 관계를 검증하므로 유효한 재연결 묶음의 중간 상태 때문에 거절하지 않는다. 원문 bytes와 큰 기존 payload는 이력마다 복제하지 않는다.
 - 독립 RAD source는 `plan_import_source`의 전체 native ID 대응표와 명시적 shared-node 선택을 검토한 후 한 명령으로 채택한다. 같은 이름·번호·좌표만으로 합치지 않는다. 하나의 source 안의 INCLUDE는 같은 native namespace를 유지한다. 원본 파일 bytes·SHA-256과 **원본→최초 채택 native 번호** 대응표는 불변 archive로 저장한다. 이후 메시 교체의 현재 번호를 이 최초 대응표라고 보고하지 않는다.

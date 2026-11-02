@@ -4,8 +4,8 @@
 `feat/shared-gui-foundation` / PR #12 candidate, not merged PR #15 (`a48d3b4`).
 Its accepted Windows A7 campaign, source ranges, test counts and CI gates belong
 to that candidate. Later modeling, conditions, CAD adoption, eight-view UI and
-Workbench changes require their own evidence. See [current execution evidence](../execution-stages.md#current-progress)
-and [remaining work](../execution-stages.md#remaining-work). The verdict and
+Workbench changes require their own evidence. See [current execution evidence](../../CURRENT_STATE.md#current-progress)
+and [remaining work](../../CURRENT_STATE.md#remaining-work). The verdict and
 failures below are preserved as review history, not current product acceptance
 or instructions to stop or approve a new merge.
 
