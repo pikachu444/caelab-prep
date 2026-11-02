@@ -15,12 +15,61 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import sysconfig
 import tarfile
 
 
 def digest(path):
     with path.open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def dependency_inventory(dependencies):
+    """Inspect the selected environment without PYTHONPATH or user-site fallback."""
+    probe = r'''
+import importlib.metadata as m, importlib.util, json, sys, sysconfig
+names = ('PySide6', 'shiboken6', 'vtkmodules', 'gmsh')
+print(json.dumps({
+    'python': sys.version, 'base_prefix': sys.base_prefix,
+    'abi': sysconfig.get_config_var('SOABI'),
+    'modules': {n: importlib.util.find_spec(n).origin for n in names},
+    'distributions': {d.metadata['Name']: {'version': d.version, 'root': str(d.locate_file(''))}
+                      for d in m.distributions()},
+}))
+'''
+    result = json.loads(subprocess.check_output(
+        [str(dependencies / "Scripts" / "python.exe"), "-I", "-c", probe], text=True))
+    site = dependencies / "Lib" / "site-packages"
+    if (result["abi"] != sysconfig.get_config_var("SOABI")
+            or Path(result["base_prefix"]).resolve() != Path(sys.base_prefix).resolve()):
+        raise ValueError("Packager and dependency environment must use the same base Python/ABI")
+    if any(not Path(path).resolve().is_relative_to(site) for path in result["modules"].values()):
+        raise ValueError("Required application modules must come from the selected dependency environment")
+    return result
+
+
+def collect_notices(distributions, destination, allowed_root):
+    records = []
+    missing = []
+    for distribution in distributions:
+        name = distribution.metadata["Name"].lower().replace("-", "_")
+        found = False
+        for item in distribution.files or []:
+            if not any(word in str(item).lower() for word in ("license", "copying", "copyright", "notice")):
+                continue
+            original = Path(distribution.locate_file(item)).resolve()
+            if not original.is_file():
+                continue
+            relative = original.relative_to(allowed_root)
+            target = destination / name / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(original, target)
+            records.append({"distribution": name, "source": str(original),
+                            "path": target.relative_to(destination).as_posix(), "sha256": digest(target)})
+            found = True
+        if not found:
+            missing.append(name)
+    return records, missing
 
 
 def main():
@@ -42,6 +91,10 @@ def main():
     output = args.output.resolve()
     if output.exists():
         parser.error("Output must be new; existing candidates are preserved")
+    inputs = dependency_inventory(dependencies)
+    tooling_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+    if subprocess.check_output(["git", "status", "--porcelain", "--", "scripts/packaging"], cwd=root, text=True).strip():
+        parser.error("Commit packaging changes before building so tooling inputs have an exact SHA")
     sha = subprocess.check_output(["git", "rev-parse", f"{args.ref}^{{commit}}"], cwd=root, text=True).strip()
     archive = subprocess.check_output(["git", "archive", sha, "src", "pyproject.toml", "THIRD_PARTY.md"], cwd=root)
     output.mkdir(parents=True)
@@ -54,6 +107,7 @@ def main():
     env["PYTHONPATH"] = os.pathsep.join((str(source / "src"), str(site), str(Path(PyInstaller.__file__).resolve().parent.parent)))
     env.pop("PYTHONHOME", None)
     env.update(PREP_BUNDLE_SOURCE=str(source), PREP_BUNDLE_DEPENDENCIES=str(dependencies),
+               PREP_BUNDLE_INPUTS=str(output / "analysis-inputs.json"),
                PYINSTALLER_CONFIG_DIR=str(output / "cache"), MPLCONFIGDIR=str(output / "mpl-cache"))
     versions = subprocess.check_output(
         [sys.executable, "-c", "import sys,json,importlib.metadata as m; print(json.dumps({'python':sys.version,'packages':{n:m.version(n) for n in ('PyInstaller','pyinstaller-hooks-contrib','PySide6','shiboken6','vtk','gmsh','mcp')}}))"],
@@ -63,6 +117,7 @@ def main():
                "--workpath", str(output / "work"), str(tooling / "portable.spec")]
     manifest = {"source_commit": sha, "source_kind": "git archive; no working-tree application edits",
                 "stage": "building", "versions": json.loads(versions),
+                "packaging_commit": tooling_sha, "dependency_environment": inputs,
                 "packaging_files": {p.name: digest(p) for p in (Path(__file__), tooling / "prep_entry.py", tooling / "portable.spec")},
                 "command": command, "external_solver_binaries_bundled": False,
                 "scope": "local internal candidate; no clean-machine or public redistribution acceptance"}
@@ -77,17 +132,24 @@ def main():
         destination = output / "dist" / "CAELab-Prep"
         notices = destination / "notices"
         notices.mkdir()
-        # Preserve installed license texts verbatim and record the exact included files.
-        distributions = {d.metadata["Name"].lower().replace("-", "_"): d for d in metadata.distributions(path=[str(site)])}
-        for name in ("pyside6", "pyside6_essentials", "pyside6_addons", "shiboken6", "vtk", "gmsh"):
-            distribution = distributions[name]
-            for item in distribution.files or []:
-                if any(word in str(item).lower() for word in ("license", "copying", "copyright")):
-                    original = Path(distribution.locate_file(item))
-                    if original.is_file():
-                        target = notices / name / original.name
-                        target.parent.mkdir(exist_ok=True)
-                        shutil.copyfile(original, target)
+        # Environment-wide notices are a superset, not redistribution clearance.
+        records, missing = collect_notices(metadata.distributions(path=[str(site)]), notices, dependencies)
+        packager_missing = []
+        for name in ("PyInstaller", "pyinstaller-hooks-contrib"):
+            packager = metadata.distribution(name)
+            items, absent = collect_notices([packager], notices, Path(packager.locate_file("")).resolve())
+            records.extend(items)
+            packager_missing.extend(absent)
+        python_license = Path(sys.base_prefix) / "LICENSE.txt"
+        shutil.copyfile(python_license, notices / "CPython-LICENSE.txt")
+        records.append({"distribution": "CPython", "source": str(python_license),
+                        "path": "CPython-LICENSE.txt", "sha256": digest(python_license)})
+        manifest["notices"] = {"files": records, "no_installed_notice_found": missing + packager_missing,
+                               "scope": "selected environment superset plus CPython and PyInstaller; not legal clearance",
+                               "unresolved": ["Qt/PySide6 LGPL/GPL texts and obligations are not established by installed commercial notices",
+                                              "Complete transitive binary redistribution conditions remain unverified"]}
+        shutil.copyfile(output / "analysis-inputs.json", destination / "analysis-inputs.json")
+        manifest["analysis_inputs_sha256"] = digest(destination / "analysis-inputs.json")
         manifest["files"] = [{"path": p.relative_to(destination).as_posix(), "bytes": p.stat().st_size, "sha256": digest(p)}
                              for p in sorted(destination.rglob("*")) if p.is_file()]
         manifest["total_bytes"] = sum(p["bytes"] for p in manifest["files"])

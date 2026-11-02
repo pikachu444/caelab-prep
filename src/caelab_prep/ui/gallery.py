@@ -20,7 +20,7 @@ class GalleryWindow(QMainWindow):
     operationFinished = Signal(str, bool)
     LAYOUT_VERSION = 2
 
-    def __init__(self, session=None, *, presentation=None):
+    def __init__(self, session=None, *, presentation=None, settings=None):
         super().__init__()
         self.presentation = presentation
         self.session = session or CurveSession()
@@ -45,7 +45,7 @@ class GalleryWindow(QMainWindow):
             is_dirty=lambda: bool(self.session.describe()["dirty"]),
             save=lambda continuation: self.save_dialog(on_success=continuation),
             capture=self._capture_drafts, restore=self._restore_drafts)
-        self._settings = QSettings("CAELab", "ComponentGallery" + ("-" + presentation if presentation else ""))
+        self._settings = settings if settings is not None else QSettings("CAELab", "ComponentGallery" + ("-" + presentation if presentation else ""))
         self.setObjectName("caelabGallery")
         self.setWindowTitle("CAELab Materials")
         self.resize(1280, 800)

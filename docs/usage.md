@@ -29,6 +29,8 @@ python -m venv .venv
 
 GUI 없는 CLI는 `python -m pip install -e .`로 설치합니다. Qt 갤러리만 쓰려면 `.[widgets]`, MCP adapter는 `.[mcp]`, 개발 검사는 `.[dev]`를 선택합니다. `gui --no-3d`는 VTK viewer만 끄며 문서 편집을 유지합니다.
 
+설정까지 분리해 실행하려면 `gui --settings-file "임시 폴더/prep.ini"` 또는 `gallery --settings-file "임시 폴더/gallery.ini"`를 사용합니다. 지정한 INI에 창 배치를 읽고 저장하며 기본 사용자 설정을 읽거나 쓰지 않습니다. 각 작업 공간에는 별도 파일을 지정하세요. 옵션을 생략하면 기존 사용자 설정을 사용합니다. 이 옵션은 작업문서·출력 위치를 바꾸지 않으며, 이전 portable 후보 `46cea514`에는 포함되지 않습니다.
+
 ## Linux에서 실행하기
 
 ```sh

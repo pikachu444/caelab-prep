@@ -20,7 +20,7 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
     _sessionEvent = Signal(object)
     LAYOUT_VERSION = 3
 
-    def __init__(self, session=None, *, enable_viewport: bool = True, presentation=None):
+    def __init__(self, session=None, *, enable_viewport: bool = True, presentation=None, settings=None):
         super().__init__()
         self.presentation = presentation
         if session is None:
@@ -29,7 +29,7 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
         self.initialize_controller(
             session, file_dialog=lambda: QFileDialog, message_box=lambda: QMessageBox,
             task_factory=lambda *args, **kwargs: _FileTask(*args, **kwargs))
-        self._settings = QSettings("CAELab", "Prep" + ("-" + presentation if presentation else ""))
+        self._settings = settings if settings is not None else QSettings("CAELab", "Prep" + ("-" + presentation if presentation else ""))
         self._register_commands()
         self.build_workspace(enable_viewport=enable_viewport)
         if presentation:
