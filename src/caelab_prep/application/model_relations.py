@@ -2,6 +2,7 @@
 from copy import copy
 from ..cae_core import PrepError
 from ..radioss.relations import coordinate_frame, frame_block, node_support, validate_components
+from ..radioss.modeling import load_direction
 
 
 class ModelRelationCommands:
@@ -128,6 +129,10 @@ class ModelRelationCommands:
             values = self.condition_values(card_id)
             if "group_id" not in values: return {"status": "not-applicable", "diagnostics": []}
             direction = values.get("direction")
+            if direction is not None:
+                try: load_direction(direction)
+                except PrepError as exc:
+                    return {"status": "unverified", "diagnostics": [{"code": exc.code, "message": exc.message, "field": "direction"}]}
             translations = values.get("translations", (True,True,True) if "velocity" in values else tuple(direction == v for v in ("X","Y","Z")))
             rotations = values.get("rotations", tuple(direction == v for v in ("XX","YY","ZZ")))
             return self._validate_condition_components(values["group_id"], translations=translations, rotations=rotations,

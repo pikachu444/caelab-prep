@@ -7,7 +7,7 @@ from uuid import uuid4
 from ..cae_core import PrepError
 from ..radioss.assembly import ELEMENTS, GROUPS, inspect
 from ..radioss.deck import number
-from ..radioss.modeling import native_identity
+from ..radioss.modeling import native_identity, load_direction
 from ..radioss.relations import coordinate_frame
 from . import mesh_edit_candidates as edits
 
@@ -151,7 +151,7 @@ class NodeMoveCommands:
     def _mesh_load_coefficients(self, condition_id, targets):
         values = self.condition_values(condition_id)
         frame = coordinate_frame(self._deck_resources(), self._coordinate_reference(values["coordinate_system_id"]))
-        direction = values["direction"]
+        direction = load_direction(values["direction"])
         axis = frame["axes"]["XYZ".index(direction[0])]
         curve_id = values["curve_id"]
         count = len(set(targets))

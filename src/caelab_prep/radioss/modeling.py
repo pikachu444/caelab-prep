@@ -137,10 +137,15 @@ def boundary_block(identifier, name, group, translations, rotations, *, skew=0, 
     return newline.join((f"/BCS/{identifier}", title(name), row, ""))
 
 
-def load_block(identifier, name, group, curve, direction, scale, *, skew=0, newline="\n"):
-    integer(identifier)
+def load_direction(direction):
     if direction not in ("X", "Y", "Z", "XX", "YY", "ZZ"):
         raise PrepError("invalid_value", "Load direction must be X, Y, Z, XX, YY or ZZ.")
+    return direction
+
+
+def load_block(identifier, name, group, curve, direction, scale, *, skew=0, newline="\n"):
+    integer(identifier)
+    load_direction(direction)
     scale_field = real(scale)
     reject_default_zero(scale, "scale")
     row = integer(curve) + f"{direction:>10}{skew:10d}{0:10d}" + integer(group) + " " * 10 + real(1) + scale_field

@@ -1,6 +1,5 @@
 """Group review uses two actual mixed native inputs and existing group commands."""
 import json
-from pathlib import Path
 import subprocess
 import sys
 
@@ -22,6 +21,25 @@ def related(session, members):
     boundary = session.create_boundary_condition("Fixed translations", group, [True]*3, [False]*3)["card_id"]
     velocity = session.create_initial_velocity("Declared initial vector", group, [1, 0, 0])["card_id"]
     return group, load, boundary, velocity
+
+
+def variant(session, tmp_path, replacements=(), *, lowercase=False):
+    source = tmp_path / "variant_0000.rad"
+    session.export_rad(source)
+    raw = source.read_text(encoding="latin1")
+    for before, after in replacements:
+        before = before.replace("\r\n", "\n").replace("\r", "\n")
+        after = after.replace("\r\n", "\n").replace("\r", "\n")
+        assert before in raw
+        raw = raw.replace(before, after, 1)
+    if lowercase:
+        raw = "".join(line.lower() if line.startswith("/") else line for line in raw.splitlines(keepends=True))
+    source.write_text(raw, encoding="latin1", newline="")
+    session.open_rad(str(source))
+
+
+def titled(session, title):
+    return next(card["id"] for card in session.list_cards() if card["title"] == title)
 
 
 @pytest.mark.parametrize("name", ["beam_shell_tet", "truss_shell_hex"])
@@ -161,3 +179,60 @@ def test_group_review_does_not_clear_existing_geometry_review():
         session.plan_group_members(group, [2, 5])
     assert error.value.code == "stale_mesh_targets"
     assert state(session) == before and before[2]["stale_targets"]
+
+
+def test_lowercase_initial_velocity_cards_keep_overlap_diagnostics(tmp_path):
+    session = opened("beam_shell_tet")
+    first = session.create_node_group("First group", [2])["card_id"]
+    second = session.create_node_group("Second group", [5])["card_id"]
+    session.create_initial_velocity("First velocity", first, [1, 0, 0])
+    session.create_initial_velocity("Second velocity", second, [0, 2, 0])
+    variant(session, tmp_path, lowercase=True)
+    preview = session.plan_group_members(titled(session, "First group"), [2, 5])
+    assert preview["admissible"] and len(preview["initial_velocity_overlaps"]) == 1
+    assert [ref["local_id"] for ref in preview["initial_velocity_overlaps"][0]["after_nodes"]] == [5]
+
+
+def test_lowercase_bcs_keeps_native_inactive_rotation_policy(tmp_path):
+    session = opened("truss_shell_hex")
+    group = session.create_node_group("Constrained group", [9])["card_id"]
+    session.create_boundary_condition("Inactive rotations", group, [True]*3, [True]*3)
+    variant(session, tmp_path, lowercase=True)
+    preview = session.plan_group_members(titled(session, "Constrained group"), [8, 9])
+    assert preview["admissible"] and not preview["blocked"]
+    assert preview["conditions"][0]["after_support"]["status"] == "unverified"
+    assert all(row["code"] == "inactive_rotation" for row in preview["conditions"][0]["after_support"]["diagnostics"])
+
+
+def test_imported_invalid_load_direction_is_not_a_supported_moment(tmp_path):
+    session = opened("beam_shell_tet")
+    group, load, _, _ = related(session, [2])
+    before = session.card_text(load)
+    lines = before.splitlines(keepends=True)
+    lines[2] = lines[2][:10] + f"{'XY':>10}" + lines[2][20:]
+    variant(session, tmp_path, [(before, "".join(lines))])
+    load = titled(session, "Per-node X load")
+    assert session.condition_values(load)["direction"] == "XY"
+    assert session.condition_support(load)["status"] == "unverified"
+    preview = session.plan_group_members(titled(session, "Explicit reviewed targets"), [2, 5])
+    assert not preview["admissible"]
+    with pytest.raises(PrepError):
+        session.apply_group_members(preview["plan_id"])
+
+
+def test_imported_solid_main_surface_is_not_approved_by_contact_not_applicable(tmp_path):
+    session = opened("truss_shell_hex")
+    group = session.create_node_group("Contact secondary", [9])["card_id"]
+    surface = session.create_surface("Contact main", [session.resolve_part_reference(9)["card_id"]])["card_id"]
+    session.create_contact("Imported TYPE7", group, surface, .2)
+    before = session.card_text(surface)
+    lines = before.splitlines(keepends=True)
+    lines[2] = f"{11:10d}" + lines[2][10:]
+    variant(session, tmp_path, [(before, "".join(lines))])
+    before_state = state(session)
+    preview = session.plan_group_members(titled(session, "Contact secondary"), [8, 9])
+    assert not preview["admissible"]
+    assert any(row["code"] == "incompatible_surface" for item in preview["blocked"] for row in item["diagnostics"])
+    with pytest.raises(PrepError):
+        session.apply_group_members(preview["plan_id"])
+    assert state(session) == before_state
