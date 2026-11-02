@@ -16,6 +16,8 @@
 
 두 모델 모두 9개 절점·3개 요소의 ID/좌표/연결이 `.caeprep` 저장 후 별도 프로세스 재열기와 같았고 형상 검토 대기·원본 파일 SHA·실제 NativeFormat 설정 불변을 확인했다. 같은 명령의 Undo/Redo·명시 대응 후 native export·신규 source import·다중 generation 보존은 별도 코어 회귀에서 확인한다. GUI의 reconnect/native export 전체 조작을 이 harness가 수행했다고 해석하지 않는다.
 
+README의 앱 창 이미지는 게시된 `adc916182d957fd583f45b5802bb7220fc7fb3c7` 소스를 별도 읽기 전용 스냅샷으로 열어 갱신했다. 같은 beam 작업문서를 재열고 node 2의 `(11,0,0)`을 확인한 뒤, 소유 창 전체 클라이언트 영역을 `QScreen.grabWindow`로 캡처했다. 픽셀에서 실제 메시·메뉴·트리·상태바를 확인했으며 검은 VTK나 다른 앱·개인 경로는 포함하지 않았다. 창 테두리·제목 표시줄은 이 캡처 API의 범위 밖이다. 원본 작업문서와 NativeFormat 설정은 불변이었다. [재열기 JSON](native-windows/2026-11-02-node-move/beam_shell_tet/reopen.json)의 `latest_window_observation`에 코드 SHA·PNG SHA·방법·범위를 추가했고 기존 실행 단계의 hash는 보존했다. 이번 관측은 GUI 재열기이며 추가 모델 편집·솔버 실행·IME·DPI 검사가 아니다. 캡처 준비의 첫 좌표 비교는 tuple/list 자료형 차이로 중단됐고 공개 이미지로 쓰지 않았다.
+
 | 관측 | 근거 |
 |---|---|
 | Beam/shell/tet Preview·저장·새 프로세스 | [Preview](native-windows/2026-11-02-node-move/beam_shell_tet/preview.png), [저장](native-windows/2026-11-02-node-move/beam_shell_tet/save.json), [재열기](native-windows/2026-11-02-node-move/beam_shell_tet/reopen.json) |

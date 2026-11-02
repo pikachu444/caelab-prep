@@ -6,7 +6,7 @@
 
 ![실제 Windows Prep 창에서 연 beam·shell·tet 입력](docs/native-windows/2026-11-02-node-move/beam_shell_tet/windows-observed.png)
 
-2026-11-02 실제 Windows Qt/VTK 창의 관측 화면입니다. 합성 이미지가 아니며, 제한된 입력 열기·좌표 이동·저장/재열기 흐름의 [화면과 확인 범위](docs/usage.md#node-move-images)를 구분해 안내합니다.
+2026-11-02 게시 코드 `adc9161`로 저장한 절점 이동 모델을 다시 연 실제 Windows Qt/VTK 앱의 클라이언트 영역입니다. 합성 이미지가 아니며, 제한된 입력 열기·좌표 이동·저장/재열기 흐름의 [화면과 확인 범위](docs/usage.md#node-move-images)를 구분해 안내합니다.
 
 ## 현재 사용할 수 있는 기능
 

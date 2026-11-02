@@ -17,5 +17,14 @@
     "src/caelab_prep/radioss/deck.py": "90b83f9f9d2a07d94687bd10ea031ab573c1487f42ffb310942c5163fc87a0fa",
     "src/caelab_prep/ui/node_moves.py": "c41827c1edab652c5378c57a0445414db828b15d29de7a16fab380d82a363443"
   },
-  "actual_dialog_size": null
+  "actual_dialog_size": null,
+  "latest_window_observation": {
+    "source_commit": "adc916182d957fd583f45b5802bb7220fc7fb3c7",
+    "platform": "windows",
+    "capture": "QScreen.grabWindow of the owned native window",
+    "scope": "Reopen previously saved node move; no edit, solver, IME or DPI acceptance",
+    "settings_unchanged": true,
+    "project_unchanged": true,
+    "png_sha256": "f9be325772e23953dee1882af9901b20db80afe11499b477d308355d9318399c"
+  }
 }
