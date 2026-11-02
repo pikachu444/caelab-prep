@@ -83,6 +83,12 @@ MSH는 2.2/4.1 ASCII에 한정합니다. binary·partition·periodic·data·para
 
 main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 절점 ID를 선택하고 입력 덱 길이 단위의 절대좌표를 입력합니다. **Preview move**에서 품질과 영향 대상을 확인하고 검토 체크 후 **Apply move**로 확정합니다. ID·연결·집합 멤버를 보존해도 하중 작용점과 접촉 간격은 달라질 수 있습니다. 영향 집합은 **Replace prepared mesh / reconnect targets…**에서 명시적으로 검토하기 전까지 native 출력을 막습니다. 다중 자원에서는 집합별 실제 변경 자원에 검토 상태를 연결합니다. API의 하중 진단은 시간함수 평가 전 계수이며 실제 시각의 힘·모멘트나 작용점 모멘트를 계산한 결과가 아닙니다. 일반 메시 편집 전체의 완료본은 아닙니다.
 
+<a id="group-member-review"></a>
+
+집합의 기존 편집 작업에서 절점 ID 또는 출처가 있는 요소 멤버를 바꾸고 **Preview change…**를 선택하면 현재/제안 멤버·추가/제거·연결된 조건의 대상 변화를 볼 수 있습니다. 지원 가능한 제안은 **Apply reviewed membership** 한 번으로 적용하며 Undo/Redo·저장·native 출력은 기존 문서 경로를 사용합니다. **Cancel**은 모델과 편집 초안을 유지합니다. 검토 중 모델이 바뀌면 적용을 차단하므로 검토를 취소하고 집합 편집을 다시 여세요.
+
+이 검토는 닫힌 native 참조 범위에 한정됩니다. 지원 밖 카드(예: LAW36)가 포함되거나 기존 geometry review가 남아 있으면 새 preview를 만들 수 없습니다. 기존 직접 **Apply**와 inspector 편집은 유지되며 새 영향 검토를 거친 것으로 계산하지 않습니다. 명시 요소 집합의 멤버 변경이 절점 하중을 자동 재배정하지 않습니다. 하중 표시는 시간함수 평가 전 계수이고, 접촉은 secondary/main 대상별로 구분합니다. 초기속도 중복과 원문 위치를 보여도 INCLUDE 간 실행 순서·유효 초기상태·운동량을 계산한 결과는 아닙니다. 기하를 바꾸지 않아 새 mesh generation/stale을 만들지 않으며, part 소유 변경·병합·삭제·법선 반전·재메시는 이 기능의 범위가 아닙니다.
+
 <a id="node-move-images"></a>
 
 ### 실제 Windows 화면으로 좌표 이동 확인하기
