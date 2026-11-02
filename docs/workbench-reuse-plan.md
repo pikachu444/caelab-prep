@@ -1,8 +1,8 @@
 # Prep 산출물의 Workbench 재사용 계획
 
-현재 구현 대조: 2026-11-02. Prep 병합 `89bd700`, Workbench 병합 `865ee15`([Prep #17](https://github.com/pikachu444/caelab-prep/pull/17), [Workbench #55](https://github.com/pikachu444/caelab-workbench/pull/55))를 기준으로 한다. W1 공용 NumericEdit의 실제 MDO 소비와 W2 RAD 작업문서의 독립 Prep 실행은 구현·병합됐다. 실제 Windows 두 앱 작업은 [중앙 잔여 N14](execution-stages.md#remaining-work), RAD 실행 입력 묶음 W3는 N21, 열린 GUI IPC/MCP는 N19/N20이다. 테스트용 QWidget host나 파일 전달을 위젯 소비 또는 solver 실행 완료로 대신하지 않는다.
+이 문서는 Prep와 Workbench의 소비·소유 계약이다. 현재 반영 코드와 N13/N14/N21의 실제 확인 범위는 [CURRENT_STATE](../CURRENT_STATE.md#remaining-work)를 따른다.
 
-원검토일은 2026-10-29이며 기준은 Workbench `92ce81181396bed9bb6e3024bba62913834c2a7e`, Prep `5d16e81c7ec7c92499401d63208039424bf73cc9`였다. 아래 날짜가 붙은 소스 조사·환경·외부 자산 기록은 그 시점에 한정한다. 당시 조사와 현재 실행 근거를 구분하며, Windows 실제 검증은 아직 후속이다. 현재 통합의 실행 근거는 [작업서 19절](execution-stages.md#current-progress), 다음 작업의 상태·완료 조건은 [중앙 잔여 목록](execution-stages.md#remaining-work)을 따른다.
+원검토일은 2026-10-29이며 기준은 Workbench `92ce81181396bed9bb6e3024bba62913834c2a7e`, Prep `5d16e81c7ec7c92499401d63208039424bf73cc9`였다. 아래 날짜가 붙은 소스 조사·환경·외부 자산 기록은 그 시점에 한정한다. 당시 조사와 현재 실행 근거를 구분하며, Windows 실제 검증은 아직 후속이다. 현재 통합의 실행 근거는 [작업서 19절](../CURRENT_STATE.md#current-progress), 다음 작업의 상태·완료 조건은 [중앙 잔여 목록](../CURRENT_STATE.md#remaining-work)을 따른다.
 
 ## 1. 먼저 확정할 결론
 
@@ -19,34 +19,13 @@ Prep의 정식 산출물은 공용 GUI 자산·공학 위젯·앱 셸·갤러리
 | W1 `apps/workbench_qt/mdo_studio/study_config.py` | Prep NumericEdit를 선택 의존성으로 import하고 continuous 변수의 숫자 셀에 설치한다. Unit 문자열과 ContinuousVariable/VariableSpace·configure 검증은 WB 소유. Prep 미설치이면 기존 Qt 입력 경로를 유지 |
 | W2 `caelab/connections.py` | `CAELAB_PREP`/`caelab-prep` 설정으로 `.rad` 또는 RAD `.caeprep`를 독립 GUI에서 연다. manifest 판별·잘못된/손상 문서 차단, input/document/output 역할과 JobManager 소유 유지. 중립 곡선 문서는 이 연결의 지원 대상이 아님 |
 | Prep 공용 자산·설치 | `application/contracts.py`·`storage.py`, `ui/design`·`widgets`·`actions`·`shell`은 실제 구현이다. `[widgets]`는 PySide6만, `[gui]`는 VTK 포함, `[cad]`는 Gmsh worker 경로 |
-| Prep 모델링·파일 | 새 재료/단면·집합/조건과 tri/tet 후보를 같은 명령·Undo·저장 경로로 편집한다. RAD 작업 문서는 v3, v1/v2 읽기 호환. 중립 재료/곡선은 별도 codec이며 WB 프로젝트 JSON을 대체하지 않음 |
+| Prep 모델링·파일 | 새 재료/단면·집합/조건과 tri/tet 후보를 같은 명령·Undo·저장 경로로 편집한다. RAD 작업 문서의 현재 버전·이전 버전 읽기는 [codec 계약](../ARCHITECTURE.md#작업-파일과-native-덱)을 따른다. 중립 재료/곡선은 별도 codec이며 WB 프로젝트 JSON을 대체하지 않음 |
 | Gmsh·작업 | 후보 생성/취소/실패·품질·국부 크기/interface·원자 채택이 구현됐다. 참조가 있는 일반 교체/재연결은 N18이며 대형 배열 경로는 N17 |
 | W3 / 자동화 | WB의 RAD 전용 snapshot와 Starter→Engine 실행 연결은 N21. 독립 Prep CLI와 별개로 live GUI IPC/MCP는 PR #21에서 실제 owner·공개 client와 최종 CI를 통과해 병합 |
 
 현재 W1/W2 관련 검사와 실제 독립 프로세스 전달은 작업서 19절에 기록돼 있다. Windows의 IME·DPI·theme·창 크기·양쪽 새 설치와 실제 사용 검증은 N14이며 Linux/Qt 검사로 대신하지 않는다.
 
-### 2026-10-29 소스 조사 기록
-
-다음 표의 파일 위치·의존성·미구현 설명은 원검토 SHA에 대한 역사적 사실이다. 특히 공용 widget extra, 채택, 공용 셸이 없다는 당시 설명은 위 현재 구현으로 대체됐으며 현재 잔여로 다시 세지 않는다.
-
-| 대상 | 실제 코드에서 확인한 사실 | 해석/한계 |
-|---|---|---|
-| WB 실행 | `apps/workbench_qt/__main__.py:16–34`가 PySide6 QApplication을 만들고 ProjectWindow(Workbench())를 연다. `run_workbench.bat`는 자체 .venv와 editable GUI/RAG 설치를 사용한다 | FreeCAD 내장 Python/Qt를 호스트로 쓰지 않는다. 사용자의 실제 Windows 설치 버전은 당시 측정하지 않음 |
-| WB 의존성 | `pyproject.toml`: Python>=3.11, PySide6>=6.6(Python3.11이면 <6.12), vtk>=9.3; numpy/filelock 기본 | 선언 범위이며 lockfile/검증된 모든 조합 목록이 아니다 |
-| Prep 의존성 | `pyproject.toml`: Python>=3.11, 기본 의존성 없음; GUI PySide6>=6.6(Python3.11 <6.12, 3.12이상 <6.13), vtk>=9.4,<10; cad=gmsh==4.15.2 | 당시 GUI extra는 VTK를 함께 설치한다. VTK 없는 공용 위젯 extra는 계획이다 |
-| CAD host | WB `connections.py:35–81,252–283`: FreeCAD=.FCStd 외부 GUI, PrePoMax=.pmx/STEP 등, Gmsh=mesh, ParaView 결과 GUI. `jobs.py:698–709`가 Popen 소유 | FreeCAD 내부 Qt/PySide 버전은 WB 호환성의 직접 전제가 아니다. 향후 내부 embedding 요구가 생기면 별도 조사 |
-| WB 정본 | `project.py:31–143`: NativeProject/ProgramNode/FileReference/Connection. input/document/output 분리, 파일 SHA 개정·하류 invalidation. JSON schema v3와 atomic 저장 | WB가 소유하는 것은 프로그램·파일·연결·실행 관계. native FE 문서 정밀 편집 정본은 전처리 프로그램 |
-| 보조 모델 | `model/schema.py`: StructuralModel에 inline mesh/재료/하중/단계가 있다. `model/AGENTS.md`와 DESIGN은 보조 converter/검사 모델로 제한 | 이 기존 스키마를 Prep ModelDoc로 치환하거나 모든 native 문서를 거쳐 쓰게 하지 않는다 |
-| WB 명령/Undo | `workbench.py` facade가 project·launch·jobs 명령을 모은다. `mdo/service.py:443–464` configure는 immutable revision을 새로 만들고 persist. `875–907` apply/undo는 백업 INP의 current-design transaction | WB 전체에 Prep식 일반 Undo dispatcher가 있다는 근거는 없다. MDO 설정 Apply와 현재 설계 적용 Undo를 혼동하면 안 됨 |
-| Prep 코어 | `cae_core/document.py`는 Qt/VTK/솔버 import 없는 Document/Resource/CommandDispatcher/ChangeSet/SelectionRef. 한 resource 상태 snapshot Undo/Redo와 expected_revision 검사 | stdlib만 쓰는 재사용 가능한 출발점은 사실. 복합 자원 변경·대용량 배열 history·모든 CAD/FE 의미는 미구현 |
-| Prep 세션/codec | `application/session.py:15`가 DeckResource import. RAD 카드·INCLUDE·mesh_view·.caeprep 저장/출력을 직접 소유. ZIP reader는 radioss-deck만 허용 | PrepSession 또는 .caeprep v1 전체를 중립 세션/공용 archive codec으로 직접 쓰지 않음 |
-| UI 자산 | WB `theme.py`는 dark/light semantic palette·QSettings·listeners, `icons.py`와 SVG 묶음. Prep `ui/theme.py`는 작은 자체 SVG+단일 light QSS. Prep main_window는 RAD 라벨/카드/세션 작업을 함께 소유 | 당시 작은 Prep theme를 WB 전체 theme에 덮어쓰지 않는다. 공용 widget/shell/gallery는 목표 모듈로만 존재 |
-| VTK | WB viewport는 StructuralModel/ResultSet, Prep viewport는 mesh projection/source-ID pick에 결합. 둘 다 QVTKRenderWindowInteractor 사용 | 같은 VTK 도구를 쓴다고 viewport API·선택 의미·배열 소유가 같은 것은 아님 |
-| 메시 | Prep gmsh_backend는 Gmsh import 없이 subprocess worker 호출; worker만 SDK import. XAO/MSH/메타데이터·원본 hash·UUID/개정·unit 제공 | candidate assets이며 RAD GUI 문서 채택 명령·하중 재연결 미구현. 당시 backend는 sys.executable을 쓰므로 별도 venv 선택도 자동 구현된 것이 아님 |
-| Jobs | WB Workbench.jobs/JobManager와 RunStore가 솔버·MDO 제출/취소·로그·입력 사본·결과 판독 소유. Prep는 파일 QRunnable과 Gmsh subprocess/cancel/timeout이 당시 구현 | 공용 Job protocol/전체 Prep meshing job service는 목표. WB jobs를 Prep 작업체계로 즉시 대체할 이유 없음 |
-| 자동화 | Prep CLI는 같은 세션 클래스를 매 호출 새로 만듦. `cli.py`가 열린 GUI IPC client가 아니라고 명시 | CLI 실행이 이미 열린 Prep 문서를 제어하지 않음. MCP/IPC 구현됨 주장 금지 |
-
-원검토 당시 WB CURRENT_STATE에는 Linux Python3.12.14/PySide6 6.12.0/VTK9.7.1 검사와 과거 Windows Python3.13.5/Qt6.9.1 기록이 있다. 이는 해당 기록의 환경이며 현재 사용자 설치 또는 Prep+WB 통합 조합을 직접 측정한 결과가 아니다. 2026-10-29 검토는 source read였으며 GUI·실솔버·Windows·package import를 실행하지 않았다. 이후 W1/W2 실행 근거는 위 현재 상태와 구분해 기록한다.
+원검토의 당시 파일 위치·환경·한계는 [구현 이력](history/implementation-history.md)에 보존한다. 아래 W1/W2/W3의 소유 계약과 종료 조건은 현재 통합에도 적용한다.
 
 ## 3. 재사용 단위별 1차 분류
 
@@ -64,11 +43,7 @@ Prep의 정식 산출물은 공용 GUI 자산·공학 위젯·앱 셸·갤러리
 | 독립 Prep↔WB | W2: 프로그램 실행 + document/output 파일 참조/해시, 명시적 refresh | Prep executable/python env 설정, .caeprep 편집원본과 .rad 출력 구분 | CLI 호출을 live GUI 접속으로 표시, save=export=run 성공으로 합침 |
 | 열린 Prep 제어 | N19 IPC / N20 MCP의 고정된 첫 범위 | doc/session handle·epoch·expected_revision·capability/error/job schema·접속/파일 범위 | 초기 필수 의존성, 두 프로세스가 동일 파일을 몰래 편집 |
 
-### W3 RAD 실행 경계 (N21)
-
-기존 WB `d6f05a3`의 공용 `snapshot_input()`은 실행 root를 **model.inp**로 고정해 RAD 실행에 부족했다. PR #55는 solver-specific snapshot과 Starter/Engine 단계 실행을 기존 JobManager에 연결하고 원래 basename·상대 INCLUDE를 보존했다. 최종 `a328253`의 [CI 41368317991](https://github.com/pikachu444/caelab-workbench/actions/runs/41368317991)에서 실제 두 입력 서비스/X11 GUI 및 전체 Python 3.11/3.12·CalculiX가 통과했고 `865ee15`에 병합했다. 완전한 animation 판독·Windows 납품은 이 연결의 성공 범위가 아니다.
-
-`native/radioss.py`도 native A### binary animation을 해독하지 않으며 opaque payload는 partial/경고로 남긴다. 첫 파일 연결 소비자의 완료를 Radioss 결과 끝단 완료로 확대하지 않는다. 기존 CalculiX snapshot/INCLUDE·FRD/DAT·MDO 경로는 유지한다.
+W3의 입력 snapshot·실행·검증 경계는 [W3 계약](#w3--rad-실행-입력-묶음과-실제-계산-연결)에 한 번 정의한다.
 
 ## 4. 소유권과 단일 변경 경로
 
@@ -187,3 +162,14 @@ GitHub accessible owner 목록과 gui 이름/설명 검색에서는 별도 전�
 - [NativeProject](https://github.com/pikachu444/caelab-workbench/blob/92ce81181396bed9bb6e3024bba62913834c2a7e/caelab/project.py), [Workbench facade](https://github.com/pikachu444/caelab-workbench/blob/92ce81181396bed9bb6e3024bba62913834c2a7e/caelab/workbench.py), [JobManager](https://github.com/pikachu444/caelab-workbench/blob/92ce81181396bed9bb6e3024bba62913834c2a7e/caelab/jobs.py), [input snapshot](https://github.com/pikachu444/caelab-workbench/blob/92ce81181396bed9bb6e3024bba62913834c2a7e/caelab/native/input_snapshot.py)
 - [MDO config UI](https://github.com/pikachu444/caelab-workbench/blob/92ce81181396bed9bb6e3024bba62913834c2a7e/apps/workbench_qt/mdo_studio/study_config.py), [Studio binding](https://github.com/pikachu444/caelab-workbench/blob/92ce81181396bed9bb6e3024bba62913834c2a7e/apps/workbench_qt/mdo_studio/window.py), [MDO service](https://github.com/pikachu444/caelab-workbench/blob/92ce81181396bed9bb6e3024bba62913834c2a7e/caelab/mdo/service.py)
 - [Prep 의존성](https://github.com/pikachu444/caelab-prep/blob/5d16e81c7ec7c92499401d63208039424bf73cc9/pyproject.toml), [코어](https://github.com/pikachu444/caelab-prep/blob/5d16e81c7ec7c92499401d63208039424bf73cc9/src/caelab_prep/cae_core/document.py), [당시 RAD 세션](https://github.com/pikachu444/caelab-prep/blob/5d16e81c7ec7c92499401d63208039424bf73cc9/src/caelab_prep/application/session.py), [Gmsh backend](https://github.com/pikachu444/caelab-prep/blob/5d16e81c7ec7c92499401d63208039424bf73cc9/src/caelab_prep/adapters/gmsh_backend.py), [worker](https://github.com/pikachu444/caelab-prep/blob/5d16e81c7ec7c92499401d63208039424bf73cc9/src/caelab_prep/adapters/gmsh_worker.py)
+
+
+## 이전 절 링크
+
+<a id="2026-10-29-소스-조사-기록"></a>
+
+이전 절 **2026-10-29 소스 조사 기록** → [옮긴 내용](history/implementation-history.md#2026-10-29-소스-조사-기록).
+
+<a id="w3-rad-실행-경계-n21"></a>
+
+이전 절 **W3 RAD 실행 경계 (N21)** → [옮긴 내용](#w3--rad-실행-입력-묶음과-실제-계산-연결).

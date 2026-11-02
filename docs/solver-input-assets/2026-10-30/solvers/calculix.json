@@ -335,7 +335,6 @@
   "catalogue": {
     "files": [
       "catalogues/calculix.csv",
-      "catalogues/calculix.jsonl",
       "catalogues/calculix-reconciliation.json",
       "catalogues/calculix-test-assets.csv"
     ],

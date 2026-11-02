@@ -27,6 +27,6 @@ Actual generated tri/tet solver checks use separate inputs in
 Linux X11 layout/render/pick checks use a separate two-quad input; neither result
 certifies these editor fixtures as complete analysis models. Standalone external
 MSH import is not supplied by the candidate metadata/XAO/MSH adoption path.
-See [current evidence](../docs/execution-stages.md#current-progress) and
-[remaining work](../docs/execution-stages.md#remaining-work) before reusing these
+See [current evidence](../CURRENT_STATE.md#current-progress) and
+[remaining work](../CURRENT_STATE.md#remaining-work) before reusing these
 examples as completion evidence.

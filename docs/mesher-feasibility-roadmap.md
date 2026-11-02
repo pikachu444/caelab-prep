@@ -2,7 +2,7 @@
 
 조사·SDK 실험 기준일: 2026-10-30. 제품 구현 대조: 2026-11-02, Prep 병합 `a48d3b4`. 상태: **기존 조사 기록과 구현된 tri/tet 경로, 미실증 고급 메시 계획의 구분**. 아래 외부 후보·논문·상용 매뉴얼과 4절 실험은 10월 30일에 확인한 범위이며 이번 문서 갱신에서 재조사·재실행하지 않았다. 이후 tri/tet 후보 생성·국부 크기·interface 정책·품질·GUI 채택·native/solver 경로가 구현됐으나 Windows 납품과 고급 메시 기능은 별도다.
 
-현재 코드·실행 근거는 [작업서 19절](execution-stages.md#current-progress)을 따른다. 일반 수정/재연결은 [중앙 잔여 N18](execution-stages.md#remaining-work), 선/준비면·중립면·quad·sweep·hybrid는 N22–N26이다. 이들 조건부 기능은 F0–F2 실증 후 제품 연결 여부를 결정하며 새로운 자동 커널의 구현 가능성이나 납기를 약속하지 않는다.
+현재 코드·실행 근거는 [작업서 19절](../CURRENT_STATE.md#current-progress)을 따른다. 일반 수정/재연결은 [중앙 잔여 N18](../CURRENT_STATE.md#remaining-work), 선/준비면·중립면·quad·sweep·hybrid는 N22–N26이다. 이들 조건부 기능은 F0–F2 실증 후 제품 연결 여부를 결정하며 새로운 자동 커널의 구현 가능성이나 납기를 약속하지 않는다.
 
 ## 1. 앞선 계획에서 바로잡는 판단
 

@@ -5,8 +5,8 @@ A7 campaign below concern the bounded `feat/shared-gui-foundation` / PR #12
 candidate. They do not certify merged PR #15 (`a48d3b4`), the eight complete
 modeling approaches, or current Windows delivery. The statements excluding new
 cards, advanced curves and other work describe this old review packet; they do
-not remove those items from later user requirements. Use [current execution evidence](../execution-stages.md#current-progress)
-and [remaining work](../execution-stages.md#remaining-work) for the handoff.
+not remove those items from later user requirements. Use [current execution evidence](../../CURRENT_STATE.md#current-progress)
+and [remaining work](../../CURRENT_STATE.md#remaining-work) for the handoff.
 The historical conclusions, failed runs and reviewer corrections remain below.
 
 Review role: member of the shared review team; independent of the writers. Read-only review apart from this evidence report and the parent's later-authorized byte-identical image audit copies. Baseline: `6a2c96e` on `feat/shared-gui-foundation`.
@@ -92,7 +92,7 @@ The independent verification role reports the final eight related suites: **99 p
 
 ## Visual evidence inspected
 
-Baseline `docs/gallery-preview.png` and `.test-tmp/rad-screens/material-final-{1320,900}.png` inspected at source resolution. Material values, units, property headings, toolbar icons and selection states are readable. The baseline RAD centre intentionally says the 3D viewer is disabled, so those images provide no mesh interaction evidence.
+Baseline [이전 gallery-preview.png](https://github.com/pikachu444/caelab-prep/blob/46cea51457ea62748a940f95015ce0216edf369a/docs/gallery-preview.png) and `.test-tmp/rad-screens/material-final-{1320,900}.png` inspected at source resolution. Material values, units, property headings, toolbar icons and selection states are readable. The baseline RAD centre intentionally says the 3D viewer is disabled, so those images provide no mesh interaction evidence.
 
 Final candidate artifacts inspected:
 
