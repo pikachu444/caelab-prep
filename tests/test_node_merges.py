@@ -94,13 +94,17 @@ def test_merge_preserves_original_targets_stale_until_explicit_reconnection(tmp_
     session.export_rad(tmp_path / "reconnected_0000.rad")
 
 
-def test_many_to_one_group_collapse_is_rejected_before_any_native_change():
+def test_many_to_one_group_is_projected_without_changing_the_original_declaration():
     session = opened("truss_shell_hex")
-    session.create_node_group("Requires coalescence", [9, 4])
+    group = session.create_node_group("Requires coalescence", [9, 4])["card_id"]
     before = state(session)
-    with pytest.raises(PrepError) as error: plan(session, 9, 4)
-    assert error.value.code == "unsupported_member_collapse"
-    assert state(session) == before
+    review = plan(session, 9, 4)
+    assert review["admissible"] and state(session) == before
+    row = review["membership_coalescences"][0]
+    assert row["group_ref"]["local_id"] == group and (row["old_link_count"], row["projected_unique_count"]) == (2, 1)
+    session.apply_node_merge(review["plan_id"])
+    assert session.group_members(group)["member_ids"] == [9, 4]
+    assert group in session.mesh_relationships()["stale_targets"]
 
 
 def test_native_merge_preserves_an_earlier_sparse_coordinate_overlay():

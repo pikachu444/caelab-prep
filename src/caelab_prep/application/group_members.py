@@ -10,6 +10,16 @@ def _refs(values):
     return [asdict(value) for value in sorted(values)]
 
 
+def _velocity_overlap_pairs(velocities, changed_conditions):
+    for index, first in enumerate(velocities):
+        for second in velocities[index + 1:]:
+            if not {first[0], second[0]} & changed_conditions:
+                continue
+            before, after = first[1] & second[1], first[2] & second[2]
+            if before or after:
+                yield first, second, before, after
+
+
 class GroupMemberCommands:
     def plan_group_members(self, card_id, members, *, expected_revision=None, expected_document_id=None):
         """Review a node/element set in the existing closed mesh-edit profile."""
@@ -120,15 +130,10 @@ class GroupMemberCommands:
             conditions.append(row)
         changed_conditions = {row["reference"]["local_id"] for row in conditions}
         overlaps = []
-        for index, first in enumerate(velocities):
-            for second in velocities[index + 1:]:
-                if not {first[0], second[0]} & changed_conditions:
-                    continue
-                before, after = first[1] & second[1], first[2] & second[2]
-                if before or after:
-                    overlaps.append({"conditions": [first[0], second[0]], "before_nodes": _refs(before),
-                                     "after_nodes": _refs(after), "source_positions": [first[3], second[3]],
-                                     "effective_initial_state": "not_evaluated; native record order matters"})
+        for first, second, before, after in _velocity_overlap_pairs(velocities, changed_conditions):
+            overlaps.append({"conditions": [first[0], second[0]], "before_nodes": _refs(before),
+                             "after_nodes": _refs(after), "source_positions": [first[3], second[3]],
+                             "effective_initial_state": "not_evaluated; native record order matters"})
         return conditions, overlaps, blocked
 
     def apply_group_members(self, plan_id, *, expected_revision=None, expected_document_id=None):
