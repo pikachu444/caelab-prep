@@ -6,7 +6,7 @@ import sys
 import pytest
 
 from caelab_prep.cae_core import PrepError
-from test_node_moves import opened, updates
+from test_node_moves import MODELS, opened, updates
 
 
 def state(session):
@@ -40,6 +40,17 @@ def variant(session, tmp_path, replacements=(), *, lowercase=False):
 
 def titled(session, title):
     return next(card["id"] for card in session.list_cards() if card["title"] == title)
+
+
+def element_model(first):
+    second = "truss_shell_hex" if first == "beam_shell_tet" else "beam_shell_tet"
+    session = opened(first)
+    session.import_source(session.plan_import_source(MODELS / second / "model_0000.rad")["plan_id"])
+    shells = [cell for cell in session.mesh_view()["cells"] if cell["formulation"] == "SHELL"]
+    assert len(shells) == 2 and shells[0]["resource_id"] != shells[1]["resource_id"]
+    refs = [session.resolve_entity_reference("element", cell["id"])["reference"] for cell in shells]
+    group = session.create_element_group("Reviewed cross-source shell set", refs[:1])["card_id"]
+    return session, group, refs
 
 
 @pytest.mark.parametrize("name", ["beam_shell_tet", "truss_shell_hex"])
@@ -236,3 +247,33 @@ def test_imported_solid_main_surface_is_not_approved_by_contact_not_applicable(t
     with pytest.raises(PrepError):
         session.apply_group_members(preview["plan_id"])
     assert state(session) == before_state
+
+
+@pytest.mark.parametrize("name", ["beam_shell_tet", "truss_shell_hex"])
+def test_element_membership_preserves_source_identity_and_does_not_retarget_nodal_conditions(name, tmp_path):
+    session, group, refs = element_model(name)
+    nodal, load, boundary, velocity = related(session, [2])
+    declarations = {card: session.card_text(card) for card in (nodal, load, boundary, velocity)}
+    before = state(session)
+    preview = session.plan_group_members(group, refs[1:])
+    assert preview["admissible"] and not preview["conditions"]
+    assert preview["before"] == refs[:1] and preview["after"] == refs[1:]
+    assert preview["before"][0]["resource_id"] != preview["after"][0]["resource_id"]
+    assert all(ref["entity_kind"] == "element" for ref in preview["after"])
+    session.apply_group_members(preview["plan_id"])
+    assert session.document.revision == before[0] + 1
+    assert session.group_members(group)["members"] == refs[1:]
+    assert all(session.card_text(card) == text for card, text in declarations.items())
+    after = state(session)
+    session.undo(); assert state(session)[1:] == before[1:]
+    session.redo(); assert state(session)[1:] == after[1:]
+    project = tmp_path / "cross-source-members.caeprep"
+    session.save_project(project)
+    code = """import json,sys
+from pathlib import Path
+from caelab_prep.application import PrepSession
+s=PrepSession();s.open_project(sys.argv[1]);s.export_rad(Path(sys.argv[1]).with_name('cross-source_0000.rad'))
+print(json.dumps(s.group_members(sys.argv[2])['members']))
+"""
+    result = json.loads(subprocess.check_output([sys.executable, "-c", code, str(project), group], text=True))
+    assert result == refs[1:]

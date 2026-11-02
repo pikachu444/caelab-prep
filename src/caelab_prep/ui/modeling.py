@@ -43,6 +43,7 @@ class OperationPanel(QWidget):
 
     applyRequested = Signal()
     cancelRequested = Signal()
+    membershipReviewRequested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -61,6 +62,12 @@ class OperationPanel(QWidget):
         self.error.setContentsMargins(8, 4, 8, 4)
         layout.addWidget(self.error)
         buttons = QHBoxLayout()
+        self.preview_button = QPushButton("Preview change…")
+        self.preview_button.setObjectName("groupMemberPreview")
+        self.preview_button.setAccessibleName("Preview group membership change")
+        self.preview_button.setToolTip("Review membership and affected conditions before applying this change.")
+        self.preview_button.hide()
+        buttons.addWidget(self.preview_button)
         buttons.addStretch()
         self.apply_button = QPushButton("Apply")
         self.apply_button.setObjectName("primaryAction")
@@ -70,14 +77,16 @@ class OperationPanel(QWidget):
         layout.addLayout(buttons)
         self.apply_button.clicked.connect(self.applyRequested)
         self.cancel_button.clicked.connect(self.cancelRequested)
+        self.preview_button.clicked.connect(self.membershipReviewRequested)
 
-    def present(self, spec, presentation):
+    def present(self, spec, presentation, *, membership_preview=False):
         self.editor.set_presentation(presentation)
         self.editor.set_fields(spec.fields, title=spec.title)
         self.description.setText(spec.description)
         self.description.setVisible(bool(spec.description))
         self.error.clear()
         self.error.hide()
+        self.preview_button.setVisible(membership_preview)
         self.apply_button.setText("Delete" if spec.destructive else
                                   "Create" if spec.key.endswith(".create") or spec.key == "object.copy" else "Apply")
 
@@ -130,6 +139,7 @@ class ModelingActions(QObject):
                                            "load.create": "Load", "velocity.create": "Velocity", "contact.create": "Contact"}[key])
         self.panel.applyRequested.connect(self.commit)
         self.panel.cancelRequested.connect(self.cancel)
+        self.panel.membershipReviewRequested.connect(self.preview_membership)
 
     @property
     def active(self):
@@ -164,7 +174,9 @@ class ModelingActions(QObject):
             h._show_error(exc)
             return False
         self.spec = spec
-        self.panel.present(spec, h.property_editor.presentation)
+        membership_preview = (callable(getattr(h, "_review_membership", None)) and spec.key == "object.edit"
+                              and any(field.name in ("node_ids", "element_refs") for field in spec.fields))
+        self.panel.present(spec, h.property_editor.presentation, membership_preview=membership_preview)
         self._bind_context_choices()
         self.stack.setCurrentWidget(self.panel)
         self._show()
@@ -231,6 +243,22 @@ class ModelingActions(QObject):
         except Exception as exc:
             self.panel.fail(str(getattr(exc, "message", exc)))
             return False
+        return self._complete(result, spec)
+
+    def preview_membership(self):
+        if not self.active or self.host._busy:
+            return False
+        spec = self.spec
+        try:
+            result = self.host._review_membership(spec, self.panel.editor.values())
+        except Exception as exc:
+            self.panel.fail(str(getattr(exc, "message", exc)))
+            return False
+        if result is None:
+            return False
+        return self._complete(result, spec)
+
+    def _complete(self, result, spec):
         self.cancel()
         self.host.refresh_document(rebuild_viewport=True)
         target = result.get("object")
@@ -243,6 +271,7 @@ class ModelingActions(QObject):
         if not self.active:
             return
         self.spec = None
+        self.panel.preview_button.hide()
         if self.stack is not None:
             self.stack.setCurrentIndex(0)
         h = self.host
