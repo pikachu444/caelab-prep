@@ -89,6 +89,14 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 이 검토는 닫힌 native 참조 범위에 한정됩니다. 지원 밖 카드(예: LAW36)가 포함되거나 기존 geometry review가 남아 있으면 새 preview를 만들 수 없습니다. 기존 직접 **Apply**와 inspector 편집은 유지되며 새 영향 검토를 거친 것으로 계산하지 않습니다. 명시 요소 집합의 멤버 변경이 절점 하중을 자동 재배정하지 않습니다. 하중 표시는 시간함수 평가 전 계수이고, 접촉은 secondary/main 대상별로 구분합니다. 초기속도 중복과 원문 위치를 보여도 INCLUDE 간 실행 순서·유효 초기상태·운동량을 계산한 결과는 아닙니다. 기하를 바꾸지 않아 새 mesh generation/stale을 만들지 않으며, part 소유 변경·병합·삭제·법선 반전·재메시는 이 기능의 범위가 아닙니다.
 
+<a id="node-merge"></a>
+
+**Mesh → Merge nodes with tolerance…**에서 **Remove node**와 **Keep node**의 출처·native ID를 지정하거나 각각 **Use selected**로 현재 절점 하나를 가져온 뒤 **Add pair**를 누릅니다. 여러 pair를 추가할 수 있으며 선택 순서나 최근접 위치로 대응을 추정하지 않습니다. keeper 좌표는 바꾸지 않습니다. **Tolerance**는 빈칸에서 입력 덱 길이 단위로 직접 지정합니다. 예제의 거리나 다른 프로그램의 기본값을 권장 공차로 사용하지 않습니다.
+
+표의 각 행을 선택해 실제 PART 사용과 source/contact 경계 허용을 검토합니다. BEAM 방향점으로 사용하는 절점은 기계적 끝점과 구분합니다. **Preview merge**는 연결·방향절점·품질과 조건의 변경 전후 대상을 표시하며 문서를 바꾸지 않습니다. 검토 체크 후 **Apply merge** 한 번이 한 Undo입니다. pair·공차·허용을 바꾸면 검토를 다시 해야 합니다. 모델이 바뀌면 창을 닫고 현재 절점을 다시 선택하세요. **Close/Escape**는 미적용 초안만 버립니다.
+
+조건의 제안 대응은 미리보기이며 실제 Apply에서 원 집합·조건을 자동 변경하지 않습니다. 영향 그룹이 있으면 native 출력을 막으므로 기존 **Replace prepared mesh / reconnect targets…**에서 각 원 멤버를 현재 대상으로 명시 연결하세요. 재연결의 기존 DOF 검사는 CLOAD/INIVEL에 한정하며 BCS·접촉의 물리 검증을 뜻하지 않습니다. 한 그룹 안의 source와 keeper를 합쳐 중복을 축약해야 하는 경우와 기존 native replacement가 보존할 수 없는 카드 layout(예: 변경 카드 안의 file directive)은 현재 merge plan에서 거부합니다. 닫힌 참조 범위·알려진 단위·품질·기계 필드의 기존 제한도 유지합니다. BEAM 기본 frame으로 조용히 전환되는 병합은 거부하지만, 다른 방향점 재배선이나 TRUSS 연결의 물리적 동등성을 보장하지 않습니다. Windows/frozen·solver와 전체 P7b의 확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
+
 <a id="node-move-images"></a>
 
 ### 실제 Windows 화면으로 좌표 이동 확인하기
