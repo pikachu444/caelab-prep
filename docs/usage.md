@@ -60,6 +60,8 @@ Qt XCB와 OpenGL 런타임, 한글 글꼴이 필요합니다. Ubuntu 의존성�
 
 ## 새 모델에 CAD·메시와 조건 연결하기
 
+개발 API의 `application.structured_mesh.generate_structured_mesh(recipe, output_dir)`는 명시한 planar quad recipe의 후보를 생성합니다. 후보의 `to_native_mesh()`를 기존 `session.adopt_mesh_candidate()`에 전달하면 선택한 재료·shell 단면과 함께 채택·Undo·저장·native 출력할 수 있습니다. recipe 단위와 문서 단위가 같아야 하며, hex 채택과 GUI 진입·recipe의 영속 편집/재생성은 아직 지원 완료가 아닙니다. 아래 GUI의 CAD/독립 MSH 경로와 구분합니다.
+
 1. **File → New model…**에서 이름과 질량·길이·시간 단위를 명시합니다. 단위 없는 입력에 임의 단위를 추정하지 않습니다.
 2. 재료와 요소 family에 맞는 shell 또는 solid 단면을 만듭니다.
 3. CAD는 **Mesh → CAD / mesh candidate…**에서 입력과 후보 폴더, 요소 크기를 선택합니다. 현재 Gmsh 경로는 tri3/tet4 후보를 지원합니다. CAD 없는 MSH는 **Mesh → Import mesh…**에서 소스 길이 단위를 직접 지정합니다.

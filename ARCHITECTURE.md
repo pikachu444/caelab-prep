@@ -51,7 +51,7 @@ flowchart TB
 | `radioss` | 원문과 지원 필드 patch, 카드 schema/단위 문맥, 미지원 부분 보존, 표시용 메시 투영 |
 | `application.session` | 현재 RAD용 PrepSession. RAD 자원 조합, 조회·편집·Undo·INCLUDE·저장·내보내기 API, 호출 직렬화. 공용 세션 계약 전체가 완성된 상태는 아님 |
 | `application.contracts` / `rad_provider` / `neutral` | 최소 host 계약, 기존 RAD adapter, 독립 재료/곡선 provider와 codec. 범용 FE 스키마를 강제하지 않음 |
-| `application.mesh_candidates` / `ui.mesh_workflow` | SDK inventory·해시·tri/tet 품질과 후보 검토 UI. 채택은 PrepSession의 원자 명령이며 다른 문서 사본을 만들지 않음 |
+| `application.mesh_candidates` / `ui.mesh_workflow` | SDK inventory·해시·tri/tet 품질과 후보 검토 UI. `structured_mesh`의 제한된 planar quad recipe는 별도 source 검증과 native 좌표 품질 검사로 공통 채택/Undo/codec을 소비하며 GUI 연결은 후속. 다른 문서 사본을 만들지 않음 |
 | `application.storage` | codec과 독립인 atomic ZIP writer와 bounded reader. RAD v6 manifest·원문/구조 편집·케이스/source/관계(v1–v5 읽기 호환)과 중립 codec의 의미는 각각 유지 |
 | `ui/design`, `ui/widgets`, `ui/actions`, `ui/shell` | 공용 디자인·입력 초안·트리·표/plot·Action·도킹·renderer frame·실제 FileTask 상태/오류/산출물 |
 | `ui/main_window`, `ui/gallery` | 앱별 조립과 초안/선택/파일 작업 조정. 모델 값의 정본은 주입한 provider/session |
