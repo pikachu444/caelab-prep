@@ -679,9 +679,15 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 state["created"].extend({"id": card_id, "text": text} for card_id, text in zip(card_ids, texts))
             part_map = {key: card_ids[position] for key, position in part_positions.items()}
             group_map = {key: card_ids[position] for key, position in group_positions.items()}
-            change = self.dispatcher.execute(resource.id, state, "Adopt mesh candidate", object_ids=tuple(card_ids),
-                                             expected_revision=expected_revision, kind="structure")
-            self._source_paths.update(str(Path(asset.path).resolve()) for asset in native_mesh.assets)
+            # Observers may save synchronously when the committed geometry is published.
+            previous_sources = self._source_paths
+            self._source_paths = previous_sources | {str(Path(asset.path).resolve()) for asset in native_mesh.assets}
+            try:
+                change = self.dispatcher.execute(resource.id, state, "Adopt mesh candidate", object_ids=tuple(card_ids),
+                                                 expected_revision=expected_revision, kind="structure")
+            except Exception:
+                self._source_paths = previous_sources
+                raise
             return self._model_result(resource, next(iter(part_map.values()), None), change,
                 card_ids=card_ids, part_ids=list(part_map.values()), part_id_map=part_map,
                 group_id_map=group_map, source_kind=getattr(native_mesh, "source_kind", "cad_gmsh"),

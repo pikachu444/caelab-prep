@@ -12,6 +12,7 @@ from ..cae_core.errors import PrepError
 
 MAX_ELEMENTS = 250_000
 MAX_NODES = 500_000
+MAX_RECIPE_BYTES = 1024 * 1024
 CONTRACT = {
     "coordinate_relative_tolerance": 1e-9, "relative_measure_tolerance": 1e-9,
     "quad_min_corner_signed_scaled_jacobian": .30, "quad_max_edge_aspect_ratio": 8,

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import sys
 import sysconfig
+import subprocess
 
 import pytest
 
@@ -52,3 +53,16 @@ def test_dependency_inventory_rejects_wrong_runtime_or_global_fallback(tmp_path,
     monkeypatch.setattr(builder.subprocess, "check_output", lambda *args, **kwargs: json.dumps(result))
     with pytest.raises(ValueError, match="Python/ABI|selected dependency environment"):
         builder.dependency_inventory(environment)
+
+
+def test_packaged_entry_routes_recipe_worker_and_preserves_json_error_protocol(tmp_path):
+    source = tmp_path / "missing recipe.json"
+    entry = Path(__file__).parents[1] / "scripts/packaging/prep_entry.py"
+    result = subprocess.run(
+        [sys.executable, str(entry), "-m", "caelab_prep.application.structured_mesh_worker",
+         str(source), str(tmp_path / "output")], capture_output=True, text=True, timeout=15)
+    assert result.returncode == 1
+    response = json.loads(result.stdout)
+    assert response["ok"] is False and response["error"]["code"] == "structured_mesh_failed"
+    assert source.name in response["error"]["message"]
+    assert not (tmp_path / "output").exists()

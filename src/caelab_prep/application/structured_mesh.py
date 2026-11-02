@@ -20,7 +20,7 @@ from ..cae_core.errors import PrepError
 from .mesh_candidates import (AssetDigest, CellInventory, MeshGroup, MeshPart,
     NativeMesh, _cells, _nodes, _sha)
 from .structured_geometry import (SIDES_H, SIDES_Q, EDGES_H, validate_recipe,
-                                  validate_structured_mesh)
+                                  validate_structured_mesh, MAX_RECIPE_BYTES)
 
 
 @dataclass(frozen=True)
@@ -136,20 +136,32 @@ def _child(module, arguments, *, cancel_event=None, timeout=30):
                 process.communicate(timeout=3)
 
 
-def generate_structured_mesh(spec, output_dir, *, cancel_event=None, timeout=30):
-    """Generate a reviewable candidate from explicit user coordinates/seeds."""
+def generate_structured_mesh(spec, output_dir, *, recipe_path=None, cancel_event=None, timeout=30):
+    """Generate from explicit values; retain a supplied original file as an asset."""
     validate_recipe(spec)
     if not str(output_dir).strip():
         raise PrepError('invalid_request', 'Choose an asset directory.')
     if cancel_event is not None and cancel_event.is_set():
         raise PrepError('cancelled', 'Structured mesh work was cancelled.')
+    recipe = None if recipe_path is None else Path(recipe_path).expanduser().resolve()
+    recipe_hash = None
+    if recipe is not None:
+        if recipe.stat().st_size > MAX_RECIPE_BYTES:
+            raise PrepError('invalid_recipe', 'Recipe JSON exceeds the 1 MiB input limit.')
+        recipe_hash = _sha(recipe)
+        if _json(recipe) != spec or _sha(recipe) != recipe_hash:
+            raise PrepError('candidate_changed', 'The original recipe differs from the reviewed input.')
     identifier = str(uuid4())
     folder = Path(output_dir).expanduser().resolve() / ('structured-' + identifier)
     folder.mkdir(parents=True, exist_ok=False)
-    recipe = folder / 'recipe.json'
-    _write_json(recipe, spec)
+    if recipe is None:
+        recipe = folder / 'recipe.json'
+        _write_json(recipe, spec)
+        recipe_hash = _sha(recipe)
     _child('caelab_prep.application.structured_mesh_worker', [recipe, folder],
            cancel_event=cancel_event, timeout=timeout)
+    if _sha(recipe) != recipe_hash:
+        raise PrepError('candidate_changed', 'The original recipe changed during generation.')
     sources = {kind: {'path': str(path), 'sha256': _sha(path)} for kind, path in
                [('recipe', recipe), ('msh', folder / 'mesh.msh'), ('sdk', folder / 'sdk.json')]}
     metadata = folder / 'metadata.json'

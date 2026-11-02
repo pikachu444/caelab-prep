@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import zipfile
 
 import pytest
 
@@ -19,7 +20,7 @@ def quad(request, tmp_path_factory):
     if importlib.util.find_spec("gmsh") is None:
         pytest.skip("Real Gmsh SDK unavailable; no structured adoption execution claim")
     inputs = Path(__file__).parents[1] / "scripts/evaluation/structured_f2/holdout-inputs.json"
-    case = next(item for item in json.loads(inputs.read_text()) if item["id"] == request.param)
+    case = next(item for item in json.loads(inputs.read_text(encoding="utf-8")) if item["id"] == request.param)
     candidate = generate_structured_mesh(case["input"], tmp_path_factory.mktemp(request.param))
     assert len(candidate.to_native_mesh().elements) == case["expectation"]["elements"]
     return case, candidate.to_native_mesh()
@@ -158,3 +159,97 @@ def test_serialization_damage_is_rejected_before_publish(quad, monkeypatch):
         session.adopt_mesh_candidate(native, material_id=material, property_id=prop)
     assert error.value.code == "native_precision"
     assert _state(session) == before
+
+
+def test_mismatched_original_recipe_is_rejected_before_creating_assets(tmp_path):
+    spec = dict(mode="quad", unit="mm", corners=[[0, 0, 0], [2, 0, 0], [2, 3, 0], [0, 3, 0]], divisions=[1, 1])
+    source = tmp_path / "original.json"
+    source.write_text(json.dumps(spec), encoding="utf-8")
+    original = source.read_bytes()
+    with pytest.raises(PrepError) as error:
+        generate_structured_mesh(dict(spec, divisions=[2, 1]), tmp_path / "assets", recipe_path=source)
+    assert error.value.code == "candidate_changed"
+    assert source.read_bytes() == original and not (tmp_path / "assets").exists()
+
+
+def test_synchronous_autosave_observer_sees_and_persists_source_protection(quad, tmp_path):
+    _, native = quad
+    source = Path(next(asset.path for asset in native.assets if asset.kind == "recipe"))
+    original = source.read_bytes()
+    session, material, prop = _session(native, native.length_unit)
+    project = tmp_path / "observer-saved.caeprep"
+    observed = []
+
+    def save_on_adoption(event):
+        if event["kind"] != "structure" or event.get("change", {}).get("label") != "Adopt mesh candidate":
+            return
+        outcomes = []
+        for write in (session.save_project, session.export_rad):
+            try:
+                write(source)
+            except PrepError as error:
+                outcomes.append(error.code)
+            else:
+                outcomes.append("overwrite allowed")
+        session.save_project(project)
+        observed.append(outcomes)
+
+    session.subscribe(save_on_adoption)
+    try:
+        session.adopt_mesh_candidate(native, material_id=material, property_id=prop)
+        assert observed == [["source_overwrite", "source_overwrite"]]
+        assert source.read_bytes() == original
+        reopened = type(session)()
+        reopened.open_project(project)
+        assert reopened.describe()["element_count"] == len(native.elements)
+        for write in (reopened.save_project, reopened.export_rad):
+            with pytest.raises(PrepError) as error:
+                write(source)
+            assert error.value.code == "source_overwrite"
+        assert source.read_bytes() == original
+    finally:
+        # The fixture is test-owned; preserve it even when testing broken ordering.
+        if source.read_bytes() != original:
+            source.write_bytes(original)
+
+
+def test_failed_adoption_restores_source_protection_with_the_model(quad, tmp_path, monkeypatch):
+    _, native = quad
+    session, material, prop = _session(native, native.length_unit)
+    before = _state(session)
+    previous = tmp_path / "before.caeprep"
+    session.save_project(previous)
+    with zipfile.ZipFile(previous) as archive:
+        source_paths = json.loads(archive.read("manifest.json"))["source_paths"]
+    resource = session.document.resources[session._root_id]
+    source = Path(next(asset.path for asset in native.assets if asset.kind == "recipe"))
+    original = source.read_bytes()
+    restore = type(resource).restore
+    attempted = []
+
+    def fail_first_owner_restore(owner, state):
+        if owner is resource and not attempted:
+            try:
+                session.export_rad(source)
+            except PrepError as error:
+                attempted.append(error.code)
+            else:
+                attempted.append("overwrite allowed")
+            raise PrepError("injected_commit_failure", "Resource rejected the adoption")
+        return restore(owner, state)
+
+    monkeypatch.setattr(type(resource), "restore", fail_first_owner_restore)
+    try:
+        with pytest.raises(PrepError) as error:
+            session.adopt_mesh_candidate(native, material_id=material, property_id=prop)
+        assert error.value.code == "injected_commit_failure"
+        assert attempted == ["source_overwrite"]
+        assert _state(session) == before
+        current = tmp_path / "after.caeprep"
+        session.save_project(current)
+        with zipfile.ZipFile(current) as archive:
+            assert json.loads(archive.read("manifest.json"))["source_paths"] == source_paths
+        assert source.read_bytes() == original
+    finally:
+        if source.read_bytes() != original:
+            source.write_bytes(original)

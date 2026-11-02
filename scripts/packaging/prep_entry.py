@@ -8,6 +8,7 @@ WORKERS = {
     "caelab_prep.adapters.gmsh_worker",
     "caelab_prep.adapters.msh_worker",
     "caelab_prep.application.mesh_candidates",
+    "caelab_prep.application.structured_mesh_worker",
 }
 
 

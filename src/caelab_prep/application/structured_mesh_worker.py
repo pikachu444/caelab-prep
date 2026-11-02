@@ -18,10 +18,9 @@ import sys
 import time
 
 from ..cae_core.errors import PrepError
-from .structured_geometry import validate_recipe
+from .structured_geometry import MAX_RECIPE_BYTES, validate_recipe
 
 SDK_VERSION = "4.15.2"
-MAX_INPUT_BYTES = 1024 * 1024
 
 
 def _check(condition, message, code="structured_mesh_inventory"):
@@ -224,7 +223,7 @@ def run(input_path, output_dir):
     """Validate first, then compile in the caller-owned isolated worker process."""
     source = Path(input_path)
     raw = source.read_bytes()
-    _check(len(raw) <= MAX_INPUT_BYTES, "Recipe JSON exceeds the 1 MiB input limit", "invalid_recipe")
+    _check(len(raw) <= MAX_RECIPE_BYTES, "Recipe JSON exceeds the 1 MiB input limit", "invalid_recipe")
     try:
         spec = json.loads(raw, object_pairs_hook=_object, parse_constant=_constant)
     except (ValueError, UnicodeError, RecursionError) as exc:
