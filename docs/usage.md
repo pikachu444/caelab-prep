@@ -60,7 +60,15 @@ Qt XCB와 OpenGL 런타임, 한글 글꼴이 필요합니다. Ubuntu 의존성�
 
 ## 새 모델에 CAD·메시와 조건 연결하기
 
-개발 API의 `application.structured_mesh.generate_structured_mesh(recipe, output_dir)`는 명시한 planar quad recipe의 후보를 생성합니다. 후보의 `to_native_mesh()`를 기존 `session.adopt_mesh_candidate()`에 전달하면 선택한 재료·shell 단면과 함께 채택·Undo·저장·native 출력할 수 있습니다. recipe 단위와 문서 단위가 같아야 하며, hex 채택과 GUI 진입·recipe의 영속 편집/재생성은 아직 지원 완료가 아닙니다. 아래 GUI의 CAD/독립 MSH 경로와 구분합니다.
+명시한 planar quad recipe는 **Mesh → CAD / mesh candidate… → Source type: Structured planar quad recipe**에서 생성합니다. recipe JSON과 후보 폴더를 선택하고 **Generate candidate**로 준비합니다. 원본 파일과 문서는 바꾸지 않으며 실행 중 **Cancel generation**으로 중지할 수 있습니다. 전체 후보의 scaled Jacobian·edge aspect·면적과 단위를 검토하고 재료·shell 단면을 고른 뒤 **Adopt candidate**로 한 번에 채택합니다. 길이 단위는 recipe에서 읽으며 문서 단위와 같아야 합니다.
+
+예를 들어 아래 JSON을 새 파일로 저장해 사용할 수 있습니다. 좌표·분할 수는 JSON에서 편집합니다. GUI에서 직접 좌표/seed를 편집하거나 `.caeprep`에 recipe를 동봉해 재생성하는 기능, hex 채택, 임의 곡면·holes·patch assembly는 이 제한된 planar quad 연결의 지원 범위가 아닙니다. 채택된 native 메시·관계는 기존 작업문서로 저장하고 재열 수 있습니다. 3D를 끈 실행에서는 patch 이름과 수치만 확인하며 실제 Windows/VTK 품질 확인과 구분합니다.
+
+```json
+{"mode":"quad","unit":"mm","corners":[[0,0,0],[40,0,0],[40,20,0],[0,20,0]],"divisions":[8,4]}
+```
+
+개발 API는 `application.structured_mesh.generate_structured_mesh(recipe, output_dir, recipe_path=original_json)`와 후보의 `to_native_mesh()`, 기존 `session.adopt_mesh_candidate()`를 사용합니다. 파일 입력은 `recipe_path`로 원본을 지정하면 내용/hash를 검증하고 기존 원본 덮어쓰기 보호에 포함합니다. dict만 전달하면 후보 폴더에 recipe snapshot을 생성합니다. 아래 CAD/독립 MSH 경로의 허용 요소 family를 quad까지 넓힌 것은 아닙니다.
 
 1. **File → New model…**에서 이름과 질량·길이·시간 단위를 명시합니다. 단위 없는 입력에 임의 단위를 추정하지 않습니다.
 2. 재료와 요소 family에 맞는 shell 또는 solid 단면을 만듭니다.
