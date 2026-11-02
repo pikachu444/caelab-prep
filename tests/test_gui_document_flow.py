@@ -676,36 +676,37 @@ def test_rad_real_modal_close_cancel_preserves_focused_scalar_draft(tmp_path):
 
 
 def test_vtk_selection_extracts_all_approved_refs_and_refreshes_pick_stamp():
-    """Exercise the real extraction code without creating an OpenGL window."""
-    from types import SimpleNamespace
-    import vtk
+    """Exercise the real unshown widget, projection and typed selection path."""
     from caelab_prep.ui.viewport import MeshViewport, pick_candidate
-    points = vtk.vtkPoints()
-    for point in ((0, 0, 0), (1, 0, 0), (0, 1, 0), (1, 1, 0)):
-        points.InsertNextPoint(*point)
-    grid = vtk.vtkUnstructuredGrid()
-    grid.SetPoints(points)
-    for indices in ((0, 1, 2), (1, 3, 2)):
-        identifiers = vtk.vtkIdList()
-        for index in indices:
-            identifiers.InsertNextId(index)
-        grid.InsertNextCell(vtk.VTK_TRIANGLE, identifiers)
     stamp = {"document_id": "document", "document_epoch": "epoch", "projection_revision": 0,
              "revision": 0, "resource_revisions": {"mesh": "old"}}
-    projection = SimpleNamespace(vtk=vtk, _highlight=vtk.vtkActor(), _projection_stamp=dict(stamp),
-                                 _document_id="document", _grid=grid,
-                                 _cells=[{"resource_id": "mesh", "id": 11}, {"resource_id": "mesh", "id": 12}],
-                                 render=lambda: None)
+    projection = MeshViewport()
+    projection.set_mesh(stamp | {
+        "points": [(0, 0, 0), (1, 0, 0), (0, 1, 0), (1, 1, 0)],
+        "node_ids": [1, 2, 3, 4],
+        "node_resources": {identifier: ["mesh"] for identifier in range(1, 5)},
+        "cells": [
+            {"resource_id": "mesh", "id": 11, "type": "triangle", "nodes": [1, 2, 3]},
+            {"resource_id": "mesh", "id": 12, "type": "triangle", "nodes": [2, 4, 3]},
+        ],
+    }, reset_camera=False)
     selection = stamp | {"kind": "element", "ids": [11, 12], "revision": 1,
                          "resource_revisions": {"mesh": "current"}, "refs": [
                              {"resource_id": "mesh", "entity_kind": "element", "local_id": 11},
                              {"resource_id": "mesh", "entity_kind": "element", "local_id": 12}]}
-    MeshViewport.set_selection(projection, selection)
-    mapper = projection._highlight.GetMapper()
-    mapper.Update()
-    assert projection._highlight.GetVisibility()
-    assert mapper.GetInput().GetNumberOfCells() == 2
-    candidate = pick_candidate(projection._projection_stamp, "element", 11, "mesh")
-    assert candidate["revision"] == 1 and candidate["resource_revision"] == "current"
-    MeshViewport.set_selection(projection, selection | {"document_epoch": "old-epoch"})
-    assert not projection._highlight.GetVisibility()
+    try:
+        projection.set_selection(selection)
+        mapper = projection._highlight.GetMapper()
+        mapper.Update()
+        assert projection._highlight.GetVisibility()
+        assert mapper.GetInput().GetNumberOfCells() == 2
+        originals = mapper.GetInput().GetCellData().GetArray("ProjectionCellIndex")
+        assert [originals.GetValue(index) for index in range(2)] == [0, 1]
+        candidate = pick_candidate(projection._projection_stamp, "element", 11, "mesh")
+        assert candidate["revision"] == 1 and candidate["resource_revision"] == "current"
+        projection.set_selection(selection | {"document_epoch": "old-epoch"})
+        assert not projection._highlight.GetVisibility()
+        assert projection._highlight.GetMapper() is None
+    finally:
+        projection.shutdown()
+        projection.close()

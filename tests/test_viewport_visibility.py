@@ -17,16 +17,18 @@ from caelab_prep.application.contracts import ObjectRef
 from caelab_prep.ui.viewport import MeshViewport, cell_part_key, part_key
 
 pytestmark = pytest.mark.usefixtures("qt_widgets")
-_views = []
 
 
-@pytest.fixture(autouse=True)
-def close_viewports(qt_widgets):
-    yield
-    while _views:
-        view = _views.pop()
-        view.shutdown()
-        view.close()
+class _DatasetViewport(MeshViewport):
+    """Let the caller's Qt owner close this unshown pipeline before deletion.
+
+    Other test modules import the factory without this module's fixtures. Keep
+    no cross-test widget registry; qt_widgets owns their actual Qt lifetime.
+    """
+
+    def closeEvent(self, event):
+        self.shutdown()
+        super().closeEvent(event)
 
 
 def projection():
@@ -49,8 +51,7 @@ def projection():
 
 def viewport(data=None):
     """Construct the real widget; an unshown viewport naturally does not Render."""
-    view = MeshViewport()
-    _views.append(view)
+    view = _DatasetViewport()
     view.set_mesh(projection() if data is None else data, reset_camera=False)
     return view
 
@@ -70,6 +71,19 @@ def test_part_identity_requires_resource_and_resolved_owner():
                           "part_ref": {"resource_id": "owner", "native_scope": "/PART/1"}}) == ("owner", "/PART/1")
     assert cell_part_key({"resource_id": "element", "part_id": 1, "part_ref": None}) is None
     assert cell_part_key({"resource_id": "element", "part_id": 1}) == ("element", "/PART/1")
+
+
+def test_dataset_viewport_owner_closes_vtk_before_qt_deletion(qt_widgets):
+    from PySide6.QtCore import QCoreApplication, QEvent
+    from shiboken6 import isValid
+
+    view = viewport()
+    assert isValid(view) and view._error_observer is not None
+    view.close()
+    assert isValid(view) and view._error_observer is None
+    view.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    assert not isValid(view)
 
 
 def test_hide_part_is_resource_scoped_and_does_not_mutate_projection_or_selection():
