@@ -409,6 +409,14 @@ class MeshViewport(QWidget):
         camera.SetViewUp(0, 0, 1)
         self.fit_view()
 
+    def orient_view(self, direction, up):
+        """Fit the visible mesh along an explicit source direction."""
+        camera = self._renderer.GetActiveCamera()
+        camera.SetPosition(*direction)
+        camera.SetFocalPoint(0, 0, 0)
+        camera.SetViewUp(*up)
+        self.fit_view()
+
     def standard_view(self, axis: str):
         camera = self._renderer.GetActiveCamera()
         position, up = {

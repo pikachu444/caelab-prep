@@ -571,7 +571,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             prop_family = property_card.keyword.upper().split("/")[2]
             allowed = {"SHELL", "TYPE1"} if native_mesh.dimension == 2 else {"SOLID", "TYPE14"}
             if prop_family not in allowed:
-                raise PrepError("incompatible_property", "Choose a shell property for triangle meshes and a solid property for tetrahedral meshes.")
+                raise PrepError("incompatible_property", "Choose a shell property for surface meshes and a solid property for tetrahedral meshes.")
             if name is not None: title(name)
             # Reserve every native integer in parsed node/element rows, including
             # rows omitted by the display projection because their geometry is bad.
@@ -611,11 +611,22 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 used_parts.add(identifier)
             newline = resource.newline
             encoded_coordinates = {node.id: tuple(float(real(value)) for value in node.xyz) for node in native_mesh.nodes}
-            for cell in native_mesh.elements:
-                points = [encoded_coordinates[node] for node in cell.node_ids]
-                q, measure, normalized = (triangle_quality(points) if native_mesh.dimension == 2 else tetrahedron_quality(points))
-                if (not all(math.isfinite(value) for value in (q, measure, normalized)) or normalized <= 1e-12 or q < .1):
-                    raise PrepError("native_precision", "Native field rounding would violate the mesh quality admission limits.", {"element_id": cell.id})
+            structured_quad = native_mesh.source_kind == "structured_recipe"
+            if structured_quad:
+                from .structured_mesh import validate_structured_native_coordinates
+                try:
+                    validate_structured_native_coordinates(native_mesh, encoded_coordinates)
+                except PrepError as exc:
+                    if exc.code == "candidate_changed":
+                        raise
+                    raise PrepError("native_precision", "Native field rounding would violate the structured mesh admission limits.",
+                                    {"reason": exc.code, **exc.details}) from exc
+            else:
+                for cell in native_mesh.elements:
+                    points = [encoded_coordinates[node] for node in cell.node_ids]
+                    q, measure, normalized = (triangle_quality(points) if native_mesh.dimension == 2 else tetrahedron_quality(points))
+                    if (not all(math.isfinite(value) for value in (q, measure, normalized)) or normalized <= 1e-12 or q < .1):
+                        raise PrepError("native_precision", "Native field rounding would violate the mesh quality admission limits.", {"element_id": cell.id})
             node_rows = [integer(node_map[node.id]) + "".join(real(value) for value in node.xyz) for node in native_mesh.nodes]
             provenance = [f"# CAELab mesh {native_mesh.mesh_uuid}; geometry {native_mesh.geometry_resource_uuid}",
                           f"# Length unit {native_mesh.length_unit}; omitted boundary cells {native_mesh.omitted_boundary_cells}"]
@@ -633,7 +644,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 marker = f"# CAELab adopted mesh {native_mesh.mesh_uuid}; part {part.uuid}"
                 texts.append(newline.join([f"/PART/{identifier}", title(part_name), marker,
                     integer(prop[1]) + integer(material[1]) + f"{0:10d}", ""]))
-                keyword = "SH3N" if native_mesh.dimension == 2 else "TETRA4"
+                keyword = "SHELL" if structured_quad else "SH3N" if native_mesh.dimension == 2 else "TETRA4"
                 cells = cells_by_part.get(part.uuid, [])
                 rows = [integer(element_map[cell.id]) + "".join(integer(node_map[node]) for node in cell.node_ids) for cell in cells]
                 texts.append(newline.join([f"/{keyword}/{identifier}", marker, *rows, ""]))
@@ -645,7 +656,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 if group.kind == "node":
                     family, mapping = "GRNOD/NODE", node_map
                 elif group.kind == "element":
-                    family = "GRSH3N/SH3N" if native_mesh.dimension == 2 else "GRBRIC/BRIC"
+                    family = self._element_group_family("quad" if structured_quad else "triangle" if native_mesh.dimension == 2 else "tetra")
                     mapping = element_map
                 else:
                     raise PrepError("invalid_reference", "Imported groups must contain nodes or physical elements.")
@@ -668,9 +679,15 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 state["created"].extend({"id": card_id, "text": text} for card_id, text in zip(card_ids, texts))
             part_map = {key: card_ids[position] for key, position in part_positions.items()}
             group_map = {key: card_ids[position] for key, position in group_positions.items()}
-            change = self.dispatcher.execute(resource.id, state, "Adopt mesh candidate", object_ids=tuple(card_ids),
-                                             expected_revision=expected_revision, kind="structure")
-            self._source_paths.update(str(Path(asset.path).resolve()) for asset in native_mesh.assets)
+            # Observers may save synchronously when the committed geometry is published.
+            previous_sources = self._source_paths
+            self._source_paths = previous_sources | {str(Path(asset.path).resolve()) for asset in native_mesh.assets}
+            try:
+                change = self.dispatcher.execute(resource.id, state, "Adopt mesh candidate", object_ids=tuple(card_ids),
+                                                 expected_revision=expected_revision, kind="structure")
+            except Exception:
+                self._source_paths = previous_sources
+                raise
             return self._model_result(resource, next(iter(part_map.values()), None), change,
                 card_ids=card_ids, part_ids=list(part_map.values()), part_id_map=part_map,
                 group_id_map=group_map, source_kind=getattr(native_mesh, "source_kind", "cad_gmsh"),

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import threading
 
 from PySide6.QtCore import QObject, QThreadPool, Qt, Signal
@@ -18,13 +19,17 @@ def candidate_projection(candidate, *, dimension=None):
     """A separate preview identity; candidate picks cannot address the document."""
     dimension = candidate.dimension if dimension is None else dimension
     parts = {part.uuid: index + 1 for index, part in enumerate(candidate.parts)}
-    resource = candidate.geometry_resource_uuid
+    resource = candidate.geometry_resource_uuid or candidate.mesh_uuid
+    from ..application.structured_mesh import StructuredMeshCandidate
+    structured = isinstance(candidate, StructuredMeshCandidate)
     return {"document_id": candidate.mesh_uuid, "document_epoch": candidate.mesh_uuid,
             "revision": 0, "projection_revision": 0, "resource_revisions": {resource: 0},
             "node_ids": [node.id for node in candidate.nodes],
             "points": [node.xyz for node in candidate.nodes],
             "node_resources": {node.id: [resource] for node in candidate.nodes},
-            "cells": [{"id": cell.id, "type": cell.kind, "nodes": cell.node_ids,
+            "cells": [{"id": cell.id, "type": "quad" if structured and
+                       (cell.dimension, cell.element_type, cell.order, len(cell.node_ids)) == (2, 3, 1, 4)
+                       else cell.kind, "nodes": cell.node_ids,
                        "part_id": parts.get(cell.part_uuid), "resource_id": resource}
                       for cell in candidate.cells if cell.dimension == dimension]}
 
@@ -146,7 +151,7 @@ class MeshCandidateDialog(QDialog):
         self._closing = False
         self._adopting = False
         self._stamp = session.describe()
-        self.setWindowTitle("CAD mesh — review candidate")
+        self.setWindowTitle("Mesh — review candidate")
         self.setMinimumSize(760, 480)
         available = self.screen().availableGeometry()
         self.resize(min(1100, available.width() - 40), min(760, available.height() - 60))
@@ -168,12 +173,20 @@ class MeshCandidateDialog(QDialog):
             self.viewport.entityPicked.connect(self.pick_entity)
             split.addWidget(self.viewport)
         panel = QWidget(); form_layout = QVBoxLayout(panel)
-        form = QFormLayout(); form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows); form_layout.addLayout(form)
+        form = QFormLayout(); self.form = form
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows); form_layout.addLayout(form)
+        self.source_kind = QComboBox()
+        self.source_kind.addItem("CAD / XAO", "cad_gmsh")
+        self.source_kind.addItem("Structured planar quad recipe", "structured_recipe")
+        form.addRow("Source type", self.source_kind)
         self.source = QLineEdit(); self.output = QLineEdit()
+        self._browse_buttons = []
         for label, field, callback in (("CAD / XAO", self.source, self.browse_source), ("Candidate folder", self.output, self.browse_output)):
             row = QHBoxLayout(); row.addWidget(field)
             button = QPushButton("Browse…"); button.clicked.connect(callback); row.addWidget(button)
+            self._browse_buttons.append(button)
             form.addRow(label, row)
+            if field is self.source: self.source_label = form.labelForField(row)
         self.size = NumericEdit(minimum=0); self.size.setPlaceholderText("Positive target size")
         self.dimension = QComboBox(); self.dimension.addItem("3D tetrahedra", 3); self.dimension.addItem("2D triangles", 2)
         self.policy = QComboBox()
@@ -198,7 +211,7 @@ class MeshCandidateDialog(QDialog):
         self.quality.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.quality.itemSelectionChanged.connect(self.highlight_quality)
         self.quality.setMaximumHeight(170); form_layout.addWidget(self.quality)
-        adopt_form = QFormLayout(); form_layout.addLayout(adopt_form)
+        adopt_form = QFormLayout(); self.adopt_form = adopt_form; form_layout.addLayout(adopt_form)
         self.length = QComboBox()
         self.length.addItem("Declare unknown source units", None)
         for unit in ("mm", "cm", "m"): self.length.addItem(unit, unit)
@@ -216,6 +229,34 @@ class MeshCandidateDialog(QDialog):
         self.close_button = QPushButton("Close")
         self.adopt_button.clicked.connect(self.adopt); self.close_button.clicked.connect(self.reject)
         buttons.addWidget(self.adopt_button); buttons.addWidget(self.close_button); layout.addLayout(buttons)
+        self.source_kind.currentIndexChanged.connect(self._source_changed)
+        self._source_controls()
+
+    def _structured(self):
+        return self.source_kind.currentData() == "structured_recipe"
+
+    def _source_controls(self):
+        structured = self._structured()
+        for widget in (self.size, self.dimension, self.policy, self.local_size):
+            widget.setVisible(not structured)
+            self.form.labelForField(widget).setVisible(not structured)
+        self.replace.setVisible(not structured)
+        self.adopt_form.labelForField(self.replace).setVisible(not structured)
+        self.source_label.setText("Quad recipe (JSON)" if structured else "CAD / XAO")
+        self.form.labelForField(self.local_entity).setText(("Highlight patch" if self.viewport else "Patch") if structured else "Refine entity")
+        self.preview_mode.setVisible(not structured)
+        self.pick_hint.setText(("Planar quad4. Units and seeds come from the recipe. " +
+                               ("Preview does not change the model." if self.viewport else "3D preview is disabled."))
+                               if structured else "Click the preview to select an entity for local refinement.")
+        self.quality.setSelectionMode(QTableWidget.SelectionMode.NoSelection if structured else QTableWidget.SelectionMode.ExtendedSelection)
+
+    def _source_changed(self):
+        self.candidate = None
+        self.source.clear(); self.error.clear(); self.quality.setRowCount(0)
+        self.summary.setText("No candidate. Generation does not change the model.")
+        self.local_entity.clear(); self.local_entity.addItem("No patch selected" if self._structured() else "No local refinement", None)
+        if self.viewport: self.viewport.set_mesh({"points": [], "node_ids": [], "cells": []})
+        self._source_controls(); self._running(False)
 
     def _show_error(self, error):
         self.error.setText(str(error))
@@ -234,7 +275,8 @@ class MeshCandidateDialog(QDialog):
                 item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable); item.setCheckState(Qt.CheckState.Unchecked); self.replace.addItem(item)
 
     def browse_source(self):
-        path, _ = QFileDialog.getOpenFileName(self, "CAD geometry", self.source.text(), "CAD (*.step *.stp *.brep *.brp *.iges *.igs *.xao)")
+        path, _ = QFileDialog.getOpenFileName(self, "Quad recipe" if self._structured() else "CAD geometry", self.source.text(),
+            "Recipe (*.json)" if self._structured() else "CAD (*.step *.stp *.brep *.brp *.iges *.igs *.xao)")
         if path: self.source.setText(path)
 
     def browse_output(self):
@@ -242,12 +284,15 @@ class MeshCandidateDialog(QDialog):
         if path: self.output.setText(path)
 
     def _running(self, value):
-        for widget in (self.generate_button, self.open_button, self.source, self.output, self.size, self.dimension, self.policy, self.local_entity, self.local_size,
+        for widget in (*self._browse_buttons, self.source_kind, self.generate_button, self.open_button, self.source, self.output, self.size, self.dimension, self.policy, self.local_entity, self.local_size,
                        self.material, self.section, self.replace, self.preview_mode, self.quality): widget.setEnabled(not value)
         self.length.setEnabled(not value and bool(self.candidate and self.candidate.length_unit == "unknown"))
         self.preview_mode.setEnabled(not value and bool(self.candidate and self.candidate.dimension == 3))
         self.cancel_job.setEnabled(value)
         self.adopt_button.setEnabled(not value and self.candidate is not None and self.candidate.quality.passed)
+        if self._structured():
+            for widget in (self.size, self.dimension, self.policy, self.local_size, self.length, self.replace, self.preview_mode):
+                widget.setEnabled(False)
 
     def _start(self, function):
         if self._task is not None: return False
@@ -264,6 +309,18 @@ class MeshCandidateDialog(QDialog):
         QThreadPool.globalInstance().start(task); return True
 
     def generate(self):
+        if self._structured():
+            source, output = self.source.text(), self.output.text()
+            def generate_recipe():
+                from ..application.structured_mesh import _json, generate_structured_mesh
+                from ..application.structured_geometry import MAX_RECIPE_BYTES
+                if Path(source).stat().st_size > MAX_RECIPE_BYTES:
+                    raise ValueError("Recipe exceeds the 1 MiB input limit.")
+                recipe = _json(source)
+                if not isinstance(recipe, dict) or recipe.get("mode") != "quad":
+                    raise ValueError("Choose a planar quad recipe; other families are not connected to adoption.")
+                return generate_structured_mesh(recipe, output, recipe_path=source, cancel_event=self._cancel)
+            return self._start(generate_recipe)
         from ..adapters.gmsh_backend import GmshBackend
         from ..application.mesh_candidates import read_mesh_candidate
         try:
@@ -278,10 +335,19 @@ class MeshCandidateDialog(QDialog):
             dimension=dimension, interface_policy=policy, local_sizes=local, cancel_event=self._cancel)))
 
     def open_candidate(self, path=None):
-        from ..application.mesh_candidates import read_mesh_candidate
         if not isinstance(path, (str, Path)):
             path, _ = QFileDialog.getOpenFileName(self, "Saved candidate", "", "Candidate metadata (*.json)")
-        if path: return self._start(lambda: read_mesh_candidate(path))
+        if path:
+            if self._structured():
+                def read_recipe_candidate():
+                    from ..application.structured_mesh import read_structured_mesh_candidate
+                    candidate = read_structured_mesh_candidate(path, cancel_event=self._cancel)
+                    if candidate.dimension != 2:
+                        raise ValueError("Only planar quad4 candidates can be adopted here.")
+                    return candidate
+                return self._start(read_recipe_candidate)
+            from ..application.mesh_candidates import read_mesh_candidate
+            return self._start(lambda: read_mesh_candidate(path))
         return False
 
     def _completed(self, candidate):
@@ -295,29 +361,66 @@ class MeshCandidateDialog(QDialog):
         self.present_candidate(candidate); self._running(False)
 
     def _failed(self, exc):
+        stale = getattr(exc, "code", None) in ("document_conflict", "revision_conflict", "document_epoch_conflict")
+        if stale:
+            self.candidate = None
+            self.quality.setRowCount(0)
+            if self.viewport: self.viewport.set_mesh({"points": [], "node_ids": [], "cells": []})
         self._task = None; self._adopting = False; self.close_button.setEnabled(True); self._running(False)
         if self._closing: super().reject(); return
-        if self.candidate is None: self.summary.setText("No candidate was accepted. The model is unchanged.")
+        if stale: self.summary.setText("The target model changed. Reopen or regenerate the candidate before adoption.")
+        elif self.candidate is None: self.summary.setText("No candidate was accepted. The model is unchanged.")
         self._show_error(exc)
 
     def present_candidate(self, candidate):
+        from ..application.structured_mesh import StructuredMeshCandidate
+        structured = isinstance(candidate, StructuredMeshCandidate)
+        if structured and candidate.dimension != 2:
+            self.candidate = None
+            self.summary.setText("Unsupported recipe family. Only planar quad4 is connected to adoption.")
+            self.adopt_button.setEnabled(False)
+            return
+        self.source_kind.blockSignals(True)
+        self.source_kind.setCurrentIndex(self.source_kind.findData("structured_recipe" if structured else "cad_gmsh"))
+        self.source_kind.blockSignals(False)
+        self._source_controls()
         self.candidate = candidate
         self._stamp = self.session.describe()
         self._fill_references()
         physical = [cell for cell in candidate.cells if cell.dimension == candidate.dimension]
         excluded = len(candidate.cells) - len(physical)
-        minimum = candidate.quality.minimum("triangle3" if candidate.dimension == 2 else "tetra4")
+        minimum = candidate.quality.minimum("quad4" if structured else "triangle3" if candidate.dimension == 2 else "tetra4")
         minimum_text = "unavailable" if minimum is None else f"{minimum:.4f}"
         verdict = "Passed" if candidate.quality.passed else "Blocked — inspect flagged elements"
         self.summary.setText(f"{len(candidate.nodes)} nodes · {len(physical)} physical elements · {len([p for p in candidate.parts if p.dimension == candidate.dimension])} parts\n"
-                             f"Minimum quality {minimum_text} · {verdict}\n{excluded} lower-dimensional cells excluded from adoption. Units: {candidate.length_unit}.")
+                             f"{'Minimum scaled Jacobian' if structured else 'Minimum quality'} {minimum_text} · {verdict}\n{excluded} lower-dimensional cells excluded from adoption. Units: {candidate.length_unit}.")
         self.length.setCurrentIndex(max(0, self.length.findData(candidate.length_unit)))
         self.length.setEnabled(candidate.length_unit == "unknown")
-        self.local_entity.clear(); self.local_entity.addItem("No local refinement", None)
+        self.local_entity.clear(); self.local_entity.addItem("No patch selected" if structured else "No local refinement", None)
         for part in candidate.parts: self.local_entity.addItem(f"{part.name} ({part.dimension}D)", part.uuid)
         xao = next((asset.path for asset in candidate.assets if asset.kind == "xao"), None)
         if xao: self.source.setText(xao); self.policy.setCurrentIndex(0)
+        if structured:
+            self.source.setText(next(asset.path for asset in candidate.assets if asset.kind == "recipe"))
         self.dimension.setCurrentIndex(self.dimension.findData(candidate.dimension))
+        if structured:
+            from ..application.structured_geometry import CONTRACT
+            quality = candidate.quality
+            self.quality.setHorizontalHeaderLabels(["Scope", "Metric", "Value", "Admission"])
+            rows = [("Whole mesh", "Min scaled Jacobian", f"{quality.minimum_scaled_jacobian:.6g}",
+                     f">= {CONTRACT['quad_min_corner_signed_scaled_jacobian']}"),
+                    ("Whole mesh", "Max edge aspect", f"{quality.maximum_edge_aspect_ratio:.6g}",
+                     f"<= {CONTRACT['quad_max_edge_aspect_ratio']}"),
+                    ("Whole mesh", f"Area ({candidate.length_unit}^2)", f"{quality.measure:.8g}", f"Expected {quality.expected_measure:.8g}")]
+            self.quality.setRowCount(len(rows))
+            for row, values in enumerate(rows):
+                for col, value in enumerate(values): self.quality.setItem(row, col, QTableWidgetItem(value))
+            self.quality.resizeColumnsToContents()
+            self.quality.setToolTip("Whole-candidate metrics, not individual element quality. Patch selection highlights physical elements.")
+            self.refresh_preview()
+            self._running(False)
+            return
+        self.quality.setHorizontalHeaderLabels(["Element", "Type", "Quality", "Status"])
         unsupported = candidate.quality.unsupported_ids[:100]
         rows = sorted(candidate.quality.cells, key=lambda item: (item.problem is None, item.q))[:100 - len(unsupported)]
         self.quality.setRowCount(len(rows) + len(unsupported))
@@ -338,14 +441,20 @@ class MeshCandidateDialog(QDialog):
         if self.viewport is not None and self.candidate is not None:
             dimension = self.preview_mode.currentData() or self.candidate.dimension
             self.viewport.set_mesh(candidate_projection(self.candidate, dimension=dimension))
+            if self._structured():
+                from ..application.structured_geometry import sub, validate_recipe
+                source = validate_recipe(json.loads(self.candidate.recipe_json))
+                corners = source["singles"][0]["corners"]
+                # An arbitrary isometric direction can be edge-on to an oblique patch.
+                self.viewport.orient_view(source["source_normal"], sub(corners[3], corners[0]))
 
     def _highlight(self, ids):
         if self.viewport is None or self.candidate is None: return
         candidate = self.candidate
         self.viewport.set_selection({"document_id": candidate.mesh_uuid, "document_epoch": candidate.mesh_uuid,
             "projection_revision": 0, "revision": 0, "kind": "element", "ids": ids,
-            "resource_revisions": {candidate.geometry_resource_uuid: 0},
-            "refs": [{"resource_id": candidate.geometry_resource_uuid, "entity_kind": "element", "local_id": identifier} for identifier in ids]})
+            "resource_revisions": {candidate.geometry_resource_uuid or candidate.mesh_uuid: 0},
+            "refs": [{"resource_id": candidate.geometry_resource_uuid or candidate.mesh_uuid, "entity_kind": "element", "local_id": identifier} for identifier in ids]})
 
     def pick_entity(self, picked):
         candidate = self.candidate
@@ -363,10 +472,12 @@ class MeshCandidateDialog(QDialog):
         desired = 1 if part.dimension == 2 and self.candidate.dimension == 3 else 0
         if self.preview_mode.currentIndex() != desired: self.preview_mode.setCurrentIndex(desired)
         self._highlight(list(part.element_ids))
-        self.pick_hint.setText(f"Selected {part.name} ({part.dimension}D). Enter a local size, then generate a new candidate.")
+        self.pick_hint.setText(f"Selected {part.name} ({part.dimension}D). " +
+                              (("Seeds are defined in the recipe." if self.viewport else "3D preview is disabled.")
+                               if self._structured() else "Enter a local size, then generate a new candidate."))
 
     def highlight_quality(self):
-        if self.viewport is None or self.candidate is None: return
+        if self.viewport is None or self.candidate is None or self._structured(): return
         ids = [int(self.quality.item(index.row(), 0).text()) for index in self.quality.selectionModel().selectedRows()]
         dimensions = {cell.dimension for cell in self.candidate.cells if cell.id in ids}
         desired = 1 if dimensions == {2} and self.candidate.dimension == 3 else 0
@@ -381,13 +492,14 @@ class MeshCandidateDialog(QDialog):
         try:
             mesh = self.candidate.to_native_mesh(length_unit=self.length.currentData())
             replaced = [self.replace.item(row).data(Qt.ItemDataRole.UserRole) for row in range(self.replace.count())
-                        if self.replace.item(row).checkState() == Qt.CheckState.Checked]
+                        if not self._structured() and self.replace.item(row).checkState() == Qt.CheckState.Checked]
             material, section = self.material.currentData(), self.section.currentData()
             stamp = dict(self._stamp)
         except Exception as exc: self._show_error(exc); return False
         self._adopting = True
         self._start(lambda: self.session.adopt_mesh_candidate(mesh, material_id=material, property_id=section,
-            replace_part_ids=replaced or None, expected_document_id=stamp["document_id"], expected_revision=stamp["revision"]))
+            replace_part_ids=replaced or None, expected_document_id=stamp["document_id"], expected_revision=stamp["revision"],
+            expected_document_epoch=stamp.get("document_epoch")))
         self.cancel_job.setEnabled(False); self.close_button.setEnabled(False)
         self.summary.setText("Validating source assets and adopting the mesh…")
         return True

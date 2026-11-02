@@ -483,12 +483,20 @@ def validate_native_mesh(native_mesh: NativeMesh) -> NativeMesh:
 
     Original candidate assets are required. Reconstructing the neutral value
     from the hashed metadata and actual MSH verifies IDs, geometry, ownership,
-    full inventory and default quality limits, including forged frozen values.
-    A caller may request stricter limits earlier, but cannot lower the default
-    q >= 0.1 admission baseline by constructing a NativeMesh directly.
+    full inventory and source-specific quality limits, including forged frozen
+    values. The CAD/standalone tri/tet baseline remains q >= 0.1; a structured
+    recipe retains its separate geometry, Jacobian and edge-aspect gates.
     """
     if not isinstance(native_mesh, NativeMesh):
         raise PrepError("invalid_native_mesh", "Expected a verified Gmsh NativeMesh candidate.")
+    if native_mesh.source_kind == "structured_recipe":
+        from .structured_mesh import validate_structured_native_mesh
+        canonical = validate_structured_native_mesh(native_mesh)
+        if (canonical.dimension != 2 or any(
+                (cell.dimension, cell.element_type, cell.order, len(set(cell.node_ids))) != (2, 3, 1, 4)
+                or len(cell.node_ids) != 4 for cell in canonical.elements)):
+            raise PrepError("unsupported_mesh_family", "Structured adoption currently supports planar first-order quad4 only.")
+        return canonical
     if native_mesh.source_kind == "standalone_msh":
         from .external_mesh import validate_imported_mesh
         return validate_imported_mesh(native_mesh)
