@@ -69,6 +69,20 @@ MSH는 2.2/4.1 ASCII에 한정합니다. binary·partition·periodic·data·para
 
 작업 브랜치의 **Mesh → Move nodes to coordinates…**에서는 소스와 절점 ID를 선택하고 입력 덱 길이 단위의 절대좌표를 입력합니다. **Preview move**에서 품질과 영향 대상을 확인하고 검토 체크 후 **Apply move**로 확정합니다. ID·연결·집합 멤버를 보존해도 하중 작용점과 접촉 간격은 달라질 수 있습니다. 영향 집합은 **Replace prepared mesh / reconnect targets…**에서 명시적으로 검토하기 전까지 native 출력을 막습니다. 다중 자원 대상 귀속과 하중 preview 정보에 검토 지적이 남아 있으며 일반 메시 편집 완료본은 아닙니다.
 
+<a id="node-move-images"></a>
+
+### 실제 Windows 화면으로 좌표 이동 확인하기
+
+아래는 이 작업 브랜치에서 2026-11-02 실행한 native Windows 앱입니다. 미리보기는 실제 Qt 위젯 캡처이며, 메시 이미지는 같은 실행 흐름의 VTK framebuffer입니다. 위젯 캡처에서 검게 보였던 OpenGL 영역은 사용하지 않았으며 두 이미지를 합성하지 않았습니다.
+
+![입력 덱 mm 단위로 node 2의 X를 11로 지정한 실제 미리보기](native-windows/2026-11-02-node-move/beam_shell_tet/preview.png)
+
+절점 ID와 절대좌표를 넣고 **Preview move**를 누르면 변경 전후 품질과 검토 대상이 나타납니다. 상세 목록은 내부 스크롤로 확인합니다. 위 화면은 beam/shell/tet 입력의 node 2를 X=10에서 11 mm로 이동하는 예입니다.
+
+![이동한 작업문서를 새 프로세스에서 다시 연 VTK 메시](native-windows/2026-11-02-node-move/beam_shell_tet/reopen-framebuffer.png)
+
+**Apply move → Save project → 별도 프로세스 재열기** 후 표시한 메시입니다. 화면뿐 아니라 절점 ID·좌표·연결도 대조했습니다. 형상 검토 대기는 재열기 후에도 남습니다. 이 그림이 재연결 조작·솔버 계산·물리 적합성을 확인한 것은 아닙니다. 실행 단계별 소스 hash와 [저장 기록](native-windows/2026-11-02-node-move/beam_shell_tet/save.json), [재열기 기록](native-windows/2026-11-02-node-move/beam_shell_tet/reopen.json)은 [Windows 확인 범위](native-windows-validation.md#node-move-20261102)를 따릅니다.
+
 ## Starter와 Engine 내보내기
 
 **File → Export Radioss deck…**은 편집된 RAD와 해석한 의존 파일을 내보냅니다. 새 해석 입력은 **File → Export Starter and Engine…**에서 종료 시간·출력 간격과 `model_0000.rad` 경로를 지정합니다. 저장된 활성 케이스를 사용하는지 수동 설정인지 확인하세요. 출력은 `_0000.rad` Starter와 `_0001.rad` Engine으로 나뉩니다.

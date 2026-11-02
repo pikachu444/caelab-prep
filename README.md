@@ -4,6 +4,10 @@
 
 첫 적용 앱은 **OpenRadioss / OpenCourant용 독립 데스크톱 전처리기**입니다. RAD를 열어 모델과 조건을 편집하고 `.caeprep` 작업문서를 저장하거나 Starter/Engine 입력을 내보냅니다. CAD 원본은 FreeCAD 같은 CAD 도구가 소유하며, Workbench에서 시작한 솔버 실행과 결과 관리는 [CAELab Workbench](https://github.com/pikachu444/caelab-workbench)가 담당합니다.
 
+![실제 Windows Prep 창에서 연 beam·shell·tet 입력](docs/native-windows/2026-11-02-node-move/beam_shell_tet/windows-observed.png)
+
+2026-11-02 실제 Windows Qt/VTK 창의 관측 화면입니다. 합성 이미지가 아니며, 제한된 입력 열기·좌표 이동·저장/재열기 흐름의 [화면과 확인 범위](docs/usage.md#node-move-images)를 구분해 안내합니다.
+
 ## 현재 사용할 수 있는 기능
 
 | 작업 | 지원 범위 |
