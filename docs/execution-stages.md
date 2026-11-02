@@ -423,7 +423,7 @@ caelab-prep mesh INPUT.step --output OUT --size 2.0 --dimension 3
 
 공통 계약 `session.py`/`rad_provider.py`/`document.py`/storage·deck·mesh_candidates는 인수자 한 명이 소유한다. PR #27의 `MeshCell.kind`를 전역 확장하면 기존 tri/tet 품질 검사를 우회할 수 있으므로 출처별 허용 family를 유지한다. N18의 stale 관계는 여러 source/generation을 기록하도록 버전을 이행해야 한다. 젠클스의 `scripts/windows/`는 동결 보고 상태이며 인수 측이 담당 교대를 확인한다. 실제 Windows 실행은 정확한 최종 Prep/WB SHA 쌍과 권한 범위에서 별도 기록한다.
 
-**새 세션의 실행 순서:** README → DESIGN의 R/T/G → 이 표 → 관련 기술 절/코드를 읽고 실제 HEAD와 dirty를 확인한다. N01/N02/N15/N19/N20/N21의 병합 근거를 유지하고 N16 transaction→N18과 제한 recipe N22/N24/N25를 진행한다. N17은 동일 100만 요소의 미달 항목을 개선한다. 원제품/Windows 접근 대기 동안 독립 가능한 구현과 배포 준비를 계속한다. N17 계측은 N16 완료를 기다리지 않으며 공통 계약 개선은 한 편집자가 조율한다. IPC→MCP와 Workbench 소유 W3의 선행 관계를 지킨다. 조건부 다섯 항목은 각각 F0–F2를 먼저 판정한다. Windows 실측을 나중에 일괄 한다는 사용자 지시는 유지한다.
+**새 세션의 실행 순서:** README → DESIGN의 R/T/G → 이 표 → 관련 기술 절/코드를 읽고 실제 HEAD와 dirty를 확인한다. N01/N02/N15/N16/N19/N20/N21의 병합 근거를 유지하고, 병합된 N16 transaction을 재사용해 N18과 제한 recipe N22/N24/N25를 진행한다. N17은 동일 100만 요소의 미달 항목을 병행 개선한다. 원제품/Windows 접근 대기 동안 독립 가능한 구현과 배포 준비를 계속한다. N17 계측과 공통 계약 개선은 한 편집자가 조율한다. IPC→MCP와 Workbench 소유 W3의 선행 관계를 지킨다. 조건부 다섯 항목은 각각 F0–F2를 먼저 판정한다. Windows 실측을 나중에 일괄 한다는 사용자 지시는 유지한다.
 
 **게시 묶음 독립 검사:** `published-work-inspection-20261102-01`에서 사용자는 PR17 `323954f`의 별도 cloud 검사 573 passed/83 skipped, OCP 전용 관련 107건과 공식 OpenCourant, 독립 MSH 두 형식의 ID·출처·quad 차단, WB PR55 관련 33건과 실제 두 단계 실행을 보고했다. 중복을 합산하지 않는다. 사용자가 수행하지 않은 X11·Windows·8원제품 검증을 이 결과에 포함하지 않는다. 이 결과는 N01/N02/N15/N21의 게시 묶음 근거이며 전체 26개 합격이 아니다.
 

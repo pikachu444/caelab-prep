@@ -36,7 +36,7 @@ Gmsh는 CAD/메시 엔진이고 문서의 정본이 아니다. OCP/OCAF와 Gmsh 
 
 계획상 첫 CAD/메시 C는 최소 자원·배열·채택 명령(P6a)만 선행하고 P7a에서 연결한다. 완전한 다중 파트·대용량 B를 선행 조건으로 삼지 않는다. 후보 생성과 문서 변경을 구분하고, 품질 확인 뒤 채택/교체를 하나의 명령으로 적용한다. 외피 facet과 물리 shell 요소, Gmsh tag와 지속 객체 참조를 구분한다. `radioss/modeling.py`가 신규 native writer를 소유한다. tri3는 SH3N/SHELL 단면, tet4는 TETRA4/SOLID 단면에 연결하며 외피 facet을 별도 shell로 중복 채택하지 않는다. N16의 준비된 mesh 교체는 참조를 stale로 보존하고 명시한 source/revision 대응으로 재연결하며, 미해결이면 출력을 차단한다. N18의 일반 메시 수정과 CAD 재메시는 아직 연결하지 않았다.
 
-Workbench는 현재 자체 PySide6 앱이며 FreeCAD를 외부 프로그램으로 사용한다. 공용 위젯에는 Workbench 서비스 adapter를 주입하고 프로젝트/연구의 소유권을 유지한다. 독립 Prep 문서와 Workbench 프로젝트는 파일 역할·개정으로 연결하며, 두 명령 이력이나 문서 정본을 겹치지 않는다. Workbench W1의 NumericEdit 소비와 W2의 RAD/작업문서 독립 Prep 열기는 구현됐다. 현재 INP용 실행 입력 복사 규칙을 RAD의 Starter/Engine/INCLUDE snapshot과 두 단계 실행에 적용하는 W3는 Workbench PR #55에서 solver별 snapshot·기존 JobManager의 Starter→Engine 단계로 구현해 CI에서 두 실제 입력을 검증 중이다. Prep에 실행 관리자를 추가하지 않는다.
+Workbench는 현재 자체 PySide6 앱이며 FreeCAD를 외부 프로그램으로 사용한다. 공용 위젯에는 Workbench 서비스 adapter를 주입하고 프로젝트/연구의 소유권을 유지한다. 독립 Prep 문서와 Workbench 프로젝트는 파일 역할·개정으로 연결하며, 두 명령 이력이나 문서 정본을 겹치지 않는다. Workbench W1의 NumericEdit 소비와 W2의 RAD/작업문서 독립 Prep 열기는 구현됐다. INP용 실행 입력 복사 규칙을 RAD의 Starter/Engine/INCLUDE snapshot과 두 단계 실행에 적용하는 W3는 Workbench PR #55에서 solver별 snapshot·기존 JobManager의 Starter→Engine 단계로 구현했다. 최종 `a328253`의 CI에서 두 실제 입력 서비스/X11 GUI와 필수 회귀를 통과해 main `865ee15`에 병합했으며 Windows 확인은 별도로 남는다. Prep에 실행 관리자를 추가하지 않는다.
 
 ## 계층과 의존 방향
 
