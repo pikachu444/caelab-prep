@@ -35,6 +35,9 @@ def _model(unit):
 
 
 def test_planar_candidate_faces_its_oblique_source_without_rendering(quad):
+    pytest.importorskip("vtk")
+    if sys.platform == "linux" and not os.environ.get("DISPLAY"):
+        pytest.skip("VTK Qt construction on this Linux build requires X11; native preview is checked in the X11 job")
     from math import sqrt
     case, native = quad
     session, _, _ = _model(native.length_unit)
