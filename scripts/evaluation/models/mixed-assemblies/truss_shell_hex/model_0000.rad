@@ -1,0 +1,33 @@
+/BEGIN
+Mixed assembly
+      2024         0
+                  Mg                  mm                   s
+                  Mg                  mm                   s
+/MAT/LAW1/41
+Shared elastic steel
+             7.8e-09
+              210000                 0.3
+/PROP/SHELL/21
+No drilling shell
+        24         1         2         2                                       1
+                   0                   0                   0                   0               0.015
+         0                             1            0.833333                   2         0
+/PROP/SOLID/23
+Linear solid
+         1         1         0         0         0         0      1000         1                   0
+                 1.1                0.05                 0.1                   0                   0
+                   0                   0                   0                   0                   0
+/PROP/TRUSS/22
+Axial truss
+                   1                   0
+/PART/9
+Same part 9
+        21        41         0
+/PART/10
+Same part 10
+        22        41         0
+/PART/11
+Same part 11
+        23        41         0
+#include mesh.inc
+/END

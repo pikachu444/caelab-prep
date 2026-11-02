@@ -43,7 +43,8 @@ def configure_native(h, key):
          "Section": (h.modeling.actions["section.create"], h.modeling.actions["solid_section.create"]),
          "Object": (h.modeling.actions["object.edit"], h.modeling.actions["object.copy"], h.modeling.actions["object.delete"]),
          "Assignment": (h.modeling.actions["part.assign"],),
-         "Selection": (h.modeling.actions["group.create"], h.modeling.actions["element_group.create"], h.modeling.actions["surface.create"]),
+         "Selection": (h.modeling.actions["group.create"], h.modeling.actions["element_group.create"], h.modeling.actions["surface.create"],
+                       h.modeling.actions["coordinate_system.create"]),
          "Curve": (h.modeling.actions["curve.create"],),
          "Conditions": tuple(h.modeling.actions[key + ".create"] for key in
                               ("constraint", "load", "velocity", "contact")) + (h.mesh_workflow.cases_action,)},

@@ -1,0 +1,219 @@
+{
+  "status": "unexecuted_read_only_plan",
+  "date": "2026-11-02",
+  "existing_input_reused": {
+    "name": "public-as1-assembly",
+    "source_sha256": "d40db2ed6f741d2955329f9751c7e3e0a14cbfeb4e11d8338cf110765b9042f9",
+    "physical_tetrahedra": 64308,
+    "physical_nodes": 16645,
+    "parts": 18,
+    "local_sizes": {},
+    "interface_policy": "independent",
+    "new_run_planned": false
+  },
+  "unchanged_acceptance": {
+    "physical_elements_min": 20000,
+    "physical_elements_max": 100000,
+    "minimum_tri_tet_quality": 0.1,
+    "inverted_or_degenerate_count": 0,
+    "worker_to_assets_seconds_max": 120,
+    "windows_status": "unverified; Linux X11 is not Windows evidence"
+  },
+  "proposed_inputs": [
+    {
+      "id": "C1-open-plate",
+      "units": "mm",
+      "source_type": "STEP with two planar open faces, one shared topological edge, zero volumes",
+      "vertices": {
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          120,
+          0,
+          0
+        ],
+        "c": [
+          300,
+          0,
+          0
+        ],
+        "d": [
+          300,
+          200,
+          0
+        ],
+        "e": [
+          120,
+          200,
+          0
+        ],
+        "f": [
+          0,
+          200,
+          0
+        ]
+      },
+      "faces": [
+        [
+          "a",
+          "b",
+          "e",
+          "f"
+        ],
+        [
+          "b",
+          "c",
+          "d",
+          "e"
+        ]
+      ],
+      "shared_edge": [
+        "b",
+        "e"
+      ],
+      "construction": "Create explicit vertices/edges once, reuse the shared edge with opposite orientation in two boundary wires, make planar faces and a STEP compound. Do not create a solid or merge by coordinate tolerance after meshing.",
+      "expected_geometry": {
+        "faces": 2,
+        "volumes": 0,
+        "source_normal": [
+          0,
+          0,
+          1
+        ],
+        "area_mm2": 60000,
+        "part_areas_mm2": [
+          24000,
+          36000
+        ]
+      },
+      "recipe": {
+        "gmsh": "4.15.2",
+        "dimension": 2,
+        "threads": 1,
+        "interface_policy": "preserve",
+        "global_size_mm": 2.2,
+        "refinement": {
+          "target": "persistent UUID of left face, selected in actual GUI",
+          "local_size_mm": 1.2,
+          "input": "baseline XAO"
+        }
+      },
+      "planned_candidate_generations": 2,
+      "element_count_estimates_only": {
+        "uniform_equilateral_approx": 28628.938968080613,
+        "refined_no_transition_approx": 55667.38132682342
+      },
+      "native_profile": {
+        "mass": "Mg",
+        "length": "mm",
+        "time": "s",
+        "density": 7.8e-09,
+        "young_modulus": 210000,
+        "poisson_ratio": 0.3,
+        "shell_thickness_mm": 1,
+        "analytic_mass_Mg": 0.00046800000000000005,
+        "element_family": "SH3N",
+        "expected_parts": 2
+      }
+    },
+    {
+      "id": "C2-touching-solids",
+      "units": "mm",
+      "source_type": "STEP compound of separately built solids with coincident distinct faces, no pre-fragment",
+      "boxes": [
+        {
+          "id": "A",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "dimensions": [
+            30,
+            30,
+            20
+          ]
+        },
+        {
+          "id": "B",
+          "origin": [
+            30,
+            0,
+            0
+          ],
+          "dimensions": [
+            50,
+            30,
+            20
+          ]
+        }
+      ],
+      "expected_geometry": {
+        "volumes": 2,
+        "volume_mm3": 48000,
+        "part_volumes_mm3": [
+          18000,
+          30000
+        ],
+        "interface_plane": {
+          "axis": "x",
+          "value": 30
+        },
+        "interface_area_mm2": 600
+      },
+      "recipe": {
+        "gmsh": "4.15.2",
+        "dimension": 3,
+        "threads": 1,
+        "global_size_mm": 2.3,
+        "branches": [
+          {
+            "policy": "conformal",
+            "input": "original STEP"
+          },
+          {
+            "policy": "preserve",
+            "input": "conformal baseline XAO",
+            "local_sizes": {
+              "target": "persistent UUID of volume A, selected in actual GUI",
+              "value_mm": 1.6
+            }
+          },
+          {
+            "policy": "independent",
+            "input": "original STEP again"
+          }
+        ]
+      },
+      "planned_candidate_generations": 3,
+      "element_count_estimates_only": {
+        "uniform_regular_tetra_approx": 33475.26144188801,
+        "refined_no_transition_approx": 58210.87256531435
+      },
+      "native_profile": {
+        "mass": "Mg",
+        "length": "mm",
+        "time": "s",
+        "density": 7.8e-09,
+        "young_modulus": 210000,
+        "poisson_ratio": 0.3,
+        "analytic_mass_Mg": 0.0003744,
+        "element_family": "TETRA4",
+        "expected_parts": 2,
+        "physical_boundary_shells": 0
+      },
+      "conformal_oracle": "Common node IDs exactly cover both volume interface faces, opposite face orientation, no duplicate coincident IDs/partial faces.",
+      "independent_oracle": "No shared volume node IDs; both separate interface meshes cover the same 600 mm2 plane. This is not contact-law accuracy validation."
+    }
+  ],
+  "local_size_comparison": {
+    "target_count_ratio_gt": 2,
+    "target_median_edge_ratio_lt": 0.75,
+    "non_target_statistics": "retain and report; no claim of zero transition effects",
+    "geometry_uuid": "all existing entities stable across XAO regeneration"
+  },
+  "execution_limit": "Do not execute before source/recipe/environment checkpoint. At most the specified five new candidates across two sources, preserve failures, no rerun of existing public as1. No silent count/quality/time gate changes."
+}

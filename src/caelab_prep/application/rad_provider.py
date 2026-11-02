@@ -7,6 +7,7 @@ This adapter only describes supported values and translates editor commands.
 from __future__ import annotations
 
 from dataclasses import replace
+from copy import deepcopy
 from decimal import Decimal, InvalidOperation
 import math
 
@@ -29,6 +30,7 @@ CREATE_OPERATIONS = {
     "material.create": ("Create material", "create_material"),
     "section.create": ("Create shell section", "create_shell_property"),
     "solid_section.create": ("Create solid section", "create_solid_property"),
+    "coordinate_system.create": ("Create fixed coordinate system", "create_coordinate_system"),
     "curve.create": ("Create load curve", "create_curve"),
     "group.create": ("Create node group", "create_node_group"),
     "element_group.create": ("Create element group", "create_element_group"),
@@ -46,6 +48,7 @@ class RadProvider:
 
     def __init__(self, session):
         self.session = session
+        self._part_properties_cache = None
 
     def describe(self):
         return self.session.describe()
@@ -75,10 +78,24 @@ class RadProvider:
         return card
 
     def properties(self, ref, draft_values=None):
-        specs = self._draft_specs(self._native_properties(ref), draft_values)
-        context = self.unit_context(ref)
-        words = self._card(ref)["keyword"].upper().split("/")
-        return self._display_specs(specs, context, words)
+        # A PART inspector and both action surfaces query identical assignments
+        # during one refresh. Cache only this small immutable-value contract, not
+        # group memberships or draft-dependent condition/unit specifications.
+        with self.session._lock:
+            document = self.session._require()
+            stamp = (self.session._document_epoch, document.id, document.revision, ref)
+            if self._part_properties_cache and self._part_properties_cache[0] == stamp:
+                return tuple(replace(spec, unit_context=deepcopy(spec.unit_context))
+                             for spec in self._part_properties_cache[1])
+            specs = self._draft_specs(self._native_properties(ref), draft_values)
+            context = self.unit_context(ref)
+            words = self._card(ref)["keyword"].upper().split("/")
+            result = self._display_specs(specs, context, words)
+            if len(words) in (3, 4) and words[1] == "PART" and words[2].isdigit():
+                self._part_properties_cache = (stamp, tuple(replace(spec, unit_context=deepcopy(spec.unit_context)) for spec in result))
+            else:
+                self._part_properties_cache = None
+            return result
 
     @staticmethod
     def _draft_specs(specs, draft_values):
@@ -142,11 +159,16 @@ class RadProvider:
         values = {field["name"]: field["value"] for field in fields}
         context = self.unit_context(ref)
         words = card["keyword"].upper().split("/")
+        if tuple(words[1:3]) == ("SKEW", "FIX"):
+            values = self.session.coordinate_system_values(card["id"])
+            return self._coordinate_fields(values)
         if self._group_kind(card) and callable(getattr(self.session, "group_members", None)):
             membership = self.session.group_members(card["id"])
+            status = (PropertySpec("relationship_status", "Target relationship", "; ".join(item["message"] for item in membership["diagnostics"]),
+                                   kind="text", editable=False),) if membership["diagnostics"] else ()
             if membership["kind"] == "node":
-                return (PropertySpec("node_ids", "Native node IDs", tuple(membership["member_ids"]), kind="integer_list"),)
-            return (self._element_members_field(membership["members"]),)
+                return (PropertySpec("node_ids", "Native node IDs", tuple(membership["member_ids"]), kind="integer_list"), *status)
+            return (self._element_members_field(membership["members"]), *status)
         if len(words) in (3, 4) and words[1] == "PART" and words[2].isdigit():
             summary = self.session.part_summary(ref)
             return (PropertySpec("part_id", "Native part ID", summary["part_id"], editable=False),
@@ -159,9 +181,16 @@ class RadProvider:
             return (PropertySpec("points", "Curve points", points, kind="table",
                                  unit="input deck", components=("X", "Y"), unit_context=context, minimum_rows=2),)
         if self._condition_kind(card):
-            return tuple(replace(field, unit_context=context,
+            fields = tuple(replace(field, unit_context=context,
                                  coordinate_frame="native skew reference in card" if field.name == "velocity" else field.coordinate_frame)
                          for field in self._condition_fields(self._condition_kind(card), self.session.condition_values(card["id"])))
+            try:
+                support = self.session.condition_support(card["id"])
+                status = support["status"]
+                if support.get("diagnostics"):
+                    status += ": " + ", ".join(sorted({item.get("code", "field applicability unknown") for item in support["diagnostics"]}))
+            except PrepError as exc: status = exc.message
+            return (*fields, PropertySpec("component_support", "Target mechanical fields", status, kind="text", editable=False))
         if card["keyword"].upper().startswith("/INIVEL/TRA/") and all(n in values for n in ("vx", "vy", "vz")):
             return (PropertySpec("velocity", "Initial velocity", tuple(values[n] for n in ("vx", "vy", "vz")),
                                  kind="vector", unit="input deck", components=("X", "Y", "Z"),
@@ -213,11 +242,13 @@ class RadProvider:
         if self._group_kind(self._card(command.target)):
             key = "node_ids" if self._group_kind(self._card(command.target)) == "node" else "element_refs"
             return self.session.set_group_members(command.target.object_id, command.values[key], **expected)
+        if self._card(command.target)["keyword"].upper().startswith("/SKEW/FIX/"):
+            return self.session.set_coordinate_system_values(command.target.object_id, command.values, **expected)
         if self._condition_kind(self._card(command.target)):
             values = dict(command.values)
             for name, value in values.items():
                 if specs[name].kind == "reference":
-                    values[name] = self._card(value)["id"]
+                    values[name] = None if name == "coordinate_system_id" and value is None else self._card(value)["id"]
             return self.session.set_condition_values(command.target.object_id, values, **expected)
         fields = {}
         for name, value in command.values.items():
@@ -271,7 +302,7 @@ class RadProvider:
         return (len(words) >= 4 and
                 ((words[1] == "MAT" and words[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB")) or
                  (words[1] == "PROP" and words[2] in ("SHELL", "TYPE1", "SOLID", "TYPE14")) or
-                 tuple(words[1:3]) in (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"),
+                 tuple(words[1:3]) in (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS"),
                                       ("SURF", "PART"), ("INIVEL", "TRA"), ("INTER", "TYPE7")))) or (
                     len(words) >= 3 and words[1] in ("FUNCT", "BCS", "CLOAD") and words[2].isdigit())
 
@@ -280,7 +311,7 @@ class RadProvider:
         words = card["keyword"].upper().split("/")
         family = tuple(words[1:3])
         return "node" if family == ("GRNOD", "NODE") else "element" if family in (
-            ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC")) else None
+            ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS")) else None
 
     def _element_members_field(self, value=None):
         cells = self.session.mesh_view()["cells"]
@@ -323,24 +354,34 @@ class RadProvider:
         values = values or {}
         group = lambda name="group_id", label="Node group": self._reference_field(
             name, label, ("/GRNOD/NODE/",), values.get(name))
+        frame = self._reference_field("coordinate_system_id", "Coordinate system", ("/SKEW/FIX/",), values.get("coordinate_system_id"))
+        frame = replace(frame, choice_labels=("Global Cartesian", *frame.choice_labels[1:]))
         if kind == "constraint":
-            return (group(), *(PropertySpec(name, label, tuple(values.get(name, (False, False, False))),
+            return (group(), frame, *(PropertySpec(name, label, tuple(values.get(name, (False, False, False))),
                     kind="bool_vector", components=("X", "Y", "Z")) for name, label in
                     (("translations", "Fixed translations"), ("rotations", "Fixed rotations"))))
         if kind == "load":
-            return (group(), self._reference_field("curve_id", "Load curve", ("/FUNCT/",), values.get("curve_id")),
+            return (group(), frame, self._reference_field("curve_id", "Load curve", ("/FUNCT/",), values.get("curve_id")),
                     PropertySpec("direction", "Direction", values.get("direction", "Z"), kind="choice",
                                  choices=("X", "Y", "Z", "XX", "YY", "ZZ")),
                     PropertySpec("scale", "Load scale at each node", values.get("scale", 1.0), unit="input deck"))
         if kind == "velocity":
             return (PropertySpec("velocity", "Initial velocity", tuple(values.get("velocity", (0., 0., 0.))),
-                                 kind="vector", unit="input deck", components=("X", "Y", "Z")), group())
+                                 kind="vector", unit="input deck", components=("X", "Y", "Z")), group(), frame)
         if kind == "contact":
             friction_label = "Friction function scale" if values.get("friction_is_scale", False) else "Friction coefficient"
             return (group("secondary_group_id", "Secondary node group"),
                     self._reference_field("main_surface_id", "Main shell surface", ("/SURF/PART/",), values.get("main_surface_id")),
                     PropertySpec("friction", friction_label, values.get("friction", 0.0), minimum=0))
         return ()
+
+    @staticmethod
+    def _coordinate_fields(values=None):
+        values = values or {}
+        return tuple(PropertySpec(name, label, tuple(values.get(name, default)), kind="vector", components=("X", "Y", "Z"),
+                                  unit="input deck" if name == "origin" else "")
+                     for name, label, default in (("origin", "Origin", (0.,0.,0.)), ("y_axis", "Local Y direction", (0.,1.,0.)),
+                                                  ("z_axis", "Local Z direction", (0.,0.,1.))))
 
     def available_operations(self, target=None):
         if not self.describe().get("document_id"):
@@ -368,7 +409,7 @@ class RadProvider:
                 candidates = [card for card in candidates
                               if card["id"] == current_id or
                               (len(card["keyword"].split("/")) > 2 and
-                               card["keyword"].upper().split("/")[2] in ("SHELL", "TYPE1", "SOLID", "TYPE14"))]
+                               card["keyword"].upper().split("/")[2] in ("SHELL", "TYPE1", "SOLID", "TYPE14", "BEAM", "TYPE3", "TRUSS", "TYPE2"))]
             else:
                 candidates = [card for card in candidates if card["id"] == current_id or
                               card["keyword"].upper().split("/")[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB")]
@@ -398,6 +439,9 @@ class RadProvider:
                                PropertySpec("poisson_ratio", "Poisson's ratio", 0.3, minimum=-1, maximum=0.5))
                 elif key == "section.create":
                     fields += (PropertySpec("thickness", "Shell thickness", 0.0, unit="input deck", minimum=0),)
+                elif key == "coordinate_system.create":
+                    fields += self._coordinate_fields()
+                    description += " Static Cartesian SKEW only. X is Y cross Z; Y is orthogonalized. No node positions are moved."
                 elif key == "curve.create":
                     fields += (PropertySpec("points", "Curve points", ((0., 0.), (1., 1.)), kind="table",
                                             components=("X", "Y"), unit="input deck", minimum_rows=2),)
@@ -408,7 +452,7 @@ class RadProvider:
                     fields += (PropertySpec("node_ids", "Native node IDs", selected, kind="integer_list"),)
                 elif key == "element_group.create":
                     fields += (self._element_members_field(),)
-                    description += " Explicit element members must share one native family: triangles, quadrilaterals, or solids."
+                    description += " Explicit element members must share one native family: beams, trusses, triangles, quadrilaterals, or solids."
                 elif key == "surface.create":
                     fields += (self._reference_field("part_ids", "Shell parts", ("/PART/",), multiple=True),)
                     description += " Select nonempty shell or triangular shell parts. Solid faces require another surface type."
@@ -473,7 +517,7 @@ class RadProvider:
                     raise PrepError("invalid_value", "The native ID must be a nonnegative integer.", {"field": "native_id"})
                 for field in spec.fields:
                     if field.kind == "reference":
-                        values[field.name] = self._card(values[field.name])["id"]
+                        values[field.name] = None if field.name == "coordinate_system_id" and values[field.name] is None else self._card(values[field.name])["id"]
                     elif field.kind == "references":
                         if not isinstance(values[field.name], (list, tuple)):
                             raise PrepError("invalid_reference", "Choose a list of object references.")

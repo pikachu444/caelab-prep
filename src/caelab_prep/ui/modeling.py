@@ -93,6 +93,7 @@ class ModelingActions(QObject):
         ("material.create", "New material…", "material"),
         ("section.create", "New shell section…", "section"),
         ("solid_section.create", "New solid section…", "section"),
+        ("coordinate_system.create", "New fixed coordinate system…", "vector"),
         ("curve.create", "New load curve…", "curve"),
         ("group.create", "New node group…", "set"),
         ("element_group.create", "New element group…", "set"),
@@ -121,6 +122,7 @@ class ModelingActions(QObject):
                                              action_id=key)
             self.actions[key].setIconText({"material.create": "New material", "section.create": "Shell section",
                                            "solid_section.create": "Solid section",
+                                           "coordinate_system.create": "Coordinates",
                                            "object.copy": "Copy", "object.delete": "Delete", "object.edit": "Edit",
                                            "part.assign": "Assign", "curve.create": "Curve", "group.create": "Node group",
                                            "element_group.create": "Element group",
