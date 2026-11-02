@@ -40,6 +40,7 @@ def test_actual_x11_final_targets_review_and_unchanged_physical_grid(profile):
             assert dialog.screen().availableGeometry().contains(dialog.frameGeometry())
             for button in (dialog.reconnect_preview_button, dialog.reconnect_button, dialog.close_button):
                 assert button.visibleRegion().boundingRect().contains(button.rect())
+            assert dialog.reconnect_reviewed.width() >= dialog.reconnect_reviewed.minimumSizeHint().width()
             bar = dialog.tabs.widget(1).verticalScrollBar() if stage == "mapping" else dialog.reconnect_details.verticalScrollBar()
             for position in ("top", "bottom"):
                 bar.setValue(0 if position == "top" else bar.maximum()); pump()

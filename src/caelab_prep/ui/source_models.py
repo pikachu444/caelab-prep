@@ -881,7 +881,7 @@ class PreparedMeshDialog(QDialog):
         self.reconnect_preview_button = QPushButton("Preview final mapping")
         self.reconnect_preview_button.clicked.connect(self.prepare_reconnection)
         row.addWidget(self.reconnect_preview_button)
-        self.reconnect_reviewed = QCheckBox("I reviewed this mapping")
+        self.reconnect_reviewed = QCheckBox("Mapping reviewed")
         self.reconnect_reviewed.toggled.connect(self._sync_actions)
         self.reconnect_button = QPushButton("Apply reconnection")
         self.reconnect_button.clicked.connect(self.apply_reconnection)

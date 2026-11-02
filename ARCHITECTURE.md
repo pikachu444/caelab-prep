@@ -74,7 +74,7 @@ N18의 `application.group_members`는 같은 mesh snapshot/stamp와 `mesh_edit_c
 
 새 topology의 변경 요소에 연결된 모든 전후 절점 조건을 검토하며, 다른 source가 소유한 잔존 절점의 DOF 변화도 포함한다. contact 양쪽 역할이 변경되지 않은 source에 있어도 해당 contact를 명시 허용한 source 편집의 실제 generation을 의존성에 기록한다. 원 그룹·조건은 자동 변경하지 않는다. 별도의 trial에서 projected correspondence와 CLOAD/BCS/INIVEL 필드·TYPE7 참조, 평가 전 하중 계수·초기속도 중복을 읽고, Apply는 영향 그룹을 stale로 남긴다. 기존 명시 재연결의 CLOAD/INIVEL DOF 검사를 전체 BCS·접촉 물리 검증으로 보고하지 않는다. merge trial의 many-to-one 집합 투영도 원 선언을 변경하지 않는다.
 
-`plan_mesh_reconnection/apply_mesh_reconnection`은 기존 재연결의 준비·검증·native member replacement와 `execute_many`/v6를 재사용한다. GRNOD/NODE의 `coalesce_duplicates=True`는 모든 old ID의 현재 typed owner를 검증한 뒤 첫 등장 순서로 중복을 줄이며, 직접 명령은 이 opt-in을 적용하지 않는다. 검토용 states는 복사해 비공개로 보관하고 revision/epoch/resource token/geometry generation CAS가 같은 후보만 게시한다. stale에서 필요한 명령이므로 stale을 거부하는 geometry-edit snapshot을 사용하지 않는다. 기존 distinct node/element/SURF/PART 직접 경로는 유지한다.
+`plan_mesh_reconnection/apply_mesh_reconnection`은 기존 재연결의 준비·검증·native member replacement와 `execute_many`/v6를 재사용한다. GRNOD/NODE의 `coalesce_duplicates=True`는 각 old ID에 지정한 현재 target의 typed owner를 검증한 뒤 첫 등장 순서로 중복을 줄이며, 직접 명령은 이 opt-in을 적용하지 않는다. 검토용 states는 복사해 비공개로 보관하고 revision/epoch/resource token/geometry generation CAS가 같은 후보만 게시한다. stale에서 필요한 명령이므로 stale을 거부하는 geometry-edit snapshot을 사용하지 않는다. 기존 distinct node/element/SURF/PART 직접 경로는 유지한다.
 
 `reconnection_review`의 before 계수·INIVEL 교집합은 stale의 보존 멤버를 사용한다. 현재 카드 선언과 최종 집합은 조건 유무와 무관하게 따로 표시하고 과거 source 소유/좌표를 재구성하지 않는다. 남은 stale 속도 그룹의 최종 대상은 미검토이며 빈 교집합도 겹침 부재의 증거가 아니다. 하중/벡터·native frame·순서의 미평가 범위를 표시하고 값을 재분배하지 않는다. `PreparedMeshDialog`의 기존 링크 UI·별도 sealed reconnection plan·고정 공통 footer가 이 경로를 소비하며 입력/문서 변경·Close가 후보를 취소한다. 조건 선언 설명과 교집합 계산은 기존 집합 검토와 공유한다.
 
