@@ -1,0 +1,5 @@
+{
+  "status": "manually_interrupted_for_harness_correction",
+  "reason": "Diagnostic variable cache held prior projection after project reopen; Qt pump did not explicitly flush DeferredDelete. Core/copy/save metrics retained, later RSS/GUI metric not accepted as final.",
+  "exit_code": 130
+}

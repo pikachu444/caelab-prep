@@ -1,0 +1,259 @@
+{
+  "base_sha": "8c1a67f6b5a8d60c81124073be55dde1aafe4176",
+  "working_tree_snapshot": true,
+  "snapshot_atomic_hash_check": true,
+  "files": [
+    {
+      "path": "src/caelab_prep/__init__.py",
+      "sha256": "378dfdedcb869c5b68f95b16896af33b7f887098de8743befce0aee1f365dbc9"
+    },
+    {
+      "path": "src/caelab_prep/__main__.py",
+      "sha256": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d"
+    },
+    {
+      "path": "src/caelab_prep/adapters/__init__.py",
+      "sha256": "5df5d63b8c69d036baa12732c1be091450f19e3ec333e154b2297dce6ed87c5f"
+    },
+    {
+      "path": "src/caelab_prep/adapters/gmsh_backend.py",
+      "sha256": "4217f2b9a123c56c4f0aa5b68fd56e31033780ed0103277f96f0b319a07a37db"
+    },
+    {
+      "path": "src/caelab_prep/adapters/gmsh_worker.py",
+      "sha256": "1877d8c856b013fdf1d663c8a3dcebf89c05507b8b83262b35ac9db9ac4fd7b4"
+    },
+    {
+      "path": "src/caelab_prep/adapters/msh_worker.py",
+      "sha256": "55834e1dedc1471af3a2f1e62fbd21ac802ed14ff5b2f6329a637308f65f1e47"
+    },
+    {
+      "path": "src/caelab_prep/application/__init__.py",
+      "sha256": "7707eee2063b2c99a9b5e5ecc7f259fd912766069e1c748e083c9fc3f7da463b"
+    },
+    {
+      "path": "src/caelab_prep/application/analysis_cases.py",
+      "sha256": "604d423215a181b3d91aa146c638dbeb653a3e9700e5f10e25f63e5a96e98e4e"
+    },
+    {
+      "path": "src/caelab_prep/application/contracts.py",
+      "sha256": "96624db56d8ce809d0bf56b22fbed513a7ba355a62ff4b8cfd306d88e7cab8ef"
+    },
+    {
+      "path": "src/caelab_prep/application/curve_csv.py",
+      "sha256": "eef41ddcf5cea288a428b5605a0cd618ef21d3ac3e17f60b630eecf01bf7d522"
+    },
+    {
+      "path": "src/caelab_prep/application/external_mesh.py",
+      "sha256": "1f32a50dadde72116ff135109fdb15b30b450d0732f34efd17eeb6f4e559b756"
+    },
+    {
+      "path": "src/caelab_prep/application/live_transport.py",
+      "sha256": "2eee1cb322354743760db13c86f9c6428036f554227c1c66bd83e0e5318ee7d2"
+    },
+    {
+      "path": "src/caelab_prep/application/mcp_server.py",
+      "sha256": "0a686db4b12fab27f0650dc10fa712f77f271af06daeebb373cd1daebd73a8b9"
+    },
+    {
+      "path": "src/caelab_prep/application/mesh_candidates.py",
+      "sha256": "7b32be594ef4150aaa2bbb77287798cf63672c477696e5fb11bc5071c38e3303"
+    },
+    {
+      "path": "src/caelab_prep/application/mesh_relations.py",
+      "sha256": "64994e86c5493a6acc7268dcaa6f1546eb865c887974ce71767f83fe19907886"
+    },
+    {
+      "path": "src/caelab_prep/application/model_relations.py",
+      "sha256": "efac59b4353729beb4f7a2206136df61dc5a89837f7c4983bb13e5500bb0171c"
+    },
+    {
+      "path": "src/caelab_prep/application/neutral.py",
+      "sha256": "1887e962da2eb4010b617d4432eef880dcfc6625cbd98f7c48dce729aa8747e1"
+    },
+    {
+      "path": "src/caelab_prep/application/projection.py",
+      "sha256": "42c8e633cc12966bccd1e79eb1c3c77467fa5efbf3c4c2d37da08c7a2ec6ca8b"
+    },
+    {
+      "path": "src/caelab_prep/application/rad_provider.py",
+      "sha256": "04b32a45e7aef9d7542c7753e42b01c096831b0d1568af3e12c49a533ceb63da"
+    },
+    {
+      "path": "src/caelab_prep/application/session.py",
+      "sha256": "886da084d7e8667cf7a297299c6f96bbe682f08503497aad69f83fd1ab01fab0"
+    },
+    {
+      "path": "src/caelab_prep/application/source_models.py",
+      "sha256": "78eb4688eda2cdc2e0a47d35c6ca9acc5a493fc1e13d59b6e7a5a059d805df25"
+    },
+    {
+      "path": "src/caelab_prep/application/storage.py",
+      "sha256": "96628538009023bb48284ca3cf90feda61472178b61faf684d7d1cb6f41abfc8"
+    },
+    {
+      "path": "src/caelab_prep/cae_core/__init__.py",
+      "sha256": "9f3492accb4f252d6a1957bdb3101ce2f41806c078c0fd81fc562ca98d51c081"
+    },
+    {
+      "path": "src/caelab_prep/cae_core/document.py",
+      "sha256": "9fd3a387fd836507bc9b3944d082dda2092d0f7229b455a15f3f682b0eb26ba3"
+    },
+    {
+      "path": "src/caelab_prep/cae_core/errors.py",
+      "sha256": "2c2931aaec1b958410b67a2338b93f1e8c5ad729ca4badcfe991ab825588b9b6"
+    },
+    {
+      "path": "src/caelab_prep/cli.py",
+      "sha256": "3a8795c0763498b6a3ce7d35b702f08790a154d26512d72d9f2772a9a05cc649"
+    },
+    {
+      "path": "src/caelab_prep/radioss/__init__.py",
+      "sha256": "c971eb69c1c7c05b75800c4f1a686b4c5837c7a1a17010fc6e65afe0dacafefe"
+    },
+    {
+      "path": "src/caelab_prep/radioss/assembly.py",
+      "sha256": "da91c2bffe76100ac74cc5b59eee37f162d9b188819e80a21f7e8e5d36d91add"
+    },
+    {
+      "path": "src/caelab_prep/radioss/deck.py",
+      "sha256": "29a6fdbe869316d888d4dd9fab9d5eddb285ab7ab7ccb2250c948615d518d5c8"
+    },
+    {
+      "path": "src/caelab_prep/radioss/modeling.py",
+      "sha256": "1407c6a7c444085c718aa430d54f3d95f2ae0878d89c82a02b1d38916501d582"
+    },
+    {
+      "path": "src/caelab_prep/radioss/relations.py",
+      "sha256": "cd7f4fad130293fa58e31541f80d105094c2162ef408b0b840f5f2d68468370d"
+    },
+    {
+      "path": "src/caelab_prep/ui/__init__.py",
+      "sha256": "5e574507234fffd6c4262c9ff4c68a818e2f2dabe5bad5ff697dca612ddbd5c7"
+    },
+    {
+      "path": "src/caelab_prep/ui/actions.py",
+      "sha256": "02ead108170be2d6b1de9e4d1ba62ea58b16fc3e6d7c97561e6fbc0fe7b617ed"
+    },
+    {
+      "path": "src/caelab_prep/ui/analysis_cases.py",
+      "sha256": "09ce043850a542c859074c5209f93de0174b3493768c8103b1ad862341903a48"
+    },
+    {
+      "path": "src/caelab_prep/ui/catalogue.py",
+      "sha256": "83d29ab026f8002c360a05d5aa8e105c72dacfe695d1bf69f75515093bde995d"
+    },
+    {
+      "path": "src/caelab_prep/ui/comparison.py",
+      "sha256": "cf362355f582ebcae8622faae9e62d3e8ceeed586416ea96e43a9ad2e6a8a031"
+    },
+    {
+      "path": "src/caelab_prep/ui/design/__init__.py",
+      "sha256": "8a79473150edbdfc44b3874b6aba5b4d2c3e187a37c62d6c870c5d071a4d4cd2"
+    },
+    {
+      "path": "src/caelab_prep/ui/design/appearance.py",
+      "sha256": "a7e528fdb31e241584a29bb1605ae166e4b6e01f56e7de5b522fbe50deaa8bad"
+    },
+    {
+      "path": "src/caelab_prep/ui/design/tokens.py",
+      "sha256": "5b68a4c0248d75f43e0e8c3c044a2a2e7f1438299a2f94a4f1062e6f260265ed"
+    },
+    {
+      "path": "src/caelab_prep/ui/gallery.py",
+      "sha256": "6915593c9592002800f976b7786e4095b9443d92923f692239b028c9623b0854"
+    },
+    {
+      "path": "src/caelab_prep/ui/live_control.py",
+      "sha256": "869d04efa55a1d86f8772a4ff752e8067f8a93894d44af818f28a289e47639ff"
+    },
+    {
+      "path": "src/caelab_prep/ui/main_window.py",
+      "sha256": "3dc7d349483d970a1b6387f9844c9548f49793d727ade31921cc488dbeda766d"
+    },
+    {
+      "path": "src/caelab_prep/ui/materials_workspace.py",
+      "sha256": "b6d9be5412b861c6e6eb5107455bb780979607be60631739b7b9ce6e8c636098"
+    },
+    {
+      "path": "src/caelab_prep/ui/mesh_import.py",
+      "sha256": "0d7426e648a996574d677048b907e806035d07676235db0840488ad3cc7918e9"
+    },
+    {
+      "path": "src/caelab_prep/ui/mesh_workflow.py",
+      "sha256": "f1b4f3e9496e004fe1484e24468ec5b07491c54059de354709da82fd3096d951"
+    },
+    {
+      "path": "src/caelab_prep/ui/modeling.py",
+      "sha256": "576b6043b4ca52568fb5a219da554d16053e0f13aeb9cdb39429d0a9003a8427"
+    },
+    {
+      "path": "src/caelab_prep/ui/prep_controller.py",
+      "sha256": "a5bc94b965e36cb98a3dce6eadc9c281f33cc6d42419f658ff5683415041c42b"
+    },
+    {
+      "path": "src/caelab_prep/ui/prep_workspace.py",
+      "sha256": "6c1429b5db5a251a856945c6296835c77de573605433826e8d37dd35a44cef4f"
+    },
+    {
+      "path": "src/caelab_prep/ui/reference_components.py",
+      "sha256": "09a28f235e8885b108bde30c962745617dcc9702465379702350e10cc4be8f8c"
+    },
+    {
+      "path": "src/caelab_prep/ui/reference_profiles.py",
+      "sha256": "dfb0d6cc4e2f685d1639a3b45ecb7414b5a16850b28c197cfe878a0399f17b44"
+    },
+    {
+      "path": "src/caelab_prep/ui/reference_workspace.py",
+      "sha256": "d0110631762960936c402e6bb0874dc8122d74aa42b06ce317b41b935aee3e92"
+    },
+    {
+      "path": "src/caelab_prep/ui/shell.py",
+      "sha256": "cb5b414bbf86a63fc4c847ef4b56d1844375c24416003d3d7bf4c295f18d592a"
+    },
+    {
+      "path": "src/caelab_prep/ui/source_models.py",
+      "sha256": "88eeb194ff0a2bf19c6cec29f1d10d00b6087ee2563fcb543b5ad172c0522ef8"
+    },
+    {
+      "path": "src/caelab_prep/ui/theme.py",
+      "sha256": "22e063fa5e3b84ca09145ddab31c0ba639f4654cff61781a9dabbccd02e2f5a1"
+    },
+    {
+      "path": "src/caelab_prep/ui/viewport.py",
+      "sha256": "ef12678b6a8ddef572a89707cd4295edff69c3277c2ff1803b275563dd52ea0d"
+    },
+    {
+      "path": "src/caelab_prep/ui/widgets/__init__.py",
+      "sha256": "c8c1b79c6368cb8e441c4dabef3fc4bfa4d31b10608cfb4492d7448ff7316506"
+    },
+    {
+      "path": "src/caelab_prep/ui/widgets/_curve_data.py",
+      "sha256": "166dce1e4b24b69685737758a20584531d749c2fa8763e0ab3774bd07747aea0"
+    },
+    {
+      "path": "src/caelab_prep/ui/widgets/_editing.py",
+      "sha256": "f5fe2be3b56421b7bb98e455f1f24085443e191edf81fdb3660fb0068d23d17b"
+    },
+    {
+      "path": "src/caelab_prep/ui/widgets/collections.py",
+      "sha256": "59ef3e7a6fa7d127d564a239edd217680f2d7a79e4138c61074baab4303cabbf"
+    },
+    {
+      "path": "src/caelab_prep/ui/widgets/curve.py",
+      "sha256": "588f1fa734fca44319d7d0d6d791b5e500f612699162708cbbe6ac00a118d349"
+    },
+    {
+      "path": "src/caelab_prep/ui/widgets/numeric.py",
+      "sha256": "0a8574c57688eced193c1364f329dcf0be8dd527f928cd1f56ae23e7b46d86ae"
+    },
+    {
+      "path": "src/caelab_prep/ui/widgets/properties.py",
+      "sha256": "02780d34c59b366696868a6f65ae434ab8ab45cfb7dd09609faccc2e41044e80"
+    },
+    {
+      "path": "src/caelab_prep/ui/widgets/tree.py",
+      "sha256": "11afb798ed5bb7d8e2f8416c7810f7256ff1f538eb6f68da92c0c4a4720d0411"
+    }
+  ]
+}

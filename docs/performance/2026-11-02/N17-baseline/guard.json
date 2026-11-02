@@ -1,0 +1,15 @@
+{
+  "returncode": 0,
+  "wall_seconds": 699.7587438800037,
+  "guard_reason": null,
+  "last_phase": [
+    "save_with_live_renderer",
+    1793580157.7337954
+  ],
+  "max_sampled_process_rss_bytes": 4154966016,
+  "sample_interval_seconds": 0.05,
+  "command": [
+    "<workspace>/envs/g3-gmsh/bin/python",
+    "<workspace>/audit/N17-baseline/baseline.py"
+  ]
+}

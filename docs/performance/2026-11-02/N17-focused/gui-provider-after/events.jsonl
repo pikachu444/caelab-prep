@@ -1,0 +1,2 @@
+{"event": "environment", "time": 1793582730.075229, "rss_bytes": 13234176, "peak_rss_bytes": 13238272, "host_pid": 90987, "namespace_pid": 10, "scope": "PART context cache focused GUI diagnostic; source-manifest.json pins source; not acceptance campaign"}
+{"event": "start", "time": 1793582730.1438267, "rss_bytes": 22364160, "peak_rss_bytes": 22212608, "phase": "focused_core_open"}

@@ -1,0 +1,13 @@
+{"event": "environment", "time": 1793581661.5136385, "rss_bytes": 13295616, "peak_rss_bytes": 13238272, "host_pid": 85887, "namespace_pid": 14, "scope": "Focused breakdown on prior N17-after frozen source; not another acceptance campaign"}
+{"event": "start", "time": 1793581661.5376976, "rss_bytes": 16232448, "peak_rss_bytes": 16121856, "phase": "focused_core_open"}
+{"event": "mesh_phase", "time": 1793581669.9806943, "rss_bytes": 1424596992, "peak_rss_bytes": 1424486400, "phase": "native_parse_and_merge", "seconds": 5.923769654997159}
+{"event": "mesh_phase", "time": 1793581670.3951712, "rss_bytes": 1438150656, "peak_rss_bytes": 1437986816, "phase": "validate_connectivity_and_sort_nodes", "seconds": 0.4141254670030321}
+{"event": "mesh_phase", "time": 1793581670.7559252, "rss_bytes": 1631420416, "peak_rss_bytes": 1631318016, "phase": "part_reference_resolution_and_per_cell_dict", "seconds": 0.36049744200136047}
+{"event": "mesh_phase", "time": 1793581681.1039457, "rss_bytes": 2504151040, "peak_rss_bytes": 2503995392, "phase": "recursive_readonly_freeze", "seconds": 10.347729442000855}
+{"event": "mesh_phase", "time": 1793581681.3241594, "rss_bytes": 2642759680, "peak_rss_bytes": 2642669568, "phase": "index_build", "seconds": 0.21981881199462805}
+{"event": "finish", "time": 1793581681.5511253, "rss_bytes": 2290503680, "peak_rss_bytes": 2642669568, "phase": "focused_core_open", "seconds": 20.01330985200184}
+{"event": "open_components", "time": 1793581681.5514188, "rss_bytes": 2290503680, "peak_rss_bytes": 2642669568, "samples": {"DeckResource.__init__.inclusive": {"count": 20, "sum_seconds": 1.6818439900016529}, "DeckResource.__init__.self": {"count": 20, "sum_seconds": 1.6818439900016529}, "DeckResource.mesh_projection.inclusive": {"count": 20, "sum_seconds": 5.155229647010856}, "DeckResource.mesh_projection.self": {"count": 20, "sum_seconds": 5.155229647010856}, "native_parse_and_merge": {"count": 1, "sum_seconds": 5.923769654997159}, "validate_connectivity_and_sort_nodes": {"count": 1, "sum_seconds": 0.4141254670030321}, "part_reference_resolution_and_per_cell_dict": {"count": 1, "sum_seconds": 0.36049744200136047}, "recursive_readonly_freeze": {"count": 1, "sum_seconds": 10.347729442000855}, "index_build": {"count": 1, "sum_seconds": 0.21981881199462805}}}
+Traceback (most recent call last):
+  File "<workspace>/audit/N17-focused/baseline.py", line 70, in <module>
+    from caelab_prep.application.rad_provider import RadPropertyProvider
+ImportError: cannot import name 'RadPropertyProvider' from 'caelab_prep.application.rad_provider' (<workspace>/audit/N17-focused/snapshot/src/caelab_prep/application/rad_provider.py)
