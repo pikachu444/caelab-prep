@@ -1,0 +1,42 @@
+{
+  "status": "frozen WIP; no common core hooks or UI/native adoption",
+  "files": [
+    {
+      "path": "src/caelab_prep/application/structured_geometry.py",
+      "sha256": "b59cbf222c78cbc300689b10134de69af8c8eb5e9b0f2887c9e4b520d50ec183",
+      "lines": 543
+    },
+    {
+      "path": "src/caelab_prep/application/structured_mesh.py",
+      "sha256": "d728d5ef7c9aae7e931e81eff46bcb0cb626ccd62075a7a4f48c8e28e82f3473",
+      "lines": 305
+    },
+    {
+      "path": "src/caelab_prep/application/structured_mesh_worker.py",
+      "sha256": "9bc7ace10716d874e2300a9c8a67691c71bc6a5e3d6afb83bc9118c9e4261de4",
+      "lines": 281
+    },
+    {
+      "path": "tests/test_structured_geometry.py",
+      "sha256": "1b409aa8c590352323586cdb55d9c709d4d57dcc822f4484ad2ad9cb82188194",
+      "lines": 82
+    },
+    {
+      "path": "tests/test_structured_mesh.py",
+      "sha256": "13160a8c207620e2dd2f8c59c0471d4b12002dc98d3c49f9bdc78fa623e32a46",
+      "lines": 83
+    }
+  ],
+  "checks": {
+    "initial_geometry_and_real_candidates": "19 passed in 2.47s; exactly two Gmsh generations",
+    "after_json_receipt_hardening": "15 pure tests passed in 0.20s; same two existing candidates re-read successfully; failed receipts rejected before inspection",
+    "git_diff_check": "passed"
+  },
+  "remaining_hooks": [
+    "validate_native_mesh structured_recipe dispatch",
+    "typed cell kind and source-scoped quality policy; preserve CAD/standalone family restrictions",
+    "kind-specific native precision check/writer/property/group selection",
+    "actual native/Undo/save/reopen/export/GUI integration"
+  ],
+  "owned_processes": "All launched generation/inspection child processes completed; no long-running job left by these tests."
+}
