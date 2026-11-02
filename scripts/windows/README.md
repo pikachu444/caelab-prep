@@ -45,15 +45,16 @@ powershell -ExecutionPolicy Bypass -File scripts\windows\run_windows_verificatio
 
 | 파라미터 | 기본값 | 의미 |
 |---|---|---|
-| `-PrepSha` | `531e02394694019511df2b38e3d3f7cb2140b254` | 기준 Prep 커밋(접두어 허용). full SHA와 비교된다. |
+| `-PrepSha` | `531e02394694019511df2b38e3d3f7cb2140b254` | 기준 Prep 커밋. hex commit 표현으로 검증한 뒤 Git이 해석한 full SHA(`git rev-parse --verify <sha>^{commit}`)와 정확히 대조한다. |
 | `-WorkbenchSha` | `865ee159c9bd1375d996a72eacf898484f1d96cb` | 기준 Workbench 커밋. `-WorkbenchDir`를 줄 때만 비교한다. |
 | `-PythonPath` | `python` | 검증에 사용할 네이티브 Python 실행 파일. |
 | `-PrepDir` | 스크립트 기준 저장소 루트 | Prep 작업 복사본 경로. |
-| `-WorkbenchDir` | (빈 값) | Workbench 작업 복사본 경로. W1 상세 기록과 W3에 사용. |
+| `-WorkbenchDir` | (빈 값) | Workbench 작업 복사본 경로. W1 precheck 상세 기록에 사용. 미지급 시 매니페스트의 `repos.workbench`는 `null`이다. |
 | `-OutputDir` | `%TEMP%\caelab-windows-verification-<시각>` | 매니페스트·로그·작업 디렉터리가 만들어지는 곳. |
 | `-SolverPath` | (빈 값) | 실제 솔버 실행 파일(W3). 주어지면 SHA256을 기록한다. |
 | `-SolverArguments` | (빈 값) | 솔버 인수. `{deck}` 자리에 Starter 덱 경로가 들어간다. |
-| `-RunSolver` | 스위치 | 실제 솔버 구동을 수행한다. 없으면 W3의 솔버 구동은 `unexecuted`로 남는다. |
+| `-RunSolver` | 스위치 | 솔버 스모크 구동을 수행한다. 없으면 `prep_export_solver_smoke`는 `partial`로 남는다. |
+| `-W3EndTime` / `-W3OutputInterval` | `0.001` / `0.0001` | `export --engine` 필수 인수(현재 CLI 계약). |
 | `-TimeoutSeconds` | `1800` | pytest·솔버 등 장시간 자식 프로세스의 제한 시간. |
 
 ## 수집하는 것
@@ -61,12 +62,15 @@ powershell -ExecutionPolicy Bypass -File scripts\windows\run_windows_verificatio
 - **Git 상태**: `git rev-parse HEAD`(40자 full SHA), `git status --porcelain`의 dirty 여부, 요청 SHA와의
   일치(`sha_matched`). SHA 불일치·dirty는 전체 결과를 `failed`로 만들고 성공으로 기록하지 않는다.
 - **환경**: Python 버전, PySide6 버전, git 버전, OS, 시스템 DPI(읽기만 수행).
-- **W1**: Prep 패키지의 공용 `NumericEdit` 위젯 import. Workbench의 `study_config.py`가
+- **W1-PRECHECK**(사전 점검): Prep 패키지의 공용 `NumericEdit` 위젯 import. Workbench의 `study_config.py`가
   `PrepNumericEdit`을 소비하는지도 함께 기록한다.
-- **W2**: 기준 모델(`scripts/evaluation/models/two_shell_plates_0000.rad`)의 복사본을 두 프로세스 CLI로
+- **W2-PRECHECK**(사전 점검): 기준 모델(`scripts/evaluation/models/two_shell_plates_0000.rad`)의 복사본을 두 프로세스 CLI로
   `fields → edit(young_modulus 205000) → fields → export → 재조회` 왕복시키고, 원본 복사본의 SHA256 불변을 확인한다.
-- **W3**: Prep `export --engine`으로 Starter/Engine 입력 덱을 만들고, `-RunSolver`가 주어지면 실제 솔버를
-  `{deck}`에 덱을 넣어 구동한다(시간 초과 시 프로세스 트리 정리).
+- **prep_export_solver_smoke**: Prep `export --engine --end-time --output-interval`로 Starter/Engine 입력 덱을 만들고,
+  `-RunSolver`가 주어지면 솔버를 `{deck}`에 덱을 넣어 단일 스모크 구동한다(시간 초과 시 프로세스 트리 정리).
+  이는 **Workbench W3 판정이 아니다.**
+- **W3**: Workbench JobManager의 Starter→Engine 2단계 실행·실패·취소·재실행 실측. 이 러너는 수행하지 않으며
+  후속 일괄 검증까지 `unexecuted`로 유지한다.
 - **T1~T6**: DESIGN.md의 제품 목표에 대응하는 `tests/` 파일 묶음을 pytest로 구분 실행한다.
 - **PATH-KO-SPACE**: 한글·공백 경로에서 파일 시스템 해시 왕복과 Prep CLI `new` 생성을 확인한다.
 - **CORRUPT-ISOLATION**: 손상된 `.caeprep`(유효하지 않은 manifest.json을 가진 ZIP)이 미처리 예외가 아니라

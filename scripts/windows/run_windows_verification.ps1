@@ -14,6 +14,8 @@ param(
   [string]$SolverPath = '',
   [string]$SolverArguments = '',
   [switch]$RunSolver,
+  [double]$W3EndTime = 0.001,
+  [double]$W3OutputInterval = 0.0001,
   [int]$TimeoutSeconds = 1800
 )
 
@@ -177,6 +179,7 @@ function Get-GitState {
     porcelain_entries = @()
     sha_matched = $false
     requested_sha = $RequestedSha
+    requested_sha_resolved = $null
     git_error = ''
   }
   if (-not (Test-Path (Join-Path $Dir '.git'))) {
@@ -195,7 +198,18 @@ function Get-GitState {
   $state['porcelain_entries'] = $lines
   $state['dirty'] = ($lines.Count -gt 0)
   if ($RequestedSha) {
-    $state['sha_matched'] = ($head -like ("{0}*" -f $RequestedSha))
+    # 와일드카드 비교 대신 hex commit 표현 검증 후 Git으로 해석한 full SHA와 정확 대조한다.
+    if ($RequestedSha -notmatch '^[0-9a-fA-F]{7,40}$') {
+      $state['git_error'] = 'requested SHA is not a valid hex commit expression'
+      return $state
+    }
+    $resolved = (& git -C $Dir rev-parse --verify ("{0}^{{commit}}" -f $RequestedSha) 2>&1 | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0) {
+      $state['git_error'] = ('requested SHA did not resolve to a commit: ' + $resolved)
+      return $state
+    }
+    $state['requested_sha_resolved'] = $resolved
+    $state['sha_matched'] = ($resolved -ieq $head)
   }
   return $state
 }
@@ -211,9 +225,10 @@ function New-RunnerProbeScript {
 # ---------------------------------------------------------------- 러너 본체
 
 Write-Log ('Windows verification runner started. OutputDir=' + $OutputDir)
-Add-Check 'W1' 'Prep 공용 NumericEdit 위젯을 Prep 패키지에서 직접 import (Workbench W1 소비 계약의 기반)'
-Add-Check 'W2' 'RAD 모델 복사본의 두 프로세스 CLI 왕복(fields-edit-fields-export-재조회)과 원본 보존 확인'
-Add-Check 'W3' 'Starter/Engine 입력 덱 생성과 (요청 시) 실제 솔버 구동'
+Add-Check 'W1-PRECHECK' '사전 점검(precheck): Prep 공용 NumericEdit 위젯 import와 Workbench 소비 근거 기록 — W1 완전 합격이 아니다'
+Add-Check 'W2-PRECHECK' '사전 점검(precheck): RAD 모델 복사본의 두 프로세스 CLI 왕복과 원본 보존 — Workbench 독립 앱 전달 실측이 아니다'
+Add-Check 'W3' 'Workbench JobManager의 Starter→Engine 2단계 실행·실패·취소·재실행 실측 (이 러너는 수행하지 않는다)'
+Add-Check 'prep_export_solver_smoke' 'Prep export --engine 덱 생성과 (요청 시) 솔버 단일 스모크 구동 — Workbench W3 판정과 별개'
 Add-Check 'T1' '탐색·선택·표시 관련 회귀 검사'
 Add-Check 'T2' '재료·단면·파트 관련 회귀 검사'
 Add-Check 'T3' '표·곡선·단위 관련 회귀 검사'
@@ -293,12 +308,12 @@ print(json.dumps({"system_dpi": result}))
   }
   Write-Log ('Prep git: full=' + $prepGit['full_sha'] + ' dirty=' + $prepGit['dirty'] + ' matched=' + $prepGit['sha_matched'])
 
-  # ---------------------------------------------------------------- W1
+  # ---------------------------------------------------------------- W1-PRECHECK
   $w1 = Invoke-PrepPython -Arguments '-c "from caelab_prep.ui.widgets.numeric import NumericEdit; print(NumericEdit.__name__)"' `
     -WorkingDirectory $script:WorkDir -Label 'w1-numeric' -TimeoutSeconds 120
   if ($environment['pyside6_version'] -eq '') {
-    Set-Check -Id 'W1' -Status 'unexecuted' `
-      -Detail 'PySide6가 이 Python 환경에 없어 위젯 import 시험을 실행하지 않았다. widgets 추가 의존성 설치 후 다시 실행하라.'
+    Set-Check -Id 'W1-PRECHECK' -Status 'unexecuted' `
+      -Detail 'PySide6가 이 Python 환경에 없어 위젯 import 사전 점검을 실행하지 않았다. widgets 추가 의존성 설치 후 다시 실행하라.'
   } elseif ($w1['exit_code'] -eq 0) {
     $w1Evidence = $w1
     if ($WorkbenchDir) {
@@ -309,16 +324,18 @@ print(json.dumps({"system_dpi": result}))
         $w1Evidence['workbench_consumes_prep_numeric_edit'] = $studyContent.Contains('PrepNumericEdit')
       }
     }
-    Set-Check -Id 'W1' -Status 'passed' -Detail 'NumericEdit import 성공.' -Evidence $w1Evidence
+    Set-Check -Id 'W1-PRECHECK' -Status 'passed' `
+      -Detail '사전 점검(precheck) 통과: NumericEdit import 성공. 실제 Workbench 위젯 소비 경로는 아니므로 W1 완전 합격이 아니다.' `
+      -Evidence $w1Evidence
   } else {
-    Set-Check -Id 'W1' -Status 'failed' -Detail 'NumericEdit import 실패. stderr를 evidence로 남긴다.' -Evidence $w1
+    Set-Check -Id 'W1-PRECHECK' -Status 'failed' -Detail 'NumericEdit import 사전 점검 실패. stderr를 evidence로 남긴다.' -Evidence $w1
   }
 
-  # ---------------------------------------------------------------- W2
+  # ---------------------------------------------------------------- W2-PRECHECK
   $w2Dir = Join-Path $script:WorkDir 'w2'
   New-Item -ItemType Directory -Force -Path $w2Dir | Out-Null
   if (-not (Test-Path $modelAsset)) {
-    Set-Check -Id 'W2' -Status 'unexecuted' -Detail ('기준 모델 자산이 없어 왕복 시험을 실행하지 않았다: ' + $modelAsset)
+    Set-Check -Id 'W2-PRECHECK' -Status 'unexecuted' -Detail ('기준 모델 자산이 없어 왕복 사전 점검을 실행하지 않았다: ' + $modelAsset)
   } else {
     $modelCopy = Join-Path $w2Dir 'model_0000.rad'
     Copy-Item -Path $modelAsset -Destination $modelCopy
@@ -387,9 +404,11 @@ print(json.dumps({"system_dpi": result}))
     }
 
     if ($w2Ok) {
-      Set-Check -Id 'W2' -Status 'passed' -Detail ('두 프로세스 왕복 통과. ' + ($steps -join '; ')) -Evidence $w2Evidence
+      Set-Check -Id 'W2-PRECHECK' -Status 'passed' `
+        -Detail ('사전 점검(precheck) 통과: 두 프로세스 CLI 왕복 성공. Workbench의 독립 앱 전달 실측이 아니므로 W2 완전 합격이 아니다. ' + ($steps -join '; ')) `
+        -Evidence $w2Evidence
     } else {
-      Set-Check -Id 'W2' -Status 'failed' -Detail ('W2 왕복 실패: ' + $w2Detail + ' | ' + ($steps -join '; ')) -Evidence $w2Evidence
+      Set-Check -Id 'W2-PRECHECK' -Status 'failed' -Detail ('W2 사전 점검 실패: ' + $w2Detail + ' | ' + ($steps -join '; ')) -Evidence $w2Evidence
     }
   }
 
@@ -414,7 +433,9 @@ ok = hashlib.sha256(read_back).hexdigest() == digest and read_back == payload
 print("PATH_PROBE_OK" if ok else "PATH_PROBE_FAILED")
 '@
   $probeFile = New-RunnerProbeScript -Name 'path-probe.py' -Source $pathProbeSource
-  $pathProbe = Invoke-PrepPython -Arguments (Format-Argument $probeFile) `
+  # probe는 sys.argv[1]로 대상 경로를 받는다. 스크립트 경로와 대상 경로를 반드시 함께 전달한다.
+  $pathProbeArgs = (Format-Argument $probeFile) + ' ' + (Format-Argument $script:WorkDir)
+  $pathProbe = Invoke-PrepPython -Arguments $pathProbeArgs `
     -WorkingDirectory $script:WorkDir -Label 'path-probe' -TimeoutSeconds 120
   $newDoc = Join-Path $koDir 'roundtrip.caeprep'
   $newCliArgs = '-m caelab_prep new --name roundtrip --mass Mg --length mm --time s --output ' + (Format-Argument $newDoc)
@@ -441,28 +462,41 @@ with zipfile.ZipFile(target, "w") as archive:
     archive.writestr("members/broken.rad", "BROKEN")
 '@
   $corruptGenerator = New-RunnerProbeScript -Name 'corrupt-probe.py' -Source $corruptSource
-  $makeCorrupt = Invoke-PrepPython -Arguments (Format-Argument $corruptGenerator) `
+  # probe는 sys.argv[1]로 대상 파일 경로를 받는다. 스크립트 경로와 대상 경로를 반드시 함께 전달한다.
+  $makeCorruptArgs = (Format-Argument $corruptGenerator) + ' ' + (Format-Argument $corruptFile)
+  $makeCorrupt = Invoke-PrepPython -Arguments $makeCorruptArgs `
     -WorkingDirectory $script:WorkDir -Label 'corrupt-make'
   if ($makeCorrupt['exit_code'] -ne 0 -or -not (Test-Path $corruptFile)) {
     Set-Check -Id 'CORRUPT-ISOLATION' -Status 'unexecuted' -Detail '손상 파일 생성에 실패해 격리 시험을 실행하지 않았다.'
   } else {
     $inspectArgs = '-m caelab_prep inspect ' + (Format-Argument $corruptFile)
+    $corruptHashBefore = (Get-FileHash -Path $corruptFile -Algorithm SHA256).Hash
     $inspect = Invoke-PrepPython -Arguments $inspectArgs -WorkingDirectory $script:WorkDir -Label 'corrupt-inspect'
+    $corruptHashAfter = (Get-FileHash -Path $corruptFile -Algorithm SHA256).Hash
+    $fileUnchanged = ($corruptHashBefore -eq $corruptHashAfter)
     $structuredError = $false
+    $errorCode = ''
     if ($inspect['exit_code'] -ne 0) {
       try {
         $errorJson = Get-JsonFromFile -Path (Join-Path $script:WorkDir 'corrupt-inspect.stdout.txt')
-        $structuredError = ($null -ne $errorJson.error)
+        if ($null -ne $errorJson.error) {
+          $structuredError = $true
+          $errorCode = [string]$errorJson.error.code
+        }
       } catch {
         $structuredError = $false
       }
     }
     $noTraceback = (-not $inspect['stderr_tail'].Contains('Traceback'))
-    if ($inspect['exit_code'] -ne 0 -and $noTraceback) {
-      Set-Check -Id 'CORRUPT-ISOLATION' -Status 'passed' -Detail '손상 문서가 비영(非零) 종료 코드와 트레이스백 없음으로 격리됐다.' `
-        -Evidence @{ structured_error = $structuredError; inspect = $inspect }
+    $expectedCode = 'invalid_project'
+    # 합격 조건: 비영 종료 + 트레이스백 없음 + 구조화 오류 존재 + 예상 오류 코드 일치 + 대상 파일 불변
+    if ($inspect['exit_code'] -ne 0 -and $noTraceback -and $structuredError -and ($errorCode -eq $expectedCode) -and $fileUnchanged) {
+      Set-Check -Id 'CORRUPT-ISOLATION' -Status 'passed' `
+        -Detail ('손상 문서가 예상된 구조화 오류(' + $expectedCode + ')로 격리됐고 대상 파일은 불변이다.') `
+        -Evidence @{ structured_error = $structuredError; error_code = $errorCode; expected_code = $expectedCode; file_unchanged = $fileUnchanged; inspect = $inspect }
     } else {
-      Set-Check -Id 'CORRUPT-ISOLATION' -Status 'failed' -Detail ('손상 문서가 미처리 예외처럼 진행됐다: exit=' + $inspect['exit_code'] + ' traceback=' + (-not $noTraceback)) `
+      Set-Check -Id 'CORRUPT-ISOLATION' -Status 'failed' `
+        -Detail ('손상 문서 격리 계약 미충족: exit=' + $inspect['exit_code'] + ' structuredError=' + $structuredError + ' errorCode=' + $errorCode + ' expected=' + $expectedCode + ' traceback=' + (-not $noTraceback) + ' fileUnchanged=' + $fileUnchanged) `
         -Evidence @{ inspect = $inspect }
     }
   }
@@ -487,28 +521,75 @@ with zipfile.ZipFile(target, "w") as archive:
   foreach ($tId in @('T1', 'T2', 'T3', 'T4', 'T5', 'T6')) {
     $testsRoot = Join-Path $PrepDir 'tests'
     $existing = @($testMap[$tId] | Where-Object { Test-Path (Join-Path $testsRoot $_) })
+    $missing = @($testMap[$tId] | Where-Object { -not (Test-Path (Join-Path $testsRoot $_)) })
     if ($existing.Count -eq 0) {
       Set-Check -Id $tId -Status 'unexecuted' -Detail ('저장소 tests/에서 매핑된 검사 파일을 찾지 못했다: ' + $checkTitles[$tId])
       continue
     }
-    $relative = ($existing | ForEach-Object { 'tests/' + $_ }) -join ' '
-    $pytestArgs = '-m pytest -q ' + $relative
-    $pytest = Invoke-PrepPython -Arguments $pytestArgs -WorkingDirectory $PrepDir -TimeoutSeconds $TimeoutSeconds -Label ($tId.ToLower() + '-pytest')
-    if ($pytest['exit_code'] -eq 0) {
-      Set-Check -Id $tId -Status 'passed' -Detail ($checkTitles[$tId] + ' 관련 pytest 통과.') -Evidence $pytest
-    } else {
-      Set-Check -Id $tId -Status 'failed' -Detail ($checkTitles[$tId] + ' 관련 pytest 실패(exit=' + $pytest['exit_code'] + ').') -Evidence $pytest
+    if ($missing.Count -gt 0) {
+      # 없는 파일을 조용히 제외하지 않는다. 누락을 기록하고 미실행으로 남긴다.
+      Set-Check -Id $tId -Status 'unexecuted' -Detail ('매핑된 검사 파일 일부가 누락되어 실행하지 않았다: ' + ($missing -join ', '))
+      continue
     }
+    $relative = ($existing | ForEach-Object { 'tests/' + $_ }) -join ' '
+    $junitPath = Join-Path $script:WorkDir ($tId.ToLower() + '-junit.xml')
+    $pytestArgs = '-m pytest -q ' + $relative + ' --junitxml=' + (Format-Argument $junitPath)
+    $pytest = Invoke-PrepPython -Arguments $pytestArgs -WorkingDirectory $PrepDir -TimeoutSeconds $TimeoutSeconds -Label ($tId.ToLower() + '-pytest')
+    if ($pytest['stderr_tail'].Contains('No module named pytest')) {
+      Set-Check -Id $tId -Status 'unexecuted' -Detail '이 Python 환경에 pytest가 없어 실행하지 않았다. dev 의존성 설치 후 다시 실행하라.' -Evidence $pytest
+      continue
+    }
+    $counts = @{ tests = 0; failures = 0; errors = 0; skipped = 0 }
+    $junitReadable = $false
+    if (Test-Path $junitPath) {
+      try {
+        $junitXml = [xml](Get-Content -Path $junitPath -Raw)
+        $suites = @($junitXml.testsuites.testsuite)
+        if ($suites.Count -eq 0 -and $junitXml.testsuite) { $suites = @($junitXml.testsuite) }
+        $suites = @($suites | Where-Object { $_ -ne $null })
+        if ($suites.Count -gt 0) {
+          foreach ($suite in $suites) {
+            $counts['tests'] += [int]$suite.tests
+            $counts['failures'] += [int]$suite.failures
+            $counts['errors'] += [int]$suite.errors
+            $counts['skipped'] += [int]$suite.skipped
+          }
+          $junitReadable = $true
+        }
+      } catch {
+        $junitReadable = $false
+      }
+    }
+    $pytest['junit_xml'] = $junitPath
+    $pytest['junit_readable'] = $junitReadable
+    $pytest['junit_counts'] = $counts
+    if (-not $junitReadable) {
+      Set-Check -Id $tId -Status 'failed' -Detail 'JUnit 결과를 읽을 수 없어 실제 실행 수를 확인하지 못했다. passed로 기록하지 않는다.' -Evidence $pytest
+      continue
+    }
+    if ($counts['tests'] -eq 0) {
+      Set-Check -Id $tId -Status 'unexecuted' -Detail '수집된 검사가 0건이다. pytest exit 0과 무관하게 미실행으로 기록한다.' -Evidence $pytest
+      continue
+    }
+    if ($pytest['exit_code'] -ne 0 -or $counts['failures'] -gt 0 -or $counts['errors'] -gt 0) {
+      Set-Check -Id $tId -Status 'failed' -Detail ($checkTitles[$tId] + ' 관련 pytest 실패(exit=' + $pytest['exit_code'] + ', failures=' + $counts['failures'] + ', errors=' + $counts['errors'] + ').') -Evidence $pytest
+      continue
+    }
+    if ($counts['skipped'] -gt 0) {
+      Set-Check -Id $tId -Status 'partial' -Detail ($checkTitles[$tId] + ': ' + $counts['tests'] + '건 중 ' + $counts['skipped'] + '건 skip. 전부 실행된 통과가 아니므로 partial로 기록한다.') -Evidence $pytest
+      continue
+    }
+    Set-Check -Id $tId -Status 'passed' -Detail ($checkTitles[$tId] + ' 관련 pytest 통과(' + $counts['tests'] + '건, skip 0).') -Evidence $pytest
   }
 
-  # ---------------------------------------------------------------- W3
+  # ---------------------------------------------------------------- W3 (Workbench 소유 경로) 와 prep 솔버 스모크 분리
   if (-not $SolverPath -or -not $WorkbenchDir) {
-    Set-Check -Id 'W3' -Status 'unexecuted' `
-      -Detail 'SolverPath 또는 WorkbenchDir 인수가 없어 W3를 실행하지 않았다. 최종 일괄 검증 때 두 인수를 고정해 제공하라.'
+    Set-Check -Id 'prep_export_solver_smoke' -Status 'unexecuted' `
+      -Detail 'SolverPath 또는 WorkbenchDir 인수가 없어 prep-export/솔버 스모크를 실행하지 않았다. 최종 일괄 검증 때 인수를 고정해 제공하라.'
   } elseif (-not (Test-Path $SolverPath)) {
-    Set-Check -Id 'W3' -Status 'failed' -Detail ('SolverPath가 존재하지 않는다: ' + $SolverPath)
+    Set-Check -Id 'prep_export_solver_smoke' -Status 'failed' -Detail ('SolverPath가 존재하지 않는다: ' + $SolverPath)
   } elseif (-not (Test-Path $modelAsset)) {
-    Set-Check -Id 'W3' -Status 'unexecuted' -Detail ('기준 모델 자산이 없어 덱 생성을 실행하지 않았다: ' + $modelAsset)
+    Set-Check -Id 'prep_export_solver_smoke' -Status 'unexecuted' -Detail ('기준 모델 자산이 없어 덱 생성을 실행하지 않았다: ' + $modelAsset)
   } else {
     $w3Dir = Join-Path $script:WorkDir 'w3'
     New-Item -ItemType Directory -Force -Path $w3Dir | Out-Null
@@ -519,12 +600,15 @@ with zipfile.ZipFile(target, "w") as archive:
     $w3Status = 'unexecuted'
     $w3Detail = ''
 
+    $endTimeText = [string]$W3EndTime
+    $intervalText = [string]$W3OutputInterval
     $editArgs = '-m caelab_prep edit ' + (Format-Argument $w3Model) + ' --card /MAT/PLAS_TAB/1 --field young_modulus --value 205000 --output ' + (Format-Argument (Join-Path $w3Dir 'w3.caeprep'))
     $edit = Invoke-PrepPython -Arguments $editArgs -WorkingDirectory $w3Dir -Label 'w3-edit'
     $starterPath = Join-Path $w3Dir 'starter_0000.rad'
     $deckExport = $null
     if ($edit['exit_code'] -eq 0) {
-      $exportArgs = '-m caelab_prep export ' + (Format-Argument (Join-Path $w3Dir 'w3.caeprep')) + ' --engine --output ' + (Format-Argument $starterPath)
+      # 현재 CLI 계약: export --engine은 --end-time과 --output-interval이 필수다.
+      $exportArgs = '-m caelab_prep export ' + (Format-Argument (Join-Path $w3Dir 'w3.caeprep')) + ' --engine --end-time ' + $endTimeText + ' --output-interval ' + $intervalText + ' --output ' + (Format-Argument $starterPath)
       $deckExport = Invoke-PrepPython -Arguments $exportArgs -WorkingDirectory $w3Dir -Label 'w3-export'
       $w3Evidence['deck_export_exit_code'] = $deckExport['exit_code']
     }
@@ -532,8 +616,8 @@ with zipfile.ZipFile(target, "w") as archive:
       $w3Status = 'failed'
       $w3Detail = 'Starter/Engine 덱 생성에 실패했다.'
     } elseif (-not $RunSolver) {
-      $w3Status = 'unexecuted'
-      $w3Detail = 'Starter/Engine 덱 생성은 통과했고, 실제 솔버 구동은 RunSolver 스위치가 없어 후속 일괄 검증으로 남긴다.'
+      $w3Status = 'partial'
+      $w3Detail = '덱 생성은 통과했고, 솔버 스모크 구동은 RunSolver 스위치가 없어 미실행으로 남긴다.'
     } else {
       $solverArguments = $SolverArguments -replace '\{deck\}', $starterPath
       $solverRun = Invoke-ChildProcess -FilePath $SolverPath -ArgumentList $solverArguments `
@@ -544,17 +628,22 @@ with zipfile.ZipFile(target, "w") as archive:
       $w3Evidence['solver_run'] = $solverRun
       if ($solverRun['timed_out']) {
         $w3Status = 'failed'
-        $w3Detail = '솔버 구동이 시간을 초과해 프로세스 트리를 정리했다.'
+        $w3Detail = '솔버 스모크가 시간을 초과해 프로세스 트리를 정리했다.'
       } elseif ($solverRun['exit_code'] -eq 0) {
         $w3Status = 'passed'
-        $w3Detail = 'Starter/Engine 덱 생성과 실제 솔버 구동이 모두 통과했다.'
+        $w3Detail = '덱 생성과 솔버 단일 스모크가 통과했다. 이는 Workbench W3 판정이 아니다.'
       } else {
         $w3Status = 'failed'
-        $w3Detail = ('솔버 구동이 실패했다: exit=' + $solverRun['exit_code'])
+        $w3Detail = ('솔버 스모크가 실패했다: exit=' + $solverRun['exit_code'])
       }
     }
-    Set-Check -Id 'W3' -Status $w3Status -Detail $w3Detail -Evidence $w3Evidence
+    Set-Check -Id 'prep_export_solver_smoke' -Status $w3Status -Detail $w3Detail -Evidence $w3Evidence
   }
+
+  # Workbench W3의 실제 판정 경로(JobManager Starter→Engine 2단계, 실패·취소·재실행)는
+  # 이 러너가 수행하지 않는다. 후속 일괄 검증에서 실제 WB 경로로 수행할 때까지 미실행으로 남는다.
+  Set-Check -Id 'W3' -Status 'unexecuted' `
+    -Detail 'Workbench JobManager의 Starter→Engine 2단계 실행·실패·취소·재실행 실측은 이 러너가 수행하지 않는다. Prep 덱 생성·솔버 스모크는 별도 항목(prep_export_solver_smoke)으로 기록되며 W3 합격으로 세지 않는다.'
 } catch {
   $script:FatalError = ('runner aborted: ' + $_.Exception.Message + ' @ ' + $_.InvocationInfo.PositionMessage)
   Write-Log $script:FatalError
@@ -573,6 +662,7 @@ if ($prepGit -eq $null) {
 
 $failedChecks = @($script:Checks | Where-Object { $_['status'] -eq 'failed' })
 $unexecutedChecks = @($script:Checks | Where-Object { $_['status'] -eq 'unexecuted' })
+$partialChecks = @($script:Checks | Where-Object { $_['status'] -eq 'partial' })
 
 $reposOk = $prepGit['sha_matched'] -and (-not $prepGit['dirty']) -and $prepGit['full_sha']
 if ($workbenchGit) {
@@ -581,7 +671,7 @@ if ($workbenchGit) {
 
 if ((-not $reposOk) -or ($failedChecks.Count -gt 0) -or $script:FatalError) {
   $overallStatus = 'failed'
-} elseif ($unexecutedChecks.Count -gt 0) {
+} elseif (($unexecutedChecks.Count -gt 0) -or ($partialChecks.Count -gt 0)) {
   $overallStatus = 'partial'
 } else {
   $overallStatus = 'success'

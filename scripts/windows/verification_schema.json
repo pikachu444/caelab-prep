@@ -56,7 +56,13 @@
       "additionalProperties": false,
       "properties": {
         "prep": { "$ref": "#/$defs/gitState" },
-        "workbench": { "$ref": "#/$defs/gitState" }
+        "workbench": {
+          "description": "WorkbenchDir 미지급 시 null. 이때 Workbench 관련 검사는 unexecuted로 기록된다.",
+          "anyOf": [
+            { "$ref": "#/$defs/gitState" },
+            { "type": "null" }
+          ]
+        }
       }
     },
     "paths": {
@@ -104,9 +110,14 @@
         },
         "sha_matched": {
           "type": "boolean",
-          "description": "요청 SHA(접두어 허용)가 full commit SHA와 일치하면 true. 불일치 또는 미확인이면 false이며 전체 결과는 성공이 될 수 없다."
+          "description": "요청 SHA를 Git으로 해석한 full commit SHA가 실제 HEAD와 정확히 일치하면 true. 불일치 또는 미확인이면 false이며 전체 결과는 성공이 될 수 없다."
         },
         "requested_sha": { "type": "string" },
+        "requested_sha_resolved": {
+          "description": "요청 SHA(접두어 허용)를 git rev-parse --verify로 해석한 full commit SHA. 해석 실패 시 null.",
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{40}$"
+        },
         "git_error": { "type": "string" }
       }
     },
@@ -117,7 +128,7 @@
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
-        "status": { "enum": ["passed", "failed", "unexecuted"] },
+        "status": { "enum": ["passed", "failed", "unexecuted", "partial"] },
         "detail": { "type": "string" },
         "evidence": { "type": "object" }
       }
