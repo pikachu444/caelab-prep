@@ -330,6 +330,8 @@ print(json.dumps({"system_dpi": result}))
   } else {
     Set-Check -Id 'W1-PRECHECK' -Status 'failed' -Detail 'NumericEdit import 사전 점검 실패. stderr를 evidence로 남긴다.' -Evidence $w1
   }
+  Set-Check -Id 'W1' -Status 'unexecuted' `
+    -Detail 'Workbench GUI 상의 실제 위젯 소비 및 도킹 실측은 이 러너가 수행하지 않는다. NumericEdit import 점검은 W1-PRECHECK로 분리 기록되며 실제 W1 합격으로 치환하지 않는다.'
 
   # ---------------------------------------------------------------- W2-PRECHECK
   $w2Dir = Join-Path $script:WorkDir 'w2'
@@ -411,6 +413,8 @@ print(json.dumps({"system_dpi": result}))
       Set-Check -Id 'W2-PRECHECK' -Status 'failed' -Detail ('W2 사전 점검 실패: ' + $w2Detail + ' | ' + ($steps -join '; ')) -Evidence $w2Evidence
     }
   }
+  Set-Check -Id 'W2' -Status 'unexecuted' `
+    -Detail 'Workbench에서 독립 Prep 앱으로의 실제 문서 전달 및 대화형 GUI 실측은 이 러너가 수행하지 않는다. CLI 파일 왕복은 W2-PRECHECK로 분리 기록되며 실제 W2 합격으로 치환하지 않는다.'
 
   # ---------------------------------------------------------------- PATH-KO-SPACE
   $koDirName = [string][char]0xD55C + [string][char]0xAE00 + ' ' + [string][char]0xACF5 + [string][char]0xBC31 + ' ' + [string][char]0xACBD + [string][char]0xB85C
@@ -467,7 +471,9 @@ with zipfile.ZipFile(target, "w") as archive:
   $makeCorrupt = Invoke-PrepPython -Arguments $makeCorruptArgs `
     -WorkingDirectory $script:WorkDir -Label 'corrupt-make'
   if ($makeCorrupt['exit_code'] -ne 0 -or -not (Test-Path $corruptFile)) {
-    Set-Check -Id 'CORRUPT-ISOLATION' -Status 'unexecuted' -Detail '손상 파일 생성에 실패해 격리 시험을 실행하지 않았다.'
+    Set-Check -Id 'CORRUPT-ISOLATION' -Status 'failed' `
+      -Detail '손상 파일 생성 probe 실행 실패 또는 출력 파일 부재 (러너 내부 생성 오류).' `
+      -Evidence $makeCorrupt
   } else {
     $inspectArgs = '-m caelab_prep inspect ' + (Format-Argument $corruptFile)
     $corruptHashBefore = (Get-FileHash -Path $corruptFile -Algorithm SHA256).Hash
@@ -719,6 +725,22 @@ $manifest = [ordered]@{
     work_dir = $script:WorkDir
     log_file = $script:LogFile
     cleanup_scope = 'runner work directory only'
+  }
+  interactive_tasks_coverage = [ordered]@{
+    scope = 'DESIGN.md 대화형 GUI 및 사용자 과업 (CLI 사전점검 및 pytest 스위트와 분리)'
+    status = 'unexecuted'
+    tasks = [ordered]@{
+      W1 = 'unexecuted'
+      W2 = 'unexecuted'
+      W3 = 'unexecuted'
+      T1 = 'unexecuted'
+      T2 = 'unexecuted'
+      T3 = 'unexecuted'
+      T4 = 'unexecuted'
+      T5 = 'unexecuted'
+      T6 = 'unexecuted'
+    }
+    note = 'T1~T6의 pytest 실행 결과는 코드 레벨 단위 검증이며, 실제 사용자 대화형 과업 실측은 후속 일괄 검증 단계에서 수행된다.'
   }
   checks = $script:Checks
   overall_status = $overallStatus

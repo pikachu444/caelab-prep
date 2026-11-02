@@ -463,3 +463,22 @@ def test_pwsh_parser_check_when_available():
     result = subprocess.run([pwsh, "-NoProfile", "-NonInteractive", "-Command", script],
                             capture_output=True, text=True, timeout=120)
     assert result.returncode == 0, f"PowerShell parse errors: {result.stdout}\n{result.stderr}"
+
+
+def test_corrupt_probe_failure_branch_sets_failed():
+    ps1 = (RUNNER_PATH).read_text(encoding="utf-8")
+    assert "-Id 'CORRUPT-ISOLATION' -Status 'failed'" in ps1
+    assert "손상 파일 생성 probe 실행 실패" in ps1
+
+
+def test_interactive_tasks_coverage_contract_and_distinct_w1_w2_w3():
+    ps1 = (RUNNER_PATH).read_text(encoding="utf-8")
+    assert "interactive_tasks_coverage" in ps1
+    assert "-Id 'W1' -Status 'unexecuted'" in ps1
+    assert "-Id 'W2' -Status 'unexecuted'" in ps1
+    assert "-Id 'W3' -Status 'unexecuted'" in ps1
+
+    # Check schema definition
+    schema = json.loads((SCHEMA_PATH).read_text(encoding="utf-8"))
+    assert "interactive_tasks_coverage" in schema["properties"]
+    assert "tasks" in schema["properties"]["interactive_tasks_coverage"]["properties"]
