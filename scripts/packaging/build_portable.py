@@ -72,6 +72,29 @@ def collect_notices(distributions, destination, allowed_root):
     return records, missing
 
 
+def copy_build_tools(destination):
+    """Expose installed Windows build tools without exposing all user packages."""
+    records = []
+    for name in ("PyInstaller", "pyinstaller-hooks-contrib", "altgraph", "packaging",
+                 "pefile", "pywin32-ctypes", "setuptools"):
+        distribution = metadata.distribution(name)
+        root = Path(distribution.locate_file("")).resolve()
+        for item in distribution.files or []:
+            original = Path(distribution.locate_file(item)).resolve()
+            if not original.is_file() or not original.is_relative_to(root) or original.suffix == ".pyc":
+                continue
+            relative = original.relative_to(root)
+            target = destination / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            sha = digest(original)
+            if target.exists() and digest(target) != sha:
+                raise ValueError(f"Build-tool distributions disagree on {relative}")
+            shutil.copyfile(original, target)
+            records.append({"distribution": name, "version": distribution.version,
+                            "source": str(original), "path": relative.as_posix(), "sha256": sha})
+    return records
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ref", default="HEAD", help="Published source commit to snapshot")
@@ -102,22 +125,30 @@ def main():
     source.mkdir()
     with tarfile.open(fileobj=io.BytesIO(archive)) as bundle:
         bundle.extractall(source, filter="data")
-    # Existing venv dependencies take precedence over the packager's global site.
+    build_tools = output / "build-tools"
+    tool_inputs = copy_build_tools(build_tools)
+    # Analysis and its isolated children see selected dependencies and exact tools.
     env = os.environ.copy()
-    env["PYTHONPATH"] = os.pathsep.join((str(source / "src"), str(site), str(Path(PyInstaller.__file__).resolve().parent.parent)))
+    env["PYTHONPATH"] = os.pathsep.join((str(source / "src"), str(site), str(build_tools)))
+    env["PYTHONNOUSERSITE"] = "1"
     env.pop("PYTHONHOME", None)
     env.update(PREP_BUNDLE_SOURCE=str(source), PREP_BUNDLE_DEPENDENCIES=str(dependencies),
+               PREP_BUNDLE_TOOLS=str(build_tools),
                PREP_BUNDLE_INPUTS=str(output / "analysis-inputs.json"),
                PYINSTALLER_CONFIG_DIR=str(output / "cache"), MPLCONFIGDIR=str(output / "mpl-cache"))
-    versions = subprocess.check_output(
-        [sys.executable, "-c", "import sys,json,importlib.metadata as m; print(json.dumps({'python':sys.version,'packages':{n:m.version(n) for n in ('PyInstaller','pyinstaller-hooks-contrib','PySide6','shiboken6','vtk','gmsh','mcp')}}))"],
-        cwd=source, env=env, text=True,
-    )
+    application_versions = {name: item["version"] for name, item in inputs["distributions"].items()}
+    versions = {"python": sys.version, "packages": {
+        **{name: metadata.version(name) for name in ("PyInstaller", "pyinstaller-hooks-contrib")},
+        **{name: application_versions[name] for name in ("PySide6", "shiboken6", "vtk", "gmsh")},
+    }}
+    if "mcp" in application_versions:
+        versions["packages"]["mcp"] = application_versions["mcp"]
     command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--distpath", str(output / "dist"),
                "--workpath", str(output / "work"), str(tooling / "portable.spec")]
     manifest = {"source_commit": sha, "source_kind": "git archive; no working-tree application edits",
-                "stage": "building", "versions": json.loads(versions),
+                "stage": "building", "versions": versions,
                 "packaging_commit": tooling_sha, "dependency_environment": inputs,
+                "build_tool_inputs": tool_inputs,
                 "packaging_files": {p.name: digest(p) for p in (Path(__file__), tooling / "prep_entry.py", tooling / "portable.spec")},
                 "command": command, "external_solver_binaries_bundled": False,
                 "scope": "local internal candidate; no clean-machine or public redistribution acceptance"}
@@ -135,11 +166,8 @@ def main():
         # Environment-wide notices are a superset, not redistribution clearance.
         records, missing = collect_notices(metadata.distributions(path=[str(site)]), notices, dependencies)
         packager_missing = []
-        for name in ("PyInstaller", "pyinstaller-hooks-contrib"):
-            packager = metadata.distribution(name)
-            items, absent = collect_notices([packager], notices, Path(packager.locate_file("")).resolve())
-            records.extend(items)
-            packager_missing.extend(absent)
+        items, packager_missing = collect_notices(metadata.distributions(path=[str(build_tools)]), notices, build_tools)
+        records.extend(items)
         python_license = Path(sys.base_prefix) / "LICENSE.txt"
         shutil.copyfile(python_license, notices / "CPython-LICENSE.txt")
         records.append({"distribution": "CPython", "source": str(python_license),

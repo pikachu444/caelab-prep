@@ -1,5 +1,6 @@
 """One-directory Windows candidate; input paths are set by build_portable.py."""
 import os
+import sys
 import hashlib
 import json
 from pathlib import Path
@@ -9,7 +10,11 @@ import _pyinstaller_hooks_contrib
 
 source = Path(os.environ["PREP_BUNDLE_SOURCE"])
 dependencies = Path(os.environ["PREP_BUNDLE_DEPENDENCIES"])
+build_tools = Path(os.environ["PREP_BUNDLE_TOOLS"])
 entry = Path(SPECPATH) / "prep_entry.py"
+# Isolated hook children inherit this path list, including the staged build tools.
+sys.path[:] = [path for path in sys.path if "site-packages" not in Path(path).parts
+               or Path(path).resolve().is_relative_to(dependencies)]
 
 a = Analysis(
     [str(entry)],
@@ -25,7 +30,8 @@ a = Analysis(
     ],
     hookspath=[],
     runtime_hooks=[],
-    excludes=["PyQt5", "PyQt6", "PySide2", "tkinter", "IPython", "pytest"],
+    excludes=["PyQt5", "PyQt6", "PySide2", "tkinter", "IPython", "pytest",
+              "setuptools", "_distutils_hack", "pkg_resources"],
     noarchive=False,
 )
 inputs = []
@@ -35,7 +41,7 @@ for kind, entries in (("scripts", a.scripts), ("modules", a.pure), ("binaries", 
         path = Path(origin).resolve()
         if not path.is_file():
             continue
-        if ("site-packages" in path.parts and not path.is_relative_to(dependencies)
+        if (("site-packages" in path.parts or path.is_relative_to(build_tools)) and not path.is_relative_to(dependencies)
                 and not any(path.is_relative_to(root) for root in packager_roots)):
             raise ValueError(f"Application input outside selected dependency environment: {path}")
         if (name == "caelab_prep" or name.startswith("caelab_prep.")) and not path.is_relative_to(source / "src"):
