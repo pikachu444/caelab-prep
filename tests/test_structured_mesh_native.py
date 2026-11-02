@@ -83,8 +83,9 @@ def test_native_structured_quad_preview_preserves_cells_and_patch_picks(quad):
         result = matches[-1]
         assert (result["resource_id"], result["id"]) == (native.mesh_uuid, view._cells[physical]["id"])
         assert result["document_id"] == result["document_epoch"] == native.mesh_uuid
-        assert dialog.local_entity.currentData() == native.parts[part - 1].uuid
-        picked.append({"part": part, "element": result["id"]})
+        source_cell = next(cell for cell in native.elements if cell.id == result["id"])
+        assert dialog.local_entity.currentData() == source_cell.part_uuid
+        picked.append({"source_patch": source_cell.part_uuid, "element": result["id"]})
     assert session.describe() == before
     evidence = {"scope": "Linux X11/Mesa Qt/VTK preview and Qt mouse picks; no Windows/OS-input/solver claim",
                 "case": case["id"], "cells": len(native.elements), "nodes": len(native.nodes),
