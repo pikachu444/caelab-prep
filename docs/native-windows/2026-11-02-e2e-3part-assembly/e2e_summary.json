@@ -3,17 +3,17 @@
   "stages": {
     "1_cad_generation": {
       "part1_ribbed_bracket": {
-        "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\cad\\part1_ribbed_bracket.step",
+        "path": "artifacts/e2e_run4/cad/part1_ribbed_bracket.step",
         "bytes": 50318,
         "sha256": "b2e0858f50086e0a740873740379da8d33010088120ddb035404f9e359908523"
       },
       "part2_hollow_loading_pin": {
-        "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\cad\\part2_hollow_loading_pin.step",
+        "path": "artifacts/e2e_run4/cad/part2_hollow_loading_pin.step",
         "bytes": 9262,
         "sha256": "3ea5cdaeab3fec3ffd9f00f3ae9b207841b7a8d41e9ca0ee1999a65ece767374"
       },
       "part3_ti_bushing_liner": {
-        "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\cad\\part3_ti_bushing_liner.step",
+        "path": "artifacts/e2e_run4/cad/part3_ti_bushing_liner.step",
         "bytes": 11328,
         "sha256": "113aa93f937cf3971428dc7902cabae7ca9b7e29fd5c082f892c85f7263f9232"
       }
@@ -31,19 +31,19 @@
         "min_quality": 0.382965,
         "assets": {
           "msh": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part1_ribbed_bracket\\gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24\\mesh.msh",
+            "path": "artifacts/e2e_run4/meshes/part1_ribbed_bracket/gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24/mesh.msh",
             "sha256": "1367eded7e0bad8c9167c429460afe5dfdff3f8bf378f9dd3dffd5ed889eb850"
           },
           "xao": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part1_ribbed_bracket\\gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24\\geometry.xao",
+            "path": "artifacts/e2e_run4/meshes/part1_ribbed_bracket/gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24/geometry.xao",
             "sha256": "1c4081d9b599ff42ca6355452075953ea0be3205e3bb2f02f9cd953ee47fcb5e"
           },
           "metadata": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part1_ribbed_bracket\\gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24\\metadata.json",
+            "path": "artifacts/e2e_run4/meshes/part1_ribbed_bracket/gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24/metadata.json",
             "sha256": "09737e148527f997136a40e4b3cbd9dd3c668a253204e586bf4490109e5f044b"
           },
           "source": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part1_ribbed_bracket\\gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24\\input.step",
+            "path": "artifacts/e2e_run4/meshes/part1_ribbed_bracket/gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24/input.step",
             "sha256": "b2e0858f50086e0a740873740379da8d33010088120ddb035404f9e359908523"
           }
         }
@@ -60,19 +60,19 @@
         "min_quality": 0.339251,
         "assets": {
           "msh": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part2_hollow_loading_pin\\gmsh-d89d8be8-2904-49ea-a39b-08704fa66139\\mesh.msh",
+            "path": "artifacts/e2e_run4/meshes/part2_hollow_loading_pin/gmsh-d89d8be8-2904-49ea-a39b-08704fa66139/mesh.msh",
             "sha256": "349fb2397c0fac32d4cd373a9974f023d298c403d9e4e139bf24a9129d16259d"
           },
           "xao": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part2_hollow_loading_pin\\gmsh-d89d8be8-2904-49ea-a39b-08704fa66139\\geometry.xao",
+            "path": "artifacts/e2e_run4/meshes/part2_hollow_loading_pin/gmsh-d89d8be8-2904-49ea-a39b-08704fa66139/geometry.xao",
             "sha256": "b4e17c2bb5619307b7ba67354533cd7706b36cade9bb71232616752b537d5307"
           },
           "metadata": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part2_hollow_loading_pin\\gmsh-d89d8be8-2904-49ea-a39b-08704fa66139\\metadata.json",
+            "path": "artifacts/e2e_run4/meshes/part2_hollow_loading_pin/gmsh-d89d8be8-2904-49ea-a39b-08704fa66139/metadata.json",
             "sha256": "32459441bfdb550e675c78493d0e631a6cceba284d65aee0ee3f6639b0fcc521"
           },
           "source": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part2_hollow_loading_pin\\gmsh-d89d8be8-2904-49ea-a39b-08704fa66139\\input.step",
+            "path": "artifacts/e2e_run4/meshes/part2_hollow_loading_pin/gmsh-d89d8be8-2904-49ea-a39b-08704fa66139/input.step",
             "sha256": "3ea5cdaeab3fec3ffd9f00f3ae9b207841b7a8d41e9ca0ee1999a65ece767374"
           }
         }
@@ -89,19 +89,19 @@
         "min_quality": 0.857537,
         "assets": {
           "msh": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part3_ti_bushing_liner\\gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93\\mesh.msh",
+            "path": "artifacts/e2e_run4/meshes/part3_ti_bushing_liner/gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93/mesh.msh",
             "sha256": "7d4b25b9d378a87b2c1766fc3bec2e618c51cb7a10936fc95fb7bcac07733b8b"
           },
           "xao": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part3_ti_bushing_liner\\gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93\\geometry.xao",
+            "path": "artifacts/e2e_run4/meshes/part3_ti_bushing_liner/gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93/geometry.xao",
             "sha256": "e72b91b0da068b758ffb57072e7b357bf36dc3966bc770296cb82bb1b20cebc2"
           },
           "metadata": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part3_ti_bushing_liner\\gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93\\metadata.json",
+            "path": "artifacts/e2e_run4/meshes/part3_ti_bushing_liner/gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93/metadata.json",
             "sha256": "ed41861e73f9e810efda94ca57936ae6941d8e64ea7b33be999f9e4e47556c2b"
           },
           "source": {
-            "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\meshes\\part3_ti_bushing_liner\\gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93\\input.step",
+            "path": "artifacts/e2e_run4/meshes/part3_ti_bushing_liner/gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93/input.step",
             "sha256": "113aa93f937cf3971428dc7902cabae7ca9b7e29fd5c082f892c85f7263f9232"
           }
         }
@@ -110,7 +110,7 @@
     "3_prep_assembly_and_cases": {
       "document_id": "f36c0e8c-d9b5-4e19-8f57-c566b08f20da",
       "revision": 27,
-      "project_path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\project\\ribbed_bracket_assembly.caeprep",
+      "project_path": "artifacts/e2e_run4/project/ribbed_bracket_assembly.caeprep",
       "project_sha256": "85835c54d4e2893dfc51e32fc19e823ee5ed35b07798d7a0022132154b4a6690",
       "total_nodes": 1113,
       "total_elements": 3151,
@@ -128,16 +128,16 @@
         "single_undo_restored_cleanly": true
       },
       "case1_export": {
-        "starter_path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\exports\\case1_impact\\bracket_case1_0000.rad",
+        "starter_path": "artifacts/e2e_run4/exports/case1_impact/bracket_case1_0000.rad",
         "starter_sha256": "78ad75944b6017944bd46d7f129f5dbe4811b595af7024389c95ce606002eaee",
-        "engine_path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\exports\\case1_impact\\bracket_case1_0001.rad",
+        "engine_path": "artifacts/e2e_run4/exports/case1_impact/bracket_case1_0001.rad",
         "engine_sha256": "ab94af0d4a783d84ba72a67e5215945a43f85575b5451102ce9ad9b473a00932",
         "inactive_condition_count": 0
       },
       "case2_export": {
-        "starter_path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\exports\\case2_ramp\\bracket_case2_0000.rad",
+        "starter_path": "artifacts/e2e_run4/exports/case2_ramp/bracket_case2_0000.rad",
         "starter_sha256": "58618262866f7c5996368916f280fb2019ca988a098c518ad08698af8ad96e98",
-        "engine_path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\exports\\case2_ramp\\bracket_case2_0001.rad",
+        "engine_path": "artifacts/e2e_run4/exports/case2_ramp/bracket_case2_0001.rad",
         "engine_sha256": "1cdbcb6dc889dc4f6e28bb09720d1e6d67d6a0f5158310b9005170cc3c666e6c",
         "inactive_condition_count": 1
       }
@@ -160,7 +160,7 @@
             "returncode": 0
           }
         ],
-        "workdir": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\workbench\\workbench_project.runs\\53f46c67bd3548e39e12946b7e844df0",
+        "workdir": "artifacts/e2e_run4/workbench/workbench_project.runs/53f46c67bd3548e39e12946b7e844df0",
         "artifacts": {
           "bracket_case1A001": "fc050c30ab4516dde7ae88bb30181ec9def310a73964d2cdf67f399b598ce698",
           "bracket_case1A002": "8815667c4aca2da94242d1d8bc35e20d615081cda653421c6510add2b857c01c",
@@ -240,7 +240,7 @@
             "returncode": 0
           }
         ],
-        "workdir": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\workbench\\workbench_project.runs\\d0ad8d7574f94f6aa112e3fe7b490d63",
+        "workdir": "artifacts/e2e_run4/workbench/workbench_project.runs/d0ad8d7574f94f6aa112e3fe7b490d63",
         "artifacts": {
           "bracket_case2A001": "fc050c30ab4516dde7ae88bb30181ec9def310a73964d2cdf67f399b598ce698",
           "bracket_case2A002": "5fc364f5978cd8c7ffd190eaf47c63bdace35ac153361eaba0f7fd61eb82d586",
@@ -313,28 +313,31 @@
         ],
         "node_count": 1113,
         "element_count": 3151,
-        "window_png": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\gui_verification\\prep_3part_assembly_window.png",
+        "window_png": "docs/native-windows/2026-11-02-e2e-3part-assembly/prep_3part_assembly_window.png",
         "window_png_sha256": "2018183e674431fb6cbe8cc5768447443c3b2e0aca3f0d0e37db1fc2e6a462f6",
         "vtk_contact_secondary_framebuffer": {
-          "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\gui_verification\\prep_3part_assembly_vtk_framebuffer.png",
+          "path": "docs/native-windows/2026-11-02-e2e-3part-assembly/prep_3part_assembly_vtk_framebuffer.png",
           "sha256": "08a7255dcfe9ab9305652232c58658e3c030b345071885b32dfe90ea1f2eb5cd",
           "dimensions": [
             1004,
             702,
             1
           ],
-          "unique_channel_values": 244
+          "unique_channel_values": 244,
+          "capture_type": "vtk_opengl_framebuffer"
         },
         "vtk_part1_highlight_framebuffer": {
-          "path": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\gui_verification\\prep_part1_bracket_vtk_framebuffer.png",
+          "path": "docs/native-windows/2026-11-02-e2e-3part-assembly/prep_part1_bracket_vtk_framebuffer.png",
           "sha256": "6e265388b3fa99f1b0fe583f5885ecf74eab565c4de2b57304ae23b4378c7956",
           "dimensions": [
             1004,
             702,
             1
           ],
-          "unique_channel_values": 235
-        }
+          "unique_channel_values": 235,
+          "capture_type": "vtk_opengl_framebuffer"
+        },
+        "capture_type": "composite_window_grab"
       },
       "workbench_project_window": {
         "window_size": [
@@ -342,8 +345,9 @@
           800
         ],
         "box_count": 3,
-        "window_png": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\gui_verification\\workbench_project_schematic.png",
-        "window_png_sha256": "26914f83f92ce4cc578b56b5c9270f3c2f3f9081a6d3b587efe04648b7474420"
+        "window_png": "docs/native-windows/2026-11-02-e2e-3part-assembly/workbench_project_schematic.png",
+        "window_png_sha256": "26914f83f92ce4cc578b56b5c9270f3c2f3f9081a6d3b587efe04648b7474420",
+        "capture_type": "composite_window_grab"
       },
       "workbench_native_analysis_window": {
         "window_size": [
@@ -353,9 +357,10 @@
         "node_id": "bba8b85de01f4983af2639c00485f02d",
         "recorded_runs": 1,
         "displayed_run_id": "53f46c67bd3548e39e12946b7e844df0",
-        "status_text": "\uc2e4\ud589: \ud504\ub85c\uc138\uc2a4 \uc815\uc0c1 \uc885\ub8cc / \uacb0\uacfc: \uc77c\ubd80 \ud310\ub3c5\nStarter: \ud504\ub85c\uc138\uc2a4 \uc815\uc0c1 \uc885\ub8cc \u00b7 Engine: \ud504\ub85c\uc138\uc2a4 \uc815\uc0c1 \uc885\ub8cc",
-        "window_png": "C:\\Users\\pikac\\.gemini\\antigravity\\brain\\91e07e69-3b5e-4634-a2fb-3a4cf114d887\\scratch\\out_e2e_run4\\gui_verification\\workbench_native_analysis_case1.png",
-        "window_png_sha256": "2b7c0e75d1d4d6bfde8aa5add7676034793962a6857d97b54e629b0fae414aba"
+        "status_text": "실행: 프로세스 정상 종료 / 결과: 일부 판독\nStarter: 프로세스 정상 종료 · Engine: 프로세스 정상 종료",
+        "window_png": "docs/native-windows/2026-11-02-e2e-3part-assembly/workbench_native_analysis_case1.png",
+        "window_png_sha256": "2b7c0e75d1d4d6bfde8aa5add7676034793962a6857d97b54e629b0fae414aba",
+        "capture_type": "composite_window_grab"
       },
       "native_qsettings_unchanged": true
     }
@@ -380,7 +385,7 @@
       "component": "caelab-workbench / caelab.connections._radioss_installation",
       "code": "windows_intel_oneapi_runtime_dll_discovery",
       "summary": "Windows source builds of OpenRadioss fail with 0xC0000135 (STATUS_DLL_NOT_FOUND) when extlib/intelOneAPI_runtime/win64 is absent and Intel oneAPI bin is not added to PATH.",
-      "details": "starter_win64.exe imports mkl_intel_thread.3.dll and libiomp5md.dll. Local source builds compiled with Intel oneAPI 2026.0 rely on ONEAPI_ROOT / C:\\Program Files (x86)\\Intel\\oneAPI\\2026.0\\bin when extlib/intelOneAPI_runtime/win64 is not bundled."
+      "details": "starter_win64.exe imports mkl_intel_thread.3.dll and libiomp5md.dll. Local source builds compiled with Intel oneAPI 2026.0 rely on ONEAPI_ROOT / %ONEAPI_ROOT%\\bin when extlib/intelOneAPI_runtime/win64 is not bundled."
     },
     {
       "id": "FINDING-04",
