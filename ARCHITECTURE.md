@@ -2,7 +2,7 @@
 
 이 저장소는 여러 CAE 프로그램에서 재사용할 개발 자산과 기반을 만든다. OpenRadioss/OpenCourant는 첫 적용 대상이며, 현재 RAD 모델 작성·편집 앱은 공용 기반을 실제 작업에 연결한 첫 사용처다. 이 문서는 공용 자산의 경계와 현재 구현의 파일 계약을 구분해 설명한다. 목표와 후보 비교는 [DESIGN](DESIGN.md), 후속 모듈·계약·코드 이행과 작업 단위는 [상세 실행 계획](docs/shared-cae-foundation-plan.md)에 둔다. 상세 계획의 경로와 인터페이스를 현재 구현으로 해석하지 않는다.
 
-2026-11-02의 현재 납품 기준은 [DESIGN의 R1–R4/T1–T6/G0–G4](DESIGN.md#delivery-goals)를 따른다. 병합 기준은 Prep main `a1eba52`와 Workbench main `d6f05a3`이며, 아래 현재 코드 설명은 Prep PR #17 `0aaada4`의 구현 후보를 포함한다. Workbench PR #55 `6541847`도 CI/병합 후보이며 전체 완료가 아니다. 아래 출발점 표는 `f4d12d0` 진단 기준이며 현재 구현은 이어지는 PR #15 변경 설명과 [남은 작업표](docs/execution-stages.md#remaining-work)를 따른다. 원제품 충실도와 Windows 검증은 구현 자체와 별도로 남는다.
+2026-11-02의 현재 납품 기준은 [DESIGN의 R1–R4/T1–T6/G0–G4](DESIGN.md#delivery-goals)를 따른다. 병합 기준은 Prep main `6ca09c2`(PR #17/#18)와 Workbench main `865ee15`이며, 아래 설명은 별도 N19/N20 구현 후보를 포함한다. Workbench PR #55 최종 `a328253`은 실제 두 입력과 필수 CI를 통과해 병합했으며 전체 납품 완료가 아니다. 아래 출발점 표는 `f4d12d0` 진단 기준이며 현재 구현은 이어지는 PR #15 변경 설명과 [남은 작업표](docs/execution-stages.md#remaining-work)를 따른다. 원제품 충실도와 Windows 검증은 구현 자체와 별도로 남는다.
 
 | 보존할 구현 | 실제 한계 | 현재 목표를 위해 필요한 보완 |
 |---|---|---|
@@ -66,13 +66,13 @@ flowchart TB
 | `cli` | 현재 RAD 세션 API를 호출하는 명시적인 독립 프로세스 진입점 |
 | `adapters.gmsh_backend` / `gmsh_worker` | 별도 SDK 프로세스, 시간 제한·취소, 입력 CAD에서 독립 후보 자산 생성 |
 
-MCP 서버·열린 GUI에 접속하는 IPC는 아직 구현하지 않았다. CLI가 같은 클래스를 사용한다는 사실은 이미 열린 GUI 문서를 공유한다는 뜻이 아니다. 추후 MCP/IPC는 앱이 소유한 같은 문서·명령/API로 연결하며 별도 모델 사본을 몰래 수정하지 않는다. 현재 RAD 사용처에서는 그 경로가 PrepSession이며, 이 솔버별 구현을 공용 API의 전부로 고정하지 않는다.
+N19의 `application/live_transport.py`는 명시적으로 켠 loopback TCP endpoint와 private descriptor를 제공한다. `ui/live_control.py`가 Qt 주 스레드 queue에서 실제 소유 Session/provider 명령을 호출하며 doc/epoch/revision·초안/busy·request ID replay를 검사한다. GUI 후속 Generate/Open/Adopt도 같은 workflow의 세대·상태·취소 권한에 연결한다. N20의 `application/mcp_server.py`는 이 검증된 명령을 stdio MCP로 노출하며 Qt나 새 Session을 생성하지 않는다. 독립 파일 CLI, 열린 GUI IPC, 실제 MCP 클라이언트 상호운용은 각각 검증한다. [live 계약](docs/live-control.md)과 [MCP 근거·미확인 사항](docs/mcp-client.md)을 따른다.
 
 ## 문서와 명령
 
 문서 ID와 resource ID는 렌더링 배열 인덱스·Gmsh tag와 구분한다. 명령 성공과 Undo/Redo는 revision을 증가시키고 저장 기준점과 현재 자원 상태로 dirty를 판단한다. `expected_revision`이 맞지 않거나 필드 검사가 실패하면 모델을 부분 변경하지 않는다. ChangeSet과 구조화 오류로 실제 변경을 전달한다.
 
-현재 Undo는 한 resource의 필드 및 카드 구조 상태 변경을 다룬다. 카드 생성/삭제를 resource 생성/삭제와 혼동하지 않는다. 여러 resource에 걸친 트랜잭션은 아직 없다. 같은 PrepSession의 변경 알림은 호출 스레드에서 발생하고 GUI는 Qt 신호로 UI 스레드에 전달한다. 별도 CLI 프로세스에는 이 구독이 공유되지 않는다.
+현재 Undo는 한 resource의 필드 및 카드 구조 상태 변경을 다룬다. 카드 생성/삭제를 resource 생성/삭제와 혼동하지 않는다. 여러 resource에 걸친 트랜잭션은 아직 없다. 같은 PrepSession의 변경 알림은 호출 스레드에서 발생하고 GUI는 Qt 신호로 UI 스레드에 전달한다. 파일 기반 CLI에는 이 구독이 공유되지 않는다. live IPC는 열린 GUI owner의 이벤트를 sequence로 조회하며 transport 스레드가 직접 Qt나 문서를 수정하지 않는다.
 
 Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 patch하며 미편집 필드·주석·카드 순서·개행을 다시 정규화하지 않는다. VTK 메시 투영은 반환된 복사본이며 편집 원본이 아니다. 원 절점·요소 ID와 pick 인덱스는 별도로 매핑한다. `/TRANSFORM` 등 표시에서 해석하지 않은 조건은 진단으로 남긴다.
 

@@ -54,6 +54,45 @@ jobs:
       - name: Real CAD worker and asset checks
         run: python -m pytest tests/test_gmsh_adapter.py tests/test_mesh_candidates.py tests/test_mesh_adoption.py tests/test_mesh_workflow_ui.py tests/test_external_mesh.py tests/test_external_mesh_sdk.py tests/test_external_mesh_ui.py
 
+  live-automation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      QT_QPA_PLATFORM: xcb
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      PYTHONPATH: ${{ github.workspace }}/src
+      CAELAB_LIVE_CAPTURE_DIR: ${{ github.workspace }}/automation-evidence/live
+      CAELAB_MCP_CAPTURE_DIR: ${{ github.workspace }}/automation-evidence/mcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y xvfb xauth libglu1-mesa libgl1 libegl1 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxkbcommon-x11-0 libfontconfig1 fonts-noto-cjk
+      # OCP is only a fixture generator; this automation window explicitly has no 3D viewer.
+      - run: python -m pip install -e ".[widgets,cad,dev]" cadquery-ocp==7.8.1.1.post1
+      - name: Install the official server SDK and published client separately
+        run: |
+          python -m venv "$RUNNER_TEMP/prep-mcp-server"
+          "$RUNNER_TEMP/prep-mcp-server/bin/python" -m pip install mcp==2.3.0
+          python -m venv "$RUNNER_TEMP/prep-mcp-client"
+          "$RUNNER_TEMP/prep-mcp-client/bin/python" -m pip install fastmcp==3.4.11
+          echo "CAELAB_MCP_PYTHON=$RUNNER_TEMP/prep-mcp-server/bin/python" >> "$GITHUB_ENV"
+          echo "CAELAB_FASTMCP=$RUNNER_TEMP/prep-mcp-client/bin/fastmcp" >> "$GITHUB_ENV"
+      - name: Require actual GUI, SDK and client dependencies
+        run: |
+          python -c "import gmsh, OCP, PySide6; gmsh.initialize(interruptible=False); gmsh.finalize()"
+          "$CAELAB_MCP_PYTHON" -c "from mcp.server import MCPServer"
+          "$RUNNER_TEMP/prep-mcp-client/bin/python" -c "from importlib.metadata import version; print('FastMCP', version('fastmcp'))"
+      - name: Actual opened GUI, live IPC and published MCP client
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -ra tests/test_live_transport.py tests/test_live_gui.py tests/test_live_lifecycle_review.py tests/test_mcp_client.py --basetemp=automation-private-work
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-automation-evidence
+          # Never publish connection descriptors or the test work directory.
+          path: automation-evidence/
+
   native-render:
     runs-on: ubuntu-24.04
     env:

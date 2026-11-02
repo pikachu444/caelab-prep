@@ -1,6 +1,6 @@
 # Prep 산출물의 Workbench 재사용 계획
 
-현재 구현 대조: 2026-11-02. Prep 병합 `a48d3b4`, Workbench 병합 `d6f05a3`([Prep #15](https://github.com/pikachu444/caelab-prep/pull/15), [Workbench #54](https://github.com/pikachu444/caelab-workbench/pull/54))를 기준으로 한다. W1 공용 NumericEdit의 실제 MDO 소비와 W2 RAD 작업문서의 독립 Prep 실행은 구현·병합됐다. 실제 Windows 두 앱 작업은 [중앙 잔여 N14](execution-stages.md#remaining-work), RAD 실행 입력 묶음 W3는 N21, 열린 GUI IPC/MCP는 N19/N20이다. 테스트용 QWidget host나 파일 전달을 위젯 소비 또는 solver 실행 완료로 대신하지 않는다.
+현재 구현 대조: 2026-11-02. Prep 병합 `6ca09c2`, Workbench 병합 `865ee15`([Prep #17](https://github.com/pikachu444/caelab-prep/pull/17), [Workbench #55](https://github.com/pikachu444/caelab-workbench/pull/55))를 기준으로 한다. W1 공용 NumericEdit의 실제 MDO 소비와 W2 RAD 작업문서의 독립 Prep 실행은 구현·병합됐다. 실제 Windows 두 앱 작업은 [중앙 잔여 N14](execution-stages.md#remaining-work), RAD 실행 입력 묶음 W3는 N21, 열린 GUI IPC/MCP는 N19/N20이다. 테스트용 QWidget host나 파일 전달을 위젯 소비 또는 solver 실행 완료로 대신하지 않는다.
 
 원검토일은 2026-10-29이며 기준은 Workbench `92ce81181396bed9bb6e3024bba62913834c2a7e`, Prep `5d16e81c7ec7c92499401d63208039424bf73cc9`였다. 아래 날짜가 붙은 소스 조사·환경·외부 자산 기록은 그 시점에 한정한다. 이번 갱신은 문서만 변경하며 새 제품 실행·Windows 검증을 수행하지 않는다. 현재 통합의 실행 근거는 [작업서 19절](execution-stages.md#current-progress), 다음 작업의 상태·완료 조건은 [중앙 잔여 목록](execution-stages.md#remaining-work)을 따른다.
 
@@ -19,9 +19,9 @@ Prep의 정식 산출물은 공용 GUI 자산·공학 위젯·앱 셸·갤러리
 | W1 `apps/workbench_qt/mdo_studio/study_config.py` | Prep NumericEdit를 선택 의존성으로 import하고 continuous 변수의 숫자 셀에 설치한다. Unit 문자열과 ContinuousVariable/VariableSpace·configure 검증은 WB 소유. Prep 미설치이면 기존 Qt 입력 경로를 유지 |
 | W2 `caelab/connections.py` | `CAELAB_PREP`/`caelab-prep` 설정으로 `.rad` 또는 RAD `.caeprep`를 독립 GUI에서 연다. manifest 판별·잘못된/손상 문서 차단, input/document/output 역할과 JobManager 소유 유지. 중립 곡선 문서는 이 연결의 지원 대상이 아님 |
 | Prep 공용 자산·설치 | `application/contracts.py`·`storage.py`, `ui/design`·`widgets`·`actions`·`shell`은 실제 구현이다. `[widgets]`는 PySide6만, `[gui]`는 VTK 포함, `[cad]`는 Gmsh worker 경로 |
-| Prep 모델링·파일 | 새 재료/단면·집합/조건과 tri/tet 후보를 같은 명령·Undo·저장 경로로 편집한다. RAD 작업 문서는 v2, v1 읽기 호환. 중립 재료/곡선은 별도 codec이며 WB 프로젝트 JSON을 대체하지 않음 |
+| Prep 모델링·파일 | 새 재료/단면·집합/조건과 tri/tet 후보를 같은 명령·Undo·저장 경로로 편집한다. RAD 작업 문서는 v3, v1/v2 읽기 호환. 중립 재료/곡선은 별도 codec이며 WB 프로젝트 JSON을 대체하지 않음 |
 | Gmsh·작업 | 후보 생성/취소/실패·품질·국부 크기/interface·원자 채택이 구현됐다. 참조가 있는 일반 교체/재연결은 N18이며 대형 배열 경로는 N17 |
-| W3 / 자동화 | WB의 RAD 전용 snapshot와 Starter→Engine 실행 연결은 N21. 독립 Prep CLI는 구현됐지만 live GUI IPC/MCP는 N19/N20 |
+| W3 / 자동화 | WB의 RAD 전용 snapshot와 Starter→Engine 실행 연결은 N21. 독립 Prep CLI와 별개로 live GUI IPC/MCP 후보는 N19/N20에서 실제 owner와 공개 client를 검증 중 |
 
 현재 W1/W2 관련 검사와 실제 독립 프로세스 전달은 작업서 19절에 기록돼 있다. Windows의 IME·DPI·theme·창 크기·양쪽 새 설치와 실제 사용 검증은 N14이며 Linux/Qt 검사로 대신하지 않는다.
 
@@ -64,9 +64,9 @@ Prep의 정식 산출물은 공용 GUI 자산·공학 위젯·앱 셸·갤러리
 | 독립 Prep↔WB | W2: 프로그램 실행 + document/output 파일 참조/해시, 명시적 refresh | Prep executable/python env 설정, .caeprep 편집원본과 .rad 출력 구분 | CLI 호출을 live GUI 접속으로 표시, save=export=run 성공으로 합침 |
 | 열린 Prep 제어 | N19 IPC / N20 MCP의 고정된 첫 범위 | doc/session handle·epoch·expected_revision·capability/error/job schema·접속/파일 범위 | 초기 필수 의존성, 두 프로세스가 동일 파일을 몰래 편집 |
 
-### 남은 W3 RAD 실행 경계 (N21)
+### W3 RAD 실행 경계 (N21)
 
-WB `native/adapter.py`의 OpenRadioss/OpenCourant adapter 등록은 끝단 실행 완료가 아니다. 병합 `d6f05a3`에서도 `jobs.py`는 `native/input_snapshot.py`의 `snapshot_input()`을 사용하며 이 경로의 실행 root는 **model.inp**다. Radioss의 `.rad` basename과 Starter/Engine/INCLUDE 묶음을 보존하는 별도 실행 경로가 필요하다. 따라서 Prep RAD 출력 등록만으로 현재 WB에서 그 파일을 정상 Starter/Engine 계산한다고 가정할 수 없다. 복수 RAD/INCLUDE와 Starter/Engine 단계·이름을 보존하는 solver-specific snapshot/launch는 WB 후속 구현이다.
+기존 WB `d6f05a3`의 공용 `snapshot_input()`은 실행 root를 **model.inp**로 고정해 RAD 실행에 부족했다. PR #55는 solver-specific snapshot과 Starter/Engine 단계 실행을 기존 JobManager에 연결하고 원래 basename·상대 INCLUDE를 보존했다. 최종 `a328253`의 [CI 41368317991](https://github.com/pikachu444/caelab-workbench/actions/runs/41368317991)에서 실제 두 입력 서비스/X11 GUI 및 전체 Python 3.11/3.12·CalculiX가 통과했고 `865ee15`에 병합했다. 완전한 animation 판독·Windows 납품은 이 연결의 성공 범위가 아니다.
 
 `native/radioss.py`도 native A### binary animation을 해독하지 않으며 opaque payload는 partial/경고로 남긴다. 첫 파일 연결 소비자의 완료를 Radioss 결과 끝단 완료로 확대하지 않는다. 기존 CalculiX snapshot/INCLUDE·FRD/DAT·MDO 경로는 유지한다.
 
@@ -146,7 +146,7 @@ Workbench에서 Prep 프로그램을 명시 설정하고 기존 `LaunchRequest`�
 
 ### W3 — RAD 실행 입력 묶음과 실제 계산 연결
 
-**현재 미구현 후속 N21.** W2와 별도인 Workbench 실행 기능이다. Prep G3는 현재 Starter/Engine을 생성하며 실제 솔버 입력 검사를 수행했다. 그 출력 또는 사용자가 준비한 묶음을 WB가 JobManager/RunStore에 연결하는 것이 W3이며, Prep의 독립 solver 검사 성공을 WB 실행 완료로 대신하지 않는다.
+**현재 Workbench PR #55 최종 `a328253`의 실제 두 입력·필수 CI를 통과해 main `865ee15`에 병합한 N21.** W2와 별도인 Workbench 실행 기능이다. Prep G3는 현재 Starter/Engine을 생성하며 실제 솔버 입력 검사를 수행했다. 그 출력 또는 사용자가 준비한 묶음을 WB가 JobManager/RunStore에 연결하는 것이 W3이며, Prep의 독립 solver 검사 성공을 WB 실행 완료로 대신하지 않는다.
 
 - **입력:** Starter 단일 파일 묶음과 상대 INCLUDE를 포함한 두 번째 묶음. 각 묶음의 Engine 파일·참조·실행 버전을 고정한다.
 - **변경 책임:** Workbench solver adapter가 입력 수집/복사 규칙과 실행 entrypoint를 제공하고 JobManager가 실행·취소·로그·RunStore를 계속 소유한다. 현재 CalculiX용 `snapshot_input`을 RAD에도 그대로 쓰지 않는다. Prep는 출력의 실제 경로·역할·버전을 전달한다.
