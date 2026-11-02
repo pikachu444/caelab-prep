@@ -28,7 +28,8 @@ class ModelRelationsResource:
     def snapshot(self):
         # Large explicit memberships are immutable tuples shared by history.
         return {**self._state, "mesh_revisions": dict(self._state["mesh_revisions"]),
-                "stale_targets": {key: dict(value) for key,value in self._state["stale_targets"].items()},
+                "stale_targets": {key: {**value, **({"mesh_dependencies": dict(value["mesh_dependencies"])} if "mesh_dependencies" in value else {})}
+                                  for key,value in self._state["stale_targets"].items()},
                 "replacement_sources": {key: dict(value) for key,value in self._state["replacement_sources"].items()},
                 "instances": {key: dict(value) for key,value in self._state["instances"].items()}}
     def state_token(self):
@@ -48,11 +49,21 @@ class ModelRelationsResource:
             if type(revision) is not int or revision < 1: raise PrepError("invalid_project", "Invalid mesh generation.")
         for card_id, item in state["stale_targets"].items():
             UUID(card_id)
-            if not isinstance(item, dict) or set(item) != {"resource_id", "mesh_resource_id", "mesh_revision", "family", "members"}:
+            keys = {"resource_id", "mesh_resource_id", "mesh_revision", "family", "members"}
+            if not isinstance(item, dict) or set(item) not in (keys, keys | {"reason", "mesh_dependencies"}):
                 raise PrepError("invalid_project", "Invalid stale target record.")
             UUID(item["resource_id"]); UUID(item["mesh_resource_id"])
             if item["family"] not in GROUPS or type(item["mesh_revision"]) is not int or item["mesh_revision"] < 1 or not isinstance(item["members"], (list,tuple)) or any(type(value) is not int or value < 1 for value in item["members"]):
                 raise PrepError("invalid_project", "Invalid target generation or membership.")
+            if "mesh_dependencies" in item:
+                dependencies = item["mesh_dependencies"]
+                if (item["reason"] != "geometry_review_required" or not isinstance(dependencies, dict) or not dependencies
+                        or dependencies.get(item["mesh_resource_id"]) != item["mesh_revision"]):
+                    raise PrepError("invalid_project", "Invalid geometry review dependencies.")
+                for rid, generation in dependencies.items():
+                    UUID(rid)
+                    if type(generation) is not int or generation < 1 or state["mesh_revisions"].get(rid) != generation:
+                        raise PrepError("invalid_project", "Invalid dependent mesh generation.")
         for rid, record in state["replacement_sources"].items():
             UUID(rid)
             if not isinstance(record, dict) or set(record) != {"sha256", "name"} or not isinstance(record["name"], str) or not isinstance(record["sha256"], str) or len(record["sha256"]) != 64:
@@ -203,6 +214,9 @@ class MeshRelationCommands:
                         or not isinstance(replacement["mapping"], dict)):
                     raise PrepError("stale_reference_mapping", "Use an explicit correspondence for the current mesh generation.")
                 mapping = replacement["mapping"]
+                if any(relations["mesh_revisions"].get(rid) != generation
+                       for rid, generation in stale.get("mesh_dependencies", {}).items()):
+                    raise PrepError("stale_reference_mapping", "A dependent mesh generation changed; review current geometry.")
                 if any(type(key) is not int or key < 1 for key in mapping):
                     raise PrepError("invalid_reference", "Correspondence keys must be original positive native IDs.")
                 if set(mapping) != set(stale["members"]):

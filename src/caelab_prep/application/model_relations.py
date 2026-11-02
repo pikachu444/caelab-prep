@@ -27,6 +27,8 @@ class ModelRelationCommands:
         if getattr(self, "_defer_relation_validation", False): return
         candidate = self._planning_snapshot()
         for rid, state in states.items(): candidate.document.resources[rid].restore(state)
+        candidate._projection_cache = None
+        candidate._projection_index = {}
         for card in self.list_cards():
             words = card["keyword"].upper().split("/")
             if words[1] != "CLOAD" and tuple(words[1:3]) != ("INIVEL","TRA"): continue

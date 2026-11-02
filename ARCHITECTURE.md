@@ -60,7 +60,7 @@ flowchart TB
 | `application.session` | 현재 RAD용 PrepSession. RAD 자원 조합, 조회·편집·Undo·INCLUDE·저장·내보내기 API, 호출 직렬화. 공용 세션 계약 전체가 완성된 상태는 아님 |
 | `application.contracts` / `rad_provider` / `neutral` | 최소 host 계약, 기존 RAD adapter, 독립 재료/곡선 provider와 codec. 범용 FE 스키마를 강제하지 않음 |
 | `application.mesh_candidates` / `ui.mesh_workflow` | SDK inventory·해시·tri/tet 품질과 후보 검토 UI. 채택은 PrepSession의 원자 명령이며 다른 문서 사본을 만들지 않음 |
-| `application.storage` | codec과 독립인 atomic ZIP writer와 bounded reader. RAD v5 manifest·원문/구조 편집·케이스/source/관계(v1–v4 읽기 호환)과 중립 codec의 의미는 각각 유지 |
+| `application.storage` | codec과 독립인 atomic ZIP writer와 bounded reader. RAD v6 manifest·원문/구조 편집·케이스/source/관계(v1–v5 읽기 호환)과 중립 codec의 의미는 각각 유지 |
 | `ui/design`, `ui/widgets`, `ui/actions`, `ui/shell` | 공용 디자인·입력 초안·트리·표/plot·Action·도킹·renderer frame·실제 FileTask 상태/오류/산출물 |
 | `ui/main_window`, `ui/gallery` | 앱별 조립과 초안/선택/파일 작업 조정. 모델 값의 정본은 주입한 provider/session |
 | `cli` | 현재 RAD 세션 API를 호출하는 명시적인 독립 프로세스 진입점 |
@@ -69,6 +69,12 @@ flowchart TB
 N19의 `application/live_transport.py`는 명시적으로 켠 loopback TCP endpoint와 private descriptor를 제공한다. `ui/live_control.py`가 Qt 주 스레드 queue에서 실제 소유 Session/provider 명령을 호출하며 doc/epoch/revision·초안/busy·request ID replay를 검사한다. GUI 후속 Generate/Open/Adopt도 같은 workflow의 세대·상태·취소 권한에 연결한다. N20의 `application/mcp_server.py`는 이 검증된 명령을 stdio MCP로 노출하며 Qt나 새 Session을 생성하지 않는다. 독립 파일 CLI, 열린 GUI IPC, 실제 MCP 클라이언트 상호운용은 각각 검증한다. [live 계약](docs/live-control.md)과 [MCP 근거·미확인 사항](docs/mcp-client.md)을 따른다.
 
 ## 문서와 명령
+
+N18의 첫 절대좌표 이동은 `application.node_moves`가 닫힌 native 참조를 읽어 `mesh_edit_candidates`의 불변 snapshot을 seal하고, source token·문서 revision/epoch·각 mesh generation으로 apply를 검증한다. 후보 delta는 희소하며 반복 편집에서 snapshot JSON을 다시 만들지 않는다. N17 전체 메모리/시간 예산의 통과를 뜻하지 않는다. `DeckResource` 상태 v4의 희소 `node_positions`는 ID·후행 필드·미편집 원문을 보존한다. NODE 블록 교체/삭제는 이전 좌표 overlay를 제거한다.
+
+좌표 상태와 `geometry_review_required` 집합·여러 source의 generation 의존성을 `execute_many` 한 번으로 게시한다. 이동한 멤버/조건 값을 바꾸지 않으며 명시 대응 검토 전에는 native 출력을 차단한다. 검사 trial은 옛 projection cache를 버려 새 형상으로 CLOAD 성분을 재판정한다. `ui.node_moves`는 같은 명령에 Preview/검토/Apply/취소를 연결한다. 새 문서·개정·입력 변경은 이전 preview를 적용할 수 없게 한다.
+
+선택적 `adapters.solidcraft_source`는 외부 CAD 실행 없이 저장 컨테이너·고정 인수·해시만 준비한다. 공급 STEP은 기존 Gmsh worker와 native 채택 gate를 사용한다. 채택 입력의 미검증 출처 선언은 이번에 생성한 NODE의 ASCII JSON 주석으로 저장하므로 별도 문서 정본/codec/Undo를 만들지 않는다. STEP 생성자 인증이나 CAD 면의 persistent identity는 이 선언이 제공하지 않는다.
 
 문서 ID와 resource ID는 렌더링 배열 인덱스·Gmsh tag와 구분한다. 명령 성공과 Undo/Redo는 revision을 증가시키고 저장 기준점과 현재 자원 상태로 dirty를 판단한다. `expected_revision`이 맞지 않거나 필드 검사가 실패하면 모델을 부분 변경하지 않는다. ChangeSet과 구조화 오류로 실제 변경을 전달한다.
 
@@ -80,11 +86,11 @@ Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 p
 
 ## 작업 파일과 native 덱
 
-`.caeprep`은 버전 있는 ZIP 문서다. RAD writer는 manifest version 5를 쓰고 v1–v4를 읽는다. source archive와 명시 ID 대응·관계/instance 참조를 보존하며 v4의 누락 관계는 빈 상태로 이행한다. v5의 필수 관계 누락은 손상으로 거부한다. `AnalysisCasesResource`가 영속 UUID·조건 UUID 집합·단위 있는 종료/출력 설정과 활성 케이스를 별도 소유하고 같은 dispatcher로 편집한다. manifest의 `analysis_cases`에 이 상태를 보존하며 이전 파일은 빈 케이스 상태로 읽는다. `manifest.json`에 문서 ID·revision·논리 경로·자원 ID·필드 patch와 stable ID를 가진 추가/삭제 카드 구조 상태를 기록하고 `raw/<resource-id>.rad`에 원문을 동봉한다. 외부 원본 경로만 저장하는 형식이나 pickle이 아니다. 임시 파일을 작성한 뒤 원자적으로 교체한다. 재시작 후 Undo 기록을 복원하는 기능은 현재 범위가 아니다.
+`.caeprep`은 버전 있는 ZIP 문서다. RAD writer는 manifest version 6을 쓰고 v1–v5를 읽는다. source archive와 명시 ID 대응·관계/instance 참조를 보존하며 v4의 누락 관계는 빈 상태로 이행한다. v5의 필수 관계 누락은 손상으로 거부한다. `AnalysisCasesResource`가 영속 UUID·조건 UUID 집합·단위 있는 종료/출력 설정과 활성 케이스를 별도 소유하고 같은 dispatcher로 편집한다. manifest의 `analysis_cases`에 이 상태를 보존하며 이전 파일은 빈 케이스 상태로 읽는다. `manifest.json`에 문서 ID·revision·논리 경로·자원 ID·필드 patch와 stable ID를 가진 추가/삭제 카드 구조 상태를 기록하고 `raw/<resource-id>.rad`에 원문을 동봉한다. 외부 원본 경로만 저장하는 형식이나 pickle이 아니다. 임시 파일을 작성한 뒤 원자적으로 교체한다. 재시작 후 Undo 기록을 복원하는 기능은 현재 범위가 아니다.
 
 이는 현재 RAD 사용 앱의 저장 계약이다. 다른 솔버의 모델을 RAD 원문이나 하나의 공통 FE 스키마로 강제하는 공용 저장 규격이 이미 완성됐다는 뜻은 아니다.
 
-중립 재료/곡선은 같은 원자 저장 절차를 쓰되 manifest `format=caelab-material-curves`, `version=2`와 `material-curves.json` payload를 사용한다. 이전 중립 v1도 읽는다. v2는 재료의 기존 곡선 참조를 저장하며 provider는 표시명/typed ObjectRef 후보를 제공하고 실제 명령이 문서·자원·종류·존재를 검증한다. 이 codec은 RAD를 import하지 않는다. `gallery [path]`로 열고 저장하며 RAD 문서는 v5로 저장하고 이전 v1–v4는 읽기 호환한다. 이전 앱이 새 구조 편집 문서를 v1으로 오해하도록 버전을 숨기지 않는다. 양쪽 모두 파일 작업 실패 시 기존 파일과 dirty 상태를 보존한다. 비동기 FileTask는 running/succeeded/failed·구조화 오류·실제 산출물 경로를 반환하고 저장/열기는 취소 불가능으로 표시한다. 지원하지 않는 Cancel 동작을 제공하지 않는다.
+중립 재료/곡선은 같은 원자 저장 절차를 쓰되 manifest `format=caelab-material-curves`, `version=2`와 `material-curves.json` payload를 사용한다. 이전 중립 v1도 읽는다. v2는 재료의 기존 곡선 참조를 저장하며 provider는 표시명/typed ObjectRef 후보를 제공하고 실제 명령이 문서·자원·종류·존재를 검증한다. 이 codec은 RAD를 import하지 않는다. `gallery [path]`로 열고 저장하며 RAD 문서는 v6로 저장하고 이전 v1–v5는 읽기 호환한다. 이전 앱이 새 구조 편집 문서를 v1으로 오해하도록 버전을 숨기지 않는다. 양쪽 모두 파일 작업 실패 시 기존 파일과 dirty 상태를 보존한다. 비동기 FileTask는 running/succeeded/failed·구조화 오류·실제 산출물 경로를 반환하고 저장/열기는 취소 불가능으로 표시한다. 지원하지 않는 Cancel 동작을 제공하지 않는다.
 
 `SelectionProvider.select/active_object`는 두 provider/window의 활성 객체를 연결한다. 첫 RAD 관계는 기존 PART와 투영의 part_id가 연결된 요소이며 중복 native ID는 거부한다. 영속 ObjectRef ID는 재열기 뒤에도 유지하지만 renderer pick은 설치마다 바뀌는 document_epoch, 문서 revision, resource state token, projection_revision을 함께 검사한다. 스칼라 수정 뒤 표시 형상을 재생성하지 않고 pick stamp를 갱신한다. 둘 이상의 승인된 요소는 모든 resource/local-ID 쌍을 강조한다.
 

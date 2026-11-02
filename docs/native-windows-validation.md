@@ -1,4 +1,35 @@
-# Windows 실행 검증 — 2026-10-31 과거 실행 기록
+# Windows 실행 검증
+
+## 2026-11-02 — 설치·사용 가이드 확인
+
+기존 개발 환경과 분리한 새 가상환경에 `pip install -e ".[gui,cad]" PySide6==6.9.1 vtk==9.4.2`로 설치하고 `pip check`를 통과했다. Python 3.13.5, PySide6/Qt 6.9.1, VTK 9.4.2, Gmsh 4.15.2 조합이다. [사용 가이드](usage.md)의 CC0 shell 입력으로 inspect→재료 Young 계수 209000→205000 수정→`.caeprep` 저장→새 CLI 프로세스 조회→RAD 출력을 확인했다. 원본의 209000은 유지됐다. 새 문서·재료·solid 단면 생성과 각 명령 도움말도 실행했다.
+
+입력 단위 행만 있는 shell 예제의 Engine 출력은 `invalid_units`로 거부되고 출력 파일이 생기지 않았다. 작업 단위가 명시된 tracked `mixed-assemblies/beam_shell_tet`에서는 Starter와 Engine을 작성했다. 솔버는 실행하지 않았다. 설치 환경에서 실제 `cli:main gui` 경로로 shell 입력 창을 띄우고 Windows QPA·visible 창을 확인한 뒤 자동으로 닫았다. QSettings를 전용 INI로 격리하고 기존 NativeFormat 값 불변을 확인했다. 이 확인은 설치·CLI 파일 흐름·GUI 시작에 한정하며 GUI 편집·원제품 비교·전체 회귀 통과를 뜻하지 않는다.
+
+<a id="node-move-20261102"></a>
+
+## 2026-11-02 — 절대좌표 이동의 첫 Windows 연결
+
+기준 main은 `11f500c`, 첫 로컬 후속의 실행 단계별 source SHA256은 각 JSON에 보존했다. 같은 기능 브랜치의 수정 중 관측이며 전체 제품 인도·원제품 8종 비교·다른 다섯 메시 작업의 합격이 아니다. 아래 실행은 메인이 수행했고 독립 QA는 코드·실제 이미지·JSON을 읽어 확인했다. QA의 독립 pytest 실행은 `.test-tmp/qa-independent` 생성 때 WinError 5로 실패했고 정식 승인 요청은 중단됐으므로 독립 runtime 통과로 계산하지 않는다.
+
+저장소 전용 `.venv`의 Python 3.13.5, Qt/PySide6 6.9.1, VTK 9.4.2, Gmsh 4.15.2를 사용했다. 두 입력은 tracked `mixed-assemblies/beam_shell_tet`와 `truss_shell_hex`다. 소유 창의 Windows QPA/Default desktop에서 QTest로 source/절점 ID와 좌표를 입력하고 Preview→검토 체크→Apply했다. beam 모델은 공유 node 2의 X를 10→11 mm, hex 모델은 nodes 5–9의 Z를 10→11 mm로 바꿨다. 검토할 구속 집합은 fixture 준비 API로 추가했다. 파일 열기/저장은 실제 창의 파일 API이며 파일 대화상자·OS SendInput·IME·모니터 DPI 조작이 아니다.
+
+두 모델 모두 9개 절점·3개 요소의 ID/좌표/연결이 `.caeprep` 저장 후 별도 프로세스 재열기와 같았고 형상 검토 대기·원본 파일 SHA·실제 NativeFormat 설정 불변을 확인했다. 같은 명령의 Undo/Redo·명시 대응 후 native export·신규 source import·다중 generation 보존은 별도 코어 회귀에서 확인한다. GUI의 reconnect/native export 전체 조작을 이 harness가 수행했다고 해석하지 않는다.
+
+| 관측 | 근거 |
+|---|---|
+| Beam/shell/tet Preview·저장·새 프로세스 | [Preview](native-windows/2026-11-02-node-move/beam_shell_tet/preview.png), [저장](native-windows/2026-11-02-node-move/beam_shell_tet/save.json), [재열기](native-windows/2026-11-02-node-move/beam_shell_tet/reopen.json) |
+| Truss/shell/hex Preview·저장·새 프로세스 | [Preview](native-windows/2026-11-02-node-move/truss_shell_hex/preview.png), [저장](native-windows/2026-11-02-node-move/truss_shell_hex/save.json), [재열기](native-windows/2026-11-02-node-move/truss_shell_hex/reopen.json) |
+| 실제 640×480 Preview의 입력·적용 도달성 | [작은 창](native-windows/2026-11-02-node-move/narrow/preview.png), [실제 크기·결과](native-windows/2026-11-02-node-move/narrow/save.json). 상세는 내부 스크롤로 접근한다. |
+| 보이는 메시와 실제 framebuffer | [선택한 Windows 창](native-windows/2026-11-02-node-move/beam_shell_tet/windows-observed.png), [beam framebuffer](native-windows/2026-11-02-node-move/beam_shell_tet/reopen-framebuffer.png), [hex framebuffer](native-windows/2026-11-02-node-move/truss_shell_hex/reopen-framebuffer.png) |
+
+초기 `QWidget.grab()`에서는 OpenGL 자식 영역이 검게 캡처됐다. 그 이미지는 메시 표시 성공의 근거에서 제외했다. 첫 Computer Use 캡처도 대상 창과 다른 픽셀이어서 제외하고, 반환된 소유 창을 다시 선택·활성화한 뒤 실제 메시가 보이는 픽셀과 VTK framebuffer를 대조했다. 관찰 창은 정상 종료했다.
+
+실행기는 [node_move_windows.py](../scripts/evaluation/node_move_windows.py)다. 같은 `--output`에 `save`와 `reopen`을 별도 프로세스로 실행하며, `--move --model beam_shell_tet` 또는 `truss_shell_hex`를 지정한다. `--dialog-size 640x480`은 작은 창 입력 확인이다. 초기 실행의 source hash가 후속 CAD 채택 epoch 수정 전인 단계도 있으며 각 JSON의 실제 hash를 유지했다. 이를 후속 전체 소스의 단일 frozen GUI 승인으로 바꾸지 않는다.
+
+이동 후 실제 solver는 **미확인**이다. 기존 `latest-20260520`의 고정 Starter를 한 번 실행했으나 30초 시간 초과였고 Engine·두 번째 모델은 실행하지 않았다. [실제 실패와 실행파일 해시](native-windows/2026-11-02-node-move/native-attempt.json)를 보존했다. 원인을 이 기록만으로 DLL 문제라고 단정하지 않으며 같은 환경 재실행은 보류한다. [node_move_native.py](../scripts/evaluation/node_move_native.py)는 준비된 환경에서 두 입력의 정지 상태 질량·입력 읽기를 확인하는 후속 실행기다. 접촉·하중 응답이나 물리 적합성의 검증을 대신하지 않는다.
+
+## 2026-10-31 과거 실행 기록
 
 2026-11-01 인계 기준: 아래는 PR #12 시기의 제한된 P1–P3/A 공용 부품·기존 필드 편집 과업에 대한 기록이다. [PR #15](https://github.com/pikachu444/caelab-prep/pull/15)가 병합된 `a48d3b4`의 8방식 생성·할당·조건·CAD 후보·Engine 출력 흐름을 Windows에서 다시 검증한 결과가 아니다. 현재 Windows 납품·배율·GPU·파일 대화상자·설치 확인은 [남은 작업과 완료 기준](execution-stages.md#remaining-work)에 남아 있다. 본문의 성공·실패·도구 제한은 당시 상태로 보존한다.
 

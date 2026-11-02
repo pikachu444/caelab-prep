@@ -63,6 +63,7 @@ class DeckResource:
         self._created: list[dict[str, str]] = []
         self._deleted: set[str] = set()
         self._replaced: dict[str, str] = {}
+        self._node_positions: dict[str, list[float]] = {}
         self._state_token_cache = None
         self._source_lines = self.raw.decode("latin1").splitlines(keepends=True)
         self._parse_layout(self._source_lines)
@@ -302,9 +303,51 @@ class DeckResource:
         return result
 
     def snapshot(self) -> dict:
-        return {"state_version": 3, "patches": {key: dict(value) for key, value in self._patches.items()},
+        return {"state_version": 4, "patches": {key: dict(value) for key, value in self._patches.items()},
                 "created": [dict(item) for item in self._created], "deleted": sorted(self._deleted),
-                "replaced": dict(self._replaced)}
+                "replaced": dict(self._replaced),
+                "node_positions": {key: list(value) for key, value in self._node_positions.items()}}
+
+    def _position_rows(self, positions):
+        if not isinstance(positions, dict):
+            raise PrepError("invalid_project", "Node positions must be a sparse native-ID mapping.")
+        if not positions:
+            return {}
+        rows = {}
+        for card in self.cards:
+            if card.keyword.upper() != "/NODE":
+                continue
+            for index in card.data:
+                try:
+                    identifier = str(int(self.lines[index][:10]))
+                except ValueError:
+                    continue
+                if identifier in rows:
+                    raise PrepError("ambiguous_reference", "Node coordinates require unique IDs in their resource.")
+                rows[identifier] = index
+        result = {}
+        for identifier, xyz in positions.items():
+            if (not isinstance(identifier, str) or not identifier.isascii() or not identifier.isdecimal()
+                    or str(int(identifier)) != identifier or int(identifier) < 1 or identifier not in rows
+                    or not isinstance(xyz, (list, tuple)) or len(xyz) != 3
+                    or any(type(value) not in (int, float) or not math.isfinite(value) for value in xyz)):
+                raise PrepError("invalid_project", "Invalid sparse node identity or coordinates.")
+            fields = [format(value, ".12g").rjust(20) for value in xyz]
+            if any(len(field) != 20 for field in fields):
+                raise PrepError("invalid_project", "Coordinates exceed the native fixed-width field.")
+            index = rows[identifier]
+            line = self.lines[index]
+            # Preserve ID bytes, trailing native fields, comments and line endings.
+            result[index] = line[:10] + "".join(fields) + line[70:]
+        return result
+
+    def node_positions_state(self, positions):
+        """Prepare sparse absolute coordinates; application validates physical effects."""
+        self._position_rows(positions)
+        state = self.snapshot()
+        state["node_positions"].update({key: list(value) for key, value in positions.items()})
+        self.prepare_state(state)
+        return state
 
     def prepare_state(self, state):
         candidate = copy(self)
@@ -319,10 +362,13 @@ class DeckResource:
             state = {"state_version": 2, "patches": state, "created": [], "deleted": []}
         if state.get("state_version") == 2 and set(state) == {"state_version", "patches", "created", "deleted"}:
             state = {**state, "state_version": 3, "replaced": {}}
-        if (type(state.get("state_version")) is not int or state["state_version"] != 3
-                or set(state) != {"state_version", "patches", "created", "deleted", "replaced"}
+        if state.get("state_version") == 3 and set(state) == {"state_version", "patches", "created", "deleted", "replaced"}:
+            state = {**state, "state_version": 4, "node_positions": {}}
+        if (type(state.get("state_version")) is not int or state["state_version"] != 4
+                or set(state) != {"state_version", "patches", "created", "deleted", "replaced", "node_positions"}
                 or not isinstance(state["patches"], dict) or not isinstance(state["created"], list)
-                or not isinstance(state["deleted"], list) or not isinstance(state["replaced"], dict)):
+                or not isinstance(state["deleted"], list) or not isinstance(state["replaced"], dict)
+                or not isinstance(state["node_positions"], dict)):
             raise PrepError("invalid_project", "Unsupported structural deck state.")
         source_ids = {card.id for card in self._source_cards}
         created, used = [], set(source_ids)
@@ -362,8 +408,14 @@ class DeckResource:
         candidate = copy(self)
         candidate._created, candidate._deleted, candidate._patches, candidate._replaced = created, deleted, {}, replaced
         candidate._state_token_cache = None
-        if created != self._created or deleted != self._deleted or replaced != self._replaced:
+        if (created != self._created or deleted != self._deleted or replaced != self._replaced
+                or state["node_positions"] != self._node_positions):
             candidate._rebuild_layout()
+        positions = candidate._position_rows(state["node_positions"])
+        candidate.lines = list(candidate.lines)
+        for index, line in positions.items():
+            candidate.lines[index] = line
+        candidate._node_positions = {key: list(value) for key, value in state["node_positions"].items()}
         for card_id, values in state["patches"].items():
             if not isinstance(values, dict):
                 raise PrepError("invalid_project", "필드 패치 형식이 잘못됐습니다.")
@@ -386,8 +438,11 @@ class DeckResource:
         return state, identities[0]
 
     def deleted_state(self, card_id):
-        self.card(card_id)
+        card = self.card(card_id)
         state = self.snapshot()
+        if card.keyword.upper() == "/NODE":
+            identifiers = {str(int(self.lines[row][:10])) for row in card.data}
+            state["node_positions"] = {key: value for key, value in state["node_positions"].items() if key not in identifiers}
         if any(item["id"] == card_id for item in state["created"]):
             state["created"] = [item for item in state["created"] if item["id"] != card_id]
         else:
@@ -414,6 +469,9 @@ class DeckResource:
         card = self.card(card_id)
         self._validate_replacement(card.keyword, text)
         state = self.snapshot()
+        if card.keyword.upper() == "/NODE":
+            identifiers = {str(int(self.lines[row][:10])) for row in card.data}
+            state["node_positions"] = {key: value for key, value in state["node_positions"].items() if key not in identifiers}
         created = next((item for item in state["created"] if item["id"] == card_id), None)
         if created is None:
             original = next(card for card in self._source_cards if card.id == card_id)
@@ -433,7 +491,7 @@ class DeckResource:
         return self._state_token_cache
 
     def render(self) -> bytes:
-        if not self._patches and not self._created and not self._deleted and not self._replaced:
+        if not self._patches and not self._created and not self._deleted and not self._replaced and not self._node_positions:
             return self.raw
         lines = list(self.lines)
         for card_id, values in self._patches.items():
@@ -469,7 +527,7 @@ class DeckResource:
         return references
 
     def mesh_projection(self) -> dict:
-        # Coordinates are read-only in this version; the native raw span is authoritative.
+        # Sparse coordinate edits retain native node IDs and original raw bytes.
         nodes: dict[int, list[float]] = {}
         cells = []
         diagnostics = []

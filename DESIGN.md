@@ -145,6 +145,20 @@ SMTK는 확인한 master의 `version.txt`가 26.04.0인 반면 조회한 문서�
 
 공용 기반 후보를 첫 적용 대상에서 비교할 때는 같은 사용자 작업인 **CAD 가져오기 → 메시 생성 → 재료·면 집합·하중/접촉 정의 → 작업 원본 저장·재열기 → Radioss Starter/Engine 출력·읽기**를 후보별로 확인해야 한다. Windows 배포와 라이선스·바인딩·메셔 조합, 조건 보존, 필요한 추가 구현량을 함께 비교한다. 이 전체 비교 작업은 아직 수행하지 않았다. 2026-10-29 첫 구현에서는 CAD 후보 생성과 기존 RAD 편집이 분리되어 있었다. PR #15에서 후보 검토·채택·조건 생성·Starter/Engine 출력을 연결했다. 이 개선은 위 후보 기반 전체 비교를 완료했다는 뜻이 아니다. 기반 선정과 상용 CAE GUI 재현은 별개다. 다른 적용 앱에서도 같은 공용 코드를 사용하고 실제 편집·파일 저장·출력을 수행하는지 확인해 재사용성을 검증한다. 이는 공용 자산 개발을 시작하기 위한 조건이 아니다.
 
+<a id="optional-cad-sources"></a>
+
+## 선택적 CAD 원본과 현재 연결 결정
+
+2026-11-02 [SolidCraft `27951f4`](https://github.com/tangency-labs/solidcraft/tree/27951f40c374b2495c1cf4648a87410179fa76cf)의 실제 CLI·engine/document·STEP writer와 [CADCraft `2034d68`](https://github.com/storytold/cadcraft/tree/2034d6899eba72363028723ec75d4c36eacfceac)의 entity/format·교점·명령/Undo 소스를 읽었다. 두 앱은 Rust/egui이고 MIT OR Apache-2.0 선택형 라이선스다. UI 전체를 Qt로 옮기거나 Prep 문서와 병립하는 CAD 문서 정본을 만들지 않는다. FreeCAD의 CAD 원본 소유 경로는 유지한다.
+
+SolidCraft의 선택적 STEP 교환을 실제 코드 접점으로 정했다. `adapters.solidcraft_source`는 saved container 형식 46/47의 제한된 사전 검사·원본 캡처·버전/해시·고정 `run --in … --out … --quiet --param-check strict` 인수를 준비한다. 실행은 하지 않는다. 일반 JSON/script 입력, 추가 명령·덮어쓰기 옵션을 노출하지 않으며 새 작업 폴더를 사용한다. 준비 검사는 native parser·프로세스 격리를 대신하지 않는다. 내장 link가 최신 외부 원본이라고 가정하지 않으며 외부 폰트 의존성도 캡처한 것으로 표시하지 않는다.
+
+STEP 결과의 존재·경로·형식·입력 해시를 확인한 다음 `PreparedSolidCraftStep.generate_mesh_candidate`가 기존 **GmshBackend → read_mesh_candidate**로 검사 가능한 후보를 만든다. worker 시작 전 CAE 문서 ID/revision을 캡처한 `SuppliedStepCandidate`를 반환하며, `adopt_supplied_step`의 별도 `to_native_mesh/validate_native_mesh` 품질·단위 gate와 기존 원자 채택을 통과해야 문서를 변경한다. Gmsh의 STEP 길이 mm는 SDK 정규화 결과다. SolidCraft writer의 mm는 고정 소스에서 확인한 예상값이며 공급 STEP의 원단위나 실제 생성자를 검증했다는 뜻이 아니다.
+
+출처 선언은 생성자를 `declared_producer`, 단위를 `expected_step_length_unit`로 표시하고 실행·native 형식 판정은 미실행으로 기록한다. 채택 당시 새 NODE 주석에는 버전 있는 `verification=unverified` 선언과 design/executable/실제 STEP 해시만 보존한다. 기존 source asset 해시와 STEP 형식을 대조하며 exe나 비공개 경로를 작업 문서에 동봉하지 않는다. 주석은 한 Undo·저장·새 프로세스 재열기·export에 보존되는 입력 이력이고, 이후 메시 수정 뒤의 현재 형상을 인증하지 않는다. 독립 SDK STEP으로 이 전달·채택/실패 불변을 확인했으며 SolidCraft 자체 실행과 `.sc→STEP` 생성 관계는 미확인이다. 이후 승인된 설치/실행 환경에서 구멍·fillet 부품의 치수 변경/Undo/저장/재열기→STEP→체적 메시→면 조건 재연결·native 입력을 검증해야 CAD 재사용을 실사용 완료로 판정한다.
+
+CADCraft의 Solid는 2D 엔티티이고 STEP/B-rep 입력원이 아니다. 교점/스냅은 향후 평면 스케치 과업에서 검토할 수 있지만 현재 N18에 억지로 추가하지 않는다. 양쪽 명령/Undo 전체를 대체하지 않고 Prep의 기존 revision·다중 자원 transaction·저장/실패 복원 계약을 사용한다. 의존 라이브러리·폰트·브랜드 조건은 별도이며 [배포 고지](THIRD_PARTY.md)를 유지한다.
+
 ## AI·스크립팅·MCP를 위한 앱 계약
 
 MCP는 모델링 기능을 제공하는 커널이 아니다. 다음 앱 API 위에 연결하는 전달 계층으로 둔다. GUI·Python/CLI·MCP는 같은 문서와 명령을 사용하며 서로 다른 모델 사본을 몰래 수정하지 않는다.
@@ -186,7 +200,7 @@ PrePoMax 3.0의 공식 Python/API·MCP·journal 문서와 FreeCAD MCP의 실제 
 
 아래는 현재 Radioss 적용 앱의 계약이다. 공용 기반이 모든 파일 형식과 솔버에 이 저장 형식·카드 규칙을 강제하는 것은 아니다.
 
-1. CAD 원본, 교환 형상/메시, 전처리 편집 문서, Starter/Engine 출력의 역할을 구분한다. 현재 RAD 편집 문서는 원문·필드 patch·추가/삭제 카드 구조 상태를 동봉한 `.caeprep` v3 ZIP이며 v1/v2도 읽는다. CLI와 실제 지원 범위는 [README](README.md), 내부 계약은 [ARCHITECTURE](ARCHITECTURE.md)에 공개한다. `export_solver_inputs`는 명시한 종료 시간·출력 간격으로 새 Engine을 작성한다. 원본 Engine 편집은 지원하지 않으며, 영속 케이스/해석 설정은 PR #17의 별도 케이스 자원·활성 조건 참조·단위 설정으로 구현했다.
+1. CAD 원본, 교환 형상/메시, 전처리 편집 문서, Starter/Engine 출력의 역할을 구분한다. 현재 RAD 편집 문서는 원문·필드 patch·추가/삭제 카드 구조 상태를 동봉한 `.caeprep` v6 ZIP이며 v1–v5도 읽는다. CLI와 실제 지원 범위는 [README](README.md), 내부 계약은 [ARCHITECTURE](ARCHITECTURE.md)에 공개한다. `export_solver_inputs`는 명시한 종료 시간·출력 간격으로 새 Engine을 작성한다. 원본 Engine 편집은 지원하지 않으며, 영속 케이스/해석 설정은 PR #17의 별도 케이스 자원·활성 조건 참조·단위 설정으로 구현했다.
 2. 원 RAD의 카드 순서·주석·미편집 필드·미지원 카드와 INCLUDE 파일 관계를 보존한다. 미지원 카드는 읽기 전용 원문으로 남기고 지원하지 않는 편집은 명시한다. 이해하지 못한 필드를 기본값으로 덮어쓰지 않는다.
 3. 형식 지정은 공개 솔버 규격에 맞추며 ID 참조와 단위 선언을 유지한다. 공통 GUI가 솔버 고유 옵션을 제거하지 않게 한다.
 4. 메뉴·툴바·단축키·추후 자동화는 같은 명령을 사용한다. 선택 → 속성 수정 → Undo/Redo → 저장/취소가 같은 문서에 반영돼야 한다.

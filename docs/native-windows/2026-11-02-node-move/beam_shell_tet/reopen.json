@@ -1,0 +1,21 @@
+{
+  "phase": "reopen",
+  "status": "passed",
+  "platform": "windows",
+  "input_desktop": "Default",
+  "nodes": 9,
+  "elements": 3,
+  "settings_unchanged": true,
+  "source_unchanged": true,
+  "absolute_node_move": true,
+  "model": "beam_shell_tet",
+  "scope": "Own Windows Qt/VTK window and file API; no OS input, IME, DPI, solver or eight-product acceptance",
+  "source_hashes": {
+    "src/caelab_prep/application/node_moves.py": "403110d2ec8463187ed13f3a33f7b4e84a74edc6b949d14dbb8a020d97ceb91e",
+    "src/caelab_prep/application/session.py": "01058c876119ee2e2649e9d01fa73628a3b5d18cf632bd9e6252d33eb2a3ae51",
+    "src/caelab_prep/application/mesh_edit_candidates.py": "8bbb130c5a5ce5fbaf3f9341b48847eda54185acfff25bf93573419fb3d00d7a",
+    "src/caelab_prep/radioss/deck.py": "90b83f9f9d2a07d94687bd10ea031ab573c1487f42ffb310942c5163fc87a0fa",
+    "src/caelab_prep/ui/node_moves.py": "c41827c1edab652c5378c57a0445414db828b15d29de7a16fab380d82a363443"
+  },
+  "actual_dialog_size": null
+}
