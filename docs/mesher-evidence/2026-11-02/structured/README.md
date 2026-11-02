@@ -7,3 +7,5 @@
 공개 재현 경로는 `scripts/evaluation/structured_recipes.py`와 `scripts/evaluation/structured_f2/verify_f2.py`다. Gmsh 4.15.2에서 원 입력·oracle·공차를 해시로 고정하고 실패/시간 초과 시 비영 종료한다. 지원 입력은 직선/짧은 원호·한 면 또는 공유 edge 두 planar quad·공통 직선 sweep이며 curved source/annulus/twist/임의 patch assembly와 hybrid는 포함하지 않는다.
 
 원호 경로 변경의 코드 근거는 공식 [Gmsh 4.15.2 source](https://gmsh.info/src/gmsh-4.15.2-source.tgz)의 `GeoInterpolation.cpp` `InterpolateCurve(...,1)` 유한차분과 `OCCEdge.cpp` `firstDer`의 OCCT D1이다. 같은 입력의 수치 오차 개선은 실측했지만 모든 SDK 내부 오차 원인을 증명한 것은 아니다.
+
+고정 입력 해시의 정본은 [실행 lock](../../../../scripts/evaluation/structured_f2/input-lock.json)이다.

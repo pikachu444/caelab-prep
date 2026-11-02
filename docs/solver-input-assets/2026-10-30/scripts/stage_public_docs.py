@@ -5,12 +5,14 @@ No Git/network writes here. The integration owner publishes after review.
 from pathlib import Path
 import json
 import shutil
+from package_research import build_index
 
 ROOT=Path(__file__).resolve().parents[1]
 DEST=ROOT.parent/'solver-input-publish'
 PREFIX=Path('docs/solver-input-assets/2026-10-30')
 
 def stage():
+    build_index()
     files=[]
     for folder in ['notes','solvers','catalogues','discussion','scripts']:
         files += [p for p in (ROOT/folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts]
@@ -25,7 +27,8 @@ def stage():
         relative=PREFIX/p.relative_to(ROOT);dst=DEST/relative;dst.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,dst);out.append(str(relative))
     all_files=sorted(str(p.relative_to(DEST)) for p in DEST.rglob('*') if p.is_file())
     manifest=dict(file_count=len(all_files),files=all_files,total_bytes=sum((DEST/p).stat().st_size for p in all_files))
-    (ROOT/'.transfer/public-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+    (ROOT/'.transfer').mkdir(exist_ok=True)
+    (ROOT/'.transfer/public-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(dict(files=manifest['file_count'],bytes=manifest['total_bytes'])))
 
 if __name__=='__main__':stage()

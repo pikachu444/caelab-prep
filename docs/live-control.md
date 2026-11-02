@@ -2,6 +2,9 @@
 
 이 연결은 실행 중인 Prep 창의 **같은 `PrepSession`**을 제어한다. 독립 CLI의 파일 열기와 다르며, 연결에 실패하면 문서 사본을 만들지 않는다. 현재 범위는 문서 조회·선택, 제공자가 지원하는 숫자/boolean scalar 편집, Undo/Redo, 작업문서 저장, 세션 이벤트 조회, CAD 메시 후보의 생성·상태·취소다. 케이스·집합 등 모든 모델 명령을 원격 노출하는 범위는 아니다. 선택적인 MCP 어댑터와 실제 목표 클라이언트 사용법은 [MCP 연결](mcp-client.md)에 별도로 설명한다.
 
+
+Windows에서는 [설치 가이드](usage.md#install-windows)의 GUI 환경을 먼저 준비한다. 아래 `caelab-prep` 명령은 가상환경 활성화 없이 `.\.venv\Scripts\caelab-prep.exe`로 실행한다. 다른 Python으로 설치한 환경의 PATH 명령과 혼용하지 않는다.
+
 ## 연결과 수명
 
 ```sh

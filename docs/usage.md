@@ -69,13 +69,13 @@ Qt XCB와 OpenGL 런타임, 한글 글꼴이 필요합니다. Ubuntu 의존성�
 
 MSH는 2.2/4.1 ASCII에 한정합니다. binary·partition·periodic·data·parametric MSH와 미지원 요소 family는 거부합니다. 문서와 소스 길이 단위가 다르면 자동 환산하지 않습니다. 일반 warped quad, 임의 all-hex, 자동 중립면과 모든 접촉 프로파일은 지원 완료 범위가 아닙니다.
 
-작업 브랜치의 **Mesh → Move nodes to coordinates…**에서는 소스와 절점 ID를 선택하고 입력 덱 길이 단위의 절대좌표를 입력합니다. **Preview move**에서 품질과 영향 대상을 확인하고 검토 체크 후 **Apply move**로 확정합니다. ID·연결·집합 멤버를 보존해도 하중 작용점과 접촉 간격은 달라질 수 있습니다. 영향 집합은 **Replace prepared mesh / reconnect targets…**에서 명시적으로 검토하기 전까지 native 출력을 막습니다. 다중 자원에서는 집합별 실제 변경 자원에 검토 상태를 연결합니다. API의 하중 진단은 시간함수 평가 전 계수이며 실제 시각의 힘·모멘트나 작용점 모멘트를 계산한 결과가 아닙니다. 일반 메시 편집 전체의 완료본은 아닙니다.
+main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 절점 ID를 선택하고 입력 덱 길이 단위의 절대좌표를 입력합니다. **Preview move**에서 품질과 영향 대상을 확인하고 검토 체크 후 **Apply move**로 확정합니다. ID·연결·집합 멤버를 보존해도 하중 작용점과 접촉 간격은 달라질 수 있습니다. 영향 집합은 **Replace prepared mesh / reconnect targets…**에서 명시적으로 검토하기 전까지 native 출력을 막습니다. 다중 자원에서는 집합별 실제 변경 자원에 검토 상태를 연결합니다. API의 하중 진단은 시간함수 평가 전 계수이며 실제 시각의 힘·모멘트나 작용점 모멘트를 계산한 결과가 아닙니다. 일반 메시 편집 전체의 완료본은 아닙니다.
 
 <a id="node-move-images"></a>
 
 ### 실제 Windows 화면으로 좌표 이동 확인하기
 
-아래는 이 작업 브랜치에서 2026-11-02 실행한 native Windows 앱입니다. 미리보기는 실제 Qt 위젯 캡처이며, 메시 이미지는 같은 실행 흐름의 VTK framebuffer입니다. 위젯 캡처에서 검게 보였던 OpenGL 영역은 사용하지 않았으며 두 이미지를 합성하지 않았습니다.
+아래는 현재 main에 통합된 절대좌표 이동 기능의 2026-11-02 당시 개발검증자료입니다. 각 단계는 [검증 기록](native-windows-validation.md#node-move-20261102)에 적힌 서로 다른 소스 기준을 사용했습니다. 현재 HEAD나 같은 frozen 배포본 전체를 검증한 이미지가 아닙니다. 미리보기는 실제 Qt 위젯 캡처이며, 메시 이미지는 같은 실행 흐름의 VTK framebuffer입니다. 위젯 캡처에서 검게 보였던 OpenGL 영역은 사용하지 않았으며 두 이미지를 합성하지 않았습니다.
 
 ![입력 덱 mm 단위로 node 2의 X를 11로 지정한 실제 미리보기](native-windows/2026-11-02-node-move/beam_shell_tet/preview.png)
 
@@ -93,7 +93,7 @@ MSH는 2.2/4.1 ASCII에 한정합니다. binary·partition·periodic·data·para
 
 Engine 출력에는 `/BEGIN`의 입력 단위뿐 아니라 두 번째 작업 단위 행도 명시되어 있어야 합니다. 예제 `shell_panels_0000.rad`처럼 작업 단위 행이 없는 RAD는 일반 RAD 내보내기를 할 수 있지만 Engine 출력은 `invalid_units`로 거부합니다. 입력 시간 단위를 작업 시간 단위로 추정하지 않습니다. 새 모델은 **New model…**에서 명시적 단위로 시작하고, 기존 입력은 작업 단위가 명시된 덱을 준비하세요.
 
-Prep에는 솔버 실행 경로나 Intel runtime을 설정하는 기능이 없습니다. 계산은 [CAELab Workbench](https://github.com/pikachu444/caelab-workbench)의 프로그램 연결과 기존 JobManager에서 설정합니다. Workbench 안내에 따라 Starter/Engine, MPI·공유 라이브러리와 실행 환경을 준비하세요. Prep를 설치했다고 솔버가 설치되거나 정상 동작이 확인된 것은 아닙니다. 실제 입력별 실행·오류·경고와 확인 범위는 [Windows 기록](native-windows-validation.md)을 확인하세요.
+Prep에는 솔버 실행 경로나 Intel runtime을 설정하는 기능이 없습니다. 계산은 [CAELab Workbench](https://github.com/pikachu444/caelab-workbench/blob/main/docs/tutorials/workbench_quickstart.md#caelab-prep와-공용-입력-위젯)의 프로그램 연결과 기존 JobManager에서 설정합니다. Workbench 안내에 따라 Starter/Engine, MPI·공유 라이브러리와 실행 환경을 준비하세요. Prep를 설치했다고 솔버가 설치되거나 정상 동작이 확인된 것은 아닙니다. 실제 입력별 실행·오류·경고와 확인 범위는 [Windows 기록](native-windows-validation.md)을 확인하세요.
 
 ## CLI로 편집·저장·재열기하기
 

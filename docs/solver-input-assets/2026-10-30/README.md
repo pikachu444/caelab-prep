@@ -4,7 +4,7 @@
 
 **이 문서는 2026-10-30 자료 수집과 후속 자산 보완의 기록이다.** 당시 작업은 자료 취득·목록 추출·관련 규칙 검토였으며 제품 구현이나 solver 실행을 수행하지 않았다. 원장의 수량·판본·`solver_executed=false`는 그 수집 대상과 시점의 증거로 유지한다.
 
-2026-11-02 제품 기준 `a48d3b4`에서는 지원 RAD 카드 생성·관계 편집, CAD tri3/tet4 후보 채택, 새 Starter/Engine 출력과 소형 실제 solver 검사가 구현됐다. 이 후속 결과를 아래 일곱 솔버 전체나 수집한 upstream 예제의 실행 성공으로 확대하지 않는다. 현재 지원은 [저장소 README](../../../README.md), 남은 구현·검증과 완료 기준은 [잔여 작업 N01–N26](../../execution-stages.md#remaining-work)을 따른다.
+2026-11-02 제품 기준 `a48d3b4`에서는 지원 RAD 카드 생성·관계 편집, CAD tri3/tet4 후보 채택, 새 Starter/Engine 출력과 소형 실제 solver 검사가 구현됐다. 이 후속 결과를 아래 일곱 솔버 전체나 수집한 upstream 예제의 실행 성공으로 확대하지 않는다. 현재 지원은 [저장소 README](../../../README.md), 남은 구현·검증과 완료 기준은 [잔여 작업 N01–N26](../../../CURRENT_STATE.md#remaining-work)을 따른다.
 
 ## PR #10 이후 실제로 보완한 자산
 
@@ -43,11 +43,11 @@ RAD를 먼저 개발할 때는 위 Starter/Engine 규칙과 `inp2rad.py`의 실�
 
 ## 필요한 자료 찾기
 
-위 기능 표에서 해당 솔버 노트로 들어가면 입력 규칙, 실제 예제, writer/schema의 경로와 부족한 부분을 볼 수 있다. 특정 키워드는 `index.html`에서 이름으로 찾거나 `catalogues/<solver>.csv`에서 공식 설명으로 이동한다. 세부 근거가 필요할 때만 `solvers/<solver>.json`을 본다.
+위 기능 표에서 해당 솔버 노트로 들어가면 입력 규칙, 실제 예제, writer/schema의 경로와 부족한 부분을 볼 수 있다. 특정 키워드는 `catalogues/<solver>.csv`에서 찾아 공식 설명으로 이동한다. HTML 색인과 집계는 아래 생성 명령으로 만든다. 세부 근거가 필요할 때만 `solvers/<solver>.json`을 본다.
 
 `tmp/` 경로는 수집 시 분석용 원본 위치다. 공개 Git과 다운로드 ZIP에는 상용 매뉴얼·재배포 불명 예제 전문을 넣지 않는다. URL·고정 버전·locator·크기·SHA·취득 manifest를 보존해 다시 찾을 수 있게 했다. HTML 원본 전체를 영구 오프라인 배포했다고 표현하지 않는다.
 
-공개 Git에는 자체 노트·원장·목록·취득 manifest·감사·재현 스크립트와 참고 source의 NOTICE/라이선스를 둔다. PR #10의 허용된 참고 source/schema/example은 별도 다운로드 ZIP에 있고, 이번 후속 참고 source와 MIT 예제는 `followup/`에도 직접 보존했다. 원장의 `assets/`·`examples/` 파일 경로는 이 ZIP을 기준으로 하며, Git의 제품 source에 편입됐다는 뜻이 아니다. `index.html`은 ZIP을 풀어 브라우저에서 여는 전체 목록 진입점이다.
+공개 Git에는 자체 노트·원장·목록·취득 manifest·감사·재현 스크립트와 참고 source의 NOTICE/라이선스를 둔다. PR #10의 허용된 참고 source/schema/example은 별도 다운로드 ZIP에 있고, 이번 후속 참고 source와 MIT 예제는 `followup/`에도 직접 보존했다. 원장의 `assets/`·`examples/` 파일 경로는 이 ZIP을 기준으로 하며, Git의 제품 source에 편입됐다는 뜻이 아니다. `index.html`은 [파생 색인 만들기](#파생-색인-만들기)로 생성하거나 참고 ZIP을 풀어 브라우저에서 여는 전체 목록 진입점이다.
 
 ## 교차 검토 결론
 
@@ -66,9 +66,22 @@ Workbench는 이 저장소에서 검증해 제공할 자산/API와 native 파일
 
 ## 종료 상태
 
-7계열에 대해 목록 분모/결손, Q01–Q12 근거/부분/공백, 예제/코드 역할·판본·조건, 실제 취득·해시를 기록했다. 담당자 교차토론, 독립 Astra 지적의 수정 확인, [통합 검증](validation.json)을 통과한 범위를 자료 수집으로 닫았다. 당시 미수행한 생성기·solver run과 후속 RAD 구현·소형 실행 검증은 별도 기록이며, 전수 field review와 일곱 솔버 전체 생성 지원은 완료되지 않았다.
+7계열에 대해 목록 분모/결손, Q01–Q12 근거/부분/공백, 예제/코드 역할·판본·조건, 실제 취득·해시를 기록했다. 담당자 교차토론, 독립 Astra 지적의 수정 확인, [당시 통합 검증](validation.json)을 통과한 범위를 자료 수집으로 닫았다. 당시 미수행한 생성기·solver run과 후속 RAD 구현·소형 실행 검증은 별도 기록이며, 전수 field review와 일곱 솔버 전체 생성 지원은 완료되지 않았다.
+
+`validation.json`은 2026-10-30 자료 수집 당시의 검증 출력이며 현재 Git tree의 검사 결과가 아니다. [정리 전 보관본](https://github.com/pikachu444/caelab-prep/blob/46cea51457ea62748a940f95015ce0216edf369a/docs/solver-input-assets/2026-10-30/validation.json)의 JSONL 행수·입력 문서 해시·판정을 그대로 보존한다. 링크의 Git SHA는 보관본의 기준이며 검증 실행코드 SHA는 기록되지 않았다.
+
+현재 찾아보기 표는 [Radioss CSV](catalogues/radioss.csv)와 [CalculiX CSV](catalogues/calculix.csv)를 정본으로 쓴다. 참고 ZIP의 경로와 현재 Git의 실제 소스·고지 구분은 [archive 원장 안내](THIRD_PARTY.md#archive-원장과-git의-실제-복사-코드)를 따른다.
 
 이 자료 묶음의 공백은 전수 생성 schema/API, 수집 대상 전체의 의도적 오류 예제·실행 oracle, 최신판 간 모든 차이, MSC2024.2 설치 raw·실행 결과의 동일판 쌍 및 일부 원문의 재배포 권리다. 후속 RAD의 제한된 오류/물리 oracle은 전체 공백의 해소를 뜻하지 않는다. 공식 필드 규칙 자체와 MSC 완전 입력 예제를 못 찾은 상태라고 표현하지 않는다. 접근 실패·불명확한 항목을 찾았다고 바꾸지 않았다.
 
-[사전 합의](discussion/protocol.md) · [토론·통합 결론](discussion/synthesis.md) · [독립 감사 기준](discussion/astra-checklist.md) · [독립 감사 결과](discussion/astra-findings.md) · [자료 집계](summary.json)
+[사전 합의](discussion/protocol.md) · [토론·통합 결론](discussion/synthesis.md) · [독립 감사 기준](discussion/astra-checklist.md) · [독립 감사 결과](discussion/astra-findings.md) · 집계는 아래 생성 명령의 `summary.json`
 
+## 파생 색인 만들기
+
+원장은 `solvers/*.json`, 찾아보기 표의 정본은 `catalogues/*.csv`다. `index.html`·`summary.json`과 두 CSV의 JSONL 거울은 Git에 중복 보관하지 않는다. HTML/집계는 다음 명령으로 로컬 생성하며 다운로드·solver 실행을 하지 않는다.
+
+```powershell
+python -c "import importlib.util; p='docs/solver-input-assets/2026-10-30/scripts/package_research.py'; s=importlib.util.spec_from_file_location('asset_index',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); m.build_index()"
+```
+
+배포 archive와 `stage_public_docs.py`는 필요한 HTML/집계를 먼저 생성한다. 생성 결과는 지원 카드 수나 현재 제품의 실행 검증으로 세지 않는다. source 원장에 적힌 참고 ZIP의 내부 경로와 현재 Git tree를 구분한다.

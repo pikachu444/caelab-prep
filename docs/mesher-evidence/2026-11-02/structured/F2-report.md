@@ -8,7 +8,7 @@ Date: 2026-11-02. This is an independent, finite SDK experiment. It does not est
 
 - Original recipe: `996274c2511fd6ba71bed27066aaad42f93d01242ca4d7cda7c1f7161847b841`. H-U1 accepted an unsupported 30-degree twist and produced a straight 192-Hex8 mesh; exit 0. See `original-H-U1/result.json` and the preserved mesh/report.
 - Corrected strict recipe: `89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb`. Unknown semantic fields are rejected. H-U1 alone was repeated; the other 17 cases were executed for the first time.
-- The input and contract SHA values were sent to the implementation owner before SDK execution. Normal N3 and difficult D2 in each family were withheld until recipe freeze. `input-lock.json` records the three SHA values.
+- The input and contract SHA values were sent to the implementation owner before SDK execution. Normal N3 and difficult D2 in each family were withheld until recipe freeze. [input-lock.json](../../../../scripts/evaluation/structured_f2/input-lock.json) records the three SHA values.
 - `frozen-strict/source-lock.json` records the exact recipe, oracle, runner, public/holdout input and contract hashes. Each case has `case.json` and `independent-result.json`; generated supported cases also retain SDK output/report/log and mesh. Unsupported rejections produce no mesh. No product files were changed by this evaluation.
 
 ## Predetermined checks

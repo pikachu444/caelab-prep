@@ -1,5 +1,7 @@
 # 열린 Prep GUI의 MCP 연결
 
+Windows GUI 환경은 [설치 가이드](usage.md#install-windows)에 따라 `.[gui]` 또는 `.[gui,cad]`로 먼저 준비한다. `.[mcp]`만 설치하면 GUI 의존성은 설치되지 않는다. 같은 환경에서 연결할 때 아래 `python`은 `.\.venv\Scripts\python.exe`, `caelab-prep`는 `.\.venv\Scripts\caelab-prep.exe`로 실행한다.
+
 이 어댑터는 [live control](live-control.md)의 인증된 연결을 사용하는 **stdio MCP 서버**다. 자체 `PrepSession`, Qt 창 또는 메시 실행기를 만들지 않는다. 요청은 이미 열린 창의 같은 제공자·문서 잠금·명령·작업에 전달된다. 지원 범위는 문서 조회/선택, 제공자가 허용하는 숫자/boolean 값 변경, Undo/Redo, 작업문서 저장, 이벤트, CAD 메시 후보 작업의 시작·조회·생성자 취소다. 모든 모델링 명령이나 Workbench 솔버 실행 API를 뜻하지 않는다.
 
 목표 클라이언트는 공개 배포된 [FastMCP client CLI](https://gofastmcp.com/cli/client)의 `list`/`call` 명령이다. 설치된 클라이언트가 stdio MCP 서버를 실제로 시작하고 요청하며, 자체 테스트용 SDK client를 작성한 경로가 아니다. 이는 MCP 클라이언트 연결이며 자연어 LLM 실행의 검증이 아니다. 로컬 stdio 연결에는 LLM API 키나 OAuth가 필요하지 않다. 다른 데스크톱/웹 MCP host 및 Windows GUI는 각각 별도로 확인한다.
@@ -29,7 +31,7 @@ GUI의 **Automation → Start live control…**도 같은 연결을 만든다. �
 }
 ```
 
-별도 클라이언트 환경에 FastMCP를 설치하고 실제 명령을 실행한다. 각 호출은 stdio 어댑터를 새로 시작하지만 연결 대상은 계속 **같은 열린 GUI 소유자**다.
+다음 FastMCP 명령은 당시 Linux/POSIX 환경에서 사용한 예다. Windows 클라이언트 실행을 검증한 예가 아니다. 별도 클라이언트 환경에 FastMCP를 설치하고 실제 명령을 실행한다. 각 호출은 stdio 어댑터를 새로 시작하지만 연결 대상은 계속 **같은 열린 GUI 소유자**다.
 
 ```sh
 python -m venv /absolute/mcp-client
@@ -84,3 +86,14 @@ PYTHONPATH=src xvfb-run -a python -m pytest -q tests/test_mcp_client.py
 ```
 
 다른 후보 [Apify mcpc](https://github.com/apify/mcpc) 0.7.0도 설치해 연결을 시도했다. 2026-11-02 이 실행 환경에서 클라이언트 bridge의 Unix socket 생성이 `EPERM`으로 거부돼 **MCP handshake 전에 실패**했다. 독립 AF_UNIX probe도 같은 오류였고 loopback TCP는 동작했다. mcpc를 수정하거나 이 시도를 연결 성공으로 세지 않았다. `CAELAB_MCPC`를 명시하는 별도 선택 경로는 정상 Unix socket 환경에서 같은 과업을 재현하기 위한 검사이며, 여기서의 mcpc 성공 근거는 없다.
+
+## Windows 클라이언트 설정의 서버 실행 경로
+
+아래와 같이 MCP 클라이언트의 command에 실제 환경의 실행 파일을 지정한다. POSIX의 `bin/caelab-prep` 예제를 Windows 경로로 그대로 복사하지 않는다. 서버와 GUI를 별도 환경에 설치해도 연결 파일은 명시적으로 같은 열린 GUI를 가리켜야 한다.
+
+```json
+{
+  "command": "C:\\path\\to\\caelab-prep\\.venv\\Scripts\\caelab-prep.exe",
+  "args": ["mcp", "--connection", "C:\\path\\to\\private-connection.json"]
+}
+```

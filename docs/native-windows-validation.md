@@ -33,9 +33,9 @@ README의 앱 창 이미지는 게시된 `adc916182d957fd583f45b5802bb7220fc7fb3
 
 ## 2026-10-31 과거 실행 기록
 
-2026-11-01 인계 기준: 아래는 PR #12 시기의 제한된 P1–P3/A 공용 부품·기존 필드 편집 과업에 대한 기록이다. [PR #15](https://github.com/pikachu444/caelab-prep/pull/15)가 병합된 `a48d3b4`의 8방식 생성·할당·조건·CAD 후보·Engine 출력 흐름을 Windows에서 다시 검증한 결과가 아니다. 현재 Windows 납품·배율·GPU·파일 대화상자·설치 확인은 [남은 작업과 완료 기준](execution-stages.md#remaining-work)에 남아 있다. 본문의 성공·실패·도구 제한은 당시 상태로 보존한다.
+2026-11-01 인계 기준: 아래는 PR #12 시기의 제한된 P1–P3/A 공용 부품·기존 필드 편집 과업에 대한 기록이다. [PR #15](https://github.com/pikachu444/caelab-prep/pull/15)가 병합된 `a48d3b4`의 8방식 생성·할당·조건·CAD 후보·Engine 출력 흐름을 Windows에서 다시 검증한 결과가 아니다. 현재 Windows 납품·배율·GPU·파일 대화상자·설치 확인은 [남은 작업과 완료 기준](../CURRENT_STATE.md#remaining-work)에 남아 있다. 본문의 성공·실패·도구 제한은 당시 상태로 보존한다.
 
-현재 [실행 근거](execution-stages.md#current-progress)의 Linux X11 16건은 8방식×2창 크기의 두 요소 장면에서 전체 창 배치·실제 VTK 렌더·선택을 확인한 별도 증거다. 전체 모델 작성 작업이나 Windows 실행, 원제품 동일 작업 비교를 대신하지 않는다. 아래 스크립트와 manifest를 재사용하더라도 새 대상 SHA·환경·실행 결과를 별도로 남겨야 한다.
+현재 [실행 근거](../CURRENT_STATE.md#current-progress)의 Linux X11 16건은 8방식×2창 크기의 두 요소 장면에서 전체 창 배치·실제 VTK 렌더·선택을 확인한 별도 증거다. 전체 모델 작성 작업이나 Windows 실행, 원제품 동일 작업 비교를 대신하지 않는다. 아래 스크립트와 manifest를 재사용하더라도 새 대상 SHA·환경·실행 결과를 별도로 남겨야 한다.
 
 당시 P1–P3/A의 공용 부품과 실제 Prep 편집 흐름을 검증했다. 구현팀과 별도인 검증 담당, 하나의 리뷰팀 안의 요구사항 비판·구현 옹호·코드/회귀 검토자가 소스·원요구·실제 실행 화면을 대조했다. 각 [리뷰 근거](reviews/20261031-requirements-critic.md)에 당시 판정과 반론을 남겼다. 아래 CI 대기·병합 조건도 그 후보에 대한 기록이다.
 
@@ -73,6 +73,8 @@ README의 앱 창 이미지는 게시된 `adc916182d957fd583f45b5802bb7220fc7fb3
 Qt 자동 검사 종료의 SIGSEGV 때문에 테스트 창을 명시 정리한 `c23149e`의 push/PR CI는 Qt41 정상 통과·exit0이었다. 이후 `0952d66`은 push 네 job이 통과했지만 [PR Qt job](https://github.com/pikachu444/caelab-prep/actions/runs/41174601977/job/124459446444)이 새 좁은 카탈로그 검사 정리 중 DeferredDelete에서 exit139로 실패했다. 단순 재실행으로 통과 처리하지 않았다. 해당 장면의 정리 전 객체 그래프는 Python 소유·부모 없는 Gallery 1개와 그 자식인 Qt 소유 메뉴 6개/내부 combo popup 6개였다. 이전 fixture는 13개를 각각 닫고 삭제 예약했다. 이제 Python 소유 root만 정리하고 자식은 [Qt의 객체 소유권](https://doc.qt.io/qt-6/objecttrees.html)에 맡긴다. **원래 13개 모두 삭제됐는지 검사는 유지**한다. 일반 QObject 부모/자식이 항상 이중 삭제된다는 주장은 아니다. 영향받은 Qt42는 로컬 9.77s/exit0, 남은 widget/worker0, 실제 설정 전후 동일이다. Linux 실패 해소는 수정 뒤 정확한 새 SHA의 push/PR CI로 별도 확인해야 한다. 제품 소스/네이티브 입력 경로는 이 정리 수정에서 바꾸지 않았다.
 
 ## 재현과 증거
+
+아래 명령은 PR12 시기 개발검증에서 사용한 실행 형태의 기록입니다. 현재 HEAD의 재현 명령으로 확인한 것이 아닙니다. 당시 코드와 기록별 입력·산출물을 함께 확인해야 하며, 현재 코드에서 같은 명령을 실행한다고 과거 결과가 재현되는 것은 아닙니다. 새 대상의 실제 확인 범위는 [N12](../CURRENT_STATE.md#remaining-work)에 별도로 기록합니다.
 
 평가 도구는 제품 실행 의존성이 아니다. GUI 의존성이 설치된 허용된 Windows 데스크톱에서만 실행한다. 새 배율/검증마다 새 OUT 경로를 사용하고, restore만 해당 OUT을 다시 쓴다.
 
