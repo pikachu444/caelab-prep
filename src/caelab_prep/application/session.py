@@ -246,6 +246,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 "create_cards": ["MAT/LAW1", "PROP/SHELL", "PROP/SOLID", "SKEW/FIX", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
                 "copy_delete_cards": ["MAT/LAW1", "MAT/LAW36", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
                 "part_assignment": True, "new_document": True, "mesh_adoption": ["triangle3", "tetra4"],
+                "mesh_adoption_sources": {"cad_gmsh": ["triangle3", "tetra4"],
+                    "standalone_msh": ["triangle3", "tetra4"], "structured_recipe": ["quad4", "hex8"]},
                 "mesh_replacement": "adoption-owned parts without dependent groups/surfaces or unknown references", "solver_input_export": True,
                 "source_import": "explicit native ID mapping and source archive within the closed initial profile",
                 "prepared_mesh_replacement": "mesh-only INCLUDE with unchanged component headers; explicit stale-target reconnection",
@@ -567,11 +569,21 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             _, material_card, material = self._unique_card(material_id, "MAT")
             if material_card.keyword.upper().split("/")[2] not in ("LAW1", "ELAST", "LAW36", "PLAS_TAB"):
                 raise PrepError("unsupported_operation", "Mesh adoption supports LAW1/LAW36 material families.")
-            _, property_card, prop = self._unique_card(property_id, "PROP")
+            property_owner, property_card, prop = self._unique_card(property_id, "PROP")
             prop_family = property_card.keyword.upper().split("/")[2]
             allowed = {"SHELL", "TYPE1"} if native_mesh.dimension == 2 else {"SOLID", "TYPE14"}
             if prop_family not in allowed:
-                raise PrepError("incompatible_property", "Choose a shell property for surface meshes and a solid property for tetrahedral meshes.")
+                raise PrepError("incompatible_property", "Choose a shell property for surface meshes and a solid property for volume meshes.")
+            structured = native_mesh.source_kind == "structured_recipe"
+            structured_hex = structured and native_mesh.dimension == 3
+            if structured_hex:
+                try:
+                    rows = property_owner.render().decode("latin1").splitlines()
+                    isolid = int(rows[property_card.data[1]][:10].strip() or "0")
+                except (IndexError, ValueError):
+                    isolid = None
+                if isolid != 1:
+                    raise PrepError("incompatible_property", "Sweep hex8 adoption requires explicit PROP/SOLID Isolid=1; inherited or other formulations are not substituted.")
             if name is not None: title(name)
             # Reserve every native integer in parsed node/element rows, including
             # rows omitted by the display projection because their geometry is bad.
@@ -611,8 +623,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 used_parts.add(identifier)
             newline = resource.newline
             encoded_coordinates = {node.id: tuple(float(real(value)) for value in node.xyz) for node in native_mesh.nodes}
-            structured_quad = native_mesh.source_kind == "structured_recipe"
-            if structured_quad:
+            structured_quad = structured and native_mesh.dimension == 2
+            if structured:
                 from .structured_mesh import validate_structured_native_coordinates
                 try:
                     validate_structured_native_coordinates(native_mesh, encoded_coordinates)
@@ -644,7 +656,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 marker = f"# CAELab adopted mesh {native_mesh.mesh_uuid}; part {part.uuid}"
                 texts.append(newline.join([f"/PART/{identifier}", title(part_name), marker,
                     integer(prop[1]) + integer(material[1]) + f"{0:10d}", ""]))
-                keyword = "SHELL" if structured_quad else "SH3N" if native_mesh.dimension == 2 else "TETRA4"
+                keyword = "SHELL" if structured_quad else "BRICK" if structured_hex else "SH3N" if native_mesh.dimension == 2 else "TETRA4"
                 cells = cells_by_part.get(part.uuid, [])
                 rows = [integer(element_map[cell.id]) + "".join(integer(node_map[node]) for node in cell.node_ids) for cell in cells]
                 texts.append(newline.join([f"/{keyword}/{identifier}", marker, *rows, ""]))
@@ -656,7 +668,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 if group.kind == "node":
                     family, mapping = "GRNOD/NODE", node_map
                 elif group.kind == "element":
-                    family = self._element_group_family("quad" if structured_quad else "triangle" if native_mesh.dimension == 2 else "tetra")
+                    family = self._element_group_family("quad" if structured_quad else "hexahedron" if structured_hex else "triangle" if native_mesh.dimension == 2 else "tetra")
                     mapping = element_map
                 else:
                     raise PrepError("invalid_reference", "Imported groups must contain nodes or physical elements.")

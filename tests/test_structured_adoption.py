@@ -37,15 +37,15 @@ def _native(raw):
                 identifier = int(row[:10])
                 assert identifier not in nodes
                 nodes[identifier] = tuple(float(row[i:i + 20]) for i in (10, 30, 50))
-        elif keyword.startswith("/SHELL/"):
+        elif keyword.startswith(("/SHELL/", "/BRICK/")):
             for row in rows:
                 identifier = int(row[:10])
                 assert identifier not in elements
                 elements[identifier] = (int(keyword.split("/")[2]),
-                    tuple(int(row[i:i + 10]) for i in (10, 20, 30, 40)))
+                    tuple(int(row[i:i + 10]) for i in range(10, 90 if keyword.startswith("/BRICK/") else 50, 10)))
         elif keyword.startswith("/PART/"):
             parts[int(keyword.split("/")[2])] = (int(rows[1][:10]), int(rows[1][10:20]))
-        elif keyword.startswith(("/GRNOD/NODE/", "/GRSHEL/SHEL/")):
+        elif keyword.startswith(("/GRNOD/NODE/", "/GRSHEL/SHEL/", "/GRBRIC/BRIC/")):
             groups[keyword] = tuple(int(row[i:i + 10]) for row in rows[1:]
                                     for i in range(0, len(row), 10) if row[i:i + 10].strip())
 
@@ -133,18 +133,18 @@ def test_structured_forgeries_units_and_wrong_property_leave_document_unchanged(
     assert _state(mismatched) == original
 
 
-def test_structured_hex_remains_unadoptable(tmp_path):
+def test_one_cell_structured_hex_adopts_as_brick(tmp_path):
     if importlib.util.find_spec("gmsh") is None:
         pytest.skip("Real Gmsh SDK unavailable")
     spec = dict(mode="hex", unit="mm", corners=[[0, 0, 0], [2, 0, 0], [2, 2, 0], [0, 2, 0]],
                 divisions=[1, 1], vector=[0, 0, 2], layers=1)
     native = generate_structured_mesh(spec, tmp_path).to_native_mesh()
     session, material, prop = _session(native)
-    before = _state(session)
-    with pytest.raises(PrepError) as error:
-        session.adopt_mesh_candidate(native, material_id=material, property_id=prop)
-    assert error.value.code == "unsupported_mesh_family"
-    assert _state(session) == before
+    before = _state(session)[1]
+    session.adopt_mesh_candidate(native, material_id=material, property_id=prop)
+    assert any(card["keyword"].startswith("/BRICK/") for card in session.list_cards())
+    session.undo()
+    assert _state(session)[1] == before
 
 
 def test_serialization_damage_is_rejected_before_publish(quad, monkeypatch):

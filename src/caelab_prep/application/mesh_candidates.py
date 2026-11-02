@@ -492,10 +492,11 @@ def validate_native_mesh(native_mesh: NativeMesh) -> NativeMesh:
     if native_mesh.source_kind == "structured_recipe":
         from .structured_mesh import validate_structured_native_mesh
         canonical = validate_structured_native_mesh(native_mesh)
-        if (canonical.dimension != 2 or any(
-                (cell.dimension, cell.element_type, cell.order, len(set(cell.node_ids))) != (2, 3, 1, 4)
-                or len(cell.node_ids) != 4 for cell in canonical.elements)):
-            raise PrepError("unsupported_mesh_family", "Structured adoption currently supports planar first-order quad4 only.")
+        family = {2: (2, 3, 1, 4), 3: (3, 5, 1, 8)}.get(canonical.dimension)
+        if family is None or any(
+                (cell.dimension, cell.element_type, cell.order, len(set(cell.node_ids))) != family
+                or len(cell.node_ids) != family[3] for cell in canonical.elements):
+            raise PrepError("unsupported_mesh_family", "Structured adoption supports planar quad4 and explicit linear sweep hex8 only.")
         return canonical
     if native_mesh.source_kind == "standalone_msh":
         from .external_mesh import validate_imported_mesh
