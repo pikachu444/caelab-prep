@@ -22,10 +22,12 @@ from ..radioss.modeling import (native_identity, integer, material_block, shell_
 from .storage import write_container
 from .contracts import ObjectRef
 from .analysis_cases import AnalysisCasesResource, AnalysisCaseCommands, condition_kind
+from .projection import readonly, mutable as mutable_projection
+from .source_models import SourceArchiveResource, SourceModelCommands
 
 
 PROJECT_FORMAT = "caelab-prep-project"
-PROJECT_VERSION = 3
+PROJECT_VERSION = 4
 
 
 def _file_boundary(function):
@@ -40,7 +42,7 @@ def _file_boundary(function):
     return wrapped
 
 
-class PrepSession(AnalysisCaseCommands):
+class PrepSession(AnalysisCaseCommands, SourceModelCommands):
     def __init__(self):
         self._lock = RLock()
         self.document: Document | None = None
@@ -50,6 +52,7 @@ class PrepSession(AnalysisCaseCommands):
         self._source_paths: set[str] = set()
         self._diagnostics: list[dict] = []
         self._projection_cache: dict | None = None
+        self._projection_index = {}
         self._source_path: str | None = None
         self._listeners = []
         self._active_object: ObjectRef | None = None
@@ -115,6 +118,7 @@ class PrepSession(AnalysisCaseCommands):
         self._source_paths = source_paths
         self._diagnostics = diagnostics
         self._projection_cache = None
+        self._projection_index = {}
         self._source_path = source_path
         self._active_object = None
         self._selected_objects = ()
@@ -246,7 +250,7 @@ class PrepSession(AnalysisCaseCommands):
             if self._projection_cache is None: self.mesh_view()
             result.extend(self._projection_cache.get("diagnostics", []))
             # Diagnostics can contain export guards; never expose their internal objects.
-            return deepcopy(result)
+            return mutable_projection(result)
 
     def list_cards(self) -> list[dict]:
         with self._lock:
@@ -302,15 +306,17 @@ class PrepSession(AnalysisCaseCommands):
 
     def _command_changed(self, change):
         if change.kind == "structure":
+            self._sync_source_paths()
             self._projection_cache = None
+            self._projection_index = {}
             self._projection_revision += 1
             if self._active_object is not None:
                 resource = self.document.resources.get(self._active_object.resource_id)
-                if resource is None or self._active_object.object_id not in resource._by_id:
+                if resource is None or self._active_object.object_id not in getattr(resource, "_by_id", {}):
                     self._active_object = None
                     self.document.selection = Selection()
             self._selected_objects = tuple(ref for ref in self._selected_objects
-                if ref.resource_id in self.document.resources and ref.object_id in self.document.resources[ref.resource_id]._by_id)
+                if ref.resource_id in self.document.resources and ref.object_id in getattr(self.document.resources[ref.resource_id], "_by_id", {}))
             if self._active_object is not None and self._active_target_role is not None:
                 self.document.selection, self._active_target_role = self._condition_selection(
                     self._active_object.object_id, self._active_target_role)
@@ -753,9 +759,7 @@ class PrepSession(AnalysisCaseCommands):
             raise PrepError("invalid_reference", "Choose at least one typed element reference.")
         if self._projection_cache is None: self.mesh_view()
         references, identifiers, families, seen = [], [], set(), set()
-        cells_by_id = {}
-        for cell in self._projection_cache["cells"]:
-            cells_by_id.setdefault(cell["id"], []).append(cell)
+        cells_by_id = self._projection_index["cells_by_id"]
         for value in members:
             if isinstance(value, SelectionRef): ref = value
             elif isinstance(value, dict) and set(value) == {"resource_id", "entity_kind", "local_id"}:
@@ -847,7 +851,7 @@ class PrepSession(AnalysisCaseCommands):
                     for member in members:
                         ref = member if isinstance(member, SelectionRef) else SelectionRef(**member) if isinstance(member, dict) and set(member) == {"resource_id", "entity_kind", "local_id"} else None
                         if (ref is None or ref.entity_kind != "node" or type(ref.local_id) is not int
-                                or self._projection_cache["node_resources"].get(ref.local_id) != [ref.resource_id]):
+                                or self._projection_cache["node_resources"].get(ref.local_id) != (ref.resource_id,)):
                             raise PrepError("invalid_reference", "A uniquely owned node reference is required.")
                         identifiers.append(ref.local_id)
                     identifiers = self._node_members(identifiers)
@@ -1241,7 +1245,14 @@ class PrepSession(AnalysisCaseCommands):
             self.dispatcher.redo()
             return self.describe()
 
-    def mesh_view(self) -> dict:
+    def mesh_view(self, *, mutable: bool = False) -> dict:
+        """Return shared, nested read-only geometry plus current small stamps.
+
+        Geometry identity is stable until a structural command, Undo/Redo of
+        that command, or document replacement. ``mutable=True`` explicitly
+        materializes detached lists/dicts for editing or JSON serialization.
+        Neither form permits mutations of the document through this view.
+        """
         with self._lock:
             document = self._require()
             if self._projection_cache is None:
@@ -1274,18 +1285,21 @@ class PrepSession(AnalysisCaseCommands):
                     matches = parts.get(cell.get("part_id"), [])
                     cell["part_ref"] = ({"resource_id": matches[0][0], "native_scope": matches[0][1].keyword}
                                         if len(matches) == 1 else None)
-                self._projection_cache = {"points": [nodes[i] for i in identifiers], "node_ids": identifiers,
+                self._projection_cache = readonly({"points": [nodes[i] for i in identifiers], "node_ids": identifiers,
                     "cells": valid, "diagnostics": diagnostics, "immutable_projection": True,
-                    "document_id": document.id, "node_resources": node_resources}
-            # The caller may render or serialize this projection, never mutate the model through it.
-            return {"points": [list(p) for p in self._projection_cache["points"]],
-                    "node_ids": list(self._projection_cache["node_ids"]),
-                    "cells": [{**c, "nodes": list(c["nodes"]), "part_ref": dict(c["part_ref"]) if c.get("part_ref") else None} for c in self._projection_cache["cells"]],
-                    "diagnostics": [dict(d) for d in self._projection_cache["diagnostics"]],
-                    "immutable_projection": True, "document_id": document.id, "revision": document.revision,
+                    "document_id": document.id, "node_resources": node_resources})
+                by_id, by_part = {}, {}
+                for cell in self._projection_cache["cells"]:
+                    by_id.setdefault(cell["id"], []).append(cell)
+                    by_part.setdefault(cell.get("part_id"), []).append(cell)
+                self._projection_index = {"cells_by_id": by_id, "cells_by_part": by_part}
+            result = {**self._projection_cache, "revision": document.revision,
                     "document_epoch": self._document_epoch, "projection_revision": self._projection_revision,
-                    "resource_revisions": {key: resource.state_token() for key, resource in document.resources.items()},
-                    "node_resources": deepcopy(self._projection_cache["node_resources"])}
+                    "resource_revisions": readonly({key: resource.state_token() for key, resource in document.resources.items()})}
+            if mutable:
+                result = mutable_projection(result)
+                result["immutable_projection"] = False
+            return result
 
     def _object_card(self, target: ObjectRef):
         document = self._require()
@@ -1319,7 +1333,7 @@ class PrepSession(AnalysisCaseCommands):
             raise PrepError("ambiguous_selection", "The PART ID is repeated across resources.")
         if self._projection_cache is None:
             self.mesh_view()
-        cells = [cell for cell in self._projection_cache["cells"] if cell.get("part_id") == part_id]
+        cells = self._projection_index["cells_by_part"].get(part_id, [])
         keys = [(cell["resource_id"], cell["id"]) for cell in cells]
         if len(keys) != len(set(keys)):
             raise PrepError("ambiguous_selection", "The part contains repeated element IDs.")
@@ -1494,8 +1508,8 @@ class PrepSession(AnalysisCaseCommands):
             entity_id = candidate.get("id")
             if self._projection_cache is None:
                 self.mesh_view()
-            resources = self._projection_cache["node_resources"].get(entity_id, []) if kind == "node" else [
-                cell["resource_id"] for cell in self._projection_cache["cells"] if cell["id"] == entity_id]
+            resources = self._projection_cache["node_resources"].get(entity_id, ()) if kind == "node" else [
+                cell["resource_id"] for cell in self._projection_index["cells_by_id"].get(entity_id, ())]
             if resource_id not in resources:
                 raise PrepError("invalid_selection", "The entity does not belong to the displayed resource.")
             return self.select_entity(kind, entity_id)
@@ -1506,7 +1520,7 @@ class PrepSession(AnalysisCaseCommands):
             if kind not in ("node", "element") or type(entity_id) is not int:
                 raise PrepError("invalid_selection", "선택에는 node/element와 정수 원본 ID가 필요합니다.")
             if self._projection_cache is None: self.mesh_view()
-            resources = self._projection_cache["node_resources"].get(entity_id, []) if kind == "node" else [c["resource_id"] for c in self._projection_cache["cells"] if c["id"] == entity_id]
+            resources = self._projection_cache["node_resources"].get(entity_id, ()) if kind == "node" else [c["resource_id"] for c in self._projection_index["cells_by_id"].get(entity_id, ())]
             if isinstance(entity_id, bool) or not resources:
                 raise PrepError("invalid_selection", "선택한 모델 객체를 찾을 수 없습니다.", {"kind": kind, "id": entity_id})
             if len(resources) != 1:
@@ -1515,7 +1529,7 @@ class PrepSession(AnalysisCaseCommands):
             self._active_object = None
             self._active_target_role = None
             if kind == "element":
-                cell = next(cell for cell in self._projection_cache["cells"] if cell["id"] == entity_id)
+                cell = self._projection_index["cells_by_id"][entity_id][0]
                 parts = [item for item in self.list_cards() if self._native_part_id(item["keyword"]) == cell.get("part_id")]
                 if len(parts) == 1:
                     card = parts[0]
@@ -1560,16 +1574,22 @@ class PrepSession(AnalysisCaseCommands):
             if collisions:
                 raise PrepError("project_path_collision", "대소문자만 다른 경로를 작업 문서에 함께 저장할 수 없습니다.", {"paths": collisions})
             target.parent.mkdir(parents=True, exist_ok=True)
+            if any(not isinstance(resource, (DeckResource, AnalysisCasesResource, SourceArchiveResource)) for resource in document.resources.values()):
+                raise PrepError("unsupported_project_resource", "A resource has no registered native-project codec; nothing was saved.")
+            sources = [r for r in document.resources.values() if isinstance(r, SourceArchiveResource)]
             manifest = {"format": PROJECT_FORMAT, "version": PROJECT_VERSION, "document_id": document.id,
                         "name": document.name, "revision": document.revision, "root_id": self._root_id,
                         "source_paths": sorted(self._source_paths), "diagnostics": self._diagnostics,
                         "resources": [{"id": r.id, "kind": r.kind, "name": r.name,
                             "logical_path": self._paths[r.id], "raw_member": f"raw/{r.id}.rad",
                             "state": r.snapshot()} for r in self._deck_resources(document)],
-                        "analysis_cases": self._cases_resource().snapshot()}
+                        "analysis_cases": self._cases_resource().snapshot(),
+                        "source_models": [resource.manifest() for resource in sources]}
             try:
-                write_container(target, manifest, {f"raw/{resource.id}.rad": resource.raw
-                                                  for resource in self._deck_resources(document)})
+                members = {f"raw/{resource.id}.rad": resource.raw for resource in self._deck_resources(document)}
+                members.update({f"sources/{resource.id}/{original_id}.rad": raw
+                                for resource in sources for original_id, raw in resource.files.items()})
+                write_container(target, manifest, members)
             except (OSError, zipfile.BadZipFile) as exc:
                 raise PrepError("project_write_error", "작업 문서를 저장하지 못했습니다.", {"reason": str(exc)}) from exc
             document.mark_saved(str(target))
@@ -1589,7 +1609,7 @@ class PrepSession(AnalysisCaseCommands):
                     manifest = json.loads(archive.read("manifest.json"))
                     if not isinstance(manifest, dict):
                         raise PrepError("invalid_project", "작업 문서의 manifest는 객체여야 합니다.")
-                    if manifest.get("format") != PROJECT_FORMAT or type(manifest.get("version")) is not int or manifest.get("version") not in (1, 2, PROJECT_VERSION):
+                    if manifest.get("format") != PROJECT_FORMAT or type(manifest.get("version")) is not int or manifest.get("version") not in (1, 2, 3, PROJECT_VERSION):
                         raise PrepError("project_version", "지원하지 않는 작업 문서 형식/버전입니다.")
                     if not isinstance(manifest["document_id"], str): raise ValueError("invalid document ID")
                     UUID(manifest["document_id"])
@@ -1614,6 +1634,27 @@ class PrepSession(AnalysisCaseCommands):
                         resource.restore(item["patches"] if manifest["version"] == 1 else item["state"])
                         document.resources[resource.id] = resource; paths[resource.id] = logical
                     if manifest["root_id"] not in document.resources: raise ValueError("missing root resource")
+                    if manifest["version"] >= 4:
+                        if not isinstance(manifest["source_models"], list): raise ValueError("invalid source model registry")
+                        owned = set()
+                        for metadata in manifest["source_models"]:
+                            source_id = metadata["id"]; UUID(source_id)
+                            files = {item["original_resource_id"]: archive.read(f"sources/{source_id}/{item['original_resource_id']}.rad")
+                                     for item in metadata["files"]}
+                            source_resource = SourceArchiveResource(metadata, files)
+                            if source_resource.id in document.resources: raise ValueError("duplicate source identity")
+                            for item in metadata["files"]:
+                                rid = item["resource_id"]
+                                if rid == manifest["root_id"] or rid in owned or rid not in paths or paths[rid] != item["logical_path"]:
+                                    raise ValueError("invalid mapped resource ownership")
+                                self._include_relative(item["original_path"])
+                                if not paths[rid].startswith(f"sources/{source_id}/"):
+                                    raise ValueError("source path escapes its namespace")
+                                owned.add(rid)
+                            document.resources[source_resource.id] = source_resource
+                        for source_resource in document.resources.values():
+                            if isinstance(source_resource, SourceArchiveResource):
+                                source_resource.validate_mapped_payloads(document)
                     if not isinstance(manifest.get("source_paths", []), list) or not all(isinstance(p, str) for p in manifest.get("source_paths", [])):
                         raise ValueError("invalid source path metadata")
                     diagnostics = self._project_include_diagnostics(document, paths, manifest["root_id"])
@@ -1661,6 +1702,8 @@ class PrepSession(AnalysisCaseCommands):
                         "unresolved_include": True, "resource_id": resource_id, **reference})
 
         visit(root_id, ())
+        for source_root in self._source_roots(document):
+            visit(source_root, (root_id,))
         if reached != set(paths):
             raise PrepError("invalid_project", "루트 입력에서 참조하지 않는 자원이 작업 문서에 있습니다.")
         return diagnostics
@@ -1684,6 +1727,12 @@ class PrepSession(AnalysisCaseCommands):
             targets.add(key)
             excluded = [identity for identity in inactive_condition_ids if identity in resource._by_id]
             payload = resource.render()
+            if resource.id == self._root_id and self._source_roots():
+                text = payload.decode("latin1").splitlines(keepends=True)
+                end = next((index for index, line in enumerate(text) if line.strip().upper() == "/END"), None)
+                if end is None: raise PrepError("invalid_deck", "Assembly export requires an explicit root /END.")
+                text[end:end] = [f"#include {self._paths[rid]}{resource.newline}" for rid in self._source_roots()]
+                payload = "".join(text).encode("latin1")
             if excluded:
                 # INCLUDE directives are comments in the block layout. Retain
                 # them and all comments, even when they follow an omitted card.

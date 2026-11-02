@@ -3,7 +3,7 @@
 A case is a separate resource so one case edit uses the same atomic command,
 Undo and saved-state contract as native cards. It does not clone a solver deck.
 """
-from copy import deepcopy
+from copy import copy, deepcopy
 from hashlib import sha256
 import json
 import math
@@ -66,6 +66,11 @@ class AnalysisCasesResource:
 
     def snapshot(self):
         return deepcopy(self._state)
+
+    def prepare_state(self, state):
+        candidate = copy(self)
+        candidate.restore(state)
+        return candidate.snapshot()
 
     def restore(self, state):
         if not isinstance(state, dict) or set(state) != {"state_version", "cases", "active_case_id"} or type(state["state_version"]) is not int or state["state_version"] != 1 or not isinstance(state["cases"], list):

@@ -14,11 +14,12 @@ from ..cae_core.errors import PrepError
 def native_identity(keyword):
     words = keyword.strip().upper().split("/")
     index = {"MAT": 3, "PROP": 3, "PART": 2, "FUNCT": 2, "GRNOD": 3,
-             "SURF": 3, "BCS": 2, "CLOAD": 2, "INIVEL": 3, "INTER": 3, "TABLE": 3, "GRSH3N": 3, "GRSHEL": 3, "GRBRIC": 3}.get(words[1] if len(words) > 1 else "")
+             "SURF": 3, "BCS": 2, "CLOAD": 2, "INIVEL": 3, "INTER": 3, "TABLE": 3, "GRSH3N": 3, "GRSHEL": 3, "GRBRIC": 3,
+             "SKEW": 3, "FRAME": 3, "GRBEAM": 3, "GRTRUS": 3}.get(words[1] if len(words) > 1 else "")
     if index is not None and len(words) > index and words[index].isdigit():
         if words[1] == "PART" and (len(words) not in (3, 4) or (len(words) == 4 and not words[3].isdigit())):
             return None
-        return ("FUNCT" if words[1] == "TABLE" else words[1]), int(words[index])
+        return ("FUNCT" if words[1] == "TABLE" else "SKEW" if words[1] == "FRAME" else words[1]), int(words[index])
     return None
 
 

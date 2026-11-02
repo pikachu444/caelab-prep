@@ -299,6 +299,11 @@ class DeckResource:
                 "created": [dict(item) for item in self._created], "deleted": sorted(self._deleted),
                 "replaced": dict(self._replaced)}
 
+    def prepare_state(self, state):
+        candidate = copy(self)
+        candidate.restore(state)
+        return candidate.snapshot()
+
     def restore(self, state: dict) -> None:
         """Validate a candidate before replacing live state; legacy patch dictionaries still read."""
         if not isinstance(state, dict):
@@ -484,7 +489,7 @@ class DeckResource:
                     line = self.lines[index].rstrip("\r\n")
                     try:
                         values = [int(line[p:p + 10]) for p in range(0, (count + 1) * 10, 10)]
-                        cells.append({"id": values[0], "type": kind, "nodes": values[1:], "part_id": part,
+                        cells.append({"id": values[0], "type": kind, "formulation": key[1], "nodes": values[1:], "part_id": part,
                                       "card_id": card.id, "resource_id": self.id})
                     except ValueError:
                         diagnostics.append({"severity": "warning", "code": "element_display_parse", "message": "일부 요소 행을 표시하지 못했습니다.", "line": index + 1})

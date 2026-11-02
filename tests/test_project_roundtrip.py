@@ -43,7 +43,7 @@ def test_include_resources_are_loaded_and_portably_exported(tmp_path):
     (inputs / "elements.rad").write_text("/SHELL/5\n" + "".join(f"{i:10d}" for i in [91,21,31,41,51]) + "\n")
     session = PrepSession(); session.open_rad(str(root))
     assert session.describe()["node_count"] == 4 and session.describe()["element_count"] == 1
-    assert session.mesh_view()["cells"][0]["nodes"] == [21,31,41,51]
+    assert session.mesh_view()["cells"][0]["nodes"] == (21,31,41,51)
     project = tmp_path / "included.caeprep"; session.save_project(str(project))
     shutil.rmtree(inputs)
     reopened = PrepSession(); reopened.open_project(str(project))
@@ -115,13 +115,13 @@ def test_include_enddata_ignores_tail_but_preserves_all_bytes(tmp_path):
     root = inputs / "root.rad"; root.write_bytes(root_raw)
     (inputs / "active.rad").write_bytes(active)
     session = PrepSession(); session.open_rad(str(root))
-    assert session.mesh_view()["node_ids"] == [17]
+    assert session.mesh_view()["node_ids"] == (17,)
     assert not any(d.get("unresolved_include") for d in session.diagnostics())
     assert len([c for c in session.list_cards() if c["keyword"] == "/NODE"]) == 1
     project = tmp_path / "a.caeprep"; session.save_project(str(project))
     shutil.rmtree(inputs)
     reopened = PrepSession(); reopened.open_project(str(project))
-    assert reopened.mesh_view()["node_ids"] == [17]
+    assert reopened.mesh_view()["node_ids"] == (17,)
     destination = tmp_path / "export" / "root.rad"
     reopened.export_rad(str(destination))
     assert destination.read_bytes() == root_raw
@@ -136,7 +136,7 @@ def test_casefold_include_collisions_are_diagnosed_before_save(tmp_path):
         pytest.skip("Distinct casefold-colliding inputs require a case-sensitive filesystem")
     (tmp_path / "a.rad").write_text("/NODE\n" + f"{2:10d}{1:20g}{0:20g}{0:20g}\n")
     session = PrepSession(); session.open_rad(str(root))
-    assert session.mesh_view()["node_ids"] == [1, 2]
+    assert session.mesh_view()["node_ids"] == (1, 2)
     assert any(d["code"] == "project_path_collision" for d in session.diagnostics())
     destination = tmp_path / "collision.caeprep"
     with pytest.raises(PrepError) as error: session.save_project(str(destination))

@@ -1,7 +1,7 @@
 """Editable material/curve document; independent of any native solver format."""
 from __future__ import annotations
 
-from copy import deepcopy
+from copy import copy, deepcopy
 from dataclasses import asdict
 import hashlib
 import json
@@ -50,6 +50,11 @@ class MaterialCurveResource:
 
     def snapshot(self):
         return deepcopy(self._state)
+
+    def prepare_state(self, state):
+        candidate = copy(self)
+        candidate.restore(state)
+        return candidate.snapshot()
 
     def restore(self, state):
         if not isinstance(state, dict) or set(state) != {"material", "curves"}:
