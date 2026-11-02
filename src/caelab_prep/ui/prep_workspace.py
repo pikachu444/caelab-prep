@@ -102,14 +102,15 @@ class PrepWorkspace:
                                    ("constraint", "load", "velocity", "contact")),
                              (self.mesh_workflow.cases_action,))),
             ("&Mesh", ((self.mesh_import.action, self.mesh_workflow.mesh_action),
-                       (self.prepared_mesh_action,))),
+                       (self.node_move_action, self.prepared_mesh_action))),
             ("&View", ((self.fit_action, self.fit_selected_action, self.iso_action, *self.standard_view_actions, self.edges_action),
                        (self.hide_selected_action, self.isolate_action, self.show_all_action))),
         )
         for name, sections in groups:
             if name in ("&Model", "&Conditions") and self.presentation:
                 continue
-            menu = self.menuBar().addMenu(name)
+            menu = QMenu(name, self.menuBar())
+            self.menuBar().addMenu(menu)
             for index, actions in enumerate(sections):
                 if index:
                     menu.addSeparator()

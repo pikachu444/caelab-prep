@@ -16,10 +16,10 @@ PUBLIC_PREFIX='docs/solver-input-assets/2026-10-30'
 KEYS=['radioss','dyna','abaqus','calculix','aster','optistruct','nastran']
 
 def dump(path,obj):
-    path.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n')
+    path.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 
 def build_index():
-    solvers=[json.loads((ROOT/f'solvers/{k}.json').read_text()) for k in KEYS]
+    solvers=[json.loads((ROOT/f'solvers/{k}.json').read_text(encoding='utf-8')) for k in KEYS]
     rows=[]
     urls=set()
     for d in solvers:
@@ -40,7 +40,8 @@ def build_index():
     parts=['<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
         '<title>CAE 솔버 입력 생성 자료</title><style>body{font:15px/1.55 system-ui,sans-serif;margin:32px auto;max-width:1220px;padding:0 20px;color:#17202b}h1{font-size:25px}table{width:100%;border-collapse:collapse}td,th{text-align:left;border-bottom:1px solid #d7dde4;padding:8px;vertical-align:top}th{background:#edf1f5}input{font:inherit;padding:9px;width:min(94%,650px);margin:12px 0}a{color:#164fa0}small{color:#526170}.warning{padding:14px;background:#fff5d9}#list td:nth-child(3){font-size:13px}</style>',
         '<h1>CAE 솔버 입력 생성 자료 · 2026-10-30</h1>',
-        '<p class="warning">자료 취득·목록 추출·관련 규칙 검토 결과입니다. 전수 필드 schema·신규 생성기·solver 실행 완료가 아닙니다. 원문 판본·조사 깊이·권리와 누락을 함께 확인하십시오.</p>',
+        '<p class="warning">2026-10-30 자료 수집과 후속 자산 보완의 색인입니다. 아래 목록·독해 깊이·판본은 당시 외부공개자료와 개발검증자료이며 현재 제품의 지원표가 아닙니다. 이 자료 수집 자체는 생성기 구현·solver 실행을 수행하지 않았습니다. 원문 판본·권리와 누락을 함께 확인하십시오.</p>',
+        '<p><a href="https://github.com/pikachu444/caelab-prep/blob/main/README.md">현재 제품 지원 범위</a>와 <a href="https://github.com/pikachu444/caelab-prep/blob/main/CURRENT_STATE.md#remaining-work">남은 작업 N01–N26</a>를 따로 확인하십시오. 수집한 다른 솔버·예제의 실행 상태를 제품의 실행 결과로 바꾸지 않습니다.</p>',
         '<p><a href="README.md">기능별 개발 자산과 사용 범위</a> · <a href="notes/radioss.md">첫 대상: RAD 생성 자료</a></p>',
         '<table><thead><tr><th>솔버</th><th>개발에 참고할 실제 자산</th><th>찾아보기</th></tr></thead><tbody>']
     useful={
@@ -50,16 +51,18 @@ def build_index():
         'calculix':'CGX writer · 공식 해석 덱/결과 · parametric 예제',
         'aster':'Cata 명령 정의 · AsterStudy .comm serializer · .export writer · MED 모델',
         'optistruct':'BDF writer/formatter · 공식 .fem 해석 예제 · 카드 매뉴얼',
-        'nastran':'BDF writer/formatter · MSC QRG · NASA95 보조 모델; 현행 완전 예제 부족',
+        'nastran':'BDF writer/formatter · MSC QRG · 2024.2 완전 listing · 후속 공식 raw 모델(실행 미검증) · NASA95 보조 모델',
     }
     for d in solvers:
-        k=d['key'];parts.append(f'<tr><td>{html.escape(k)}</td><td>{html.escape(useful[k])}</td><td><a href="notes/{k}.md">코드·예제·사용 범위</a> · <a href="catalogues/{k}.csv">키워드 설명 찾기</a></td></tr>')
+        k=d['key']
+        followup='<a href="followup/msc/README.md">후속 확보 범위</a> · ' if k=='nastran' else ''
+        parts.append(f'<tr><td>{html.escape(k)}</td><td>{html.escape(useful[k])}</td><td><a href="notes/{k}.md">코드·예제·사용 범위</a> · {followup}<a href="catalogues/{k}.csv">키워드 설명 찾기</a></td></tr>')
     parts+=['</tbody></table><h2>전체 목록에서 이름 찾기</h2><p><small>단순 파일 내 필터입니다. 공식 원문 전문은 포함하지 않습니다. 종류가 다른 행과 다른 버전을 합쳐 지원 수로 세지 않습니다.</small></p>',
         '<input id="q" placeholder="솔버, keyword/command 이름, 종류 검색" aria-label="목록 필터"><span id="n"></span>',
         '<table id="list"><thead><tr><th>솔버</th><th>이름</th><th>종류 · 조사 깊이</th><th>공식 locator</th></tr></thead><tbody>']
     for d in solvers:
         k=d['key'];source_by_id={s['id']:s for s in d['sources']}
-        for row in csv.DictReader((ROOT/f'catalogues/{k}.csv').open()):
+        for row in csv.DictReader((ROOT/f'catalogues/{k}.csv').open(encoding='utf-8',newline='')):
             name=row.get('name','');kind=row.get('kind',row.get('entry_kind',''))
             url=row.get('url') or row.get('official_url') or row.get('official_source_url') or ''
             src=source_by_id.get(row.get('source_id'),{})
@@ -69,7 +72,7 @@ def build_index():
             if k=='dyna' and row.get('target_pdf_page'):url+='#page='+row['target_pdf_page']
             parts.append('<tr><td>'+html.escape(k)+'</td><td>'+html.escape(name)+'</td><td>'+html.escape(kind+' · '+depth)+'</td><td><a href="'+html.escape(url,quote=True)+'">'+html.escape(str(loc))+'</a></td></tr>')
     parts+=['</tbody></table><script>const rows=[...document.querySelectorAll("#list tbody tr")];const q=document.querySelector("#q"),n=document.querySelector("#n");function filter(){const s=q.value.trim().toLowerCase();let count=0;for(const r of rows){const visible=r.textContent.toLowerCase().includes(s);r.hidden=!visible;if(visible)count++}n.textContent=" "+count+"행"}q.addEventListener("input",filter);filter();</script></html>']
-    (ROOT/'index.html').write_text('\n'.join(parts)+'\n')
+    (ROOT/'index.html').write_text('\n'.join(parts)+'\n',encoding='utf-8')
 
 def selected_files():
     roots=['assets','examples','catalogues','solvers','notes','discussion','scripts']

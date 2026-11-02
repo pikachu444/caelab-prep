@@ -1,0 +1,62 @@
+{
+  "scope": "Fixed F2 prepared geometry SDK evidence only; no generated-native/product/Windows claim",
+  "latest_recipe_sha256": "8ebf10dc5f97536896744199993c7f3df6396f3b1da89461223b908bfabd954a",
+  "oracle_sha256": "984efa88711ab8f298684539f8f3ce893bcefab16fa758e5c27f9c051560a6a8",
+  "input_sha256": {
+    "contract.json": "80030ae1d2111ca2e2777235ac146241a000d406f0f2bdc455de55569548918d",
+    "holdout-inputs.json": "67577e6f3a2c20635b28046b92e291d34d1704f9fe8c0a12f3ab08c77a08a638",
+    "public-inputs.json": "47b68120a5293bde36451a5e85d88f70ef57cb151852499e301a0b8c387763ec"
+  },
+  "retest_policy": "Three affected arc cases rerun once on OpenCASCADE second recipe; retain other fifteen results from unchanged code paths. Not a claim that all eighteen ran locally on latest SHA.",
+  "total_fixed_inputs": 18,
+  "latest_per_input_passes": 18,
+  "latest_per_input_failures": 0,
+  "families": {
+    "line_arc": {
+      "supported_passes": 5,
+      "supported_total": 5,
+      "unsupported_safe_rejections": 1,
+      "status": "F2_PASS_FOR_LOCKED_FAMILY"
+    },
+    "quad": {
+      "supported_passes": 5,
+      "supported_total": 5,
+      "unsupported_safe_rejections": 1,
+      "status": "F2_PASS_FOR_LOCKED_FAMILY"
+    },
+    "sweep_hex": {
+      "supported_passes": 5,
+      "supported_total": 5,
+      "unsupported_safe_rejections": 1,
+      "status": "F2_PASS_FOR_LOCKED_FAMILY"
+    }
+  },
+  "case_evidence_stages": {
+    "H-D1": "frozen-strict",
+    "H-D2": "frozen-strict",
+    "H-N1": "frozen-strict",
+    "H-N2": "frozen-strict",
+    "H-N3": "frozen-strict",
+    "H-U1": "frozen-strict",
+    "L-D1": "arc-occ-retry",
+    "L-D2": "arc-occ-retry",
+    "L-N1": "frozen-strict",
+    "L-N2": "arc-occ-retry",
+    "L-N3": "frozen-strict",
+    "L-U1": "frozen-strict",
+    "Q-D1": "frozen-strict",
+    "Q-D2": "frozen-strict",
+    "Q-N1": "frozen-strict",
+    "Q-N2": "frozen-strict",
+    "Q-N3": "frozen-strict",
+    "Q-U1": "frozen-strict"
+  },
+  "retained_history": [
+    "original-H-U1/result.json",
+    "initial-verdict.json",
+    "verdict.json",
+    "frozen-strict/summary.json",
+    "arc-precision-retry/summary.json"
+  ],
+  "affected_retry_summary": "arc-occ-retry/summary.json"
+}

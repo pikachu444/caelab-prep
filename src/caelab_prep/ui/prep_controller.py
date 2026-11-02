@@ -122,12 +122,19 @@ class PrepController:
         self.mesh_import = MeshImportWorkflow(self)
         self.source_models_dialog = None
         self.prepared_mesh_dialog = None
+        self.node_move_dialog = None
         self.source_models_action = self._action(
             "project", "Source models / import RAD…", self.open_source_models,
             action_id="model.sources")
         self.prepared_mesh_action = self._action(
             "mesh", "Replace prepared mesh / reconnect targets…", self.open_prepared_mesh,
             action_id="mesh.replace_prepared")
+        self.node_move_action = self._action("mesh", "Move nodes to coordinates…", self.open_node_move,
+                                             action_id="mesh.move_nodes")
+
+    def open_node_move(self):
+        from .node_moves import NodeMoveDialog
+        return self._open_model_relation_dialog("node_move_dialog", NodeMoveDialog, "changed")
 
     def open_source_models(self):
         from .source_models import SourceModelsDialog
@@ -271,6 +278,7 @@ class PrepController:
         self.mesh_import.action.setEnabled(loaded and editable)
         self.source_models_action.setEnabled(loaded and editable)
         self.prepared_mesh_action.setEnabled(loaded and editable)
+        self.node_move_action.setEnabled(loaded and editable)
         selected_parts = self._selected_part_refs() if loaded else ()
         self.hide_selected_action.setEnabled(bool(selected_parts) and loaded and editable and self.viewport is not None)
         self.isolate_action.setEnabled(self.hide_selected_action.isEnabled())
@@ -963,7 +971,7 @@ class PrepController:
                 return
         self._settings.setValue("windowGeometry", self.saveGeometry())
         self._settings.setValue("windowState", self.saveState(self.LAYOUT_VERSION))
-        for dialog in (self.source_models_dialog, self.prepared_mesh_dialog):
+        for dialog in (self.source_models_dialog, self.prepared_mesh_dialog, self.node_move_dialog):
             if dialog is not None:
                 dialog.reject()
         if self.viewport:

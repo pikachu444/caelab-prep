@@ -1,6 +1,6 @@
 # 통합 확인과 종료 범위
 
-> 2026-10-30 외부 근거 수집의 감사 기록이다. 아래 `runtime_verified=false`와 공백은 수집 대상의 당시 확인 상태다. 현재 Prep 구현·실행 결과와 미완료 작업은 [현 상태·N01–N26](../../execution-stages.md#remaining-work)에서 별도로 관리한다.
+> 2026-10-30 외부 근거 수집의 감사 기록이다. 아래 `runtime_verified=false`와 공백은 수집 대상의 당시 확인 상태다. 현재 Prep 구현·실행 결과와 미완료 작업은 [현 상태·N01–N26](../../../CURRENT_STATE.md#remaining-work)에서 별도로 관리한다.
 
 ## 수행한 확인
 

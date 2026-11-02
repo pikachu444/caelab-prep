@@ -1,0 +1,238 @@
+{
+  "recipe_sha256": "8ebf10dc5f97536896744199993c7f3df6396f3b1da89461223b908bfabd954a",
+  "source_sha256": {
+    "independent_oracle.py": "984efa88711ab8f298684539f8f3ce893bcefab16fa758e5c27f9c051560a6a8",
+    "run_arcs_occ.py": "e98b483b07920aa69dae168fa93af14311f4199e7d32f67cc96986ab8e047f12",
+    "contract.json": "80030ae1d2111ca2e2777235ac146241a000d406f0f2bdc455de55569548918d",
+    "public-inputs.json": "47b68120a5293bde36451a5e85d88f70ef57cb151852499e301a0b8c387763ec",
+    "holdout-inputs.json": "67577e6f3a2c20635b28046b92e291d34d1704f9fe8c0a12f3ab08c77a08a638",
+    "recipe.py": "8ebf10dc5f97536896744199993c7f3df6396f3b1da89461223b908bfabd954a"
+  },
+  "results": [
+    {
+      "case_id": "L-D1",
+      "family": "line_arc",
+      "category": "difficult",
+      "holdout": false,
+      "recipe_sha256": "8ebf10dc5f97536896744199993c7f3df6396f3b1da89461223b908bfabd954a",
+      "case_sha256": "c262a820745bc953775cfc2c2b400b62ebf169e58748a8976f873fe74260c635",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.004574771999614313,
+        "min_SICN": null,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 35
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 3
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 35,
+        "active_nodes": 36,
+        "all_msh_nodes": 37,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 3
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 35
+          }
+        ],
+        "max_lattice_coordinate_error": 2.2748467065386707e-14,
+        "coordinate_tolerance": 1.2000000000000002e-08,
+        "physical_group_cells": [
+          35
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "radius_error": 5.329070518200751e-15,
+        "plane_error": 0.0,
+        "angle_error": 2.1094237467877974e-15,
+        "analytic_arc_length": 36.65191429188092,
+        "analytic_chord_length": 36.64028538688224,
+        "polyline_approximation_relative_error": 0.00031727960799189225,
+        "measure": 36.64028538688224,
+        "analytic_measure": 36.64028538688224,
+        "relative_measure_error": 0.0
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.07805610499781324,
+      "wall_seconds": 0.13822882899694378,
+      "returncode": 0
+    },
+    {
+      "case_id": "L-N2",
+      "family": "line_arc",
+      "category": "normal",
+      "holdout": false,
+      "recipe_sha256": "8ebf10dc5f97536896744199993c7f3df6396f3b1da89461223b908bfabd954a",
+      "case_sha256": "b5d5415a6cc08adb622cf5f9890873f84e5d39188b1764f6fdaab45f58448e6e",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.008529956998245325,
+        "min_SICN": null,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 16
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 3
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 16,
+        "active_nodes": 17,
+        "all_msh_nodes": 18,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 3
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 16
+          }
+        ],
+        "max_lattice_coordinate_error": 2.220446049250313e-14,
+        "coordinate_tolerance": 1e-08,
+        "physical_group_cells": [
+          16
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "radius_error": 5.329070518200751e-15,
+        "plane_error": 0.0,
+        "angle_error": 2.220446049250313e-15,
+        "analytic_arc_length": 15.707963267948966,
+        "analytic_chord_length": 15.701655784773765,
+        "polyline_approximation_relative_error": 0.0004015468503208683,
+        "measure": 15.701655784773765,
+        "analytic_measure": 15.701655784773765,
+        "relative_measure_error": 0.0
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.10653675199864665,
+      "wall_seconds": 0.15680190199782373,
+      "returncode": 0
+    },
+    {
+      "case_id": "L-D2",
+      "family": "line_arc",
+      "category": "difficult",
+      "holdout": true,
+      "recipe_sha256": "8ebf10dc5f97536896744199993c7f3df6396f3b1da89461223b908bfabd954a",
+      "case_sha256": "085d8a771fdf524604ab652f6eedf0511c444cff2844f2d6e2e049afaf7c093c",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.008853836996422615,
+        "min_SICN": null,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 19
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 3
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 19,
+        "active_nodes": 20,
+        "all_msh_nodes": 21,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 3
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 19
+          }
+        ],
+        "max_lattice_coordinate_error": 7.499885442698834e-12,
+        "coordinate_tolerance": 3.2e-07,
+        "physical_group_cells": [
+          19
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "radius_error": 6.252776074688882e-12,
+        "plane_error": 4.542033416043978e-12,
+        "angle_error": 1.0289512297756431e-14,
+        "analytic_arc_length": 6.981317007977318,
+        "analytic_chord_length": 6.981316624452326,
+        "polyline_approximation_relative_error": 5.493563800404734e-08,
+        "measure": 6.981316624454214,
+        "analytic_measure": 6.981316624452326,
+        "relative_measure_error": 2.7047438497041355e-13
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.11601273899577791,
+      "wall_seconds": 0.16614098200079752,
+      "returncode": 0
+    }
+  ]
+}

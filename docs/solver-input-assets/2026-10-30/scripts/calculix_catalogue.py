@@ -32,8 +32,6 @@ def write_csv(path,rows):
  with path.open('w',newline='') as f:
   w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
 write_csv(ROOT/'catalogues/calculix.csv',rows)
-with (ROOT/'catalogues/calculix.jsonl').open('w') as f:
- for x in rows:f.write(json.dumps(x,ensure_ascii=False)+'\n')
 manifest=[]
 TEST=TMP/'extract-ccx_2.23.test/CalculiX/ccx_2.23/test'
 for f in sorted(TEST.rglob('*')):

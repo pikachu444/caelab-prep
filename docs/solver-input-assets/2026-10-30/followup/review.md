@@ -1,6 +1,6 @@
 # 입력 생성 자산 후속 독립 검토
 
-> 2026-10-30 자료 묶음의 후속 원문 검토 기록이다. 아래 `analysis/`, `analysis-only/`, `tmp/`는 그 조사 환경의 분석 경로이며 현재 clone의 파일 경로나 배포 링크가 아니다. 이 검토의 미실행 범위와 후속 제품의 RAD 생성·소형 solver 결과는 구분한다. 현재 지원·잔여 작업은 [작업서](../../../execution-stages.md#remaining-work)를 따른다.
+> 2026-10-30 자료 묶음의 후속 원문 검토 기록이다. 아래 `analysis/`, `analysis-only/`, `tmp/`는 그 조사 환경의 분석 경로이며 현재 clone의 파일 경로나 배포 링크가 아니다. 이 검토의 미실행 범위와 후속 제품의 RAD 생성·소형 solver 결과는 구분한다. 현재 지원·잔여 작업은 [작업서](../../../../CURRENT_STATE.md#remaining-work)를 따른다.
 
 기존 PR10의 RAD 미독해 descriptor/semantic reader와 MSC 완전 예제는 공개 취득 경로를 소진한 결과가 아니었다. RAD 상세 문서 대부분은 미독해였고 MSC 추가 조사는 5분으로 한정됐다. 이번 후속에서 실제 새 writer와 MIT 완전 RAD 모델까지 나왔으므로 이 부분을 접근 불가나 권리 문제로 묶어 종료해서는 안 된다. 실제 제약은 특정 CFG의 제한적 조건, upstream QA의 NC 조건, MSC matching-version 설치 예제·실행 환경·재배포 권리다.
 

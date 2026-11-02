@@ -6,8 +6,8 @@ CAE goal. Its scope exclusions, finite Windows acceptance and pending CI gates
 are retained as statements made at that milestone. They neither close current
 Windows/source-product comparison work nor authorize narrowing later user
 requirements. Current status and concrete completion criteria are in
-[execution evidence](../execution-stages.md#current-progress) and
-[remaining work](../execution-stages.md#remaining-work).
+[execution evidence](../../CURRENT_STATE.md#current-progress) and
+[remaining work](../../CURRENT_STATE.md#remaining-work).
 
 Reviewed the candidate against baseline `6a2c96e` on `feat/shared-gui-foundation`. Read-only source, evidence and image review; this report is the only reviewer edit. Implementation changes were committed in `70a2baf`, followed by Qt-test teardown in `c23149e`; the final narrow-catalogue correction and evidence are awaiting the integrator's final commit at this review point.
 

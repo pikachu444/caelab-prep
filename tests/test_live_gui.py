@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import time
 from uuid import uuid4
 
@@ -32,9 +33,22 @@ def call(connection, method="document.describe", params=None, *, request_id=None
     command = [sys.executable,"-m","caelab_prep","live","--connection",str(connection),"--method",method,
                "--params",json.dumps(params or {})]
     if request_id: command += ["--request-id",request_id]
-    process = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-    pump_until(lambda: process.poll() is not None)
-    stdout, stderr = process.communicate()
+    # The Qt owner must keep pumping while a large CLI response is written.
+    # Files avoid waiting for exit with a full, unread pipe on Windows.
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as output, tempfile.TemporaryFile(mode="w+", encoding="utf-8") as errors:
+        process = subprocess.Popen(command, stdout=output, stderr=errors, text=True)
+        try:
+            pump_until(lambda: process.poll() is not None)
+        finally:
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=5)
+        output.seek(0); errors.seek(0)
+        stdout, stderr = output.read(), errors.read()
     value = json.loads(stdout)
     capture_dir = os.environ.get("CAELAB_LIVE_CAPTURE_DIR")
     if capture_dir:

@@ -1,0 +1,419 @@
+{
+  "timestamp": "2026-11-02T04:03:05Z",
+  "stages": {
+    "1_cad_generation": {
+      "part1_ribbed_bracket": {
+        "path": "artifacts/e2e_run4/cad/part1_ribbed_bracket.step",
+        "bytes": 50318,
+        "sha256": "b2e0858f50086e0a740873740379da8d33010088120ddb035404f9e359908523"
+      },
+      "part2_hollow_loading_pin": {
+        "path": "artifacts/e2e_run4/cad/part2_hollow_loading_pin.step",
+        "bytes": 9262,
+        "sha256": "3ea5cdaeab3fec3ffd9f00f3ae9b207841b7a8d41e9ca0ee1999a65ece767374"
+      },
+      "part3_ti_bushing_liner": {
+        "path": "artifacts/e2e_run4/cad/part3_ti_bushing_liner.step",
+        "bytes": 11328,
+        "sha256": "113aa93f937cf3971428dc7902cabae7ca9b7e29fd5c082f892c85f7263f9232"
+      }
+    },
+    "2_meshing_and_quality": {
+      "part1_ribbed_bracket": {
+        "dimension": 3,
+        "target_size_mm": 6.0,
+        "length_unit": "mm",
+        "node_count": 816,
+        "element_count": 2483,
+        "part_count": 1,
+        "omitted_boundary_cells": 1802,
+        "quality_passed": true,
+        "min_quality": 0.382965,
+        "assets": {
+          "msh": {
+            "path": "artifacts/e2e_run4/meshes/part1_ribbed_bracket/gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24/mesh.msh",
+            "sha256": "1367eded7e0bad8c9167c429460afe5dfdff3f8bf378f9dd3dffd5ed889eb850"
+          },
+          "xao": {
+            "path": "artifacts/e2e_run4/meshes/part1_ribbed_bracket/gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24/geometry.xao",
+            "sha256": "1c4081d9b599ff42ca6355452075953ea0be3205e3bb2f02f9cd953ee47fcb5e"
+          },
+          "metadata": {
+            "path": "artifacts/e2e_run4/meshes/part1_ribbed_bracket/gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24/metadata.json",
+            "sha256": "09737e148527f997136a40e4b3cbd9dd3c668a253204e586bf4490109e5f044b"
+          },
+          "source": {
+            "path": "artifacts/e2e_run4/meshes/part1_ribbed_bracket/gmsh-6bfba054-99ef-4c67-b7be-47c400a50e24/input.step",
+            "sha256": "b2e0858f50086e0a740873740379da8d33010088120ddb035404f9e359908523"
+          }
+        }
+      },
+      "part2_hollow_loading_pin": {
+        "dimension": 3,
+        "target_size_mm": 4.5,
+        "length_unit": "mm",
+        "node_count": 163,
+        "element_count": 456,
+        "part_count": 1,
+        "omitted_boundary_cells": 378,
+        "quality_passed": true,
+        "min_quality": 0.339251,
+        "assets": {
+          "msh": {
+            "path": "artifacts/e2e_run4/meshes/part2_hollow_loading_pin/gmsh-d89d8be8-2904-49ea-a39b-08704fa66139/mesh.msh",
+            "sha256": "349fb2397c0fac32d4cd373a9974f023d298c403d9e4e139bf24a9129d16259d"
+          },
+          "xao": {
+            "path": "artifacts/e2e_run4/meshes/part2_hollow_loading_pin/gmsh-d89d8be8-2904-49ea-a39b-08704fa66139/geometry.xao",
+            "sha256": "b4e17c2bb5619307b7ba67354533cd7706b36cade9bb71232616752b537d5307"
+          },
+          "metadata": {
+            "path": "artifacts/e2e_run4/meshes/part2_hollow_loading_pin/gmsh-d89d8be8-2904-49ea-a39b-08704fa66139/metadata.json",
+            "sha256": "32459441bfdb550e675c78493d0e631a6cceba284d65aee0ee3f6639b0fcc521"
+          },
+          "source": {
+            "path": "artifacts/e2e_run4/meshes/part2_hollow_loading_pin/gmsh-d89d8be8-2904-49ea-a39b-08704fa66139/input.step",
+            "sha256": "3ea5cdaeab3fec3ffd9f00f3ae9b207841b7a8d41e9ca0ee1999a65ece767374"
+          }
+        }
+      },
+      "part3_ti_bushing_liner": {
+        "dimension": 2,
+        "target_size_mm": 4.0,
+        "length_unit": "mm",
+        "node_count": 134,
+        "element_count": 212,
+        "part_count": 2,
+        "omitted_boundary_cells": 60,
+        "quality_passed": true,
+        "min_quality": 0.857537,
+        "assets": {
+          "msh": {
+            "path": "artifacts/e2e_run4/meshes/part3_ti_bushing_liner/gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93/mesh.msh",
+            "sha256": "7d4b25b9d378a87b2c1766fc3bec2e618c51cb7a10936fc95fb7bcac07733b8b"
+          },
+          "xao": {
+            "path": "artifacts/e2e_run4/meshes/part3_ti_bushing_liner/gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93/geometry.xao",
+            "sha256": "e72b91b0da068b758ffb57072e7b357bf36dc3966bc770296cb82bb1b20cebc2"
+          },
+          "metadata": {
+            "path": "artifacts/e2e_run4/meshes/part3_ti_bushing_liner/gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93/metadata.json",
+            "sha256": "ed41861e73f9e810efda94ca57936ae6941d8e64ea7b33be999f9e4e47556c2b"
+          },
+          "source": {
+            "path": "artifacts/e2e_run4/meshes/part3_ti_bushing_liner/gmsh-a0ca00ee-ffe0-4bef-aa06-71aa0000da93/input.step",
+            "sha256": "113aa93f937cf3971428dc7902cabae7ca9b7e29fd5c082f892c85f7263f9232"
+          }
+        }
+      }
+    },
+    "3_prep_assembly_and_cases": {
+      "document_id": "f36c0e8c-d9b5-4e19-8f57-c566b08f20da",
+      "revision": 27,
+      "project_path": "artifacts/e2e_run4/project/ribbed_bracket_assembly.caeprep",
+      "project_sha256": "85835c54d4e2893dfc51e32fc19e823ee5ed35b07798d7a0022132154b4a6690",
+      "total_nodes": 1113,
+      "total_elements": 3151,
+      "group_counts": {
+        "bolt_fixed_nodes": 248,
+        "bushing_rim_nodes": 28,
+        "contact_secondary_nodes": 148,
+        "pin_load_nodes": 58,
+        "pin_all_nodes": 163
+      },
+      "n18_node_move_probe": {
+        "moved_node_id": 817,
+        "quality_checked_elements": 8,
+        "stale_targets_marked": 6,
+        "single_undo_restored_cleanly": true
+      },
+      "case1_export": {
+        "starter_path": "artifacts/e2e_run4/exports/case1_impact/bracket_case1_0000.rad",
+        "starter_sha256": "78ad75944b6017944bd46d7f129f5dbe4811b595af7024389c95ce606002eaee",
+        "engine_path": "artifacts/e2e_run4/exports/case1_impact/bracket_case1_0001.rad",
+        "engine_sha256": "ab94af0d4a783d84ba72a67e5215945a43f85575b5451102ce9ad9b473a00932",
+        "inactive_condition_count": 0
+      },
+      "case2_export": {
+        "starter_path": "artifacts/e2e_run4/exports/case2_ramp/bracket_case2_0000.rad",
+        "starter_sha256": "58618262866f7c5996368916f280fb2019ca988a098c518ad08698af8ad96e98",
+        "engine_path": "artifacts/e2e_run4/exports/case2_ramp/bracket_case2_0001.rad",
+        "engine_sha256": "1cdbcb6dc889dc4f6e28bb09720d1e6d67d6a0f5158310b9005170cc3c666e6c",
+        "inactive_condition_count": 1
+      }
+    },
+    "4_workbench_two_stage_solver": {
+      "case1_impact": {
+        "run_id": "53f46c67bd3548e39e12946b7e844df0",
+        "state": "completed",
+        "error": "",
+        "parse_state": "partial",
+        "stages": [
+          {
+            "name": "starter",
+            "state": "completed",
+            "returncode": 0
+          },
+          {
+            "name": "engine",
+            "state": "completed",
+            "returncode": 0
+          }
+        ],
+        "workdir": "artifacts/e2e_run4/workbench/workbench_project.runs/53f46c67bd3548e39e12946b7e844df0",
+        "artifacts": {
+          "bracket_case1A001": "fc050c30ab4516dde7ae88bb30181ec9def310a73964d2cdf67f399b598ce698",
+          "bracket_case1A002": "8815667c4aca2da94242d1d8bc35e20d615081cda653421c6510add2b857c01c",
+          "bracket_case1A003": "73ebe981d81559964cf3a4f022ffbb90921844cfde108962a2cd49edf938772a",
+          "bracket_case1A004": "a4d8ba1af4fbce226ca8e453ed8c87bf7367cd7f734c6cbdc36bcdcaef19dc6d",
+          "bracket_case1A005": "7d9571d125a8777fad9609bc0e0c9a5785314fb71fb11004c4100911e8860d3f",
+          "bracket_case1T01": "cc9d2f270cf1432408c21c1bfd8142111bea9c208b6df0a2de9deca7b27e1b20",
+          "bracket_case1_0000.out": "e3a32d75dd905cb190bd9dd0db24d20babfced8f2a2c0fa9969999c3cea19c2e",
+          "bracket_case1_0000_0001.rst": "7f6834ab09a36d90fd86626f4f27c21f2361a5e21ccc4caf044998d6cf85e9c5",
+          "bracket_case1_0001.out": "d3157b111cf8d0f221742976b6c977af86222fcf5c8119a90b87c825b55192ae",
+          "bracket_case1_0001_0001.rst": "4d5ace15478e8c94168d4aed413025c7d70951e90dcc74135b15c274052a8680",
+          "engine.log": "3ff14b068b9214324ed08eee2a2fe52548fd5386a6bec9977f54fb3477b081b3",
+          "job.log": "036c2ec8e1fca0b9dbf4fd87581434d6dfa01a9dece8d8b4e89b29574149ab1a",
+          "starter.log": "e50b06c99285f9eea51f7f9412c80133ccb3e4029b0373f6ec3698d1a2d447cb"
+        },
+        "part_masses_Mg": {
+          "1": 0.00015770531,
+          "2": 2.71998241e-05,
+          "3": 2.89878658e-06,
+          "4": 2.89878854e-06
+        },
+        "part_masses_grams": {
+          "1": 157.7053,
+          "2": 27.1998,
+          "3": 2.8988,
+          "4": 2.8988
+        },
+        "total_part_mass_grams": 190.7027,
+        "cycle_count": 0,
+        "first_cycle": {
+          "cycle": 0,
+          "time_s": 0.0,
+          "dt_s": 7.714e-08,
+          "energy_error": "0.0%",
+          "internal_energy_mJ": 0.0,
+          "kinetic_energy_t_mJ": 992.8,
+          "kinetic_energy_r_mJ": 0.0,
+          "external_work_mJ": 0.0
+        },
+        "final_cycle": {
+          "cycle": 1000,
+          "time_s": 7.712e-05,
+          "dt_s": 7.714e-08,
+          "energy_error": "-35.8%",
+          "internal_energy_mJ": 265.4,
+          "kinetic_energy_t_mJ": 1783.0,
+          "kinetic_energy_r_mJ": 20.01,
+          "external_work_mJ": 2228.0
+        },
+        "total_cycles": 1039,
+        "printed_cycle_count": 1000,
+        "peak_internal_energy_cycle": {
+          "cycle": 500,
+          "time_s": 3.856e-05,
+          "dt_s": 7.709e-08,
+          "energy_error": "-51.2%",
+          "internal_energy_mJ": 1420.0,
+          "kinetic_energy_t_mJ": 570.0,
+          "kinetic_energy_r_mJ": 16.83,
+          "external_work_mJ": 3117.0
+        }
+      },
+      "case2_ramp": {
+        "run_id": "d0ad8d7574f94f6aa112e3fe7b490d63",
+        "state": "completed",
+        "error": "",
+        "parse_state": "partial",
+        "stages": [
+          {
+            "name": "starter",
+            "state": "completed",
+            "returncode": 0
+          },
+          {
+            "name": "engine",
+            "state": "completed",
+            "returncode": 0
+          }
+        ],
+        "workdir": "artifacts/e2e_run4/workbench/workbench_project.runs/d0ad8d7574f94f6aa112e3fe7b490d63",
+        "artifacts": {
+          "bracket_case2A001": "fc050c30ab4516dde7ae88bb30181ec9def310a73964d2cdf67f399b598ce698",
+          "bracket_case2A002": "5fc364f5978cd8c7ffd190eaf47c63bdace35ac153361eaba0f7fd61eb82d586",
+          "bracket_case2A003": "8df05863a5e93e41bb5e7ee6aa0915b5cda3bd0aa98e88e38050d771a05882b2",
+          "bracket_case2A004": "986885459ad2f5bc074544168b54883412cff7258c3c75f9a90b5e44cf15640a",
+          "bracket_case2A005": "f77d967a9d87a38310cce08e9210581795f296703e8816db2332449b7eb9c77d",
+          "bracket_case2T01": "5c7709aadf437a8b03019f3343ca12e3acf968d35acc9f5cc39ce497c7b274ec",
+          "bracket_case2_0000.out": "eef0a4244135b61ef9f531cfa4f5e4cad240778fb315da39ef278f79cc4adbb3",
+          "bracket_case2_0000_0001.rst": "b90d1200190892dd5b9366261286a53c59605214b2201ed9249fdc35a457262b",
+          "bracket_case2_0001.out": "a6f3974fa44952326867fead4e9ab083bd5fb2709692d06dc3c01f3535353361",
+          "bracket_case2_0001_0001.rst": "11bd3152dfb0cbc14017ec6de5a2388c3413134bbe69600eb868ce92d7913876",
+          "engine.log": "7cc926e32c667727588b005079b416b64e46501918a140f7ce57bab79940432f",
+          "job.log": "c4cdb44fc3f04d5cd7be36d3aeed8b5a5f9a379af1955dc4a163493c9a9c5f1d",
+          "starter.log": "f6ec88fca8d1dd6e50ebfcda840baf32182243b3682b3cd166038d62b3210d7e"
+        },
+        "part_masses_Mg": {
+          "1": 0.00015770531,
+          "2": 2.71998241e-05,
+          "3": 2.89878658e-06,
+          "4": 2.89878854e-06
+        },
+        "part_masses_grams": {
+          "1": 157.7053,
+          "2": 27.1998,
+          "3": 2.8988,
+          "4": 2.8988
+        },
+        "total_part_mass_grams": 190.7027,
+        "cycle_count": 0,
+        "first_cycle": {
+          "cycle": 0,
+          "time_s": 0.0,
+          "dt_s": 7.714e-08,
+          "energy_error": "0.0%",
+          "internal_energy_mJ": 0.0,
+          "kinetic_energy_t_mJ": 0.0,
+          "kinetic_energy_r_mJ": 0.0,
+          "external_work_mJ": 0.0
+        },
+        "final_cycle": {
+          "cycle": 1000,
+          "time_s": 7.712e-05,
+          "dt_s": 7.712e-08,
+          "energy_error": "-32.9%",
+          "internal_energy_mJ": 380.0,
+          "kinetic_energy_t_mJ": 2486.0,
+          "kinetic_energy_r_mJ": 30.82,
+          "external_work_mJ": 4316.0
+        },
+        "total_cycles": 1039,
+        "printed_cycle_count": 1000,
+        "peak_internal_energy_cycle": {
+          "cycle": 700,
+          "time_s": 5.399e-05,
+          "dt_s": 7.71e-08,
+          "energy_error": "-47.3%",
+          "internal_energy_mJ": 1790.0,
+          "kinetic_energy_t_mJ": 832.1,
+          "kinetic_energy_r_mJ": 19.93,
+          "external_work_mJ": 5014.0
+        }
+      }
+    },
+    "5_windows_gui_and_vtk_verification": {
+      "platform": "windows",
+      "prep_window": {
+        "window_size": [
+          1360,
+          860
+        ],
+        "node_count": 1113,
+        "element_count": 3151,
+        "window_png": "docs/native-windows/2026-11-02-e2e-3part-assembly/prep_3part_assembly_window.png",
+        "window_png_sha256": "2018183e674431fb6cbe8cc5768447443c3b2e0aca3f0d0e37db1fc2e6a462f6",
+        "vtk_contact_secondary_framebuffer": {
+          "path": "docs/native-windows/2026-11-02-e2e-3part-assembly/prep_3part_assembly_vtk_framebuffer.png",
+          "sha256": "08a7255dcfe9ab9305652232c58658e3c030b345071885b32dfe90ea1f2eb5cd",
+          "dimensions": [
+            1004,
+            702,
+            1
+          ],
+          "unique_channel_values": 244,
+          "capture_type": "vtk_opengl_framebuffer"
+        },
+        "vtk_part1_highlight_framebuffer": {
+          "path": "docs/native-windows/2026-11-02-e2e-3part-assembly/prep_part1_bracket_vtk_framebuffer.png",
+          "sha256": "6e265388b3fa99f1b0fe583f5885ecf74eab565c4de2b57304ae23b4378c7956",
+          "dimensions": [
+            1004,
+            702,
+            1
+          ],
+          "unique_channel_values": 235,
+          "capture_type": "vtk_opengl_framebuffer"
+        },
+        "capture_type": "composite_window_grab"
+      },
+      "workbench_project_window": {
+        "window_size": [
+          1280,
+          800
+        ],
+        "box_count": 3,
+        "window_png": "docs/native-windows/2026-11-02-e2e-3part-assembly/workbench_project_schematic.png",
+        "window_png_sha256": "26914f83f92ce4cc578b56b5c9270f3c2f3f9081a6d3b587efe04648b7474420",
+        "capture_type": "composite_window_grab"
+      },
+      "workbench_native_analysis_window": {
+        "window_size": [
+          1180,
+          876
+        ],
+        "node_id": "bba8b85de01f4983af2639c00485f02d",
+        "recorded_runs": 1,
+        "displayed_run_id": "53f46c67bd3548e39e12946b7e844df0",
+        "status_text": "실행: 프로세스 정상 종료 / 결과: 일부 판독\nStarter: 프로세스 정상 종료 · Engine: 프로세스 정상 종료",
+        "window_png": "docs/native-windows/2026-11-02-e2e-3part-assembly/workbench_native_analysis_case1.png",
+        "window_png_sha256": "2b7c0e75d1d4d6bfde8aa5add7676034793962a6857d97b54e629b0fae414aba",
+        "capture_type": "composite_window_grab"
+      },
+      "native_qsettings_unchanged": true
+    }
+  },
+  "findings": [
+    {
+      "id": "FINDING-01",
+      "component": "caelab-prep / PrepSession.create_surface",
+      "code": "incompatible_surface",
+      "summary": "Solid-to-solid contact surface authoring is blocked because create_surface only supports shell/triangle parts (/SURF/PART).",
+      "details": "Calling create_surface on Part 1 (Ribbed_Mounting_Bracket, TETRA4) or Part 2 (Hollow_Loading_Pin, TETRA4) raises PrepError('incompatible_surface'). Authoring solid-to-solid /INTER/TYPE7 contact without a shell liner requires /SURF/PART/EXT or /SURF/GRBRIC/EXT support."
+    },
+    {
+      "id": "FINDING-02",
+      "component": "caelab-prep / contact_block + caelab-workbench / OpenRadiossAdapter.validate_stage",
+      "code": "type7_gap_min_and_starter_warning_rejection",
+      "summary": "contact_block hardcodes Gap_min=0 (causing OpenRadioss to default GAP MIN = full shell thickness 1.0 mm) and OpenRadiossAdapter.validate_stage rejects Starter 'TERMINATION WITH WARNING' (0 ERROR(S), 1 WARNING(S)).",
+      "details": "In out_e2e_run3 (0.5 mm radial clearance with 1.0 mm shell bushing), Starter detected initial penetration against GAP MIN = 1.0 mm (WARNING ID 343), wrote a valid _0000_0001.rst, and printed 'TERMINATION WITH WARNING' (0 ERROR(S), 1 WARNING(S)). OpenRadiossAdapter.validate_stage required 'NORMAL TERMINATION' literally and aborted before Engine."
+    },
+    {
+      "id": "FINDING-03",
+      "component": "caelab-workbench / caelab.connections._radioss_installation",
+      "code": "windows_intel_oneapi_runtime_dll_discovery",
+      "summary": "Windows source builds of OpenRadioss fail with 0xC0000135 (STATUS_DLL_NOT_FOUND) when extlib/intelOneAPI_runtime/win64 is absent and Intel oneAPI bin is not added to PATH.",
+      "details": "starter_win64.exe imports mkl_intel_thread.3.dll and libiomp5md.dll. Local source builds compiled with Intel oneAPI 2026.0 rely on ONEAPI_ROOT / %ONEAPI_ROOT%\\bin when extlib/intelOneAPI_runtime/win64 is not bundled."
+    },
+    {
+      "id": "FINDING-04",
+      "component": "caelab-prep / GmshBackend + adopt_mesh_candidate",
+      "code": "multi_face_shell_step_split_into_multiple_parts",
+      "summary": "A single 2D shell STEP file with 2 cylindrical CAD faces (part3_ti_bushing_liner.step) is automatically split into 2 separate native /PART cards (PART 3 and PART 4) on adoption.",
+      "details": "GmshBackend emits one MeshPart per OCC surface entity (caelab:surface:*), and adopt_mesh_candidate creates a separate /PART card per MeshPart with no option to merge faces of one CAD component into a single /PART."
+    },
+    {
+      "id": "FINDING-05",
+      "component": "caelab-prep / engine_input + caelab-workbench / collect_radioss_results",
+      "code": "radioss_post_parse_state_partial",
+      "summary": "Real OpenRadioss runs always report parse_state='partial' with 0 decoded frames and empty summary KPIs.",
+      "details": "1) Prep's engine_input() only emits /RUN and /ANIM/DT without /ANIM/VECT/DISP, /ANIM/ELTYP/..., or /PRINT, and binary A001-A005 files are not decoded by _read_ascii_animation. 2) parse_radioss_output() only matches verbose labels ('KINETIC ENERGY = ...'), missing the standard Engine cycle table ('I-ENERGY', 'K-ENERGY T') and mass error."
+    },
+    {
+      "id": "FINDING-06",
+      "component": "caelab-workbench / ProjectWindow + NativeAnalysisWindow",
+      "code": "schematic_auto_grid_and_radioss_cycle_summary",
+      "summary": "Programmatic schematic nodes at (0, 0) overlapped in ProjectWindow, and NativeAnalysisWindow did not surface Engine cycle summary KPIs.",
+      "details": "1) ProjectWindow._show_project() auto-assigns non-overlapping grid positions when multiple nodes share default (0, 0), and Workbench.add_program_node() defaults to auto-grid. 2) parse_radioss_output() parses OpenRadioss Engine cycle table rows (cycle, time, energy error, internal/kinetic energy, external work, mass error), and NativeAnalysisWindow surfaces them in the result summary and KPI cards."
+    },
+    {
+      "id": "FINDING-07",
+      "component": "caelab-workbench / apps/workbench_qt/native_analysis.py",
+      "code": "radioss_card_outline_and_syntax_highlighting",
+      "summary": "NativeAnalysisWindow deck outline and syntax highlighting only recognized CalculiX '*' cards, ignoring OpenRadioss '/' cards and '#' comments.",
+      "details": "1) _deck_category and _rebuild_deck_outline now parse OpenRadioss '/' cards and '#include' into step, material, bc_load, contact, and mesh categories. 2) CalculixDeckHighlighter highlights '/' cards and '#' comments. 3) SolverLogHighlighter and _update_log_summary count OpenRadioss ERROR ID/WARNING ID/NORMAL TERMINATION alongside CalculiX markers."
+    }
+  ]
+}

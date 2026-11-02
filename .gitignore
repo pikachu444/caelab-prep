@@ -13,3 +13,9 @@ beidprep-trial/
 .test-tmp/
 .pytest_cache/
 .review/
+
+# Generated solver-reference views; JSON/CSV inputs are canonical.
+/docs/solver-input-assets/2026-10-30/index.html
+/docs/solver-input-assets/2026-10-30/summary.json
+/docs/solver-input-assets/2026-10-30/catalogues/radioss.jsonl
+/docs/solver-input-assets/2026-10-30/catalogues/calculix.jsonl

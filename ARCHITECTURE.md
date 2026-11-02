@@ -2,15 +2,7 @@
 
 이 저장소는 여러 CAE 프로그램에서 재사용할 개발 자산과 기반을 만든다. OpenRadioss/OpenCourant는 첫 적용 대상이며, 현재 RAD 모델 작성·편집 앱은 공용 기반을 실제 작업에 연결한 첫 사용처다. 이 문서는 공용 자산의 경계와 현재 구현의 파일 계약을 구분해 설명한다. 목표와 후보 비교는 [DESIGN](DESIGN.md), 후속 모듈·계약·코드 이행과 작업 단위는 [상세 실행 계획](docs/shared-cae-foundation-plan.md)에 둔다. 상세 계획의 경로와 인터페이스를 현재 구현으로 해석하지 않는다.
 
-2026-11-02의 현재 납품 기준은 [DESIGN의 R1–R4/T1–T6/G0–G4](DESIGN.md#delivery-goals)를 따른다. 병합 기준은 Prep main `6ca09c2`(PR #17/#18)와 Workbench main `865ee15`이며, 아래 설명은 별도 N19/N20 구현 후보를 포함한다. Workbench PR #55 최종 `a328253`은 실제 두 입력과 필수 CI를 통과해 병합했으며 전체 납품 완료가 아니다. 아래 출발점 표는 `f4d12d0` 진단 기준이며 현재 구현은 이어지는 PR #15 변경 설명과 [남은 작업표](docs/execution-stages.md#remaining-work)를 따른다. 원제품 충실도와 Windows 검증은 구현 자체와 별도로 남는다.
-
-| 보존할 구현 | 실제 한계 | 현재 목표를 위해 필요한 보완 |
-|---|---|---|
-| `Document/CommandDispatcher`, typed ref, 초안·Undo·저장 | 기존 단일 resource 상태 변경 중심 | G1의 객체 생성/삭제·파트 참조 할당과 다중 자원 원자 변경, 실패 시 전체 복원 |
-| `RadProvider`, 원문 patch·INCLUDE·native 출력 | 일부 기존 필드 편집, PART 관계는 읽기 전용 | G1/G2의 새 native 객체·ID/참조 생성, G3의 Starter/Engine 출력; 원문 보존 경로 유지 |
-| `CurveSession`, 공용 속성·표·곡선 위젯 | 재료 하나와 곡선 목록의 제한 host | sample은 개발용 유지; 제품의 다중 재료·단면·조건 모델과 실제 곡선 참조는 domain provider가 소유 |
-| `reference_components`의 composition과 8 adapter | 공통 Edit 중심 명령, 배치·일부 확정 방식 차이 | T1–T6 과업별 명령 진입·선택·확정/취소·오류 복구; 공용 명령/문서는 공유, host별 모델 사본 금지 |
-| `gmsh_backend`의 별도 worker | 독립 후보 생성이며 GUI 문서와 단절 | G3 품질·채택/교체·관계 영향·Undo·저장 연결 |
+요구와 종료 조건은 [DESIGN](DESIGN.md#delivery-goals), 반영 코드·검증 범위·남은 작업은 [CURRENT_STATE](CURRENT_STATE.md)를 따른다. 이 문서는 현재 코드의 책임과 파일 계약을 설명한다.
 
 G1에서는 `radioss/modeling.py`의 명시된 writer와 `PrepSession` 생성·복사·삭제·할당 명령을 추가했다. `DeckResource`는 원본 raw와 기존 카드 UUID를 유지하고 versioned 구조 상태에 추가·삭제 block과 필드 patch를 기록한다. 단일 자원 내 카드 생성/삭제·PART 참조 변경은 기존 dispatcher의 한 Undo다. PART/PLY·집합·하중·구속·초기속도·접촉의 지원 참조를 검사하고, 참조 의미가 미확인인 카드가 있으면 삭제를 거절한다. 전역 native ID 해석의 범위를 벗어나는 SUBMODEL offset을 지원한다고 가정하지 않는다.
 
@@ -26,7 +18,7 @@ G1에서는 `radioss/modeling.py`의 명시된 writer와 `PrepSession` 생성·�
 
 `cae_core`는 솔버와 GUI를 모르는 문서·명령·선택 기반이다. `application.contracts`의 PropertyHost/DocumentSession·ObjectRef·PropertySpec·SetProperties는 Qt/RAD/VTK 없이 로드된다. `RadProvider`가 기존 PrepSession을 이 계약에 연결하고 `CurveSession`은 중립 재료/곡선 문서를 제공한다. 공용 위젯과 갤러리는 RAD와 VTK 없이 로드되며 기존 `ui.MainWindow`와 `application.PrepSession` export는 지연 로딩으로 호환한다. 기존 PrepSession 자체는 RAD/INCLUDE·원문·출력을 소유하는 솔버별 구현으로 남는다.
 
-`ui/design`은 자체 SVG·토큰·상태 스타일, `ui/widgets`는 model/view 트리·그룹 속성·숫자/단위·벡터·곡선 표/plot을 소유한다. `ui/actions`와 `ui/shell`은 동일 Action·도킹·renderer frame·비동기 FileTask를 제공하며 실제 전처리기와 갤러리가 공유한다. 위젯은 초안만 소유하고 provider/session이 확정 값·검증·Undo를 소유한다. [Windows 검증 기록](docs/native-windows-validation.md)은 PR #12 시기의 재구현 전 묶음 A에 한정된다. 현재 8방식 UI/G 목표의 Windows 합격 증거가 아니다.
+`ui/design`은 자체 SVG·토큰·상태 스타일, `ui/widgets`는 model/view 트리·그룹 속성·숫자/단위·벡터·곡선 표/plot을 소유한다. `ui/actions`와 `ui/shell`은 동일 Action·도킹·renderer frame·비동기 FileTask를 제공하며 실제 전처리기와 갤러리가 공유한다. 위젯은 초안만 소유하고 provider/session이 확정 값·검증·Undo를 소유한다. [Windows 개발검증자료](docs/native-windows-validation.md)는 PR12 당시 기록과 이후 새 환경·절점 이동 기록을 구분한다. 제한된 입력의 결과를 8방식 전체의 Windows 합격으로 확대하지 않는다.
 
 ## 이번 구현의 결정
 
@@ -34,9 +26,9 @@ G1에서는 `radioss/modeling.py`의 명시된 writer와 `PrepSession` 생성·�
 
 Gmsh는 CAD/메시 엔진이고 문서의 정본이 아니다. OCP/OCAF와 Gmsh OCC를 동시에 정본으로 두지 않는다. Gmsh 산출물은 독립 후보 자산이다. 품질·원자산 해시·배열·단위·참조를 검증한 뒤 명시적 채택 명령으로만 Radioss 문서에 반영한다.
 
-계획상 첫 CAD/메시 C는 최소 자원·배열·채택 명령(P6a)만 선행하고 P7a에서 연결한다. 완전한 다중 파트·대용량 B를 선행 조건으로 삼지 않는다. 후보 생성과 문서 변경을 구분하고, 품질 확인 뒤 채택/교체를 하나의 명령으로 적용한다. 외피 facet과 물리 shell 요소, Gmsh tag와 지속 객체 참조를 구분한다. `radioss/modeling.py`가 신규 native writer를 소유한다. tri3는 SH3N/SHELL 단면, tet4는 TETRA4/SOLID 단면에 연결하며 외피 facet을 별도 shell로 중복 채택하지 않는다. 일반 재메시의 조건 자동 재연결은 구현하지 않았고 참조가 있으면 교체를 거부한다.
+계획상 첫 CAD/메시 C는 최소 자원·배열·채택 명령(P6a)만 선행하고 P7a에서 연결한다. 완전한 다중 파트·대용량 B를 선행 조건으로 삼지 않는다. 후보 생성과 문서 변경을 구분하고, 품질 확인 뒤 채택/교체를 하나의 명령으로 적용한다. 외피 facet과 물리 shell 요소, Gmsh tag와 지속 객체 참조를 구분한다. `radioss/modeling.py`가 신규 native writer를 소유한다. tri3는 SH3N/SHELL 단면, tet4는 TETRA4/SOLID 단면에 연결하며 외피 facet을 별도 shell로 중복 채택하지 않는다. N16의 준비된 mesh 교체는 참조를 stale로 보존하고 명시한 source/revision 대응으로 재연결하며, 미해결이면 출력을 차단한다. N18의 첫 절대좌표 이동은 아래 문서와 명령 절에 설명한다. 나머지 메시 수정과 CAD 재메시는 미완료다.
 
-Workbench는 현재 자체 PySide6 앱이며 FreeCAD를 외부 프로그램으로 사용한다. 공용 위젯에는 Workbench 서비스 adapter를 주입하고 프로젝트/연구의 소유권을 유지한다. 독립 Prep 문서와 Workbench 프로젝트는 파일 역할·개정으로 연결하며, 두 명령 이력이나 문서 정본을 겹치지 않는다. Workbench W1의 NumericEdit 소비와 W2의 RAD/작업문서 독립 Prep 열기는 구현됐다. 현재 INP용 실행 입력 복사 규칙을 RAD의 Starter/Engine/INCLUDE snapshot과 두 단계 실행에 적용하는 W3는 Workbench PR #55에서 solver별 snapshot·기존 JobManager의 Starter→Engine 단계로 구현해 CI에서 두 실제 입력을 검증 중이다. Prep에 실행 관리자를 추가하지 않는다.
+Workbench는 현재 자체 PySide6 앱이며 FreeCAD를 외부 프로그램으로 사용한다. 공용 위젯에는 Workbench 서비스 adapter를 주입하고 프로젝트/연구의 소유권을 유지한다. 독립 Prep 문서와 Workbench 프로젝트는 파일 역할·개정으로 연결하며, 두 명령 이력이나 문서 정본을 겹치지 않는다. Workbench W1의 NumericEdit 소비와 W2의 RAD/작업문서 독립 Prep 열기는 구현됐다. INP용 실행 입력 복사 규칙을 RAD의 Starter/Engine/INCLUDE snapshot과 두 단계 실행에 적용하는 W3는 Workbench PR #55에서 solver별 snapshot·기존 JobManager의 Starter→Engine 단계로 구현했다. 최종 `a328253`의 CI에서 두 실제 입력 서비스/X11 GUI와 필수 회귀를 통과해 main `865ee15`에 병합했으며 Windows 확인은 별도로 남는다. Prep에 실행 관리자를 추가하지 않는다.
 
 ## 계층과 의존 방향
 
@@ -60,7 +52,7 @@ flowchart TB
 | `application.session` | 현재 RAD용 PrepSession. RAD 자원 조합, 조회·편집·Undo·INCLUDE·저장·내보내기 API, 호출 직렬화. 공용 세션 계약 전체가 완성된 상태는 아님 |
 | `application.contracts` / `rad_provider` / `neutral` | 최소 host 계약, 기존 RAD adapter, 독립 재료/곡선 provider와 codec. 범용 FE 스키마를 강제하지 않음 |
 | `application.mesh_candidates` / `ui.mesh_workflow` | SDK inventory·해시·tri/tet 품질과 후보 검토 UI. 채택은 PrepSession의 원자 명령이며 다른 문서 사본을 만들지 않음 |
-| `application.storage` | codec과 독립인 atomic ZIP writer와 bounded reader. RAD v3 manifest·원문/구조 편집·케이스(v1/v2 읽기 호환)과 중립 codec의 의미는 각각 유지 |
+| `application.storage` | codec과 독립인 atomic ZIP writer와 bounded reader. RAD v6 manifest·원문/구조 편집·케이스/source/관계(v1–v5 읽기 호환)과 중립 codec의 의미는 각각 유지 |
 | `ui/design`, `ui/widgets`, `ui/actions`, `ui/shell` | 공용 디자인·입력 초안·트리·표/plot·Action·도킹·renderer frame·실제 FileTask 상태/오류/산출물 |
 | `ui/main_window`, `ui/gallery` | 앱별 조립과 초안/선택/파일 작업 조정. 모델 값의 정본은 주입한 provider/session |
 | `cli` | 현재 RAD 세션 API를 호출하는 명시적인 독립 프로세스 진입점 |
@@ -70,21 +62,27 @@ N19의 `application/live_transport.py`는 명시적으로 켠 loopback TCP endpo
 
 ## 문서와 명령
 
+N18의 첫 절대좌표 이동은 `application.node_moves`가 닫힌 native 참조를 읽어 `mesh_edit_candidates`의 불변 snapshot을 seal하고, source token·문서 revision/epoch·각 mesh generation으로 apply를 검증한다. 후보 delta는 희소하며 반복 편집에서 snapshot JSON을 다시 만들지 않는다. N17 전체 메모리/시간 예산의 통과를 뜻하지 않는다. `DeckResource` 상태 v4의 희소 `node_positions`는 ID·후행 필드·미편집 원문을 보존한다. NODE 블록 교체/삭제는 이전 좌표 overlay를 제거한다.
+
+좌표 상태와 `geometry_review_required` 집합·여러 source의 generation 의존성을 `execute_many` 한 번으로 게시한다. 이동한 멤버/조건 값을 바꾸지 않으며 명시 대응 검토 전에는 native 출력을 차단한다. 검사 trial은 옛 projection cache를 버려 새 형상으로 CLOAD 성분을 재판정한다. `ui.node_moves`는 같은 명령에 Preview/검토/Apply/취소를 연결한다. 새 문서·개정·입력 변경은 이전 preview를 적용할 수 없게 한다.
+
+선택적 `adapters.solidcraft_source`는 외부 CAD 실행 없이 저장 컨테이너·고정 인수·해시만 준비한다. 공급 STEP은 기존 Gmsh worker와 native 채택 gate를 사용한다. 채택 입력의 미검증 출처 선언은 이번에 생성한 NODE의 ASCII JSON 주석으로 저장하므로 별도 문서 정본/codec/Undo를 만들지 않는다. STEP 생성자 인증이나 CAD 면의 persistent identity는 이 선언이 제공하지 않는다.
+
 문서 ID와 resource ID는 렌더링 배열 인덱스·Gmsh tag와 구분한다. 명령 성공과 Undo/Redo는 revision을 증가시키고 저장 기준점과 현재 자원 상태로 dirty를 판단한다. `expected_revision`이 맞지 않거나 필드 검사가 실패하면 모델을 부분 변경하지 않는다. ChangeSet과 구조화 오류로 실제 변경을 전달한다.
 
-현재 Undo는 한 resource의 필드 및 카드 구조 상태 변경을 다룬다. 카드 생성/삭제를 resource 생성/삭제와 혼동하지 않는다. 여러 resource에 걸친 트랜잭션은 아직 없다. 같은 PrepSession의 변경 알림은 호출 스레드에서 발생하고 GUI는 Qt 신호로 UI 스레드에 전달한다. 파일 기반 CLI에는 이 구독이 공유되지 않는다. live IPC는 열린 GUI owner의 이벤트를 sequence로 조회하며 transport 스레드가 직접 Qt나 문서를 수정하지 않는다.
+PR #20의 execute_many는 여러 resource 후보를 준비·검증한 뒤 단일 publish/ChangeSet/Undo로 적용한다. 두 번째 후보 실패 시 기존 revision·dirty·redo·observer 상태를 보존한다. 카드 생성/삭제와 resource 생성/삭제는 구분한다. 같은 PrepSession의 변경 알림은 호출 스레드에서 발생하고 GUI는 Qt 신호로 UI 스레드에 전달한다. 파일 기반 CLI에는 이 구독이 공유되지 않는다. live IPC는 열린 GUI owner의 이벤트를 sequence로 조회하며 transport 스레드가 직접 Qt나 문서를 수정하지 않는다.
 
-Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 patch하며 미편집 필드·주석·카드 순서·개행을 다시 정규화하지 않는다. VTK 메시 투영은 반환된 복사본이며 편집 원본이 아니다. 원 절점·요소 ID와 pick 인덱스는 별도로 매핑한다. `/TRANSFORM` 등 표시에서 해석하지 않은 조건은 진단으로 남긴다.
+Radioss는 원문 바이트가 정본이다. 편집 가능한 필드 위치만 patch하며 미편집 필드·주석·카드 순서·개행을 다시 정규화하지 않는다. VTK 메시 투영은 revision별 불변 데이터와 index를 재사용하며 편집 원본이 아니다. N17 전체 UI 성능 기준을 통과했다는 뜻은 아니다. 원 절점·요소 ID와 pick 인덱스는 별도로 매핑한다. `/TRANSFORM` 등 표시에서 해석하지 않은 조건은 진단으로 남긴다.
 
 필드는 입력 덱 단위와 카드별 `unit_ID` 문맥을 유지한다. 확인한 전역 단위의 E/밀도/길이/속도/힘·모멘트만 표시 단위를 선택·환산할 수 있다. 표시 전환 자체는 문서 명령이 아니며 Apply가 같은 dispatcher를 통과한다. 알려지지 않은 단위를 임의로 Pa/MPa로 해석하지 않는다. 기존 곡선·물리 조건을 보존한다는 것과 그 조건의 편집·3D 표시를 지원한다는 것은 다르다.
 
 ## 작업 파일과 native 덱
 
-`.caeprep`은 버전 있는 ZIP 문서다. RAD writer는 manifest version 3을 쓰고 v1/v2도 읽는다. `AnalysisCasesResource`가 영속 UUID·조건 UUID 집합·단위 있는 종료/출력 설정과 활성 케이스를 별도 소유하고 같은 dispatcher로 편집한다. manifest의 `analysis_cases`에 이 상태를 보존하며 이전 파일은 빈 케이스 상태로 읽는다. `manifest.json`에 문서 ID·revision·논리 경로·자원 ID·필드 patch와 stable ID를 가진 추가/삭제 카드 구조 상태를 기록하고 `raw/<resource-id>.rad`에 원문을 동봉한다. 외부 원본 경로만 저장하는 형식이나 pickle이 아니다. 임시 파일을 작성한 뒤 원자적으로 교체한다. 재시작 후 Undo 기록을 복원하는 기능은 현재 범위가 아니다.
+`.caeprep`은 버전 있는 ZIP 문서다. RAD writer는 manifest version 6을 쓰고 v1–v5를 읽는다. source archive와 명시 ID 대응·관계/instance 참조를 보존하며 v4의 누락 관계는 빈 상태로 이행한다. v5의 필수 관계 누락은 손상으로 거부한다. `AnalysisCasesResource`가 영속 UUID·조건 UUID 집합·단위 있는 종료/출력 설정과 활성 케이스를 별도 소유하고 같은 dispatcher로 편집한다. manifest의 `analysis_cases`에 이 상태를 보존하며 이전 파일은 빈 케이스 상태로 읽는다. `manifest.json`에 문서 ID·revision·논리 경로·자원 ID·필드 patch와 stable ID를 가진 추가/삭제 카드 구조 상태를 기록하고 `raw/<resource-id>.rad`에 원문을 동봉한다. 외부 원본 경로만 저장하는 형식이나 pickle이 아니다. 임시 파일을 작성한 뒤 원자적으로 교체한다. 재시작 후 Undo 기록을 복원하는 기능은 현재 범위가 아니다.
 
 이는 현재 RAD 사용 앱의 저장 계약이다. 다른 솔버의 모델을 RAD 원문이나 하나의 공통 FE 스키마로 강제하는 공용 저장 규격이 이미 완성됐다는 뜻은 아니다.
 
-중립 재료/곡선은 같은 원자 저장 절차를 쓰되 manifest `format=caelab-material-curves`, `version=2`와 `material-curves.json` payload를 사용한다. 이전 중립 v1도 읽는다. v2는 재료의 기존 곡선 참조를 저장하며 provider는 표시명/typed ObjectRef 후보를 제공하고 실제 명령이 문서·자원·종류·존재를 검증한다. 이 codec은 RAD를 import하지 않는다. `gallery [path]`로 열고 저장하며 RAD 문서는 v3로 저장하고 이전 v1/v2는 읽기 호환한다. 이전 앱이 새 구조 편집 문서를 v1으로 오해하도록 버전을 숨기지 않는다. 양쪽 모두 파일 작업 실패 시 기존 파일과 dirty 상태를 보존한다. 비동기 FileTask는 running/succeeded/failed·구조화 오류·실제 산출물 경로를 반환하고 저장/열기는 취소 불가능으로 표시한다. 지원하지 않는 Cancel 동작을 제공하지 않는다.
+중립 재료/곡선은 같은 원자 저장 절차를 쓰되 manifest `format=caelab-material-curves`, `version=2`와 `material-curves.json` payload를 사용한다. 이전 중립 v1도 읽는다. v2는 재료의 기존 곡선 참조를 저장하며 provider는 표시명/typed ObjectRef 후보를 제공하고 실제 명령이 문서·자원·종류·존재를 검증한다. 이 codec은 RAD를 import하지 않는다. `gallery [path]`로 열고 저장하며 RAD 문서는 v6로 저장하고 이전 v1–v5는 읽기 호환한다. 이전 앱이 새 구조 편집 문서를 v1으로 오해하도록 버전을 숨기지 않는다. 양쪽 모두 파일 작업 실패 시 기존 파일과 dirty 상태를 보존한다. 비동기 FileTask는 running/succeeded/failed·구조화 오류·실제 산출물 경로를 반환하고 저장/열기는 취소 불가능으로 표시한다. 지원하지 않는 Cancel 동작을 제공하지 않는다.
 
 `SelectionProvider.select/active_object`는 두 provider/window의 활성 객체를 연결한다. 첫 RAD 관계는 기존 PART와 투영의 part_id가 연결된 요소이며 중복 native ID는 거부한다. 영속 ObjectRef ID는 재열기 뒤에도 유지하지만 renderer pick은 설치마다 바뀌는 document_epoch, 문서 revision, resource state token, projection_revision을 함께 검사한다. 스칼라 수정 뒤 표시 형상을 재생성하지 않고 pick stamp를 갱신한다. 둘 이상의 승인된 요소는 모든 resource/local-ID 쌍을 강조한다.
 
