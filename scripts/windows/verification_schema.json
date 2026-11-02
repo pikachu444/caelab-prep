@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pikachu444/caelab-prep/blob/main/scripts/windows/verification_schema.json",
+  "title": "CAELab Prep Windows verification manifest",
+  "description": "run_windows_verification.ps1이 출력하는 verification_manifest.json의 구조. 검증 결과 매니페스트의 계약을 고정한다.",
+  "type": "object",
+  "required": ["manifest_version", "runner", "requested", "environment", "repos", "paths", "checks", "overall_status"],
+  "additionalProperties": true,
+  "properties": {
+    "manifest_version": { "const": 1 },
+    "runner": {
+      "type": "object",
+      "required": ["script", "created_utc", "ps_version", "os"],
+      "additionalProperties": true,
+      "properties": {
+        "script": { "type": "string" },
+        "created_utc": { "type": "string" },
+        "created_local": { "type": "string" },
+        "ps_version": { "type": "string" },
+        "os": { "type": "string" },
+        "git_version": { "type": "string" }
+      }
+    },
+    "requested": {
+      "type": "object",
+      "required": ["prep_sha", "workbench_sha", "python_path"],
+      "additionalProperties": true,
+      "properties": {
+        "prep_sha": { "type": "string", "minLength": 1 },
+        "workbench_sha": { "type": "string" },
+        "python_path": { "type": "string" },
+        "prep_dir": { "type": "string" },
+        "workbench_dir": { "type": "string" },
+        "output_dir": { "type": "string" },
+        "solver_path": { "type": "string" },
+        "run_solver": { "type": "boolean" },
+        "timeout_seconds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "required": ["python_version", "git_version", "os"],
+      "additionalProperties": true,
+      "properties": {
+        "python_version": { "type": "string" },
+        "python_exit_code": { "type": ["integer", "null"] },
+        "pyside6_version": { "type": "string" },
+        "git_version": { "type": "string" },
+        "os": { "type": "string" },
+        "system_dpi": { "type": ["integer", "null"] }
+      }
+    },
+    "repos": {
+      "type": "object",
+      "required": ["prep"],
+      "additionalProperties": false,
+      "properties": {
+        "prep": { "$ref": "#/$defs/gitState" },
+        "workbench": { "$ref": "#/$defs/gitState" }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "required": ["output_dir", "work_dir", "cleanup_scope"],
+      "additionalProperties": true,
+      "properties": {
+        "output_dir": { "type": "string" },
+        "work_dir": { "type": "string" },
+        "log_file": { "type": "string" },
+        "cleanup_scope": { "const": "runner work directory only" }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/check" }
+    },
+    "overall_status": {
+      "enum": ["success", "partial", "failed"],
+      "description": "success=모든 검사 실행 후 통과, partial=실패 없으나 unexecuted 존재, failed=실패 존재 또는 SHA 불일치·dirty 또는 러너 중단."
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "gitState": {
+      "type": "object",
+      "required": ["name", "path", "dirty", "sha_matched"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string" },
+        "path": { "type": "string" },
+        "exists": { "type": "boolean" },
+        "full_sha": {
+          "description": "git rev-parse HEAD의 결과인 40자 full commit SHA. 확인 실패 시 null.",
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "dirty": { "type": "boolean" },
+        "porcelain_entries": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "sha_matched": {
+          "type": "boolean",
+          "description": "요청 SHA(접두어 허용)가 full commit SHA와 일치하면 true. 불일치 또는 미확인이면 false이며 전체 결과는 성공이 될 수 없다."
+        },
+        "requested_sha": { "type": "string" },
+        "git_error": { "type": "string" }
+      }
+    },
+    "check": {
+      "type": "object",
+      "required": ["id", "title", "status"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "enum": ["passed", "failed", "unexecuted"] },
+        "detail": { "type": "string" },
+        "evidence": { "type": "object" }
+      }
+    }
+  }
+}
