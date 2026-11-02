@@ -34,6 +34,31 @@ def _model(unit):
     return session, material, section
 
 
+def test_planar_candidate_faces_its_oblique_source_without_rendering(quad):
+    from math import sqrt
+    case, native = quad
+    session, _, _ = _model(native.length_unit)
+    before = session.describe()
+    dialog = MeshCandidateDialog(session, enable_viewport=True)
+    try:
+        from caelab_prep.application.structured_mesh import read_structured_mesh_candidate
+        candidate = read_structured_mesh_candidate(next(asset.path for asset in native.assets if asset.kind == "metadata"))
+        dialog.present_candidate(candidate)
+        recipe = case["input"]
+        p = ([recipe["vertices"][key] for key in recipe["patches"][0]["corners"]]
+             if "patches" in recipe else recipe["corners"])
+        a, b = ([p[1][i] - p[0][i] for i in range(3)], [p[3][i] - p[0][i] for i in range(3)])
+        normal = (a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0])
+        view = dialog.viewport
+        direction = view._renderer.GetActiveCamera().GetDirectionOfProjection()
+        assert abs(sum(x*y for x, y in zip(direction, normal))) / sqrt(sum(x*x for x in normal)) > .999999
+        assert not view._initialized and not view.isVisible()
+        assert session.describe() == before
+    finally:
+        dialog.viewport.shutdown()
+        dialog.reject()
+
+
 @pytest.mark.parametrize("case_id", ["Q-N3", "Q-D2"])
 def test_real_recipe_generation_preview_and_close_do_not_edit_document(case_id, tmp_path):
     if importlib.util.find_spec("gmsh") is None:

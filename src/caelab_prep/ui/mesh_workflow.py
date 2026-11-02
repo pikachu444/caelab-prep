@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import threading
 
 from PySide6.QtCore import QObject, QThreadPool, Qt, Signal
@@ -440,6 +441,12 @@ class MeshCandidateDialog(QDialog):
         if self.viewport is not None and self.candidate is not None:
             dimension = self.preview_mode.currentData() or self.candidate.dimension
             self.viewport.set_mesh(candidate_projection(self.candidate, dimension=dimension))
+            if self._structured():
+                from ..application.structured_geometry import sub, validate_recipe
+                source = validate_recipe(json.loads(self.candidate.recipe_json))
+                corners = source["singles"][0]["corners"]
+                # An arbitrary isometric direction can be edge-on to an oblique patch.
+                self.viewport.orient_view(source["source_normal"], sub(corners[3], corners[0]))
 
     def _highlight(self, ids):
         if self.viewport is None or self.candidate is None: return

@@ -61,7 +61,7 @@ def test_native_structured_quad_preview_preserves_cells_and_patch_picks(quad):
     finally:
         view._actor.SetVisibility(True); view.render()
     changed = sum(pixels[index:index + 3] != empty[index:index + 3] for index in range(0, len(pixels), 3))
-    assert changed > 100, "The native framebuffer contains no visible quad mesh"
+    assert changed > len(pixels) / 3 * .02, "The planar preview is empty or nearly edge-on"
     emitted, picked = [], []
     view.entityPicked.connect(emitted.append)
     view.set_pick_mode("element")
