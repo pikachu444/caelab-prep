@@ -1,0 +1,10 @@
+{
+  "recipe_sha256": "996274c2511fd6ba71bed27066aaad42f93d01242ca4d7cda7c1f7161847b841",
+  "input_file_sha256": "8f58c978fc75d69942ed5c50046d2a4647610acc4c9aadf8946a52eb2c1974cc",
+  "returncode": 0,
+  "seconds": 0.23046747100306675,
+  "mesh_written": true,
+  "report_written": true,
+  "expected": "Explicit unsupported-twist rejection before mesh",
+  "passed": false
+}

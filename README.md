@@ -6,7 +6,7 @@
 
 **현재 구현:** 사용자 RAD의 재료·단면·파트 관계를 편집하고, 새 문서에서 CAD 메시 후보를 검토·채택해 조건과 Starter/Engine을 작성할 수 있습니다. 같은 문서·명령·편집 부품을 8개 프로그램별 표현에서 사용합니다. 재료/단면 2쌍의 생성·할당, 곡선·집합·구속·하중·초기속도·접촉, 단위 표시 변환, Undo/Redo·저장·재열기를 연결했습니다. 실제 Workbench는 공용 숫자 입력 부품과 독립 Prep 문서 열기를 사용합니다.
 
-**새 세션의 시작점:** [전체 26개 작업의 상태와 완료 기준](docs/execution-stages.md#remaining-work)을 확인하세요. 현재 목표 15개, 보존한 기존 구현 요구 6개, 실증이 선행되는 조건부 5개입니다. 작업 크기가 같은 26개나 완료율을 뜻하지 않습니다. **PR #17은 N01 케이스·영속 해석 설정, N02 독립 MSH 가져오기, N15 두 앱의 CSV 파일·plot drag를 구현하고 최종 `323954f`의 CI 통과 후 병합했습니다.** 현재 main `6ca09c2`에는 PR #18의 작업표 정정도 포함됩니다. 다음 구현은 N16 다중 자원 관계, N19→N20 live 제어이며 N17 대용량 개선을 병행합니다. Workbench N21/W3는 PR #55 최종 `a328253`의 실제 솔버·전체 CI 통과 후 `865ee15`에 병합했습니다. 전체 26개 중 구현 범위를 병합한 행은 4개이며 22개 행이 미완료입니다. 나머지 행의 미완료 기능과 외부 검증은 유지합니다.
+**새 세션의 시작점:** [전체 26개 작업의 상태와 완료 기준](docs/execution-stages.md#remaining-work)을 확인하세요. 현재 목표 15개, 보존한 기존 구현 요구 6개, 실증이 선행되는 조건부 5개입니다. 작업 크기가 같은 26개나 완료율을 뜻하지 않습니다. **PR #17은 N01 케이스·영속 해석 설정, N02 독립 MSH 가져오기, N15 두 앱의 CSV 파일·plot drag를 구현하고 최종 `323954f`의 CI 통과 후 병합했습니다.** 현재 main `89bd700`에는 PR #18의 작업표 정정, PR #21의 실제 GUI IPC/MCP 제어, PR #22의 대형 선택 입력 수정과 PR #25의 64,308 요소 대표 모델 native 재현이 포함됩니다. N16 다중 자원 관계는 PR #20에서 병합했고 다음 구현은 N18이며 N17 대용량 개선을 병행합니다. Workbench N21/W3는 PR #55 최종 `a328253`의 실제 솔버·전체 CI 통과 후 `865ee15`에 병합했습니다. 전체 26개 중 구현 범위를 병합한 행은 7개이며 19개 행이 미완료입니다. 나머지 행의 미완료 기능과 외부 검증은 유지합니다.
 
 [달성 목표](DESIGN.md#delivery-goals)와 [구현·검증 근거](docs/execution-stages.md#current-progress)를 구분합니다. 원제품 8종과의 동일 과업 실행 비교는 미확인이고 Windows 실제 창·IME·DPI·배포 검증은 사용자 지시에 따라 후속 일괄 검사로 남깁니다. 이 구현을 상용 CAE 전체 기능·품질과 동등하다고 주장하지 않습니다.
 
@@ -45,7 +45,7 @@ PART를 선택하면 원래 파트 ID·표시 요소 수·현재 재료/단면 �
 | 단위 | 명시된 덱 단위의 탄성계수·밀도·길이·속도·힘/모멘트 표시 변환. 미해석 카드별 단위와 FUNCT 축의 물리 차원은 추정하지 않음 |
 | CAD/메시 | 별도 Gmsh worker의 tri3/tet4 후보, 품질 문턱·공유 경계·국부 크기, 후보 취소·채택·참조 없는 소유 메시의 안전 교체 |
 | 케이스 | 영속 UUID·조건 참조/활성 집합·단위 있는 시간/출력 설정, 생성·복사·선택·삭제·한 Undo, 선택 케이스 native 출력 |
-| 문서·출력 | 원문/구조 편집·Undo/Redo·revision, `.caeprep` v3와 v1/v2 읽기, INCLUDE 묶음과 새 Starter/Engine 출력 |
+| 문서·출력 | 원문/구조 편집·Undo/Redo·revision, `.caeprep` v5와 v1–v4 읽기, INCLUDE 묶음과 새 Starter/Engine 출력 |
 | 실제 공통화 | 8 native 표현의 같은 provider/명령/위젯, 중립 문서, Workbench의 NumericEdit 소비와 독립 프로세스 파일 전달 |
 
 **Mesh → Import mesh**는 CAD 없이 MSH 2.2/4.1 ASCII를 가져옵니다. `[cad]`의 Gmsh 4.15.2와 공유 라이브러리가 필요하며 소스 길이 단위 mm/cm/m를 직접 지정해야 합니다. 문서와 단위가 다르면 거부하고 좌표를 자동 환산하지 않습니다. 원본 해시와 SDK 전체 요소 목록을 대조하고 tri3/tet4의 품질·그룹·파트를 검토한 뒤 채택합니다. 중첩 physical group은 집합으로 유지하고 멤버 조합별 파트로 나눠 요소 중복을 피합니다. 무그룹 요소는 명시적 파트가 됩니다. 하위 차원 경계는 별도 shell/beam이 아닌 node 집합이며, 지원하지 않는 family가 있으면 전체 채택을 막습니다. binary/partition/periodic/data/parametric MSH는 아직 지원하지 않습니다. CAD 후보의 실제 source/metadata/msh/xao 검증은 별도 경로에서 그대로 유지합니다.
@@ -101,7 +101,7 @@ caelab-prep case case.caeprep export --output run/case_0000.rad
 
 ## 열린 GUI의 live 제어와 MCP
 
-현재 N19/N20 후보는 **Automation → Start live control…** 또는 `gui --ipc /absolute/private/connection.json`으로 실행 중인 창의 같은 Session에 연결합니다. `live` CLI와 선택 설치 `.[mcp]`의 stdio MCP adapter는 별도 문서 사본을 열지 않습니다. 조회·지원 숫자/boolean 편집·선택·Undo/Redo·저장·이벤트·실제 CAD 후보 작업의 상태/생성자 취소를 제공합니다. 오래된 document/epoch/revision, 미확정 초안과 busy 충돌은 변경 없이 거부합니다.
+PR #21에서 병합한 N19/N20은 **Automation → Start live control…** 또는 `gui --ipc /absolute/private/connection.json`으로 실행 중인 창의 같은 Session에 연결합니다. `live` CLI와 선택 설치 `.[mcp]`의 stdio MCP adapter는 별도 문서 사본을 열지 않습니다. 조회·지원 숫자/boolean 편집·선택·Undo/Redo·저장·이벤트·실제 CAD 후보 작업의 상태/생성자 취소를 제공합니다. 오래된 document/epoch/revision, 미확정 초안과 busy 충돌은 변경 없이 거부합니다.
 
 [연결 방법과 제한](docs/live-control.md), [실제 공개 MCP 클라이언트의 사용·검증](docs/mcp-client.md)을 따르세요. 공개 FastMCP CLI로 실제 Linux Qt 창의 값·파일·취소를 확인했지만 자연어 LLM 실행·다른 MCP host·Windows 및 상용 제품 비교의 완료를 뜻하지 않습니다. 연결 파일은 인증 정보이므로 공유하거나 저장소에 추가하지 않습니다. 정확한 게시 SHA의 CI 판정은 중앙 N 작업표에 기록합니다.
 

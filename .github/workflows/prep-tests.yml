@@ -179,6 +179,24 @@ jobs:
           name: solver-generation-evidence
           path: solver-evidence/
 
+  structured-recipes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y libglu1-mesa libgl1
+      - run: python -m pip install gmsh==4.15.2
+      - name: Run locked SDK recipes and independent geometry oracles
+        run: python scripts/evaluation/structured_f2/verify_f2.py --recipe scripts/evaluation/structured_recipes.py --output structured-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: structured-recipe-evidence
+          path: structured-evidence/
+
   representative-native:
     runs-on: ubuntu-24.04
     timeout-minutes: 10

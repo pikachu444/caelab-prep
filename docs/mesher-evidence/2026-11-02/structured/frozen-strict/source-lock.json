@@ -1,0 +1,8 @@
+{
+  "independent_oracle.py": "984efa88711ab8f298684539f8f3ce893bcefab16fa758e5c27f9c051560a6a8",
+  "run_campaign.py": "5c471bddd1fac95c77c09dafc5b69ed7a0732f25f5ed1466c7c49308caed2cd5",
+  "contract.json": "80030ae1d2111ca2e2777235ac146241a000d406f0f2bdc455de55569548918d",
+  "public-inputs.json": "47b68120a5293bde36451a5e85d88f70ef57cb151852499e301a0b8c387763ec",
+  "holdout-inputs.json": "67577e6f3a2c20635b28046b92e291d34d1704f9fe8c0a12f3ab08c77a08a638",
+  "recipe.py": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb"
+}

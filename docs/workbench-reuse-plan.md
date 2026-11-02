@@ -1,8 +1,8 @@
 # Prep 산출물의 Workbench 재사용 계획
 
-현재 구현 대조: 2026-11-02. Prep 병합 `6ca09c2`, Workbench 병합 `865ee15`([Prep #17](https://github.com/pikachu444/caelab-prep/pull/17), [Workbench #55](https://github.com/pikachu444/caelab-workbench/pull/55))를 기준으로 한다. W1 공용 NumericEdit의 실제 MDO 소비와 W2 RAD 작업문서의 독립 Prep 실행은 구현·병합됐다. 실제 Windows 두 앱 작업은 [중앙 잔여 N14](execution-stages.md#remaining-work), RAD 실행 입력 묶음 W3는 N21, 열린 GUI IPC/MCP는 N19/N20이다. 테스트용 QWidget host나 파일 전달을 위젯 소비 또는 solver 실행 완료로 대신하지 않는다.
+현재 구현 대조: 2026-11-02. Prep 병합 `89bd700`, Workbench 병합 `865ee15`([Prep #17](https://github.com/pikachu444/caelab-prep/pull/17), [Workbench #55](https://github.com/pikachu444/caelab-workbench/pull/55))를 기준으로 한다. W1 공용 NumericEdit의 실제 MDO 소비와 W2 RAD 작업문서의 독립 Prep 실행은 구현·병합됐다. 실제 Windows 두 앱 작업은 [중앙 잔여 N14](execution-stages.md#remaining-work), RAD 실행 입력 묶음 W3는 N21, 열린 GUI IPC/MCP는 N19/N20이다. 테스트용 QWidget host나 파일 전달을 위젯 소비 또는 solver 실행 완료로 대신하지 않는다.
 
-원검토일은 2026-10-29이며 기준은 Workbench `92ce81181396bed9bb6e3024bba62913834c2a7e`, Prep `5d16e81c7ec7c92499401d63208039424bf73cc9`였다. 아래 날짜가 붙은 소스 조사·환경·외부 자산 기록은 그 시점에 한정한다. 이번 갱신은 문서만 변경하며 새 제품 실행·Windows 검증을 수행하지 않는다. 현재 통합의 실행 근거는 [작업서 19절](execution-stages.md#current-progress), 다음 작업의 상태·완료 조건은 [중앙 잔여 목록](execution-stages.md#remaining-work)을 따른다.
+원검토일은 2026-10-29이며 기준은 Workbench `92ce81181396bed9bb6e3024bba62913834c2a7e`, Prep `5d16e81c7ec7c92499401d63208039424bf73cc9`였다. 아래 날짜가 붙은 소스 조사·환경·외부 자산 기록은 그 시점에 한정한다. 당시 조사와 현재 실행 근거를 구분하며, Windows 실제 검증은 아직 후속이다. 현재 통합의 실행 근거는 [작업서 19절](execution-stages.md#current-progress), 다음 작업의 상태·완료 조건은 [중앙 잔여 목록](execution-stages.md#remaining-work)을 따른다.
 
 ## 1. 먼저 확정할 결론
 
@@ -21,7 +21,7 @@ Prep의 정식 산출물은 공용 GUI 자산·공학 위젯·앱 셸·갤러리
 | Prep 공용 자산·설치 | `application/contracts.py`·`storage.py`, `ui/design`·`widgets`·`actions`·`shell`은 실제 구현이다. `[widgets]`는 PySide6만, `[gui]`는 VTK 포함, `[cad]`는 Gmsh worker 경로 |
 | Prep 모델링·파일 | 새 재료/단면·집합/조건과 tri/tet 후보를 같은 명령·Undo·저장 경로로 편집한다. RAD 작업 문서는 v3, v1/v2 읽기 호환. 중립 재료/곡선은 별도 codec이며 WB 프로젝트 JSON을 대체하지 않음 |
 | Gmsh·작업 | 후보 생성/취소/실패·품질·국부 크기/interface·원자 채택이 구현됐다. 참조가 있는 일반 교체/재연결은 N18이며 대형 배열 경로는 N17 |
-| W3 / 자동화 | WB의 RAD 전용 snapshot와 Starter→Engine 실행 연결은 N21. 독립 Prep CLI와 별개로 live GUI IPC/MCP 후보는 N19/N20에서 실제 owner와 공개 client를 검증 중 |
+| W3 / 자동화 | WB의 RAD 전용 snapshot와 Starter→Engine 실행 연결은 N21. 독립 Prep CLI와 별개로 live GUI IPC/MCP는 PR #21에서 실제 owner·공개 client와 최종 CI를 통과해 병합 |
 
 현재 W1/W2 관련 검사와 실제 독립 프로세스 전달은 작업서 19절에 기록돼 있다. Windows의 IME·DPI·theme·창 크기·양쪽 새 설치와 실제 사용 검증은 N14이며 Linux/Qt 검사로 대신하지 않는다.
 
