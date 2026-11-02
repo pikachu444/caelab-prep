@@ -26,11 +26,12 @@ from test_structured_adoption import quad, _native
 pytestmark = pytest.mark.usefixtures("qt_widgets")
 
 
-def _model(unit):
+def _model(unit, dimension=2):
     session = PrepSession()
     session.new_document("User quad model", {"mass": "Mg", "length": unit, "time": "s"})
     material = session.create_material("User material", 7.8e-9, 210000, .3)["card_id"]
-    section = session.create_shell_property("User shell", .1)["card_id"]
+    section = (session.create_shell_property("User shell", .1) if dimension == 2 else
+               session.create_solid_property("User solid"))["card_id"]
     return session, material, section
 
 
@@ -112,8 +113,12 @@ def test_real_recipe_generation_preview_and_close_do_not_edit_document(case_id, 
 
 @pytest.mark.parametrize("profile", PROFILES)
 def test_each_presentation_opens_same_recipe_adoption_with_one_history(quad, profile, monkeypatch, tmp_path):
-    case, native = quad
-    session, material, section = _model(native.length_unit)
+    exercise_presentation_adoption(quad, profile, monkeypatch, tmp_path)
+
+
+def exercise_presentation_adoption(prepared, profile, monkeypatch, tmp_path):
+    case, native = prepared
+    session, material, section = _model(native.length_unit, native.dimension)
     window = MainWindow(session, enable_viewport=False, presentation=profile)
     window._allow_close = True
     window.show()
@@ -148,7 +153,7 @@ def test_each_presentation_opens_same_recipe_adoption_with_one_history(quad, pro
     assert session.describe()["element_count"] == case["expectation"]["elements"]
     session.undo(); assert session.describe()["element_count"] == 0
     session.redo(); assert session.describe()["element_count"] == case["expectation"]["elements"]
-    project, output = tmp_path / "quad.caeprep", tmp_path / "quad_0000.rad"
+    project, output = tmp_path / "structured.caeprep", tmp_path / "structured_0000.rad"
     session.save_project(project)
     saved = subprocess.run([sys.executable, "-m", "caelab_prep", "export", str(project), "--output", str(output)],
                            capture_output=True, text=True, timeout=30)
@@ -157,7 +162,8 @@ def test_each_presentation_opens_same_recipe_adoption_with_one_history(quad, pro
     assert len(nodes) == case["expectation"]["active_nodes"]
     assert len(elements) == case["expectation"]["elements"]
     assert len(parts) == len(native.parts)
-    assert sum(name.startswith("/GRSHEL/SHEL/") for name in groups) == len(native.parts)
+    family = "/GRSHEL/SHEL/" if native.dimension == 2 else "/GRBRIC/BRIC/"
+    assert sum(name.startswith(family) for name in groups) == len(native.parts)
     assert window.close()
 
 
@@ -184,8 +190,8 @@ def test_same_document_reopen_invalidates_prepared_adoption(quad, tmp_path):
 
 
 @pytest.mark.parametrize("contents,message", [
-    ("[]", "planar quad recipe"),
-    ('{"mode":"hex"}', "planar quad recipe"),
+    ("[]", "quad or sweep hex recipe"),
+    ('{"mode":"tet"}', "quad or sweep hex recipe"),
     ('{"mode":"quad","mode":"quad"}', "Repeated JSON field"),
     (" " * 1_048_577, "1 MiB"),
 ], ids=["array", "unsupported-family", "duplicate-keys", "oversize"])
