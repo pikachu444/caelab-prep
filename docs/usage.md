@@ -60,15 +60,17 @@ Qt XCB와 OpenGL 런타임, 한글 글꼴이 필요합니다. Ubuntu 의존성�
 
 ## 새 모델에 CAD·메시와 조건 연결하기
 
-명시한 planar quad recipe는 **Mesh → CAD / mesh candidate… → Source type: Structured planar quad recipe**에서 생성합니다. recipe JSON과 후보 폴더를 선택하고 **Generate candidate**로 준비합니다. 원본 파일과 문서는 바꾸지 않으며 실행 중 **Cancel generation**으로 중지할 수 있습니다. 전체 후보의 scaled Jacobian·edge aspect·면적과 단위를 검토하고 재료·shell 단면을 고른 뒤 **Adopt candidate**로 한 번에 채택합니다. 길이 단위는 recipe에서 읽으며 문서 단위와 같아야 합니다.
+명시한 planar quad/sweep hex8 recipe는 **Mesh → CAD / mesh candidate… → Source type: Structured quad / sweep hex recipe**에서 생성합니다. recipe JSON과 후보 폴더를 선택하고 **Generate candidate**로 준비합니다. 원본 파일과 문서는 바꾸지 않으며 실행 중 **Cancel generation**으로 중지할 수 있습니다. 전체 후보의 scaled Jacobian·edge aspect·면적/체적과 단위를 검토하고 재료·quad의 shell 또는 hex의 solid 단면을 고른 뒤 **Adopt candidate**로 한 번에 채택합니다. 길이 단위는 recipe에서 읽으며 문서 단위와 같아야 합니다.
 
-예를 들어 아래 JSON을 새 파일로 저장해 사용할 수 있습니다. 좌표·분할 수는 JSON에서 편집합니다. GUI에서 직접 좌표/seed를 편집하거나 `.caeprep`에 recipe를 동봉해 재생성하는 기능, hex 채택, 임의 곡면·holes·patch assembly는 이 제한된 planar quad 연결의 지원 범위가 아닙니다. 채택된 native 메시·관계는 기존 작업문서로 저장하고 재열 수 있습니다. 3D를 끈 실행에서는 patch 이름과 수치만 확인하며 실제 Windows/VTK 품질 확인과 구분합니다.
+예를 들어 아래 JSON을 새 파일로 저장해 사용할 수 있습니다. 좌표·분할 수는 JSON에서 편집합니다. GUI에서 직접 좌표/seed를 편집하거나 `.caeprep`에 recipe를 동봉해 재생성하는 기능, 임의 곡면·holes·일반 patch assembly는 이 제한된 연결의 지원 범위가 아닙니다. 채택된 native 메시·관계는 기존 작업문서로 저장하고 재열 수 있습니다. 3D를 끈 실행에서는 patch 이름과 수치만 확인하며 실제 Windows/VTK 품질 확인과 구분합니다.
 
 ```json
 {"mode":"quad","unit":"mm","corners":[[0,0,0],[40,0,0],[40,20,0],[0,20,0]],"divisions":[8,4]}
 ```
 
-개발 API는 `application.structured_mesh.generate_structured_mesh(recipe, output_dir, recipe_path=original_json)`와 후보의 `to_native_mesh()`, 기존 `session.adopt_mesh_candidate()`를 사용합니다. 파일 입력은 `recipe_path`로 원본을 지정하면 내용/hash를 검증하고 기존 원본 덮어쓰기 보호에 포함합니다. dict만 전달하면 후보 폴더에 recipe snapshot을 생성합니다. 아래 CAD/독립 MSH 경로의 허용 요소 family를 quad까지 넓힌 것은 아닙니다.
+개발 API는 `application.structured_mesh.generate_structured_mesh(recipe, output_dir, recipe_path=original_json)`와 후보의 `to_native_mesh()`, 기존 `session.adopt_mesh_candidate()`를 사용합니다. 파일 입력은 `recipe_path`로 원본을 지정하면 내용/hash를 검증하고 기존 원본 덮어쓰기 보호에 포함합니다. dict만 전달하면 후보 폴더에 recipe snapshot을 생성합니다. 아래 CAD/독립 MSH 경로의 허용 요소 family를 quad/hex까지 넓힌 것은 아닙니다.
+
+같은 GUI/API에서 `mode: "hex"`인 명시 planar source의 직선/경사 sweep hex8도 채택할 수 있습니다. 예를 들어 위 quad JSON의 `"mode"`를 `"hex"`로 바꾸고 `"vector":[0,0,10],"layers":4`를 추가합니다. GUI의 solid 단면 또는 `session.create_solid_property()`가 만든 명시 `Isolid=1` 속성과 재료 ID로 채택하면 BRICK/GRBRIC을 작성하고 한 번의 Undo와 기존 작업문서 저장·재열기를 사용합니다. 상속/기타 Isolid 값을 자동 치환하지 않습니다. `describe()["capabilities"]["mesh_adoption_sources"]`가 출처별 family를 구분합니다. 27점 Jacobian 검사는 기하 품질 검사이며 solver 적분점 수를 뜻하지 않습니다. 새 출력 두 입력의 Starter 읽기는 확인했지만 Engine·해석 응답·물성의 타당성·Windows/frozen GUI는 미확인입니다. 비틀림·곡면·일반 CAD 분할·임의 외부 hex는 지원하지 않습니다.
 
 1. **File → New model…**에서 이름과 질량·길이·시간 단위를 명시합니다. 단위 없는 입력에 임의 단위를 추정하지 않습니다.
 2. 재료와 요소 family에 맞는 shell 또는 solid 단면을 만듭니다.
