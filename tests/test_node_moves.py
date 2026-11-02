@@ -267,6 +267,6 @@ def test_load_preview_keeps_native_curve_and_skew_without_evaluating_time(direct
     assert coefficients["value_basis"] == "unevaluated_native_curve_multiplier"
     assert coefficients["time_scaling"] == "native_not_evaluated"
     assert coefficients["application_point_moments"] == "not_evaluated"
-    use = next(item for item in session._node_move_snapshot().uses if item.ref.local_id == load)
+    use = next(item for item in session._mesh_edit_snapshot().uses if item.ref.local_id == load)
     assert use.orientation_sensitive and use.per_node_value is None
     assert before == (session.describe(), session.document.tokens(), session.condition_values(load))
