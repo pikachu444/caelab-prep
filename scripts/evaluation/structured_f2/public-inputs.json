@@ -1,0 +1,636 @@
+[
+  {
+    "category": "normal",
+    "expectation": {
+      "active_nodes": 9,
+      "elements": 8,
+      "measure": 2.4,
+      "measure_kind": "length",
+      "supported": true
+    },
+    "family": "line_arc",
+    "holdout": false,
+    "id": "L-N1",
+    "input": {
+      "divisions": 8,
+      "mode": "line",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2.4,
+          0,
+          0
+        ]
+      ],
+      "unit": "m"
+    },
+    "reason": "Axis-aligned line; unit m."
+  },
+  {
+    "category": "normal",
+    "expectation": {
+      "active_nodes": 17,
+      "angle": 1.5707963267948966,
+      "elements": 16,
+      "measure": 15.707963267948966,
+      "measure_kind": "arc_length",
+      "polyline_length": 15.701655784773765,
+      "radius": 10,
+      "supported": true
+    },
+    "family": "line_arc",
+    "holdout": false,
+    "id": "L-N2",
+    "input": {
+      "center": [
+        2,
+        -3,
+        1
+      ],
+      "divisions": 16,
+      "end": [
+        2,
+        7,
+        1
+      ],
+      "mode": "arc",
+      "start": [
+        12,
+        -3,
+        1
+      ],
+      "unit": "mm"
+    },
+    "reason": "Quarter-circle; the construction center may remain as an unused 0D node."
+  },
+  {
+    "category": "difficult",
+    "expectation": {
+      "active_nodes": 36,
+      "angle": 3.0543261909900767,
+      "elements": 35,
+      "measure": 36.65191429188092,
+      "measure_kind": "arc_length",
+      "polyline_length": 36.64028538688224,
+      "radius": 12,
+      "supported": true
+    },
+    "family": "line_arc",
+    "holdout": false,
+    "id": "L-D1",
+    "input": {
+      "center": [
+        -4,
+        1,
+        8
+      ],
+      "divisions": 35,
+      "end": [
+        -4,
+        -10.954336377100947,
+        9.045868912971898
+      ],
+      "mode": "arc",
+      "start": [
+        -4,
+        13,
+        8
+      ],
+      "unit": "mm"
+    },
+    "reason": "Unique 175-degree short arc in the YZ plane."
+  },
+  {
+    "category": "unsupported",
+    "expectation": {
+      "supported": false
+    },
+    "family": "line_arc",
+    "holdout": false,
+    "id": "L-U1",
+    "input": {
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "divisions": 20,
+      "end": [
+        -5,
+        0,
+        0
+      ],
+      "mode": "arc",
+      "start": [
+        5,
+        0,
+        0
+      ],
+      "unit": "mm"
+    },
+    "reason": "Antipodal arc endpoints do not determine a unique short arc."
+  },
+  {
+    "category": "normal",
+    "expectation": {
+      "active_nodes": 63,
+      "elements": 48,
+      "measure": 72.0,
+      "measure_kind": "area",
+      "patch_areas": [
+        72.0
+      ],
+      "source_area": 72.0,
+      "source_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "supported": true
+    },
+    "family": "quad",
+    "holdout": false,
+    "id": "Q-N1",
+    "input": {
+      "corners": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          12,
+          0,
+          0
+        ],
+        [
+          12,
+          6,
+          0
+        ],
+        [
+          0,
+          6,
+          0
+        ]
+      ],
+      "divisions": [
+        8,
+        6
+      ],
+      "mode": "quad",
+      "unit": "mm"
+    },
+    "reason": "Single rectangle with unequal element edge lengths."
+  },
+  {
+    "category": "normal",
+    "expectation": {
+      "active_nodes": 98,
+      "elements": 78,
+      "measure": 78.0,
+      "measure_kind": "area",
+      "patch_areas": [
+        48.0,
+        30.0
+      ],
+      "shared_boundary_cells": 6,
+      "shared_nodes": 7,
+      "shared_segments": 6,
+      "source_area": 78.0,
+      "source_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "supported": true
+    },
+    "family": "quad",
+    "holdout": false,
+    "id": "Q-N2",
+    "input": {
+      "mode": "quad",
+      "patches": [
+        {
+          "corners": [
+            "a",
+            "b",
+            "c",
+            "d"
+          ],
+          "divisions": [
+            8,
+            6
+          ],
+          "id": "left"
+        },
+        {
+          "corners": [
+            "b",
+            "e",
+            "f",
+            "c"
+          ],
+          "divisions": [
+            5,
+            6
+          ],
+          "id": "right"
+        }
+      ],
+      "unit": "mm",
+      "vertices": {
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          8,
+          0,
+          0
+        ],
+        "c": [
+          8,
+          6,
+          0
+        ],
+        "d": [
+          0,
+          6,
+          0
+        ],
+        "e": [
+          13,
+          0,
+          0
+        ],
+        "f": [
+          13,
+          6,
+          0
+        ]
+      }
+    },
+    "reason": "Two rectangular patches share an explicit six-segment edge."
+  },
+  {
+    "category": "difficult",
+    "expectation": {
+      "active_nodes": 152,
+      "elements": 126,
+      "measure": 105.0,
+      "measure_kind": "area",
+      "patch_areas": [
+        105.0
+      ],
+      "source_area": 105.0,
+      "source_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "supported": true
+    },
+    "family": "quad",
+    "holdout": false,
+    "id": "Q-D1",
+    "input": {
+      "corners": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          18,
+          0,
+          0
+        ],
+        [
+          14,
+          7,
+          0
+        ],
+        [
+          2,
+          7,
+          0
+        ]
+      ],
+      "divisions": [
+        18,
+        7
+      ],
+      "mode": "quad",
+      "unit": "mm"
+    },
+    "reason": "Strictly convex trapezoid with nonparallel opposite side edges."
+  },
+  {
+    "category": "unsupported",
+    "expectation": {
+      "supported": false
+    },
+    "family": "quad",
+    "holdout": false,
+    "id": "Q-U1",
+    "input": {
+      "corners": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          4,
+          0
+        ]
+      ],
+      "divisions": [
+        4,
+        4
+      ],
+      "mode": "quad",
+      "unit": "mm"
+    },
+    "reason": "Concave source quadrilateral is outside the convex mapped-face family."
+  },
+  {
+    "category": "normal",
+    "expectation": {
+      "active_nodes": 315,
+      "elements": 192,
+      "measure": 192.0,
+      "measure_kind": "volume",
+      "patch_areas": [
+        48.0
+      ],
+      "source_area": 48.0,
+      "source_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "supported": true
+    },
+    "family": "sweep_hex",
+    "holdout": false,
+    "id": "H-N1",
+    "input": {
+      "corners": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          8,
+          0,
+          0
+        ],
+        [
+          8,
+          6,
+          0
+        ],
+        [
+          0,
+          6,
+          0
+        ]
+      ],
+      "divisions": [
+        8,
+        6
+      ],
+      "layers": 4,
+      "mode": "hex",
+      "unit": "mm",
+      "vector": [
+        0,
+        0,
+        4
+      ]
+    },
+    "reason": "Orthogonal unit-cell block."
+  },
+  {
+    "category": "normal",
+    "expectation": {
+      "active_nodes": 392,
+      "elements": 234,
+      "measure": 234.0,
+      "measure_kind": "volume",
+      "patch_areas": [
+        48.0,
+        30.0
+      ],
+      "shared_boundary_cells": 18,
+      "shared_nodes": 28,
+      "shared_segments": 6,
+      "source_area": 78.0,
+      "source_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "supported": true
+    },
+    "family": "sweep_hex",
+    "holdout": false,
+    "id": "H-N2",
+    "input": {
+      "layers": 3,
+      "mode": "hex",
+      "patches": [
+        {
+          "corners": [
+            "a",
+            "b",
+            "c",
+            "d"
+          ],
+          "divisions": [
+            8,
+            6
+          ],
+          "id": "left"
+        },
+        {
+          "corners": [
+            "b",
+            "e",
+            "f",
+            "c"
+          ],
+          "divisions": [
+            5,
+            6
+          ],
+          "id": "right"
+        }
+      ],
+      "unit": "mm",
+      "vector": [
+        0,
+        0,
+        3
+      ],
+      "vertices": {
+        "a": [
+          0,
+          0,
+          0
+        ],
+        "b": [
+          8,
+          0,
+          0
+        ],
+        "c": [
+          8,
+          6,
+          0
+        ],
+        "d": [
+          0,
+          6,
+          0
+        ],
+        "e": [
+          13,
+          0,
+          0
+        ],
+        "f": [
+          13,
+          6,
+          0
+        ]
+      }
+    },
+    "reason": "Two blocks share an explicit swept interface."
+  },
+  {
+    "category": "difficult",
+    "expectation": {
+      "active_nodes": 546,
+      "elements": 360,
+      "measure": 300.0,
+      "measure_kind": "volume",
+      "patch_areas": [
+        60.0
+      ],
+      "source_area": 60.0,
+      "source_normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "supported": true
+    },
+    "family": "sweep_hex",
+    "holdout": false,
+    "id": "H-D1",
+    "input": {
+      "corners": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          12,
+          0,
+          0
+        ],
+        [
+          10,
+          6,
+          0
+        ],
+        [
+          2,
+          6,
+          0
+        ]
+      ],
+      "divisions": [
+        12,
+        6
+      ],
+      "layers": 5,
+      "mode": "hex",
+      "unit": "mm",
+      "vector": [
+        3,
+        2,
+        5
+      ]
+    },
+    "reason": "Trapezoid source with oblique extrusion and five layers."
+  },
+  {
+    "category": "unsupported",
+    "expectation": {
+      "supported": false
+    },
+    "family": "sweep_hex",
+    "holdout": false,
+    "id": "H-U1",
+    "input": {
+      "corners": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          8,
+          0,
+          0
+        ],
+        [
+          8,
+          6,
+          0
+        ],
+        [
+          0,
+          6,
+          0
+        ]
+      ],
+      "divisions": [
+        8,
+        6
+      ],
+      "layers": 4,
+      "mode": "hex",
+      "twist_degrees": 30,
+      "unit": "mm",
+      "vector": [
+        0,
+        0,
+        4
+      ]
+    },
+    "reason": "Requested twist is unsupported; silently ignoring it and meshing a straight prism is a failure."
+  }
+]

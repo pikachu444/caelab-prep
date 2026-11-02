@@ -2,7 +2,7 @@
 
 이 저장소는 여러 CAE 프로그램에서 재사용할 개발 자산과 기반을 만든다. OpenRadioss/OpenCourant는 첫 적용 대상이며, 현재 RAD 모델 작성·편집 앱은 공용 기반을 실제 작업에 연결한 첫 사용처다. 이 문서는 공용 자산의 경계와 현재 구현의 파일 계약을 구분해 설명한다. 목표와 후보 비교는 [DESIGN](DESIGN.md), 후속 모듈·계약·코드 이행과 작업 단위는 [상세 실행 계획](docs/shared-cae-foundation-plan.md)에 둔다. 상세 계획의 경로와 인터페이스를 현재 구현으로 해석하지 않는다.
 
-2026-11-02의 현재 납품 기준은 [DESIGN의 R1–R4/T1–T6/G0–G4](DESIGN.md#delivery-goals)를 따른다. 병합 기준은 Prep main `531e023`(PR #17/#18/#21/#22)와 Workbench main `865ee15`이며, 아래 설명은 PR #21에서 병합한 N19/N20 구현을 포함한다. Workbench PR #55 최종 `a328253`은 실제 두 입력과 필수 CI를 통과해 병합했으며 전체 납품 완료가 아니다. 아래 출발점 표는 `f4d12d0` 진단 기준이며 현재 구현은 이어지는 PR #15 변경 설명과 [남은 작업표](docs/execution-stages.md#remaining-work)를 따른다. 원제품 충실도와 Windows 검증은 구현 자체와 별도로 남는다.
+2026-11-02의 현재 납품 기준은 [DESIGN의 R1–R4/T1–T6/G0–G4](DESIGN.md#delivery-goals)를 따른다. 병합 기준은 Prep main `3ceaf44`(PR #17/#18/#21/#22/#25)와 Workbench main `865ee15`이며, 아래 설명은 PR #21에서 병합한 N19/N20 구현을 포함한다. Workbench PR #55 최종 `a328253`은 실제 두 입력과 필수 CI를 통과해 병합했으며 전체 납품 완료가 아니다. 아래 출발점 표는 `f4d12d0` 진단 기준이며 현재 구현은 이어지는 PR #15 변경 설명과 [남은 작업표](docs/execution-stages.md#remaining-work)를 따른다. 원제품 충실도와 Windows 검증은 구현 자체와 별도로 남는다.
 
 | 보존할 구현 | 실제 한계 | 현재 목표를 위해 필요한 보완 |
 |---|---|---|

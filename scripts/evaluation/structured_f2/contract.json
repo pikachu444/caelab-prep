@@ -1,0 +1,43 @@
+{
+  "angle_absolute_tolerance_radians": 1e-08,
+  "arc_checks": [
+    "All active nodes on the stated circle and plane, single ordered chain with uniformly seeded angles.",
+    "Chord sum compared to exact 2 N R sin(theta/(2 N)); true arc R theta reported separately, never incorrectly required to equal polyline length."
+  ],
+  "common_checks": [
+    "Only requested first-order top-dimensional family; unique node and element IDs; connectivity fully resolved; no degenerate cells or silent drop.",
+    "Exact top-cell and active-node counts; one chain or edge/face-connected component.",
+    "All expected lattice nodes and cells are present with required ordering, within coordinate tolerance; unused arc center 0D node allowed.",
+    "Physical groups 110/111 form nonempty disjoint exhaustive patch partition.",
+    "Shared boundaries use identical native node IDs, opposite orientation, exact prescribed divisions/layers; no hanging nodes or partial face matches.",
+    "Analytic measure relative error <=1e-9; quad area from local-origin polygon triangles, hex volume from Gauss quadrature.",
+    "SDK errors fail; warnings recorded and explicitly reviewed."
+  ],
+  "coordinate_relative_tolerance": 1e-09,
+  "coordinate_scale": "Maximum pairwise source-corner/line-point distance, arc radius, or extrusion-vector length. Positive characteristic length L; geometric tolerance is 1e-9 L.",
+  "date": "2026-11-02",
+  "design": "Six per family: three normal, two difficult supported, one unsupported; N3 and D2 are withheld until recipe freeze. Exactly 18 fixed cases, no post-failure replacement or weaker gates.",
+  "hex_max_edge_aspect_ratio": 10,
+  "hex_min_sampled_scaled_jacobian": 0.25,
+  "hex_samples": [
+    -1,
+    0,
+    1
+  ],
+  "locked_before_sdk_runs": true,
+  "metrics": {
+    "SICN": "Report SDK minSICN separately. It is not the independent scaled Jacobian and not a solver Jacobian.",
+    "hex": "Gmsh standard Hex8 corner signs; det(dX/dxi,dX/deta,dX/dzeta)>0 and determinant/product(column norms) at 27 samples. Integrate independent volume with 2x2x2 Gauss quadrature.",
+    "quad": "At each corner, dot(cross(next-current,previous-current),source_unit_normal) divided by the two edge norms. Strictly positive determinants; independent polygon area."
+  },
+  "native_mapping_boundary": "Read existing native fixtures/codec only. Line2 needs explicit TRUSS/BEAM mechanical interpretation and property; BEAM orientation is not inferred from line geometry. Q4->SHELL and Hex8->BRICK require first-order ordering/properties. Full generated native workflow remains F3.",
+  "quad_max_edge_aspect_ratio": 8,
+  "quad_min_corner_signed_scaled_jacobian": 0.3,
+  "quality_scope": "Reasoned initial-family admission gates, not an official engineering quality standard or proof for arbitrary trilinear hexes.",
+  "relative_measure_tolerance": 1e-09,
+  "scope": "Gmsh recipe F2 only: line/unique short arc; one/two convex planar quad patches; common positive straight, possibly oblique, extrusion. No product adoption, native generation or Windows claim.",
+  "time_includes": "Fresh process start, recipe import and SDK initialization/generation/write/reopen, independent ASCII MSH verification and result serialization.",
+  "time_limit_seconds": 30,
+  "unsupported": "Explicit ValueError limitation/validation failure before successful mesh/report, within 30 seconds; unknown semantic options must not be silently ignored.",
+  "version": 1
+}

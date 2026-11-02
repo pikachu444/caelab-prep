@@ -1,0 +1,1312 @@
+{
+  "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+  "source_sha256": {
+    "independent_oracle.py": "984efa88711ab8f298684539f8f3ce893bcefab16fa758e5c27f9c051560a6a8",
+    "run_campaign.py": "5c471bddd1fac95c77c09dafc5b69ed7a0732f25f5ed1466c7c49308caed2cd5",
+    "contract.json": "80030ae1d2111ca2e2777235ac146241a000d406f0f2bdc455de55569548918d",
+    "public-inputs.json": "47b68120a5293bde36451a5e85d88f70ef57cb151852499e301a0b8c387763ec",
+    "holdout-inputs.json": "67577e6f3a2c20635b28046b92e291d34d1704f9fe8c0a12f3ab08c77a08a638",
+    "recipe.py": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb"
+  },
+  "results": [
+    {
+      "case_id": "H-U1",
+      "family": "sweep_hex",
+      "category": "unsupported",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "3772f28184219ad430d698064e1473e83f4bfc13498465a7d17527b9896189a1",
+      "expected_supported": false,
+      "exception": {
+        "type": "ValueError",
+        "message": "unsupported or missing recipe fields: {'missing': [], 'unknown': ['twist_degrees']}"
+      },
+      "passed": true,
+      "status": "unsupported_rejected",
+      "child_seconds": 0.08643800400022883,
+      "wall_seconds": 0.14099239099596161,
+      "returncode": 0
+    },
+    {
+      "case_id": "L-D1",
+      "family": "line_arc",
+      "category": "difficult",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "c262a820745bc953775cfc2c2b400b62ebf169e58748a8976f873fe74260c635",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.008888266995199956,
+        "min_SICN": null,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 35
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 3
+          }
+        ]
+      },
+      "passed": false,
+      "status": "failure",
+      "exception": {
+        "type": "AssertionError",
+        "message": "('expected lattice point has missing/duplicate nodes', (-4.0, 11.392304845413264, 14.0), 0)"
+      },
+      "traceback": "Traceback (most recent call last):\n  File \"<workspace>/audit/structured-recipes-f2-independent/run_campaign.py\", line 31, in child\n    result['oracle']=verify(case,folder/'output/mesh.msh',contract)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>/audit/structured-recipes-f2-independent/independent_oracle.py\", line 184, in verify\n    lattice_ids,deviation=matching_lattices(spec,expect,nodes,active,delta)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>/audit/structured-recipes-f2-independent/independent_oracle.py\", line 127, in matching_lattices\n    assert len(matches)==1,('expected lattice point has missing/duplicate nodes',point,len(matches))\n           ^^^^^^^^^^^^^^^\nAssertionError: ('expected lattice point has missing/duplicate nodes', (-4.0, 11.392304845413264, 14.0), 0)\n",
+      "child_seconds": 0.11506002100213664,
+      "wall_seconds": 0.16898458400100935,
+      "returncode": 0
+    },
+    {
+      "case_id": "L-N1",
+      "family": "line_arc",
+      "category": "normal",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "79961bed527d353e5724f646e42e1346d3f7ebbb5a68e9d367d7ac67a1f2ee95",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.0029952749973745085,
+        "min_SICN": null,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 8
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 2
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 8,
+        "active_nodes": 9,
+        "all_msh_nodes": 9,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 2
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 8
+          }
+        ],
+        "max_lattice_coordinate_error": 3.0480062918059048e-12,
+        "coordinate_tolerance": 2.4e-09,
+        "physical_group_cells": [
+          8
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "measure": 2.4,
+        "analytic_measure": 2.4,
+        "relative_measure_error": 0.0
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.1161162409989629,
+      "wall_seconds": 0.16440479200537084,
+      "returncode": 0
+    },
+    {
+      "case_id": "L-N2",
+      "family": "line_arc",
+      "category": "normal",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "b5d5415a6cc08adb622cf5f9890873f84e5d39188b1764f6fdaab45f58448e6e",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.006779171999369282,
+        "min_SICN": null,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 16
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 3
+          }
+        ]
+      },
+      "passed": false,
+      "status": "failure",
+      "exception": {
+        "type": "AssertionError",
+        "message": "('expected lattice point has missing/duplicate nodes', (11.238795325112868, 0.8268343236508979, 1.0), 0)"
+      },
+      "traceback": "Traceback (most recent call last):\n  File \"<workspace>/audit/structured-recipes-f2-independent/run_campaign.py\", line 31, in child\n    result['oracle']=verify(case,folder/'output/mesh.msh',contract)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>/audit/structured-recipes-f2-independent/independent_oracle.py\", line 184, in verify\n    lattice_ids,deviation=matching_lattices(spec,expect,nodes,active,delta)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>/audit/structured-recipes-f2-independent/independent_oracle.py\", line 127, in matching_lattices\n    assert len(matches)==1,('expected lattice point has missing/duplicate nodes',point,len(matches))\n           ^^^^^^^^^^^^^^^\nAssertionError: ('expected lattice point has missing/duplicate nodes', (11.238795325112868, 0.8268343236508979, 1.0), 0)\n",
+      "child_seconds": 0.1057950879985583,
+      "wall_seconds": 0.15663553399645025,
+      "returncode": 0
+    },
+    {
+      "case_id": "L-U1",
+      "family": "line_arc",
+      "category": "unsupported",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "48477196bae947463f7f06fddbc690e062232f0e3ab4225609d644b67422268e",
+      "expected_supported": false,
+      "exception": {
+        "type": "ValueError",
+        "message": "only unique short arc with angle below pi is supported"
+      },
+      "passed": true,
+      "status": "unsupported_rejected",
+      "child_seconds": 0.08551227099815151,
+      "wall_seconds": 0.15893588899780298,
+      "returncode": 0
+    },
+    {
+      "case_id": "Q-D1",
+      "family": "quad",
+      "category": "difficult",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "62ca1b8b34f4873ba607af0545d1ef9e4680e370b0a2e295a84675973082e9e6",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.01653583099687239,
+        "min_SICN": 0.7528809218922502,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 50
+          },
+          {
+            "type": 3,
+            "dimension": 2,
+            "order": 1,
+            "arity": 4,
+            "name": "Quadrilateral 4",
+            "count": 126
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 4
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 126,
+        "active_nodes": 152,
+        "all_msh_nodes": 152,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 4
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 50
+          },
+          {
+            "dimension": 2,
+            "type": 3,
+            "arity": 4,
+            "count": 126
+          }
+        ],
+        "max_lattice_coordinate_error": 3.1803892852622084e-11,
+        "coordinate_tolerance": 1.8000000000000002e-08,
+        "physical_group_cells": [
+          126
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "boundary_sides": 50,
+        "interior_sides": 227,
+        "min_signed_jacobian": 0.16666666666349808,
+        "min_independent_scaled_jacobian": 0.8682431421244582,
+        "max_edge_aspect_ratio": 1.7276266603623849,
+        "scaled_jacobian_gate": 0.3,
+        "measure": 104.99999999999999,
+        "analytic_measure": 105.0,
+        "relative_measure_error": 1.3534147347811433e-16
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.12750064899591962,
+      "wall_seconds": 0.16824593499768525,
+      "returncode": 0
+    },
+    {
+      "case_id": "Q-N1",
+      "family": "quad",
+      "category": "normal",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "373de3213d827591da3cc73afab6f0f3d8712db3c489b277edb218b847f18657",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.009470016004343051,
+        "min_SICN": 0.92307692307368,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 28
+          },
+          {
+            "type": 3,
+            "dimension": 2,
+            "order": 1,
+            "arity": 4,
+            "name": "Quadrilateral 4",
+            "count": 48
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 4
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 48,
+        "active_nodes": 63,
+        "all_msh_nodes": 63,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 4
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 28
+          },
+          {
+            "dimension": 2,
+            "type": 3,
+            "arity": 4,
+            "count": 48
+          }
+        ],
+        "max_lattice_coordinate_error": 2.2856383452563023e-11,
+        "coordinate_tolerance": 1.341640786499874e-08,
+        "physical_group_cells": [
+          48
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "boundary_sides": 28,
+        "interior_sides": 82,
+        "min_signed_jacobian": 0.3749999999978524,
+        "min_independent_scaled_jacobian": 1.0,
+        "max_edge_aspect_ratio": 1.5000000000137024,
+        "scaled_jacobian_gate": 0.3,
+        "measure": 71.99999999999999,
+        "analytic_measure": 72.0,
+        "relative_measure_error": 1.9737298215558337e-16
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.11439873599738348,
+      "wall_seconds": 0.16359900899988133,
+      "returncode": 0
+    },
+    {
+      "case_id": "Q-N2",
+      "family": "quad",
+      "category": "normal",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "711b0531d5aa53012b6514d53a51e9b18870eb5a7c48c969faf59cae8aded16d",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.015002224994532298,
+        "min_SICN": 1.0,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 44
+          },
+          {
+            "type": 3,
+            "dimension": 2,
+            "order": 1,
+            "arity": 4,
+            "name": "Quadrilateral 4",
+            "count": 78
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 6
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 78,
+        "active_nodes": 98,
+        "all_msh_nodes": 98,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 6
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 44
+          },
+          {
+            "dimension": 2,
+            "type": 3,
+            "arity": 4,
+            "count": 78
+          }
+        ],
+        "max_lattice_coordinate_error": 1.6475709685437323e-11,
+        "coordinate_tolerance": 1.4317821063276354e-08,
+        "physical_group_cells": [
+          48,
+          30
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "boundary_sides": 38,
+        "interior_sides": 137,
+        "shared_boundary_cells": 6,
+        "shared_nodes": 7,
+        "min_signed_jacobian": 0.24999999999818157,
+        "min_independent_scaled_jacobian": 1.0,
+        "max_edge_aspect_ratio": 1.0000000000107754,
+        "scaled_jacobian_gate": 0.3,
+        "measure": 77.99999999999999,
+        "analytic_measure": 78.0,
+        "relative_measure_error": 1.8219044506669235e-16
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.1240401910035871,
+      "wall_seconds": 0.17674207499658223,
+      "returncode": 0
+    },
+    {
+      "case_id": "Q-U1",
+      "family": "quad",
+      "category": "unsupported",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "5480a515694d6617e1994962b246f7e2d32fd874d98a123b0822ae8d2554cb17",
+      "expected_supported": false,
+      "exception": {
+        "type": "ValueError",
+        "message": "strict convex boundary order required"
+      },
+      "passed": true,
+      "status": "unsupported_rejected",
+      "child_seconds": 0.08561553600156913,
+      "wall_seconds": 0.15028245199937373,
+      "returncode": 0
+    },
+    {
+      "case_id": "H-D1",
+      "family": "sweep_hex",
+      "category": "difficult",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "ffc0a755e3c2fead9bd39bf0e42959a73340018e9c4b8b84ba0f2a240c562b53",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.1364876549996552,
+        "min_SICN": 0.7060580613754835,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 92
+          },
+          {
+            "type": 3,
+            "dimension": 2,
+            "order": 1,
+            "arity": 4,
+            "name": "Quadrilateral 4",
+            "count": 324
+          },
+          {
+            "type": 5,
+            "dimension": 3,
+            "order": 1,
+            "arity": 8,
+            "name": "Hexahedron 8",
+            "count": 360
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 8
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 360,
+        "active_nodes": 546,
+        "all_msh_nodes": 546,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 8
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 92
+          },
+          {
+            "dimension": 2,
+            "type": 3,
+            "arity": 4,
+            "count": 324
+          },
+          {
+            "dimension": 3,
+            "type": 5,
+            "arity": 8,
+            "count": 360
+          }
+        ],
+        "max_lattice_coordinate_error": 2.2856383452563023e-11,
+        "coordinate_tolerance": 1.2000000000000002e-08,
+        "physical_group_cells": [
+          360
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "boundary_sides": 324,
+        "interior_sides": 918,
+        "min_signed_jacobian": 0.08333333333280424,
+        "min_independent_scaled_jacobian": 0.7694837640633768,
+        "max_edge_aspect_ratio": 1.8493242009009858,
+        "scaled_jacobian_gate": 0.25,
+        "measure": 299.99999999999903,
+        "analytic_measure": 300.0,
+        "relative_measure_error": 3.2211270687791207e-15
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.4542127739987336,
+      "wall_seconds": 0.504451529996004,
+      "returncode": 0
+    },
+    {
+      "case_id": "H-N1",
+      "family": "sweep_hex",
+      "category": "normal",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "56d120d1dbcdca4b5536668484d75cc62f3b2f9f62de05093bb14cfc5567758d",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.07609531500202138,
+        "min_SICN": 0.9999999999999999,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 72
+          },
+          {
+            "type": 3,
+            "dimension": 2,
+            "order": 1,
+            "arity": 4,
+            "name": "Quadrilateral 4",
+            "count": 208
+          },
+          {
+            "type": 5,
+            "dimension": 3,
+            "order": 1,
+            "arity": 8,
+            "name": "Hexahedron 8",
+            "count": 192
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 8
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 192,
+        "active_nodes": 315,
+        "all_msh_nodes": 315,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 8
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 72
+          },
+          {
+            "dimension": 2,
+            "type": 3,
+            "arity": 4,
+            "count": 208
+          },
+          {
+            "dimension": 3,
+            "type": 5,
+            "arity": 8,
+            "count": 192
+          }
+        ],
+        "max_lattice_coordinate_error": 1.6475709685437323e-11,
+        "coordinate_tolerance": 1e-08,
+        "physical_group_cells": [
+          192
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "boundary_sides": 208,
+        "interior_sides": 472,
+        "min_signed_jacobian": 0.12499999999899869,
+        "min_independent_scaled_jacobian": 1.0,
+        "max_edge_aspect_ratio": 1.000000000010493,
+        "scaled_jacobian_gate": 0.25,
+        "measure": 191.99999999999986,
+        "analytic_measure": 192.0,
+        "relative_measure_error": 7.401486830834377e-16
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.28932366899971385,
+      "wall_seconds": 0.33470617800048785,
+      "returncode": 0
+    },
+    {
+      "case_id": "H-N2",
+      "family": "sweep_hex",
+      "category": "normal",
+      "holdout": false,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "a040ee502a5f07fda1952efc616766f288e76172e7d850e7ede3e3c64de1f5e7",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.09678790700127138,
+        "min_SICN": 0.9999999999999999,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 106
+          },
+          {
+            "type": 3,
+            "dimension": 2,
+            "order": 1,
+            "arity": 4,
+            "name": "Quadrilateral 4",
+            "count": 288
+          },
+          {
+            "type": 5,
+            "dimension": 3,
+            "order": 1,
+            "arity": 8,
+            "name": "Hexahedron 8",
+            "count": 234
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 12
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 234,
+        "active_nodes": 392,
+        "all_msh_nodes": 392,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 12
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 106
+          },
+          {
+            "dimension": 2,
+            "type": 3,
+            "arity": 4,
+            "count": 288
+          },
+          {
+            "dimension": 3,
+            "type": 5,
+            "arity": 8,
+            "count": 234
+          }
+        ],
+        "max_lattice_coordinate_error": 1.6475709685437323e-11,
+        "coordinate_tolerance": 1.4317821063276354e-08,
+        "physical_group_cells": [
+          144,
+          90
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "boundary_sides": 270,
+        "interior_sides": 567,
+        "shared_boundary_cells": 18,
+        "shared_nodes": 28,
+        "min_signed_jacobian": 0.12499999999909078,
+        "min_independent_scaled_jacobian": 1.0,
+        "max_edge_aspect_ratio": 1.0000000000107754,
+        "scaled_jacobian_gate": 0.25,
+        "measure": 234.00000000000102,
+        "analytic_measure": 234.0,
+        "relative_measure_error": 4.372570681600617e-15
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.33876688400050625,
+      "wall_seconds": 0.3792472259956412,
+      "returncode": 0
+    },
+    {
+      "case_id": "L-D2",
+      "family": "line_arc",
+      "category": "difficult",
+      "holdout": true,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "085d8a771fdf524604ab652f6eedf0511c444cff2844f2d6e2e049afaf7c093c",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.010864724004932214,
+        "min_SICN": null,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 19
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 3
+          }
+        ]
+      },
+      "passed": false,
+      "status": "failure",
+      "exception": {
+        "type": "AssertionError",
+        "message": "('expected lattice point has missing/duplicate nodes', (12191.29249687105, -19743.47359172371, 8001.175796625247), 0)"
+      },
+      "traceback": "Traceback (most recent call last):\n  File \"<workspace>/audit/structured-recipes-f2-independent/run_campaign.py\", line 31, in child\n    result['oracle']=verify(case,folder/'output/mesh.msh',contract)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>/audit/structured-recipes-f2-independent/independent_oracle.py\", line 184, in verify\n    lattice_ids,deviation=matching_lattices(spec,expect,nodes,active,delta)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<workspace>/audit/structured-recipes-f2-independent/independent_oracle.py\", line 127, in matching_lattices\n    assert len(matches)==1,('expected lattice point has missing/duplicate nodes',point,len(matches))\n           ^^^^^^^^^^^^^^^\nAssertionError: ('expected lattice point has missing/duplicate nodes', (12191.29249687105, -19743.47359172371, 8001.175796625247), 0)\n",
+      "child_seconds": 0.12310740000248188,
+      "wall_seconds": 0.17343685300147627,
+      "returncode": 0
+    },
+    {
+      "case_id": "L-N3",
+      "family": "line_arc",
+      "category": "normal",
+      "holdout": true,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "60d638439f81a0181bb0de8c72cbf0ac8d240ed46d7cd1c3582eb867280f130c",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.0031027980003273115,
+        "min_SICN": null,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 17
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 2
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 17,
+        "active_nodes": 18,
+        "all_msh_nodes": 18,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 2
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 17
+          }
+        ],
+        "max_lattice_coordinate_error": 5.553792672818332e-12,
+        "coordinate_tolerance": 2.5826343140289917e-08,
+        "physical_group_cells": [
+          17
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "measure": 25.826343140289914,
+        "analytic_measure": 25.826343140289914,
+        "relative_measure_error": 0.0
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.06670642999961274,
+      "wall_seconds": 0.11927100500179222,
+      "returncode": 0
+    },
+    {
+      "case_id": "Q-D2",
+      "family": "quad",
+      "category": "difficult",
+      "holdout": true,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "54967309d61c6bebc77b006bac0785ca90ad8d1f47073917f93c3cc05659005e",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.015261237000231631,
+        "min_SICN": 0.745341614901803,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 46
+          },
+          {
+            "type": 3,
+            "dimension": 2,
+            "order": 1,
+            "arity": 4,
+            "name": "Quadrilateral 4",
+            "count": 68
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 6
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 68,
+        "active_nodes": 90,
+        "all_msh_nodes": 90,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 6
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 46
+          },
+          {
+            "dimension": 2,
+            "type": 3,
+            "arity": 4,
+            "count": 68
+          }
+        ],
+        "max_lattice_coordinate_error": 5.287787994920305e-11,
+        "coordinate_tolerance": 1.60312195418814e-08,
+        "physical_group_cells": [
+          40,
+          28
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "boundary_sides": 42,
+        "interior_sides": 115,
+        "shared_boundary_cells": 4,
+        "shared_nodes": 5,
+        "min_signed_jacobian": 0.15000000000023553,
+        "min_independent_scaled_jacobian": 0.8087360843031868,
+        "max_edge_aspect_ratio": 1.8633899812725738,
+        "scaled_jacobian_gate": 0.3,
+        "measure": 60.5,
+        "analytic_measure": 60.50000000000001,
+        "relative_measure_error": 1.1744508029092563e-16
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.12592880299780518,
+      "wall_seconds": 0.1718045519955922,
+      "returncode": 0
+    },
+    {
+      "case_id": "Q-N3",
+      "family": "quad",
+      "category": "normal",
+      "holdout": true,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "8660e6537f10162dd1962a46a0ed48e3ef8fd6bcc79e2243dd0474316400956f",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.00603172299452126,
+        "min_SICN": 0.9999999999999998,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 28
+          },
+          {
+            "type": 3,
+            "dimension": 2,
+            "order": 1,
+            "arity": 4,
+            "name": "Quadrilateral 4",
+            "count": 45
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 4
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 45,
+        "active_nodes": 60,
+        "all_msh_nodes": 60,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 4
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 28
+          },
+          {
+            "dimension": 2,
+            "type": 3,
+            "arity": 4,
+            "count": 45
+          }
+        ],
+        "max_lattice_coordinate_error": 1.070006306370934e-11,
+        "coordinate_tolerance": 1.0295630140986999e-08,
+        "physical_group_cells": [
+          45
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "boundary_sides": 28,
+        "interior_sides": 76,
+        "min_signed_jacobian": 0.24999999999902978,
+        "min_independent_scaled_jacobian": 0.9999999999999998,
+        "max_edge_aspect_ratio": 1.000000000003532,
+        "scaled_jacobian_gate": 0.3,
+        "measure": 44.999999999999986,
+        "analytic_measure": 45.0,
+        "relative_measure_error": 3.1579677144893343e-16
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.07771679399593268,
+      "wall_seconds": 0.13320199100417085,
+      "returncode": 0
+    },
+    {
+      "case_id": "H-D2",
+      "family": "sweep_hex",
+      "category": "difficult",
+      "holdout": true,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "3f4bbc1280eaf2bef93998d362a183c9362742ddc5b7b9599729995317dd1aa2",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.17632913799752714,
+        "min_SICN": 0.7034558583164292,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 132
+          },
+          {
+            "type": 3,
+            "dimension": 2,
+            "order": 1,
+            "arity": 4,
+            "name": "Quadrilateral 4",
+            "count": 465
+          },
+          {
+            "type": 5,
+            "dimension": 3,
+            "order": 1,
+            "arity": 8,
+            "name": "Hexahedron 8",
+            "count": 525
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 12
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 525,
+        "active_nodes": 768,
+        "all_msh_nodes": 768,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 12
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 132
+          },
+          {
+            "dimension": 2,
+            "type": 3,
+            "arity": 4,
+            "count": 465
+          },
+          {
+            "dimension": 3,
+            "type": 5,
+            "arity": 8,
+            "count": 525
+          }
+        ],
+        "max_lattice_coordinate_error": 2.6441071793150165e-11,
+        "coordinate_tolerance": 1.5231546211727818e-08,
+        "physical_group_cells": [
+          280,
+          245
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "boundary_sides": 430,
+        "interior_sides": 1360,
+        "shared_boundary_cells": 35,
+        "shared_nodes": 48,
+        "min_signed_jacobian": 0.03906249999961581,
+        "min_independent_scaled_jacobian": 0.8012626294675345,
+        "max_edge_aspect_ratio": 2.3390253903589873,
+        "scaled_jacobian_gate": 0.25,
+        "measure": 245.0000000000018,
+        "analytic_measure": 245.00000000000003,
+        "relative_measure_error": 7.192432590551218e-15
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.6068962070057751,
+      "wall_seconds": 0.6550726869973005,
+      "returncode": 0
+    },
+    {
+      "case_id": "H-N3",
+      "family": "sweep_hex",
+      "category": "normal",
+      "holdout": true,
+      "recipe_sha256": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+      "case_sha256": "aa0de00c45979bc0b8909e831be003c310fe71f208716b3da7965cd7063dffcf",
+      "expected_supported": true,
+      "recipe_completed": true,
+      "sdk": {
+        "version": "4.15.2",
+        "seconds": 0.09503033199871425,
+        "min_SICN": 0.8108663413599362,
+        "errors": [],
+        "warnings": [],
+        "inventory": [
+          {
+            "type": 1,
+            "dimension": 1,
+            "order": 1,
+            "arity": 2,
+            "name": "Line 2",
+            "count": 76
+          },
+          {
+            "type": 3,
+            "dimension": 2,
+            "order": 1,
+            "arity": 4,
+            "name": "Quadrilateral 4",
+            "count": 230
+          },
+          {
+            "type": 5,
+            "dimension": 3,
+            "order": 1,
+            "arity": 8,
+            "name": "Hexahedron 8",
+            "count": 225
+          },
+          {
+            "type": 15,
+            "dimension": 0,
+            "order": 0,
+            "arity": 1,
+            "name": "Point",
+            "count": 8
+          }
+        ]
+      },
+      "oracle": {
+        "elements": 225,
+        "active_nodes": 360,
+        "all_msh_nodes": 360,
+        "inventory": [
+          {
+            "dimension": 0,
+            "type": 15,
+            "arity": 1,
+            "count": 8
+          },
+          {
+            "dimension": 1,
+            "type": 1,
+            "arity": 2,
+            "count": 76
+          },
+          {
+            "dimension": 2,
+            "type": 3,
+            "arity": 4,
+            "count": 230
+          },
+          {
+            "dimension": 3,
+            "type": 5,
+            "arity": 8,
+            "count": 225
+          }
+        ],
+        "max_lattice_coordinate_error": 1.0621548090058887e-11,
+        "coordinate_tolerance": 1.0295630140986999e-08,
+        "physical_group_cells": [
+          225
+        ],
+        "hanging_nodes": 0,
+        "connected_components": 1,
+        "boundary_sides": 230,
+        "interior_sides": 560,
+        "min_signed_jacobian": 0.062499999999798696,
+        "min_independent_scaled_jacobian": 0.9759000729485309,
+        "max_edge_aspect_ratio": 1.951800145902565,
+        "scaled_jacobian_gate": 0.25,
+        "measure": 112.49999999999991,
+        "analytic_measure": 112.50000000000001,
+        "relative_measure_error": 8.842309600570134e-16
+      },
+      "passed": true,
+      "status": "supported_pass",
+      "child_seconds": 0.3158054079976864,
+      "wall_seconds": 0.35633200599841075,
+      "returncode": 0
+    }
+  ]
+}

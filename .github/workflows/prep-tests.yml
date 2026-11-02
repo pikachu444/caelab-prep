@@ -177,3 +177,50 @@ jobs:
         with:
           name: solver-generation-evidence
           path: solver-evidence/
+
+  structured-recipes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y libglu1-mesa libgl1
+      - run: python -m pip install gmsh==4.15.2
+      - name: Run locked SDK recipes and independent geometry oracles
+        run: python scripts/evaluation/structured_f2/verify_f2.py --recipe scripts/evaluation/structured_recipes.py --output structured-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: structured-recipe-evidence
+          path: structured-evidence/
+
+  representative-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y libglu1-mesa libgl1
+      - run: python -m pip install -e ".[cad,dev]" gmsh==4.15.2 cadquery-ocp==7.8.1.1.post1
+      - name: Check independent native oracle and bounded process management
+        run: python -m pytest -q tests/test_representative_native.py
+      - name: Prepare the same public representative model through production APIs
+        run: python scripts/evaluation/representative_native.py prepare --output representative-evidence
+      - name: Obtain the pinned official OpenCourant release
+        run: |
+          curl --fail --location --retry 2 https://github.com/OpenCourant/OpenCourant/releases/download/latest-20261011/OpenCourant_linux64.zip --output opencourant.zip
+          echo "6cb419677ca36d73acb96218cc0cf5e4f7d50494d9c7812ba27935e3c0f8ec94  opencourant.zip" | sha256sum --check
+          unzip -q opencourant.zip -d solver
+          chmod +x solver/OpenCourant/exec/*
+      - name: Exact Engine and separate physical history with a 120 second native budget
+        run: python scripts/evaluation/representative_native.py run --output representative-evidence --solver-root "$PWD/solver/OpenCourant" --budget 120
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: representative-native-evidence
+          # Includes public inputs and diagnostic outputs, never solver executables.
+          path: representative-evidence/

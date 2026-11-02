@@ -1,8 +1,8 @@
 # Prep 산출물의 Workbench 재사용 계획
 
-현재 구현 대조: 2026-11-02. Prep 병합 `531e023`, Workbench 병합 `865ee15`([Prep #17](https://github.com/pikachu444/caelab-prep/pull/17), [Workbench #55](https://github.com/pikachu444/caelab-workbench/pull/55))를 기준으로 한다. W1 공용 NumericEdit의 실제 MDO 소비와 W2 RAD 작업문서의 독립 Prep 실행은 구현·병합됐다. 실제 Windows 두 앱 작업은 [중앙 잔여 N14](execution-stages.md#remaining-work), RAD 실행 입력 묶음 W3는 N21, 열린 GUI IPC/MCP는 N19/N20이다. 테스트용 QWidget host나 파일 전달을 위젯 소비 또는 solver 실행 완료로 대신하지 않는다.
+현재 구현 대조: 2026-11-02. Prep 병합 `3ceaf44`, Workbench 병합 `865ee15`([Prep #17](https://github.com/pikachu444/caelab-prep/pull/17), [Workbench #55](https://github.com/pikachu444/caelab-workbench/pull/55))를 기준으로 한다. W1 공용 NumericEdit의 실제 MDO 소비와 W2 RAD 작업문서의 독립 Prep 실행은 구현·병합됐다. 실제 Windows 두 앱 작업은 [중앙 잔여 N14](execution-stages.md#remaining-work), RAD 실행 입력 묶음 W3는 N21, 열린 GUI IPC/MCP는 N19/N20이다. 테스트용 QWidget host나 파일 전달을 위젯 소비 또는 solver 실행 완료로 대신하지 않는다.
 
-원검토일은 2026-10-29이며 기준은 Workbench `92ce81181396bed9bb6e3024bba62913834c2a7e`, Prep `5d16e81c7ec7c92499401d63208039424bf73cc9`였다. 아래 날짜가 붙은 소스 조사·환경·외부 자산 기록은 그 시점에 한정한다. 이번 갱신은 문서만 변경하며 새 제품 실행·Windows 검증을 수행하지 않는다. 현재 통합의 실행 근거는 [작업서 19절](execution-stages.md#current-progress), 다음 작업의 상태·완료 조건은 [중앙 잔여 목록](execution-stages.md#remaining-work)을 따른다.
+원검토일은 2026-10-29이며 기준은 Workbench `92ce81181396bed9bb6e3024bba62913834c2a7e`, Prep `5d16e81c7ec7c92499401d63208039424bf73cc9`였다. 아래 날짜가 붙은 소스 조사·환경·외부 자산 기록은 그 시점에 한정한다. 당시 조사와 현재 실행 근거를 구분하며, Windows 실제 검증은 아직 후속이다. 현재 통합의 실행 근거는 [작업서 19절](execution-stages.md#current-progress), 다음 작업의 상태·완료 조건은 [중앙 잔여 목록](execution-stages.md#remaining-work)을 따른다.
 
 ## 1. 먼저 확정할 결론
 

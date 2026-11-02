@@ -1,0 +1,70 @@
+{
+  "recipe_sha256": {
+    "initial": "89f14c423f7fd2604e75c6e952f3a03e3f259985c6e8bf68149d11827ebd83eb",
+    "affected_arc_retry": "e13741a912e8e890057172a1240548b8dbd3edaa38dde73cb521e33303794a0f"
+  },
+  "lock_sha256": {
+    "contract.json": "80030ae1d2111ca2e2777235ac146241a000d406f0f2bdc455de55569548918d",
+    "holdout-inputs.json": "67577e6f3a2c20635b28046b92e291d34d1704f9fe8c0a12f3ab08c77a08a638",
+    "public-inputs.json": "47b68120a5293bde36451a5e85d88f70ef57cb151852499e301a0b8c387763ec"
+  },
+  "scope": "Fixed F2 prepared geometry only; F3 product/native path not tested",
+  "families": {
+    "line_arc": {
+      "supported_passes": 3,
+      "supported_total": 5,
+      "unsupported_safe_rejections": 1,
+      "status": "F2_FAIL",
+      "failures": [
+        "L-D1",
+        "L-N2"
+      ]
+    },
+    "quad": {
+      "supported_passes": 5,
+      "supported_total": 5,
+      "unsupported_safe_rejections": 1,
+      "status": "F2_PASS_FOR_LOCKED_FAMILY",
+      "failures": []
+    },
+    "sweep_hex": {
+      "supported_passes": 5,
+      "supported_total": 5,
+      "unsupported_safe_rejections": 1,
+      "status": "F2_PASS_FOR_LOCKED_FAMILY",
+      "failures": []
+    }
+  },
+  "total_cases": 18,
+  "case_passes": 16,
+  "case_failures": 2,
+  "max_wall_seconds": 0.6550726869973005,
+  "latest_arc_recipe_sha256": "e13741a912e8e890057172a1240548b8dbd3edaa38dde73cb521e33303794a0f",
+  "initial_case_passes": 15,
+  "initial_case_failures": 3,
+  "additional_sdk_runs": {
+    "original_twist_reproduction": 1,
+    "affected_arc_retry": 3
+  },
+  "case_evidence_stages": {
+    "H-D1": "frozen-strict",
+    "H-D2": "frozen-strict",
+    "H-N1": "frozen-strict",
+    "H-N2": "frozen-strict",
+    "H-N3": "frozen-strict",
+    "H-U1": "frozen-strict",
+    "L-D1": "arc-precision-retry",
+    "L-D2": "arc-precision-retry",
+    "L-N1": "frozen-strict",
+    "L-N2": "arc-precision-retry",
+    "L-N3": "frozen-strict",
+    "L-U1": "frozen-strict",
+    "Q-D1": "frozen-strict",
+    "Q-D2": "frozen-strict",
+    "Q-N1": "frozen-strict",
+    "Q-N2": "frozen-strict",
+    "Q-N3": "frozen-strict",
+    "Q-U1": "frozen-strict"
+  },
+  "retest_policy": "Only 3 failed arc cases rerun after mode-specific SDK precision-setting correction. Other 15 outcomes retained; not a claim that all 18 reran on latest SHA."
+}

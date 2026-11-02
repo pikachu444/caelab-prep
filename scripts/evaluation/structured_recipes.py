@@ -239,6 +239,10 @@ def run(spec, folder):
         gmsh.model.add('explicit_recipe')
         geo = gmsh.model.geo
         mode = spec['mode']
+        if mode == 'arc':
+            # Gmsh's 1D integration tolerance controls transfinite curve seeds.
+            # Keep the geometric gate fixed; improve backend integration accuracy.
+            gmsh.option.setNumber('Mesh.LcIntegrationPrecision', 1e-12)
         entities = None
         if shared_divisions is not None:
             dim, entities = add_patches(gmsh, spec, singles)
@@ -247,9 +251,17 @@ def run(spec, folder):
                 a, b = [geo.addPoint(*p) for p in spec['points']]
                 entity = geo.addLine(a, b)
             else:
-                c, a, b = [geo.addPoint(*spec[k]) for k in ('center', 'start', 'end')]
-                entity = geo.addCircleArc(a, c, b)
-            geo.mesh.setTransfiniteCurve(entity, spec['divisions'] + 1)
+                # Built-in InterpolateCurve differentiates with finite differences;
+                # OCCT supplies the analytic curve derivative for arc-length seeds.
+                # This is a bounded second recipe, with unchanged geometry gates.
+                occ = gmsh.model.occ
+                c, a, b = [occ.addPoint(*spec[k]) for k in ('center', 'start', 'end')]
+                entity = occ.addCircleArc(a, c, b)
+                occ.synchronize()
+            if mode == 'arc':
+                gmsh.model.mesh.setTransfiniteCurve(entity, spec['divisions'] + 1)
+            else:
+                geo.mesh.setTransfiniteCurve(entity, spec['divisions'] + 1)
             dim = 1
         else:
             pts = [geo.addPoint(*p) for p in spec['corners']]
@@ -342,6 +354,8 @@ def run(spec, folder):
             inventory=inventory, interface=interface, measure=measure,
             min_signed_jacobian=minimum_jacobian,
             min_SICN=min(quality) if quality else None, errors=errors,
+            geometry_kernel='OpenCASCADE' if mode == 'arc' else 'built-in',
+            curve_integration_precision=gmsh.option.getNumber('Mesh.LcIntegrationPrecision'),
             warnings=[s for s in logs if s.lower().startswith('warning')],
             seconds=time.monotonic() - started,
             recipe_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),

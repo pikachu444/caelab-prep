@@ -1,0 +1,370 @@
+[
+  {
+    "category": "normal",
+    "expectation": {
+      "active_nodes": 18,
+      "elements": 17,
+      "measure": 25.826343140289914,
+      "measure_kind": "length",
+      "supported": true
+    },
+    "family": "line_arc",
+    "holdout": true,
+    "id": "L-N3",
+    "input": {
+      "divisions": 17,
+      "mode": "line",
+      "points": [
+        [
+          17,
+          -9,
+          4
+        ],
+        [
+          -2,
+          6,
+          13
+        ]
+      ],
+      "unit": "cm"
+    },
+    "reason": "Translated oblique line; non-default unit."
+  },
+  {
+    "category": "difficult",
+    "expectation": {
+      "active_nodes": 20,
+      "angle": 0.02181661564992912,
+      "elements": 19,
+      "measure": 6.981317007977318,
+      "measure_kind": "arc_length",
+      "polyline_length": 6.981316624452326,
+      "radius": 320,
+      "supported": true
+    },
+    "family": "line_arc",
+    "holdout": true,
+    "id": "L-D2",
+    "input": {
+      "center": [
+        12000,
+        -20000,
+        8000
+      ],
+      "divisions": 19,
+      "end": [
+        12188.603542858033,
+        -19741.54784631156,
+        8005.584610568848
+      ],
+      "mode": "arc",
+      "start": [
+        12192.0,
+        -19744.0,
+        8000
+      ],
+      "unit": "mm"
+    },
+    "reason": "Small 1.25-degree arc in an oblique plane at a translated origin."
+  },
+  {
+    "category": "normal",
+    "expectation": {
+      "active_nodes": 60,
+      "elements": 45,
+      "measure": 45.0,
+      "measure_kind": "area",
+      "patch_areas": [
+        45.0
+      ],
+      "source_area": 45.0,
+      "source_normal": [
+        0.64,
+        -0.47999999999999987,
+        0.6
+      ],
+      "supported": true
+    },
+    "family": "quad",
+    "holdout": true,
+    "id": "Q-N3",
+    "input": {
+      "corners": [
+        [
+          5.0,
+          -8.0,
+          12.0
+        ],
+        [
+          10.399999999999999,
+          -0.7999999999999998,
+          12.0
+        ],
+        [
+          7.999999999999998,
+          1.0,
+          16.0
+        ],
+        [
+          2.6,
+          -6.2,
+          16.0
+        ]
+      ],
+      "divisions": [
+        9,
+        5
+      ],
+      "mode": "quad",
+      "unit": "cm"
+    },
+    "reason": "Rotated and translated rectangle in a non-coordinate plane."
+  },
+  {
+    "category": "difficult",
+    "expectation": {
+      "active_nodes": 90,
+      "elements": 68,
+      "measure": 60.50000000000001,
+      "measure_kind": "area",
+      "patch_areas": [
+        32.0,
+        28.500000000000007
+      ],
+      "shared_boundary_cells": 4,
+      "shared_nodes": 5,
+      "shared_segments": 4,
+      "source_area": 60.50000000000001,
+      "source_normal": [
+        -0.6000000000000001,
+        8.881784197001253e-17,
+        0.8
+      ],
+      "supported": true
+    },
+    "family": "quad",
+    "holdout": true,
+    "id": "Q-D2",
+    "input": {
+      "mode": "quad",
+      "patches": [
+        {
+          "corners": [
+            "a",
+            "b",
+            "c",
+            "d"
+          ],
+          "divisions": [
+            10,
+            4
+          ],
+          "id": "left"
+        },
+        {
+          "corners": [
+            "b",
+            "e",
+            "f",
+            "c"
+          ],
+          "divisions": [
+            7,
+            4
+          ],
+          "id": "right"
+        }
+      ],
+      "unit": "mm",
+      "vertices": {
+        "a": [
+          11.0,
+          -7,
+          19.0
+        ],
+        "b": [
+          19.0,
+          -7,
+          25.0
+        ],
+        "c": [
+          17.4,
+          -3,
+          23.8
+        ],
+        "d": [
+          12.6,
+          -3,
+          20.2
+        ],
+        "e": [
+          23.8,
+          -8,
+          28.6
+        ],
+        "f": [
+          23.0,
+          -3,
+          28.0
+        ]
+      }
+    },
+    "reason": "Two nonrectangular patches in an oblique plane share a sloped edge and matching seeds."
+  },
+  {
+    "category": "normal",
+    "expectation": {
+      "active_nodes": 360,
+      "elements": 225,
+      "measure": 112.50000000000001,
+      "measure_kind": "volume",
+      "patch_areas": [
+        45.0
+      ],
+      "source_area": 45.0,
+      "source_normal": [
+        -0.6,
+        0.0,
+        0.8000000000000002
+      ],
+      "supported": true
+    },
+    "family": "sweep_hex",
+    "holdout": true,
+    "id": "H-N3",
+    "input": {
+      "corners": [
+        [
+          -2.0,
+          7,
+          3.0
+        ],
+        [
+          5.2,
+          7,
+          8.399999999999999
+        ],
+        [
+          5.2,
+          12,
+          8.399999999999999
+        ],
+        [
+          -2.0,
+          12,
+          3.0
+        ]
+      ],
+      "divisions": [
+        9,
+        5
+      ],
+      "layers": 5,
+      "mode": "hex",
+      "unit": "cm",
+      "vector": [
+        -1.1,
+        0.25,
+        2.3
+      ]
+    },
+    "reason": "Tilted source plane and positive oblique straight extrusion."
+  },
+  {
+    "category": "difficult",
+    "expectation": {
+      "active_nodes": 768,
+      "elements": 525,
+      "measure": 245.00000000000003,
+      "measure_kind": "volume",
+      "patch_areas": [
+        32.5,
+        37.500000000000014
+      ],
+      "shared_boundary_cells": 35,
+      "shared_nodes": 48,
+      "shared_segments": 5,
+      "source_area": 70.00000000000001,
+      "source_normal": [
+        0.6399999999999997,
+        -0.48,
+        0.6000000000000001
+      ],
+      "supported": true
+    },
+    "family": "sweep_hex",
+    "holdout": true,
+    "id": "H-D2",
+    "input": {
+      "layers": 7,
+      "mode": "hex",
+      "patches": [
+        {
+          "corners": [
+            "a",
+            "b",
+            "c",
+            "d"
+          ],
+          "divisions": [
+            8,
+            5
+          ],
+          "id": "left"
+        },
+        {
+          "corners": [
+            "b",
+            "e",
+            "f",
+            "c"
+          ],
+          "divisions": [
+            7,
+            5
+          ],
+          "id": "right"
+        }
+      ],
+      "unit": "mm",
+      "vector": [
+        2.144,
+        -0.6079999999999999,
+        3.06
+      ],
+      "vertices": {
+        "a": [
+          -13.0,
+          17.0,
+          6.0
+        ],
+        "b": [
+          -8.2,
+          23.4,
+          6.0
+        ],
+        "c": [
+          -11.8,
+          23.6,
+          10.0
+        ],
+        "d": [
+          -14.8,
+          19.6,
+          10.0
+        ],
+        "e": [
+          -3.52,
+          28.64,
+          5.2
+        ],
+        "f": [
+          -7.6,
+          29.2,
+          10.0
+        ]
+      }
+    },
+    "reason": "Two skew planar patches in an oblique frame with common oblique sweep."
+  }
+]
