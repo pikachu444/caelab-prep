@@ -153,9 +153,23 @@ class GalleryWindow(QMainWindow):
         spec = next(spec for spec in self.session.properties(self._curve_ref) if spec.kind == "table")
         axes = spec.components or ("X", "Y")
         self.curve_table.set_points(self.session.curve_points(self._curve_ref), headers=axes)
+        self.curve_table.set_csv_axes(f"X [{axes[0]}]", f"Y [{axes[1]}]")
         self.plot.set_points(self.session.curve_points(self._curve_ref), x_label=f"X [{axes[0]}]", y_label=f"Y [{axes[1]}]")
         node = next(node for node in self.session.tree_nodes() if node.ref == self._curve_ref)
         self.viewport_frame.title.setText(node.label)
+
+    def _curve_edit_context(self):
+        description = self.session.describe()
+        return (description.get("document_epoch"), description["document_id"], description["revision"],
+                self._curve_ref, self._target, self.session.active_object())
+
+    def _curve_editable(self):
+        description = self.session.describe()
+        return (not self._busy and not self._closed and self._target is not None
+                and self._target.kind == "curve" and self._target == self._curve_ref
+                and self.session.active_object() == self._target
+                and description.get("document_epoch") == self._document_epoch
+                and description["revision"] == self._revision and not self._property_draft())
 
     def _sync_curve_context(self):
         if self._target is None:

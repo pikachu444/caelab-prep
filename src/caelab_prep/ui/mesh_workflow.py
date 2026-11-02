@@ -72,6 +72,7 @@ class SolverExportDialog(_FormDialog):
     def __init__(self, session, parent=None):
         super().__init__("Export Starter and Engine", parent)
         self.session = session
+        self._stamp = session.describe()
         self.path = QLineEdit(); self.path.setPlaceholderText("New folder / model_0000.rad")
         browse = QPushButton("Browse…"); browse.clicked.connect(self.browse)
         row = QHBoxLayout(); row.addWidget(self.path); row.addWidget(browse)
@@ -79,10 +80,37 @@ class SolverExportDialog(_FormDialog):
         self.end = NumericEdit(minimum=0)
         self.interval = NumericEdit(minimum=0)
         self.form.addRow("End time", self.end); self.form.addRow("Output interval", self.interval)
-        hint = QLabel("Times use the model's declared time unit. Exports a new Starter, INCLUDE bundle and Engine; it does not run a solver.")
-        hint.setWordWrap(True); self.layout.insertWidget(0, hint)
+        self.case = QComboBox()
+        self.case.addItem("Manual settings — all native conditions", None)
+        cases = session.analysis_cases()
+        self._saved_cases = {item["id"]: item for item in cases["cases"]}
+        for item in cases["cases"]:
+            self.case.addItem(item["name"], item["id"])
+        self.form.insertRow(1, "Analysis case", self.case)
+        self.hint = QLabel()
+        self.hint.setWordWrap(True); self.layout.insertWidget(0, self.hint)
+        self.case.currentIndexChanged.connect(self._case_changed)
+        self.case.setCurrentIndex(max(0, self.case.findData(cases["active_case_id"])))
+        self._case_changed()
         self.result = None
         self.buttons.accepted.connect(self.apply)
+
+    def _case_changed(self):
+        current = self.session.describe()
+        if any(current.get(key) != self._stamp.get(key) for key in ("document_id", "document_epoch", "revision")):
+            self.error.setText("The model changed while export was open. Close and reopen export to review the current cases.")
+            self.buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
+            return
+        case_id = self.case.currentData()
+        self.end.setEnabled(case_id is None); self.interval.setEnabled(case_id is None)
+        if case_id is None:
+            self.end.clear(); self.interval.clear()
+            self.hint.setText("Manual export uses all native conditions and times in the model's declared time unit. Choose a saved analysis case to use its active conditions and settings. Export does not run a solver.")
+        else:
+            case = self._saved_cases[case_id]
+            self.end.setText(format(case["end_time"], ".16g"))
+            self.interval.setText(format(case["output_interval"], ".16g"))
+            self.hint.setText(f"Saved case: {case['name']} — times in {case['time_unit']}, {len(case['condition_ids'])} active conditions. Edit this case in Analysis cases to change these settings. Export does not run a solver.")
 
     def browse(self):
         path, _ = QFileDialog.getSaveFileName(self, "New solver input", self.path.text(), "Radioss Starter (*_0000.rad)")
@@ -90,7 +118,14 @@ class SolverExportDialog(_FormDialog):
 
     def apply(self):
         try:
-            self.result = self.session.export_solver_inputs(self.path.text(), self.end.numeric_value(), self.interval.numeric_value())
+            current = self.session.describe()
+            if any(current.get(key) != self._stamp.get(key) for key in ("document_id", "document_epoch", "revision")):
+                raise ValueError("The model changed while export was open. Close and reopen export to review the current case.")
+            if self.case.currentData() is not None:
+                self.result = self.session.export_analysis_case(self.path.text(), self.case.currentData(),
+                    expected_revision=self._stamp["revision"], expected_document_id=self._stamp["document_id"])
+            else:
+                self.result = self.session.export_solver_inputs(self.path.text(), self.end.numeric_value(), self.interval.numeric_value())
         except Exception as exc:
             self.error.setText(str(exc)); return False
         self.accept(); return True
@@ -377,7 +412,16 @@ class MeshWorkflow(QObject):
         self.new_action = host._action("project", "New model…", self.new_document, "Ctrl+N", action_id="file.new")
         self.mesh_action = host._action("mesh", "CAD / mesh candidate…", self.mesh, action_id="mesh.candidate")
         self.export_action = host._action("export", "Export Starter and Engine…", self.export, action_id="file.export_solver")
+        self.cases_action = host._action("card", "Analysis cases…", self.cases, action_id="model.analysis_cases")
         self.dialog = None
+
+    def cases(self):
+        if self.host._busy or not self.host._finish_pending_edits(): return
+        if not self.host.session.describe().get("document_id"): return
+        from .analysis_cases import AnalysisCasesDialog
+        self.dialog = AnalysisCasesDialog(self.host.session, self.host)
+        self.dialog.exec()
+        self.host.refresh_document()
 
     def new_document(self):
         if self.host._busy: return

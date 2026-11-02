@@ -117,6 +117,15 @@ class AssetDigest:
 
 
 @dataclass(frozen=True)
+class MeshGroup:
+    """A source-defined set; members are source node or physical element IDs."""
+    key: str
+    name: str
+    kind: str
+    member_ids: tuple[int, ...]
+
+
+@dataclass(frozen=True)
 class NativeMesh:
     """Solver-neutral physical cells, with the complete source inventory.
 
@@ -128,13 +137,15 @@ class NativeMesh:
     elements: tuple[MeshCell, ...]
     parts: tuple[MeshPart, ...]
     length_unit: str
-    geometry_resource_uuid: str
+    geometry_resource_uuid: str | None
     mesh_uuid: str
     dimension: int
     inventory: tuple[CellInventory, ...]
     omitted_boundary_cells: int
     unused_node_ids: tuple[int, ...]
     assets: tuple[AssetDigest, ...]
+    source_kind: str = "cad_gmsh"
+    groups: tuple[MeshGroup, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -300,7 +311,7 @@ def _inspect_msh(path):
                                "ids": [int(value) for value in identifiers],
                                "connectivity": [flat[i:i + count] for i in range(0, len(flat), count)]})
         coordinates = [float(value) for value in xyz]
-        groups = [{"dimension": int(dim), "name": gmsh.model.getPhysicalName(dim, tag),
+        groups = [{"dimension": int(dim), "tag": int(tag), "name": gmsh.model.getPhysicalName(dim, tag),
                    "entities": [int(value) for value in gmsh.model.getEntitiesForPhysicalGroup(dim, tag)]}
                   for dim, tag in gmsh.model.getPhysicalGroups()]
         return {"nodes": {"ids": [int(value) for value in ids],
@@ -470,7 +481,6 @@ def read_mesh_candidate(source: str | os.PathLike[str] | dict, *,
 def validate_native_mesh(native_mesh: NativeMesh) -> NativeMesh:
     """Re-admit an untrusted public value immediately before document adoption.
 
-    This is a Gmsh-candidate boundary, not a general hand-authored mesh importer.
     Original candidate assets are required. Reconstructing the neutral value
     from the hashed metadata and actual MSH verifies IDs, geometry, ownership,
     full inventory and default quality limits, including forged frozen values.
@@ -479,6 +489,11 @@ def validate_native_mesh(native_mesh: NativeMesh) -> NativeMesh:
     """
     if not isinstance(native_mesh, NativeMesh):
         raise PrepError("invalid_native_mesh", "Expected a verified Gmsh NativeMesh candidate.")
+    if native_mesh.source_kind == "standalone_msh":
+        from .external_mesh import validate_imported_mesh
+        return validate_imported_mesh(native_mesh)
+    if native_mesh.source_kind != "cad_gmsh" or native_mesh.groups:
+        raise PrepError("invalid_native_mesh", "Unrecognised mesh source or unverified source groups.")
     assets = native_mesh.assets
     if (not isinstance(assets, tuple) or any(not isinstance(asset, AssetDigest) for asset in assets)
             or len(assets) != 4 or {asset.kind for asset in assets} != {"source", "metadata", "msh", "xao"}):

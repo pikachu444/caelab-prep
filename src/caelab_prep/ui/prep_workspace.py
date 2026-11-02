@@ -14,7 +14,7 @@ from PySide6.QtGui import QActionGroup, QFont
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QFrame, QHeaderView, QLabel, QLineEdit, QMenu,
     QPlainTextEdit, QProgressBar, QPushButton, QScrollArea, QSizePolicy,
-    QStackedWidget, QTabWidget, QToolBar, QToolButton, QTreeWidget, QVBoxLayout, QWidget,
+    QSplitter, QStackedWidget, QTabWidget, QToolBar, QToolButton, QTreeWidget, QVBoxLayout, QWidget,
 )
 
 from .shell import ViewportFrame, create_dock
@@ -98,8 +98,9 @@ class PrepWorkspace:
                         (self.modeling.actions["part.assign"],))),
             ("&Conditions", ((self.modeling.actions["curve.create"],),
                              tuple(self.modeling.actions[key + ".create"] for key in
-                                   ("constraint", "load", "velocity", "contact")))),
-            ("&Mesh", ((self.mesh_workflow.mesh_action,),)),
+                                   ("constraint", "load", "velocity", "contact")),
+                             (self.mesh_workflow.cases_action,))),
+            ("&Mesh", ((self.mesh_import.action, self.mesh_workflow.mesh_action),)),
             ("&View", ((self.fit_action, self.fit_selected_action, self.iso_action, *self.standard_view_actions, self.edges_action),
                        (self.hide_selected_action, self.isolate_action, self.show_all_action))),
         )
@@ -261,9 +262,11 @@ class PrepWorkspace:
         self.apply_vector_button = QPushButton("Apply velocity")
         self.apply_vector_button.setObjectName("primaryAction")
         self.apply_vector_button.clicked.connect(self._apply_properties)
-        self.curve_table = CurveTable(minimum_points=1, require_increasing_x=False)
+        self.curve_table = CurveTable(minimum_points=1, require_increasing_x=True)
         self.curve_table.pointsEdited.connect(self._commit_curve)
         self.curve_plot = CurvePlot()
+        self.curve_table.bind_plot(self.curve_plot, commit=self._commit_curve,
+                                   context=self._curve_edit_context, can_edit=self._curve_editable)
         self.units_note = QLabel()
         self.units_note.setObjectName("unitsNote")
         self.units_note.setWordWrap(True)
@@ -398,6 +401,8 @@ class PrepWorkspace:
 
     def _clear_form(self):
         self._curve_active = False
+        if hasattr(self, "_curve_dock_minimum"):
+            self.properties_dock.setMinimumWidth(self._curve_dock_minimum)
         self.target_role_selector.hide()
         self.property_editor.set_fields(())
         self.property_editor.setMinimumHeight(0)
@@ -502,6 +507,8 @@ class PrepWorkspace:
         self.curve_table.minimum_points = spec.minimum_rows
         self.curve_table.maximum_points = spec.maximum_rows
         self.curve_table.set_points(points, headers=spec.components or ("X", "Y"))
+        self.curve_table.set_csv_axes("X (input deck; physical dimension unknown)",
+                                      "Y (input deck; physical dimension unknown)")
         grid = self.curve_table.table
         grid.setFixedHeight(grid.horizontalHeader().sizeHint().height()
                             + min(8, len(points)) * grid.verticalHeader().defaultSectionSize()
@@ -512,6 +519,16 @@ class PrepWorkspace:
         bindings = getattr(self, "reference_bindings", None)
         if bindings is not None and bindings.curve_pages is not None:
             bindings.curve_pages.show()
+            if isinstance(bindings.curve_pages, QSplitter):
+                # A horizontal scroll area can otherwise clip the actual graph
+                # while synthetic Qt events still reach its hidden coordinates.
+                if not hasattr(self, "_curve_dock_minimum"):
+                    self._curve_dock_minimum = self.properties_dock.minimumWidth()
+                needed = (self.curve_table.minimumSizeHint().width() + self.curve_plot.minimumWidth()
+                          + bindings.curve_pages.handleWidth() + 28)
+                self.properties_dock.setMinimumWidth(needed)
+                self.resizeDocks([self.properties_dock], [max(needed, self.properties_dock.width())],
+                                 Qt.Orientation.Horizontal)
 
     @staticmethod
     def _unit_caption(units):
