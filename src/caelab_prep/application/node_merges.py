@@ -118,6 +118,8 @@ class NodeMergeCommands:
                 states = self._native_node_merge_states(candidate)
                 conditions, overlaps, blocked, correspondences = self._project_node_merge(candidate, states)
             except edits.MeshEditError as exc:
+                if exc.code == "component_boundary":
+                    raise PrepError("part_boundary", "Cross-PART merge requires permission for this exact source and keeper pair.", {"details": exc.details}) from exc
                 raise PrepError(exc.code, str(exc), {"details": exc.details}) from exc
             except (KeyError, TypeError, ValueError, IndexError) as exc:
                 raise PrepError("invalid_merge_map", "The native merge could not be resolved.", {"reason": str(exc)}) from exc
