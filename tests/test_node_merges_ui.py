@@ -166,3 +166,26 @@ def test_reviewed_condition_targets_use_existing_reconnection_ui_before_export(t
     session.export_rad(tmp_path / "reconnected_0000.rad")
     project = tmp_path / "reconnected.caeprep"; session.save_project(project)
     assert window.close()
+
+
+def test_contact_permission_is_explicit_and_targets_remain_stale_after_apply():
+    session = opened("truss_shell_hex")
+    secondary = session.create_node_group("Reviewed secondary", [9])["card_id"]
+    main = session.create_surface("Reviewed main shell", [session.resolve_part_reference(9)["card_id"]])["card_id"]
+    contact = session.create_contact("Exact TYPE7 permission", secondary, main, .2)["card_id"]
+    before = state(session); window, dialog = open_merge(session, "abaqus")
+    add_pair(dialog, 9, 4); dialog.cross_parts.setChecked(True); dialog.tolerance.setText("20")
+    dialog.preview_button.click(); assert dialog._plan is None and state(session) == before
+    assert dialog.contacts.count() == 1 and dialog.contacts.isVisible()
+    item = dialog.contacts.item(0)
+    assert item.data(Qt.ItemDataRole.UserRole)["local_id"] == contact
+    item.setCheckState(Qt.CheckState.Checked)
+    dialog.preview_button.click(); pump()
+    assert dialog._plan and dialog._plan["admissible"], dialog.status.text()
+    text = dialog.preview.toPlainText()
+    assert "Secondary" in text and "Main" in text and "gap, activation, penetration and force are not evaluated" in text
+    dialog.reviewed.setChecked(True); dialog.apply_button.click(); pump()
+    assert session.document.revision == before[0] + 1
+    assert {secondary, main} <= session.mesh_relationships()["stale_targets"].keys()
+    assert session.group_members(secondary)["member_ids"] == [9]
+    assert window.close()

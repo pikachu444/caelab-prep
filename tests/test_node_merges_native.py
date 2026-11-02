@@ -28,11 +28,15 @@ def test_actual_x11_merge_inputs_review_apply_and_physical_grid(name, source, ke
     output = Path(os.environ["CAELAB_NATIVE_RENDER_ARTIFACT_DIR"]) / "node-merges"
     assert output.is_absolute(); output.mkdir(parents=True, exist_ok=True)
     session = opened(name)
-    related(session, [2 if name == "beam_shell_tet" else 9])
+    group, _, _, _ = related(session, [2 if name == "beam_shell_tet" else 9])
+    if name == "truss_shell_hex":
+        main = session.create_surface("Reviewed main shell", [session.resolve_part_reference(9)["card_id"]])["card_id"]
+        session.create_contact("Explicit TYPE7 boundary", group, main, .2)
     revision = session.document.revision
     window, dialog = open_merge(session, profile, enable_viewport=True)
     assert QTest.qWaitForWindowExposed(window, 10000) and QTest.qWaitForWindowExposed(dialog, 10000)
     add_pair(dialog, source, keeper); dialog.tolerance.setText("20"); dialog.cross_parts.setChecked(True)
+    if name == "truss_shell_hex": dialog.contacts.item(0).setCheckState(Qt.CheckState.Checked)
     for stage in ("pairs", "review"):
         if stage == "review":
             QTest.mouseClick(dialog.preview_button, Qt.MouseButton.LeftButton); pump()

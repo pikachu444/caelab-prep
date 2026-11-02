@@ -63,10 +63,10 @@ class NodeMergeDialog(QDialog):
         self.table = QTableWidget(0, 2)
         self.table.setObjectName("nodeMergePairs"); self.table.setHorizontalHeaderLabels(("Removed node", "Keeper"))
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.table.horizontalHeader().sectionResized.connect(lambda *_: self.table.resizeRowsToContents())
+        self.table.horizontalHeader().sectionResized.connect(self._fit_pairs_table)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
-        self.table.setMinimumHeight(110); body.addWidget(self.table)
+        body.addWidget(self.table)
         self.boundaries = QGroupBox("Boundary permissions for the selected pair")
         boundary_layout = QVBoxLayout(self.boundaries)
         self.part_uses = QLabel(); self.part_uses.setWordWrap(True); self.part_uses.setTextFormat(Qt.TextFormat.PlainText)
@@ -74,7 +74,8 @@ class NodeMergeDialog(QDialog):
         self.cross_parts = QCheckBox("Allow crossing these PART uses")
         self.cross_resources = QCheckBox("Allow crossing the listed source-file boundary")
         boundary_layout.addWidget(self.cross_parts); boundary_layout.addWidget(self.cross_resources)
-        boundary_layout.addWidget(QLabel("Allow these exact contact boundaries:"))
+        contact_label = QLabel("Allow these exact contact boundaries:")
+        boundary_layout.addWidget(contact_label)
         self.contacts = QListWidget(); self.contacts.setMaximumHeight(100)
         self.contacts.setWordWrap(True)
         self.contacts.setAccessibleName("Exact contact boundary permissions for selected pair")
@@ -86,6 +87,8 @@ class NodeMergeDialog(QDialog):
                 item.setData(Qt.ItemDataRole.UserRole, {"resource_id": card["resource_id"], "entity_kind": "condition", "local_id": card["id"]})
                 item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
                 item.setCheckState(Qt.CheckState.Unchecked)
+        contact_label.setVisible(self.contacts.count() > 0)
+        self.contacts.setVisible(self.contacts.count() > 0)
         boundary_layout.addWidget(self.contacts); body.addWidget(self.boundaries); body.addStretch()
         self.table.itemSelectionChanged.connect(self._show_permissions)
         self.cross_parts.toggled.connect(self._permissions_changed)
@@ -175,7 +178,7 @@ class NodeMergeDialog(QDialog):
                 item = QTableWidgetItem(text); item.setToolTip(text)
                 if column == 0: item.setData(Qt.ItemDataRole.UserRole, context)
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable); self.table.setItem(row, column, item)
-            self.table.resizeRowToContents(row); self.table.selectRow(row)
+            self._fit_pairs_table(); self.table.selectRow(row)
             for editor in self.identifiers: editor.clear()
             self.status.setText("Pair added. Review its boundary permissions, then preview the complete merge.")
         except PrepError as exc: self.status.setText(exc.message)
@@ -191,11 +194,17 @@ class NodeMergeDialog(QDialog):
                 labels.add(f"{card.title or card.keyword} [{card.keyword}]" + (" (direction point)" if direction and not endpoint else ""))
         return "; ".join(sorted(labels)) or "No element or direction-point use"
 
+    def _fit_pairs_table(self, *_):
+        self.table.resizeRowsToContents()
+        height = self.table.horizontalHeader().height() + 2 * self.table.frameWidth()
+        height += sum(self.table.rowHeight(row) for row in range(self.table.rowCount()))
+        self.table.setFixedHeight(max(76, min(240, height)))
+
     def remove_pair(self):
         try:
             self._guard(); row = self.table.currentRow()
             if row >= 0:
-                self._invalidate(); self._pairs.pop(row); self.table.removeRow(row); self._show_permissions()
+                self._invalidate(); self._pairs.pop(row); self.table.removeRow(row); self._show_permissions(); self._fit_pairs_table()
         except PrepError as exc: self.status.setText(exc.message)
 
     def _show_permissions(self):
@@ -260,7 +269,7 @@ class NodeMergeDialog(QDialog):
                 raise PrepError("review_required", "Prepare and review a valid merge preview first.")
             result = self.session.apply_node_merge(self._plan["plan_id"], expected_revision=self._plan["revision"], expected_document_id=self._plan["document_id"])
             self._plan = None; self._stamp = self._current_stamp(); self._pairs.clear(); self.table.setRowCount(0)
-            self._show_permissions(); self._fill_sources(); self._invalidate(); self.tabs.setCurrentIndex(0)
+            self._show_permissions(); self._fit_pairs_table(); self._fill_sources(); self._invalidate(); self.tabs.setCurrentIndex(0)
             self.status.setText("Merge applied in one Undo. Use Mesh → Replace prepared mesh / reconnect targets… for remaining target reviews.")
             self.changed.emit(result)
         except PrepError as exc:
