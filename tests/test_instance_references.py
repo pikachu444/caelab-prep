@@ -106,7 +106,7 @@ def test_source_archive_v4_migrates_but_current_format_requires_relations(tmp_pa
     original = tmp_path / "current.caeprep"; session.save_project(original)
     with ZipFile(original) as archive: files = {name:archive.read(name) for name in archive.namelist()}
     manifest = json.loads(files["manifest.json"])
-    assert manifest["version"] == 5
+    assert manifest["version"] == 6
     del manifest["model_relations"]
     def archive_as(path, version):
         manifest["version"] = version
@@ -117,15 +117,18 @@ def test_source_archive_v4_migrates_but_current_format_requires_relations(tmp_pa
     restored = PrepSession(); restored.open_project(legacy)
     assert restored.source_models() == session.source_models() and restored.instance_references() == []
     assert restored.describe()["element_count"] == 6 and not restored.document.dirty
-    converted = tmp_path / "converted-v5.caeprep"; restored.save_project(converted)
+    converted = tmp_path / "converted-v6.caeprep"; restored.save_project(converted)
     with ZipFile(converted) as archive:
         saved = json.loads(archive.read("manifest.json"))
-    assert saved["version"] == 5 and saved["model_relations"]["instances"] == {}
-    invalid = tmp_path / "missing-current-state.caeprep"; archive_as(invalid,5)
+    assert saved["version"] == 6 and saved["model_relations"]["instances"] == {}
+    invalid = tmp_path / "missing-current-state.caeprep"
     identity, tokens = restored.document.id, restored.document.tokens()
-    with pytest.raises(PrepError): restored.open_project(invalid)
-    assert restored.document.id == identity and restored.document.tokens() == tokens
-    manifest["model_relations"] = None
-    archive_as(invalid, 5)
-    with pytest.raises(PrepError): restored.open_project(invalid)
-    assert restored.document.id == identity and restored.document.tokens() == tokens
+    for version in (5, 6):
+        manifest.pop("model_relations", None)
+        archive_as(invalid, version)
+        with pytest.raises(PrepError): restored.open_project(invalid)
+        assert restored.document.id == identity and restored.document.tokens() == tokens
+        manifest["model_relations"] = None
+        archive_as(invalid, version)
+        with pytest.raises(PrepError): restored.open_project(invalid)
+        assert restored.document.id == identity and restored.document.tokens() == tokens

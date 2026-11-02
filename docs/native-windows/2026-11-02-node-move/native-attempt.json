@@ -1,0 +1,27 @@
+{
+  "scope": "Windows Starter/Engine input read and stopped-model mass; no physical response qualification",
+  "models": {
+    "beam_shell_tet": {
+      "stages": {
+        "starter": {
+          "error": "starter_win64.exe -i moved_0000.rad -np 1 timed out after 30 seconds",
+          "normal": false
+        }
+      }
+    }
+  },
+  "executables": {
+    "starter": {
+      "sha256": "b544f04b47d834af50a18d79b7be40df32799f437fe94d9608822cbd5e990ea7",
+      "executable_name": "starter_win64.exe"
+    },
+    "engine": {
+      "sha256": "0827c8923941f6110439a8d47f721bc4360cb9d71678588d005b532b3e5346c4",
+      "executable_name": "engine_win64.exe"
+    }
+  },
+  "status": "native_execution_failed",
+  "redactions": [
+    "Local executable paths removed; executable names, hashes, failure and scope retained."
+  ]
+}

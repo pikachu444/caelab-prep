@@ -26,10 +26,11 @@ from .projection import readonly, mutable as mutable_projection, freeze_mesh_pay
 from .source_models import SourceArchiveResource, SourceModelCommands
 from .model_relations import ModelRelationCommands
 from .mesh_relations import ModelRelationsResource, MeshRelationCommands
+from .node_moves import NodeMoveCommands
 
 
 PROJECT_FORMAT = "caelab-prep-project"
-PROJECT_VERSION = 5
+PROJECT_VERSION = 6
 
 
 def _file_boundary(function):
@@ -44,7 +45,7 @@ def _file_boundary(function):
     return wrapped
 
 
-class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationCommands, MeshRelationCommands):
+class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationCommands, MeshRelationCommands, NodeMoveCommands):
     def __init__(self):
         self._lock = RLock()
         self.document: Document | None = None
@@ -521,7 +522,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                        "removed_node_ids": sorted(removed_nodes), "preserved_shared_node_ids": sorted(shared_nodes)}
 
     def adopt_mesh_candidate(self, native_mesh, *, material_id, property_id, name=None,
-                             replace_part_ids=None, expected_revision=None, expected_document_id=None):
+                             replace_part_ids=None, expected_revision=None, expected_document_id=None,
+                             source_declaration=None, expected_document_epoch=None):
         """Adopt a verified candidate into one atomic native resource command.
 
         No unit inference, automatic constitutive numbers or orphan PARTs. Native
@@ -530,11 +532,33 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         from .mesh_candidates import validate_native_mesh, triangle_quality, tetrahedron_quality
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
+            if expected_document_epoch is not None and expected_document_epoch != self._document_epoch:
+                raise PrepError("document_epoch_conflict", "The target document was reopened; prepare a current CAD candidate.")
             if any(card["keyword"].upper().startswith("/TRANSFORM") for card in self.list_cards()):
                 raise PrepError("unsupported_mesh_transform", "Mesh adoption does not reinterpret existing native transformation scopes.")
             replacement_state, replacement_details = (self._mesh_replacement_state(replace_part_ids)
                 if replace_part_ids is not None else (None, {}))
             native_mesh = validate_native_mesh(native_mesh)
+            declaration_text = None
+            if source_declaration is not None:
+                keys = {"format", "verification", "declared_producer", "declared_version", "design_sha256",
+                        "executable_sha256", "step_sha256", "expected_step_length_unit"}
+                if (not isinstance(source_declaration, dict) or set(source_declaration) != keys
+                        or any(not isinstance(value, str) for value in source_declaration.values())
+                        or source_declaration["format"] != "caelab-cad-source-declaration/1"
+                        or source_declaration["verification"] != "unverified"
+                        or source_declaration["expected_step_length_unit"] != "mm"
+                        or any(not 0 < len(source_declaration[key]) <= 80 or not source_declaration[key].isprintable()
+                               for key in ("declared_producer", "declared_version"))
+                        or any(re.fullmatch(r"[0-9a-f]{64}", source_declaration[key]) is None
+                               for key in ("design_sha256", "executable_sha256", "step_sha256"))):
+                    raise PrepError("invalid_source_declaration", "Unsupported CAD input declaration.")
+                sources = [asset for asset in native_mesh.assets if asset.kind == "source"]
+                if (native_mesh.source_kind != "cad_gmsh" or len(sources) != 1
+                        or Path(sources[0].path).suffix.lower() not in (".step", ".stp")
+                        or sources[0].sha256 != source_declaration["step_sha256"]):
+                    raise PrepError("invalid_source_declaration", "The declaration must match the verified STEP source asset.")
+                declaration_text = json.dumps(source_declaration, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
             resource = self._model_resource(None)
             units = resource.unit_context().get("global")
             if not units or units.get("length") != native_mesh.length_unit:
@@ -596,6 +620,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             provenance = [f"# CAELab mesh {native_mesh.mesh_uuid}; geometry {native_mesh.geometry_resource_uuid}",
                           f"# Length unit {native_mesh.length_unit}; omitted boundary cells {native_mesh.omitted_boundary_cells}"]
             provenance.extend(f"# Source {asset.kind} sha256 {asset.sha256}" for asset in native_mesh.assets)
+            if declaration_text is not None:
+                provenance.append("# CAELab adopted input declaration (unverified): " + declaration_text)
             texts = [newline.join(["/NODE", *provenance, *node_rows, ""])]
             part_positions, cells_by_part = {}, {}
             for cell in native_mesh.elements: cells_by_part.setdefault(cell.part_uuid, []).append(cell)
@@ -1659,7 +1685,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     manifest = json.loads(archive.read("manifest.json"))
                     if not isinstance(manifest, dict):
                         raise PrepError("invalid_project", "작업 문서의 manifest는 객체여야 합니다.")
-                    if manifest.get("format") != PROJECT_FORMAT or type(manifest.get("version")) is not int or manifest.get("version") not in (1, 2, 3, 4, PROJECT_VERSION):
+                    if manifest.get("format") != PROJECT_FORMAT or type(manifest.get("version")) is not int or manifest.get("version") not in (1, 2, 3, 4, 5, PROJECT_VERSION):
                         raise PrepError("project_version", "지원하지 않는 작업 문서 형식/버전입니다.")
                     if not isinstance(manifest["document_id"], str): raise ValueError("invalid document ID")
                     UUID(manifest["document_id"])
@@ -1700,6 +1726,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                             owner = document.resources.get(record["resource_id"])
                             if not isinstance(owner, DeckResource) or card_id not in owner._by_id or record["mesh_resource_id"] not in paths:
                                 raise ValueError("stale relation target does not exist")
+                            if any(rid not in paths for rid in record.get("mesh_dependencies", {})):
+                                raise ValueError("stale mesh dependency does not exist")
                         document.resources[relations.id] = relations
                         if not isinstance(manifest["source_models"], list): raise ValueError("invalid source model registry")
                         owned = set()
