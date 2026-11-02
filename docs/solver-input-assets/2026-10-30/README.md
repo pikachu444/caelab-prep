@@ -47,7 +47,7 @@ RAD를 먼저 개발할 때는 위 Starter/Engine 규칙과 `inp2rad.py`의 실�
 
 `tmp/` 경로는 수집 시 분석용 원본 위치다. 공개 Git과 다운로드 ZIP에는 상용 매뉴얼·재배포 불명 예제 전문을 넣지 않는다. URL·고정 버전·locator·크기·SHA·취득 manifest를 보존해 다시 찾을 수 있게 했다. HTML 원본 전체를 영구 오프라인 배포했다고 표현하지 않는다.
 
-공개 Git에는 자체 노트·원장·목록·취득 manifest·감사·재현 스크립트와 참고 source의 NOTICE/라이선스를 둔다. PR #10의 허용된 참고 source/schema/example은 별도 다운로드 ZIP에 있고, 이번 후속 참고 source와 MIT 예제는 `followup/`에도 직접 보존했다. 원장의 `assets/`·`examples/` 파일 경로는 이 ZIP을 기준으로 하며, Git의 제품 source에 편입됐다는 뜻이 아니다. `index.html`은 ZIP을 풀어 브라우저에서 여는 전체 목록 진입점이다.
+공개 Git에는 자체 노트·원장·목록·취득 manifest·감사·재현 스크립트와 참고 source의 NOTICE/라이선스를 둔다. PR #10의 허용된 참고 source/schema/example은 별도 다운로드 ZIP에 있고, 이번 후속 참고 source와 MIT 예제는 `followup/`에도 직접 보존했다. 원장의 `assets/`·`examples/` 파일 경로는 이 ZIP을 기준으로 하며, Git의 제품 source에 편입됐다는 뜻이 아니다. `index.html`은 [파생 색인 만들기](#파생-색인-만들기)로 생성하거나 참고 ZIP을 풀어 브라우저에서 여는 전체 목록 진입점이다.
 
 ## 교차 검토 결론
 
@@ -66,7 +66,11 @@ Workbench는 이 저장소에서 검증해 제공할 자산/API와 native 파일
 
 ## 종료 상태
 
-7계열에 대해 목록 분모/결손, Q01–Q12 근거/부분/공백, 예제/코드 역할·판본·조건, 실제 취득·해시를 기록했다. 담당자 교차토론, 독립 Astra 지적의 수정 확인, [통합 검증](validation.json)을 통과한 범위를 자료 수집으로 닫았다. 당시 미수행한 생성기·solver run과 후속 RAD 구현·소형 실행 검증은 별도 기록이며, 전수 field review와 일곱 솔버 전체 생성 지원은 완료되지 않았다.
+7계열에 대해 목록 분모/결손, Q01–Q12 근거/부분/공백, 예제/코드 역할·판본·조건, 실제 취득·해시를 기록했다. 담당자 교차토론, 독립 Astra 지적의 수정 확인, [당시 통합 검증](validation.json)을 통과한 범위를 자료 수집으로 닫았다. 당시 미수행한 생성기·solver run과 후속 RAD 구현·소형 실행 검증은 별도 기록이며, 전수 field review와 일곱 솔버 전체 생성 지원은 완료되지 않았다.
+
+`validation.json`은 2026-10-30 자료 수집 당시의 검증 출력이며 현재 Git tree의 검사 결과가 아니다. [정리 전 보관본](https://github.com/pikachu444/caelab-prep/blob/46cea51457ea62748a940f95015ce0216edf369a/docs/solver-input-assets/2026-10-30/validation.json)의 JSONL 행수·입력 문서 해시·판정을 그대로 보존한다. 링크의 Git SHA는 보관본의 기준이며 검증 실행코드 SHA는 기록되지 않았다.
+
+현재 찾아보기 표는 [Radioss CSV](catalogues/radioss.csv)와 [CalculiX CSV](catalogues/calculix.csv)를 정본으로 쓴다. 참고 ZIP의 경로와 현재 Git의 실제 소스·고지 구분은 [archive 원장 안내](THIRD_PARTY.md#archive-원장과-git의-실제-복사-코드)를 따른다.
 
 이 자료 묶음의 공백은 전수 생성 schema/API, 수집 대상 전체의 의도적 오류 예제·실행 oracle, 최신판 간 모든 차이, MSC2024.2 설치 raw·실행 결과의 동일판 쌍 및 일부 원문의 재배포 권리다. 후속 RAD의 제한된 오류/물리 oracle은 전체 공백의 해소를 뜻하지 않는다. 공식 필드 규칙 자체와 MSC 완전 입력 예제를 못 찾은 상태라고 표현하지 않는다. 접근 실패·불명확한 항목을 찾았다고 바꾸지 않았다.
 
