@@ -5,13 +5,15 @@ import time
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QTimer, Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
 from caelab_prep.application import PrepSession
 from caelab_prep.ui.mesh_workflow import MeshCandidateDialog
 from caelab_prep.ui.source_models import PreparedMeshDialog
+from caelab_prep.ui.main_window import MainWindow
+from caelab_prep.ui.reference_profiles import PROFILES
 from test_mesh_candidates import real_candidate
 from test_cad_mesh_replacement import referenced_model, states
 from test_mesh_workflow_ui import choose, pump_until
@@ -121,3 +123,36 @@ def test_late_review_is_discarded_without_publication(real_candidate, monkeypatc
     assert not dialog.replacement_reviewed.isChecked() and dialog.result is None
     assert states(session) == before and session.document.revision == revision and session._source_paths == paths
     dialog.reject()
+
+
+@pytest.mark.parametrize("profile", PROFILES)
+def test_each_host_opens_existing_reconnection_after_replacement(real_candidate, profile):
+    _, _, candidate = real_candidate
+    session, _, material, section, old, group, *_ = referenced_model(candidate)
+    window = MainWindow(session, enable_viewport=False, presentation=profile)
+    window._allow_close = True; window.show()
+    before, revision = states(session), session.document.revision
+    failures = []
+    def operate():
+        dialog = window.mesh_workflow.dialog
+        try:
+            dialog.present_candidate(candidate)
+            choose(dialog.material, material); choose(dialog.section, section)
+            for row in range(dialog.replace.count()):
+                if dialog.replace.item(row).data(Qt.ItemDataRole.UserRole) in old["part_ids"]:
+                    dialog.replace.item(row).setCheckState(Qt.CheckState.Checked)
+            review(dialog); dialog.replacement_reviewed.setChecked(True)
+            QTest.mouseClick(dialog.adopt_button, Qt.MouseButton.LeftButton); pump_until(dialog)
+            assert dialog.result is not None, dialog.error.text()
+        except BaseException as exc:
+            failures.append(exc); dialog.reject()
+    QTimer.singleShot(0, operate)
+    window.mesh_workflow.mesh_action.trigger()
+    assert failures == []
+    reconnect = window.prepared_mesh_dialog
+    assert isinstance(reconnect, PreparedMeshDialog) and reconnect.session is session
+    assert reconnect.isVisible() and reconnect.tabs.currentIndex() == 1
+    assert reconnect.target_group.findData(group) >= 0 and reconnect._mapping == {}
+    assert session.document.revision == revision + 1
+    reconnect.reject(); session.undo(); assert states(session) == before
+    window.close()
