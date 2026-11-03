@@ -33,6 +33,7 @@ from .node_merges import NodeMergeCommands
 from .shell_normals import ShellNormalCommands
 from .element_deletion import ElementDeletionCommands
 from .part_reassignment import PartReassignmentCommands
+from .recipe_archives import StructuredRecipeArchive, RecipeArchiveCommands, MAX_RECIPE_BYTES
 
 
 PROJECT_FORMAT = "caelab-prep-project"
@@ -51,7 +52,7 @@ def _file_boundary(function):
     return wrapped
 
 
-class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationCommands, MeshRelationCommands, NodeMoveCommands, GroupMemberCommands, NodeMergeCommands, ShellNormalCommands, ElementDeletionCommands, PartReassignmentCommands):
+class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationCommands, MeshRelationCommands, NodeMoveCommands, GroupMemberCommands, NodeMergeCommands, ShellNormalCommands, ElementDeletionCommands, PartReassignmentCommands, RecipeArchiveCommands):
     def __init__(self):
         self._lock = RLock()
         self.document: Document | None = None
@@ -779,6 +780,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 omitted_boundary_cells=native_mesh.omitted_boundary_cells, unused_node_ids=list(native_mesh.unused_node_ids), **replacement_details)
             return {"resource_id": resource.id, "state": state, "result": result,
                     "protected_sources": protected_sources, "native_mesh": native_mesh,
+                    "recipe_archive": StructuredRecipeArchive.capture(native_mesh) if structured else None,
                     "replacement_targets": replacement_targets}
 
     def _publish_mesh_adoption(self, prepared, *, expected_revision=None):
@@ -793,6 +795,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     {resource.id: prepared["state"], self._relations_resource().id: prepared["relations"]},
                     "Replace CAD mesh and mark targets stale",
                     object_ids=tuple(result["card_ids"]) + tuple(prepared["replacement_targets"]),
+                    expected_revision=expected_revision, kind="structure")
+            elif prepared.get("recipe_archive") is not None:
+                recipe = prepared["recipe_archive"]
+                change = self.dispatcher.execute_many({resource.id: prepared["state"]}, "Adopt mesh candidate",
+                    additions=(recipe,), object_ids=tuple(result["card_ids"]),
                     expected_revision=expected_revision, kind="structure")
             else:
                 change = self.dispatcher.execute(resource.id, prepared["state"], "Adopt mesh candidate",
@@ -1793,9 +1800,10 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             if collisions:
                 raise PrepError("project_path_collision", "대소문자만 다른 경로를 작업 문서에 함께 저장할 수 없습니다.", {"paths": collisions})
             target.parent.mkdir(parents=True, exist_ok=True)
-            if any(not isinstance(resource, (DeckResource, AnalysisCasesResource, SourceArchiveResource, ModelRelationsResource)) for resource in document.resources.values()):
+            if any(not isinstance(resource, (DeckResource, AnalysisCasesResource, SourceArchiveResource, ModelRelationsResource, StructuredRecipeArchive)) for resource in document.resources.values()):
                 raise PrepError("unsupported_project_resource", "A resource has no registered native-project codec; nothing was saved.")
             sources = [r for r in document.resources.values() if isinstance(r, SourceArchiveResource)]
+            recipes = [r for r in document.resources.values() if isinstance(r, StructuredRecipeArchive)]
             manifest = {"format": PROJECT_FORMAT, "version": PROJECT_VERSION, "document_id": document.id,
                         "name": document.name, "revision": document.revision, "root_id": self._root_id,
                         "source_paths": sorted(self._source_paths), "diagnostics": self._diagnostics,
@@ -1804,11 +1812,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                             "state": r.snapshot()} for r in self._deck_resources(document)],
                         "analysis_cases": self._cases_resource().snapshot(),
                         "source_models": [resource.manifest() for resource in sources],
+                        "structured_recipes": [resource.manifest() for resource in recipes],
                         "model_relations": self._relations_resource().snapshot()}
             try:
                 members = {f"raw/{resource.id}.rad": resource.raw for resource in self._deck_resources(document)}
                 members.update({f"sources/{resource.id}/{original_id}.rad": raw
                                 for resource in sources for original_id, raw in resource.files.items()})
+                members.update({f"recipes/{resource.id}/{role}.json": raw
+                                for resource in recipes for role, raw in resource.files.items()})
                 write_container(target, manifest, members)
             except (OSError, zipfile.BadZipFile) as exc:
                 raise PrepError("project_write_error", "작업 문서를 저장하지 못했습니다.", {"reason": str(exc)}) from exc
@@ -1894,6 +1905,27 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                             if isinstance(source_resource, SourceArchiveResource):
                                 source_resource.validate_mapped_payloads(document)
                         self._validate_instance_references(document, manifest["root_id"], relations.snapshot()["instances"])
+                    recipes = manifest.get("structured_recipes", [])
+                    if not isinstance(recipes, list): raise ValueError("invalid structured recipe registry")
+                    for metadata in recipes:
+                        # Validate roles and identities before constructing ZIP paths.
+                        if not isinstance(metadata, dict) or not isinstance(metadata.get("files"), list):
+                            raise ValueError("invalid structured recipe archive")
+                        recipe_id = metadata["id"]
+                        if not isinstance(recipe_id, str): raise ValueError("invalid recipe identity")
+                        UUID(recipe_id)
+                        roles = [item["role"] for item in metadata["files"]]
+                        if not roles or len(roles) > 2 or any(role not in ("recipe", "source_recipe") for role in roles):
+                            raise ValueError("invalid structured recipe role")
+                        files = {}
+                        for role in roles:
+                            member = f"recipes/{recipe_id}/{role}.json"
+                            if archive.getinfo(member).file_size > MAX_RECIPE_BYTES:
+                                raise ValueError("recipe member exceeds the input limit")
+                            files[role] = archive.read(member)
+                        recipe = StructuredRecipeArchive(metadata, files)
+                        if recipe.id in document.resources: raise ValueError("duplicate recipe archive identity")
+                        document.resources[recipe.id] = recipe
                     if not isinstance(manifest.get("source_paths", []), list) or not all(isinstance(p, str) for p in manifest.get("source_paths", [])):
                         raise ValueError("invalid source path metadata")
                     diagnostics = self._project_include_diagnostics(document, paths, manifest["root_id"])

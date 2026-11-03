@@ -5,9 +5,10 @@ from pathlib import Path
 from copy import deepcopy
 import json
 import threading
+from uuid import uuid4
 
 from PySide6.QtCore import QObject, QThreadPool, Qt, Signal
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QInputDialog,
     QFormLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem,
     QPushButton, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem,
     QTextBrowser, QVBoxLayout, QWidget)
@@ -208,6 +209,10 @@ class MeshCandidateDialog(QDialog):
         self.local_entity.currentIndexChanged.connect(self.highlight_entity)
         self.local_size = NumericEdit(minimum=0)
         form.addRow("Refine entity", self.local_entity); form.addRow("Local size", self.local_size)
+        self.project_recipe_button = QPushButton("Open project recipe…")
+        self.project_recipe_button.setToolTip("Use inputs saved when a structured mesh was adopted. Later mesh edits are not reconstructed.")
+        self.project_recipe_button.clicked.connect(self.open_project_recipe)
+        form.addRow(self.project_recipe_button)
         self.load_divisions_button = QPushButton("Load recipe divisions")
         self.load_divisions_button.clicked.connect(self.load_divisions)
         form.addRow(self.load_divisions_button)
@@ -338,6 +343,7 @@ class MeshCandidateDialog(QDialog):
         self.form.labelForField(self.local_entity).setText(("Highlight patch" if self.viewport else "Patch") if structured else "Refine entity")
         self.preview_mode.setVisible(not structured)
         self.load_divisions_button.setVisible(structured)
+        self.project_recipe_button.setVisible(structured)
         self.divisions.setVisible(structured and self._seed_recipe is not None)
         self.form.labelForField(self.divisions).setVisible(structured and self._seed_recipe is not None)
         hex_layers = structured and self._seed_recipe is not None and self._seed_recipe.get("mode") == "hex"
@@ -412,6 +418,30 @@ class MeshCandidateDialog(QDialog):
             self._show_error(exc); self._source_controls(); return False
         self._source_controls(); return True
 
+    def open_project_recipe(self):
+        if self._task is not None: return False
+        try:
+            records = self.session.structured_mesh_recipes()
+            if not records:
+                self._show_error("This project has no archived structured recipes. Earlier projects require their external recipe files.")
+                return False
+            choices = [f"{index + 1}. {record['name']} ({record['mode']}, {record['length_unit']})"
+                       for index, record in enumerate(records)]
+            choice, accepted = QInputDialog.getItem(self, "Project generation inputs", "Recipe saved at adoption", choices, 0, False)
+            if not accepted: return False
+            parent = QFileDialog.getExistingDirectory(self, "Extract inputs into a new child folder", self.output.text())
+            if not parent: return False
+            selected = records[choices.index(choice)]
+            result = self.session.export_structured_recipe(selected["id"], Path(parent) / ("recipe-" + str(uuid4())),
+                expected_document_id=selected["document_id"], expected_document_epoch=selected["document_epoch"],
+                expected_revision=selected["revision"])
+            self.source.setText(result["recipe_path"]); self.output.setText(parent)
+            if not self.load_divisions(): return False
+            self.summary.setText("Adoption-time recipe extracted. Generate a new candidate to check current geometry and quality. Later mesh edits are not reconstructed.")
+            return True
+        except Exception as exc:
+            self._show_error(exc); return False
+
     def _show_error(self, error):
         self.error.setText(str(error))
 
@@ -440,7 +470,7 @@ class MeshCandidateDialog(QDialog):
     def _running(self, value):
         self._running_job = value
         for widget in (*self._browse_buttons, self.source_kind, self.generate_button, self.open_button, self.source, self.output, self.size, self.dimension, self.policy, self.local_entity, self.local_size,
-                       self.material, self.section, self.replace, self.preview_mode, self.quality, self.load_divisions_button, self.divisions, self.layers): widget.setEnabled(not value)
+                       self.material, self.section, self.replace, self.preview_mode, self.quality, self.project_recipe_button, self.load_divisions_button, self.divisions, self.layers): widget.setEnabled(not value)
         self.length.setEnabled(not value and bool(self.candidate and self.candidate.length_unit == "unknown"))
         self.preview_mode.setEnabled(not value and bool(self.candidate and self.candidate.dimension == 3))
         self.cancel_job.setEnabled(value)

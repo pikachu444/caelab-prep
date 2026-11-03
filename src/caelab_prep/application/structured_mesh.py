@@ -109,6 +109,11 @@ def _validate_source_recipe(spec, asset):
     original, current = read_recipe_input(asset.path)
     if current != asset:
         raise PrepError('candidate_changed', 'The original recipe changed after review.')
+    validate_recipe_edit(original, spec)
+
+
+def validate_recipe_edit(original, spec):
+    """The same bounded edit contract for live and archived recipe bytes."""
     validate_recipe(original)
     if original.get('mode') != spec.get('mode') or original.get('mode') not in ('quad', 'hex'):
         raise PrepError('invalid_recipe', 'Keep the original quad or hex recipe mode.')

@@ -82,6 +82,14 @@ quad와 hex 밑면의 분할 수는 JSON을 선택한 뒤 **Load recipe division
 
 개발 API는 `application.structured_mesh.generate_structured_mesh(recipe, output_dir, recipe_path=original_json)`와 후보의 `to_native_mesh()`, 기존 `session.adopt_mesh_candidate()`를 사용합니다. 파일 입력은 `recipe_path`로 원본을 지정하면 내용/hash를 검증하고 기존 원본 덮어쓰기 보호에 포함합니다. dict만 전달하면 후보 폴더에 recipe snapshot을 생성합니다. quad/hex 분할 수 편집은 `read_recipe_input(original_json)`이 돌려준 출처를 `source_recipe=`로 전달합니다. 원본과 같은 mode를 유지하고 차이를 divisions와 hex의 공통 layers로 제한하며 snapshot과 원본 둘 다 채택·저장 이후 덮어쓰기에서 보호합니다. 아래 CAD/독립 MSH 경로의 허용 요소 family를 quad/hex까지 넓힌 것은 아닙니다.
 
+<a id="project-recipes"></a>
+
+이후에 채택하는 structured 후보는 **그 채택에 사용한 recipe 원문**과 선택적 원본 `source_recipe`를 작업문서에도 보관합니다. 문서를 재열고 같은 메시 창의 structured 모드에서 **Open project recipe…**를 누르면 보관 입력을 선택해 새 하위 폴더로 꺼내고 분할 수를 불러옵니다. **Generate candidate**를 다시 실행해 현재 생성기와 품질 검사를 거친 새 후보를 만듭니다. 기존 문서는 바뀌지 않습니다. 보관 입력은 채택 당시의 기록이며 이후 절점 이동·삭제·PART 변경을 역으로 복원하지 않습니다. 선택 도중 문서를 바꾸거나 재열면 다시 선택해야 합니다.
+
+실제 생성 입력은 추출된 `recipe.json`입니다. 편집 전 원본이 있으면 `source_recipe.json`도 따로 보존합니다. 두 파일은 역할별 정확한 bytes/hash를 유지하고 각각1MiB로 제한합니다. 추출은 기존 폴더를 덮어쓰지 않으며 I/O 실패 때 일부 새 파일이 남을 수 있지만 창의 기존 입력은 바꾸지 않습니다. 이 기능을 모르는 이전 v6 앱에서 재저장하면 native 내용은 유지해도 recipe 첨부는 사라집니다. 예전 문서에 첨부가 없다면 외부 recipe가 필요합니다. 과거 MSH·SDK 보고서·Passed 판정은 동봉하거나 재사용하지 않습니다.
+
+개발 API의 `structured_mesh_recipes()`는 archive UUID·채택 mesh UUID·mode/단위·원문 역할과 조회 시 문서 ID/epoch/revision을 반환합니다. `export_structured_recipe(archive_id, new_directory, expected_document_id=..., expected_document_epoch=..., expected_revision=...)`로 그 조회에 묶어 추출할 수 있습니다. 반환된 `recipe_path`를 기존 `read_recipe_input`·`generate_structured_mesh(..., recipe_path=...)`에 전달합니다. 실제 확인과 남은 플랫폼·좌표/patch 편집 범위는 [현재 상태](../CURRENT_STATE.md#recipe-archive-progress)를 따릅니다.
+
 같은 GUI/API에서 `mode: "hex"`인 명시 planar source의 직선/경사 sweep hex8도 채택할 수 있습니다. 예를 들어 위 quad JSON의 `"mode"`를 `"hex"`로 바꾸고 `"vector":[0,0,10],"layers":4`를 추가합니다. GUI의 solid 단면 또는 `session.create_solid_property()`가 만든 명시 `Isolid=1` 속성과 재료 ID로 채택하면 BRICK/GRBRIC을 작성하고 한 번의 Undo와 기존 작업문서 저장·재열기를 사용합니다. 상속/기타 Isolid 값을 자동 치환하지 않습니다. `describe()["capabilities"]["mesh_adoption_sources"]`가 출처별 family를 구분합니다. 27점 Jacobian 검사는 기하 품질 검사이며 solver 적분점 수를 뜻하지 않습니다. Starter 읽기는 기존 PR34의 225/525요소 입력에서 확인한 범위이며, 이번 divisions/layers 편집 출력(360/720요소)의 Starter는 실행하지 않았습니다. Engine·해석 응답·물성의 타당성·Windows/frozen GUI도 미확인입니다. 비틀림·곡면·일반 CAD 분할·임의 외부 hex는 지원하지 않습니다.
 
 1. **File → New model…**에서 이름과 질량·길이·시간 단위를 명시합니다. 단위 없는 입력에 임의 단위를 추정하지 않습니다.
