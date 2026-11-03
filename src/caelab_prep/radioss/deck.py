@@ -138,7 +138,7 @@ class DeckResource:
     def _category(keyword: str) -> str:
         root = keyword.upper().split("/")[1]
         return {"NODE": "Nodes", "SHELL": "Elements", "SH3N": "Elements", "BRICK": "Elements",
-                "TETRA4": "Elements", "TETRA": "Elements", "BEAM": "Elements", "TRUSS": "Elements",
+                "TETRA4": "Elements", "TETRA": "Elements", "TETRA10": "Elements", "BEAM": "Elements", "TRUSS": "Elements",
                 "MAT": "Materials", "PROP": "Properties", "PART": "Parts", "BCS": "Constraints",
                 "INTER": "Contacts", "FUNCT": "Curves", "GRNOD": "Groups", "SURF": "Groups",
                 "GRSH3N": "Groups", "GRSHEL": "Groups", "GRBRIC": "Groups", "GRBEAM": "Groups", "GRTRUS": "Groups", "SKEW": "Coordinate systems",
@@ -546,6 +546,19 @@ class DeckResource:
                             nodes[identifier] = xyz
                     except ValueError:
                         diagnostics.append({"severity": "warning", "code": "node_display_parse", "message": "일부 절점 행을 표시하지 못했습니다.", "line": index + 1})
+            elif key[1] == "TETRA10":
+                from .tetra10 import records
+                part = int(key[2]) if len(key) > 2 and key[2].isdigit() else None
+                try:
+                    parsed = records(self.lines, card.data)
+                except PrepError as exc:
+                    diagnostics.append({"severity": "warning", "code": "element_display_parse",
+                                        "message": str(exc), "line": card.start + 1})
+                    continue
+                cells.extend({"id": identifier, "type": "tetra10", "formulation": "TETRA10",
+                              "nodes": list(connectivity), "part_id": part,
+                              "card_id": card.id, "resource_id": self.id}
+                             for identifier, connectivity, _, _ in parsed)
             elif key[1] in ("SHELL", "SH3N", "BRICK", "TETRA4", "TETRA", "BEAM", "TRUSS"):
                 kind, count = {"SHELL": ("quad", 4), "SH3N": ("triangle", 3), "BRICK": ("hexahedron", 8),
                                "TETRA4": ("tetra", 4), "TETRA": ("tetra", 4), "BEAM": ("line", 2), "TRUSS": ("line", 2)}[key[1]]

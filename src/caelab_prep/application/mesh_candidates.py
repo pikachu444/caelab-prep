@@ -56,7 +56,8 @@ class MeshCell:
 
     @property
     def kind(self):
-        return {(2, 2, 1, 3): "triangle3", (3, 4, 1, 4): "tetra4"}.get(
+        return {(2, 2, 1, 3): "triangle3", (3, 4, 1, 4): "tetra4",
+                (2, 9, 2, 6): "triangle6", (3, 11, 2, 10): "tetra10"}.get(
             (self.dimension, self.element_type, self.order, len(self.node_ids)))
 
 
@@ -267,18 +268,25 @@ def _cross(a, b):
     return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
 
 
-def _quality(nodes, cells, limits):
+def _quality(nodes, cells, limits, *, straight_tet10=False):
     coordinates = {node.id: node.xyz for node in nodes}
     results, unsupported = [], []
     for cell in cells:
         if cell.dimension < 2:
             continue  # Explicit geometric edge/vertex inventory, not physical cells.
-        if cell.kind is None:
+        if cell.kind is None or cell.kind in ("triangle6", "tetra10") and not straight_tet10:
             unsupported.append(cell.id)
             continue
         points = [coordinates[identifier] for identifier in cell.node_ids]
-        q, measure, normalized = triangle_quality(points) if cell.kind == "triangle3" else tetrahedron_quality(points)
-        threshold = limits.minimum_triangle if cell.kind == "triangle3" else limits.minimum_tetrahedron
+        if cell.kind == "tetra10":
+            from .tet10_geometry import assess_straight_tet10
+            report = assess_straight_tet10(points)
+            results.append(CellQuality(cell.id, cell.kind, report["corner_scaled_jacobian"] or 0.,
+                                       report["signed_volume"] or 0., report["problem"]))
+            continue
+        triangular = cell.kind in ("triangle3", "triangle6")
+        q, measure, normalized = triangle_quality(points[:3]) if triangular else tetrahedron_quality(points)
+        threshold = limits.minimum_triangle if triangular else limits.minimum_tetrahedron
         problem = None
         if not all(math.isfinite(v) for v in (q, measure, normalized)):
             problem = "nonfinite_geometry"
@@ -463,7 +471,7 @@ def read_mesh_candidate(source: str | os.PathLike[str] | dict, *,
                         and by_uuid[cell.part_uuid].volume_orientations)
             return {0: "geometry_vertex", 1: "geometry_edge", 2: "boundary_facet" if boundary else "shell", 3: "solid"}[cell.dimension]
         counter = Counter((cell.dimension, cell.element_type, cell.element_name, cell.order,
-                           cell.kind is not None, role_for(cell)) for cell in cells)
+                           cell.kind in ("triangle3", "tetra4"), role_for(cell)) for cell in cells)
         for (dim, typ, name, order, supported, role), count in sorted(counter.items()):
             inventory.append(CellInventory(dim, typ, name, order, count, role, supported if dim >= 2 else True))
         # Detect replacement during inspection rather than accepting mixed assets.

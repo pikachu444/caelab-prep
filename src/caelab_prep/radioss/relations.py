@@ -135,9 +135,11 @@ def node_support(resources, projection, node_ids):
                     a,b,c = (points[node] for node in cell["nodes"][:3])
                     x = unit(subtract(b,a)); z = unit(cross(x, subtract(c,a))); y = unit(cross(z,x))
                     for identifier in targets: rotations[identifier] = [x,y,z] if drill == 1 else [x,y]
-            elif family in ("BRICK", "TETRA4") and pair in ("PROP/SOLID", "PROP/TYPE14"):
+            elif family in ("BRICK", "TETRA4", "TETRA10") and pair in ("PROP/SOLID", "PROP/TYPE14"):
                 if family == "BRICK" and int(rows[1][:10].strip() or "0") != 1: raise ValueError("Only linear brick Isolid=1 is supported")
                 if family == "TETRA4" and int(rows[1][60:70].strip() or "0") != 1000: raise ValueError("Only linear tetra4 Itetra4=1000 is supported")
+                if family == "TETRA10" and tuple(int(rows[1][start:start + 10].strip() or "0") for start in (10, 20, 40)) != (4, 0, 1000):
+                    raise ValueError("Only Lagrangian Tet10 Itetra10=1000 and Ismstr=4 are supported")
             else: raise ValueError("Element/property formulation is outside the supported mechanical profile")
         except (KeyError, ValueError, IndexError, StopIteration, PrepError) as exc:
             for identifier in targets: result[identifier]["diagnostics"].append({"code": "dof_support_unknown", "element_id": cell["id"], "reason": str(exc)})

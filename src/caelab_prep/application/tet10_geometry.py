@@ -97,3 +97,18 @@ def certify_straight_tet10(points, *, ordering="gmsh", ulp_budget=8):
     report["certified_positive"] = maximum_norm_numerator < determinant
     report["reason"] = None if report["certified_positive"] else "positivity_not_certified"
     return report
+
+
+def assess_straight_tet10(points, *, ordering="gmsh"):
+    """The prepared Tet10 profile: corner J>=.5, edge AR<=4 and straight validity."""
+    from .surface_tet import tetra_metrics
+    metrics = tetra_metrics(points[:4])
+    certificate = certify_straight_tet10(points, ordering=ordering)
+    problem = metrics["problem"]
+    if not problem and not certificate["certified_positive"]:
+        problem = "positivity_not_certified"
+    if not problem and not certificate["midpoint_within_ulp_budget"]:
+        problem = "nonstraight_tet10"
+    if not problem and (metrics["corner_scaled_jacobian"] < .5 or metrics["edge_aspect_ratio"] > 4):
+        problem = "below_straight_tet10_quality"
+    return {**metrics, "problem": problem, "certificate": certificate}

@@ -179,14 +179,18 @@ def contact_block(identifier, name, secondary, main, friction, *, newline="\n"):
     return newline.join([f"/INTER/TYPE7/{identifier}", title(name), *rows, ""])
 
 
-def solid_block(identifier, name, *, newline="\n"):
-    """2024 TYPE14 explicit linear tetra4 profile, verified with Starter/Engine.
+def solid_block(identifier, name, *, newline="\n", element_family="tetra4"):
+    """2024 TYPE14 explicit Lagrangian tetra profile.
 
+    Tet4 has prior Starter/Engine evidence; Tet10 requires its separate checks.
     prop_type14_solid_starter_r.htm; FORMAT(radioss2023) prop_p14_solid.cfg.
     """
     integer(identifier)
+    if element_family not in ("tetra4", "tetra10"):
+        raise PrepError("unsupported_operation", "Choose an explicit tetra4 or tetra10 solid profile.")
+    fields = (1, 4, 0, 0, 1000 if element_family == "tetra10" else 0, 0, 1000, 1)
     return newline.join([f"/PROP/SOLID/{identifier}", title(name),
-        "".join(f"{value:10d}" for value in (1, 4, 0, 0, 0, 0, 1000, 1)) + real(0),
+        "".join(f"{value:10d}" for value in fields) + real(0),
         "".join(real(value) for value in (1.1, .05, .1, 0, 0)), real(0) * 5, ""])
 
 
