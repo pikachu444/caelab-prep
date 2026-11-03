@@ -14,7 +14,7 @@
 |---|---|
 | RAD 편집 | INCLUDE 원문 보존, LAW1 재료·shell/solid 단면·PART 관계의 지원 필드 생성·수정 |
 | 조건과 케이스 | 곡선, 집합, BCS, CLOAD, INIVEL/TRA, 제한된 INTER/TYPE7, 영속 해석 케이스와 시간·출력 설정 |
-| CAD·메시 | Gmsh tri3/tet4와 명시 planar quad/sweep hex8 recipe의 공통 후보 검토·채택·Undo·저장, MSH 2.2/4.1 ASCII 가져오기, 지원 조건 안의 준비된 메시 교체·대상 재연결 |
+| CAD·메시 | Gmsh tri3/tet4와 명시 planar quad/sweep hex8 recipe의 공통 후보 검토·채택·Undo·저장, MSH 2.2/4.1 ASCII 가져오기와 [준비된 straight Tet10 opt-in](docs/usage.md#prepared-tet10), 지원 조건 안의 준비된 메시 교체·대상 재연결 |
 | 문서 | Undo/Redo, `.caeprep` 저장·재열기, RAD 및 Starter/Engine 내보내기 |
 | 공용 GUI | 같은 문서·명령을 사용하는 8개 프로그램별 표현, 단위 숫자·벡터·표·곡선 입력, 재료/곡선 갤러리와 부품 카탈로그 |
 | 자동화 | 독립 CLI, 열린 GUI에 접속하는 live 제어와 선택 설치 MCP adapter |

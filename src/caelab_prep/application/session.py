@@ -247,9 +247,9 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 "shell_edit": ["PROP/SHELL thickness"],
                 "create_cards": ["MAT/LAW1", "PROP/SHELL", "PROP/SOLID", "SKEW/FIX", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
                 "copy_delete_cards": ["MAT/LAW1", "MAT/LAW36", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
-                "part_assignment": True, "new_document": True, "mesh_adoption": ["triangle3", "tetra4"],
+                "part_assignment": True, "new_document": True, "mesh_adoption": ["triangle3", "tetra4", "tetra10"],
                 "mesh_adoption_sources": {"cad_gmsh": ["triangle3", "tetra4"],
-                    "standalone_msh": ["triangle3", "tetra4"], "structured_recipe": ["quad4", "hex8"]},
+                    "standalone_msh": ["triangle3", "tetra4", "tetra10"], "structured_recipe": ["quad4", "hex8"]},
                 "mesh_replacement": "adoption-owned parts without dependent groups/surfaces or unknown references", "solver_input_export": True,
                 "source_import": "explicit native ID mapping and source archive within the closed initial profile",
                 "prepared_mesh_replacement": "mesh-only INCLUDE with unchanged component headers; explicit stale-target reconnection",
@@ -420,13 +420,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             return self._insert_model_card(resource, text, "Create shell property", expected_revision)
 
     def create_solid_property(self, name, *, resource_id=None, native_id=None,
-                              expected_revision=None, expected_document_id=None):
+                              expected_revision=None, expected_document_id=None, element_family="tetra4"):
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             resource = self._model_resource(resource_id)
             identifier = self._allocate_native_id("PROP", native_id)
-            return self._insert_model_card(resource, solid_block(identifier, name, newline=resource.newline),
-                                           "Create linear tetra4 property", expected_revision)
+            return self._insert_model_card(resource, solid_block(identifier, name, newline=resource.newline,
+                                           element_family=element_family),
+                                           f"Create {element_family} property", expected_revision)
 
     def _mesh_replacement_state(self, part_ids):
         """Remove only proven adoption-owned geometry; protect external node use."""
@@ -488,7 +489,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             state["replaced"].pop(card.id, None)
             removed_cards.append(card.id)
         for card in selected.values(): remove(card)
-        element_roots = {"SHELL", "SH3N", "BRICK", "TETRA4", "TETRA", "BEAM", "TRUSS"}
+        element_roots = {"SHELL", "SH3N", "BRICK", "TETRA4", "TETRA", "TETRA10", "BEAM", "TRUSS"}
         for owner in self._deck_resources():
             for card in owner.cards:
                 words = card.keyword.upper().split("/")
@@ -537,7 +538,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             if expected_document_epoch is not None and expected_document_epoch != self._document_epoch:
-                raise PrepError("document_epoch_conflict", "The target document was reopened; prepare a current CAD candidate.")
+                raise PrepError("document_epoch_conflict", "The target document was reopened; inspect a current mesh candidate.")
             if any(card["keyword"].upper().startswith("/TRANSFORM") for card in self.list_cards()):
                 raise PrepError("unsupported_mesh_transform", "Mesh adoption does not reinterpret existing native transformation scopes.")
             replacement_state, replacement_details = (self._mesh_replacement_state(replace_part_ids)
@@ -576,6 +577,17 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             allowed = {"SHELL", "TYPE1"} if native_mesh.dimension == 2 else {"SOLID", "TYPE14"}
             if prop_family not in allowed:
                 raise PrepError("incompatible_property", "Choose a shell property for surface meshes and a solid property for volume meshes.")
+            tetra10 = bool(native_mesh.elements) and all(cell.kind == "tetra10" for cell in native_mesh.elements)
+            if tetra10:
+                if native_mesh.source_kind != "standalone_msh" or material_card.keyword.upper().split("/")[2] not in ("LAW1", "ELAST"):
+                    raise PrepError("unsupported_operation", "Prepared straight Tet10 adoption requires explicit standalone MSH and LAW1.")
+                try:
+                    row = property_owner.render().decode("latin1").splitlines()[property_card.data[1]]
+                    profile = tuple(int(row[start:start + 10].strip() or "0") for start in (10, 20, 40))
+                except (IndexError, ValueError):
+                    profile = None
+                if profile != (4, 0, 1000):
+                    raise PrepError("incompatible_property", "Tet10 requires explicit SOLID Ismstr=4, Iale=0 and Itetra10=1000.")
             structured = native_mesh.source_kind == "structured_recipe"
             structured_hex = structured and native_mesh.dimension == 3
             if structured_hex:
@@ -594,6 +606,10 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             for source in self._deck_resources():
                 for card in source.cards:
                     root = card.keyword.upper().split("/")[1]
+                    if root == "TETRA10":
+                        from ..radioss.tetra10 import records
+                        used_elements.update(row[0] for row in records(source.lines, card.data))
+                        continue
                     used = used_nodes if root == "NODE" else used_elements
                     for index in card.data:
                         try: used.add(int(source.lines[index][:10]))
@@ -635,6 +651,13 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         raise
                     raise PrepError("native_precision", "Native field rounding would violate the structured mesh admission limits.",
                                     {"reason": exc.code, **exc.details}) from exc
+            elif tetra10:
+                from .tet10_geometry import assess_straight_tet10
+                for cell in native_mesh.elements:
+                    report = assess_straight_tet10(tuple(encoded_coordinates[node] for node in cell.node_ids))
+                    if report["problem"]:
+                        raise PrepError("native_precision", "Native coordinates violate the straight Tet10 profile.",
+                                        {"element_id": cell.id, "reason": report["problem"]})
             else:
                 for cell in native_mesh.elements:
                     points = [encoded_coordinates[node] for node in cell.node_ids]
@@ -658,9 +681,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 marker = f"# CAELab adopted mesh {native_mesh.mesh_uuid}; part {part.uuid}"
                 texts.append(newline.join([f"/PART/{identifier}", title(part_name), marker,
                     integer(prop[1]) + integer(material[1]) + f"{0:10d}", ""]))
-                keyword = "SHELL" if structured_quad else "BRICK" if structured_hex else "SH3N" if native_mesh.dimension == 2 else "TETRA4"
+                keyword = "SHELL" if structured_quad else "BRICK" if structured_hex else "TETRA10" if tetra10 else "SH3N" if native_mesh.dimension == 2 else "TETRA4"
                 cells = cells_by_part.get(part.uuid, [])
-                rows = [integer(element_map[cell.id]) + "".join(integer(node_map[node]) for node in cell.node_ids) for cell in cells]
+                if tetra10:
+                    from .tet10_geometry import native_tet10_nodes
+                    rows = [row for cell in cells for row in (integer(element_map[cell.id]),
+                            "".join(integer(node_map[node]) for node in native_tet10_nodes(cell.node_ids)))]
+                else:
+                    rows = [integer(element_map[cell.id]) + "".join(integer(node_map[node]) for node in cell.node_ids) for cell in cells]
                 texts.append(newline.join([f"/{keyword}/{identifier}", marker, *rows, ""]))
             group_positions = {}
             group_reserved = {}
@@ -695,7 +723,13 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             group_map = {key: card_ids[position] for key, position in group_positions.items()}
             # Observers may save synchronously when the committed geometry is published.
             previous_sources = self._source_paths
-            self._source_paths = previous_sources | {str(Path(asset.path).resolve()) for asset in native_mesh.assets}
+            protected_sources = {str(Path(asset.path).resolve()) for asset in native_mesh.assets}
+            if native_mesh.source_kind == "standalone_msh":
+                metadata = next(asset.path for asset in native_mesh.assets if asset.kind == "metadata")
+                original = json.loads(Path(metadata).read_text(encoding="utf-8"))["source"].get("original_path")
+                if original:
+                    protected_sources.add(str(Path(original).expanduser().resolve()))
+            self._source_paths = previous_sources | protected_sources
             try:
                 change = self.dispatcher.execute(resource.id, state, "Adopt mesh candidate", object_ids=tuple(card_ids),
                                                  expected_revision=expected_revision, kind="structure")
@@ -825,7 +859,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
     @staticmethod
     def _element_group_family(kind, formulation=None):
         if kind == "line": return {"BEAM": "GRBEAM/BEAM", "TRUSS": "GRTRUS/TRUS"}.get(formulation)
-        return {"triangle": "GRSH3N/SH3N", "quad": "GRSHEL/SHEL", "tetra": "GRBRIC/BRIC",
+        return {"triangle": "GRSH3N/SH3N", "quad": "GRSHEL/SHEL", "tetra": "GRBRIC/BRIC", "tetra10": "GRBRIC/BRIC",
                 "hexahedron": "GRBRIC/BRIC", "wedge": "GRBRIC/BRIC", "pyramid": "GRBRIC/BRIC"}.get(kind)
 
     def _element_members(self, members, family=None):
@@ -1304,6 +1338,10 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             resource, card, refs = self._part_native_references(card_id)
+            if self._projection_cache is None: self.mesh_view()
+            part_kinds = {cell["type"] for cell in self._projection_cache["cells"] if cell.get("part_id") == refs["native_part_id"]}
+            if "tetra10" in part_kinds and part_kinds != {"tetra10"}:
+                raise PrepError("incompatible_property", "Tet10 requires a separate PART from other solid families.")
             if material_id is None and property_id is None:
                 raise PrepError("invalid_command", "Choose a material or property to assign.")
             values = {}
@@ -1314,14 +1352,16 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         raise PrepError("dangling_reference" if not matches else "ambiguous_reference",
                                         "Replace the unresolved PART reference before applying.", {"field": key})
                     continue
-                _, target_card, identity = self._unique_card(target, namespace)
+                target_owner, target_card, identity = self._unique_card(target, namespace)
                 values[key] = identity[1]
                 if key == "material_id" and target_card.keyword.upper().split("/")[2] not in ("LAW1", "ELAST", "LAW36", "PLAS_TAB"):
                     raise PrepError("unsupported_operation", "Assignment supports LAW1/LAW36 material families only.")
+                if key == "material_id" and "tetra10" in part_kinds and target_card.keyword.upper().split("/")[2] not in ("LAW1", "ELAST"):
+                    raise PrepError("unsupported_operation", "The prepared Tet10 profile supports LAW1 material only.")
                 if key == "property_id":
                     family = target_card.keyword.upper().split("/")[2]
                     compatible = ({"quad", "triangle"} if family in ("SHELL", "TYPE1") else
-                                  {"tetra", "hexahedron", "wedge", "pyramid"} if family in ("SOLID", "TYPE14") else
+                                  {"tetra", "tetra10", "hexahedron", "wedge", "pyramid"} if family in ("SOLID", "TYPE14") else
                                   {"line"} if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2") else None)
                     if compatible is None and identity[1] != refs["native_property_id"]:
                         raise PrepError("unsupported_operation", "Assignment supports SHELL and SOLID property families only.")
@@ -1329,6 +1369,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     kinds = {cell["type"] for cell in self._projection_cache["cells"] if cell.get("part_id") == refs["native_part_id"]}
                     if compatible is not None and kinds - compatible:
                         raise PrepError("incompatible_property", "The property family does not match the part's element types.")
+                    if "tetra10" in kinds:
+                        try:
+                            row = target_owner.render().decode("latin1").splitlines()[target_card.data[1]]
+                            profile = tuple(int(row[start:start + 10].strip() or "0") for start in (10, 20, 40))
+                        except (IndexError, ValueError):
+                            profile = None
+                        if profile != (4, 0, 1000):
+                            raise PrepError("incompatible_property", "Tet10 requires explicit SOLID Ismstr=4, Iale=0 and Itetra10=1000.")
                     if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2"):
                         expected = "BEAM" if family in ("BEAM", "TYPE3") else "TRUSS"
                         if any(cell.get("formulation") != expected for cell in self._projection_index["cells_by_part"].get(refs["native_part_id"], ())):

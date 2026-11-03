@@ -49,7 +49,7 @@
 
 <a id="current-progress"></a>
 
-Phase 3.6 폐삼각표면 Auto-Tet의 독립 진단 코드는 `01e0be2`에 보존했다. [고정 F1 결과](docs/mesher-feasibility-roadmap.md#2026-11-03-폐삼각표면-auto-tet-f1)는 L형 Tet4/Tet10 통과와 공식 구 J 미달을 구분한다. 두 recipe의 F1은 품질 미달이며 F2·공통 채택·native Tet10은 미완료다. N02의 기존 tri3/tet4 import와 N18의 기존 메시 수정 지원 또는 그룹별 잔여 수를 이 진단으로 닫지 않는다.
+Phase 3.6 폐삼각표면 Auto-Tet의 독립 진단 코드는 `01e0be2`에 보존했다. [고정 F1 결과](docs/mesher-feasibility-roadmap.md#2026-11-03-폐삼각표면-auto-tet-f1)는 L형 Tet4/Tet10 통과와 공식 구 J 미달을 구분한다. 두 recipe의 F1은 품질 미달이며 F2·자동생성의 공통 채택은 미완료다. 이후 별도 [prepared Tet10 선행 경로](docs/usage.md#prepared-tet10)의 API `da754bf`는 기존 NativeMesh/v6에 opt-in admission·한 Undo·두 행 RAD 출력을 연결했다. 고정 L의 새 프로세스 재열기·실제 Starter 입력 확인은 Engine 부재 경고1과 응답 미확인을 구분한다. 공용 Qt `3c47c31`의 가져오기·단면 선택과 source preview의 정확한 순서 연결은 같은 API를 사용한다. 8표현의 조작·Undo·재열기, 원본 보호·Line3 역할·문서 재열기 epoch의 원지적 종결과 실제 OS/VTK 후속을 구분한다. N02의 기존 tri3/tet4 import와 N18의 기존 메시 수정 지원 또는 그룹별 잔여 수를 이 진단으로 닫지 않는다.
 
 ## 현재 개발검증자료와 진행 중 변경
 

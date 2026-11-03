@@ -94,10 +94,13 @@ def _read_in_worker(path, *, cancel_event=None, timeout=60.0):
                 process.kill(); process.communicate(timeout=3)
 
 
-def import_standalone_mesh(source, output_dir, *, length_unit, cancel_event=None, timeout=60.0):
+def import_standalone_mesh(source, output_dir, *, length_unit, cancel_event=None, timeout=60.0,
+                           element_profile="linear"):
     """Capture a user MSH and return a reviewable candidate; change no document."""
     if length_unit not in ("mm", "cm", "m"):
         raise PrepError("unknown_length_unit", "Declare the MSH source length unit: mm, cm or m.")
+    if element_profile not in ("linear", "straight_tet10"):
+        raise PrepError("unsupported_mesh", "Choose the linear or explicit straight_tet10 import profile.")
     if not str(output_dir).strip():
         raise PrepError("invalid_request", "Choose a directory to retain the imported mesh assets.")
     source = Path(source).expanduser().resolve()
@@ -116,6 +119,7 @@ def import_standalone_mesh(source, output_dir, *, length_unit, cancel_event=None
     metadata = folder / "metadata.json"
     manifest = {"schema": "caelab.standalone-msh", "version": 1, "mesh_uuid": identifier,
                 "length_unit": length_unit, "name": source.stem, "format_version": data["format_version"],
+                "element_profile": element_profile,
                 "source": {"path": str(captured), "original_path": str(source), "sha256": digest}}
     metadata.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     assets = (AssetDigest("msh", str(captured), digest), AssetDigest("metadata", str(metadata), _sha(metadata)))
@@ -132,6 +136,8 @@ def read_imported_mesh(path, *, cancel_event=None, timeout=60.0):
         UUID(manifest["mesh_uuid"])
         if manifest["length_unit"] not in ("mm", "cm", "m"):
             raise ValueError("An explicit source length unit is required")
+        if "original_path" in manifest["source"] and (not isinstance(manifest["source"]["original_path"], str) or not manifest["source"]["original_path"].strip()):
+            raise ValueError("The original source path must be a nonempty string")
         source = Path(manifest["source"]["path"])
         digest = _sha(source)
         if digest != manifest["source"]["sha256"]:
@@ -149,6 +155,9 @@ def read_imported_mesh(path, *, cancel_event=None, timeout=60.0):
 
 def _candidate(data, manifest, assets):
     nodes = _nodes(data["nodes"])
+    profile = manifest.get("element_profile", "linear")
+    if profile not in ("linear", "straight_tet10"):
+        raise PrepError("unsupported_mesh", "Unsupported standalone element profile.")
     dimension = max(block["dimension"] for block in data["blocks"])
     if dimension not in (2, 3):
         raise PrepError("unsupported_mesh", "Import physical triangle3 surfaces or tetra4 solids; standalone 1D models are not supported.")
@@ -178,19 +187,31 @@ def _candidate(data, manifest, assets):
             for group in entity_groups.get(tuple(entity), ()):
                 group_nodes[(0, group)].add(int(identifier))
     physical_cells = [cell for cell in all_cells if cell.dimension == dimension]
+    quadratic = profile == "straight_tet10"
+    if quadratic and (dimension != 3 or any(cell.kind != "tetra10" for cell in physical_cells)):
+        raise PrepError("unsupported_mesh", "The straight_tet10 profile requires only Tet10 physical solids; mixed families are not supported.")
     used = {identifier for cell in physical_cells for identifier in cell.node_ids}
     topology = [(cell.dimension, tuple(sorted(cell.node_ids))) for cell in all_cells]
     if len(topology) != len(set(topology)):
         raise PrepError("duplicate_elements", "Duplicate element connectivity is ambiguous; the whole import is rejected.")
     # Lower-dimensional records may annotate actual physical-cell boundaries;
     # they must not silently turn a mixed shell/solid or beam model into one body.
-    if all(cell.kind for cell in physical_cells):
-        facets = {tuple(sorted(face)) for cell in physical_cells for face in combinations(cell.node_ids, dimension)}
-        edges = {tuple(sorted(edge)) for cell in physical_cells for edge in combinations(cell.node_ids, 2)}
+    if quadratic or all(cell.kind in ("triangle3", "tetra4") for cell in physical_cells):
+        if quadratic:
+            facets, edges, edge_midpoints = _quadratic_boundaries(physical_cells)
+        else:
+            facets = {tuple(sorted(face)) for cell in physical_cells for face in combinations(cell.node_ids, dimension)}
+            edges = {tuple(sorted(edge)) for cell in physical_cells for edge in combinations(cell.node_ids, 2)}
         for cell in all_cells:
             valid = (set(cell.node_ids) <= used if cell.dimension == 0 else
                      tuple(sorted(cell.node_ids)) in edges if cell.dimension == 1 else
                      tuple(sorted(cell.node_ids)) in facets if cell.dimension == 2 else True)
+            if quadratic and cell.dimension == 1 and valid:
+                valid = len(cell.node_ids) == 3 and edge_midpoints.get(tuple(sorted(cell.node_ids[:2]))) == cell.node_ids[2]
+            if quadratic and cell.dimension == 2 and valid:
+                corners = cell.node_ids[:3]
+                valid = all(edge_midpoints.get(tuple(sorted((corners[a], corners[b])))) == midpoint
+                            for (a, b), midpoint in zip(((0, 1), (1, 2), (2, 0)), cell.node_ids[3:]))
             if cell.dimension < dimension and not valid:
                 raise PrepError("mixed_dimension_mesh", "A lower-dimensional element is not a boundary of the adopted physical mesh.", {"element_id": cell.id})
     groups = []
@@ -204,16 +225,36 @@ def _candidate(data, manifest, assets):
         groups.append(MeshGroup(f"physical:{dim}:{tag}", f"[{dim}:{tag}] {name}", kind, tuple(sorted(members))))
     parts = tuple(MeshPart(key, dimension, index + 1, part_names[key], tuple(ids))
                   for index, (key, ids) in enumerate(part_cells.items()))
-    quality = _quality(nodes, all_cells, QualityLimits())
-    unsupported_lower = tuple(cell.id for cell in all_cells if cell.dimension < 2 and cell.element_type not in (1, 15))
+    limits = QualityLimits(minimum_tetrahedron=.5) if quadratic else QualityLimits()
+    quality = _quality(nodes, all_cells, limits, straight_tet10=quadratic)
+    lower_types = (8, 15) if quadratic else (1, 15)
+    unsupported_lower = tuple(cell.id for cell in all_cells if cell.dimension < 2 and cell.element_type not in lower_types)
     quality = replace(quality, unsupported_ids=quality.unsupported_ids + unsupported_lower)
     counts = Counter((cell.dimension, cell.element_type, cell.element_name, cell.order,
                       "physical" if cell.dimension == dimension else "boundary_annotation",
-                      cell.kind is not None if cell.dimension >= 2 else cell.element_type in (1, 15)) for cell in all_cells)
+                      cell.kind is not None and (quadratic or cell.order == 1) if cell.dimension >= 2 else cell.element_type in lower_types) for cell in all_cells)
     inventory = tuple(CellInventory(dim, typ, name, order, count, role, supported)
                       for (dim, typ, name, order, role, supported), count in sorted(counts.items()))
     return ImportedMeshCandidate(str(namespace), manifest["length_unit"], dimension, nodes, tuple(all_cells),
                                  parts, tuple(groups), inventory, quality, assets, data["format_version"])
+
+
+def _quadratic_boundaries(cells):
+    from .tet10_geometry import GMSH_EDGES
+    shared, inverse, facets, edges = {}, {}, set(), set()
+    corners = {node for cell in cells for node in cell.node_ids[:4]}
+    for cell in cells:
+        nodes, midsides = cell.node_ids, {}
+        for (a, b), midpoint in zip(GMSH_EDGES, nodes[4:]):
+            edge = tuple(sorted((nodes[a], nodes[b])))
+            if (midpoint in corners or edge in shared and shared[edge] != midpoint
+                    or midpoint in inverse and inverse[midpoint] != edge):
+                raise PrepError("nonconforming_tet10", "Tet10 edges require one shared midpoint ID and distinct corner IDs.")
+            shared[edge], inverse[midpoint], midsides[edge] = midpoint, edge, midpoint
+            edges.add(tuple(sorted((*edge, midpoint))))
+        for face in combinations(nodes[:4], 3):
+            facets.add(tuple(sorted((*face, *(midsides[tuple(sorted(edge))] for edge in combinations(face, 2))))))
+    return facets, edges, shared
 
 
 def validate_imported_mesh(native):

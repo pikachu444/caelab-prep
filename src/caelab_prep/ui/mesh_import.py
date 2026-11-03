@@ -19,9 +19,17 @@ def import_projection(candidate):
             "resource_revisions": {resource: 0}, "node_ids": [node.id for node in candidate.nodes],
             "node_resources": {node.id: [resource] for node in candidate.nodes},
             "points": [node.xyz for node in candidate.nodes],
-            "cells": [{"id": cell.id, "type": cell.kind, "nodes": cell.node_ids,
+            "cells": [{"id": cell.id, "type": cell.kind,
+                       "nodes": _preview_nodes(cell),
                        "resource_id": resource, "part_id": parts.get(cell.part_uuid)}
                       for cell in candidate.cells if cell.kind and cell.dimension == candidate.dimension]}
+
+
+def _preview_nodes(cell):
+    if cell.kind == "tetra10":
+        from ..application.tet10_geometry import native_tet10_nodes
+        return native_tet10_nodes(cell.node_ids)
+    return cell.node_ids
 
 
 class ImportMeshDialog(QDialog):
@@ -46,7 +54,7 @@ class ImportMeshDialog(QDialog):
             self.viewport.diagnostic.connect(self._show_error)
             split.addWidget(self.viewport)
         panel = QWidget(); column = QVBoxLayout(panel)
-        hint = QLabel("Import triangle3 surfaces or tetra4 solids from a CAD-independent Gmsh MSH 2.2/4.1 ASCII file. Physical regions become parts and element sets. Boundary face/edge groups become NODE sets; their elements remain source annotations, not shell/beam bodies or contact surfaces. Unsupported data blocks the whole import.")
+        hint = QLabel("Import a CAD-independent Gmsh MSH 2.2/4.1 ASCII file using an explicit element profile. Physical regions become parts and element sets. Boundary face/edge groups become NODE sets; their elements remain source annotations, not shell/beam bodies or contact surfaces. Unsupported data blocks the whole import.")
         hint.setWordWrap(True); column.addWidget(hint)
         form = QFormLayout(); form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows); column.addLayout(form)
         self.source, self.output = QLineEdit(), QLineEdit()
@@ -59,6 +67,12 @@ class ImportMeshDialog(QDialog):
         self.length = QComboBox(); self.length.addItem("Declare source length unit", None)
         for unit in ("mm", "cm", "m"): self.length.addItem(unit, unit)
         self.length.setAccessibleName("Source mesh length unit"); form.addRow("Source length unit", self.length)
+        self.element_profile = QComboBox()
+        self.element_profile.addItem("Linear triangle3 / tetra4", "linear")
+        self.element_profile.addItem("Straight Tet10 solids (explicit)", "straight_tet10")
+        self.element_profile.setAccessibleName("Mesh element profile")
+        form.addRow("Element profile", self.element_profile)
+        self.profile_hint = QLabel(); self.profile_hint.setWordWrap(True); column.addWidget(self.profile_hint)
         note = QLabel("MSH has no standard length unit. Declare the source unit; it must match the model. Coordinates are not rescaled automatically.")
         note.setWordWrap(True); column.addWidget(note)
         commands = QHBoxLayout()
@@ -90,8 +104,20 @@ class ImportMeshDialog(QDialog):
         self._references(); self._running(False)
         for field in (self.source, self.output): field.textEdited.connect(self._invalidate_candidate)
         self.length.currentIndexChanged.connect(self._invalidate_candidate)
+        self.element_profile.currentIndexChanged.connect(self._profile_changed)
+        self._profile_hint()
 
     def _show_error(self, error): self.error.setText(str(error))
+
+    def _profile_hint(self):
+        self.profile_hint.setText(
+            "Straight Tet10: corner J ≥ 0.5, edge aspect ratio ≤ 4 and straight midsides. "
+            "Adoption requires LAW1 and an explicitly created Tet10 solid section."
+            if self.element_profile.currentData() == "straight_tet10" else
+            "Linear profile: triangle3 surfaces or tetra4 solids. Higher-order elements block adoption.")
+
+    def _profile_changed(self):
+        self._profile_hint(); self._invalidate_candidate()
 
     def _invalidate_candidate(self):
         if self._task is not None: return
@@ -119,7 +145,7 @@ class ImportMeshDialog(QDialog):
             if len(words) > 3 and words[1] == "PROP" and words[2] in allowed: self.section.addItem(label, card["id"])
 
     def _running(self, running):
-        for widget in (self.source, self.output, self.length, self.inspect_button, self.material, self.section, *self.browse_buttons): widget.setEnabled(not running)
+        for widget in (self.source, self.output, self.length, self.element_profile, self.inspect_button, self.material, self.section, *self.browse_buttons): widget.setEnabled(not running)
         self.cancel_button.setEnabled(running and not self._adopting)
         self.adopt_button.setEnabled(not running and bool(self.candidate and self.candidate.quality.passed))
         self.close_button.setEnabled(not self._adopting)
@@ -142,8 +168,10 @@ class ImportMeshDialog(QDialog):
             self._show_error("Choose an MSH file, an import folder and its source length unit."); return False
         self._invalidate_candidate()
         source, output, unit = self.source.text(), self.output.text(), self.length.currentData()
+        profile = self.element_profile.currentData()
         self.summary.setText("Inspecting every source element. The model is unchanged.")
-        return self._start(lambda: import_standalone_mesh(source, output, length_unit=unit, cancel_event=self._cancel))
+        return self._start(lambda: import_standalone_mesh(source, output, length_unit=unit,
+            element_profile=profile, cancel_event=self._cancel))
 
     def _completed(self, result):
         self._task = None
@@ -207,7 +235,8 @@ class ImportMeshDialog(QDialog):
         self._adopting = True
         self.summary.setText("Revalidating the captured source and adopting parts and sets…")
         return self._start(lambda: self.session.adopt_mesh_candidate(native, material_id=material, property_id=section,
-            expected_document_id=stamp["document_id"], expected_revision=stamp["revision"]))
+            expected_document_id=stamp["document_id"], expected_revision=stamp["revision"],
+            expected_document_epoch=stamp["document_epoch"]))
 
     def reject(self):
         if self._adopting: return

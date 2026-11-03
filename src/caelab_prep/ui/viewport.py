@@ -186,6 +186,7 @@ class MeshViewport(QWidget):
             "triangle": (vtk.VTK_TRIANGLE, 3), "triangle3": (vtk.VTK_TRIANGLE, 3),
             "quad": (vtk.VTK_QUAD, 4), "shell4": (vtk.VTK_QUAD, 4),
             "tetra": (vtk.VTK_TETRA, 4), "tetra4": (vtk.VTK_TETRA, 4),
+            "tetra10": (vtk.VTK_QUADRATIC_TETRA, 10),
             "hexahedron": (vtk.VTK_HEXAHEDRON, 8), "brick8": (vtk.VTK_HEXAHEDRON, 8),
             "line": (vtk.VTK_LINE, 2), "wedge": (vtk.VTK_WEDGE, 6),
             "pyramid": (vtk.VTK_PYRAMID, 5),
