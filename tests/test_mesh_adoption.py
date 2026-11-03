@@ -274,3 +274,49 @@ def test_original_cad_path_uses_the_validated_metadata_bytes(real_candidate, mon
         session.adopt_mesh_candidate(native, material_id=material, property_id=section)
     assert error.value.code == "candidate_changed"
     assert _state(session) == before and session._source_paths == paths
+
+
+@pytest.mark.parametrize("beam_part", ["2", "+2"])
+@pytest.mark.parametrize("tetra_part", ["1", "+1"])
+def test_replacement_preserves_external_beam_direction_reference(beam_part, tetra_part):
+    """Preserve raw references even before an external PART's profile is repaired."""
+    from copy import copy
+    from uuid import uuid4
+    session = PrepSession()
+    session.new_document("Raw reference preservation", {"mass": "Mg", "length": "mm", "time": "s"})
+    session.create_material("Steel", 7.8e-9, 210000, .3, native_id=41)
+    session.create_solid_property("Solid", native_id=207)
+    resource = session.document.resources[session._root_id]
+    mesh, geometry, source_part = str(uuid4()), str(uuid4()), str(uuid4())
+    marker = f"# CAELab adopted mesh {mesh}; part {source_part}\n"
+    def node(identifier, xyz):
+        return f"{identifier:10d}" + "".join(f"{value:20.12e}" for value in xyz) + "\n"
+    assignment = f"{207:10d}{41:10d}{0:10d}\n"
+    beam = f"/BEAM/{beam_part}\n" + "".join(f"{value:10d}" for value in (101, 5, 6, 9)) + "\n"
+    texts = [f"/NODE\n# CAELab mesh {mesh}; geometry {geometry}\n" +
+             "".join(node(i, p) for i, p in [(1,(0,0,0)),(2,(1,0,0)),(3,(0,1,0)),(9,(0,0,1))]),
+             "/PART/1\nOwned CAD PART\n" + marker + assignment,
+             f"/TETRA4/{tetra_part}\n" + marker + "".join(f"{v:10d}" for v in (1,1,2,3,9)) + "\n",
+             "/NODE\n" + node(5,(2,0,0)) + node(6,(2,1,0)),
+             "/PART/2\nExternal raw PART\n" + assignment, beam]
+    # The external BEAM's SOLID assignment is not a certified solver profile.
+    # Its declared direction-node reference must nevertheless not be deleted.
+    state, ids = resource.inserted_states(texts)
+    session.dispatcher.execute(resource.id, state, "Load raw references")
+    resource.restore(resource.node_positions_state({"1": [.01,.01,.01], "9": [0,0,1.1]}))
+    before = _state(session)
+    original_beam = session.card_text(ids[5])
+    if tetra_part.startswith("+"):
+        with pytest.raises(PrepError) as error: session._mesh_replacement_state([ids[1]])
+        assert error.value.code == "mesh_replacement_unsupported" and _state(session) == before
+        return
+    proposed, details = session._mesh_replacement_state([ids[1]])
+    assert 9 not in details["removed_node_ids"]
+    assert details["preserved_shared_node_ids"] == [9]
+    assert ids[2] in details["removed_card_ids"]
+    assert proposed["node_positions"] == {"9": [0,0,1.1]}
+    trial = copy(resource); trial.restore(proposed)
+    nodes, _, _ = _native(trial.render())
+    card = trial.card(ids[5]); lines = trial.render().decode("latin1").splitlines(keepends=True)
+    assert set(nodes) == {5,6,9} and "".join(lines[card.start:card.stop]) == original_beam
+    assert _state(session) == before

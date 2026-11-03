@@ -136,6 +136,107 @@ class MeshRelationCommands:
             self._mesh_replacement_plan = candidate._mesh_replacement_plan
         return result
 
+    def _mesh_replacement_targets(self, touched_nodes, touched_elements, touched_parts):
+        targets = {}
+        for deck in self._deck_resources():
+            for card in deck.cards:
+                family = "/".join(card.keyword.upper().split("/")[1:3])
+                if family not in GROUPS: continue
+                members = self._integer_members(deck, card)
+                affected = touched_nodes if family == "GRNOD/NODE" else touched_parts if family == "SURF/PART" else touched_elements
+                if affected.intersection(members):
+                    targets[card.id] = {"resource_id": deck.id, "family": family, "members": members}
+        return targets
+
+    def _mesh_replacement_relations(self, resource_id, targets, source):
+        relations = self._relations_resource().snapshot()
+        if relations["stale_targets"]:
+            raise PrepError("stale_mesh_targets", "Reconnect the previous replacement's targets before replacing another mesh.")
+        generation = relations["mesh_revisions"].get(resource_id, 0) + 1
+        relations["mesh_revisions"][resource_id] = generation
+        relations["replacement_sources"][resource_id] = dict(source)
+        relations["stale_targets"] = {key: {**value, "mesh_resource_id": resource_id, "mesh_revision": generation}
+                                      for key, value in targets.items()}
+        return relations, generation
+
+    def _mesh_replacement_view(self, resource_id, state):
+        document = self._require()
+        resource = copy(document.resources[resource_id]); resource.restore(state)
+        trial = copy(self); trial.document = copy(document)
+        trial.document.resources = {**document.resources, resource_id: resource}
+        trial._projection_cache = None; trial._projection_index = {}
+        view = trial.mesh_view()
+        if view["diagnostics"]:
+            raise PrepError("invalid_mesh", "Replacement introduces duplicate nodes or unresolved connectivity.",
+                            {"diagnostics": [dict(item) for item in view["diagnostics"]]})
+        identifiers = [cell["id"] for cell in view["cells"]]
+        if any(type(value) is not int or value < 1 for value in (*view["node_ids"], *identifiers)) or len(identifiers) != len(set(identifiers)):
+            raise PrepError("invalid_mesh", "Replacement requires positive node IDs and unambiguous global element IDs.")
+        return view
+
+    def plan_cad_mesh_replacement(self, native_mesh, *, replace_part_ids, material_id, property_id, name=None):
+        """Seal one verified candidate and its explicit stale-target states."""
+        from .mesh_candidates import NativeMesh
+        with self._lock:
+            self._check_model_edit(None, None)
+            if not isinstance(native_mesh, NativeMesh) or native_mesh.source_kind != "cad_gmsh":
+                raise PrepError("unsupported_mesh_replacement", "Choose a verified CAD mesh candidate.")
+            if (not isinstance(replace_part_ids, (list, tuple)) or not replace_part_ids
+                    or any(not isinstance(value, str) for value in replace_part_ids)
+                    or len(set(replace_part_ids)) != len(replace_part_ids)):
+                raise PrepError("invalid_reference", "Choose distinct adopted PART card IDs.")
+            stamp = self._mesh_edit_stamp()
+            candidate = self._planning_snapshot()
+            selected = tuple(replace_part_ids)
+        old_view = candidate.mesh_view()
+        prepared = candidate._prepare_mesh_adoption(native_mesh, material_id=material_id, property_id=property_id,
+            name=name, replace_part_ids=selected, allow_stale=True)
+        metadata = next(asset for asset in prepared["native_mesh"].assets if asset.kind == "metadata")
+        source = {"sha256": metadata.sha256, "name": Path(metadata.path).name}
+        relations, generation = candidate._mesh_replacement_relations(prepared["resource_id"],
+            prepared["replacement_targets"], source)
+        prepared["relations"] = relations
+        view = candidate._mesh_replacement_view(prepared["resource_id"], prepared["state"])
+        cards = {card["id"]: card for card in candidate.list_cards()}
+        conditions = candidate._stale_conditions(relations)
+        result = {"plan_id": str(uuid4()), "document_id": candidate.document.id,
+                  "revision": candidate.document.revision, "document_epoch": candidate._document_epoch,
+                  "resource_id": prepared["resource_id"], "mesh_revision": generation,
+                  "old_node_count": len(old_view["node_ids"]), "old_element_count": len(old_view["cells"]),
+                  "node_count": len(view["node_ids"]), "element_count": len(view["cells"]),
+                  "stale_targets": deepcopy(relations["stale_targets"]),
+                  "target_labels": {key: f"{cards[key]['title'] or cards[key]['keyword']} [{cards[key]['keyword']}]"
+                                    for key in relations["stale_targets"]},
+                  "affected_conditions": conditions,
+                  "condition_labels": {item["card_id"]: f"{cards[item['card_id']]['title'] or cards[item['card_id']]['keyword']} [{cards[item['card_id']]['keyword']}]"
+                                       for item in conditions},
+                  "new_part_ids": list(prepared["result"]["part_ids"]), "source": source}
+        with self._lock:
+            if self._mesh_edit_stamp() != stamp:
+                raise PrepError("stale_mesh_replacement_plan", "The document changed while preparing CAD replacement.")
+            self._cad_mesh_replacement_plan = (result["plan_id"], stamp, prepared)
+        return result
+
+    def apply_cad_mesh_replacement(self, plan_id, *, expected_revision=None, expected_document_id=None):
+        from .mesh_candidates import validate_native_mesh
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            plan = getattr(self, "_cad_mesh_replacement_plan", None)
+            if plan is None or plan[0] != plan_id or plan[1] != self._mesh_edit_stamp():
+                raise PrepError("stale_mesh_replacement_plan", "Prepare a current CAD replacement preview.")
+            prepared = plan[2]
+            if validate_native_mesh(prepared["native_mesh"]) != prepared["native_mesh"]:
+                raise PrepError("candidate_changed", "CAD candidate values changed after review.")
+            result = self._publish_mesh_adoption(prepared, expected_revision=self.document.revision)
+            self._cad_mesh_replacement_plan = None
+            return {**result, "mesh_relationships": self.mesh_relationships()}
+
+    def cancel_cad_mesh_replacement(self, plan_id):
+        with self._lock:
+            plan = getattr(self, "_cad_mesh_replacement_plan", None)
+            if plan is not None and plan[0] == plan_id:
+                self._cad_mesh_replacement_plan = None
+
     def _prepare_mesh_replacement(self, resource_id, path):
         with self._lock:
             document = self._require()
@@ -160,34 +261,15 @@ class MeshRelationCommands:
                 incoming = new[keyword]
                 block = "".join(prepared.lines[incoming.start:incoming.stop])
                 candidate.restore(candidate.replaced_state(card.id, block))
-            # Validate geometry references across all INCLUDEs before publication.
-            trial = copy(self); trial.document = copy(document)
-            trial.document.resources = {**document.resources, resource_id: candidate}
-            trial._projection_cache = None; trial._projection_index = {}
-            view = trial.mesh_view()
-            if view["diagnostics"]:
-                raise PrepError("invalid_mesh", "Replacement introduces duplicate nodes or unresolved connectivity.", {"diagnostics": [dict(item) for item in view["diagnostics"]]})
-            identifiers = [cell["id"] for cell in view["cells"]]
-            if any(type(value) is not int or value < 1 for value in (*view["node_ids"], *identifiers)) or len(identifiers) != len(set(identifiers)):
-                raise PrepError("invalid_mesh", "Replacement requires positive node IDs and unambiguous global element IDs.")
+            view = self._mesh_replacement_view(resource_id, candidate.snapshot())
             old_projection = resource.mesh_projection()
             touched_nodes = set(old_projection["node_ids"])
             touched_elements = {cell["id"] for cell in old_projection["cells"]}
             touched_parts = {cell["part_id"] for cell in self.mesh_view()["cells"]
                              if cell["resource_id"] == resource_id or touched_nodes.intersection(cell["nodes"])}
-            relations = self._relations_resource().snapshot()
-            generation = relations["mesh_revisions"].get(resource_id, 0) + 1
-            relations["mesh_revisions"][resource_id] = generation
-            relations["replacement_sources"][resource_id] = {"sha256": sha256(raw).hexdigest(), "name": Path(path).name}
-            for deck in self._deck_resources():
-                for card in deck.cards:
-                    family = "/".join(card.keyword.upper().split("/")[1:3])
-                    if family not in GROUPS: continue
-                    members = self._integer_members(deck, card)
-                    affected = touched_nodes if family == "GRNOD/NODE" else touched_parts if family == "SURF/PART" else touched_elements
-                    if affected.intersection(members):
-                        relations["stale_targets"][card.id] = {"resource_id": deck.id, "mesh_resource_id": resource_id,
-                            "mesh_revision": generation, "family": family, "members": members}
+            targets = self._mesh_replacement_targets(touched_nodes, touched_elements, touched_parts)
+            relations, generation = self._mesh_replacement_relations(resource_id, targets,
+                {"sha256": sha256(raw).hexdigest(), "name": Path(path).name})
             plan_id = str(uuid4())
             self._mesh_replacement_plan = (plan_id, document.id, document.revision, self._document_epoch, resource_id, candidate.snapshot(), relations)
             return {"plan_id": plan_id, "document_id": document.id, "revision": document.revision,

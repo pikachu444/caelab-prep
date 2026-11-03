@@ -7,10 +7,10 @@ import json
 import threading
 
 from PySide6.QtCore import QObject, QThreadPool, Qt, Signal
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
     QFormLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem,
     QPushButton, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem,
-    QVBoxLayout, QWidget)
+    QTextBrowser, QVBoxLayout, QWidget)
 
 from .shell import FileTask
 from .widgets.numeric import NumericEdit
@@ -142,6 +142,7 @@ class SolverExportDialog(_FormDialog):
 class MeshCandidateDialog(QDialog):
     """Generate off the GUI thread, review, then commit once with a revision guard."""
     adopted = Signal(object)
+    sessionEvent = Signal(dict)
 
     def __init__(self, session, parent=None, *, enable_viewport=True, backend=None):
         super().__init__(parent)
@@ -153,6 +154,10 @@ class MeshCandidateDialog(QDialog):
         self._cancel = threading.Event()
         self._closing = False
         self._adopting = False
+        self._reviewing = self._presenting = False
+        self._running_job = False
+        self._replacement_plan = None
+        self._review_generation = 0
         self._stamp = session.describe()
         self.setWindowTitle("Mesh — review candidate")
         self._seed_recipe = None
@@ -242,17 +247,82 @@ class MeshCandidateDialog(QDialog):
         self.replace = QListWidget(); self.replace.setMaximumHeight(95)
         adopt_form.addRow("Replace parts\n(optional)", self.replace)
         self._fill_references()
+        self.replacement_details = QTextBrowser()
+        self.replacement_details.setObjectName("cadReplacementReview")
+        self.replacement_details.setMinimumHeight(120)
+        form_layout.addWidget(self.replacement_details)
+        self.replacement_reviewed = QCheckBox("Replacement reviewed")
+        self.replacement_reviewed.setToolTip("I reviewed the replacement and targets that will become stale.")
+        self.replacement_reviewed.setAccessibleName("Replacement and stale targets reviewed")
+        self.replacement_reviewed.toggled.connect(self._sync_adoption)
+        form_layout.addWidget(self.replacement_reviewed)
         scroll = QScrollArea(); scroll.setWidgetResizable(True); scroll.setWidget(panel); split.addWidget(scroll)
         split.setSizes([620, 480])
         self.error = QLabel(); self.error.setWordWrap(True); self.error.setObjectName("inputError"); layout.addWidget(self.error)
         buttons = QHBoxLayout(); buttons.addStretch()
+        self.review_button = QPushButton("Review replacement")
+        self.review_button.clicked.connect(self.review_replacement)
         self.adopt_button = QPushButton("Adopt candidate"); self.adopt_button.setObjectName("primaryAction"); self.adopt_button.setEnabled(False)
         self.close_button = QPushButton("Close")
         self.adopt_button.clicked.connect(self.adopt); self.close_button.clicked.connect(self.reject)
-        buttons.addWidget(self.adopt_button); buttons.addWidget(self.close_button); layout.addLayout(buttons)
+        buttons.addWidget(self.review_button); buttons.addWidget(self.adopt_button); buttons.addWidget(self.close_button); layout.addLayout(buttons)
         self.source_kind.currentIndexChanged.connect(self._source_changed)
         self.source.textChanged.connect(self._recipe_source_changed)
+        for field in (self.size, self.local_size): field.textChanged.connect(self._cad_inputs_changed)
+        for field in (self.dimension, self.policy): field.currentIndexChanged.connect(self._cad_inputs_changed)
+        for field in (self.material, self.section, self.length): field.currentIndexChanged.connect(self._invalidate_replacement)
+        self.replace.itemChanged.connect(self._invalidate_replacement)
+        self.local_entity.currentIndexChanged.connect(self._local_selection_changed)
+        self.sessionEvent.connect(self._session_changed)
+        self._unsubscribe = session.subscribe(self.sessionEvent.emit)
+        self.destroyed.connect(self._unsubscribe)
+        self.finished.connect(self._finished)
         self._source_controls()
+        self._sync_adoption()
+
+    def _selected_parts(self):
+        return [self.replace.item(row).data(Qt.ItemDataRole.UserRole) for row in range(self.replace.count())
+                if not self._structured() and self.replace.item(row).checkState() == Qt.CheckState.Checked]
+
+    def _sync_adoption(self):
+        replacement = bool(self._selected_parts())
+        ready = not self._running_job and self._task is None and self.candidate is not None and self.candidate.quality.passed
+        self.review_button.setVisible(replacement)
+        self.review_button.setEnabled(ready)
+        self.replacement_details.setVisible(replacement)
+        self.replacement_reviewed.setVisible(replacement)
+        self.replacement_reviewed.setEnabled(ready and self._replacement_plan is not None)
+        self.adopt_button.setText("Apply replacement" if replacement else "Adopt candidate")
+        self.adopt_button.setEnabled(ready and (not replacement or
+            (self._replacement_plan is not None and self.replacement_reviewed.isChecked())))
+
+    def _invalidate_replacement(self, *_):
+        if self._presenting: return
+        self._review_generation += 1
+        if self._replacement_plan is not None:
+            self.session.cancel_cad_mesh_replacement(self._replacement_plan["plan_id"])
+        self._replacement_plan = None
+        self.replacement_details.clear(); self.replacement_reviewed.setChecked(False)
+        self._sync_adoption()
+
+    def _session_changed(self, event):
+        if not self._adopting and any(event.get(key) != self._stamp.get(key)
+                for key in ("document_id", "revision", "document_epoch")):
+            self._invalidate_replacement()
+
+    def _finished(self, _):
+        self._invalidate_replacement()
+        self._unsubscribe()
+
+    def _cad_inputs_changed(self, *_):
+        if self._presenting or self._structured(): return
+        self._invalidate_candidate(keep_entities=True)
+        self.summary.setText("Mesh inputs changed. Generate a new candidate to check quality before adoption.")
+
+    def _local_selection_changed(self, *_):
+        if self._presenting: return
+        self._invalidate_replacement()
+        if not self._structured() and self.local_size.text().strip(): self._cad_inputs_changed()
 
     def _structured(self):
         return self.source_kind.currentData() == "structured_recipe"
@@ -282,11 +352,15 @@ class MeshCandidateDialog(QDialog):
         self._invalidate_candidate()
         self._source_controls()
 
-    def _invalidate_candidate(self):
+    def _invalidate_candidate(self, *, keep_entities=False):
+        self._invalidate_replacement()
         self.candidate = None
         self.error.clear(); self.quality.setRowCount(0)
         self.summary.setText("No candidate. Generation does not change the model.")
-        self.local_entity.clear(); self.local_entity.addItem("No patch selected" if self._structured() else "No local refinement", None)
+        if not keep_entities:
+            self.local_entity.blockSignals(True)
+            self.local_entity.clear(); self.local_entity.addItem("No patch selected" if self._structured() else "No local refinement", None)
+            self.local_entity.blockSignals(False)
         if self.viewport: self.viewport.set_mesh({"points": [], "node_ids": [], "cells": []})
         self._running(False)
 
@@ -297,8 +371,10 @@ class MeshCandidateDialog(QDialog):
         self.layers.blockSignals(True); self.layers.accept_value(""); self.layers.blockSignals(False)
 
     def _recipe_source_changed(self):
+        if self._presenting: return
         if self._structured():
             self._clear_divisions(); self._invalidate_candidate(); self._source_controls()
+        else: self._invalidate_candidate()
 
     def _set_divisions(self, recipe, source):
         self._clear_divisions()
@@ -362,19 +438,21 @@ class MeshCandidateDialog(QDialog):
         if path: self.output.setText(path)
 
     def _running(self, value):
+        self._running_job = value
         for widget in (*self._browse_buttons, self.source_kind, self.generate_button, self.open_button, self.source, self.output, self.size, self.dimension, self.policy, self.local_entity, self.local_size,
                        self.material, self.section, self.replace, self.preview_mode, self.quality, self.load_divisions_button, self.divisions, self.layers): widget.setEnabled(not value)
         self.length.setEnabled(not value and bool(self.candidate and self.candidate.length_unit == "unknown"))
         self.preview_mode.setEnabled(not value and bool(self.candidate and self.candidate.dimension == 3))
         self.cancel_job.setEnabled(value)
-        self.adopt_button.setEnabled(not value and self.candidate is not None and self.candidate.quality.passed)
+        self._sync_adoption()
         if self._structured():
             for widget in (self.size, self.dimension, self.policy, self.local_size, self.length, self.replace, self.preview_mode):
                 widget.setEnabled(False)
 
     def _start(self, function):
         if self._task is not None: return False
-        if not self._adopting:
+        if not self._adopting and not self._reviewing:
+            self._invalidate_replacement()
             self.candidate = None
             self.quality.setRowCount(0)
             self.local_entity.clear(); self.local_entity.addItem("No local refinement", None)
@@ -447,6 +525,30 @@ class MeshCandidateDialog(QDialog):
             self._adopting = False
             self.result = candidate
             self.adopted.emit(self.result); self.accept(); return
+        if self._reviewing:
+            self._reviewing = False
+            current = self.session.describe()
+            if (self._closing or self._cancel.is_set() or self._task_review_generation != self._review_generation or
+                    any(candidate[key] != current[key] for key in ("document_id", "revision", "document_epoch"))):
+                self.session.cancel_cad_mesh_replacement(candidate["plan_id"])
+                self._running(False)
+                if self._closing: super().reject()
+                else: self._show_error("The model or replacement inputs changed. Review the replacement again.")
+                return
+            self._replacement_plan = candidate
+            lines = [f"Model nodes: {candidate['old_node_count']} → {candidate['node_count']}",
+                     f"Model elements: {candidate['old_element_count']} → {candidate['element_count']}",
+                     "Replacement and stale markers form one Undo.", "", "Targets that will become stale:"]
+            lines += [f"{candidate['target_labels'][key]} · {value['family']} · {len(value['members'])} old members"
+                      for key, value in candidate["stale_targets"].items()]
+            if not candidate["stale_targets"]: lines.append("None")
+            lines += ["", "Affected conditions:"]
+            for condition in candidate["affected_conditions"]:
+                lines.append(candidate["condition_labels"][condition["card_id"]])
+            if not candidate["affected_conditions"]: lines.append("None")
+            lines += ["", "Old groups and conditions remain unchanged. Analysis export stays blocked until every stale target is explicitly reconnected. New boundary nodes are not added automatically; review the physical region and load distribution after reconnection."]
+            self.replacement_details.setPlainText("\n".join(lines))
+            self._running(False); return
         if self._closing: super().reject(); return
         if self._cancel.is_set(): self._running(False); self.summary.setText("Generation cancelled. The model is unchanged."); return
         self.present_candidate(candidate); self._running(False)
@@ -457,13 +559,21 @@ class MeshCandidateDialog(QDialog):
             self.candidate = None
             self.quality.setRowCount(0)
             if self.viewport: self.viewport.set_mesh({"points": [], "node_ids": [], "cells": []})
-        self._task = None; self._adopting = False; self.close_button.setEnabled(True); self._running(False)
+        self._task = None; self._adopting = self._reviewing = False; self.close_button.setEnabled(True)
+        self._invalidate_replacement(); self._running(False)
         if self._closing: super().reject(); return
         if stale: self.summary.setText("The target model changed. Reopen or regenerate the candidate before adoption.")
         elif self.candidate is None: self.summary.setText("No candidate was accepted. The model is unchanged.")
         self._show_error(exc)
 
     def present_candidate(self, candidate):
+        self._invalidate_replacement()
+        self._presenting = True
+        try: self._present_candidate(candidate)
+        finally: self._presenting = False
+        self._sync_adoption()
+
+    def _present_candidate(self, candidate):
         from ..application.structured_mesh import StructuredMeshCandidate
         structured = isinstance(candidate, StructuredMeshCandidate)
         if structured and candidate.dimension not in (2, 3):
@@ -591,21 +701,44 @@ class MeshCandidateDialog(QDialog):
         if self._task is not None or self.candidate is None: return False
         try:
             mesh = self.candidate.to_native_mesh(length_unit=self.length.currentData())
-            replaced = [self.replace.item(row).data(Qt.ItemDataRole.UserRole) for row in range(self.replace.count())
-                        if not self._structured() and self.replace.item(row).checkState() == Qt.CheckState.Checked]
+            replaced = self._selected_parts()
             material, section = self.material.currentData(), self.section.currentData()
             stamp = dict(self._stamp)
         except Exception as exc: self._show_error(exc); return False
+        if replaced:
+            if self._replacement_plan is None or not self.replacement_reviewed.isChecked():
+                self._show_error("Review the replacement and stale targets before applying it."); return False
+            plan = self._replacement_plan
+            publish = lambda: self.session.apply_cad_mesh_replacement(plan["plan_id"],
+                expected_document_id=plan["document_id"], expected_revision=plan["revision"])
+        else:
+            publish = lambda: self.session.adopt_mesh_candidate(mesh, material_id=material, property_id=section,
+                expected_document_id=stamp["document_id"], expected_revision=stamp["revision"],
+                expected_document_epoch=stamp.get("document_epoch"))
         self._adopting = True
-        self._start(lambda: self.session.adopt_mesh_candidate(mesh, material_id=material, property_id=section,
-            replace_part_ids=replaced or None, expected_document_id=stamp["document_id"], expected_revision=stamp["revision"],
-            expected_document_epoch=stamp.get("document_epoch")))
+        self._start(publish)
         self.cancel_job.setEnabled(False); self.close_button.setEnabled(False)
         self.summary.setText("Validating source assets and adopting the mesh…")
         return True
 
+    def review_replacement(self):
+        if self._task is not None or self.candidate is None or not self._selected_parts(): return False
+        self._invalidate_replacement()
+        try:
+            from ..cae_core import PrepError
+            current = self.session.describe()
+            if any(current[key] != self._stamp[key] for key in ("document_id", "revision", "document_epoch")):
+                raise PrepError("document_conflict", "The model changed. Reopen the candidate before reviewing replacement.")
+            mesh = self.candidate.to_native_mesh(length_unit=self.length.currentData())
+            parts, material, section = self._selected_parts(), self.material.currentData(), self.section.currentData()
+        except Exception as exc: self._show_error(exc); return False
+        self._reviewing = True; self._task_review_generation = self._review_generation
+        return self._start(lambda: self.session.plan_cad_mesh_replacement(mesh,
+            replace_part_ids=parts, material_id=material, property_id=section))
+
     def reject(self):
         if self._adopting: return
+        self._invalidate_replacement()
         if self._task is not None:
             self._closing = True; self._cancel.set(); self.cancel_job.setEnabled(False)
             self.error.setText("Stopping the mesh worker…"); return
@@ -655,7 +788,11 @@ class MeshWorkflow(QObject):
         if not self.host.session.describe().get("document_id"):
             self.host.statusBar().showMessage("Create or open a model, then create its material and section first."); return
         self.dialog = MeshCandidateDialog(self.host.session, self.host, enable_viewport=self.host.viewport is not None)
-        if self.dialog.exec(): self.host.refresh_document(rebuild_viewport=True)
+        if self.dialog.exec():
+            self.host.refresh_document(rebuild_viewport=True)
+            if self.dialog.result and self.dialog.result.get("mesh_relationships", {}).get("stale_targets"):
+                dialog = self.host.open_prepared_mesh()
+                if dialog is not None: dialog.tabs.setCurrentIndex(1)
 
     def export(self):
         if self.host._busy or not self.host._finish_pending_edits(): return

@@ -95,6 +95,18 @@ quad와 hex 밑면의 분할 수는 JSON을 선택한 뒤 **Load recipe division
 
 MSH는 2.2/4.1 ASCII에 한정합니다. binary·partition·periodic·data·parametric MSH와 미지원 요소 family는 거부합니다. 문서와 소스 길이 단위가 다르면 자동 환산하지 않습니다. 일반 warped quad, 임의 all-hex, 자동 중립면과 모든 접촉 프로파일은 지원 완료 범위가 아닙니다.
 
+<a id="cad-replacement"></a>
+
+### 참조된 CAD 메시 교체
+
+기존 CAD에서 채택한 PART를 크기 변경 후보로 교체하려면 같은 창에서 새 후보를 생성하거나 엽니다. 재료·단면을 선택하고 **Replace parts**에서 교체할 기존 PART를 고른 뒤 **Review replacement**를 누릅니다. 이 단계에서는 모델이 바뀌지 않습니다. 전후 절점·요소 수, stale이 될 그룹·표면과 영향 조건을 읽고 검토 체크를 한 뒤 **Apply replacement**로 확정합니다. 후보·크기·입력 경로·단위·재료·단면·PART 또는 문서가 바뀌면 검토를 다시 해야 합니다. 취소와 닫기는 검토 상태를 폐기합니다.
+
+교체는 기존 root에 CAD 후보 채택으로 만든 PART와 소유가 확인되는 요소에 한정합니다. 알려진 native 참조 범위·같은 길이 단위·후보 전체 품질을 요구하며, 외부 INCLUDE의 요소 소유나 미확인 참조·변환 범위를 추정하지 않습니다. 다른 요소의 BEAM 방향점으로 쓰는 절점과 잔존 절점의 이동 좌표는 보존합니다. 새 후보의 PART·절점 번호를 기존 번호로 자동 대응하지 않습니다.
+
+새 메시와 영향 그룹의 stale 표시는 한 번의 Undo로 되돌립니다. 원 그룹·조건 선언은 유지하고, 영향 대상이 있으면 기존 **Replace prepared mesh / reconnect targets…**의 재연결 탭을 엽니다. 옛 멤버마다 현재 typed 대상 또는 명시 Drop을 검토해야 하며 모두 해소하기 전 native 출력은 차단됩니다. 전체 old main의 일시 소실은 stale로 남길 수 있지만, 최종 TYPE7 표면·secondary 연결과 BCS/CLOAD/INIVEL 성분·빈 최종 집합 검사는 유지합니다. 새 경계 절점의 자동 추가·물리 영역 복원·CLOAD의 절점당 계수 보정은 하지 않습니다. 재연결 후 실제 경계와 하중 분포를 확인해야 합니다.
+
+개발 API는 `plan_cad_mesh_replacement(native, replace_part_ids=..., material_id=..., property_id=...)`와 `apply_cad_mesh_replacement(plan_id)`·`cancel_cad_mesh_replacement(plan_id)`입니다. plan은 문서·자원 상태에 묶인 봉인된 사본이며 Apply에서 자산도 다시 검증합니다. 기존 `adopt_mesh_candidate`의 참조된 직접 교체 거절은 유지합니다. 보관된 plate/cylinder의 1.5→1.2 후보 교체와 별도 2D TYPE7의 확인 범위·미확인은 [현재 상태](../CURRENT_STATE.md#cad-replacement-progress)를 따릅니다. Windows/VTK·frozen·solver 응답이나 전체 N18의 완료를 뜻하지 않습니다.
+
 <a id="meshing-criteria"></a>
 
 ### Meshing criteria와 출력 최소-edge 검사 (Python API)

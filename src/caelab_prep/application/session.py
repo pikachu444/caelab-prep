@@ -140,6 +140,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._projection_revision += 1
         self._import_plan = None
         self._mesh_replacement_plan = None
+        self._cad_mesh_replacement_plan = None
 
     @staticmethod
     def _path_collisions(paths: dict[str, str]) -> list[list[str]]:
@@ -433,8 +434,9 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                                            element_family=element_family),
                                            f"Create {element_family} property", expected_revision)
 
-    def _mesh_replacement_state(self, part_ids):
+    def _mesh_replacement_state(self, part_ids, *, allow_stale=False):
         """Remove only proven adoption-owned geometry; protect external node use."""
+        from ..radioss.assembly import REFERENCE_FREE_PAIRS, element_node_references, element_part_reference, inspect
         self._member_sequence(part_ids)
         resource = self._model_resource(None)
         selected, batches, blockers, unknown = {}, set(), [], []
@@ -448,9 +450,22 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             dependents, unverified = self._dependency_inventory(part_id)
             blockers.extend(dependents)
             unknown.extend(unverified)
+        if allow_stale:
+            if self._relations_resource().snapshot()["stale_targets"]:
+                raise PrepError("stale_mesh_targets", "Reconnect the previous replacement's targets before replacing another mesh.")
+            inspect(self._deck_resources())
+            unknown = [item for item in unknown if "/".join(item["keyword"].upper().split("/")[1:3]) not in REFERENCE_FREE_PAIRS]
         cells = [cell for item in self._deck_resources() for cell in item.mesh_projection()["cells"]]
         selected_nodes = {node for cell in cells if cell.get("part_id") in selected for node in cell["nodes"]}
-        shared_nodes = selected_nodes & {node for cell in cells if cell.get("part_id") not in selected for node in cell["nodes"]}
+        used_elsewhere = {node for cell in cells if cell.get("part_id") not in selected for node in cell["nodes"]}
+        for owner in self._deck_resources():
+            lines = owner.render().decode("latin1").splitlines()
+            for card in owner.cards:
+                words = card.keyword.upper().split("/")
+                if len(words) > 1 and words[1] == "BEAM" and element_part_reference(card.keyword) not in selected:
+                    for row in card.data:
+                        used_elsewhere.update(value for _, value in element_node_references("BEAM", lines[row]))
+        shared_nodes = selected_nodes & used_elsewhere
         potentially_removed = set(selected_nodes)
         for card in resource.cards:
             if card.keyword.upper().split("/")[1] != "NODE": continue
@@ -479,6 +494,13 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     continue
                 selected_elements = {cell["id"] for cell in cells if cell.get("part_id") in selected}
                 if selected_elements.intersection(identifiers): blockers.append(item)
+        targets = None
+        if allow_stale:
+            elements = {cell["id"] for cell in cells if cell.get("part_id") in selected}
+            parts = set(selected) | {cell["part_id"] for cell in cells
+                                    if cell.get("part_id") is not None and potentially_removed.intersection(cell["nodes"])}
+            targets = self._mesh_replacement_targets(potentially_removed, elements, parts)
+            blockers = [item for item in blockers if item["id"] not in targets]
         if blockers or unknown:
             raise PrepError("mesh_replacement_in_use", "Replacement is blocked by existing groups/surfaces/conditions or unverified references.",
                             {"dependents": list({item["id"]: item for item in blockers}.values()),
@@ -497,12 +519,13 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         for owner in self._deck_resources():
             for card in owner.cards:
                 words = card.keyword.upper().split("/")
-                if words[1] in element_roots and len(words) > 2 and words[2].isdigit() and int(words[2]) in selected:
+                if words[1] in element_roots and element_part_reference(card.keyword) in selected:
+                    if not words[2].isdigit():
+                        raise PrepError("mesh_replacement_unsupported", "Normalize the selected element PART header before replacement; its geometry projection is incomplete.", {"card_id": card.id})
                     marker = re.search(r"^# CAELab adopted mesh ([0-9a-f-]+); part ([0-9a-f-]+)$", self.card_text(card.id), re.M)
                     if owner.id != resource.id or marker is None or marker.group(1) not in batches:
                         raise PrepError("mesh_replacement_unsupported", "An element block has no proven ownership by the selected adopted mesh.", {"card_id": card.id})
                     remove(card)
-        used_elsewhere = {node for cell in cells if cell.get("part_id") not in selected for node in cell["nodes"]}
         for card in resource.cards:
             if card.keyword.upper().split("/")[1] != "NODE": continue
             text = self.card_text(card.id)
@@ -527,8 +550,12 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 if created is not None: created["text"] = replacement
                 else: state["replaced"][card.id] = replacement
                 state["patches"].pop(card.id, None)
-        return state, {"replaced_part_ids": list(part_ids), "removed_card_ids": removed_cards,
-                       "removed_node_ids": sorted(removed_nodes), "preserved_shared_node_ids": sorted(shared_nodes)}
+        state["node_positions"] = {key: value for key, value in state["node_positions"].items()
+                                   if int(key) not in removed_nodes}
+        details = {"replaced_part_ids": list(part_ids), "removed_card_ids": removed_cards,
+                   "removed_node_ids": sorted(removed_nodes), "preserved_shared_node_ids": sorted(shared_nodes)}
+        if targets is not None: details["_replacement_targets"] = targets
+        return state, details
 
     def adopt_mesh_candidate(self, native_mesh, *, material_id, property_id, name=None,
                              replace_part_ids=None, expected_revision=None, expected_document_id=None,
@@ -543,15 +570,16 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             return self._publish_mesh_adoption(prepared, expected_revision=expected_revision)
 
     def _prepare_mesh_adoption(self, native_mesh, *, material_id, property_id, name=None,
-                               replace_part_ids=None, source_declaration=None):
+                               replace_part_ids=None, source_declaration=None, allow_stale=False):
         """Validate and build private states; publication remains a separate command."""
         from .mesh_candidates import validate_native_mesh, triangle_quality, tetrahedron_quality
         with self._lock:
             self._check_model_edit(None, None)
             if any(card["keyword"].upper().startswith("/TRANSFORM") for card in self.list_cards()):
                 raise PrepError("unsupported_mesh_transform", "Mesh adoption does not reinterpret existing native transformation scopes.")
-            replacement_state, replacement_details = (self._mesh_replacement_state(replace_part_ids)
+            replacement_state, replacement_details = (self._mesh_replacement_state(replace_part_ids, allow_stale=allow_stale)
                 if replace_part_ids is not None else (None, {}))
+            replacement_targets = replacement_details.pop("_replacement_targets", None)
             native_mesh = validate_native_mesh(native_mesh)
             declaration_text = None
             if source_declaration is not None:
@@ -750,7 +778,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 mesh_uuid=native_mesh.mesh_uuid, geometry_resource_uuid=native_mesh.geometry_resource_uuid,
                 omitted_boundary_cells=native_mesh.omitted_boundary_cells, unused_node_ids=list(native_mesh.unused_node_ids), **replacement_details)
             return {"resource_id": resource.id, "state": state, "result": result,
-                    "protected_sources": protected_sources, "native_mesh": native_mesh}
+                    "protected_sources": protected_sources, "native_mesh": native_mesh,
+                    "replacement_targets": replacement_targets}
 
     def _publish_mesh_adoption(self, prepared, *, expected_revision=None):
         # Observers may save synchronously when the committed geometry is published.
@@ -759,8 +788,15 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         resource = self.document.resources[prepared["resource_id"]]
         result = prepared["result"]
         try:
-            change = self.dispatcher.execute(resource.id, prepared["state"], "Adopt mesh candidate",
-                object_ids=tuple(result["card_ids"]), expected_revision=expected_revision, kind="structure")
+            if "relations" in prepared:
+                change = self.dispatcher.execute_many(
+                    {resource.id: prepared["state"], self._relations_resource().id: prepared["relations"]},
+                    "Replace CAD mesh and mark targets stale",
+                    object_ids=tuple(result["card_ids"]) + tuple(prepared["replacement_targets"]),
+                    expected_revision=expected_revision, kind="structure")
+            else:
+                change = self.dispatcher.execute(resource.id, prepared["state"], "Adopt mesh candidate",
+                    object_ids=tuple(result["card_ids"]), expected_revision=expected_revision, kind="structure")
         except Exception:
             self._source_paths = previous_sources
             raise
