@@ -86,17 +86,28 @@ def target_review_text(session, plan, *, group_heading=True):
 def reconnection_review_text(session, plan):
     """Use stored old IDs at a stale boundary, without inventing old geometry."""
     labels = {card["id"]: f"{card['title'] or card['keyword']} [{card['keyword']}]" for card in session.list_cards()}
-    lines = ["Final explicit node targets", "Old entries below are stored native IDs; historical node ownership and geometry are not reconstructed.",
+    drops = any(row.get("dropped_old_native_ids") for row in plan["links"])
+    ownership = "ownership" if drops else "node ownership"
+    lines = ["Final explicit targets and member removals" if drops else "Final explicit node targets", f"Old entries below are stored native IDs; historical {ownership} and geometry are not reconstructed.",
              "Repeated targets form one member only with your explicit permission. Native condition values stay unchanged.", plan["before_basis"]]
     for row in plan["links"]:
+        counts = (f"{row['dropped_count']} explicitly removed; {row['coalesced_count']} repeated links coalesced."
+                  if row.get("dropped_old_native_ids") else f"{row['collapsed_count']} collapsed links.")
         lines.extend(("", labels.get(row["group_id"], row["group_id"]),
-            f"{row['old_link_count']} old links → {row['unique_target_count']} unique current targets; {row['collapsed_count']} collapsed links."))
+            f"{row['old_link_count']} old links → {row['unique_target_count']} unique current targets; {counts}"))
+        if row.get("dropped_old_native_ids"):
+            lines.append(f"Remove these old IDs from the group: {row['dropped_old_native_ids']}")
         lines.append(f"Current card declaration: {row['current_declared_native_ids']} → final set: {row['proposed_native_ids']}")
         if row["current_declared_native_ids"] != row["old_native_ids"]:
             lines.append(f"Current card declaration differs from saved old links: {row['old_native_ids']}")
         for link in row["mapping"]:
-            target = link["target"]; resource = session.document.resources[target["resource_id"]]
-            lines.append(f"Old ID {link['old_native_id']} → node {target['local_id']} in {resource.name} ({resource.id})")
+            target = link["target"]
+            if isinstance(target, dict):
+                resource = session.document.resources[target["resource_id"]]
+                lines.append(f"Old ID {link['old_native_id']} → {target['entity_kind']} {target['local_id']} in {resource.name} ({resource.id})")
+            else:
+                resource = session._find_card(target)
+                lines.append(f"Old ID {link['old_native_id']} → {labels.get(target, target)} in {resource.name} ({resource.id})")
     lines.extend(("", "Affected conditions"))
     for row in plan["conditions"]:
         lines.extend(("", labels.get(row["condition_id"], row["keyword"])))

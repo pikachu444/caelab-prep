@@ -201,14 +201,15 @@ class MeshRelationCommands:
         """
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
-            if isinstance(targets, dict) and any(isinstance(value, dict) and value.get("coalesce_duplicates") is True for value in targets.values()):
-                raise PrepError("review_required", "Prepare and apply a reviewed node coalescence candidate.")
+            if isinstance(targets, dict) and any(isinstance(value, dict) and
+                    (value.get("coalesce_duplicates") is True or "drop_members" in value) for value in targets.values()):
+                raise PrepError("review_required", "Prepare and apply a reviewed coalescence or member-removal candidate.")
             states, changed_objects, _, _ = self._prepare_mesh_reconnection(targets)
             changed = self.dispatcher.execute_many(states, "Reconnect explicit mesh targets", object_ids=tuple(changed_objects),
                 expected_revision=self.document.revision, kind="structure")
             return {**self.describe(), "mesh_relationships": self.mesh_relationships(), "change": changed.to_dict()}
 
-    def _prepare_mesh_reconnection(self, targets, *, allow_coalescence=False):
+    def _prepare_mesh_reconnection(self, targets, *, allow_coalescence=False, allow_drop=False):
         if not isinstance(targets, dict) or not targets:
             raise PrepError("invalid_reference", "Provide explicit replacement memberships for stale target UUIDs.")
         relations = self._relations_resource().snapshot(); candidates = {}; changed_objects = []; links = []
@@ -217,8 +218,9 @@ class MeshRelationCommands:
                 raise PrepError("invalid_reference", "The target is not marked stale.", {"card_id": card_id})
             resource = self._find_card(card_id); card = resource.card(card_id)
             stale = relations["stale_targets"][card_id]
-            permitted = ({"mesh_revision", "mapping"}, {"mesh_revision", "mapping", "coalesce_duplicates"}) if allow_coalescence else ({"mesh_revision", "mapping"},)
-            if (not isinstance(replacement, dict) or set(replacement) not in permitted
+            required = {"mesh_revision", "mapping"}
+            permitted = required | ({"coalesce_duplicates"} if allow_coalescence else set()) | ({"drop_members"} if allow_drop else set())
+            if (not isinstance(replacement, dict) or not required <= set(replacement) <= permitted
                     or type(replacement["mesh_revision"]) is not int or replacement["mesh_revision"] != stale["mesh_revision"]
                     or replacement["mesh_revision"] != relations["mesh_revisions"].get(stale["mesh_resource_id"])
                     or not isinstance(replacement["mapping"], dict)):
@@ -229,9 +231,20 @@ class MeshRelationCommands:
                 raise PrepError("stale_reference_mapping", "A dependent mesh generation changed; review current geometry.")
             if any(type(key) is not int or key < 1 for key in mapping):
                 raise PrepError("invalid_reference", "Correspondence keys must be original positive native IDs.")
-            if set(mapping) != set(stale["members"]):
+            dropped = replacement.get("drop_members", ())
+            if (not isinstance(dropped, (list, tuple)) or any(type(value) is not int or value < 1 for value in dropped)
+                    or len(set(dropped)) != len(dropped) or not set(dropped) <= set(stale["members"])):
+                raise PrepError("invalid_member_drop", "Drop requires distinct original positive native member IDs.")
+            dropped = set(dropped)
+            if dropped:
+                self._member_sequence(list(stale["members"]))
+            if set(mapping) & dropped:
+                raise PrepError("invalid_member_drop", "An old member cannot be both mapped and dropped.")
+            if set(mapping) | dropped != set(stale["members"]):
                 raise PrepError("incomplete_reference_mapping", "Map every original member explicitly; missing targets remain stale.")
-            members = [mapping[value] for value in stale["members"]]
+            members = [mapping[value] for value in stale["members"] if value not in dropped]
+            if not members:
+                raise PrepError("empty_reconnected_target", "A final target group must retain at least one current member.")
             family = stale["family"]
             coalesce = replacement.get("coalesce_duplicates", False)
             if type(coalesce) is not bool or (coalesce and family != "GRNOD/NODE"):
@@ -252,13 +265,17 @@ class MeshRelationCommands:
                     identifiers = list(dict.fromkeys(identifiers))
                 identifiers = self._node_members(identifiers)
             else: identifiers, _, _ = self._element_members(members, family)
-            links.append({"group_id": card_id, "family": family,
+            link = {"group_id": card_id, "family": family,
                 "old_native_ids": list(stale["members"]),
                 "current_declared_native_ids": self._integer_members(resource, card),
                 "proposed_native_ids": list(identifiers),
-                "mapping": [{"old_native_id": value, "target": deepcopy(mapping[value])} for value in stale["members"]],
+                "mapping": [{"old_native_id": value, "target": deepcopy(mapping[value])} for value in stale["members"] if value not in dropped],
                 "old_link_count": len(stale["members"]), "unique_target_count": len(identifiers),
-                "collapsed_count": len(stale["members"]) - len(identifiers), "coalescence_requested": coalesce})
+                "collapsed_count": len(stale["members"]) - len(identifiers), "coalescence_requested": coalesce}
+            if dropped:
+                link.update(dropped_old_native_ids=[value for value in stale["members"] if value in dropped],
+                            dropped_count=len(dropped), coalesced_count=len(members) - len(identifiers))
+            links.append(link)
             candidate = candidates.setdefault(resource.id, copy(resource))
             # Only member rows are replaced; preserve title, comments and
             # non-target card bytes, including comments inside the group.
@@ -295,12 +312,12 @@ class MeshRelationCommands:
         return states, tuple(changed_objects), trial, links
 
     def plan_mesh_reconnection(self, targets, *, expected_revision=None, expected_document_id=None):
-        """Review final node correspondences, including explicit many-to-one sets."""
+        """Review explicit correspondences and optional old-member removals."""
         from .reconnection_review import reconnection_review
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
-            states, objects, trial, links = self._prepare_mesh_reconnection(targets, allow_coalescence=True)
-            if any(row["family"] != "GRNOD/NODE" for row in links):
+            states, objects, trial, links = self._prepare_mesh_reconnection(targets, allow_coalescence=True, allow_drop=True)
+            if any(row["family"] != "GRNOD/NODE" for row in links) and not any(row.get("dropped_old_native_ids") for row in links):
                 raise PrepError("unsupported_reconnection_review", "This reviewed path supports explicit node groups; use the existing direct path for other families.")
             report = reconnection_review(self, trial, links)
             plan_id = str(uuid4())
@@ -315,7 +332,7 @@ class MeshRelationCommands:
             if plan is None or plan[0] != plan_id or plan[1] != self._mesh_edit_stamp():
                 raise PrepError("stale_reference_mapping", "Prepare a fresh reconnection review against the current document and sources.")
             _, _, states, objects = plan
-            changed = self.dispatcher.execute_many(states, "Apply reviewed explicit node targets", object_ids=objects,
+            changed = self.dispatcher.execute_many(states, "Apply reviewed explicit targets", object_ids=objects,
                 expected_revision=self.document.revision, kind="structure")
             if getattr(self, "_mesh_reconnection_plan", None) is plan:
                 self._mesh_reconnection_plan = None
