@@ -71,6 +71,7 @@ class MeshViewport(QWidget):
         self._part_cells = {}
         self._part_nodes = {}
         self._part_slots = {}
+        self._part_colors = {}
         self._cell_parts = ()
         self._element_index = {}
         self._node_index = {}
@@ -246,6 +247,8 @@ class MeshViewport(QWidget):
         self._cell_parts = tuple(cell_parts)
         self._part_cells = {part: np.asarray(indices, dtype=np.int64) for part, indices in part_cells.items()}
         self._part_slots = part_slots
+        self._part_colors = {part: "#%02x%02x%02x" % tuple(palette[slot % len(palette)])
+                             for part, slot in part_slots.items() if part is not None}
         self._part_data, self._part_nodes = {}, {}
         visible = vtk.vtkMultiBlockDataSet(); visible.SetNumberOfBlocks(len(part_slots))
         for part, indices in self._part_cells.items():
@@ -286,6 +289,10 @@ class MeshViewport(QWidget):
                 raise ValueError("The part belongs to another document")
             keys.add(part_key(reference))
         return keys
+
+    def part_colors(self):
+        """Read-only presentation colours from the same slots as VTK scalars."""
+        return dict(self._part_colors)
 
     def hide_parts(self, part_refs):
         """Hide qualified parts without changing document selection or history."""

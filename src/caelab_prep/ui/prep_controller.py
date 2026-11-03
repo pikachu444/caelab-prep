@@ -63,6 +63,7 @@ class PrepController:
         self._source_path = None
         self._selected_card_id = None
         self._editor_revision = None
+        self._card_text_draft = None
         self._replacement_conflict = False
         self._pending_selection = False
         self._updating = False
@@ -253,6 +254,7 @@ class PrepController:
                     self._viewport_diagnostic(f"Mesh display failed: {exc}")
             if self.viewport is not None and summary.get("document_id"):
                 self.viewport.set_selection(self.session.selection())
+            self._refresh_tree_appearances()
             self._last_presented_document = summary.get("document_id")
             self._last_presented_epoch = summary.get("document_epoch")
             self._last_presented_revision = summary.get("revision", 0)
@@ -269,9 +271,11 @@ class PrepController:
                              enabled={"file.save": loaded and editable, "file.save_as": loaded and editable,
                                       "file.export": loaded and editable, "edit.undo": editable,
                                       "edit.redo": editable, "edit.reload": loaded})
-        self._form_host.setEnabled(loaded and not self._busy)
-        self.apply_vector_button.setEnabled(loaded and not self._busy)
-        self.curve_table.setEnabled(loaded and not self._busy)
+        form_enabled = loaded and not self._busy and self._card_text_draft is None
+        self._form_host.setEnabled(form_enabled)
+        self.apply_vector_button.setEnabled(form_enabled)
+        self.curve_table.setEnabled(form_enabled)
+        self.curve_plot.setEnabled(form_enabled)
         self.model_tree.setEnabled(loaded and not self._busy)
         self.model_filter.setEnabled(loaded and not self._busy)
         if self.viewport:
@@ -397,7 +401,36 @@ class PrepController:
         self.viewport.show_all_parts()
         if self._display_state.hidden:
             self.viewport.hide_parts(tuple(self._display_state.hidden))
+        self._refresh_tree_appearances()
         self._refresh_actions()
+
+    def _refresh_tree_appearances(self):
+        from .widgets.tree import TreeAppearance
+        from .viewport import part_key
+        color_query = getattr(self.viewport, "part_colors", None)
+        colors = color_query() if color_query is not None else {}
+        appearances = {}
+        for node in self._tree_nodes:
+            if node.group != "Parts":
+                continue
+            key = part_key(node.ref)
+            if key in colors:
+                hidden = (node.ref.resource_id, node.ref.native_scope) in self._display_state.hidden
+                appearances[node.ref] = TreeAppearance(visible=not hidden, color=colors[key])
+        self.model_tree.update_appearances(appearances)
+
+    def _tree_visibility_requested(self, ref, visible):
+        if self._busy or self.viewport is None or ref not in self._card_refs.values():
+            return
+        if not any(node.ref == ref and node.group == "Parts" for node in self._tree_nodes):
+            return
+        key = (ref.resource_id, ref.native_scope)
+        hidden = set(self._display_state.hidden)
+        if visible:
+            hidden.discard(key)
+        else:
+            hidden.add(key)
+        self._display_state.set_hidden(hidden)
 
     def _hide_selected(self):
         if self.viewport is not None and self._finish_pending_edits():
@@ -484,9 +517,76 @@ class PrepController:
         return self._commit_field(name, value)
 
     def _submit_properties(self, values):
+        if self._card_text_draft is not None:
+            raise ValueError("Apply or cancel TEXT before editing FORM.")
         ref = self._card_refs[self._selected_card_id]
         units = {name: unit for name, unit in self.property_editor.units().items() if name in values}
         return self.provider.submit(SetProperties(ref, values, self._editor_revision, units=units))
+
+    def _present_card_source(self, ref=None):
+        if self._card_text_draft is not None:
+            return
+        source = self.session.card_text(ref.object_id) if ref is not None else ""
+        available = False
+        if ref is not None:
+            from ..application.card_text import prepare_card_text
+            try:
+                prepare_card_text(self.provider, ref)
+                available = True
+            except Exception:
+                # Unsupported native layouts remain viewable without inventing
+                # a writable contract for them.
+                pass
+        preview = source
+        if len(preview) > 100_000:
+            preview = preview[:100_000] + "\n… Preview truncated. Edit supported values opens the complete card."
+        self.card_source.present(preview, available=available)
+
+    def _begin_card_text(self):
+        if self._busy or self._replacement_conflict or self.modeling.active or not self._finish_pending_edits():
+            return False
+        ref = self._card_refs.get(self._selected_card_id)
+        if ref is None:
+            return False
+        from ..application.card_text import prepare_card_text
+        try:
+            self._card_text_draft = prepare_card_text(self.provider, ref)
+        except Exception as exc:
+            self.card_source.show_error(getattr(exc, "message", str(exc)))
+            return False
+        self.card_source.begin(self.session.card_text(ref.object_id))
+        self._refresh_actions()
+        return True
+
+    def _apply_card_text(self):
+        draft = self._card_text_draft
+        if draft is None:
+            return True
+        if self._busy or self._replacement_conflict:
+            return False
+        try:
+            with self.session._lock:
+                changes = draft.changes(self.provider, self.raw_source.toPlainText())
+                if changes:
+                    # Keep epoch validation and publication atomic, including
+                    # reopening the same saved document at the same revision.
+                    self.provider.submit(SetProperties(draft.target, changes, draft.revision))
+        except Exception as exc:
+            self.card_source.show_error(getattr(exc, "message", str(exc)))
+            self._show_error(exc)
+            return False
+        self._card_text_draft = None
+        self.refresh_document()
+        self._consume_pending_selection()
+        self.statusBar().showMessage("TEXT applied" if changes else "TEXT unchanged", 5000)
+        return True
+
+    def _cancel_card_text(self):
+        self._card_text_draft = None
+        if self._replacement_conflict:
+            self._replacement_conflict = False
+        self.refresh_document(rebuild_viewport=True)
+        self._consume_pending_selection()
 
     def _review_membership(self, spec, values):
         from .group_members import review_membership
@@ -629,9 +729,18 @@ class PrepController:
             drafts["@units"] = changed_units
         if self.property_editor.context_changed:
             drafts["@quantities"] = self.property_editor.context_draft_state()
+        if self._card_text_draft is not None:
+            drafts["@card_text"] = (self._card_text_draft, self.raw_source.toPlainText(),
+                                    self.raw_source.textCursor().position())
         return drafts
 
     def _restore_text_drafts(self, drafts):
+        if "@card_text" in drafts:
+            self._card_text_draft, text, position = drafts["@card_text"]
+            self.card_source.begin(text)
+            cursor = self.raw_source.textCursor()
+            cursor.setPosition(min(position, len(text)))
+            self.raw_source.setTextCursor(cursor)
         choices = {name: value for name, value in drafts.get("@properties", {}).items()
                    if name in self.property_editor.specs and self.property_editor.specs[name].kind == "choice"}
         self._refresh_property_context(choices)
@@ -641,7 +750,7 @@ class PrepController:
             if selector is not None and selector.findText(unit) >= 0:
                 selector.setCurrentText(unit)
         for key, text in drafts.items():
-            if key in ("@units", "@quantities"):
+            if key in ("@units", "@quantities", "@card_text"):
                 continue
             if key == "@properties":
                 for name, raw in text.items():
@@ -695,9 +804,12 @@ class PrepController:
                 return
         if self._replacement_conflict:
             self._replacement_conflict = False
+            self._card_text_draft = None
             self.refresh_document(rebuild_viewport=True)
         else:
+            self._card_text_draft = None
             self._refresh_fields()
+            self._refresh_actions()
         self._consume_pending_selection()
 
     def _finish_pending_edits(self):
@@ -706,6 +818,11 @@ class PrepController:
             return False
         if self._replacement_conflict:
             self._show_error(ValueError("Reload properties (Ctrl+R) before continuing with the replaced document."))
+            return False
+        if self._card_text_draft is not None:
+            self.property_tabs.setCurrentIndex(1)
+            self.card_source.show_error("Apply or cancel TEXT before changing selection, saving or continuing.")
+            self.raw_source.setFocus()
             return False
         if self._deferred_property_drafts():
             try:
@@ -762,6 +879,7 @@ class PrepController:
 
     def _discard_pending_edits(self):
         self.modeling.cancel()
+        self._card_text_draft = None
         self._replacement_conflict = False
         self.refresh_document(rebuild_viewport=True)
         self._consume_pending_selection()

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from PySide6.QtCore import QItemSelectionModel, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (QAbstractItemView, QHeaderView, QStyledItemDelegate,
-                              QStyleOptionViewItem, QTreeView)
+                              QStyle, QStyleOptionViewItem, QTreeView)
 
 from ..design import TOKENS, icon
 
@@ -16,6 +16,43 @@ def field(item, name, default=None):
 
 _GROUP = int(Qt.ItemDataRole.UserRole) + 1
 _COUNT = _GROUP + 1
+
+
+@dataclass(frozen=True)
+class TreeAppearance:
+    """Host-supplied display state; changing it does not edit the document."""
+
+    visible: bool | None = None
+    color: str | None = None
+
+    def __post_init__(self):
+        if self.visible is not None and type(self.visible) is not bool:
+            raise ValueError("Visibility must be a boolean or None")
+        if self.color is not None and (not isinstance(self.color, str) or not QColor(self.color).isValid()):
+            raise ValueError("Color must be a valid Qt color string or None")
+
+
+class _FittingDelegate(QStyledItemDelegate):
+    """Keep each presentation's density while fitting its actual text and icons."""
+
+    def __init__(self, delegate, parent):
+        super().__init__(parent)
+        self.delegate = delegate
+        delegate.setParent(self)
+
+    def paint(self, painter, option, index):
+        self.delegate.paint(painter, option, index)
+
+    def sizeHint(self, option, index):
+        hint = self.delegate.sizeHint(option, index)
+        native = QStyleOptionViewItem(option)
+        self.initStyleOption(native, index)
+        content_height = native.fontMetrics.height()
+        if index.data(Qt.ItemDataRole.DecorationRole) is not None:
+            content_height = max(content_height, native.decorationSize.height())
+        if index.data(Qt.ItemDataRole.CheckStateRole) is not None:
+            content_height = max(content_height, self.parent().style().pixelMetric(QStyle.PixelMetric.PM_IndicatorHeight))
+        return QSize(hint.width(), max(hint.height(), content_height + 2))
 
 
 class _ObjectDelegate(QStyledItemDelegate):
@@ -73,12 +110,14 @@ class _TreeViewState:
         return cls(tree.selected_refs(), tree.selected_ref(),
                    {model.item(row).text(): tree.isExpanded(model.item(row).index())
                     for row in range(model.rowCount())},
-                   tuple(tree.columnWidth(column) for column in range(3)) if model.rowCount() else (180, 60, 95),
+                   tuple(tree.columnWidth(column) if not tree.isColumnHidden(column) else None
+                         for column in range(model.columnCount())),
                    tree.verticalScrollBar().value())
 
     def restore(self, tree, groups):
         for column, width in enumerate(self.widths):
-            tree.setColumnWidth(column, width)
+            if width is not None:
+                tree.setColumnWidth(column, width)
         for label, item in groups.items():
             tree.setExpanded(item.index(), self.expanded.get(label, True))
         tree.select_refs(self.selected, self.active)
@@ -88,6 +127,7 @@ class _TreeViewState:
 class ModelTree(QTreeView):
     nodeSelected = Signal(object)
     selectedRefsChanged = Signal(object)
+    visibilityRequested = Signal(object, bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -105,19 +145,61 @@ class ModelTree(QTreeView):
         self.setIndentation(12)
         self.setTextElideMode(Qt.TextElideMode.ElideRight)
         self.setItemDelegate(_ObjectDelegate(self))
-        self._model = QStandardItemModel(0, 3, self)
-        self._model.setHorizontalHeaderLabels(["Name", "Type", "ID"])
+        self._model = QStandardItemModel(0, 5, self)
+        self._model.setHorizontalHeaderLabels(["Name", "Type", "ID", "Visible", "Color"])
         self.setModel(self._model)
         self.header().setStretchLastSection(False)
-        self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
-        self.header().setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)
+        for column, width in enumerate((180, 60, 95, 40, 40)):
+            self.header().setSectionResizeMode(column, QHeaderView.ResizeMode.Interactive)
+            self.setColumnWidth(column, width)
+        self.setColumnHidden(3, True)
+        self.setColumnHidden(4, True)
         self.header().setMinimumSectionSize(40)
         self._indices, self._resetting = {}, False
+        self._appearances = {}
+        self._pressed_visibility = None
+        self._name_width = None
+        self._sizing_columns = False
+        self.header().sectionResized.connect(self._column_resized)
+        self.header().geometriesChanged.connect(self._fit_name_column)
         self.selectionModel().currentChanged.connect(self._selected)
         self.selectionModel().selectionChanged.connect(self._selection_changed)
 
-    def set_nodes(self, nodes):
+    def _column_resized(self, column, old_width, width):
+        if self._sizing_columns or self._resetting:
+            return
+        if column == 0:
+            self._name_width = max(100, width)
+        self._fit_name_column()
+
+    def _fit_name_column(self):
+        if self._sizing_columns or self._resetting:
+            return
+        width = self._name_width
+        if width is None:
+            width = self.viewport().width() - sum(self.columnWidth(column)
+                for column in range(1, self._model.columnCount()) if not self.isColumnHidden(column))
+        width = max(100, width)
+        if self.columnWidth(0) == width:
+            return
+        self._sizing_columns = True
+        try:
+            self.setColumnWidth(0, width)
+        finally:
+            self._sizing_columns = False
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._fit_name_column()
+
+    def setItemDelegate(self, delegate):
+        previous = getattr(self, "_sizing_delegate", None)
+        self._sizing_delegate = _FittingDelegate(delegate, self)
+        super().setItemDelegate(self._sizing_delegate)
+        if previous is not None:
+            previous.deleteLater()
+
+    def set_nodes(self, nodes, *, appearances=None):
         nodes = list(nodes)
         state = _TreeViewState.capture(self)
         self._resetting = True
@@ -128,7 +210,7 @@ class ModelTree(QTreeView):
             for node in nodes:
                 group = str(field(node, "group", "Objects"))
                 if group not in groups:
-                    cells = [QStandardItem(group), QStandardItem(), QStandardItem()]
+                    cells = [QStandardItem(group)] + [QStandardItem() for _ in range(4)]
                     for cell in cells:
                         cell.setData(True, _GROUP)
                         cell.setEditable(False)
@@ -136,9 +218,10 @@ class ModelTree(QTreeView):
                     self._model.appendRow(cells)
                     groups[group] = cells[0]
                 ref = field(node, "ref")
-                native = field(ref, "native_scope") or field(ref, "object_id", "")
+                native = field(ref, "native_scope") or ""
                 cells = [QStandardItem(icon(field(node, "icon", "card")), str(field(node, "label", ""))),
-                         QStandardItem(str(field(ref, "kind", ""))), QStandardItem(str(native))]
+                         QStandardItem(str(field(ref, "kind", ""))), QStandardItem(str(native)),
+                         QStandardItem(), QStandardItem()]
                 cells[0].setData(ref, Qt.ItemDataRole.UserRole)
                 cells[0].setToolTip(str(field(node, "tooltip", "") or field(node, "label", "")))
                 cells[2].setToolTip(str(native))
@@ -148,12 +231,84 @@ class ModelTree(QTreeView):
                 self._indices[ref] = cells[0]
             for item in groups.values():
                 item.setData(item.rowCount(), _COUNT)
-            self.setColumnHidden(2, not any(field(field(node, "ref"), "native_scope") for node in nodes))
             state.restore(self, groups)
-            if not self.isColumnHidden(2) and self.columnWidth(2) < 95:
-                self.setColumnWidth(2, 95)
+            self.setColumnHidden(2, not any(field(field(node, "ref"), "native_scope") for node in nodes))
+            self._appearances = {}
+            self.update_appearances(appearances or {})
         finally:
             self._resetting = False
+        self._fit_name_column()
+
+    def update_appearances(self, mapping):
+        """Replace the host's appearance snapshot without rebuilding tree rows."""
+        appearances = {ref: value for ref, value in mapping.items() if ref in self._indices}
+        for ref, item in self._indices.items():
+            appearance = appearances.get(ref, TreeAppearance())
+            if appearance == self._appearances.get(ref, TreeAppearance()):
+                continue
+            visible = self._model.itemFromIndex(item.index().siblingAtColumn(3))
+            visible.setData(None if appearance.visible is None else
+                            Qt.CheckState.Checked if appearance.visible else Qt.CheckState.Unchecked,
+                            Qt.ItemDataRole.CheckStateRole)
+            text = "" if appearance.visible is None else "Visible" if appearance.visible else "Hidden"
+            visible.setToolTip(text)
+            visible.setData(text, Qt.ItemDataRole.AccessibleTextRole)
+            color = self._model.itemFromIndex(item.index().siblingAtColumn(4))
+            color.setData(QColor(appearance.color) if appearance.color is not None else None,
+                          Qt.ItemDataRole.DecorationRole)
+            color.setToolTip(appearance.color or "")
+            color.setData(appearance.color or "", Qt.ItemDataRole.AccessibleTextRole)
+        self._appearances = appearances
+        self.setColumnHidden(3, not any(value.visible is not None for value in appearances.values()))
+        self.setColumnHidden(4, not any(value.color is not None for value in appearances.values()))
+        self._fit_name_column()
+
+    def _visibility_ref_at(self, position):
+        index = self.indexAt(position)
+        if index.column() == 3:
+            ref = index.siblingAtColumn(0).data(Qt.ItemDataRole.UserRole)
+            if self._appearances.get(ref, TreeAppearance()).visible is not None:
+                return ref
+        return None
+
+    def _request_visibility(self, ref):
+        appearance = self._appearances.get(ref, TreeAppearance())
+        if appearance.visible is not None:
+            self.visibilityRequested.emit(ref, not appearance.visible)
+
+    def mousePressEvent(self, event):
+        self._pressed_visibility = None
+        if event.button() == Qt.MouseButton.LeftButton:
+            ref = self._visibility_ref_at(event.position().toPoint())
+            if ref is not None:
+                self._pressed_visibility = ref
+                event.accept()
+                return
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if self._pressed_visibility is not None:
+            ref, self._pressed_visibility = self._pressed_visibility, None
+            if event.button() == Qt.MouseButton.LeftButton and self._visibility_ref_at(event.position().toPoint()) == ref:
+                self._request_visibility(ref)
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        if self._visibility_ref_at(event.position().toPoint()) is not None:
+            self._pressed_visibility = None
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
+
+    def keyPressEvent(self, event):
+        if (event.key() == Qt.Key.Key_Space and event.modifiers() == Qt.KeyboardModifier.NoModifier
+                and self._appearances.get(self.selected_ref(), TreeAppearance()).visible is not None):
+            self._request_visibility(self.selected_ref())
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
     def selected_ref(self):
         return self.currentIndex().siblingAtColumn(0).data(Qt.ItemDataRole.UserRole)

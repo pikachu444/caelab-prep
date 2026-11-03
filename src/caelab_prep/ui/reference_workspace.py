@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QToolBar
 from .design import icon
 from .materials_workspace import MaterialsWorkspace
 from .reference_components import ADAPTERS, ReferenceBindings
+from .native_commands import command_groups
 
 
 def _edit_action(window):
@@ -30,27 +31,18 @@ class ReferenceMaterialsWorkspace(MaterialsWorkspace):
         h.property_dialog = h.reference_bindings.dialog
 
 
-def configure_native(h, key):
+def configure_native(h, key, *, native_commands=False):
     """Recompose RAD handles without importing its controller or solver."""
-    h.edit_properties_action = _edit_action(h)
+    if not hasattr(h, "edit_properties_action"):
+        h.edit_properties_action = _edit_action(h)
     h.reference_adapter = ADAPTERS[key]
     h.reference_bindings = ReferenceBindings(
         h, h.model_tree, h.model_dock, h.properties_dock, h.messages_dock,
         h.property_editor, h.document_toolbar,
-        {"Document": (h.open_rad_action, h.open_project_action, h.save_action, h.export_action),
-         "History": (h.undo_action, h.redo_action),
-         "Material": (h.edit_properties_action, h.modeling.actions["material.create"]),
-         "Section": (h.modeling.actions["section.create"], h.modeling.actions["solid_section.create"]),
-         "Object": (h.modeling.actions["object.edit"], h.modeling.actions["object.copy"], h.modeling.actions["object.delete"]),
-         "Assignment": (h.modeling.actions["part.assign"],),
-         "Selection": (h.modeling.actions["group.create"], h.modeling.actions["element_group.create"], h.modeling.actions["surface.create"],
-                       h.modeling.actions["coordinate_system.create"]),
-         "Curve": (h.modeling.actions["curve.create"],),
-         "Conditions": tuple(h.modeling.actions[key + ".create"] for key in
-                              ("constraint", "load", "velocity", "contact")) + (h.mesh_workflow.cases_action,)},
+        command_groups(h),
         h._finish_pending_edits, h._discard_pending_edits,
         h.curve_table, h.curve_plot, h.curve_plot.parentWidget(), property_tabs=h.property_tabs,
         selection_tools=h.viewport_frame.findChild(QToolBar, "modelViewCommands"), viewport=h.viewport_frame,
         edit_action=h.edit_properties_action)
-    h.reference_adapter.install(h.reference_bindings)
+    h.reference_adapter.install(h.reference_bindings, commands=not native_commands)
     h.property_dialog = h.reference_bindings.dialog

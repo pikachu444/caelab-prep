@@ -58,6 +58,16 @@ Qt XCB와 OpenGL 런타임, 한글 글꼴이 필요합니다. Ubuntu 의존성�
 .\.venv\Scripts\caelab-prep.exe gui prep-demo/edited.caeprep
 ```
 
+### MODEL·FORM·TEXT 작업 공간
+
+기본 CourantPrep 창과 `compare --rad`의 BeidPrep 표현은 MODEL 옆에 FORM/TEXT를 배치합니다. **File / Edit / Model / Mesh / Conditions / View** 메뉴와 상단 기능 아이콘은 같은 명령을 사용합니다. 재료·shell/solid 단면 생성, 복사·삭제·할당은 **Model**에서 선택합니다. 아이콘이 좁은 창에서 접혀도 메뉴로 접근할 수 있습니다. 첫 실행은 최대화하며 이후에는 저장된 창 크기와 도킹 배치를 복원합니다.
+
+MODEL은 실제 카드 분류와 native header를 표시합니다. 생성된 CAD part 이름의 내부 UUID 접미사는 화면에서만 숨기며 원문 이름과 객체 참조는 유지합니다. 3D에 실제 표시되는 PART에는 가시성 체크와 읽기 전용 색 칩이 나타납니다. 이 표시는 현재 viewport 상태이며 문서의 물성색이나 영구 설정이 아닙니다. `--no-3d`에서는 이 표시가 없습니다.
+
+FORM은 기존 지원 속성을 편집합니다. TEXT에서 **Edit supported values**를 누르면 같은 카드 전체의 native 원문을 열고, 지원되는 고정 폭 값만 수정할 수 있습니다. 숫자는 입력 덱 단위이며 FORM에서 선택한 표시 단위로 해석하지 않습니다. **Apply TEXT** 한 번은 한 Undo이고, **Cancel TEXT**는 원래 문서 값을 유지합니다. TEXT 편집 중에는 FORM을 잠그며 선택 변경·저장·내보내기 전에 Apply 또는 Cancel을 요구합니다. 모델이 외부에서 변경되면 오래된 TEXT 적용을 거부하고 초안을 유지합니다.
+
+TEXT 지원 범위는 읽을 수 있는 MAT LAW1/ELAST/LAW36/PLAS_TAB의 밀도·E·ν, shell/beam/truss PROP의 기존 지원 수치, PART 재료·속성 참조, 기존 FUNCT 점 값, INIVEL/TRA 속도, BCS의 지원 boolean, INTER의 지원 friction입니다. 구조·header와 카드 자체의 ID·제목·comment·행 수 및 나머지 필드는 보존합니다. 집합 멤버 추가나 curve 행 추가 등은 기존 FORM/전용 편집기를 이용합니다. 기존 writer가 보호 영역을 보존하지 못하는 FUNCT 행 뒤 suffix·마지막 개행 누락, 비표준 BCS 정렬/padding 등의 레이아웃은 TEXT 읽기 전용입니다. 잘못된 숫자나 지원 밖 변경은 오류를 표시하고 초안을 남깁니다. 긴 읽기 전용 미리보기의 생략 안내는 편집 정본에 포함되지 않습니다.
+
 ## 새 모델에 CAD·메시와 조건 연결하기
 
 명시한 planar quad/sweep hex8 recipe는 **Mesh → CAD / mesh candidate… → Source type: Structured quad / sweep hex recipe**에서 생성합니다. recipe JSON과 후보 폴더를 선택하고 **Generate candidate**로 준비합니다. 원본 파일과 문서는 바꾸지 않으며 실행 중 **Cancel generation**으로 중지할 수 있습니다. 전체 후보의 scaled Jacobian·edge aspect·면적/체적과 단위를 검토하고 재료·quad의 shell 또는 hex의 solid 단면을 고른 뒤 **Adopt candidate**로 한 번에 채택합니다. 길이 단위는 recipe에서 읽으며 문서 단위와 같아야 합니다.

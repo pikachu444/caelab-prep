@@ -10,6 +10,7 @@ from dataclasses import replace
 from copy import deepcopy
 from decimal import Decimal, InvalidOperation
 import math
+import re
 
 from .contracts import ObjectRef, OperationRequest, OperationSpec, PropertySpec, SetProperties, TreeNode
 from ..cae_core.errors import PrepError
@@ -42,6 +43,16 @@ CREATE_OPERATIONS = {
 }
 MODEL_OPERATIONS = (*CREATE_OPERATIONS, "object.edit", "object.copy", "object.delete", "part.assign")
 
+_GENERATED_ENTITY = re.compile(
+    r"(?:(?P<label>.+): )?caelab:(?P<kind>surface|volume):"
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.IGNORECASE)
+
+
+def display_title(title):
+    """Hide the producer's exact validation suffix only in display projections."""
+    match = _GENERATED_ENTITY.fullmatch(str(title))
+    return (match.group("label") or f"CAD {match.group('kind').lower()}") if match else str(title)
+
 
 class RadProvider:
     """Expose a PrepSession without making shared widgets understand RAD."""
@@ -60,7 +71,7 @@ class RadProvider:
     def tree_nodes(self):
         if not self.describe().get("document_id"):
             return ()
-        return tuple(TreeNode(self.ref_for_card(card), str(card.get("title") or card["keyword"]),
+        return tuple(TreeNode(self.ref_for_card(card), display_title(card.get("title") or card["keyword"]),
                               str(card.get("category") or "Other cards"),
                               _ICONS.get(card.get("category"), "card"),
                               f"{card['keyword']}\n{card['resource_name']}")
