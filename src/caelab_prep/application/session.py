@@ -29,6 +29,7 @@ from .mesh_relations import ModelRelationsResource, MeshRelationCommands
 from .node_moves import NodeMoveCommands
 from .group_members import GroupMemberCommands
 from .node_merges import NodeMergeCommands
+from .shell_normals import ShellNormalCommands
 
 
 PROJECT_FORMAT = "caelab-prep-project"
@@ -47,7 +48,7 @@ def _file_boundary(function):
     return wrapped
 
 
-class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationCommands, MeshRelationCommands, NodeMoveCommands, GroupMemberCommands, NodeMergeCommands):
+class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationCommands, MeshRelationCommands, NodeMoveCommands, GroupMemberCommands, NodeMergeCommands, ShellNormalCommands):
     def __init__(self):
         self._lock = RLock()
         self.document: Document | None = None
