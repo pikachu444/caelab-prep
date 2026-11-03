@@ -166,6 +166,9 @@ class GeometryFeaturesDialog(QDialog):
         self.details = QLabel("Select a candidate to inspect its axis and boundary evidence.")
         self.details.setWordWrap(True); self.details.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         side.addWidget(self.details)
+        self.washer_button = QPushButton("Washer controls…")
+        self.washer_button.setEnabled(False); self.washer_button.clicked.connect(self.open_washer_controls)
+        side.addWidget(self.washer_button)
         split.addWidget(panel); split.setSizes([650, 340])
         note = QLabel("Review units: mm. Supported: axis-aligned circular holes and quarter-cylinder blends with rectangular supports. "
                       "Blend joins require material-oriented tangency; conical blends remain unclassified. "
@@ -183,6 +186,7 @@ class GeometryFeaturesDialog(QDialog):
         self.report = None; self.projection = {}; self._primitive_owners = {}
         self.preview_id = str(uuid4())
         self.table.setRowCount(0)
+        self.washer_button.setEnabled(False)
         self.view_frame.context.setText("No current review")
         self.details.setText("Select a candidate to inspect its axis and boundary evidence.")
         if self.viewport:
@@ -316,10 +320,14 @@ class GeometryFeaturesDialog(QDialog):
         return True
 
     def highlight_selection(self):
+        if not self.table.selectionModel().selectedRows():
+            self.washer_button.setEnabled(False)
+            return
         if self.report is None: return
         row = self.table.currentRow()
         if not 0 <= row < len(self.report["features"]): return
         feature = self.report["features"][row]
+        self.washer_button.setEnabled(any(cap["kind"] == "rectangular_opening" for cap in feature.get("caps", [])))
         if feature["kind"] == "cylindrical_blend_candidate":
             boundary = "Material-oriented tangent joins: " + ", ".join(
                 f"edge {join['shared_line_tag']} ({join['angle_radians']:.6g} rad)" for join in feature["tangent_edges"])
@@ -341,6 +349,16 @@ class GeometryFeaturesDialog(QDialog):
         owner = self._primitive_owners.get(picked.get("id"))
         row = next((index for index, feature in enumerate(self.report["features"]) if feature["surface_uuid"] == owner), None)
         if row is not None: self.table.selectRow(row)
+
+    def open_washer_controls(self):
+        if self.report is None or not self.table.selectionModel().selectedRows(): return False
+        row = self.table.currentRow()
+        if not 0 <= row < len(self.report["features"]): return False
+        feature = self.report["features"][row]
+        if not any(cap["kind"] == "rectangular_opening" for cap in feature.get("caps", [])): return False
+        from .washer_controls import WasherControlsDialog
+        WasherControlsDialog(self.inspection, feature, length_tolerance=self.report["length_tolerance"], parent=self).exec()
+        return True
 
     def reject(self):
         if self._task is not None:

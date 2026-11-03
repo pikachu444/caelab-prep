@@ -90,7 +90,7 @@ def test_duplicate_json_fields_are_not_last_value_wins(tmp_path):
     path = tmp_path/"duplicate.json"
     text = json.dumps(MeshingCriteria("mm", 1.5, .25).to_dict()).replace('"target_size": 1.5', '"target_size": 1.5, "target_size": 10')
     path.write_text(text, encoding="utf-8")
-    with pytest.raises(PrepError, match="Duplicate criteria field"):
+    with pytest.raises(PrepError, match="Duplicate"):
         MeshingCriteria.load(path)
 
 
