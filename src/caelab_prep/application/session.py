@@ -538,7 +538,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             if expected_document_epoch is not None and expected_document_epoch != self._document_epoch:
-                raise PrepError("document_epoch_conflict", "The target document was reopened; prepare a current CAD candidate.")
+                raise PrepError("document_epoch_conflict", "The target document was reopened; inspect a current mesh candidate.")
             if any(card["keyword"].upper().startswith("/TRANSFORM") for card in self.list_cards()):
                 raise PrepError("unsupported_mesh_transform", "Mesh adoption does not reinterpret existing native transformation scopes.")
             replacement_state, replacement_details = (self._mesh_replacement_state(replace_part_ids)

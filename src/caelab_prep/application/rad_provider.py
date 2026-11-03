@@ -450,6 +450,11 @@ class RadProvider:
                                PropertySpec("poisson_ratio", "Poisson's ratio", 0.3, minimum=-1, maximum=0.5))
                 elif key == "section.create":
                     fields += (PropertySpec("thickness", "Shell thickness", 0.0, unit="input deck", minimum=0),)
+                elif key == "solid_section.create":
+                    fields += (PropertySpec("element_family", "Element formulation", "tetra4", kind="choice",
+                                            choices=("tetra4", "tetra10"),
+                                            choice_labels=("Linear Tet4", "Straight Tet10 (LAW1)")),)
+                    description += " Choose Tet10 for a prepared straight-edge quadratic tetrahedral mesh. Use a separate part for each element family."
                 elif key == "coordinate_system.create":
                     fields += self._coordinate_fields()
                     description += " Static Cartesian SKEW only. X is Y cross Z; Y is orthogonalized. No node positions are moved."

@@ -5,6 +5,8 @@ from importlib.util import find_spec
 import pytest
 
 from caelab_prep.application import PrepSession
+from caelab_prep.application.contracts import OperationRequest
+from caelab_prep.application.rad_provider import RadProvider
 from caelab_prep.application.external_mesh import import_standalone_mesh
 from caelab_prep.application.tet10_geometry import GMSH_EDGES, native_tet10_nodes, certify_straight_tet10
 from caelab_prep.cae_core.errors import PrepError
@@ -53,6 +55,32 @@ def model():
     material = session.create_material('Steel', 7.8e-9, 210000, .3)['card_id']
     section = session.create_solid_property('Straight Tet10', element_family='tetra10')['card_id']
     return session, material, section
+
+
+def test_shared_section_operation_offers_and_commits_explicit_tet10():
+    session = PrepSession(); session.new_document('Section form', {'mass': 'Mg', 'length': 'mm', 'time': 's'})
+    provider = RadProvider(session)
+    spec = provider.operation_spec('solid_section.create')
+    field = next(field for field in spec.fields if field.name == 'element_family')
+    assert field.value == 'tetra4' and field.choices == ('tetra4', 'tetra10')
+    provider.execute_operation(OperationRequest(spec.key, {'name': 'Quadratic', 'native_id': 0,
+        'element_family': 'tetra10'}, spec.document_id, spec.expected_revision))
+    card = next(card for card in session.list_cards() if card['keyword'].startswith('/PROP/SOLID/'))
+    native = DeckResource(session.card_text(card['id']).encode('ascii'))
+    row = native.lines[native.cards[0].data[1]]
+    assert tuple(int(row[start:start+10]) for start in (10, 20, 40)) == (4, 0, 1000)
+
+
+def test_native_order_matches_vtk_quadratic_cell_edges_without_rendering():
+    data_model = pytest.importorskip('vtkmodules.vtkCommonDataModel')
+    cell = data_model.vtkQuadraticTetra()
+    for index in range(10):
+        cell.GetPointIds().SetId(index, index)
+    source_slots = native_tet10_nodes(tuple(range(10)))
+    for index in range(6):
+        edge = cell.GetEdge(index)
+        a, b, midpoint = (source_slots[edge.GetPointId(j)] for j in range(3))
+        assert frozenset((a, b)) == frozenset(GMSH_EDGES[midpoint-4])
 
 
 def test_opt_in_and_complete_quadratic_boundary_inventory(tmp_path, sdk):
