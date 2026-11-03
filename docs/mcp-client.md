@@ -4,9 +4,11 @@ Windows GUI 환경은 [설치 가이드](usage.md#install-windows)에 따라 `.[
 
 이 어댑터는 [live control](live-control.md)의 인증된 연결을 사용하는 **stdio MCP 서버**다. 자체 `PrepSession`, Qt 창 또는 메시 실행기를 만들지 않는다. 요청은 이미 열린 창의 같은 제공자·문서 잠금·명령·작업에 전달된다. 지원 범위는 문서 조회/선택, 제공자가 허용하는 숫자/boolean 값 변경, Undo/Redo, 작업문서 저장, 이벤트, CAD 메시 후보 작업의 시작·조회·생성자 취소다. 모든 모델링 명령이나 Workbench 솔버 실행 API를 뜻하지 않는다.
 
-목표 클라이언트는 공개 배포된 [FastMCP client CLI](https://gofastmcp.com/cli/client)의 `list`/`call` 명령이다. 설치된 클라이언트가 stdio MCP 서버를 실제로 시작하고 요청하며, 자체 테스트용 SDK client를 작성한 경로가 아니다. 이는 MCP 클라이언트 연결이며 자연어 LLM 실행의 검증이 아니다. 로컬 stdio 연결에는 LLM API 키나 OAuth가 필요하지 않다. 다른 데스크톱/웹 MCP host 및 Windows GUI는 각각 별도로 확인한다.
+목표 클라이언트는 공개 배포된 [FastMCP client CLI](https://gofastmcp.com/cli/client)의 `list`/`call` 명령이다. 기존 Linux 확인은 설치된 CLI가 stdio MCP 서버를 실제로 시작하고 요청한 경로다. 이는 MCP 클라이언트 연결이며 자연어 LLM 실행의 검증이 아니다. 로컬 stdio 연결에는 LLM API 키나 OAuth가 필요하지 않다. 다른 데스크톱/웹 MCP host 및 Windows GUI는 각각 별도로 확인한다.
 
 ## 설치와 연결
+
+Windows portable 후보는 선택한 GUI/MCP 의존 환경의 PyWin32도 함께 수집한다. 빌드 spec은 그 환경 안의 `win32`·`win32/lib` 검색 경로와 기존 PyInstaller hook을 사용하며 전역 Python 경로를 허용하지 않는다. 선택 환경에 SDK가 있어도 이 경로가 빠진 과거 frozen 후보는 adapter import에서 종료됐다. 이번 portable 확인은 공식 MCP SDK의 `ClientSession` 하네스를 사용했다. 확인 범위는 같은 소유 GUI에 대한 initialize·도구 목록·read-only `prep_describe`이며, 전체 편집·작업 흐름과 공개 클라이언트/새 Windows 검증은 [N13 상태](../CURRENT_STATE.md#n13-mcp-packaging-progress)에서 구분한다.
 
 Prep 환경에 선택 의존성을 설치한다. MCP 서버 프로세스는 GUI 의존성을 가져오지 않으며 GUI가 실행되는 환경과 달라도 된다.
 
