@@ -82,6 +82,31 @@ def _stop(process: subprocess.Popen) -> tuple[str, str]:
         return process.communicate(timeout=3)
 
 
+def _surface_parameters(mesh_size, *, length_unit, element_order=1, smoothing_iterations=2,
+                        relaxation=.5, minimum_scaled_jacobian=.5, maximum_edge_aspect_ratio=4.,
+                        volume_optimizer="netgen"):
+    values = {}
+    for name, raw in (("mesh_size", mesh_size), ("relaxation", relaxation),
+                      ("minimum_scaled_jacobian", minimum_scaled_jacobian),
+                      ("maximum_edge_aspect_ratio", maximum_edge_aspect_ratio)):
+        try:
+            value = float(raw)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise GmshBackendError("invalid_request", f"{name} must be finite") from exc
+        if isinstance(raw, bool) or not math.isfinite(value):
+            raise GmshBackendError("invalid_request", f"{name} must be finite")
+        values[name] = value
+    if (length_unit not in ("mm", "cm", "m") or type(element_order) is not int or element_order not in (1, 2)
+            or type(smoothing_iterations) is not int or not 0 <= smoothing_iterations <= 100
+            or values["mesh_size"] <= 0 or not 0 < values["relaxation"] <= 1
+            or not .5 <= values["minimum_scaled_jacobian"] <= 1
+            or not 1 <= values["maximum_edge_aspect_ratio"] <= 4
+            or volume_optimizer not in ("netgen", "gmsh")):
+        raise GmshBackendError("invalid_request", "Invalid surface volume units, order, smoothing or quality targets")
+    return {**values, "length_unit": length_unit, "element_order": element_order,
+            "smoothing_iterations": smoothing_iterations, "volume_optimizer": volume_optimizer, "dimension": 3}
+
+
 class GmshBackend:
     def __init__(self, *, timeout: float = 120.0):
         if isinstance(timeout, bool) or not math.isfinite(float(timeout)) or float(timeout) <= 0:
@@ -139,6 +164,39 @@ class GmshBackend:
                 if key in sizes:
                     raise GmshBackendError("invalid_request", "Duplicate local sizing entity")
                 sizes[key] = value
+        workdir, captured, digest = self._capture(source, output_dir, cancel_event)
+        request = {"source": str(captured), "original_source": str(source), "source_sha256": digest,
+                   "output_dir": str(workdir), "mesh_size": size, "dimension": int(dimension),
+                   "interface_policy": interface_policy, "local_sizes": sizes}
+        return self._run(request, workdir, cancel_event)
+
+    def generate_surface_volume(self, source_path, output_dir, mesh_size, *, length_unit,
+                                element_order=1, smoothing_iterations=2, relaxation=.5,
+                                minimum_scaled_jacobian=.5, maximum_edge_aspect_ratio=4.,
+                                volume_optimizer="netgen", cancel_event=None):
+        """Capture a closed tri3 MSH and generate an unapplied volume diagnostic.
+
+        A completed job returns ``status=quality_passed|quality_failed``; failed
+        target values and every failing cell remain in the output evidence.
+        Neither status admits a mesh into a document or qualifies a native or
+        solver element. Structural, SDK and serialization failures raise errors.
+        """
+        parameters = _surface_parameters(mesh_size, length_unit=length_unit, element_order=element_order,
+            smoothing_iterations=smoothing_iterations, relaxation=relaxation,
+            minimum_scaled_jacobian=minimum_scaled_jacobian, maximum_edge_aspect_ratio=maximum_edge_aspect_ratio,
+            volume_optimizer=volume_optimizer)
+        source = Path(source_path).expanduser().resolve()
+        if not source.is_file() or source.suffix.lower() != ".msh":
+            raise GmshBackendError("invalid_request", "Choose a closed triangle surface .msh input")
+        workdir, captured, digest = self._capture(source, output_dir, cancel_event)
+        request = {**parameters, "source_kind": "closed_tri_surface", "source": str(captured),
+                   "original_source": str(source), "source_sha256": digest, "output_dir": str(workdir)}
+        result = self._run(request, workdir, cancel_event)
+        if result.get("source_kind") != "surface_tet":
+            raise GmshBackendError("worker_protocol_error", "Worker returned a different candidate source kind")
+        return result
+
+    def _capture(self, source, output_dir, cancel_event):
         if cancel_event is not None and cancel_event.is_set():
             raise CancelledError("cancelled", "Meshing cancelled before starting")
         destination = Path(output_dir).expanduser().resolve()
@@ -151,9 +209,9 @@ class GmshBackend:
         shutil.copyfile(source, captured)
         with captured.open("rb") as stream:
             digest = hashlib.file_digest(stream, "sha256").hexdigest()
-        request = {"source": str(captured), "original_source": str(source), "source_sha256": digest,
-                   "output_dir": str(workdir), "mesh_size": size, "dimension": int(dimension),
-                   "interface_policy": interface_policy, "local_sizes": sizes}
+        return workdir, captured, digest
+
+    def _run(self, request, workdir, cancel_event):
         request_file = workdir / "request.json"
         request_file.write_text(json.dumps(request), encoding="utf-8")
         env = os.environ.copy()
@@ -196,7 +254,8 @@ class GmshBackend:
             error = response.get("error", {})
             cls = DependencyError if error.get("code") == "dependency_error" else GmshBackendError
             raise cls(error.get("code", "worker_error"), error.get("message", "Gmsh worker failed"),
-                      returncode=process.returncode, workdir=str(workdir), stderr=stderr[-8000:])
+                      returncode=process.returncode, workdir=str(workdir), stderr=stderr[-8000:],
+                      **({"worker_details": error["details"]} if error.get("details") else {}))
         if process.returncode != 0:
             raise GmshBackendError("worker_error", "Worker exited unsuccessfully after returning data",
                                    returncode=process.returncode, workdir=str(workdir))

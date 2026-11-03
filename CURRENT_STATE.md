@@ -49,6 +49,8 @@
 
 <a id="current-progress"></a>
 
+Phase 3.6 폐삼각표면 Auto-Tet의 독립 진단 코드는 `01e0be2`에 보존했다. [고정 F1 결과](docs/mesher-feasibility-roadmap.md#2026-11-03-폐삼각표면-auto-tet-f1)는 L형 Tet4/Tet10 통과와 공식 구 J 미달을 구분한다. 두 recipe의 F1은 품질 미달이며 F2·공통 채택·native Tet10은 미완료다. N02의 기존 tri3/tet4 import와 N18의 기존 메시 수정 지원 또는 그룹별 잔여 수를 이 진단으로 닫지 않는다.
+
 ## 현재 개발검증자료와 진행 중 변경
 
 PR29 `89ef36b`는 정확한 head의 필수 CI 10개 job과 독립 검토 후 main `e929bcd`에 병합했다. push/PR 이벤트의 중복 실행은 별개 검사 수로 합산하지 않는다. N18의 Windows 입력·좌표/참조·저장 결과는 [기록](docs/native-windows-validation.md#node-move-20261102)에 한정한다.
