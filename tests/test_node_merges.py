@@ -354,9 +354,21 @@ def test_sparse_native_ids_preserve_untouched_fields_bcs_contact_and_roundtrip(
     code = """import json,sys
 from caelab_prep.application import PrepSession
 s=PrepSession();s.open_project(sys.argv[1]);s.export_rad(sys.argv[2])
-print(json.dumps({'nodes':s.mesh_view()['node_ids'],'conditions':[s.card_text(c) for c in sys.argv[3:]]}))
+native=PrepSession();native.open_rad(sys.argv[2])
+families=('/BCS/', '/CLOAD/', '/INIVEL/TRA/', '/INTER/TYPE7/')
+def conditions(owner):
+    return [[c['keyword'],owner.card_text(c['id'])] for c in owner.list_cards() if c['keyword'].startswith(families)]
+def cells(owner):
+    return [[c.family,c.ref.local_id,[n.local_id for n in c.nodes],
+             c.orientation_node.local_id if c.orientation_node else None] for c in owner._mesh_edit_snapshot().cells]
+print(json.dumps({'nodes':s.mesh_view()['node_ids'],'conditions':[s.card_text(c) for c in sys.argv[3:]],
+    'export_nodes':native.mesh_view()['node_ids'],'export_conditions':conditions(native),
+    'document_conditions':conditions(s),'export_cells':cells(native),'document_cells':cells(s)}))
 """
     reopened = json.loads(subprocess.check_output([sys.executable, '-X', 'utf8', '-c', code,
         str(project), str(exported), *declarations], text=True))
     assert set(reopened['nodes']) == set(aliases.values()) - {aliases[source]}
     assert reopened['conditions'] == list(declarations.values()) and exported.is_file()
+    assert set(reopened['export_nodes']) == set(reopened['nodes'])
+    assert reopened['export_conditions'] == reopened['document_conditions']
+    assert reopened['export_cells'] == reopened['document_cells']
