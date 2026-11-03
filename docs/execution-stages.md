@@ -230,6 +230,10 @@ G1의 객체 생성/삭제·할당과 G2의 조건 관계에 필요한 작은 �
 
 지정 확인은 profile 저장/재열기·단위 오류·미지원 제어 거절, 실제 두 CAD의 SDK 옵션/전체 inventory/원본 hash 불변, 짧은 edge·미지원 family의 실패다. 현재 기능 인식·시각화, hole 주위 washer ring, 접선 edge 억제, 일반 2D tri/quad·3D mixed batch와 warpage/AR/J 기반 relocation/split/merge는 이 첫 연결의 종료로 닫지 않는다. 원본 B-Rep/물질영역을 바꾸지 않고 기존 candidate/채택/Undo/저장 경계를 재사용한다.
 
+다음 geometry-only 연결은 기존 CAD capture/import/identity/process runner를 재사용해 mesh.generate 없이 XAO와 원시 analytic/loop/normal/volume-use를 수집한다. 원통과 hole을 구별할 동일 R1/H3의 양성/음성 입력에서 관측했으며, 이 단계는 through/blind·fillet 판정이나 시각화 완료가 아니다. Raw normal에 volume sign을 다시 곱하지 않고, trim 내부/재료 측/접선 연속의 근거 부족은 미확인으로 남긴다.
+
+후속 `0d567fb`는 같은 순수 형상/offset 계획을 worker와 reader에서 재사용하고 실제 저장 XYZ의 반경 잔차·계산된 safety floor를 검사한다. 정확 basis의 full cylinder와 disk/원형 구멍이 있는 직사각 cap에 한정한 through/blind 후보이며, 고정 세 입력의 국소 witness와 cap 판정을 확인했다. 공용 Qt `80a4c4d`는 기존 source-preview/Action/viewport 경계를 사용해 같은 evidence를 8표현의 읽기 전용 표·wireframe에 연결한다. 일반 hole/fillet·설계 의도/전체 공극 외부 연결 또는 washer/suppression·batch·cleanup 완료로 확대하지 않는다.
+
 ## 12. P6b — 다중 파트·혼합 필드·집합·조건 관계
 
 G1에는 재료/단면 생성·복사·삭제 영향·파트 할당을, G2에는 집합·조건·곡선의 최소 실제 관계를 먼저 연결한다. 아래 혼합 조립 B 전체 완료를 이 두 작업의 선행 조건으로 삼지 않는다.

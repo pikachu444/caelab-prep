@@ -15,11 +15,12 @@
 | RAD 편집 | INCLUDE 원문 보존, LAW1 재료·shell/solid 단면·PART 관계의 지원 필드 생성·수정 |
 | 조건과 케이스 | 곡선, 집합, BCS, CLOAD, INIVEL/TRA, 제한된 INTER/TYPE7, 영속 해석 케이스와 시간·출력 설정 |
 | CAD·메시 | Gmsh tri3/tet4와 명시 planar quad/sweep hex8 recipe의 공통 후보 검토·채택·Undo·저장, MSH 2.2/4.1 ASCII 가져오기와 [준비된 straight Tet10 opt-in](docs/usage.md#prepared-tet10), 지원 조건 안의 준비된 메시 교체·대상 재연결 |
+| 기하 검토 | [제한된 원통 홀 후보](docs/usage.md#geometry-features)의 독립 검사, 관통/막힌 홀 후보 표와 읽기 전용 wireframe 선택. 지원 형상군과 실제 3D 확인 범위는 사용법·현재 상태에서 구분 |
 | 문서 | Undo/Redo, `.caeprep` 저장·재열기, RAD 및 Starter/Engine 내보내기 |
 | 공용 GUI | 같은 문서·명령을 사용하는 8개 프로그램별 표현, 단위 숫자·벡터·표·곡선 입력, 재료/곡선 갤러리와 부품 카탈로그 |
 | 자동화 | 독립 CLI, 열린 GUI에 접속하는 live 제어와 선택 설치 MCP adapter |
 
-Python API에는 [meshing criteria JSON과 최소-edge 감사](docs/usage.md#meshing-criteria)가 있습니다. 독립 minimum을 SDK에 전달하고 실제 출력의 지원 선형 edge를 검사합니다. Feature 인식·washer ring·fillet 억제·batch/자동 cleanup은 후속입니다.
+Python API에는 [meshing criteria JSON과 최소-edge 감사](docs/usage.md#meshing-criteria)가 있습니다. 독립 minimum을 SDK에 전달하고 실제 출력의 지원 선형 edge를 검사합니다. 일반 형상의 특징 인식·washer ring·fillet 억제·batch/자동 cleanup은 후속입니다.
 
 main에는 **절대좌표 절점 이동의 첫 구현**도 있습니다. 요소 품질과 영향 대상을 미리 검토하고 한 Undo로 적용합니다. 영향 집합을 명시적으로 재검토하기 전에는 native 출력을 막습니다. 다중 자원별 검토 의존성을 보존하며, 하중 시간함수와 작용점 모멘트의 실제 평가는 별도로 확인해야 합니다. 일반 메시 편집 전체의 완료본은 아닙니다.
 

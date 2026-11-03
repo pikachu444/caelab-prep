@@ -118,7 +118,56 @@ SDK `Mesh.MeshSizeMin/Max`는 sizing 입력입니다. 모든 출력 edge의 하�
 
 `washer_rim_divisions`, `washer_width`, `washer_layers`, `fillet_suppression_threshold`는 profile에 보존되지만 non-null 실행 요청은 명시 거부합니다. Washer는 hole 주위 mesh ring, fillet suppression은 B-Rep 변경 없는 meshing tangent-edge 억제라는 후속 의미이며 아직 생성/억제하지 않습니다.
 
+<a id="geometry-features"></a>
+
+### 메시 없는 CAD 기하 검사 (Python API)
+
+```python
+from caelab_prep.adapters.gmsh_backend import GmshBackend
+from caelab_prep.application.geometry_inspection import read_geometry_inspection
+
+result = GmshBackend().inspect_geometry("part.step", "geometry-evidence",
+                                       expected_coordinate_length_unit="mm")
+inspection = read_geometry_inspection(result)
+inspection.verify_assets()
+raw_surfaces = inspection.to_dict()["surfaces"]
+```
+
+Gmsh 4.15.2의 CAD analytic 속성·curve loops·원시 face normal·volume-use를 원본 캡처와 XAO/metadata에 연결합니다. 메시를 생성하지 않으며 MeshCandidate·채택·문서 수정 경로가 아닙니다. Reader는 세 자산의 해시와 identity/위상 참조를 검사하며, 반환 사본을 바꿔도 보관된 evidence는 바뀌지 않습니다.
+
+Curve/loop tag는 해당 inspection 안에서만 유효합니다. Loop의 outer/inner 역할·방향, raw normal의 재료 외향 여부, UV 중점의 경계 여유는 확인하지 않았습니다. `trim_count=1`도 `sampling_status=unverified`이며 원통 면을 hole이나 fillet로 확정하지 않습니다. 별도 가져오기 사이에서 UUID/tag를 자동 대응시키지 않습니다.
+
+### 제한된 원통 홀 후보 (Python API)
+
+```python
+from caelab_prep.adapters.gmsh_backend import GmshBackend
+from caelab_prep.application.geometry_inspection import read_geometry_inspection
+from caelab_prep.application.geometry_features import recognize_cylindrical_holes
+
+result = GmshBackend().inspect_geometry("part.step", "hole-evidence",
+    expected_coordinate_length_unit="mm", probe_cylinder_material_side=True)
+inspection = read_geometry_inspection(result)
+candidates = recognize_cylindrical_holes(inspection, length_tolerance=1e-6)
+print(candidates["features"], candidates["unclassified"])
+```
+
+첫 지원 형상군은 좌표축과 나란한 완전 원통이며, 경계가 두 완전 원과 반복 seam이고 한 volume에 속해야 합니다. 국소 offset의 원시 volume membership·수치 여유와 실제 좌표의 반경 잔차를 worker/reader의 같은 순수 계획으로 검증합니다. 다른 boundary가 지원 평면/원통이 아니거나 여유·좌표 단위·trim 근거가 부족하면 `indeterminate`로 남깁니다. 원시 face normal에 volume sign을 다시 곱하지 않습니다.
+
+각 끝의 같은 volume 평면에서 하나의 원형 disk 또는 원 하나가 뚫린 직사각 cap을 확인합니다. 두 opening이면 `through_hole_candidate`, 한 opening과 disk이면 `blind_hole_candidate`, 두 disk이면 enclosed cavity로 미분류합니다. 외부 원통은 재료 측 witness로 제외합니다. `length_tolerance`는 실제 좌표 단위의 길이이며 위 예는 mm입니다.
+
+이는 검토할 후보입니다. 전체 공극의 외부 연결·CAD 설계 이력·임의 축/일반 polygon/복잡 trim·fillet 인식은 보장하지 않습니다. Washer ring·fillet 억제·mesh 생성/채택은 연결하지 않았으며 후보 판독은 B-Rep·mesh·활성 문서를 변경하지 않습니다. 자산이 바뀌면 다시 검사해야 합니다.
+
+### 공용 창에서 후보 검토하기
+
+8개 표현의 **Mesh → Inspect geometry features…**에서 CAD와 evidence 폴더를 선택한 뒤 **Inspect geometry**를 실행합니다. 활성 모델 없이도 열 수 있습니다. **Open inspection…**은 기존 geometry metadata를 읽으며 SDK를 다시 실행하지 않습니다. STEP/IGES는 mm 정규화 좌표를 사용하고, 저장된 XAO에는 알려진 mm 단위가 필요합니다.
+
+행을 선택하거나 wireframe의 홀 표식을 클릭하면 같은 후보의 반경·깊이·축·끝 cap을 확인합니다. 표시용 선분의 선택은 활성 모델 선택과 분리됩니다. View에는 지원 직선 CAD edge, 인식한 원형 경계의 polyline과 축을 표시합니다. 허용오차를 바꾸면 후보를 다시 판독하며, Escape는 마지막 성공 값과 표시로 복귀합니다. 입력 변경·실패·잘못된 허용오차는 이전 후보와 표식을 지웁니다. **Cancel inspection**과 창 닫기는 진행 중 worker를 중지한 뒤 결과를 폐기합니다.
+
+검사 evidence와 이 창의 후보 표시는 작업문서의 메시·조건을 편집하거나 채택하지 않습니다. 현재 인식 지원 형상군은 위 Python API와 같으며, Fillet/Flange/washer ring·일반 batch/cleanup은 후속입니다. Windows OS·VTK 실제 확인은 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
+
 <a id="prepared-tet10"></a>
+
+### 준비된 straight Tet10
 
 준비된 **직선 Tet10 메시**는 별도 opt-in 경로를 사용합니다. **New solid section… → Element formulation → Straight Tet10 (LAW1)**으로 단면을 만들고, **Import mesh… → Element profile → Straight Tet10 solids (explicit)**에서 실제 MSH를 검사합니다. 기존 선형 프로필은 Tet10 채택을 계속 차단합니다. LAW1 재료와 명시 Tet10 단면을 선택해 채택하면 별도 PART, 한 Undo, 기존 v6 저장·재열기와 두 행 `/TETRA10` RAD 출력을 사용합니다. 원 MSH와 캡처본의 덮어쓰기를 막으며, 검토 후 문서를 재열었으면 다시 검사해야 합니다.
 
