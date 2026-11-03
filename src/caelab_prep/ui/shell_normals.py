@@ -76,7 +76,8 @@ class ShellNormalDialog(QDialog):
     def _sync(self):
         self.reviewed.setEnabled(bool(self._plan and self._plan["admissible"]))
         self.apply_button.setEnabled(bool(self._plan and self._plan["admissible"] and self.reviewed.isChecked()))
-        self.remove_button.setEnabled(bool(self.table.selectionModel().selectedRows()) and not self._closed)
+        current = not self._closed and self._current_stamp() == self._stamp
+        self.remove_button.setEnabled(bool(self.table.selectionModel().selectedRows()) and current)
 
     def use_selection(self):
         try:

@@ -125,6 +125,8 @@ def test_external_change_and_busy_draft_block_reviewed_apply():
         before = state(session); dialog.apply_reversal()
         assert state(session) == before and "model changed" in dialog.status.text().lower()
         pump(); assert not dialog.preview_button.isEnabled()
+        dialog.table.clearSelection(); dialog.table.selectRow(0); pump()
+        assert not dialog.remove_button.isEnabled()
     finally:
         window.close(); pump()
 
