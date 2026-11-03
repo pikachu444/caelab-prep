@@ -135,3 +135,19 @@ def test_no_selection_and_all_dropped_cannot_commit_and_pending_entry_is_cleared
     link(dialog, 2, 2)
     assert dialog._dropped == {1} and dialog.prepare_reconnection()
     dialog.close_button.click(); assert state(session) == before and window.close()
+
+
+def test_minimum_mapping_keeps_decision_column_visible_and_scrolls_to_drop():
+    session = opened("beam_shell_tet")
+    group, _, _, _, _ = node_request(session)
+    window, dialog = open_reconnection(session, group)
+    dialog.resize(680, 500); pump()
+    assert dialog.reconnect_table.horizontalScrollBar().maximum() == 0
+    header = dialog.reconnect_table.horizontalHeader()
+    assert header.sectionViewportPosition(2) + header.sectionSize(2) <= dialog.reconnect_table.viewport().width()
+    page = dialog.tabs.widget(1)
+    page.ensureWidgetVisible(dialog.drop_member_button); pump()
+    assert dialog.drop_member_button.visibleRegion().boundingRect().width() >= dialog.drop_member_button.sizeHint().width()
+    dialog.reconnect_table.selectRow(0); dialog.drop_member_button.click(); pump()
+    assert dialog._dropped == {1} and not dialog.reconnect_reviewed.isChecked()
+    dialog.close_button.click(); assert window.close()

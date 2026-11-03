@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QThreadPool, Qt, Signal
 from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog,
-    QFileDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+    QFileDialog, QFormLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QPushButton,
     QScrollArea, QTableView, QTabWidget, QTextBrowser, QVBoxLayout, QWidget)
 
 from ..cae_core import PrepError
@@ -838,7 +838,11 @@ class PreparedMeshDialog(QDialog):
         column.addWidget(hint)
         self.reconnect_model = _ReconnectModel(self)
         self.reconnect_table = _table(self.reconnect_model, "explicitMeshReconnection")
-        self.reconnect_table.setColumnWidth(1, 570)
+        header = self.reconnect_table.horizontalHeader()
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        for index in (0, 2):
+            header.setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
         self.reconnect_table.setMinimumHeight(130)
         self.reconnect_table.selectionModel().currentRowChanged.connect(self._member_changed)
         column.addWidget(self.reconnect_table, 1)
@@ -866,16 +870,15 @@ class PreparedMeshDialog(QDialog):
         self.remove_link_button.clicked.connect(self.remove_link)
         self.clear_entry_button = QPushButton("Clear entry")
         self.clear_entry_button.clicked.connect(self._clear_entry)
-        row.addWidget(self.link_button)
-        row.addWidget(self.remove_link_button)
-        row.addWidget(self.clear_entry_button)
-        row.addStretch()
-        column.addLayout(row)
-        row = QHBoxLayout()
         self.drop_member_button = QPushButton("Drop selected old member")
         self.drop_member_button.setToolTip("Remove this old membership after final preview and Apply; preserve its mesh entity.")
         self.drop_member_button.clicked.connect(self.drop_member)
-        row.addWidget(self.drop_member_button); row.addStretch(); column.addLayout(row)
+        row.addWidget(self.link_button)
+        row.addWidget(self.remove_link_button)
+        row.addWidget(self.clear_entry_button)
+        row.addWidget(self.drop_member_button)
+        row.addStretch()
+        column.addLayout(row)
         self.reconnect_table.selectionModel().selectionChanged.connect(lambda *_: self._sync_actions())
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
