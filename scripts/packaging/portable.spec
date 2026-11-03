@@ -12,13 +12,24 @@ source = Path(os.environ["PREP_BUNDLE_SOURCE"])
 dependencies = Path(os.environ["PREP_BUNDLE_DEPENDENCIES"])
 build_tools = Path(os.environ["PREP_BUNDLE_TOOLS"])
 entry = Path(SPECPATH) / "prep_entry.py"
+site = dependencies / "Lib" / "site-packages"
+dependency_paths = [site]
+# Selected-venv .pth files are not processed merely by placing site on
+# PYTHONPATH. Reuse pywin32's two installed search paths and standard hooks.
+for relative in ("win32", "win32/lib"):
+    path = site / relative
+    if path.is_dir():
+        resolved = path.resolve()
+        if not resolved.is_relative_to(site.resolve()):
+            raise ValueError(f"PyWin32 search path outside selected environment: {path}")
+        dependency_paths.append(resolved)
 # Isolated hook children inherit this path list, including the staged build tools.
 sys.path[:] = [path for path in sys.path if "site-packages" not in Path(path).parts
                or Path(path).resolve().is_relative_to(dependencies)]
 
 a = Analysis(
     [str(entry)],
-    pathex=[str(source / "src"), str(dependencies / "Lib" / "site-packages")],
+    pathex=[str(source / "src"), *map(str, dependency_paths)],
     binaries=[(str(dependencies / "Lib" / "gmsh-4.15.dll"), ".")],
     datas=[(str(source / "THIRD_PARTY.md"), "notices")],
     hiddenimports=[
