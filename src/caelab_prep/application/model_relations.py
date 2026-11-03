@@ -5,7 +5,43 @@ from ..radioss.relations import coordinate_frame, frame_block, node_support, val
 from ..radioss.modeling import load_direction
 
 
+def supported_condition_fields(family, support, *, allow_pending=False):
+    """Keep native BCS inactive-rotation warnings distinct from missing support."""
+    if support["status"] == "supported" or (allow_pending and support["status"] == "stale"):
+        return True
+    if family == "INTER/TYPE7" and support["status"] == "not-applicable":
+        return True
+    failures = support["diagnostics"]
+    return family.startswith("BCS/") and bool(failures) and all(
+        diagnostic.get("code") == "inactive_rotation" for diagnostic in failures)
+
+
 class ModelRelationCommands:
+    def _contact_reference_checks(self, declaration, *, allow_pending=False):
+        """Check each resolved TYPE7 role without treating pending roles as valid."""
+        pending = self._relations_resource().snapshot()["stale_targets"] if allow_pending else {}
+        checks = []
+        for role, key, validate in (("secondary", "secondary_group_id", self._group_reference),
+                                    ("main", "main_surface_id", self._surface_reference)):
+            target = declaration[key]
+            if target in pending:
+                continue
+            try:
+                validate(target)
+            except PrepError as exc:
+                checks.append({"role": role, "code": exc.code, "message": exc.message})
+                continue
+            if role == "secondary":
+                resource = self._find_card(target)
+                identifiers = self._integer_members(resource, resource.card(target))
+                supports = node_support(self._deck_resources(), self.mesh_view(), identifiers)
+                unsupported = [row for row in supports if row["status"] != "supported"]
+                if unsupported:
+                    checks.append({"role": role, "code": "unsupported_contact_attachment",
+                        "message": "TYPE7 secondary nodes require supported mechanical attachment.",
+                        "nodes": unsupported})
+        return checks
+
     def resolve_part_reference(self, native_id):
         """Resolve the PART namespace including supported native unit suffixes."""
         with self._lock:

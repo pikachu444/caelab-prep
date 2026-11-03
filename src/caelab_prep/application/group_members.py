@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from ..cae_core import PrepError
 from . import mesh_edit_candidates as edits
+from .model_relations import supported_condition_fields
 
 
 def _refs(values):
@@ -98,19 +99,13 @@ class GroupMemberCommands:
             after_support = planned.condition_support(card.id)
             after_values = planned.condition_values(card.id)
             failures = after_support["diagnostics"]
-            bcs_inactive_only = family.startswith("BCS/") and failures and all(
-                diagnostic.get("code") == "inactive_rotation" for diagnostic in failures)
             diagnostics = list(after_values["diagnostics"])
-            if after_support["status"] not in ("supported", "not-applicable") and not bcs_inactive_only:
+            if not supported_condition_fields(family, after_support):
                 diagnostics.extend(failures)
             reference_checks = {"before": [], "after": []}
             if family == "INTER/TYPE7":
                 for phase, session, declaration in (("before", self, values), ("after", planned, after_values)):
-                    for role, check, target in (("secondary", session._group_reference, declaration["secondary_group_id"]),
-                                                ("main", session._surface_reference, declaration["main_surface_id"])):
-                        try: check(target)
-                        except PrepError as exc:
-                            reference_checks[phase].append({"role": role, "code": exc.code, "message": exc.message})
+                    reference_checks[phase] = session._contact_reference_checks(declaration)
                 diagnostics.extend(reference_checks["after"])
             row = {"reference": asdict(use.ref), "keyword": card.keyword, "title": card.title,
                    "declaration": values, "roles": roles, "before_support": before_support,
