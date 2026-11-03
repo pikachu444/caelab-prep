@@ -179,7 +179,7 @@ class NodeMoveCommands:
                     owners.add(previous.ref.resource_id)
         else:
             cells = ([candidate.base._cells[ref] for ref in group.members] if group.member_kind == "element"
-                     else [cell for cell in candidate.base.cells if cell.part in group.members])
+                     else [cell for cell in (*candidate.base.cells, *candidate.cell_updates) if cell.part in group.members])
             for cell in cells:
                 owners.add(cell.ref.resource_id)
                 owners.update(node.resource_id for node in cell.nodes)
