@@ -12,7 +12,7 @@ timing follows the retained controller.
 from PySide6.QtCore import QEvent, QObject, QSize, Qt
 from PySide6.QtGui import QActionGroup, QFont
 from PySide6.QtWidgets import (
-    QCheckBox, QComboBox, QFrame, QHeaderView, QLabel, QLineEdit, QMenu,
+    QCheckBox, QComboBox, QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMenu,
     QPlainTextEdit, QProgressBar, QPushButton, QScrollArea, QSizePolicy,
     QSplitter, QStackedWidget, QTabWidget, QToolBar, QToolButton, QTreeWidget, QVBoxLayout, QWidget,
 )
@@ -68,9 +68,9 @@ class PrepWorkspace:
 
     def build_workspace(self, *, enable_viewport):
         self.setObjectName("caelabPrepWindow")
-        self.setWindowTitle("CAELab Prep")
+        self.setWindowTitle("CAELAB Prep 2026")
         self.resize(1440, 900)
-        self.setMinimumSize(900, 600)
+        self.setMinimumSize(850, 550)
         self.setStyleSheet(STYLESHEET)
         self.setDockOptions(self.DockOption.AllowTabbedDocks | self.DockOption.AllowNestedDocks)
 
@@ -81,8 +81,8 @@ class PrepWorkspace:
         self._install_notices()
         self._install_status()
         self.splitDockWidget(self.model_dock, self.properties_dock, Qt.Orientation.Vertical)
-        self.resizeDocks([self.model_dock], [350], Qt.Orientation.Horizontal)
-        self.resizeDocks([self.model_dock, self.properties_dock], [400, 330], Qt.Orientation.Vertical)
+        self.resizeDocks([self.model_dock], [320], Qt.Orientation.Horizontal)
+        self.resizeDocks([self.model_dock, self.properties_dock], [380, 320], Qt.Orientation.Vertical)
         self.resizeDocks([self.messages_dock], [125], Qt.Orientation.Vertical)
 
     def _install_command_surfaces(self):
@@ -123,12 +123,13 @@ class PrepWorkspace:
         self.document_toolbar = bar
         bar.setObjectName("documentToolbar")
         bar.setMovable(False)
-        bar.setIconSize(QSize(18, 18))
+        bar.setIconSize(QSize(16, 16))
         bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.addToolBar(bar)
-        brand = QLabel("CAELab  /  Prep")
+        brand = QLabel("CAELAB PREP")
         brand.setObjectName("applicationBrand")
-        brand.setContentsMargins(12, 0, 18, 0)
+        brand.setToolTip("CAELAB Prep 2026 Professional CAE Preprocessor")
+        brand.setContentsMargins(6, 2, 6, 2)
         bar.addWidget(brand)
         for action, label in ((self.open_rad_action, "Open deck"), (self.save_action, "Save"),
                               (self.export_action, "Export")):
@@ -235,7 +236,7 @@ class PrepWorkspace:
         layout.addWidget(self.model_tree, 1)
         self.model_dock = create_dock(self, "modelDock", "Model browser", browser,
                                      Qt.DockWidgetArea.LeftDockWidgetArea, self._view_menu)
-        self.model_dock.setMinimumWidth(300)
+        self.model_dock.setMinimumWidth(260)
 
     def _model_context_menu(self, position):
         index = self.model_tree.indexAt(position)
@@ -280,9 +281,15 @@ class PrepWorkspace:
         self.target_role_selector.setAccessibleName("Displayed condition target")
         self.target_role_selector.setToolTip("Choose which referenced geometry is highlighted in the 3D view")
         self.target_role_selector.currentIndexChanged.connect(self._condition_target_selected)
+        action_bar = QWidget()
+        action_bar.setObjectName("propertyActionBar")
+        action_layout = QHBoxLayout(action_bar)
+        action_layout.setContentsMargins(4, 2, 4, 2)
+        action_layout.addStretch(1)
+        action_layout.addWidget(self.apply_vector_button)
         layout.addWidget(self.target_role_selector)
         layout.addWidget(self.property_editor, 1)
-        layout.addWidget(self.apply_vector_button)
+        layout.addWidget(action_bar)
         layout.addWidget(self.curve_table)
         layout.addWidget(self.curve_plot, 1)
         layout.addWidget(self.units_note)
@@ -302,8 +309,8 @@ class PrepWorkspace:
         self.modeling.mount(self.inspector_stack)
         self.properties_dock = create_dock(self, "propertiesDock", "Inspector", self.inspector_stack,
                                           Qt.DockWidgetArea.LeftDockWidgetArea, self._view_menu)
-        self.properties_dock.setMinimumWidth(300)
-        self.properties_dock.setMinimumHeight(290)
+        self.properties_dock.setMinimumWidth(260)
+        self.properties_dock.setMinimumHeight(220)
         self._clear_form()
 
     def _install_notices(self):
@@ -330,11 +337,11 @@ class PrepWorkspace:
 
     def _present_document(self, summary):
         name = str(summary.get("name") or "Untitled")
-        self.setWindowTitle(f"{name}{' *' if summary.get('dirty') else ''} — CAELab Prep")
+        self.setWindowTitle(f"CAELAB Prep 2026 — {name}{' *' if summary.get('dirty') else ''}")
         self.viewport_frame.title.setText(name if summary.get("document_id") else "Model")
         self.viewport_frame.title.setToolTip(name)
         self.viewport_frame.context.setText("" if summary.get("document_id") else "Open a deck or project")
-        self.document_state.setText("Unsaved changes" if summary.get("dirty") else "Radioss" if summary.get("document_id") else "")
+        self.document_state.setText("[ UNSAVED ]" if summary.get("dirty") else "OPENRADIOSS" if summary.get("document_id") else "")
         self._counts.setText(f"{summary.get('node_count', 0):,} nodes  ·  {summary.get('element_count', 0):,} elements")
         self.messages.clear()
         for diagnostic in summary.get("diagnostics", ()):
@@ -378,6 +385,8 @@ class PrepWorkspace:
             self.model_tree.setColumnHidden(1, True)
             self.model_tree.setColumnHidden(2, False)
             self.model_tree.model().setHeaderData(2, Qt.Orientation.Horizontal, "Card")
+            if self.model_tree.columnWidth(2) < 95:
+                self.model_tree.setColumnWidth(2, 95)
             if self._selected_card_id not in self._card_refs:
                 self._selected_card_id = None
             self._restore_approved_selection()

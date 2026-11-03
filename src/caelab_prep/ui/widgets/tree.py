@@ -23,7 +23,7 @@ class _ObjectDelegate(QStyledItemDelegate):
 
     def sizeHint(self, option, index):
         hint = super().sizeHint(option, index)
-        return QSize(hint.width(), 25 if index.data(_GROUP) else TOKENS["tree_row_height"])
+        return QSize(hint.width(), 20 if index.data(_GROUP) else TOKENS["tree_row_height"])
 
     def paint(self, painter, option, index):
         if not index.data(_GROUP):
@@ -43,13 +43,16 @@ class _ObjectDelegate(QStyledItemDelegate):
             font.setWeight(font.Weight.DemiBold)
             painter.setFont(font)
             painter.setPen(QColor(TOKENS["group_heading"]))
-            text = option.fontMetrics.elidedText(str(index.data() or ""), Qt.TextElideMode.ElideRight, rect.width() - 43)
-            painter.drawText(rect.adjusted(5, 0, -36, 0), Qt.AlignmentFlag.AlignVCenter, text)
-            badge = QRectF(rect.right() - 31, rect.top() + 4, 25, rect.height() - 8)
+            text = option.fontMetrics.elidedText(str(index.data() or ""), Qt.TextElideMode.ElideRight, max(10, rect.width() - 32))
+            painter.drawText(rect.adjusted(4, 0, -28, 0), Qt.AlignmentFlag.AlignVCenter, text)
+            badge = QRectF(rect.right() - 25, rect.top() + 2, 21, max(12, rect.height() - 4))
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(TOKENS["surface"]))
-            painter.drawRoundedRect(badge, 3, 3)
+            painter.drawRoundedRect(badge, 2, 2)
             painter.setPen(QColor(TOKENS["muted"]))
+            badge_font = option.font
+            badge_font.setPointSize(max(7, badge_font.pointSize() - 2))
+            painter.setFont(badge_font)
             painter.drawText(badge, Qt.AlignmentFlag.AlignCenter, str(index.data(_COUNT) or ""))
         painter.restore()
 
@@ -70,7 +73,7 @@ class _TreeViewState:
         return cls(tree.selected_refs(), tree.selected_ref(),
                    {model.item(row).text(): tree.isExpanded(model.item(row).index())
                     for row in range(model.rowCount())},
-                   tuple(tree.columnWidth(column) for column in range(3)) if model.rowCount() else (210, 72, 80),
+                   tuple(tree.columnWidth(column) for column in range(3)) if model.rowCount() else (180, 60, 95),
                    tree.verticalScrollBar().value())
 
     def restore(self, tree, groups):
@@ -98,8 +101,8 @@ class ModelTree(QTreeView):
         self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.setIconSize(QSize(16, 16))
-        self.setIndentation(15)
+        self.setIconSize(QSize(14, 14))
+        self.setIndentation(12)
         self.setTextElideMode(Qt.TextElideMode.ElideRight)
         self.setItemDelegate(_ObjectDelegate(self))
         self._model = QStandardItemModel(0, 3, self)
@@ -109,7 +112,7 @@ class ModelTree(QTreeView):
         self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
         self.header().setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)
-        self.header().setMinimumSectionSize(45)
+        self.header().setMinimumSectionSize(40)
         self._indices, self._resetting = {}, False
         self.selectionModel().currentChanged.connect(self._selected)
         self.selectionModel().selectionChanged.connect(self._selection_changed)
@@ -147,6 +150,8 @@ class ModelTree(QTreeView):
                 item.setData(item.rowCount(), _COUNT)
             self.setColumnHidden(2, not any(field(field(node, "ref"), "native_scope") for node in nodes))
             state.restore(self, groups)
+            if not self.isColumnHidden(2) and self.columnWidth(2) < 95:
+                self.setColumnWidth(2, 95)
         finally:
             self._resetting = False
 
