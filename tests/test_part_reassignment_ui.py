@@ -12,6 +12,7 @@ from caelab_prep.ui.reference_profiles import PROFILES
 from test_group_member_review import state
 from test_modeling_ui import pump
 from test_part_reassignment import empty_target, two_sources
+from test_node_moves import MODELS, opened
 
 pytestmark = pytest.mark.usefixtures("qt_widgets")
 
@@ -117,4 +118,26 @@ def test_draft_and_document_change_block_old_ownership_and_disable_options():
     assert not dialog.preview_button.isEnabled() and not dialog.target_part.isEnabled()
     dialog.table.selectRow(0); assert not dialog.remove_button.isEnabled()
     before = state(session); dialog.apply_change(); assert state(session) == before
+    dialog.close_button.click(); assert window.close()
+
+
+@pytest.mark.parametrize("bad,diagnostic", [("duplicate", "unique"), ("malformed", "positive")])
+def test_raw_part_errors_are_diagnosed_by_preview_without_breaking_picker(tmp_path, bad, diagnostic):
+    original = opened("beam_shell_tet")
+    part = original.resolve_part_reference(9)["card_id"]
+    block = original.card_text(part).splitlines(keepends=True)
+    if bad == "malformed":
+        block[0] = "/PART/900\n"; block[2] = "bad\n"
+    base = MODELS / "beam_shell_tet"
+    path = tmp_path / "model_0000.rad"
+    path.write_bytes((base / "model_0000.rad").read_bytes().replace(b"/END", "".join(block).encode("latin1")+b"/END"))
+    (tmp_path / "mesh.inc").write_bytes((base / "mesh.inc").read_bytes())
+    session = PrepSession(); session.open_rad(path); session.select_entity("element", 77)
+    window = MainWindow(session, enable_viewport=False); window._allow_close = True; window.show(); pump()
+    before = state(session)
+    dialog = window.open_part_reassignment(); pump()
+    assert dialog and dialog.isVisible()
+    dialog.target_part.setCurrentIndex(1); dialog.preview_button.click(); pump()
+    assert dialog._plan is None and not dialog.apply_button.isEnabled() and diagnostic in dialog.status.text()
+    assert state(session) == before
     dialog.close_button.click(); assert window.close()

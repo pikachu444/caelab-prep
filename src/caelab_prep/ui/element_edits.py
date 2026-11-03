@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog,
     QTextBrowser, QVBoxLayout)
 
 from ..cae_core import PrepError
+from ..radioss.modeling import native_identity
 from .mesh_target_text import target_review_text
 from .widgets._editing import ReferenceComboBox
 
@@ -305,9 +306,11 @@ class PartReassignmentDialog(NativeElementDialog):
         self.target_part.addItem("Choose target PART explicitly…", None)
         for row in self.session.list_cards():
             if row["keyword"].upper().strip("/").split("/")[0] != "PART": continue
-            owner, card, refs = self.session._part_native_references(row["id"])
+            owner = self.session._find_card(row["id"])
+            card = owner.card(row["id"])
+            identity = native_identity(card.keyword)
             source = self.session._paths.get(owner.id, owner.name)
-            label = f"PART {refs['native_part_id']} — {card.title or card.keyword} — {source}"
+            label = f"PART {identity[1] if identity else 'unresolved'} — {card.title or card.keyword} — {source}"
             self.target_part.addItem(label, {"resource_id": owner.id, "entity_kind": "part", "local_id": card.id})
             self.target_part.setItemData(self.target_part.count()-1, label, Qt.ItemDataRole.ToolTipRole)
         form.addRow("Target for all listed elements", self.target_part)
