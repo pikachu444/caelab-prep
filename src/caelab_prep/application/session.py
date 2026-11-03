@@ -11,6 +11,7 @@ import tempfile
 from threading import RLock
 from uuid import UUID, uuid4
 from dataclasses import asdict
+from hashlib import sha256
 import zipfile
 from functools import wraps
 
@@ -532,16 +533,21 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
     def adopt_mesh_candidate(self, native_mesh, *, material_id, property_id, name=None,
                              replace_part_ids=None, expected_revision=None, expected_document_id=None,
                              source_declaration=None, expected_document_epoch=None):
-        """Adopt a verified candidate into one atomic native resource command.
-
-        No unit inference, automatic constitutive numbers or orphan PARTs. Native
-        IDs are mapped explicitly; source CAD identifiers remain provenance only.
-        """
-        from .mesh_candidates import validate_native_mesh, triangle_quality, tetrahedron_quality
+        """Adopt a verified candidate into one atomic native resource command."""
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             if expected_document_epoch is not None and expected_document_epoch != self._document_epoch:
                 raise PrepError("document_epoch_conflict", "The target document was reopened; inspect a current mesh candidate.")
+            prepared = self._prepare_mesh_adoption(native_mesh, material_id=material_id, property_id=property_id,
+                name=name, replace_part_ids=replace_part_ids, source_declaration=source_declaration)
+            return self._publish_mesh_adoption(prepared, expected_revision=expected_revision)
+
+    def _prepare_mesh_adoption(self, native_mesh, *, material_id, property_id, name=None,
+                               replace_part_ids=None, source_declaration=None):
+        """Validate and build private states; publication remains a separate command."""
+        from .mesh_candidates import validate_native_mesh, triangle_quality, tetrahedron_quality
+        with self._lock:
+            self._check_model_edit(None, None)
             if any(card["keyword"].upper().startswith("/TRANSFORM") for card in self.list_cards()):
                 raise PrepError("unsupported_mesh_transform", "Mesh adoption does not reinterpret existing native transformation scopes.")
             replacement_state, replacement_details = (self._mesh_replacement_state(replace_part_ids)
@@ -724,27 +730,41 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 state["created"].extend({"id": card_id, "text": text} for card_id, text in zip(card_ids, texts))
             part_map = {key: card_ids[position] for key, position in part_positions.items()}
             group_map = {key: card_ids[position] for key, position in group_positions.items()}
-            # Observers may save synchronously when the committed geometry is published.
-            previous_sources = self._source_paths
             protected_sources = {str(Path(asset.path).resolve()) for asset in native_mesh.assets}
-            if native_mesh.source_kind == "standalone_msh":
-                metadata = next(asset.path for asset in native_mesh.assets if asset.kind == "metadata")
-                original = json.loads(Path(metadata).read_text(encoding="utf-8"))["source"].get("original_path")
-                if original:
+            if native_mesh.source_kind in ("standalone_msh", "cad_gmsh"):
+                metadata = next(asset for asset in native_mesh.assets if asset.kind == "metadata")
+                raw = Path(metadata.path).read_bytes()
+                if sha256(raw).hexdigest() != metadata.sha256:
+                    raise PrepError("candidate_changed", "Candidate metadata changed after validation.")
+                source = json.loads(raw.decode("utf-8"))["source"]
+                key = "original_path" if native_mesh.source_kind == "standalone_msh" else "path"
+                if key in source:
+                    original = source[key]
+                    if not isinstance(original, str) or not original.strip():
+                        raise PrepError("invalid_candidate", "An original source path must be a nonempty string.")
                     protected_sources.add(str(Path(original).expanduser().resolve()))
-            self._source_paths = previous_sources | protected_sources
-            try:
-                change = self.dispatcher.execute(resource.id, state, "Adopt mesh candidate", object_ids=tuple(card_ids),
-                                                 expected_revision=expected_revision, kind="structure")
-            except Exception:
-                self._source_paths = previous_sources
-                raise
-            return self._model_result(resource, next(iter(part_map.values()), None), change,
+            result = dict(
                 card_ids=card_ids, part_ids=list(part_map.values()), part_id_map=part_map,
                 group_id_map=group_map, source_kind=getattr(native_mesh, "source_kind", "cad_gmsh"),
                 node_id_map=node_map, element_id_map=element_map,
                 mesh_uuid=native_mesh.mesh_uuid, geometry_resource_uuid=native_mesh.geometry_resource_uuid,
                 omitted_boundary_cells=native_mesh.omitted_boundary_cells, unused_node_ids=list(native_mesh.unused_node_ids), **replacement_details)
+            return {"resource_id": resource.id, "state": state, "result": result,
+                    "protected_sources": protected_sources, "native_mesh": native_mesh}
+
+    def _publish_mesh_adoption(self, prepared, *, expected_revision=None):
+        # Observers may save synchronously when the committed geometry is published.
+        previous_sources = self._source_paths
+        self._source_paths = previous_sources | prepared["protected_sources"]
+        resource = self.document.resources[prepared["resource_id"]]
+        result = prepared["result"]
+        try:
+            change = self.dispatcher.execute(resource.id, prepared["state"], "Adopt mesh candidate",
+                object_ids=tuple(result["card_ids"]), expected_revision=expected_revision, kind="structure")
+        except Exception:
+            self._source_paths = previous_sources
+            raise
+        return self._model_result(resource, next(iter(result["part_ids"]), None), change, **result)
 
     def create_curve(self, name, points, *, resource_id=None, native_id=None,
                      expected_revision=None, expected_document_id=None):

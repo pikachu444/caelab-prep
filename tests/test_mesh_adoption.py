@@ -7,6 +7,9 @@ the exported deck is read with a small fixed-width oracle, not DeckResource.
 from __future__ import annotations
 
 from dataclasses import replace
+from hashlib import sha256
+import json
+from pathlib import Path
 import shutil
 
 import pytest
@@ -179,3 +182,95 @@ def test_owned_mesh_replacement_is_atomic_and_preserves_external_shared_nodes(re
     assert len(new_cells) == len(native.elements) + 1 and len(new_parts) == len(native.parts) + 1
     assert new_cells[9009] == (9007, shared)
     assert all(new_nodes[node] == nodes[node] for node in shared)
+
+
+def test_original_cad_path_is_protected_before_publish_and_after_reopen(real_candidate, tmp_path):
+    from caelab_prep.application.mesh_candidates import read_mesh_candidate
+    _, _, candidate = real_candidate
+    metadata = json.loads(Path(next(asset.path for asset in candidate.assets if asset.kind == "metadata")).read_text(encoding="utf-8"))
+    captured = Path(metadata["source"]["captured_path"])
+    original = tmp_path / "original CAD.step"
+    original.write_bytes(captured.read_bytes())
+    original_bytes = original.read_bytes()
+    metadata["source"]["path"] = str(original)
+    manifest = tmp_path / "metadata.json"
+    manifest.write_text(json.dumps(metadata), encoding="utf-8")
+    native = read_mesh_candidate(manifest).to_native_mesh()
+    session, material, section = _session(native)
+    observed = []
+    project = tmp_path / "observed.caeprep"
+
+    def at_publish(event):
+        if event["kind"] != "structure" or event.get("change", {}).get("label") != "Adopt mesh candidate": return
+        for write in (session.save_project, session.export_rad):
+            try: write(original)
+            except PrepError as error: observed.append(error.code)
+            else: observed.append("overwrite allowed")
+        session.save_project(project)
+
+    session.subscribe(at_publish)
+    try:
+        session.adopt_mesh_candidate(native, material_id=material, property_id=section)
+        assert observed == ["source_overwrite", "source_overwrite"], observed
+        assert original.read_bytes() == original_bytes
+        reopened = PrepSession(); reopened.open_project(project)
+        for write in (reopened.save_project, reopened.export_rad):
+            with pytest.raises(PrepError) as error: write(original)
+            assert error.value.code == "source_overwrite"
+        assert original.read_bytes() == original_bytes
+    finally:
+        if original.read_bytes() != original_bytes: original.write_bytes(original_bytes)
+
+
+def test_preparing_adoption_does_not_publish_or_register_sources(real_candidate):
+    _, _, candidate = real_candidate
+    native = candidate.to_native_mesh()
+    session, material, section = _session(native)
+    before, paths, events = _state(session), set(session._source_paths), []
+    session.subscribe(events.append)
+    prepared = session._prepare_mesh_adoption(native, material_id=material, property_id=section)
+    assert _state(session) == before and session._source_paths == paths and events == []
+    assert prepared["protected_sources"] and prepared["native_mesh"] == native
+    assert not set(prepared["result"]["card_ids"]) & {card["id"] for card in session.list_cards()}
+
+
+def _metadata_native(candidate, tmp_path, original):
+    metadata = json.loads(Path(next(a.path for a in candidate.assets if a.kind == "metadata")).read_text(encoding="utf-8"))
+    metadata["source"]["path"] = original
+    raw = json.dumps(metadata).encode("utf-8")
+    path = tmp_path / "metadata.json"; path.write_bytes(raw)
+    native = candidate.to_native_mesh()
+    return replace(native, assets=tuple(replace(a, path=str(path), sha256=sha256(raw).hexdigest())
+                   if a.kind == "metadata" else a for a in native.assets)), path, raw
+
+
+@pytest.mark.parametrize("original", [False, 0, [], {}, None, "", " "])
+def test_falsey_original_cad_path_is_not_an_absent_origin(real_candidate, monkeypatch, tmp_path, original):
+    from caelab_prep.application import mesh_candidates
+    _, _, candidate = real_candidate
+    native, _, _ = _metadata_native(candidate, tmp_path, original)
+    monkeypatch.setattr(mesh_candidates, "validate_native_mesh", lambda value: value)
+    session, material, section = _session(native)
+    before, paths = _state(session), set(session._source_paths)
+    with pytest.raises(PrepError) as error:
+        session.adopt_mesh_candidate(native, material_id=material, property_id=section)
+    assert error.value.code == "invalid_candidate"
+    assert _state(session) == before and session._source_paths == paths
+
+
+def test_original_cad_path_uses_the_validated_metadata_bytes(real_candidate, monkeypatch, tmp_path):
+    from caelab_prep.application import mesh_candidates
+    _, _, candidate = real_candidate
+    native, path, before_raw = _metadata_native(candidate, tmp_path, str(tmp_path / "A.step"))
+    (tmp_path / "metadata-before.json").write_bytes(before_raw)
+    def change_after_validation(value):
+        data = json.loads(before_raw); data["source"]["path"] = str(tmp_path / "B.step")
+        path.write_text(json.dumps(data), encoding="utf-8")
+        return value
+    monkeypatch.setattr(mesh_candidates, "validate_native_mesh", change_after_validation)
+    session, material, section = _session(native)
+    before, paths = _state(session), set(session._source_paths)
+    with pytest.raises(PrepError) as error:
+        session.adopt_mesh_candidate(native, material_id=material, property_id=section)
+    assert error.value.code == "candidate_changed"
+    assert _state(session) == before and session._source_paths == paths
