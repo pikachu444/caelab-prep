@@ -29,7 +29,7 @@ def menu_sections(host):
         ("&Edit", (groups["History"], (host.reload_properties_action,))),
         ("&Model", (groups["Material"], groups["Section"], groups["Selection"],
                     groups["Object"], groups["Assignment"])),
-        ("&Mesh", ((host.mesh_import.action, host.mesh_workflow.mesh_action),
+        ("&Mesh", ((host.mesh_import.action, host.mesh_workflow.mesh_action, host.mesh_workflow.features_action),
                    (host.node_move_action, host.node_merge_action, host.prepared_mesh_action))),
         ("&Conditions", (groups["Curve"], groups["Conditions"])),
         ("&View", ((host.fit_action, host.fit_selected_action, host.iso_action,

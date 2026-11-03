@@ -87,6 +87,25 @@ def _identity(gmsh, surfaces, volumes, extension):
     return resource_uuid, revision, unit, by_entity
 
 
+def _import_cad(gmsh, source):
+    """Load the captured CAD into a fresh model; never transform source topology."""
+    gmsh.model.add("caelab-cad")
+    if source.suffix.lower() == ".xao":
+        gmsh.open(str(source))
+    else:
+        gmsh.model.occ.importShapes(str(source))
+    gmsh.model.occ.synchronize()
+
+
+def _checked_cad_identity(gmsh, surfaces, volumes, extension, expected_unit):
+    identity = _identity(gmsh, surfaces, volumes, extension)
+    unit = identity[2]
+    if expected_unit is not None and unit in ("mm", "cm", "m") and expected_unit != unit:
+        raise WorkerFailure("unit_mismatch", "CAD coordinate unit differs from the expected criteria unit",
+                            expected_coordinate_length_unit=expected_unit, actual_coordinate_length_unit=unit)
+    return identity
+
+
 def _entity_closure(gmsh, entity):
     """Collect the actual CAD boundary identities, including curves and points."""
     found, pending = set(), [entity]
@@ -640,11 +659,247 @@ def _generate_surface_volume(request):
         if gmsh.isInitialized(): gmsh.finalize()
 
 
+def _geometry_values(values, count, field):
+    try:
+        result = [float(value) for value in values]
+        if (count is not None and len(result) != count) or not all(math.isfinite(value) for value in result):
+            raise ValueError()
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise WorkerFailure("invalid_geometry", "Malformed or nonfinite SDK geometry values", field=field) from exc
+    return result
+
+
+def _geometry_tag(value):
+    try:
+        result = int(value)
+        if isinstance(value, bool) or result != value or result == 0:
+            raise ValueError()
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise WorkerFailure("invalid_geometry", "Malformed SDK topology tag") from exc
+    return result
+
+
+def _analytic_properties(gmsh, dimension, tag, kind):
+    integers, reals = gmsh.model.getEntityProperties(dimension, tag)
+    raw_integers = []
+    for value in integers:
+        number = int(value)
+        if isinstance(value, bool) or number != value:
+            raise WorkerFailure("invalid_geometry", "Malformed analytic integer properties")
+        raw_integers.append(number)
+    raw_reals = _geometry_values(reals, None, "analytic_properties")
+    layouts = {"Plane": (4, "plane_cartesian_coefficients"),
+               "Cylinder": (7, "axis_point_xyz_direction_xyz_radius"),
+               "Cone": (8, "axis_point_xyz_direction_xyz_radius_semiangle"),
+               "Sphere": (4, "center_xyz_radius"),
+               "Torus": (8, "axis_point_xyz_direction_xyz_major_minor_radii")}
+    expected = layouts.get(kind) if dimension == 2 else None
+    if expected and len(raw_reals) != expected[0]:
+        raise WorkerFailure("invalid_geometry", "Analytic properties differ from the pinned SDK layout", geometry_type=kind)
+    return {"integers": raw_integers, "reals": raw_reals,
+            "layout": expected[1] if expected else None,
+            "interpretation_source": "Gmsh 4.15.2 OCCFace::geomProperties; curve/other properties remain uninterpreted"}
+
+
+def _geometry_bounds(gmsh, dimension, tag):
+    low, high = gmsh.model.getParametrizationBounds(dimension, tag)
+    low = _geometry_values(low, dimension, "parametric_bounds.minimum")
+    high = _geometry_values(high, dimension, "parametric_bounds.maximum")
+    if any(a > b for a, b in zip(low, high)):
+        raise WorkerFailure("invalid_geometry", "Reversed SDK parametric bounds")
+    return {"minimum": low, "maximum": high}
+
+
+def _cylinder_material_side_probe(gmsh, face, surfaces, volumes, curves, tolerance, unit):
+    from .gmsh_geometry import plan_cylinder_material_probe
+    row = plan_cylinder_material_probe(face, surfaces, volumes, curves, tolerance, unit)
+    if row["status"] != "ready":
+        return row
+    volume = next(v for v in volumes if v["uuid"] == row["volume_uuid"])
+    for label in ("plus", "minus"):
+        try:
+            count = gmsh.model.isInside(3, volume["backend_tag"], row[label]["xyz"], parametric=False)
+        except Exception as exc:
+            row.update(status="indeterminate", reason="volume_query_error: " + str(exc))
+            return row
+        if type(count) is not int or count not in (0, 1):
+            row.update(status="indeterminate", reason="invalid_inside_count: " + repr(count))
+            return row
+        row[label]["inside_count"] = count
+    pair = row["plus"]["inside_count"], row["minus"]["inside_count"]
+    if pair[0] == pair[1]:
+        row.update(status="indeterminate", reason="ambiguous_equal_inside_counts")
+        return row
+    row.update(status="observed", radial_material_side="outward_side_is_material" if pair == (1, 0) else "inward_side_is_material")
+    return row
+
+
+def _cylinder_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit):
+    return [_cylinder_material_side_probe(gmsh, face, surfaces, volumes, curves, tolerance, unit)
+            for face in surfaces if face["geometry_type"] == "Cylinder"]
+
+
+def _inspect_geometry(request):
+    from .gmsh_backend import _FORMATS
+    supported = {"source_kind", "source", "original_source", "source_sha256", "output_dir",
+                 "expected_coordinate_length_unit", "probe_cylinder_material_side"}
+    unknown = sorted(request.keys() - supported)
+    if unknown:
+        raise WorkerFailure("unsupported_criteria", "Geometry inspection does not generate or configure a mesh", criteria=unknown)
+    expected = request.get("expected_coordinate_length_unit")
+    probe_material = request.get("probe_cylinder_material_side", False)
+    if type(probe_material) is not bool:
+        raise WorkerFailure("invalid_request", "probe_cylinder_material_side must be boolean")
+    if expected is not None and expected not in ("mm", "cm", "m"):
+        raise WorkerFailure("invalid_request", "Expected coordinate length unit must be mm, cm or m")
+    try:
+        source, out = Path(request["source"]).resolve(), Path(request["output_dir"]).resolve()
+    except (KeyError, TypeError, ValueError) as exc:
+        raise WorkerFailure("invalid_request", "Inspection needs a CAD input and output directory") from exc
+    if not source.is_file() or source.suffix.lower() not in _FORMATS:
+        raise WorkerFailure("invalid_request", "Choose a supported existing CAD input")
+    with source.open("rb") as stream:
+        digest = hashlib.file_digest(stream, "sha256").hexdigest()
+    if request.get("source_sha256", digest) != digest:
+        raise WorkerFailure("source_changed", "Captured CAD changed before inspection")
+    out.mkdir(parents=True, exist_ok=True)
+    xao, metadata = out / "geometry.xao", out / "metadata.json"
+    if xao.exists() or metadata.exists():
+        raise WorkerFailure("invalid_request", "Inspection output assets already exist")
+    try:
+        import gmsh
+    except Exception as exc:
+        raise WorkerFailure("dependency_error", f"Gmsh SDK is unavailable: {exc}") from exc
+    if getattr(gmsh, "__version__", None) != "4.15.2" or not getattr(gmsh, "libpath", None):
+        raise WorkerFailure("dependency_error", "Geometry inspection requires the Gmsh 4.15.2 SDK")
+    try:
+        gmsh.initialize(readConfigFiles=False, interruptible=False)
+        gmsh.option.setNumber("General.Terminal", 1); gmsh.logger.start()
+        gmsh.option.setNumber("General.NumThreads", 1)
+        gmsh.option.setString("Geometry.OCCTargetUnit", "MM")
+        _import_cad(gmsh, source)
+        surface_tags = [int(tag) for _, tag in gmsh.model.getEntities(2)]
+        volume_tags = [int(tag) for _, tag in gmsh.model.getEntities(3)]
+        if not surface_tags:
+            raise WorkerFailure("geometry_error", "Inspection requires CAD surfaces")
+        resource, revision, unit, identities = _checked_cad_identity(
+            gmsh, surface_tags, volume_tags, source.suffix.lower(), expected)
+        tolerance = _geometry_values([gmsh.option.getNumber("Geometry.Tolerance")], 1, "Geometry.Tolerance")[0]
+        if tolerance < 0:
+            raise WorkerFailure("invalid_geometry", "Negative SDK geometry tolerance")
+        orientations = {tag: [] for tag in surface_tags}
+        volumes = []
+        for tag in volume_tags:
+            members = []
+            for dim, signed in gmsh.model.getBoundary([(3, tag)], combined=False, oriented=True):
+                if dim != 2 or abs(int(signed)) not in orientations:
+                    raise WorkerFailure("invalid_geometry", "Volume references an unknown boundary surface")
+                signed = _geometry_tag(signed)
+                members.append(identities[(2, abs(signed))])
+                orientations[abs(signed)].append({"volume_uuid": identities[(3, tag)], "sign": 1 if signed > 0 else -1})
+            volumes.append({"uuid": identities[(3, tag)], "backend_tag": tag,
+                "physical_group_name": f"caelab:volume:{identities[(3, tag)]}",
+                "bbox": _geometry_values(gmsh.model.getBoundingBox(3, tag), 6, "volume.bbox"),
+                "volume": _geometry_values([gmsh.model.occ.getMass(3, tag)], 1, "volume.volume")[0],
+                "surface_uuids": members})
+        surfaces = []
+        curve_tags = {int(tag) for _, tag in gmsh.model.getEntities(1)}
+        for tag in surface_tags:
+            kind = gmsh.model.getType(2, tag)
+            bounds = _geometry_bounds(gmsh, 2, tag)
+            loop_tags, loops = gmsh.model.occ.getCurveLoops(tag)
+            if len(loop_tags) != len(loops):
+                raise WorkerFailure("invalid_geometry", "SDK loop tags and memberships differ")
+            loop_rows = []
+            for loop, members in zip(loop_tags, loops):
+                members = [_geometry_tag(value) for value in members]
+                if any(abs(value) not in curve_tags for value in members):
+                    raise WorkerFailure("invalid_geometry", "Surface loop references an unknown curve")
+                loop_rows.append({"backend_tag": _geometry_tag(loop), "curve_tags": members})
+            uv = [a / 2 + b / 2 for a, b in zip(bounds["minimum"], bounds["maximum"])]
+            xyz = _geometry_values(gmsh.model.getValue(2, tag, uv), 3, "sample.xyz")
+            normal = _geometry_values(gmsh.model.getNormal(tag, uv), 3, "sample.face_normal")
+            count = int(gmsh.model.isInside(2, tag, uv, parametric=True))
+            if count not in (0, 1):
+                raise WorkerFailure("invalid_geometry", "Single-point trim query returned an invalid count")
+            surfaces.append({"uuid": identities[(2, tag)], "backend_tag": tag,
+                "physical_group_name": f"caelab:surface:{identities[(2, tag)]}", "geometry_type": kind,
+                "area": _geometry_values([gmsh.model.occ.getMass(2, tag)], 1, "surface.area")[0],
+                "bbox": _geometry_values(gmsh.model.getBoundingBox(2, tag), 6, "surface.bbox"),
+                "center": _geometry_values(gmsh.model.occ.getCenterOfMass(2, tag), 3, "surface.center"),
+                "orientation_by_volume": orientations[tag], "curve_loops": loop_rows,
+                "analytic_properties": _analytic_properties(gmsh, 2, tag, kind), "parametric_bounds": bounds,
+                "samples": [{"uv": uv, "xyz": xyz, "face_normal": normal, "trim_count": count}],
+                "sampling_status": "unverified", "normal_basis": "gmsh_face_oriented_no_volume_sign"})
+        curves = []
+        for tag in sorted(curve_tags):
+            kind = gmsh.model.getType(1, tag)
+            adjacent, _ = gmsh.model.getAdjacencies(1, tag)
+            adjacent_refs = []
+            for face in adjacent:
+                face = abs(_geometry_tag(face))
+                if face not in orientations:
+                    raise WorkerFailure("invalid_geometry", "Curve references an unknown adjacent surface")
+                adjacent_refs.append(identities[(2, face)])
+            endpoints = []
+            for dim, vertex in gmsh.model.getBoundary([(1, tag)], combined=False, oriented=False):
+                if dim != 0:
+                    raise WorkerFailure("invalid_geometry", "Curve boundary is not a vertex")
+                vertex = _geometry_tag(vertex)
+                endpoints.append({"backend_tag": vertex,
+                    "xyz": _geometry_values(gmsh.model.getValue(0, abs(vertex), []), 3, "endpoint.xyz")})
+            curves.append({"backend_tag": tag, "geometry_type": kind,
+                "bbox": _geometry_values(gmsh.model.getBoundingBox(1, tag), 6, "curve.bbox"),
+                "length": _geometry_values([gmsh.model.occ.getMass(1, tag)], 1, "curve.length")[0],
+                "parametric_bounds": _geometry_bounds(gmsh, 1, tag),
+                "analytic_properties": _analytic_properties(gmsh, 1, tag, kind),
+                "endpoints": endpoints, "adjacent_surface_uuids": adjacent_refs})
+        probes = _cylinder_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit) if probe_material else None
+        gmsh.write(str(xao))
+        messages = list(gmsh.logger.get())
+        errors = [message for message in messages if message.startswith("Error:")]
+        if errors:
+            raise WorkerFailure("sdk_error", "Gmsh logged inspection errors", errors=errors)
+        with source.open("rb") as stream:
+            if hashlib.file_digest(stream, "sha256").hexdigest() != digest:
+                raise WorkerFailure("source_changed", "Captured CAD changed during inspection")
+        result = {"schema_version": 1, "source_kind": "cad_geometry_inspection",
+            "source": {"path": request.get("original_source", str(source)), "sha256": digest, "captured_path": str(source)},
+            "backend": {"name": "gmsh", "version": gmsh.__version__}, "geometry_resource_uuid": resource,
+            "geometry_revision": revision, "length_unit": unit, "assets": {"xao": str(xao), "metadata": str(metadata)},
+            "expected_coordinate_length_unit": expected, "geometry_tolerance": tolerance,
+            "surfaces": surfaces, "volumes": volumes, "curves": curves,
+            "topology_semantics": {"curve_loop_tags": "inspection-local; no persistent UUIDs",
+                "curve_loops": "SDK ordered curve IDs; outer/inner roles and orientation are not inferred",
+                "samples": "UV bounds midpoint; trim includes IN or ON, boundary clearance unverified; no volume probes or feature classification"},
+            "diagnostics": [{"severity": "warning", "code": "sdk_warning", "message": message}
+                            for message in messages if message.startswith("Warning:")], "sdk_error_count": 0}
+        if probes is not None:
+            result["cylinder_material_side_probes"] = probes
+            result["topology_semantics"]["samples"] = "UV bounds midpoint; trim includes IN or ON; boundary clearance unverified; no feature classification"
+        temporary = metadata.with_suffix(".json.tmp")
+        with temporary.open("x", encoding="utf-8") as stream:
+            json.dump(result, stream, ensure_ascii=False, allow_nan=False)
+        temporary.replace(metadata)
+        return result
+    except WorkerFailure:
+        raise
+    except Exception as exc:
+        raise WorkerFailure("sdk_error", str(exc)) from exc
+    finally:
+        if gmsh.isInitialized():
+            gmsh.finalize()
+
+
 def generate(request):
+    if request.get("source_kind") != "cad_geometry_inspection" and "probe_cylinder_material_side" in request:
+        raise WorkerFailure("unsupported_criteria", "Cylinder material-side probes require geometry inspection")
     unimplemented = sorted({"washer_rim_divisions", "washer_width", "washer_layers",
                             "fillet_suppression_threshold"} & request.keys())
     if unimplemented:
         raise WorkerFailure("unsupported_criteria", "CAD criteria are not implemented", criteria=unimplemented)
+    if request.get("source_kind") == "cad_geometry_inspection":
+        return _inspect_geometry(request)
     if request.get("source_kind") not in (None, "cad") and "expected_coordinate_length_unit" in request:
         raise WorkerFailure("unsupported_criteria", "Coordinate unit expectations are supported only for CAD generation")
     if request.get("source_kind") == "closed_tri_surface":
@@ -715,21 +970,14 @@ def generate(request):
         gmsh.option.setNumber("Mesh.SaveAll", 1)
         gmsh.option.setNumber("Mesh.Binary", 1)
         gmsh.option.setNumber("Mesh.MshFileVersion", 4.1)
-        gmsh.model.add("caelab-cad")
-        if source.suffix.lower() == ".xao":
-            gmsh.open(str(source))
-        else:
-            gmsh.model.occ.importShapes(str(source))
-        gmsh.model.occ.synchronize()
+        _import_cad(gmsh, source)
         preparation, closures = _prepare_interfaces(gmsh, policy, source.suffix.lower())
         surface_tags = [int(tag) for _, tag in gmsh.model.getEntities(2)]
         volume_tags = [int(tag) for _, tag in gmsh.model.getEntities(3)]
         if not surface_tags or dimension == 3 and not volume_tags:
             raise WorkerFailure("geometry_error", "Input does not contain geometry suitable for the requested mesh dimension")
-        resource_uuid, revision, unit, entity_uuids = _identity(gmsh, surface_tags, volume_tags, source.suffix.lower())
-        if expected_unit is not None and unit in ("mm", "cm", "m") and expected_unit != unit:
-            raise WorkerFailure("unit_mismatch", "CAD coordinate unit differs from the expected criteria unit",
-                                expected_coordinate_length_unit=expected_unit, actual_coordinate_length_unit=unit)
+        resource_uuid, revision, unit, entity_uuids = _checked_cad_identity(
+            gmsh, surface_tags, volume_tags, source.suffix.lower(), expected_unit)
         applied_sizes = _apply_local_sizes(gmsh, local_sizes, entity_uuids, size, minimum_mesh_size=minimum)
         gmsh.model.mesh.generate(dimension)
         node_ids, xyz, _ = gmsh.model.mesh.getNodes()

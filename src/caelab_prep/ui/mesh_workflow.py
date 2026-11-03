@@ -528,9 +528,17 @@ class MeshWorkflow(QObject):
         self.host = host
         self.new_action = host._action("project", "New model…", self.new_document, "Ctrl+N", action_id="file.new")
         self.mesh_action = host._action("mesh", "CAD / mesh candidate…", self.mesh, action_id="mesh.candidate")
+        self.features_action = host._action("mesh", "Inspect geometry features…", self.geometry_features,
+                                            action_id="mesh.geometry_features")
         self.export_action = host._action("export", "Export Starter and Engine…", self.export, action_id="file.export_solver")
         self.cases_action = host._action("card", "Analysis cases…", self.cases, action_id="model.analysis_cases")
         self.dialog = None
+
+    def geometry_features(self):
+        if self.host._busy: return
+        from .geometry_features import GeometryFeaturesDialog
+        self.dialog = GeometryFeaturesDialog(self.host, enable_viewport=self.host.viewport is not None)
+        self.dialog.exec()
 
     def cases(self):
         if self.host._busy or not self.host._finish_pending_edits(): return
