@@ -91,6 +91,16 @@ TEXT 지원 범위는 읽을 수 있는 MAT LAW1/ELAST/LAW36/PLAS_TAB의 밀도�
 
 MSH는 2.2/4.1 ASCII에 한정합니다. binary·partition·periodic·data·parametric MSH와 미지원 요소 family는 거부합니다. 문서와 소스 길이 단위가 다르면 자동 환산하지 않습니다. 일반 warped quad, 임의 all-hex, 자동 중립면과 모든 접촉 프로파일은 지원 완료 범위가 아닙니다.
 
+<a id="prepared-tet10"></a>
+
+준비된 **직선 Tet10 메시**는 별도 opt-in 경로를 사용합니다. **New solid section… → Element formulation → Straight Tet10 (LAW1)**으로 단면을 만들고, **Import mesh… → Element profile → Straight Tet10 solids (explicit)**에서 실제 MSH를 검사합니다. 기존 선형 프로필은 Tet10 채택을 계속 차단합니다. LAW1 재료와 명시 Tet10 단면을 선택해 채택하면 별도 PART, 한 Undo, 기존 v6 저장·재열기와 두 행 `/TETRA10` RAD 출력을 사용합니다. 원 MSH와 캡처본의 덮어쓰기를 막으며, 검토 후 문서를 재열었으면 다시 검사해야 합니다.
+
+이 프로필은 모든 물리 요소가 10절점 Tet10인 입력에 한정합니다. 부모의 Verdict corner-scaled J≥.5·6-edge AR≤4와 직선 midpoint·공유 edge·전체 요소의 양의 Jacobian 충분조건을 원좌표 및 native 반올림 좌표에서 모두 확인합니다. Tri6/Line3는 정확한 절점 역할을 검사한 경계 annotation이며 물리 shell/beam 또는 접촉면으로 출력하지 않습니다. 소스 집합의 명시 멤버를 보존하고 midside를 하중/구속 집합에 자동 추가하지 않습니다. Tet4 혼합, 곡선 Tet10, 해당 메시의 일반 node move/merge·assembly 병합·solid contact는 이 경로의 지원 범위가 아닙니다.
+
+개발 API는 `import_standalone_mesh(..., element_profile="straight_tet10")`, `session.create_solid_property(..., element_family="tetra10")`, 기존 `session.adopt_mesh_candidate()`를 사용합니다. 표준 MSH에는 신뢰할 길이·질량·시간 단위가 없으므로 소스 길이 단위와 문서의 작업 단위를 명시해야 합니다. CalcX 변환·실행은 Workbench 소유이며 Prep에 별도 중복 변환기를 만들지 않습니다.
+
+고정 L의 87절점/36 Tet10은 한 Undo·v6·새 Python 재열기·RAD 재해석과 단일 Windows Starter에서 총질량 `2.34e-8 Mg`를 확인했습니다. Starter는 오류0·경고1이며 Engine 파일 부재로 `/DT1TET10`을 확인하지 못했습니다. Engine·해석 응답·실제 VTK 렌더/픽·OS 입력·frozen 확인은 남습니다. Qt offscreen 조작·미리보기 10슬롯 데이터와 VTK cell의 edge 순서 검사는 이 실제 화면 확인을 대신하지 않습니다. 폐표면 자동생성의 [F1 품질 미달](mesher-feasibility-roadmap.md#2026-11-03-폐삼각표면-auto-tet-f1)도 별도로 유지합니다.
+
 main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 절점 ID를 선택하고 입력 덱 길이 단위의 절대좌표를 입력합니다. **Preview move**에서 품질과 영향 대상을 확인하고 검토 체크 후 **Apply move**로 확정합니다. ID·연결·집합 멤버를 보존해도 하중 작용점과 접촉 간격은 달라질 수 있습니다. 영향 집합은 **Replace prepared mesh / reconnect targets…**에서 명시적으로 검토하기 전까지 native 출력을 막습니다. 다중 자원에서는 집합별 실제 변경 자원에 검토 상태를 연결합니다. API의 하중 진단은 시간함수 평가 전 계수이며 실제 시각의 힘·모멘트나 작용점 모멘트를 계산한 결과가 아닙니다. 일반 메시 편집 전체의 완료본은 아닙니다.
 
 <a id="group-member-review"></a>
