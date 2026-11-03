@@ -189,45 +189,61 @@ def _topology(data):
         expected = {(1, 0): "outward_side_is_material", (0, 1): "inward_side_is_material"}.get(tuple(counts))
         if expected is None or probe["radial_material_side"] != expected:
             _invalid("Observed material-side labels must match the two raw volume membership counts.")
-    blend_keys = {"blend_material_side_probes", "blend_probe_policy"} & data.keys()
-    if blend_keys:
-        from ..adapters.gmsh_geometry import (BLEND_PROBE_POLICY, cylindrical_blend_shape,
-                                             plan_analytic_material_probe)
-        if len(blend_keys) != 2 or data["blend_probe_policy"] != BLEND_PROBE_POLICY:
-            _invalid("Blend material observations need the supported explicit probe policy.")
-        eligible = {}
-        for surface in surfaces.values():
-            if surface["geometry_type"] != "Cylinder":
-                continue
-            shape = cylindrical_blend_shape(surface, data["surfaces"], data["volumes"], data["curves"],
-                                             data["geometry_tolerance"], data["length_unit"])
-            if shape["eligible"]:
-                for identity in [surface["uuid"], *shape["support_surface_uuids"]]:
-                    eligible[identity] = shape["volume_uuid"]
-        seen = set()
-        for probe in _rows(data["blend_material_side_probes"]):
-            identity = probe["surface_uuid"]
-            if identity not in surface_ids or identity in seen:
-                _invalid("Each blend material observation must reference one unique inspected surface.")
-            seen.add(identity)
-            if probe["status"] not in ("observed", "indeterminate"):
-                _invalid("Blend material observation status must be explicit.")
-            if probe["status"] == "indeterminate":
-                if probe["material_normal_sign"] is not None:
-                    _invalid("Indeterminate observations cannot establish a material normal.")
-                continue
-            surface = surfaces_by_id[identity]
-            if (eligible.get(identity) != probe["volume_uuid"] or identity not in eligible
-                    or [use["volume_uuid"] for use in surface["orientation_by_volume"]] != [probe["volume_uuid"]]):
-                _invalid("Observed blend evidence must belong to its supported connected shape and single volume.")
-            plan = plan_analytic_material_probe(surface, data["surfaces"], data["volumes"],
-                                                data["geometry_tolerance"], data["length_unit"])
-            if probe["normal_reference"] != plan["normal_reference"]:
-                _invalid("Material normal reference differs from the analytic surface.")
-            counts = _observed_probe(data, surface, probe, plan, "signed_surface_residual")
-            sign = {(0, 1): 1, (1, 0): -1}.get(counts)
-            if sign is None or type(probe["material_normal_sign"]) is not int or probe["material_normal_sign"] != sign:
-                _invalid("Material normal sign must match the raw volume membership counts.")
+    _blend_probe_rows(data, surface_ids, surfaces_by_id, conical=False)
+    _blend_probe_rows(data, surface_ids, surfaces_by_id, conical=True)
+
+
+def _blend_probe_rows(data, surface_ids, surfaces_by_id, *, conical):
+    if conical:
+        probe_key, policy_key, surface_type = "conical_material_side_probes", "conical_probe_policy", "Cone"
+    else:
+        probe_key, policy_key, surface_type = "blend_material_side_probes", "blend_probe_policy", "Cylinder"
+    keys = {probe_key, policy_key} & data.keys()
+    if not keys:
+        return
+    from ..adapters.gmsh_geometry import plan_analytic_material_probe
+    if conical:
+        from ..adapters.gmsh_geometry import CONICAL_PROBE_POLICY, conical_blend_shape
+        policy, shape_function = CONICAL_PROBE_POLICY, conical_blend_shape
+    else:
+        from ..adapters.gmsh_geometry import BLEND_PROBE_POLICY, cylindrical_blend_shape
+        policy, shape_function = BLEND_PROBE_POLICY, cylindrical_blend_shape
+    if len(keys) != 2 or data[policy_key] != policy:
+        _invalid("Blend material observations need the supported explicit probe policy.")
+    eligible = {}
+    for surface in data["surfaces"]:
+        if surface["geometry_type"] != surface_type:
+            continue
+        shape = shape_function(surface, data["surfaces"], data["volumes"], data["curves"],
+                               data["geometry_tolerance"], data["length_unit"])
+        if shape["eligible"]:
+            for identity in [surface["uuid"], *shape["support_surface_uuids"]]:
+                eligible[identity] = shape["volume_uuid"]
+    seen = set()
+    for probe in _rows(data[probe_key]):
+        identity = probe["surface_uuid"]
+        if identity not in surface_ids or identity in seen:
+            _invalid("Each blend material observation must reference one unique inspected surface.")
+        seen.add(identity)
+        if probe["status"] not in ("observed", "indeterminate"):
+            _invalid("Blend material observation status must be explicit.")
+        if probe["status"] == "indeterminate":
+            if probe["material_normal_sign"] is not None:
+                _invalid("Indeterminate observations cannot establish a material normal.")
+            continue
+        surface = surfaces_by_id[identity]
+        if (eligible.get(identity) != probe["volume_uuid"] or identity not in eligible
+                or [use["volume_uuid"] for use in surface["orientation_by_volume"]] != [probe["volume_uuid"]]):
+            _invalid("Observed blend evidence must belong to its supported connected shape and single volume.")
+        options = {"conical_supports": True} if conical else {}
+        plan = plan_analytic_material_probe(surface, data["surfaces"], data["volumes"],
+                                           data["geometry_tolerance"], data["length_unit"], **options)
+        if probe["normal_reference"] != plan["normal_reference"]:
+            _invalid("Material normal reference differs from the analytic surface.")
+        counts = _observed_probe(data, surface, probe, plan, "signed_surface_residual")
+        sign = {(0, 1): 1, (1, 0): -1}.get(counts)
+        if sign is None or type(probe["material_normal_sign"]) is not int or probe["material_normal_sign"] != sign:
+            _invalid("Material normal sign must match the raw volume membership counts.")
 
 
 def read_geometry_inspection(source) -> GeometryInspection:

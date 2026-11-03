@@ -230,7 +230,7 @@ class GmshBackend:
 
     def inspect_geometry(self, source_path, output_dir, *, cancel_event=None,
                          expected_coordinate_length_unit=None, probe_cylinder_material_side=False,
-                         probe_cylindrical_blends=False):
+                         probe_cylindrical_blends=False, probe_conical_blends=False):
         """Capture CAD and return raw geometry evidence, with no generated mesh.
 
         Curve/loop tags belong to this inspection. Samples have no verified
@@ -238,7 +238,8 @@ class GmshBackend:
         The optional bounded cylinder witness records raw radial material-side
         queries only; it does not classify a hole or any other feature.
         The separate blend option records analytic surface material-side probes,
-        without asserting G1 continuity or qualifying a fillet.
+        without asserting G1 continuity or qualifying a fillet. Conical surface
+        probes require their separate opt-in and retain the same raw-only scope.
         """
         source = Path(source_path).expanduser().resolve()
         if not source.is_file() or source.suffix.lower() not in _FORMATS:
@@ -249,6 +250,8 @@ class GmshBackend:
             raise GmshBackendError("invalid_request", "probe_cylinder_material_side must be boolean")
         if type(probe_cylindrical_blends) is not bool:
             raise GmshBackendError("invalid_request", "probe_cylindrical_blends must be boolean")
+        if type(probe_conical_blends) is not bool:
+            raise GmshBackendError("invalid_request", "probe_conical_blends must be boolean")
         workdir, captured, digest = self._capture(source, output_dir, cancel_event)
         request = {"source_kind": "cad_geometry_inspection", "source": str(captured),
                    "original_source": str(source), "source_sha256": digest, "output_dir": str(workdir)}
@@ -258,6 +261,8 @@ class GmshBackend:
             request["probe_cylinder_material_side"] = True
         if probe_cylindrical_blends:
             request["probe_cylindrical_blends"] = True
+        if probe_conical_blends:
+            request["probe_conical_blends"] = True
         result = self._run(request, workdir, cancel_event)
         if not isinstance(result, dict) or result.get("source_kind") != "cad_geometry_inspection":
             raise GmshBackendError("worker_protocol_error", "Worker returned a different geometry inspection source kind")
