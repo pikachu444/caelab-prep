@@ -69,7 +69,51 @@ class BackendTimeoutError(GmshBackendError):
     pass
 
 
-_FORMATS = {".step", ".stp", ".brep", ".brp", ".iges", ".igs", ".xao"}
+_MM_COORDINATE_FORMATS = frozenset({".step", ".stp", ".iges", ".igs"})
+_DECLARED_COORDINATE_FORMATS = frozenset({".brep", ".brp", ".xao"})
+_FORMATS = _MM_COORDINATE_FORMATS | _DECLARED_COORDINATE_FORMATS
+
+
+def cad_coordinate_length_unit(source_path, declared_coordinate_length_unit=None):
+    """Return an expected unit from normalization policy or a declaration.
+
+    STEP/IGES coordinates are normalized to mm by Geometry.OCCTargetUnit.
+    BREP/XAO require an explicit declaration here. A stored XAO unit is read
+    only by the worker and checked against expected_coordinate_length_unit.
+    This function does not relabel a resource, rescale coordinates or load SDKs.
+    """
+    from ..cae_core.errors import PrepError
+    try:
+        extension = Path(source_path).suffix.lower()
+    except (TypeError, ValueError) as exc:
+        raise PrepError("cad_coordinate_unit", "A supported CAD source path is required.") from exc
+    if extension not in _FORMATS:
+        raise PrepError("cad_coordinate_unit", "Cannot establish a coordinate unit for this CAD format.")
+    declared = declared_coordinate_length_unit
+    if declared is not None and declared not in ("mm", "cm", "m"):
+        raise PrepError("cad_coordinate_unit", "Declare the actual coordinate length unit: mm, cm or m.")
+    if extension in _MM_COORDINATE_FORMATS:
+        if declared is not None and declared != "mm":
+            raise PrepError("cad_coordinate_unit", "STEP/IGES coordinates are normalized to mm; a contradictory declaration is invalid.")
+        return "mm"
+    if declared is None:
+        raise PrepError("cad_coordinate_unit", "BREP/XAO require an explicit coordinate length unit declaration.")
+    return declared
+
+
+def _cad_minimum_size(target, minimum, local_sizes):
+    """Shared host/worker check; a minimum is an SDK sizing bound, not an edge guarantee."""
+    if minimum is None:
+        return None
+    try:
+        value = float(minimum)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise GmshBackendError("invalid_request", "minimum_mesh_size must be finite and positive") from exc
+    if isinstance(minimum, bool) or not math.isfinite(value) or not 0 < value <= target:
+        raise GmshBackendError("invalid_request", "minimum_mesh_size must be positive and no greater than mesh_size")
+    if any(size < value for size in local_sizes.values()):
+        raise GmshBackendError("invalid_request", "Local refinement size cannot be below minimum_mesh_size")
+    return value
 
 
 def _stop(process: subprocess.Popen) -> tuple[str, str]:
@@ -114,7 +158,8 @@ class GmshBackend:
         self.timeout = float(timeout)
 
     def generate(self, source_path, output_dir, mesh_size, *, dimension=3, cancel_event=None,
-                 interface_policy="preserve", local_sizes=None) -> dict:
+                 interface_policy="preserve", local_sizes=None, minimum_mesh_size=None,
+                 expected_coordinate_length_unit=None) -> dict:
         """Import generic CAD and produce immutable, candidate geometry/mesh assets.
 
         ``mesh_size`` is in millimetres for STEP/IGES input (SDK normalization),
@@ -130,6 +175,13 @@ class GmshBackend:
         persisted XAO identities. Already prepared XAO uses ``preserve``.
         ``local_sizes`` maps persisted XAO surface/volume UUIDs to target sizes;
         target refinement includes entity boundaries and may affect neighbours.
+        ``minimum_mesh_size`` optionally sets an independent positive SDK sizing
+        bound, no greater than the global or any local target. None preserves the
+        legacy target/local-derived bound. This is not a lower bound on every
+        generated element edge; output geometry and quality require inspection.
+        ``expected_coordinate_length_unit`` optionally checks a restored or
+        normalized known unit before meshing. Unknown source metadata remains
+        unknown; an expectation does not rescale or relabel it.
         """
         source = Path(source_path).expanduser().resolve()
         if not source.is_file():
@@ -164,10 +216,16 @@ class GmshBackend:
                 if key in sizes:
                     raise GmshBackendError("invalid_request", "Duplicate local sizing entity")
                 sizes[key] = value
+        minimum = _cad_minimum_size(size, minimum_mesh_size, sizes)
+        if expected_coordinate_length_unit is not None and expected_coordinate_length_unit not in ("mm", "cm", "m"):
+            raise GmshBackendError("invalid_request", "Expected coordinate length unit must be mm, cm or m")
         workdir, captured, digest = self._capture(source, output_dir, cancel_event)
         request = {"source": str(captured), "original_source": str(source), "source_sha256": digest,
                    "output_dir": str(workdir), "mesh_size": size, "dimension": int(dimension),
-                   "interface_policy": interface_policy, "local_sizes": sizes}
+                   "interface_policy": interface_policy, "local_sizes": sizes,
+                   "minimum_mesh_size": minimum}
+        if expected_coordinate_length_unit is not None:
+            request["expected_coordinate_length_unit"] = expected_coordinate_length_unit
         return self._run(request, workdir, cancel_event)
 
     def generate_surface_volume(self, source_path, output_dir, mesh_size, *, length_unit,

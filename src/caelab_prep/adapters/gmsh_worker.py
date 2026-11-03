@@ -37,6 +37,7 @@ def _uuid(value):
 
 
 def _identity(gmsh, surfaces, volumes, extension):
+    from .gmsh_backend import _MM_COORDINATE_FORMATS
     resource_uuid, revision, unit = str(uuid.uuid4()), 1, "unknown"
     by_entity = {}
     anchor = None
@@ -66,7 +67,7 @@ def _identity(gmsh, surfaces, volumes, extension):
             if key in by_entity:
                 raise WorkerFailure("identity_error", "Ambiguous persisted entity identity")
             by_entity[key] = _uuid(parts[2])
-    if extension in (".step", ".stp", ".iges", ".igs"):
+    if extension in _MM_COORDINATE_FORMATS:
         unit = "mm"
     uuids = list(by_entity.values())
     if len(set(uuids)) != len(uuids):
@@ -145,7 +146,7 @@ def _prepare_interfaces(gmsh, policy, extension):
                                    "source_volume": before[old]} for old, new in mapping.items()]}, closures
 
 
-def _apply_local_sizes(gmsh, local_sizes, identities, global_size):
+def _apply_local_sizes(gmsh, local_sizes, identities, global_size, *, minimum_mesh_size=None):
     """Entity-restricted Constant fields; a Min field combines refinements.
 
     Public Gmsh 4.15.2 Constant/IncludeBoundary supports surfaces and volumes.
@@ -171,7 +172,8 @@ def _apply_local_sizes(gmsh, local_sizes, identities, global_size):
     minimum = gmsh.model.mesh.field.add("Min")
     gmsh.model.mesh.field.setNumbers(minimum, "FieldsList", fields)
     gmsh.model.mesh.field.setAsBackgroundMesh(minimum)
-    gmsh.option.setNumber("Mesh.MeshSizeMin", min(local_sizes.values()))
+    if minimum_mesh_size is None:
+        gmsh.option.setNumber("Mesh.MeshSizeMin", min(local_sizes.values()))
     gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
     gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
     gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
@@ -639,17 +641,37 @@ def _generate_surface_volume(request):
 
 
 def generate(request):
+    unimplemented = sorted({"washer_rim_divisions", "washer_width", "washer_layers",
+                            "fillet_suppression_threshold"} & request.keys())
+    if unimplemented:
+        raise WorkerFailure("unsupported_criteria", "CAD criteria are not implemented", criteria=unimplemented)
+    if request.get("source_kind") not in (None, "cad") and "expected_coordinate_length_unit" in request:
+        raise WorkerFailure("unsupported_criteria", "Coordinate unit expectations are supported only for CAD generation")
     if request.get("source_kind") == "closed_tri_surface":
+        if "minimum_mesh_size" in request:
+            raise WorkerFailure("unsupported_criteria", "minimum_mesh_size is supported only for CAD generation")
         return _generate_surface_volume(request)
     if request.get("source_kind") not in (None, "cad"):
         raise WorkerFailure("invalid_request", "Unknown source kind")
+    supported = {"source_kind", "source", "original_source", "source_sha256", "output_dir",
+                 "mesh_size", "minimum_mesh_size", "dimension", "interface_policy", "local_sizes",
+                 "expected_coordinate_length_unit"}
+    unknown = sorted(request.keys() - supported)
+    if unknown:
+        raise WorkerFailure("unsupported_criteria", "CAD criteria are not implemented", criteria=unknown)
     source = Path(request["source"]).resolve()
     out = Path(request["output_dir"]).resolve()
-    size = float(request["mesh_size"])
+    try:
+        size = float(request["mesh_size"])
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise WorkerFailure("invalid_request", "Invalid mesh size") from exc
     dimension = request["dimension"]
     policy = request.get("interface_policy", "preserve")
     local_sizes = request.get("local_sizes", {})
-    if not math.isfinite(size) or size <= 0 or dimension not in (2, 3):
+    expected_unit = request.get("expected_coordinate_length_unit")
+    if expected_unit is not None and expected_unit not in ("mm", "cm", "m"):
+        raise WorkerFailure("invalid_request", "Expected coordinate length unit must be mm, cm or m")
+    if isinstance(request["mesh_size"], bool) or not math.isfinite(size) or size <= 0 or isinstance(dimension, bool) or dimension not in (2, 3):
         raise WorkerFailure("invalid_request", "Invalid mesh size or dimension")
     if policy not in ("preserve", "conformal", "independent") or not isinstance(local_sizes, dict):
         raise WorkerFailure("invalid_request", "Invalid interface policy or local sizing mapping")
@@ -658,6 +680,11 @@ def generate(request):
     for identifier, value in local_sizes.items():
         if _uuid(identifier) != identifier or type(value) not in (int, float) or not math.isfinite(value) or not 0 < value <= size:
             raise WorkerFailure("invalid_request", "Invalid local refinement size or entity UUID")
+    from .gmsh_backend import _cad_minimum_size, GmshBackendError
+    try:
+        minimum = _cad_minimum_size(size, request.get("minimum_mesh_size"), local_sizes)
+    except GmshBackendError as exc:
+        raise WorkerFailure(exc.code, str(exc)) from exc
     if not source.is_file():
         raise WorkerFailure("invalid_request", "CAD input does not exist")
     if source.suffix.lower() not in {".step", ".stp", ".brep", ".brp", ".iges", ".igs", ".xao"}:
@@ -682,7 +709,7 @@ def generate(request):
         gmsh.logger.start()
         gmsh.option.setNumber("General.NumThreads", 1)
         gmsh.option.setString("Geometry.OCCTargetUnit", "MM")
-        gmsh.option.setNumber("Mesh.MeshSizeMin", size)
+        gmsh.option.setNumber("Mesh.MeshSizeMin", size if minimum is None else minimum)
         gmsh.option.setNumber("Mesh.MeshSizeMax", size)
         gmsh.option.setNumber("Mesh.ElementOrder", 1)
         gmsh.option.setNumber("Mesh.SaveAll", 1)
@@ -700,7 +727,10 @@ def generate(request):
         if not surface_tags or dimension == 3 and not volume_tags:
             raise WorkerFailure("geometry_error", "Input does not contain geometry suitable for the requested mesh dimension")
         resource_uuid, revision, unit, entity_uuids = _identity(gmsh, surface_tags, volume_tags, source.suffix.lower())
-        applied_sizes = _apply_local_sizes(gmsh, local_sizes, entity_uuids, size)
+        if expected_unit is not None and unit in ("mm", "cm", "m") and expected_unit != unit:
+            raise WorkerFailure("unit_mismatch", "CAD coordinate unit differs from the expected criteria unit",
+                                expected_coordinate_length_unit=expected_unit, actual_coordinate_length_unit=unit)
+        applied_sizes = _apply_local_sizes(gmsh, local_sizes, entity_uuids, size, minimum_mesh_size=minimum)
         gmsh.model.mesh.generate(dimension)
         node_ids, xyz, _ = gmsh.model.mesh.getNodes()
         if not len(node_ids):
@@ -762,6 +792,7 @@ def generate(request):
         if unit == "unknown":
             diagnostics.append({"severity": "warning", "code": "unknown_length_unit",
                                 "message": "BREP/external XAO units are not declared; the caller must assign consistent units before solver export."})
+        sdk_sizes = {name: float(gmsh.option.getNumber(name)) for name in ("Mesh.MeshSizeMin", "Mesh.MeshSizeMax")}
         result = {
             "schema_version": 1, "backend": {"name": "gmsh", "version": gmsh.__version__},
             "geometry_resource_uuid": resource_uuid, "geometry_revision": revision,
@@ -779,6 +810,13 @@ def generate(request):
                        "surfaces": len(surfaces), "volumes": len(volumes)},
             "diagnostics": diagnostics,
             "recipe": {"global_size": size, "dimension": dimension, "interface_policy": policy,
+                       "expected_coordinate_length_unit": expected_unit,
+                       "minimum_mesh_size": minimum,
+                       "effective_minimum_mesh_size": sdk_sizes["Mesh.MeshSizeMin"],
+                       "effective_maximum_mesh_size": sdk_sizes["Mesh.MeshSizeMax"],
+                       "minimum_mesh_size_origin": "explicit" if minimum is not None else "derived_local" if local_sizes else "legacy_target",
+                       "sdk_size_options": sdk_sizes,
+                       "size_bound_semantics": "SDK sizing bounds; not a guarantee on every output element edge",
                        "independent_is_preflight_only": True, "local_sizes": applied_sizes,
                        "topology_preparation": preparation,
                        "local_size_rule": "Minimum of global and entity targets, including entity boundaries; shared boundaries may refine adjacent parts"},
