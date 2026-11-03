@@ -284,3 +284,79 @@ def test_two_deck_resources_prepare_atomically_and_keep_both_review_dependencies
     output = tmp_path / "export" / "two-resources_0000.rad"
     output.parent.mkdir()
     session.export_rad(output)
+
+
+@pytest.mark.parametrize('name,source,keeper,group_node,family,changed_column', [
+    ('beam_shell_tet', 6, 8, 2, 'BEAM', 3),
+    ('truss_shell_hex', 9, 4, 9, 'TRUSS', 2),
+])
+def test_sparse_native_ids_preserve_untouched_fields_bcs_contact_and_roundtrip(
+        name, source, keeper, group_node, family, changed_column, tmp_path):
+    aliases = {1: 101, 2: 8, 3: 909, 4: 4007, 5: 55, 6: 600001, 7: 3, 8: 8400, 9: 99}
+    folder = tmp_path / name; folder.mkdir()
+    root = folder / 'model_0000.rad'; shutil.copyfile(MODELS / name / root.name, root)
+    lines = (MODELS / name / 'mesh.inc').read_text(encoding='ascii').splitlines()
+    output, node_rows, keyword = [], [], ''
+    for line in lines:
+        if line.startswith('/'):
+            if node_rows: output.extend(reversed(node_rows)); node_rows.clear()
+            keyword = line.split('/')[1]
+            output.append(line)
+        elif line and not line.startswith('#') and keyword == 'NODE':
+            node_rows.append(f'{aliases[int(line[:10])]:010d}' + line[10:])
+        elif line and not line.startswith('#') and keyword in ('BEAM', 'TRUSS', 'SHELL', 'TETRA4', 'BRICK'):
+            values = [int(line[i:i+10]) for i in range(0, len(line), 10)]
+            output.append(f'{values[0]:010d}' + ''.join(f'{aliases[value]:010d}' for value in values[1:]))
+        else: output.append(line)
+    if node_rows: output.extend(reversed(node_rows))
+    mesh = folder / 'mesh.inc'; mesh.write_text('\n'.join(output) + '\n', encoding='ascii', newline='')
+    input_bytes = {path: path.read_bytes() for path in (root, mesh)}
+    session = PrepSession(); session.open_rad(root)
+    group, load, bcs, velocity = related(session, [aliases[group_node]])
+    surface = session.create_surface('Original main side', [session.resolve_part_reference(9)['card_id']])['card_id']
+    contact = session.create_contact('Original ordered contact', group, surface, .2)['card_id']
+    declarations = {card: session.card_text(card) for card in (load, bcs, velocity, contact)}
+    owner = next(resource for resource in session._deck_resources() if resource.is_include)
+    card = next(card for card in owner.cards if card.keyword == f'/{family}/10')
+    original_line = owner.render().decode('latin1').splitlines()[card.data[0]]
+    pairs, approvals = request(session, aliases[source], aliases[keeper])
+    if family == 'TRUSS':
+        approvals[0]['contacts'] = [{'resource_id': session._find_card(contact).id,
+            'entity_kind': 'condition', 'local_id': contact}]
+    before = state(session); events = []; session.subscribe(events.append)
+    review = session.plan_node_merge(pairs, tolerance=20., length_unit='mm', approvals=approvals)
+    assert review['admissible'] and state(session) == before
+    session.apply_node_merge(review['plan_id'])
+    assert len(events) == 1 and session.document.revision == before[0] + 1
+    changed_line = owner.render().decode('latin1').splitlines()[owner.card(card.id).data[0]]
+    start = changed_column * 10
+    assert changed_line[:start] == original_line[:start]
+    assert changed_line[start:start+10] == f'{aliases[keeper]:10d}'
+    assert changed_line[start+10:] == original_line[start+10:]
+    assert set(session.mesh_view()['node_ids']) == set(aliases.values()) - {aliases[source]}
+    assert all(session.card_text(card) == text for card, text in declarations.items())
+    assert all(path.read_bytes() == raw for path, raw in input_bytes.items())
+    after = state(session)
+    session.undo(); assert state(session)[1:] == before[1:]
+    session.redo(); assert state(session)[1:] == after[1:]
+    with pytest.raises(PrepError) as error: session.export_rad(folder / 'blocked_0000.rad')
+    assert error.value.code == 'stale_mesh_targets'
+    targets = {}
+    for identifier, stale in session.mesh_relationships()['stale_targets'].items():
+        mapping = {old: (session.resolve_part_reference(old)['card_id'] if stale['family'] == 'SURF/PART'
+                    else session.resolve_entity_reference('node', aliases[keeper] if old == aliases[source] else old)['reference'])
+                   for old in stale['members']}
+        targets[identifier] = {'mesh_revision': stale['mesh_revision'], 'mapping': mapping}
+    session.reconnect_mesh_targets(targets)
+    assert all(session.card_text(card) == text for card, text in declarations.items())
+    project = folder / 'sparse.caeprep'; session.save_project(project)
+    exported = folder / 'export' / 'sparse_0000.rad'; exported.parent.mkdir()
+    code = """import json,sys
+from caelab_prep.application import PrepSession
+s=PrepSession();s.open_project(sys.argv[1]);s.export_rad(sys.argv[2])
+print(json.dumps({'nodes':s.mesh_view()['node_ids'],'conditions':[s.card_text(c) for c in sys.argv[3:]]}))
+"""
+    reopened = json.loads(subprocess.check_output([sys.executable, '-X', 'utf8', '-c', code,
+        str(project), str(exported), *declarations], text=True))
+    assert set(reopened['nodes']) == set(aliases.values()) - {aliases[source]}
+    assert reopened['conditions'] == list(declarations.values()) and exported.is_file()

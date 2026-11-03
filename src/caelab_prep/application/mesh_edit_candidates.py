@@ -276,8 +276,14 @@ def _quality_impl(cell,lookup):
     if cell.family in ('TRUSS','BEAM'):
         metric='normalized_length';measure=norm(sub(p[1],p[0]));q=measure/size
         if cell.orientation_node is not None and cell.orientation_node not in cell.nodes:
-            v=sub(lookup(cell.orientation_node).xyz,p[0]);den=norm(v)*measure
-            if not den or norm(cross(sub(p[1],p[0]),v))/den<=1e-12: problems.append('degenerate_beam_orientation')
+            v=sub(lookup(cell.orientation_node).xyz,p[0]);v_length=norm(v)
+            if not v_length or not math.isfinite(v_length):
+                problems.append('degenerate_beam_orientation')
+            else:
+                axis=tuple(x/measure for x in sub(p[1],p[0]))
+                direction=tuple(x/v_length for x in v)
+                sine=norm(cross(axis,direction))
+                if not math.isfinite(sine) or sine<=1e-12: problems.append('degenerate_beam_orientation')
     elif cell.family=='SH3N':
         area=norm(cross(s[1],s[2]))/2;den=sum(dot(sub(a,b),sub(a,b)) for i,a in enumerate(s) for b in s[i+1:])
         q=4*math.sqrt(3)*area/den;measure=area*size*size;metric='triangle_mean_ratio'
@@ -425,7 +431,7 @@ def merge_nodes(snapshot,mapping,*,tolerance,length_unit,approvals=()):
     components={r:frozenset(snapshot._parts[c.part].component_id for c in snapshot.cells if r in c.nodes or r==c.orientation_node) for r in set(sources)|set(keepers)}
     contact_dependencies=set()
     for source,keeper in zip(sources,keepers):
-        if norm(sub(snapshot._nodes[source].xyz,snapshot._nodes[keeper].xyz))>tolerance:
+        if math.dist(snapshot._nodes[source].xyz,snapshot._nodes[keeper].xyz)>tolerance:
             fail('outside_tolerance','Selected source is outside tolerance of its explicit keeper.',(source,keeper))
         contacts=[]
         for use in snapshot.uses:

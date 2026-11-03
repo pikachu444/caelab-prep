@@ -35,8 +35,10 @@ class NodeMergeCommands:
                         text = lines[row]
                         body = text.rstrip("\r\n")
                         ending = text[len(body):]
-                        fields = [(index, node.local_id) for index, node in enumerate(cell.nodes, 1)]
-                        if family == "BEAM" and cell.orientation_node is not None:
+                        previous = candidate.base._cells[ref]
+                        fields = [(index, node.local_id) for index, node in enumerate(cell.nodes, 1)
+                                  if node != previous.nodes[index - 1]]
+                        if family == "BEAM" and cell.orientation_node is not None and cell.orientation_node != previous.orientation_node:
                             fields.append((3, cell.orientation_node.local_id))
                         for index, value in fields:
                             start = index * 10
