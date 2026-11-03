@@ -109,6 +109,23 @@ def test_targets_remain_stale_until_explicit_identity_reconnection(tmp_path):
     session.export_rad(tmp_path / "reviewed_0000.rad")
 
 
+def test_one_undo_reverses_explicit_shells_from_two_source_resources():
+    session = opened("beam_shell_tet")
+    imported = session.plan_import_source(MODELS / "truss_shell_hex" / "model_0000.rad")
+    session.import_source(imported["plan_id"])
+    shells = [cell for cell in session._mesh_edit_snapshot().cells if cell.family == "SHELL"]
+    assert len(shells) == 2 and len({cell.ref.resource_id for cell in shells}) == 2
+    references = [{"resource_id": cell.ref.resource_id, "entity_kind": "element", "local_id": cell.ref.local_id} for cell in shells]
+    before = state(session); events = []; session.subscribe(events.append)
+    review = session.plan_shell_normal_flip(references)
+    assert len(review["cells"]) == 2 and review["admissible"] and state(session) == before
+    session.apply_shell_normal_flip(review["plan_id"])
+    assert len(events) == 1 and session.document.revision == before[0] + 1
+    current = {cell.ref: cell for cell in session._mesh_edit_snapshot().cells}
+    assert all(current[cell.ref].nodes == tuple(cell.nodes[i] for i in (0, 3, 2, 1)) for cell in shells)
+    session.undo(); assert state(session)[1:] == before[1:]
+
+
 @pytest.mark.parametrize("mutation", ["empty", "node", "foreign", "bool", "duplicate", "beam"])
 def test_invalid_selection_never_changes_the_document(mutation):
     session = opened("beam_shell_tet")
