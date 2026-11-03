@@ -105,21 +105,23 @@ def read_recipe_input(path):
 
 def _validate_source_recipe(spec, asset):
     if not isinstance(asset, AssetDigest) or asset.kind != 'source_recipe':
-        raise PrepError('invalid_recipe', 'Expected the original quad recipe identity.')
+        raise PrepError('invalid_recipe', 'Expected the original structured recipe identity.')
     original, current = read_recipe_input(asset.path)
     if current != asset:
         raise PrepError('candidate_changed', 'The original recipe changed after review.')
     validate_recipe(original)
-    if original.get('mode') != 'quad' or spec.get('mode') != 'quad':
-        raise PrepError('invalid_recipe', 'Only quad divisions can differ from an original recipe.')
+    if original.get('mode') != spec.get('mode') or original.get('mode') not in ('quad', 'hex'):
+        raise PrepError('invalid_recipe', 'Keep the original quad or hex recipe mode.')
     expected = deepcopy(original)
     if 'patches' in original and 'patches' in spec and len(original['patches']) == len(spec['patches']):
         for old, edited in zip(expected['patches'], spec['patches']):
             old['divisions'] = edited['divisions']
     elif 'patches' not in original and 'patches' not in spec:
         expected['divisions'] = spec['divisions']
+    if original['mode'] == 'hex':
+        expected['layers'] = spec['layers']
     if expected != spec:
-        raise PrepError('invalid_recipe', 'Only quad divisions can differ from an original recipe.')
+        raise PrepError('invalid_recipe', 'Only divisions and hex layers can differ from an original recipe.')
 
 
 def _write_json(path, value):
@@ -176,7 +178,7 @@ def generate_structured_mesh(spec, output_dir, *, recipe_path=None, source_recip
     validate_recipe(spec)
     if source_recipe is not None:
         if recipe_path is not None:
-            raise PrepError('invalid_recipe', 'Use a snapshot for an edited quad recipe.')
+            raise PrepError('invalid_recipe', 'Use a snapshot for an edited structured recipe.')
         _validate_source_recipe(spec, source_recipe)
     if not str(output_dir).strip():
         raise PrepError('invalid_request', 'Choose an asset directory.')

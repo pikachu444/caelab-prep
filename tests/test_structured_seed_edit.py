@@ -1,4 +1,4 @@
-"""Quad division drafts reuse generation, source protection and one adoption."""
+"""Structured division drafts reuse generation, source protection and one adoption."""
 from copy import deepcopy
 import hashlib
 import json
@@ -33,13 +33,13 @@ def _source(tmp_path, recipe, name="original recipe.json"):
     return path
 
 
-@pytest.mark.parametrize("case_id", ["Q-N3", "Q-D2"])
+@pytest.mark.parametrize("case_id", ["Q-N3", "Q-D2", "H-N3", "H-D2"])
 @pytest.mark.parametrize("profile", PROFILES)
 def test_every_presentation_edits_ordered_divisions_and_cancels_without_history(case_id, profile, tmp_path):
     recipe = _case(case_id)["input"]
     source = _source(tmp_path, recipe)
     original = source.read_bytes()
-    session, _, _ = _model(recipe["unit"])
+    session, _, _ = _model(recipe["unit"], 3 if recipe["mode"] == "hex" else 2)
     before = session.describe()
     window = MainWindow(session, enable_viewport=False, presentation=profile)
     window._allow_close = True
@@ -54,6 +54,8 @@ def test_every_presentation_edits_ordered_divisions_and_cancels_without_history(
             patches = recipe.get("patches", [recipe])
             assert [[edit.numeric_value() for edit in row] for row in dialog.division_edits] == [p["divisions"] for p in patches]
             assert dialog.divisions.horizontalHeaderItem(1).text() == "Edge 1–2"
+            assert dialog.layers.isHidden() == (recipe["mode"] != "hex")
+            if recipe["mode"] == "hex": assert dialog.layers.numeric_value() == recipe["layers"]
             dialog.division_edits[0][0].setText("1.5")
             assert not dialog.generate() and "whole number" in dialog.error.text()
             assert not dialog.adopt_button.isEnabled() and dialog._task is None
@@ -71,11 +73,13 @@ def test_every_presentation_edits_ordered_divisions_and_cancels_without_history(
     assert window.close()
 
 
-@pytest.mark.parametrize("case_id,divisions,elements,nodes", [
-    ("Q-N3", [[18, 10]], 180, 209),
-    ("Q-D2", [[12, 6], [9, 6]], 126, 154),
+@pytest.mark.parametrize("case_id,divisions,layers,elements,nodes", [
+    ("Q-N3", [[18, 10]], None, 180, 209),
+    ("Q-D2", [[12, 6], [9, 6]], None, 126, 154),
+    ("H-N3", [[10, 6]], 6, 360, 539),
+    ("H-D2", [[8, 6], [7, 6]], 8, 720, 1008),
 ])
-def test_edited_real_candidate_protects_original_at_publish_and_v6_reopen(case_id, divisions, elements, nodes, tmp_path):
+def test_edited_real_candidate_protects_original_at_publish_and_v6_reopen(case_id, divisions, layers, elements, nodes, tmp_path):
     pytest.importorskip("gmsh")
     recipe = _case(case_id)["input"]
     source = _source(tmp_path, recipe)
@@ -83,7 +87,8 @@ def test_edited_real_candidate_protects_original_at_publish_and_v6_reopen(case_i
     expected = deepcopy(recipe)
     for patch, counts in zip(expected.get("patches", [expected]), divisions):
         patch["divisions"] = counts
-    session, material, section = _model(recipe["unit"])
+    if layers is not None: expected["layers"] = layers
+    session, material, section = _model(recipe["unit"], 3 if layers is not None else 2)
     before = session.describe()
     dialog = MeshCandidateDialog(session, enable_viewport=False)
     dialog.show(); choose(dialog.source_kind, "structured_recipe")
@@ -91,6 +96,7 @@ def test_edited_real_candidate_protects_original_at_publish_and_v6_reopen(case_i
     assert dialog.load_divisions()
     for row, counts in zip(dialog.division_edits, divisions):
         for edit, count in zip(row, counts): edit.setText(str(count))
+    if layers is not None: dialog.layers.setText(str(layers))
     assert dialog.generate(); pump_until(dialog)
     candidate = dialog.candidate
     assert candidate is not None, dialog.error.text()
@@ -102,6 +108,22 @@ def test_edited_real_candidate_protects_original_at_publish_and_v6_reopen(case_i
     assert json.loads(Path(assets["recipe"].path).read_text(encoding="utf-8")) == expected
     assert candidate.quality.passed and dialog.adopt_button.isEnabled()
     assert source.read_bytes() == original and session.describe() == before
+    if layers is not None:
+        assert candidate.quality.measure == pytest.approx(_case(case_id)["expectation"]["measure"])
+        dialog.layers.setText("-")
+        assert dialog.candidate is None and not dialog.adopt_button.isEnabled()
+        assert dialog.quality.rowCount() == 0 and "Passed" not in dialog.summary.text()
+        assert not dialog.generate() and dialog._task is None
+        dialog.present_candidate(candidate)
+        assert dialog.candidate is candidate and dialog.layers.numeric_value() == layers
+    if case_id == "H-D2":
+        by_part = [[cell.node_ids for cell in candidate.to_native_mesh().elements if cell.part_uuid == part.uuid]
+                   for part in candidate.parts]
+        assert len(by_part) == 2
+        assert len(set(sum(by_part[0], ())) & set(sum(by_part[1], ()))) == 63
+        sides = ((0,1,2,3), (4,5,6,7), (0,1,5,4), (1,2,6,5), (2,3,7,6), (3,0,4,7))
+        faces = [{frozenset(cell[i] for i in side) for cell in cells for side in sides} for cells in by_part]
+        assert len(faces[0] & faces[1]) == 48
     dialog.division_edits[0][0].setText("-")
     assert dialog.candidate is None and not dialog.adopt_button.isEnabled()
     assert dialog.quality.rowCount() == 0 and "Passed" not in dialog.summary.text()
@@ -114,6 +136,7 @@ def test_edited_real_candidate_protects_original_at_publish_and_v6_reopen(case_i
     assert dialog.open_candidate(candidate.manifest_path); pump_until(dialog)
     assert dialog.source.text() == str(source.resolve())
     assert [[edit.numeric_value() for edit in row] for row in dialog.division_edits] == divisions
+    if layers is not None: assert dialog.layers.numeric_value() == layers
     assert dialog.candidate == candidate
     observed = []
     project = tmp_path / "published.caeprep"
@@ -148,15 +171,16 @@ def test_edited_real_candidate_protects_original_at_publish_and_v6_reopen(case_i
 
 
 @pytest.mark.parametrize("change", ["shared", "budget", "zero", "upper"])
-def test_invalid_division_draft_starts_no_worker(change, tmp_path):
-    recipe = _case("Q-D2")["input"]
+@pytest.mark.parametrize("case_id", ["Q-D2", "H-D2"])
+def test_invalid_division_draft_starts_no_worker(change, case_id, tmp_path):
+    recipe = _case(case_id)["input"]
     source = _source(tmp_path, recipe)
     session, _, _ = _model(recipe["unit"])
     before = session.describe()
     dialog = MeshCandidateDialog(session, enable_viewport=False)
     choose(dialog.source_kind, "structured_recipe"); dialog.source.setText(str(source))
     dialog.output.setText(str(tmp_path / "assets")); assert dialog.load_divisions()
-    if change == "shared": dialog.division_edits[0][1].setText("5")
+    if change == "shared": dialog.division_edits[0][1].setText(str(recipe["patches"][0]["divisions"][1] + 1))
     elif change == "budget":
         for row in dialog.division_edits:
             for edit in row: edit.setText("10000")
@@ -203,7 +227,7 @@ def test_original_change_after_load_is_rejected_without_generation(monkeypatch, 
     dialog.reject()
 
 
-@pytest.mark.parametrize("case_id", ["Q-N3", "Q-D2"])
+@pytest.mark.parametrize("case_id", ["Q-N3", "Q-D2", "H-N3", "H-D2"])
 @pytest.mark.parametrize("change", ["unit", "geometry", "identity"])
 def test_reopened_candidate_checks_original_recipe_before_sdk(case_id, change, monkeypatch, tmp_path):
     from uuid import uuid4
@@ -246,3 +270,55 @@ def test_original_change_during_generation_cannot_publish_manifest(monkeypatch, 
     assert error.value.code == "candidate_changed"
     assert calls == ["caelab_prep.application.structured_mesh_worker"]
     assert not list((tmp_path / "assets").rglob("metadata.json"))
+
+
+@pytest.mark.parametrize("text", ["", "1.5", "0", "10001", "10000"])
+def test_invalid_hex_layers_keep_draft_and_start_no_worker(text, tmp_path):
+    recipe = _case("H-N3")["input"]
+    source = _source(tmp_path, recipe)
+    session, _, _ = _model(recipe["unit"], 3)
+    before = session.describe()
+    dialog = MeshCandidateDialog(session, enable_viewport=False)
+    choose(dialog.source_kind, "structured_recipe"); dialog.source.setText(str(source))
+    dialog.output.setText(str(tmp_path / "assets")); assert dialog.load_divisions()
+    dialog.layers.setText(text)
+    assert not dialog.generate() and dialog._task is None and dialog.error.text()
+    assert dialog.layers.text() == text and not (tmp_path / "assets").exists()
+    assert session.describe() == before and not dialog.adopt_button.isEnabled()
+    choose(dialog.source_kind, "cad_gmsh")
+    assert dialog.layers.isHidden() and dialog.layers.text() == ""
+    dialog.reject()
+
+
+@pytest.mark.parametrize("case_id", ["H-N3", "H-D2"])
+@pytest.mark.parametrize("change", ["vector", "mode"])
+def test_hex_original_vector_and_mode_cannot_change(case_id, change, monkeypatch, tmp_path):
+    recipe = _case(case_id)["input"]
+    source = _source(tmp_path, recipe)
+    _, origin = structured_mesh.read_recipe_input(source)
+    edited = deepcopy(recipe); edited["layers"] += 1
+    if change == "vector": edited["vector"] = [value * 1.1 for value in edited["vector"]]
+    else:
+        edited["mode"] = "quad"; del edited["vector"]; del edited["layers"]
+    monkeypatch.setattr(structured_mesh, "_child", lambda *a, **k: pytest.fail("changed source geometry launched a worker"))
+    with pytest.raises(PrepError) as error:
+        structured_mesh.generate_structured_mesh(edited, tmp_path / "assets", source_recipe=origin)
+    assert error.value.code == "invalid_recipe" and not (tmp_path / "assets").exists()
+
+
+@pytest.mark.parametrize("case_id", ["H-N3", "H-D2"])
+def test_loaded_layers_escape_restores_loaded_value_and_source_change_clears_it(case_id, tmp_path):
+    recipe = _case(case_id)["input"]
+    source = _source(tmp_path, recipe)
+    session, _, _ = _model(recipe["unit"], 3)
+    dialog = MeshCandidateDialog(session, enable_viewport=False)
+    choose(dialog.source_kind, "structured_recipe"); dialog.source.setText(str(source))
+    assert dialog.load_divisions()
+    dialog.layers.setText(str(recipe["layers"] + 1))
+    QTest.keyClick(dialog.layers, Qt.Key.Key_Escape)
+    assert dialog.layers.text() == str(recipe["layers"])
+    dialog.source.clear()
+    QTest.keyClick(dialog.layers, Qt.Key.Key_Escape)
+    assert dialog.layers.text() == "" and dialog._seed_recipe is None
+    assert dialog.candidate is None and not dialog.adopt_button.isEnabled()
+    dialog.reject()

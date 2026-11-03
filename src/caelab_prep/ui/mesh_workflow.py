@@ -203,7 +203,7 @@ class MeshCandidateDialog(QDialog):
         self.local_entity.currentIndexChanged.connect(self.highlight_entity)
         self.local_size = NumericEdit(minimum=0)
         form.addRow("Refine entity", self.local_entity); form.addRow("Local size", self.local_size)
-        self.load_divisions_button = QPushButton("Load quad divisions")
+        self.load_divisions_button = QPushButton("Load recipe divisions")
         self.load_divisions_button.clicked.connect(self.load_divisions)
         form.addRow(self.load_divisions_button)
         self.divisions = QTableWidget(0, 3)
@@ -212,7 +212,12 @@ class MeshCandidateDialog(QDialog):
         self.divisions.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.divisions.setMaximumHeight(125)
         self.divisions.setToolTip("Segment counts along the patch's ordered corner edges, not global X/Y. Shared edges must agree.")
-        form.addRow("Quad divisions", self.divisions)
+        form.addRow("Patch divisions", self.divisions)
+        self.layers = NumericEdit(integer=True, minimum=1, maximum=10000)
+        self.layers.setAccessibleName("Shared sweep layers")
+        self.layers.setToolTip("One sweep layer count for the whole hex recipe, shared by both patches.")
+        self.layers.textChanged.connect(self._divisions_changed)
+        form.addRow("Sweep layers", self.layers)
         self.generate_button = QPushButton("Generate candidate")
         self.cancel_job = QPushButton("Cancel generation"); self.cancel_job.setEnabled(False)
         self.generate_button.clicked.connect(self.generate)
@@ -265,7 +270,9 @@ class MeshCandidateDialog(QDialog):
         self.load_divisions_button.setVisible(structured)
         self.divisions.setVisible(structured and self._seed_recipe is not None)
         self.form.labelForField(self.divisions).setVisible(structured and self._seed_recipe is not None)
-        self.pick_hint.setText(("Planar quad4 / sweep hex8. Load quad divisions to edit segment counts; units and geometry stay in the recipe. " +
+        hex_layers = structured and self._seed_recipe is not None and self._seed_recipe.get("mode") == "hex"
+        self.layers.setVisible(hex_layers); self.form.labelForField(self.layers).setVisible(hex_layers)
+        self.pick_hint.setText(("Planar quad4 / sweep hex8. Load recipe divisions to edit segment counts and hex layers; units and geometry stay in the recipe. " +
                                ("Preview does not change the model." if self.viewport else "3D preview is disabled."))
                                if structured else "Click the preview to select an entity for local refinement.")
         self.quality.setSelectionMode(QTableWidget.SelectionMode.NoSelection if structured else QTableWidget.SelectionMode.ExtendedSelection)
@@ -287,6 +294,7 @@ class MeshCandidateDialog(QDialog):
         self._seed_recipe = self._seed_source = None
         self.division_edits = []
         self.divisions.setRowCount(0)
+        self.layers.blockSignals(True); self.layers.accept_value(""); self.layers.blockSignals(False)
 
     def _recipe_source_changed(self):
         if self._structured():
@@ -294,8 +302,10 @@ class MeshCandidateDialog(QDialog):
 
     def _set_divisions(self, recipe, source):
         self._clear_divisions()
-        if recipe.get("mode") != "quad": return
+        if recipe.get("mode") not in ("quad", "hex"): return
         self._seed_recipe = deepcopy(recipe); self._seed_source = source
+        if recipe["mode"] == "hex":
+            self.layers.blockSignals(True); self.layers.accept_value(recipe["layers"]); self.layers.blockSignals(False)
         patches = recipe.get("patches", [recipe])
         self.divisions.setRowCount(len(patches))
         for row, patch in enumerate(patches):
@@ -321,8 +331,6 @@ class MeshCandidateDialog(QDialog):
         try:
             recipe, source = read_recipe_input(self.source.text())
             validate_recipe(recipe)
-            if recipe.get("mode") != "quad":
-                raise ValueError("Division editing supports planar quad recipes. Edit sweep hex values in the JSON file.")
             self._set_divisions(recipe, source)
         except Exception as exc:
             self._show_error(exc); self._source_controls(); return False
@@ -355,7 +363,7 @@ class MeshCandidateDialog(QDialog):
 
     def _running(self, value):
         for widget in (*self._browse_buttons, self.source_kind, self.generate_button, self.open_button, self.source, self.output, self.size, self.dimension, self.policy, self.local_entity, self.local_size,
-                       self.material, self.section, self.replace, self.preview_mode, self.quality, self.load_divisions_button, self.divisions): widget.setEnabled(not value)
+                       self.material, self.section, self.replace, self.preview_mode, self.quality, self.load_divisions_button, self.divisions, self.layers): widget.setEnabled(not value)
         self.length.setEnabled(not value and bool(self.candidate and self.candidate.length_unit == "unknown"))
         self.preview_mode.setEnabled(not value and bool(self.candidate and self.candidate.dimension == 3))
         self.cancel_job.setEnabled(value)
@@ -388,6 +396,7 @@ class MeshCandidateDialog(QDialog):
                 try:
                     for patch, edits in zip(recipe.get("patches", [recipe]), self.division_edits):
                         patch["divisions"] = [edit.numeric_value() for edit in edits]
+                    if recipe["mode"] == "hex": recipe["layers"] = self.layers.numeric_value()
                     validate_recipe(recipe)
                 except Exception as exc:
                     self._show_error(exc); return False
