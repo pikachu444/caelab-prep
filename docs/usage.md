@@ -229,6 +229,20 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 질량·운동량·운동에너지와 TYPE7 main segment·면적·gap/stiffness의 계산 근거가 달라질 수 있습니다. 표시한 CLOAD 합계는 미평가 곡선 배수이며 실제 힘·모멘트나 응답 보존이 아닙니다. API의 `plan_element_deletion(references, orphan_policy="keep" | "delete_new")`·`apply_element_deletion`·`cancel_element_deletion`도 기존 sealed candidate/CAS·v6·Undo 경로를 사용합니다. 실제 OS/VTK·frozen·solver와 전체 P7b의 미확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
 
+<a id="element-part-ownership"></a>
+
+### 요소의 PART 소유 이동
+
+8개 표현의 **Mesh → Move elements to PART…**에서 요소를 **Add selected elements**로 모으고 **Target for all listed elements**의 PART를 직접 선택합니다. 대상은 native PART ID·이름·source와 UUID 참조로 구별합니다. 기본 선택은 미정이며, 선택한 대상은 목록 전체에 적용됩니다. 같은 요소의 중복은 한 행이고 이미 해당 PART에 속한 요소는 검토문에 **Already in chosen PART, unchanged**로 표시합니다. **Remove selected rows**는 미적용 목록에서만 제거합니다.
+
+**Preview ownership**은 각 변경 요소의 기존/제안 PART·MAT·PROP native ID와 이름·source, 조건과 접촉 대상의 변화를 보여 줍니다. 현재 요소가 있는 PART와 비어 있던 기존 PART 모두 참조 유일성·선언된 속성 family를 확인한 뒤, 실제 native trial의 이동 요소에서 기존 기계 프로필 검사로 정식화를 검증합니다. PROP 이름이나 기존 요소의 존재만으로 승인하지 않습니다. 모든 MAT 수치값·PROP 필드와 solver 수용을 인증한 결과는 아닙니다. 중복 PART ID·잘못된 assignment 원문도 목록을 읽을 수 있고, Preview에서 진단과 함께 Apply를 차단합니다.
+
+검토 체크 후 **Apply ownership** 한 번이 한 Undo입니다. native 요소 ID와 source resource, 좌표·연결·BEAM orientation·원문 행 suffix를 유지하며 source resource의 요소 행을 새 PART 헤더 블록으로 옮깁니다. 블록을 다시 구성하면 그 native 카드 블록 UUID는 바뀔 수 있습니다. 저장된 셸 각도·요소별 두께 override를 보존하므로 대상 PROP 두께를 무조건 덮어썼다고 표시하지 않습니다. PART의 MAT/PROP를 편집하는 기존 **Assign material / section…**과 다른 명령이며, 이 소유 이동은 두 PART의 MAT/PROP 선언 자체를 바꾸지 않습니다.
+
+원 집합·조건 선언은 보존하고 old/new PART의 실제 요소와 유입 source를 포함해 영향 집합을 stale로 남깁니다. PART ID가 같아도 main surface의 segment가 늘거나 줄 수 있습니다. 기존 **Replace prepared mesh / reconnect targets…**에서 현재 대상의 명시 mapping/필요한 [Drop](#mesh-target-drop)을 검토하기 전까지 native 출력을 막습니다. 빈 최종 집합·마지막 main support 제거, 보존할 수 없는 directive/layout와 지원 밖 native profile은 거부합니다. 대상 선택·목록·문서 변경은 preview를 무효화하며 **Close/Escape**는 미적용 초안만 취소합니다. 저장·재열기·한 Undo는 기존 v6 경로를 사용합니다.
+
+재료·단면과 접촉 segment가 달라지면 형상과 하중 대상 수·계수가 같아도 질량·강성·운동량·운동에너지와 물리 응답이 달라질 수 있습니다. API의 `plan_part_reassignment([{"element": scoped_ref, "part": scoped_part_ref}, ...])`·`apply_part_reassignment`·`cancel_part_reassignment`는 같은 검토/CAS 경로를 사용합니다. 실제 OS/VTK·frozen·solver와 N18 전체의 판정은 [현재 상태](../CURRENT_STATE.md#remaining-work)에서 구분합니다.
+
 <a id="node-move-images"></a>
 
 ### 실제 Windows 화면으로 좌표 이동 확인하기
