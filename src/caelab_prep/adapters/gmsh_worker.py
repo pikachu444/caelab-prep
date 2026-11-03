@@ -739,10 +739,50 @@ def _cylinder_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, u
             for face in surfaces if face["geometry_type"] == "Cylinder"]
 
 
+def _blend_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit):
+    from .gmsh_geometry import cylindrical_blend_shape, plan_analytic_material_probe, _material_plan_row
+    cache = {}
+    by_surface = {face["uuid"]: face for face in surfaces}
+    by_volume = {volume["uuid"]: volume for volume in volumes}
+    for face in surfaces:
+        if face["geometry_type"] != "Cylinder":
+            continue
+        shape = cylindrical_blend_shape(face, surfaces, volumes, curves, tolerance, unit)
+        if not shape["eligible"]:
+            row = _material_plan_row(face, tolerance)
+            row.update(volume_uuid=shape["volume_uuid"], reason=shape["reason"])
+            cache.setdefault(face["uuid"], row)
+            continue
+        for identity in (face["uuid"], *shape["support_surface_uuids"]):
+            if identity in cache:
+                continue
+            row = plan_analytic_material_probe(by_surface[identity], surfaces, volumes, tolerance, unit)
+            cache[identity] = row
+            if row["status"] != "ready":
+                continue
+            for side in ("plus", "minus"):
+                try:
+                    count = gmsh.model.isInside(3, by_volume[row["volume_uuid"]]["backend_tag"], row[side]["xyz"], parametric=False)
+                except Exception as exc:
+                    row.update(status="indeterminate", reason="volume_query_error: " + str(exc))
+                    break
+                if type(count) is not int or count not in (0, 1):
+                    row.update(status="indeterminate", reason="invalid_inside_count: " + repr(count))
+                    break
+                row[side]["inside_count"] = count
+            else:
+                pair = row["plus"]["inside_count"], row["minus"]["inside_count"]
+                if pair[0] == pair[1]:
+                    row.update(status="indeterminate", reason="ambiguous_equal_inside_counts")
+                else:
+                    row.update(status="observed", material_normal_sign=1 if pair == (0, 1) else -1)
+    return list(cache.values())
+
+
 def _inspect_geometry(request):
     from .gmsh_backend import _FORMATS
     supported = {"source_kind", "source", "original_source", "source_sha256", "output_dir",
-                 "expected_coordinate_length_unit", "probe_cylinder_material_side"}
+                 "expected_coordinate_length_unit", "probe_cylinder_material_side", "probe_cylindrical_blends"}
     unknown = sorted(request.keys() - supported)
     if unknown:
         raise WorkerFailure("unsupported_criteria", "Geometry inspection does not generate or configure a mesh", criteria=unknown)
@@ -750,6 +790,9 @@ def _inspect_geometry(request):
     probe_material = request.get("probe_cylinder_material_side", False)
     if type(probe_material) is not bool:
         raise WorkerFailure("invalid_request", "probe_cylinder_material_side must be boolean")
+    probe_blends = request.get("probe_cylindrical_blends", False)
+    if type(probe_blends) is not bool:
+        raise WorkerFailure("invalid_request", "probe_cylindrical_blends must be boolean")
     if expected is not None and expected not in ("mm", "cm", "m"):
         raise WorkerFailure("invalid_request", "Expected coordinate length unit must be mm, cm or m")
     try:
@@ -855,6 +898,7 @@ def _inspect_geometry(request):
                 "analytic_properties": _analytic_properties(gmsh, 1, tag, kind),
                 "endpoints": endpoints, "adjacent_surface_uuids": adjacent_refs})
         probes = _cylinder_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit) if probe_material else None
+        blend_probes = _blend_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit) if probe_blends else None
         gmsh.write(str(xao))
         messages = list(gmsh.logger.get())
         errors = [message for message in messages if message.startswith("Error:")]
@@ -877,6 +921,11 @@ def _inspect_geometry(request):
         if probes is not None:
             result["cylinder_material_side_probes"] = probes
             result["topology_semantics"]["samples"] = "UV bounds midpoint; trim includes IN or ON; boundary clearance unverified; no feature classification"
+        if blend_probes is not None:
+            from .gmsh_geometry import BLEND_PROBE_POLICY
+            result["blend_material_side_probes"] = blend_probes
+            result["blend_probe_policy"] = dict(BLEND_PROBE_POLICY)
+            result["topology_semantics"]["samples"] = "Raw trim samples and bounded material-side probes; no feature classification"
         temporary = metadata.with_suffix(".json.tmp")
         with temporary.open("x", encoding="utf-8") as stream:
             json.dump(result, stream, ensure_ascii=False, allow_nan=False)
@@ -892,8 +941,8 @@ def _inspect_geometry(request):
 
 
 def generate(request):
-    if request.get("source_kind") != "cad_geometry_inspection" and "probe_cylinder_material_side" in request:
-        raise WorkerFailure("unsupported_criteria", "Cylinder material-side probes require geometry inspection")
+    if request.get("source_kind") != "cad_geometry_inspection" and {"probe_cylinder_material_side", "probe_cylindrical_blends"} & request.keys():
+        raise WorkerFailure("unsupported_criteria", "Geometry material-side probes require geometry inspection")
     unimplemented = sorted({"washer_rim_divisions", "washer_width", "washer_layers",
                             "fillet_suppression_threshold"} & request.keys())
     if unimplemented:

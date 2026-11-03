@@ -20,6 +20,7 @@ from caelab_prep.ui.main_window import MainWindow
 from caelab_prep.ui.reference_profiles import PROFILES
 from test_external_mesh_ui import pump, wait_task
 from test_geometry_features import hole
+from test_cylindrical_blends import blend_evidence, persist
 
 
 pytestmark = pytest.mark.usefixtures("qt_widgets")
@@ -214,5 +215,71 @@ def test_real_unshown_vtk_pipeline_replaces_the_cleared_preview(inspection):
         assert not view._initialized and view._widget.GetRenderWindow().GetNeverRendered() == 1
         assert view._grid.GetNumberOfCells() == len(dialog.projection["cells"])
         assert view._visible_grid.GetNumberOfCells() == len(dialog.projection["cells"])
+    finally:
+        dialog.reject()
+
+
+@pytest.mark.parametrize("cusp", [False, True])
+def test_blend_review_uses_partial_arcs_and_signed_tangent_evidence(tmp_path, cusp):
+    data, metadata = blend_evidence(tmp_path, cusp=cusp)
+    dialog = GeometryFeaturesDialog(enable_viewport=False)
+    try:
+        assert dialog.present_inspection(persist(data, metadata))
+        assert dialog.table.rowCount() == (0 if cusp else 1)
+        if cusp:
+            assert "material normals not g1" in dialog.summary.toolTip()
+            assert not any(dialog._primitive_owners.values())
+        else:
+            assert dialog.table.item(0, 0).text() == "Cylindrical blend"
+            assert dialog.table.item(0, 1).text() == "1" and dialog.table.item(0, 2).text() == "3"
+            assert "Material-oriented tangent joins" in dialog.details.text()
+            face = dialog.report["features"][0]["surface_uuid"]
+            owned = [cell for cell in dialog.projection["cells"] if dialog._primitive_owners[cell["id"]] == face]
+            assert len(owned) == 35  # Two generatrices, two 16-segment arcs, axis; no full rings.
+            points = dict(zip(dialog.projection["node_ids"], dialog.projection["points"]))
+            for node in {node for cell in owned for node in cell["nodes"]}:
+                x, y, z = points[node]
+                assert -1e-12 <= x <= 1. + 1e-12 and -1e-12 <= y <= 1. + 1e-12
+                assert z in (0., 3.)
+    finally:
+        dialog.reject()
+
+
+def test_blend_radius_filter_reclassifies_saved_evidence_and_escape_restores_last_review(tmp_path, monkeypatch):
+    data, metadata = blend_evidence(tmp_path)
+    dialog = GeometryFeaturesDialog(enable_viewport=False)
+    try:
+        monkeypatch.setattr("caelab_prep.adapters.gmsh_backend.GmshBackend.inspect_geometry",
+                            lambda *args, **kwargs: pytest.fail("Filter changes must not query SDK"))
+        assert dialog.present_inspection(persist(data, metadata))
+        dialog.limit_blend_radius.setChecked(True)
+        dialog.blend_radius.setText("0.9")
+        assert dialog.reclassify() and dialog.table.rowCount() == 0
+        dialog.show(); pump()
+        dialog.blend_radius.setFocus(); pump(); assert dialog.blend_radius.hasFocus()
+        dialog.blend_radius.selectAll(); QTest.keyClicks(dialog.blend_radius, "invalid")
+        assert dialog.report is None and not dialog.projection
+        QTest.keyClick(dialog.blend_radius, Qt.Key.Key_Escape); pump()
+        assert dialog.blend_radius.numeric_value() == .9 and dialog.table.rowCount() == 0
+        assert dialog.report["blend_review"]["radius_threshold"] == .9
+        dialog.limit_blend_radius.setChecked(False)
+        assert dialog.table.rowCount() == 1
+    finally:
+        dialog.reject()
+
+
+def test_saved_unknown_unit_evidence_cannot_be_displayed_with_mm_labels(inspection):
+    dialog = GeometryFeaturesDialog(enable_viewport=False)
+    try:
+        assert dialog.present_inspection(inspection) and dialog.table.rowCount() == 1
+        data = inspection.to_dict()
+        data["length_unit"] = "unknown"
+        data.pop("cylinder_material_side_probes")
+        metadata = Path(data["assets"]["metadata"])
+        metadata.write_text(json.dumps(data), encoding="utf-8")
+        non_mm = read_geometry_inspection(metadata)
+        assert not dialog.present_inspection(non_mm)
+        assert dialog.inspection is None and dialog.report is None and not dialog.projection
+        assert dialog.table.rowCount() == 0 and "not rescaled" in dialog.error.text()
     finally:
         dialog.reject()

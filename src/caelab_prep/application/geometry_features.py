@@ -1,13 +1,14 @@
-"""Conservative hole candidates from bounded analytic CAD evidence.
+"""Conservative hole and cylindrical blend candidates from analytic CAD evidence.
 
 The first supported family is an axis-aligned full cylindrical wall ending in
 planar disks or rectangular caps with one circular opening. Other trims remain
 unclassified. This module does not query SDKs, alter B-Rep or configure meshing.
 """
-from collections import Counter
 from dataclasses import asdict
 import math
 
+from ..adapters.gmsh_topology import rectangular_wire
+from ..adapters.gmsh_geometry import cylindrical_blend_shape
 from .geometry_inspection import GeometryInspection
 from ..cae_core.errors import PrepError
 
@@ -19,52 +20,13 @@ def _basis(vector):
 
 def _rectangle(curve_tags, curves, axis, center, radius, tolerance):
     """Require four actual shared-vertex lines, not a bounding-box heuristic."""
-    if len(curve_tags) != 4 or len(set(map(abs, curve_tags))) != 4:
+    wire = rectangular_wire(curve_tags, curves, axis, center[axis], tolerance)
+    if wire is None:
         return None
-    vertices, degrees, edges = {}, Counter(), []
-    for tag in curve_tags:
-        curve = curves[abs(tag)]
-        endpoints = curve["endpoints"]
-        if curve["geometry_type"] != "Line" or len(endpoints) != 2:
-            return None
-        first, second = (point["backend_tag"] for point in endpoints)
-        if first == second:
-            return None
-        for point in endpoints:
-            vertex, xyz = point["backend_tag"], tuple(point["xyz"])
-            if vertex in vertices and vertices[vertex] != xyz:
-                return None
-            vertices[vertex] = xyz
-            degrees[vertex] += 1
-        edges.append((first, second))
-    if (len(vertices) != 4 or set(degrees.values()) != {2}
-            or len({tuple(sorted(edge)) for edge in edges}) != 4):
-        return None
-    plane_axes = [index for index in range(3) if index != axis]
-    if any(abs(point[axis] - center[axis]) > tolerance for point in vertices.values()):
-        return None
-    low = [min(point[index] for point in vertices.values()) for index in plane_axes]
-    high = [max(point[index] for point in vertices.values()) for index in plane_axes]
     if any(not a + radius + tolerance < center[index] < b - radius - tolerance
-           for index, a, b in zip(plane_axes, low, high)):
+           for index, a, b in zip(wire["plane_axes"], wire["minimum"], wire["maximum"])):
         return None
-    corners = {}
-    for vertex, point in vertices.items():
-        corner = []
-        for index, a, b in zip(plane_axes, low, high):
-            if abs(point[index] - a) <= tolerance:
-                corner.append(0)
-            elif abs(point[index] - b) <= tolerance:
-                corner.append(1)
-            else:
-                return None
-        corners[vertex] = tuple(corner)
-    if set(corners.values()) != {(0, 0), (0, 1), (1, 0), (1, 1)}:
-        return None
-    if any(sum(a != b for a, b in zip(corners[first], corners[second])) != 1 for first, second in edges):
-        return None
-    lengths = [b - a for a, b in zip(low, high)]
-    return math.prod(lengths), 2 * sum(lengths)
+    return wire["area"], wire["perimeter"]
 
 
 def _cap(circle, cylinder, volume_uuid, surfaces, curves, axis, origin, radius, tolerance):
@@ -169,3 +131,93 @@ def recognize_cylindrical_holes(inspection: GeometryInspection, *, length_tolera
             "assets": [asdict(asset) for asset in inspection.assets], "length_tolerance": length_tolerance,
             "features": features, "unclassified": unclassified, "modifications": 0,
             "scope": "axis-aligned full cylinders with planar disks or one-hole rectangular caps; candidates only"}
+
+
+def recognize_cylindrical_blends(inspection: GeometryInspection, *, length_tolerance,
+                                 angular_tolerance=1e-6, radius_threshold=None):
+    """Review material-oriented G1 joins in the first quarter-cylinder family.
+
+    A connected analytic strip and rectangular supports make each signed normal
+    constant along its shared generatrix. The result is a geometric candidate,
+    not CAD history or permission to suppress an edge or alter the B-Rep.
+    """
+    if not isinstance(inspection, GeometryInspection):
+        raise PrepError("geometry_feature_input", "Read a geometry inspection before recognizing features.")
+    for value in (length_tolerance, angular_tolerance):
+        try:
+            valid = type(value) in (int, float) and math.isfinite(value) and value > 0
+        except OverflowError:
+            valid = False
+        if not valid:
+            raise PrepError("geometry_feature_tolerance", "Declare finite positive length and angular tolerances.")
+    if not 1e-6 <= angular_tolerance < math.pi / 2:
+        raise PrepError("geometry_feature_tolerance", "Angular tolerance must be at least 1e-6 and below pi/2 radians.")
+    if radius_threshold is not None:
+        try:
+            valid = type(radius_threshold) in (int, float) and math.isfinite(radius_threshold) and radius_threshold >= 0
+        except OverflowError:
+            valid = False
+        if not valid:
+            raise PrepError("geometry_feature_threshold", "Declare a finite nonnegative radius threshold in mm.")
+    inspection.verify_assets()
+    data = inspection.to_dict()
+    surfaces = {row["uuid"]: row for row in data["surfaces"]}
+    curves = {row["backend_tag"]: row for row in data["curves"]}
+    probes = {row["surface_uuid"]: row for row in data.get("blend_material_side_probes", [])}
+    features, unclassified = [], []
+    for face in surfaces.values():
+        if face["geometry_type"] != "Cylinder":
+            continue
+        shape = cylindrical_blend_shape(face, data["surfaces"], data["volumes"], data["curves"],
+            data["geometry_tolerance"], data["length_unit"], length_tolerance=length_tolerance,
+            angular_tolerance=angular_tolerance)
+        identity, reason = face["uuid"], shape["reason"]
+        joins = []
+        if shape["eligible"]:
+            ids = [identity, *shape["support_surface_uuids"]]
+            if any(probes.get(key, {}).get("status") != "observed"
+                   or probes[key].get("volume_uuid") != shape["volume_uuid"]
+                   or type(probes[key].get("material_normal_sign")) is not int
+                   or probes[key]["material_normal_sign"] not in (-1, 1) for key in ids):
+                reason = "material_side_unverified"
+            else:
+                axis, origin = shape["axis_index"], shape["axis_point"]
+                for support_id, tag in zip(shape["support_surface_uuids"], shape["shared_line_tags"]):
+                    ends = curves[tag]["endpoints"]
+                    point = [a / 2 + b / 2 for a, b in zip(ends[0]["xyz"], ends[1]["xyz"])]
+                    radial = [0. if i == axis else point[i] - origin[i] for i in range(3)]
+                    radial_length = math.hypot(*radial)
+                    cylinder_normal = [value / radial_length * probes[identity]["material_normal_sign"] for value in radial]
+                    coefficients = surfaces[support_id]["analytic_properties"]["reals"][:3]
+                    norm = math.hypot(*coefficients)
+                    plane_normal = [value / norm * probes[support_id]["material_normal_sign"] for value in coefficients]
+                    dot = max(-1., min(1., sum(a * b for a, b in zip(cylinder_normal, plane_normal))))
+                    joins.append({"support_surface_uuid": support_id, "shared_line_tag": tag,
+                        "point": point, "cylinder_material_normal": cylinder_normal,
+                        "support_material_normal": plane_normal, "signed_normal_dot": dot,
+                        "angle_radians": math.acos(dot)})
+                if any(join["signed_normal_dot"] < math.cos(angular_tolerance) for join in joins):
+                    reason = "material_normals_not_g1"
+                elif radius_threshold is not None and shape["radius"] > radius_threshold:
+                    reason = "radius_above_threshold"
+        if reason:
+            unclassified.append({"surface_uuid": identity, "reason": reason, "tangent_edges": joins})
+            continue
+        end_arcs = []
+        for tag in shape["evidence"]["end_arc_tags"]:
+            endpoints = [row["xyz"] for row in curves[tag]["endpoints"]]
+            center = list(shape["axis_point"])
+            center[shape["axis_index"]] = endpoints[0][shape["axis_index"]]
+            end_arcs.append({"curve_tag": tag, "center": center, "endpoints": endpoints})
+        features.append({"kind": "cylindrical_blend_candidate", "qualification": "candidate",
+            "surface_uuid": identity, "volume_uuid": shape["volume_uuid"], "radius": shape["radius"],
+            "axis_point": shape["axis_point"], "axis_direction": face["analytic_properties"]["reals"][3:6],
+            "axial_range": shape["axial_range"], "end_arcs": end_arcs, "tangent_edges": joins,
+            "shape_evidence": shape["evidence"], "material_side_evidence": [probes[key] for key in ids]})
+    inspection.verify_assets()
+    return {"geometry_resource_uuid": inspection.geometry_resource_uuid,
+            "geometry_revision": inspection.geometry_revision, "length_unit": inspection.length_unit,
+            "assets": [asdict(asset) for asset in inspection.assets], "length_tolerance": length_tolerance,
+            "angular_tolerance_radians": angular_tolerance, "radius_threshold": radius_threshold,
+            "features": features, "unclassified": unclassified, "modifications": 0,
+            "scope": "mm axis-aligned quarter cylinders with rectangular supports and material-oriented G1 joins; candidates only"}
