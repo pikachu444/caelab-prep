@@ -1,9 +1,10 @@
 """Pure/fake material-oriented blend classification; no native CAD evidence."""
 from copy import deepcopy
-import hashlib
 import json
 import math
 from uuid import uuid4
+
+from geometry_evidence_fixtures import material_inspection_data
 
 import pytest
 
@@ -16,37 +17,12 @@ from test_blend_backend import blend_scene, membership
 
 
 def blend_evidence(tmp_path, *, cusp=False, axis_sign=1):
-    surfaces, volumes, curves = blend_scene(cusp=cusp, axis_sign=axis_sign)
-    identities = {row["uuid"]: str(uuid4()) for row in [*surfaces, *volumes]}
-    for tag, face in enumerate(surfaces, 1):
-        face.update(uuid=identities[face["uuid"]], backend_tag=tag,
-                    center=face["samples"][0]["xyz"], normal_basis="gmsh_face_oriented_no_volume_sign",
-                    sampling_status="unverified")
-        face["samples"][0]["uv"] = [0., 0.]
-        for use in face["orientation_by_volume"]:
-            use["volume_uuid"] = identities[use["volume_uuid"]]
-    for volume in volumes:
-        volume.update(uuid=identities[volume["uuid"]], bbox=[0., 0., 0., 12., 8., 3.],
-                      surface_uuids=[identities[value] for value in volume["surface_uuids"]])
-    for curve in curves:
-        curve["adjacent_surface_uuids"] = [identities[value] for value in curve["adjacent_surface_uuids"]]
-        points = [row["xyz"] for row in curve["endpoints"]]
-        curve["bbox"] = [min(p[i] for p in points) for i in range(3)] + [max(p[i] for p in points) for i in range(3)]
+    geometry = blend_scene(cusp=cusp, axis_sign=axis_sign)
     sdk, calls = membership(cusp=cusp)
-    probes = gmsh_worker._blend_material_side_probes(sdk, surfaces, volumes, curves, 1e-8, "mm")
+    probes = gmsh_worker._blend_material_side_probes(sdk, *geometry, 1e-8, "mm")
     assert len(calls) == 6  # Fake membership only, never an SDK execution.
-    source, xao, metadata = (tmp_path / name for name in ("source.step", "geometry.xao", "metadata.json"))
-    source.write_bytes(b"synthetic blend reader source, not native CAD")
-    xao.write_bytes(b"synthetic blend reader XAO, not native CAD")
-    data = {"schema_version": 1, "source_kind": "cad_geometry_inspection",
-        "backend": {"name": "gmsh", "version": "fake"},
-        "geometry_resource_uuid": str(uuid4()), "geometry_revision": 1, "length_unit": "mm",
-        "source": {"path": str(source), "captured_path": str(source),
-                   "sha256": hashlib.sha256(source.read_bytes()).hexdigest()},
-        "assets": {"xao": str(xao), "metadata": str(metadata)}, "sdk_error_count": 0,
-        "geometry_tolerance": 1e-8, "surfaces": surfaces, "volumes": volumes, "curves": curves,
-        "blend_probe_policy": deepcopy(BLEND_PROBE_POLICY), "blend_material_side_probes": probes}
-    return data, metadata
+    return material_inspection_data(tmp_path, geometry,
+        probe_rows={"blend_material_side_probes": probes}, policies={"blend_probe_policy": BLEND_PROBE_POLICY})
 
 
 def persist(data, metadata):

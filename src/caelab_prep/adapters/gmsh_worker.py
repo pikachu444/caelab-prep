@@ -739,24 +739,28 @@ def _cylinder_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, u
             for face in surfaces if face["geometry_type"] == "Cylinder"]
 
 
-def _blend_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit):
-    from .gmsh_geometry import cylindrical_blend_shape, plan_analytic_material_probe, _material_plan_row
+def _analytic_blend_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit, *, conical=False):
+    from .gmsh_geometry import (cylindrical_blend_shape,conical_blend_shape,
+                               plan_analytic_material_probe,_material_plan_row)
+    shape_reader = conical_blend_shape if conical else cylindrical_blend_shape
+    kind = "Cone" if conical else "Cylinder"
     cache = {}
     by_surface = {face["uuid"]: face for face in surfaces}
     by_volume = {volume["uuid"]: volume for volume in volumes}
     for face in surfaces:
-        if face["geometry_type"] != "Cylinder":
+        if face["geometry_type"] != kind:
             continue
-        shape = cylindrical_blend_shape(face, surfaces, volumes, curves, tolerance, unit)
+        shape = shape_reader(face, surfaces, volumes, curves, tolerance, unit)
         if not shape["eligible"]:
-            row = _material_plan_row(face, tolerance)
+            row = _material_plan_row(face, tolerance, conical_supports=True) if conical else _material_plan_row(face, tolerance)
             row.update(volume_uuid=shape["volume_uuid"], reason=shape["reason"])
             cache.setdefault(face["uuid"], row)
             continue
         for identity in (face["uuid"], *shape["support_surface_uuids"]):
             if identity in cache:
                 continue
-            row = plan_analytic_material_probe(by_surface[identity], surfaces, volumes, tolerance, unit)
+            row = (plan_analytic_material_probe(by_surface[identity], surfaces, volumes, tolerance, unit, conical_supports=True)
+                   if conical else plan_analytic_material_probe(by_surface[identity], surfaces, volumes, tolerance, unit))
             cache[identity] = row
             if row["status"] != "ready":
                 continue
@@ -779,10 +783,18 @@ def _blend_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit
     return list(cache.values())
 
 
+def _blend_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit):
+    return _analytic_blend_material_side_probes(gmsh,surfaces,volumes,curves,tolerance,unit)
+
+
+def _conical_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit):
+    return _analytic_blend_material_side_probes(gmsh,surfaces,volumes,curves,tolerance,unit,conical=True)
+
+
 def _inspect_geometry(request):
     from .gmsh_backend import _FORMATS
     supported = {"source_kind", "source", "original_source", "source_sha256", "output_dir",
-                 "expected_coordinate_length_unit", "probe_cylinder_material_side", "probe_cylindrical_blends"}
+                 "expected_coordinate_length_unit", "probe_cylinder_material_side", "probe_cylindrical_blends", "probe_conical_blends"}
     unknown = sorted(request.keys() - supported)
     if unknown:
         raise WorkerFailure("unsupported_criteria", "Geometry inspection does not generate or configure a mesh", criteria=unknown)
@@ -793,6 +805,9 @@ def _inspect_geometry(request):
     probe_blends = request.get("probe_cylindrical_blends", False)
     if type(probe_blends) is not bool:
         raise WorkerFailure("invalid_request", "probe_cylindrical_blends must be boolean")
+    probe_conical = request.get("probe_conical_blends", False)
+    if type(probe_conical) is not bool:
+        raise WorkerFailure("invalid_request", "probe_conical_blends must be boolean")
     if expected is not None and expected not in ("mm", "cm", "m"):
         raise WorkerFailure("invalid_request", "Expected coordinate length unit must be mm, cm or m")
     try:
@@ -899,6 +914,7 @@ def _inspect_geometry(request):
                 "endpoints": endpoints, "adjacent_surface_uuids": adjacent_refs})
         probes = _cylinder_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit) if probe_material else None
         blend_probes = _blend_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit) if probe_blends else None
+        conical_probes = _conical_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit) if probe_conical else None
         gmsh.write(str(xao))
         messages = list(gmsh.logger.get())
         errors = [message for message in messages if message.startswith("Error:")]
@@ -926,6 +942,11 @@ def _inspect_geometry(request):
             result["blend_material_side_probes"] = blend_probes
             result["blend_probe_policy"] = dict(BLEND_PROBE_POLICY)
             result["topology_semantics"]["samples"] = "Raw trim samples and bounded material-side probes; no feature classification"
+        if conical_probes is not None:
+            from .gmsh_geometry import CONICAL_PROBE_POLICY
+            result["conical_material_side_probes"] = conical_probes
+            result["conical_probe_policy"] = dict(CONICAL_PROBE_POLICY)
+            result["topology_semantics"]["samples"] = "Raw trim samples and bounded material-side probes; no feature classification"
         temporary = metadata.with_suffix(".json.tmp")
         with temporary.open("x", encoding="utf-8") as stream:
             json.dump(result, stream, ensure_ascii=False, allow_nan=False)
@@ -941,7 +962,7 @@ def _inspect_geometry(request):
 
 
 def generate(request):
-    if request.get("source_kind") != "cad_geometry_inspection" and {"probe_cylinder_material_side", "probe_cylindrical_blends"} & request.keys():
+    if request.get("source_kind") != "cad_geometry_inspection" and {"probe_cylinder_material_side", "probe_cylindrical_blends", "probe_conical_blends"} & request.keys():
         raise WorkerFailure("unsupported_criteria", "Geometry material-side probes require geometry inspection")
     unimplemented = sorted({"washer_rim_divisions", "washer_width", "washer_layers",
                             "fillet_suppression_threshold"} & request.keys())
