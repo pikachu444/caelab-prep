@@ -1,6 +1,8 @@
 """Prepared straight Tet10 uses the existing standalone/Undo/project/native path."""
 from pathlib import Path
 from importlib.util import find_spec
+import subprocess
+import sys
 
 import pytest
 
@@ -174,6 +176,34 @@ def test_second_adoption_reserves_two_row_element_ids(tmp_path, sdk):
     assert set(first['element_id_map'].values()).isdisjoint(second['element_id_map'].values())
     assert set(first['node_id_map'].values()).isdisjoint(second['node_id_map'].values())
     assert len(session.mesh_view()['cells']) == 2
+
+
+def test_saved_tet10_case_exports_geometry_and_only_selected_conditions(tmp_path, sdk):
+    imported, _ = candidate(tmp_path)
+    session, material, section = model()
+    adopted = session.adopt_mesh_candidate(imported.to_native_mesh(), material_id=material, property_id=section)
+    group = session.create_node_group('All ten nodes', list(adopted['node_id_map'].values()))['card_id']
+    guide = session.create_boundary_condition('Guide YZ', group, [False,True,True], [False,False,False])['card_id']
+    speed = session.create_initial_velocity('Selected speed', group, [2.5,0,0])['card_id']
+    excluded = session.create_initial_velocity('Excluded speed', group, [5,0,0])['card_id']
+    case = session.create_analysis_case('Rigid motion', [guide, speed], 1e-6, 1e-7, 's')['case_id']
+    session.select_analysis_case(case)
+    project = tmp_path/'case.caeprep'; session.save_project(project)
+    before = {card['id']: session.card_text(card['id']) for card in session.list_cards()}
+    output = tmp_path/'native'/'rigid_0000.rad'
+    code = ('from caelab_prep.application import PrepSession; import sys; '
+            's=PrepSession();s.open_project(sys.argv[1]);s.export_analysis_case(sys.argv[2])')
+    subprocess.run([sys.executable, '-c', code, str(project), str(output)], check=True,
+                   capture_output=True, text=True, timeout=30)
+    data = output.read_bytes()
+    assert session.card_text(speed).encode('ascii') in data
+    assert session.card_text(guide).encode('ascii') in data
+    assert session.card_text(excluded).encode('ascii') not in data
+    deck = DeckResource(data)
+    cells = deck.mesh_projection()['cells']
+    assert len(cells) == 1 and cells[0]['formulation'] == 'TETRA10' and len(cells[0]['nodes']) == 10
+    assert '/RUN/rigid/1\n1e-06\n/ANIM/DT\n0 1e-07\n' in output.with_name('rigid_0001.rad').read_text()
+    assert {card['id']: session.card_text(card['id']) for card in session.list_cards()} == before
 
 
 @pytest.mark.parametrize('method', ['save_project', 'export_rad'])
