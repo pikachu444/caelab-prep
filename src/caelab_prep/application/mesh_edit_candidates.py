@@ -364,6 +364,12 @@ def _finish(candidate,affected_cells,*,normal_flip=False,contact_dependencies=()
     resources={r.resource_id for r in changed_nodes|affected_cells|deleted_cells}
     affected_parts={base._cells[r].part for r in affected_cells}|{c.part for c in candidate.cell_updates}
     updated_sets={s.ref:s for s in candidate.set_updates};mapping=dict(candidate.merge_map);impacts=[];set_impacts={}
+    live_parts={cell.part for cell in candidate.iter_cells()}
+    def projected_members(group):
+        if group.ref in updated_sets: return updated_sets[group.ref].members
+        return tuple(mapping.get(r,r) for r in group.members if r not in deleted_cells
+                     and (r not in deleted_nodes or r in mapping)
+                     and (group.member_kind!='part' or r in live_parts))
     contact_sets={ref for use in base.uses if use.ref in contact_dependencies for ref in use.targets}
     for group in base.sets:
         hits=(set(group.members)&(changed_nodes|affected_node_support|affected_cells|affected_parts))
@@ -376,7 +382,7 @@ def _finish(candidate,affected_cells,*,normal_flip=False,contact_dependencies=()
         if group.ref in updated_sets: reasons.append('explicit_membership_replaced')
         if normal_flip and (group.orientation_sensitive or group.member_kind in ('element','part')): reasons.append('surface_orientation_changed')
         remaining=set(group.members)-deleted_nodes-deleted_cells
-        projected=set(updated_sets[group.ref].members) if group.ref in updated_sets else {mapping.get(r,r) for r in group.members if r not in deleted_cells and (r not in deleted_nodes or r in mapping)}
+        projected=set(projected_members(group))
         impact=Impact(group.ref,tuple(reasons),len(group.members),len(remaining),len(projected))
         impacts.append(impact);set_impacts[group.ref]=impact
     live_cells={r:c for r,c in cell_updates.items()}
@@ -386,9 +392,6 @@ def _finish(candidate,affected_cells,*,normal_flip=False,contact_dependencies=()
         if group.member_kind=='node': return set(members)-deleted_nodes
         cells=[live_cell(r) for r in members] if group.member_kind=='element' else [c for c in candidate.iter_cells() if c.part in members]
         return {n for c in cells if c is not None for n in c.nodes}
-    def projected_members(group):
-        if group.ref in updated_sets: return updated_sets[group.ref].members
-        return tuple(mapping.get(r,r) for r in group.members if r not in deleted_cells and (r not in deleted_nodes or r in mapping))
     for use in base.uses:
         targets=[set_impacts[r] for r in use.targets if r in set_impacts]
         if not targets: continue

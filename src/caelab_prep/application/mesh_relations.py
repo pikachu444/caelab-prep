@@ -17,6 +17,23 @@ from ..radioss.modeling import native_identity, member_block
 from .model_relations import supported_condition_fields
 
 
+def explicit_member_state(resource, card_id, identifiers):
+    """Replace validated native member rows, preserving title and comments."""
+    card = resource.card(card_id)
+    family = "/".join(card.keyword.upper().strip("/").split("/")[:2])
+    lines = resource.render().decode("latin1").splitlines(keepends=True)
+    block = lines[card.start:card.stop]
+    data_rows = {index-card.start for index in card.data[1:]}
+    rows = member_block(family, native_identity(card.keyword)[1], card.title, identifiers,
+                        newline=resource.newline).splitlines(keepends=True)[2:]
+    output, inserted = [], False
+    for index, line in enumerate(block):
+        if index in data_rows:
+            if not inserted: output.extend(rows); inserted = True
+        else: output.append(line)
+    return resource.replaced_state(card_id, "".join(output))
+
+
 class ModelRelationsResource:
     kind = "native-model-relations"
 
@@ -277,19 +294,7 @@ class MeshRelationCommands:
                             dropped_count=len(dropped), coalesced_count=len(members) - len(identifiers))
             links.append(link)
             candidate = candidates.setdefault(resource.id, copy(resource))
-            # Only member rows are replaced; preserve title, comments and
-            # non-target card bytes, including comments inside the group.
-            lines = candidate.render().decode("latin1").splitlines(keepends=True)
-            current = candidate.card(card_id)
-            block = lines[current.start:current.stop]
-            data_rows = {index-current.start for index in current.data[1:]}
-            rows = member_block(family, native_identity(card.keyword)[1], card.title, identifiers, newline=resource.newline).splitlines(keepends=True)[2:]
-            output, inserted = [], False
-            for index, line in enumerate(block):
-                if index in data_rows:
-                    if not inserted: output.extend(rows); inserted=True
-                else: output.append(line)
-            candidate.restore(candidate.replaced_state(card_id, "".join(output)))
+            candidate.restore(explicit_member_state(candidate, card_id, identifiers))
             del relations["stale_targets"][card_id]; changed_objects.append(card_id)
         states = {key: value.snapshot() for key,value in candidates.items()}
         states[self._relations_resource().id] = relations

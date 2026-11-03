@@ -217,6 +217,18 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 존재하는 절점 ID라도 기계 요소에 붙지 않으면 BCS 또는 TYPE7 secondary의 최종 대상으로 적용할 수 없습니다. 잘못된 대응은 검토/Apply 전에 거절하고 원 선언·stale·입력 링크를 유지합니다. TYPE7은 각 역할을 따로 검사하므로 main의 검토가 남아 있어도 새 secondary 오류를 숨기지 않습니다. 미검토 역할은 계속 pending이며 native 출력을 막습니다. TYPE7의 기존 `condition_support=not-applicable`은 노드 DOF 상태 표기이고 역할/attachment 검사는 별도로 수행합니다. 명시 링크 Drop과 요소 삭제는 아직 이 경로에 연결하지 않았습니다.
 
+<a id="element-deletion"></a>
+
+### 요소 삭제와 새 고립 절점 처리
+
+8개 표현의 **Mesh → Delete elements…**에서 현재 요소를 **Add selected elements**로 목록에 모읍니다. 같은 source·native ID의 중복은 한 행이며 **Remove selected rows**는 목록에서만 제거합니다. Source file·Element ID·Type을 확인하고 **Newly orphaned nodes**에서 **Keep newly orphaned nodes** 또는 **Delete only newly orphaned nodes**를 직접 선택하세요. 기본 선택은 미정이며, 이미 고립돼 있던 절점은 두 정책 모두 보존합니다. BEAM의 orientation 전용 참조도 새 고립 여부 계산에 포함합니다.
+
+**Preview deletion**은 삭제할 요소/연결·새 고립 절점과 삭제 여부·삭제 요소의 기존 품질·집합과 조건의 생존 대상 제안을 보여 줍니다. 살아남은 요소의 연결을 바꾸거나 품질 개선을 주장하지 않습니다. 조건의 기계 성분을 지지하지 못하거나 TYPE7 secondary가 무지지이면 Apply를 막습니다. 빈 최종 집합이나 마지막 main shell을 제거하는 제안은 현재 거부하며, 조건·집합을 함께 삭제하거나 전체 고립 절점을 자동 정리하지 않습니다. 지원 밖 raw 카드와 보존할 수 없는 file directive/layout도 거부합니다.
+
+검토 체크 후 **Apply deletion** 한 번은 한 Undo입니다. 정책·목록·문서 변경은 이전 preview를 무효화하며 **Close/Escape**는 미적용 목록을 취소합니다. 실제 삭제는 요소와 명시 정책의 새 고립 절점에만 적용합니다. 기존 PART 카드·집합 멤버·조건 선언은 보존하고 영향 집합은 stale로 남깁니다. 저장·재열기 뒤에도 native 출력 차단은 유지됩니다. **Replace prepared mesh / reconnect targets…**에서 생존 대상의 명시 mapping과 삭제된 멤버의 [Drop](#mesh-target-drop)을 검토해야 복구됩니다. 삭제 후에도 존재하는 절점이 DOF 지지를 잃을 수 있으므로 최종 재연결에서 기존 성분 검사를 다시 수행합니다.
+
+질량·운동량·운동에너지와 TYPE7 main segment·면적·gap/stiffness의 계산 근거가 달라질 수 있습니다. 표시한 CLOAD 합계는 미평가 곡선 배수이며 실제 힘·모멘트나 응답 보존이 아닙니다. API의 `plan_element_deletion(references, orphan_policy="keep" | "delete_new")`·`apply_element_deletion`·`cancel_element_deletion`도 기존 sealed candidate/CAS·v6·Undo 경로를 사용합니다. 실제 OS/VTK·frozen·solver와 전체 P7b의 미확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
+
 <a id="node-move-images"></a>
 
 ### 실제 Windows 화면으로 좌표 이동 확인하기
