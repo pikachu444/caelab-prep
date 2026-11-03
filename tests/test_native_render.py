@@ -10,8 +10,11 @@ unambiguous; it is not a model-size/performance benchmark.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -190,3 +193,102 @@ def test_native_window_render_and_mouse_pick(user_model, profile, size):
             window._allow_close = True
             window.close()
             _pump()
+
+
+def test_geometry_feature_inspect_render_and_private_mouse_pick(tmp_path):
+    """One real source→worker→Qt/VTK path; no renderer or picker stubs."""
+    from caelab_prep.application import PrepSession
+    from caelab_prep.adapters.gmsh_backend import GmshBackend
+    from caelab_prep.ui.geometry_features import GeometryFeaturesDialog
+    from test_external_mesh_ui import wait_task
+
+    output = Path(os.environ["CAELAB_NATIVE_RENDER_ARTIFACT_DIR"]).expanduser()
+    assert output.is_absolute()
+    output.mkdir(parents=True, exist_ok=True)
+    assert QApplication.instance().platformName() == "xcb"
+    source = tmp_path / "native-hole.step"
+    # CC0: self-authored analytic CAD fixture, not a user or vendor model.
+    script = """import gmsh, sys
+gmsh.initialize(readConfigFiles=False, interruptible=False)
+try:
+    gmsh.model.add('own-hole-fixture')
+    box = gmsh.model.occ.addBox(0, 0, 0, 12, 8, 3)
+    cutter = gmsh.model.occ.addCylinder(6, 4, -1, 0, 0, 5, 1)
+    gmsh.model.occ.cut([(3, box)], [(3, cutter)])
+    gmsh.model.occ.synchronize()
+    gmsh.write(sys.argv[1])
+finally:
+    gmsh.finalize()
+"""
+    generated = subprocess.run([sys.executable, "-c", script, str(source)], capture_output=True, text=True, timeout=30)
+    assert generated.returncode == 0, generated.stdout + generated.stderr
+    source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+    session = PrepSession(); before = session.describe()
+    window = MainWindow(session, presentation="hypermesh", enable_viewport=False)
+    window._allow_close = True
+    dialog = GeometryFeaturesDialog(window, backend=GmshBackend(timeout=30), enable_viewport=True)
+    evidence = {"status": "running", "source_sha256": source_hash,
+                "scope": "One self-authored CAD through-hole, Linux/X11 real inspection/render/pick; Windows unverified"}
+    try:
+        window.show(); dialog.resize(960, 640); dialog.show()
+        assert QTest.qWaitForWindowExposed(dialog, 10000)
+        dialog.source.setText(str(source)); dialog.output.setText(str(tmp_path / "inspection"))
+        QTest.mouseClick(dialog.inspect_button, Qt.MouseButton.LeftButton)
+        wait_task(dialog)
+        assert dialog.report and dialog.table.rowCount() == 1, dialog.error.text()
+        feature, = dialog.report["features"]
+        assert feature["kind"] == "through_hole_candidate" and feature["radius"] == 1.
+        view = dialog.viewport; _pump(); view.fit_view(); view.render(); _pump()
+        render_window = view._widget.GetRenderWindow()
+        assert render_window.GetClassName() == "vtkXOpenGLRenderWindow"
+        assert not view._render_failed and render_window.GetNeverRendered() == 0
+        assert tuple((dialog.width(), dialog.height())) == (960, 640)
+        assert view._visible_grid.GetNumberOfCells() == len(dialog.projection["cells"])
+        dialog.table.clearSelection()
+        view.set_selection({**{key: dialog.projection[key] for key in
+            ("document_id", "document_epoch", "revision", "projection_revision", "resource_revisions")},
+            "kind": "element", "ids": [], "refs": []})
+        visible_image, visible = _readback(render_window)
+        _png(output / "geometry-features-viewport.png", visible_image)
+        _, screen_before = _screen_pixels(dialog)
+        view._actor.SetVisibility(False)
+        try:
+            view.render(); _, hidden = _readback(render_window)
+            _, screen_hidden = _screen_pixels(dialog)
+        finally:
+            view._actor.SetVisibility(True); view.render()
+        assert len(visible) == len(hidden) > 0 and len(screen_before) == len(screen_hidden) > 0
+        changed = sum(visible[index:index + 3] != hidden[index:index + 3] for index in range(0, len(visible), 3))
+        screen_changed = sum(screen_before[index:index + 4] != screen_hidden[index:index + 4]
+                             for index in range(0, len(screen_before), 4))
+        assert changed > 100 and screen_changed > 100
+        nodes = dict(zip(dialog.projection["node_ids"], dialog.projection["points"]))
+        cell = next(cell for cell in dialog.projection["cells"]
+                    if dialog._primitive_owners[cell["id"]] == feature["surface_uuid"]
+                    and all(nodes[node][2] == 3. for node in cell["nodes"]))
+        center = [sum(nodes[node][axis] for node in cell["nodes"]) / 2 for axis in range(3)]
+        view._renderer.SetWorldPoint(*center, 1.); view._renderer.WorldToDisplay()
+        x, y, _ = view._renderer.GetDisplayPoint(); width, height = render_window.GetSize()
+        point = QPoint(round(x * view._widget.width() / width), round((height - 1 - y) * view._widget.height() / height))
+        assert view._widget.rect().contains(point)
+        picks = []; view.entityPicked.connect(picks.append)
+        QTest.mouseClick(view._widget, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, point)
+        _pump()
+        assert picks and picks[-1]["document_id"] == dialog.preview_id
+        assert dialog._primitive_owners[picks[-1]["id"]] == feature["surface_uuid"]
+        assert dialog.table.selectionModel().selectedRows()
+        assert session.describe() == before
+        dialog.inspection.verify_assets()
+        assert hashlib.sha256(source.read_bytes()).hexdigest() == source_hash
+        assert dialog.grab().save(str(output / "geometry-features-960x640.png"), "PNG")
+        evidence.update(status="passed", framebuffer_changed_pixels=changed, native_window_changed_pixels=screen_changed,
+                        feature=feature, picked=picks[-1], display_line_primitives=len(dialog.projection["cells"]),
+                        model_unchanged=True, input_unchanged=True, actual_sdk_inspection_calls=1,
+                        fixture_cad_creation_calls=1, mesh_generation_calls=0)
+    except BaseException as error:
+        evidence.update(status="failed", error=f"{type(error).__name__}: {error}")
+        if dialog.isVisible(): dialog.grab().save(str(output / "geometry-features-failure.png"), "PNG")
+        raise
+    finally:
+        (output / "geometry-features.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
+        dialog.reject(); window.close(); _pump()

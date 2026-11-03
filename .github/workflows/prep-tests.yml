@@ -45,6 +45,8 @@ jobs:
       - name: Qt document flow
         # The opt-in settings path is also exercised through separate CLI processes.
         run: python -m pytest -q tests/test_settings_isolation.py
+      - name: Read-only geometry feature review
+        run: python -m pytest -q tests/test_geometry_features_ui.py
       - name: Qt document regression
         run: python -m pytest -vv tests/test_gui_document_flow.py tests/test_common_widgets.py tests/test_prep_presentation.py tests/test_curve_plot_scale.py tests/test_program_comparison.py tests/test_property_presentations.py tests/test_reference_adapters.py tests/test_modeling_ui.py tests/test_viewport_visibility.py tests/test_conditions_ui.py tests/test_collection_editors.py tests/test_numeric_units.py tests/test_native_units_ui.py tests/test_groups_ui.py tests/test_responsive_inspector.py tests/test_selection_menu.py tests/test_analysis_cases_ui.py tests/test_case_entrypoints.py tests/test_curve_workflow.py tests/test_viewport_scaling.py tests/test_part_property_refresh.py tests/test_node_moves_ui.py tests/test_group_member_review_ui.py tests/test_node_merges_ui.py tests/test_node_coalescence_ui.py tests/test_tree_appearance.py tests/test_courant_workspace.py
 
