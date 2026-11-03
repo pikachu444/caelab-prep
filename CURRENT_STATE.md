@@ -53,6 +53,8 @@ Phase 3.6 폐삼각표면 Auto-Tet의 독립 진단 코드는 `01e0be2`에 보�
 
 ## 현재 개발검증자료와 진행 중 변경
 
+수정 head `78135bf9d843c5ce7a57592839b645626d84b383`의 [CI41633000143](https://github.com/pikachu444/caelab-prep/actions/runs/41633000143)은 10 jobs를 통과했고 PR46은 main `952203175ec750feff7d49e79071daebab6cfb36`에 같은 tree로 squash 병합됐다. 새 실제 CAD3건과 Linux/X11의 142개 표시 선·framebuffer/native-window 변화4064픽셀·private mouse pick를 확인했다. `phase37-geometry-inspection/ci-78135bf`의 viewport PNG와 JSON은 root/독립 검토자가 읽었다. QWidget.grab으로 쓴 전체창 PNG는 3D 영역이 비어 있어 전체창/형상 동시 캡처 승인은 보류했으며, 기존 QScreen helper를 쓰는 test-only 후속을 준비했다. 새 전체창 캡처와 실제 Windows/일반 형상 확인은 아직 미확인이다.
+
 PR46 최초 head `f5f37d4`의 CI41631351152는 새 실제 CAD3건·새 Qt 단계를 통과했지만, native preview가 비운 화면과 채운 화면에 같은 캐시 표식을 써 0/142 cell로 실패했다. 수정 `d3b7d76f764de637c9627d6247ba7691ae7deeda`는 기존 source preview처럼 identity 없는 빈 projection을 사용한다. 실제 unshown VTK 데이터의 0/138 red를 보존하고 138개 재구성을 확인했으며, 의도된 무문서 읽기 Action의 기존 허용 목록과 Qt 영향22건을 통과했다. 원 비판자가 수정·선택 격리를 읽기 재확인했고, 실제 Linux 렌더/pick은 수정 HEAD의 CI에서 별도로 확인한다. 이 데이터 검사는 Render/OS 실행이 아니다.
 
 GI2 코드 `0d567fba238648ecd6ee2baccdd8cb82941361f2`의 실제 고정 A/B/C는 관통 후보1·외부 원통 후보0·blind 후보1(R1, 깊이3/2)을 첫 시도에 구분했다. A/B의 기존 XAO UUID/revision을 보존했고 새 자체 blind CAD 생성1·inspection3, 메시/solver/독립 SDK 재읽기0·4 native process rc0/회수다. 원래 GI1 자산은 실행 전후 불변, 새 자산은 생성 뒤 최초/최종 snapshot 불변이며 `phase37-geometry-inspection/gi2-actual-01`에 plan·입력 lock·원시 metadata·classifier와 해시를 보관한다. 공통 plan·실제 좌표 잔차·계산 floor·사각 wire의 원 지적은 수정 후 각각 원 지적자가 종결했다. 일반 shape/fillet·전체 공극 연결의 완료가 아닌 제한된 후보 판정이다.

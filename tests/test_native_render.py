@@ -280,14 +280,15 @@ finally:
         assert session.describe() == before
         dialog.inspection.verify_assets()
         assert hashlib.sha256(source.read_bytes()).hexdigest() == source_hash
-        assert dialog.grab().save(str(output / "geometry-features-960x640.png"), "PNG")
+        screen_image, _ = _screen_pixels(dialog)
+        assert screen_image.save(str(output / "geometry-features-960x640.png"), "PNG")
         evidence.update(status="passed", framebuffer_changed_pixels=changed, native_window_changed_pixels=screen_changed,
                         feature=feature, picked=picks[-1], display_line_primitives=len(dialog.projection["cells"]),
                         model_unchanged=True, input_unchanged=True, actual_sdk_inspection_calls=1,
                         fixture_cad_creation_calls=1, mesh_generation_calls=0)
     except BaseException as error:
         evidence.update(status="failed", error=f"{type(error).__name__}: {error}")
-        if dialog.isVisible(): dialog.grab().save(str(output / "geometry-features-failure.png"), "PNG")
+        if dialog.isVisible(): dialog.screen().grabWindow(int(dialog.winId())).save(str(output / "geometry-features-failure.png"), "PNG")
         raise
     finally:
         (output / "geometry-features.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
