@@ -6,6 +6,38 @@ import tempfile
 import zipfile
 
 
+def read_json(source: Path) -> dict:
+    def unique_pairs(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate JSON field")
+            result[key] = value
+        return result
+    def nonfinite(value):
+        raise ValueError("Nonfinite JSON number: " + value)
+    return json.loads(Path(source).read_text(encoding="utf-8"),
+                      object_pairs_hook=unique_pairs, parse_constant=nonfinite)
+
+
+def write_json(target: Path, value: dict, *, before_replace=None) -> None:
+    """Write a complete JSON value before replacing the existing file."""
+    # Keep the caller's checked destination; replace a late symlink itself.
+    target = Path(target).expanduser().absolute()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=".caelab-json-", dir=target.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            json.dump(value, stream, ensure_ascii=False, indent=2, allow_nan=False)
+            stream.write("\n")
+        if before_replace is not None:
+            before_replace()
+        os.replace(temporary, target)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
 def write_container(target: Path, manifest: dict, members: dict[str, bytes]) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary = tempfile.mkstemp(prefix=".caeprep-", dir=target.parent)

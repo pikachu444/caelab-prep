@@ -95,7 +95,7 @@ MSH는 2.2/4.1 ASCII에 한정합니다. binary·partition·periodic·data·para
 
 ### Meshing criteria와 출력 최소-edge 검사 (Python API)
 
-독립 criteria JSON은 활성 작업문서와 별도로 저장합니다. 다음은 STEP의 mm 정규화 좌표에서 target=1.5, minimum=.25를 실행하는 예입니다. GUI/CLI의 criteria 선택기는 아직 연결하지 않았습니다.
+독립 criteria JSON은 활성 작업문서와 별도로 저장합니다. 다음은 STEP의 mm 정규화 좌표에서 target=1.5, minimum=.25를 실행하는 예입니다. CAD 생성 GUI/CLI의 criteria 실행 선택기는 아직 미연결이며, 기하 검토 창의 Washer 제어에서는 profile을 읽어 저장용 설정을 편집할 수 있습니다.
 
 ```python
 from pathlib import Path
@@ -116,7 +116,7 @@ STEP/STP/IGES/IGS 실행 criteria는 mm여야 합니다. BREP/BRP/XAO에는 `gms
 
 SDK `Mesh.MeshSizeMin/Max`는 sizing 입력입니다. 모든 출력 edge의 하한/상한 보장이 아니므로 감사 결과를 별도로 확인합니다. 현재 감사는 전체 inventory의 line2/tri3/quad4/tet4/hex8 위상 edge를 측정하며, point annotation은 명시적으로 건너뜁니다. 고차·미지원 family가 하나라도 있으면 전체 감사는 통과하지 않습니다. 짧은 edge의 요소 ID만 cleanup 후보로 반환하고 mesh·문서·원본은 변경하지 않습니다. Warpage/AR/J 판정이나 자동 collapse/swap 완료를 뜻하지 않습니다.
 
-`washer_rim_divisions`, `washer_width`, `washer_layers`, `fillet_suppression_threshold`는 profile에 보존되지만 non-null 실행 요청은 명시 거부합니다. Washer는 hole 주위 mesh ring, fillet suppression은 B-Rep 변경 없는 meshing tangent-edge 억제라는 후속 의미이며 아직 생성/억제하지 않습니다.
+`washer_rim_divisions`, `washer_width`, `washer_layers`, `fillet_suppression_threshold`는 기존 v1 profile에 보존됩니다. `washer_element_family`가 `quad`/`tria`로 명시되면 v2로 쓰고, family가 없으면 기존 v1 형태로 씁니다. v1을 읽을 때 family를 추정하지 않으며 v1의 미지 키도 계속 거부합니다. 모든 non-null feature 실행 요청은 여전히 명시 거부합니다. Washer는 hole 주위 mesh ring, fillet suppression은 B-Rep 변경 없는 meshing tangent-edge 억제이며 실제 요소 생성/억제는 미지원입니다.
 
 <a id="geometry-features"></a>
 
@@ -180,6 +180,16 @@ blends = recognize_cylindrical_blends(inspection, length_tolerance=1e-6,
 행을 선택하거나 wireframe의 표식을 클릭하면 같은 후보의 반경·길이·축·끝 cap 또는 재료 방향의 접선 증거를 확인합니다. 표시용 선분의 선택은 활성 모델 선택과 분리됩니다. View에는 지원 직선 CAD edge, hole의 완전 원형 경계 또는 blend의 부분 호와 축을 표시합니다. **Maximum blend radius**는 선택적 반경 필터입니다. 허용오차·반경을 바꾸면 저장된 자료를 재판독하며 SDK를 다시 조회하지 않습니다. Escape는 마지막 성공 값과 표시로 복귀합니다. 입력 변경·실패·잘못된 값은 이전 후보와 표식을 지웁니다. **Cancel inspection**과 창 닫기는 진행 중 worker를 중지한 뒤 결과를 폐기합니다. 이 창은 mm 전용이며 저장 자료의 unknown 단위를 자동 환산하지 않습니다.
 
 검사 evidence와 이 창의 후보 표시는 작업문서의 메시·조건을 편집하거나 채택하지 않습니다. 현재 인식 지원 형상군은 위 Python API와 같으며, 일반 fillet/원추·Flange·washer ring 생성·접선 edge 억제·일반 batch/cleanup은 후속입니다. Hole의 64분할 원과 blend의 16분할 부분 호는 표시 선분이며 Washer Quad/Tria 요소가 아닙니다. Windows OS·VTK 실제 확인은 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
+
+### Washer 제어 draft 저장·재열기
+
+기하 후보 표에서 홀을 선택한 뒤 **Washer controls…**를 엽니다. Blend나 선택 없는 상태에서는 사용할 수 없습니다. **Load criteria profile…**로 기존 mm profile을 읽으면 target/minimum과 다른 profile 제어값을 보존합니다. 실제 opening을 명시적으로 선택하고 Quad/Tria·1~2 radial layers·전체 반경 방향 폭·rim divisions를 지정한 뒤 **Review controls**를 누릅니다. 관통 홀의 두 opening과 두 radial layer는 서로 다른 선택입니다. Blind hole의 닫힌 disk는 목록에서 제외합니다. 새로운 값이나 원제품 기본값을 추정해 채우지 않습니다.
+
+폭은 홀 경계 R부터 바깥 R+width까지의 전체 반경 방향 거리이고 각 층은 같은 간격입니다. 현재 제한된 직사각 opening 지지면 안에 전체 범위가 들어가는지와 각 층 폭이 recognition tolerance보다 큰지를 검사합니다. 이는 Quad/Tria mesh의 품질·생성 가능성 판정이 아닙니다. **Save draft…**는 criteria 값과 geometry UUID/revision·자산 hash·hole/opening/circle 참조·층 반경을 한 `caelab.washer-control-draft` v1 JSON에 저장합니다. 새 파일 또는 기존 Washer draft만 교체할 수 있고 원 profile·CAD·inspection 자산·다른 파일은 보존합니다. 저장 도중 자산이 바뀌면 기존 draft를 교체하기 전에 중단합니다.
+
+**Open control draft…**는 원 inspection 자산을 다시 검증·재판독하며 현재 선택한 홀과 같은 geometry/assets/tolerance인지 확인합니다. 원 inspection 자산도 함께 보관해야 합니다. 잘못된 값·stale 자산·외부 target·지원하지 않는 단위는 검토/저장을 거부합니다. Escape는 마지막 검토한 수치로 돌아갑니다. 이 창은 문서/Undo/메시를 변경하지 않으며 **유효한 제어 draft도 실제 Washer 요소가 생성된 상태는 아닙니다**.
+
+Python API는 `application.washer_controls.create_washer_control_draft`, `save_washer_control_draft`, `read_washer_control_draft`입니다. Create/Save에는 `GeometryInspection`, `MeshingCriteria`와 해당 inspection의 명시 `hole_surface_uuid`, `opening_surface_uuid`, `length_tolerance`를 전달합니다. 새 문서 모델이나 별도 mesh 채택 경로를 만들지 않습니다.
 
 <a id="prepared-tet10"></a>
 

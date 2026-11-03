@@ -1,9 +1,9 @@
 """Persisted mesher inputs; unsupported feature controls never become no-ops."""
 from dataclasses import asdict, dataclass
-import json
 import math
 from pathlib import Path
-from uuid import uuid4
+
+from .storage import read_json, write_json
 
 from ..cae_core.errors import PrepError
 
@@ -30,6 +30,7 @@ class MeshingCriteria:
     washer_width: float | None = None
     washer_layers: int | None = None
     fillet_suppression_threshold: float | None = None
+    washer_element_family: str | None = None
 
     def __post_init__(self):
         if self.length_unit not in ("mm", "cm", "m"):
@@ -47,51 +48,41 @@ class MeshingCriteria:
         if self.fillet_suppression_threshold is not None:
             object.__setattr__(self, "fillet_suppression_threshold",
                                _length(self.fillet_suppression_threshold, "fillet_suppression_threshold", zero=True))
+        if self.washer_element_family is not None and self.washer_element_family not in ("quad", "tria"):
+            raise PrepError("invalid_meshing_criteria", "washer_element_family must be quad or tria.")
 
     def to_dict(self):
-        return {"schema": SCHEMA, "version": 1, **asdict(self)}
+        values = asdict(self)
+        if self.washer_element_family is None:
+            values.pop("washer_element_family")
+        return {"schema": SCHEMA, "version": 1 if self.washer_element_family is None else 2, **values}
 
     @classmethod
     def from_dict(cls, value):
         required = {"schema", "version", "length_unit", "target_size", "minimum_size"}
         optional = {"washer_rim_divisions", "washer_width", "washer_layers", "fillet_suppression_threshold"}
+        if isinstance(value, dict) and type(value.get("version")) is int and value["version"] == 2:
+            required.add("washer_element_family")
         if not isinstance(value, dict) or required - value.keys() or value.keys() - required - optional:
             raise PrepError("invalid_meshing_criteria", "Expected the complete criteria schema with no unknown fields.")
-        if value["schema"] != SCHEMA or type(value["version"]) is not int or value["version"] != 1:
+        if (value["schema"] != SCHEMA or type(value["version"]) is not int or value["version"] not in (1, 2)
+                or value["version"] == 2 and value["washer_element_family"] not in ("quad", "tria")):
             raise PrepError("invalid_meshing_criteria", "Unsupported meshing criteria schema/version.")
         return cls(**{key: item for key, item in value.items() if key not in ("schema", "version")})
 
     @classmethod
     def load(cls, path):
-        def unique_pairs(pairs):
-            result = {}
-            for key, value in pairs:
-                if key in result:
-                    raise ValueError("Duplicate criteria field")
-                result[key] = value
-            return result
         try:
-            value = json.loads(Path(path).read_text(encoding="utf-8"), object_pairs_hook=unique_pairs)
+            value = read_json(Path(path))
         except (OSError, UnicodeError, ValueError) as exc:
             raise PrepError("invalid_meshing_criteria", f"Cannot read criteria: {exc}") from exc
         return cls.from_dict(value)
 
     def save(self, path):
-        path = Path(path).expanduser().resolve()
-        temporary = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
-        created = False
         try:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            with temporary.open("x", encoding="utf-8") as stream:
-                created = True
-                json.dump(self.to_dict(), stream, ensure_ascii=False, indent=2, allow_nan=False)
-                stream.write("\n")
-            temporary.replace(path)
+            write_json(Path(path), self.to_dict())
         except OSError as exc:
             raise PrepError("meshing_criteria_io", f"Cannot save criteria: {exc}") from exc
-        finally:
-            if created:
-                temporary.unlink(missing_ok=True)
 
     def _check_coordinate_unit(self, coordinate_length_unit):
         if coordinate_length_unit not in ("mm", "cm", "m"):
@@ -110,7 +101,7 @@ class MeshingCriteria:
         from ..adapters.gmsh_backend import cad_coordinate_length_unit
         self._check_coordinate_unit(cad_coordinate_length_unit(
             source_path, declared_coordinate_length_unit=declared_coordinate_length_unit))
-        unsupported = [field for field in ("washer_rim_divisions", "washer_width", "washer_layers", "fillet_suppression_threshold")
+        unsupported = [field for field in ("washer_rim_divisions", "washer_width", "washer_layers", "fillet_suppression_threshold", "washer_element_family")
                        if getattr(self, field) is not None]
         if unsupported:
             raise PrepError("unsupported_meshing_criteria", "These feature controls are not implemented for the CAD backend.",
