@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+from copy import deepcopy
 import json
 import threading
 
 from PySide6.QtCore import QObject, QThreadPool, Qt, Signal
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFileDialog,
-    QFormLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QFormLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem,
     QPushButton, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QWidget)
 
@@ -154,6 +155,9 @@ class MeshCandidateDialog(QDialog):
         self._adopting = False
         self._stamp = session.describe()
         self.setWindowTitle("Mesh — review candidate")
+        self._seed_recipe = None
+        self._seed_source = None
+        self.division_edits = []
         self.setMinimumSize(760, 480)
         available = self.screen().availableGeometry()
         self.resize(min(1100, available.width() - 40), min(760, available.height() - 60))
@@ -199,6 +203,16 @@ class MeshCandidateDialog(QDialog):
         self.local_entity.currentIndexChanged.connect(self.highlight_entity)
         self.local_size = NumericEdit(minimum=0)
         form.addRow("Refine entity", self.local_entity); form.addRow("Local size", self.local_size)
+        self.load_divisions_button = QPushButton("Load quad divisions")
+        self.load_divisions_button.clicked.connect(self.load_divisions)
+        form.addRow(self.load_divisions_button)
+        self.divisions = QTableWidget(0, 3)
+        self.divisions.setHorizontalHeaderLabels(["Patch", "Edge 1–2", "Edge 2–3"])
+        self.divisions.verticalHeader().hide()
+        self.divisions.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.divisions.setMaximumHeight(125)
+        self.divisions.setToolTip("Segment counts along the patch's ordered corner edges, not global X/Y. Shared edges must agree.")
+        form.addRow("Quad divisions", self.divisions)
         self.generate_button = QPushButton("Generate candidate")
         self.cancel_job = QPushButton("Cancel generation"); self.cancel_job.setEnabled(False)
         self.generate_button.clicked.connect(self.generate)
@@ -232,6 +246,7 @@ class MeshCandidateDialog(QDialog):
         self.adopt_button.clicked.connect(self.adopt); self.close_button.clicked.connect(self.reject)
         buttons.addWidget(self.adopt_button); buttons.addWidget(self.close_button); layout.addLayout(buttons)
         self.source_kind.currentIndexChanged.connect(self._source_changed)
+        self.source.textChanged.connect(self._recipe_source_changed)
         self._source_controls()
 
     def _structured(self):
@@ -247,18 +262,71 @@ class MeshCandidateDialog(QDialog):
         self.source_label.setText("Mesh recipe (JSON)" if structured else "CAD / XAO")
         self.form.labelForField(self.local_entity).setText(("Highlight patch" if self.viewport else "Patch") if structured else "Refine entity")
         self.preview_mode.setVisible(not structured)
-        self.pick_hint.setText(("Planar quad4 / sweep hex8. Units and seeds come from the recipe. " +
+        self.load_divisions_button.setVisible(structured)
+        self.divisions.setVisible(structured and self._seed_recipe is not None)
+        self.form.labelForField(self.divisions).setVisible(structured and self._seed_recipe is not None)
+        self.pick_hint.setText(("Planar quad4 / sweep hex8. Load quad divisions to edit segment counts; units and geometry stay in the recipe. " +
                                ("Preview does not change the model." if self.viewport else "3D preview is disabled."))
                                if structured else "Click the preview to select an entity for local refinement.")
         self.quality.setSelectionMode(QTableWidget.SelectionMode.NoSelection if structured else QTableWidget.SelectionMode.ExtendedSelection)
 
     def _source_changed(self):
+        self.source.clear(); self._clear_divisions()
+        self._invalidate_candidate()
+        self._source_controls()
+
+    def _invalidate_candidate(self):
         self.candidate = None
-        self.source.clear(); self.error.clear(); self.quality.setRowCount(0)
+        self.error.clear(); self.quality.setRowCount(0)
         self.summary.setText("No candidate. Generation does not change the model.")
         self.local_entity.clear(); self.local_entity.addItem("No patch selected" if self._structured() else "No local refinement", None)
         if self.viewport: self.viewport.set_mesh({"points": [], "node_ids": [], "cells": []})
-        self._source_controls(); self._running(False)
+        self._running(False)
+
+    def _clear_divisions(self):
+        self._seed_recipe = self._seed_source = None
+        self.division_edits = []
+        self.divisions.setRowCount(0)
+
+    def _recipe_source_changed(self):
+        if self._structured():
+            self._clear_divisions(); self._invalidate_candidate(); self._source_controls()
+
+    def _set_divisions(self, recipe, source):
+        self._clear_divisions()
+        if recipe.get("mode") != "quad": return
+        self._seed_recipe = deepcopy(recipe); self._seed_source = source
+        patches = recipe.get("patches", [recipe])
+        self.divisions.setRowCount(len(patches))
+        for row, patch in enumerate(patches):
+            item = QTableWidgetItem(patch.get("id") or recipe.get("name") or "Patch 1")
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            item.setToolTip(item.text()); self.divisions.setItem(row, 0, item)
+            edits = []
+            for column, value in enumerate(patch["divisions"], 1):
+                edit = NumericEdit(value, integer=True, minimum=1, maximum=10000)
+                edit.setAccessibleName(f"{item.text()} edge {column}–{column + 1} divisions")
+                edit.textChanged.connect(self._divisions_changed)
+                self.divisions.setCellWidget(row, column, edit); edits.append(edit)
+            self.division_edits.append(edits)
+
+    def _divisions_changed(self):
+        self._invalidate_candidate()
+        self.summary.setText("Divisions changed. Generate a new candidate to check quality before adoption.")
+
+    def load_divisions(self):
+        from ..application.structured_mesh import read_recipe_input
+        from ..application.structured_geometry import validate_recipe
+        self._clear_divisions(); self._invalidate_candidate()
+        try:
+            recipe, source = read_recipe_input(self.source.text())
+            validate_recipe(recipe)
+            if recipe.get("mode") != "quad":
+                raise ValueError("Division editing supports planar quad recipes. Edit sweep hex values in the JSON file.")
+            self._set_divisions(recipe, source)
+        except Exception as exc:
+            self._show_error(exc); self._source_controls(); return False
+        self._source_controls(); return True
 
     def _show_error(self, error):
         self.error.setText(str(error))
@@ -287,7 +355,7 @@ class MeshCandidateDialog(QDialog):
 
     def _running(self, value):
         for widget in (*self._browse_buttons, self.source_kind, self.generate_button, self.open_button, self.source, self.output, self.size, self.dimension, self.policy, self.local_entity, self.local_size,
-                       self.material, self.section, self.replace, self.preview_mode, self.quality): widget.setEnabled(not value)
+                       self.material, self.section, self.replace, self.preview_mode, self.quality, self.load_divisions_button, self.divisions): widget.setEnabled(not value)
         self.length.setEnabled(not value and bool(self.candidate and self.candidate.length_unit == "unknown"))
         self.preview_mode.setEnabled(not value and bool(self.candidate and self.candidate.dimension == 3))
         self.cancel_job.setEnabled(value)
@@ -313,15 +381,27 @@ class MeshCandidateDialog(QDialog):
     def generate(self):
         if self._structured():
             source, output = self.source.text(), self.output.text()
+            recipe, origin = None, self._seed_source
+            if self._seed_recipe is not None:
+                from ..application.structured_geometry import validate_recipe
+                recipe = deepcopy(self._seed_recipe)
+                try:
+                    for patch, edits in zip(recipe.get("patches", [recipe]), self.division_edits):
+                        patch["divisions"] = [edit.numeric_value() for edit in edits]
+                    validate_recipe(recipe)
+                except Exception as exc:
+                    self._show_error(exc); return False
             def generate_recipe():
-                from ..application.structured_mesh import _json, generate_structured_mesh
-                from ..application.structured_geometry import MAX_RECIPE_BYTES
-                if Path(source).stat().st_size > MAX_RECIPE_BYTES:
-                    raise ValueError("Recipe exceeds the 1 MiB input limit.")
-                recipe = _json(source)
-                if not isinstance(recipe, dict) or recipe.get("mode") not in ("quad", "hex"):
+                from ..application.structured_mesh import read_recipe_input, generate_structured_mesh
+                original, current = read_recipe_input(source)
+                if origin is not None and current != origin:
+                    raise ValueError("The original recipe changed after review. Load its divisions again.")
+                edited = original if recipe is None else recipe
+                if not isinstance(edited, dict) or edited.get("mode") not in ("quad", "hex"):
                     raise ValueError("Choose a quad or sweep hex recipe; other families are not connected to adoption.")
-                return generate_structured_mesh(recipe, output, recipe_path=source, cancel_event=self._cancel)
+                if edited != original:
+                    return generate_structured_mesh(edited, output, source_recipe=current, cancel_event=self._cancel)
+                return generate_structured_mesh(edited, output, recipe_path=source, cancel_event=self._cancel)
             return self._start(generate_recipe)
         from ..adapters.gmsh_backend import GmshBackend
         from ..application.mesh_candidates import read_mesh_candidate
@@ -385,6 +465,7 @@ class MeshCandidateDialog(QDialog):
         self.source_kind.blockSignals(True)
         self.source_kind.setCurrentIndex(self.source_kind.findData("structured_recipe" if structured else "cad_gmsh"))
         self.source_kind.blockSignals(False)
+        self._clear_divisions()
         self._source_controls()
         self.candidate = candidate
         self._stamp = self.session.describe()
@@ -403,7 +484,12 @@ class MeshCandidateDialog(QDialog):
         xao = next((asset.path for asset in candidate.assets if asset.kind == "xao"), None)
         if xao: self.source.setText(xao); self.policy.setCurrentIndex(0)
         if structured:
-            self.source.setText(next(asset.path for asset in candidate.assets if asset.kind == "recipe"))
+            from ..application.mesh_candidates import AssetDigest
+            source = next((asset for asset in candidate.assets if asset.kind == "source_recipe"),
+                          next(asset for asset in candidate.assets if asset.kind == "recipe"))
+            self.source.blockSignals(True); self.source.setText(source.path); self.source.blockSignals(False)
+            self._set_divisions(json.loads(candidate.recipe_json), AssetDigest("source_recipe", source.path, source.sha256))
+            self._source_controls()
         self.dimension.setCurrentIndex(self.dimension.findData(candidate.dimension))
         if structured:
             from ..application.structured_geometry import CONTRACT

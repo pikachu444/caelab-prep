@@ -6,7 +6,9 @@ CAD or standalone MSH, invent a CAD identity, or bypass final source validation.
 from __future__ import annotations
 
 from collections import Counter
+from copy import deepcopy
 from dataclasses import dataclass
+import hashlib
 import json
 import math
 import os
@@ -73,7 +75,7 @@ class StructuredMeshCandidate:
             'structured_recipe', self.groups)
 
 
-def _json(path):
+def _loads_json(text):
     def unique(pairs):
         result = {}
         for key, value in pairs:
@@ -83,8 +85,41 @@ def _json(path):
         return result
     def finite(value):
         raise ValueError('Nonfinite JSON number: ' + value)
-    return json.loads(Path(path).read_text(encoding='utf-8'),
-                      object_pairs_hook=unique, parse_constant=finite)
+    return json.loads(text, object_pairs_hook=unique, parse_constant=finite)
+
+
+def _json(path):
+    return _loads_json(Path(path).read_text(encoding='utf-8'))
+
+
+def read_recipe_input(path):
+    """Bind the reviewed JSON and digest to the same bounded byte read."""
+    path = Path(path).expanduser().resolve()
+    with path.open('rb') as stream:
+        raw = stream.read(MAX_RECIPE_BYTES + 1)
+    if len(raw) > MAX_RECIPE_BYTES:
+        raise PrepError('invalid_recipe', 'Recipe JSON exceeds the 1 MiB input limit.')
+    return (_loads_json(raw.decode('utf-8')),
+            AssetDigest('source_recipe', str(path), hashlib.sha256(raw).hexdigest()))
+
+
+def _validate_source_recipe(spec, asset):
+    if not isinstance(asset, AssetDigest) or asset.kind != 'source_recipe':
+        raise PrepError('invalid_recipe', 'Expected the original quad recipe identity.')
+    original, current = read_recipe_input(asset.path)
+    if current != asset:
+        raise PrepError('candidate_changed', 'The original recipe changed after review.')
+    validate_recipe(original)
+    if original.get('mode') != 'quad' or spec.get('mode') != 'quad':
+        raise PrepError('invalid_recipe', 'Only quad divisions can differ from an original recipe.')
+    expected = deepcopy(original)
+    if 'patches' in original and 'patches' in spec and len(original['patches']) == len(spec['patches']):
+        for old, edited in zip(expected['patches'], spec['patches']):
+            old['divisions'] = edited['divisions']
+    elif 'patches' not in original and 'patches' not in spec:
+        expected['divisions'] = spec['divisions']
+    if expected != spec:
+        raise PrepError('invalid_recipe', 'Only quad divisions can differ from an original recipe.')
 
 
 def _write_json(path, value):
@@ -136,9 +171,13 @@ def _child(module, arguments, *, cancel_event=None, timeout=30):
                 process.communicate(timeout=3)
 
 
-def generate_structured_mesh(spec, output_dir, *, recipe_path=None, cancel_event=None, timeout=30):
+def generate_structured_mesh(spec, output_dir, *, recipe_path=None, source_recipe=None, cancel_event=None, timeout=30):
     """Generate from explicit values; retain a supplied original file as an asset."""
     validate_recipe(spec)
+    if source_recipe is not None:
+        if recipe_path is not None:
+            raise PrepError('invalid_recipe', 'Use a snapshot for an edited quad recipe.')
+        _validate_source_recipe(spec, source_recipe)
     if not str(output_dir).strip():
         raise PrepError('invalid_request', 'Choose an asset directory.')
     if cancel_event is not None and cancel_event.is_set():
@@ -162,8 +201,12 @@ def generate_structured_mesh(spec, output_dir, *, recipe_path=None, cancel_event
            cancel_event=cancel_event, timeout=timeout)
     if _sha(recipe) != recipe_hash:
         raise PrepError('candidate_changed', 'The original recipe changed during generation.')
+    if source_recipe is not None:
+        _validate_source_recipe(spec, source_recipe)
     sources = {kind: {'path': str(path), 'sha256': _sha(path)} for kind, path in
                [('recipe', recipe), ('msh', folder / 'mesh.msh'), ('sdk', folder / 'sdk.json')]}
+    if source_recipe is not None:
+        sources['source_recipe'] = {'path': source_recipe.path, 'sha256': source_recipe.sha256}
     metadata = folder / 'metadata.json'
     _write_json(metadata, {'schema': 'caelab.structured-recipe', 'version': 1,
                           'mesh_uuid': identifier, 'assets': sources})
@@ -178,11 +221,12 @@ def read_structured_mesh_candidate(metadata, *, cancel_event=None, inspection_ti
         metadata_hash = _sha(metadata)
         manifest = _json(metadata)
         if (manifest['schema'] != 'caelab.structured-recipe' or type(manifest['version']) is not int
-                or manifest['version'] != 1 or set(manifest['assets']) != {'recipe', 'msh', 'sdk'}):
+                or manifest['version'] != 1 or set(manifest['assets']) not in
+                ({'recipe', 'msh', 'sdk'}, {'recipe', 'msh', 'sdk', 'source_recipe'})):
             raise ValueError('Unsupported structured manifest schema.')
         namespace = UUID(manifest['mesh_uuid'])
         assets = [AssetDigest('metadata', str(metadata), metadata_hash)]
-        for kind in ('recipe', 'msh', 'sdk'):
+        for kind in ('recipe', 'msh', 'sdk', *(('source_recipe',) if 'source_recipe' in manifest['assets'] else ())):
             record = manifest['assets'][kind]
             path = str(Path(record['path']).expanduser().resolve())
             if _sha(path) != record['sha256']:
@@ -191,6 +235,8 @@ def read_structured_mesh_candidate(metadata, *, cancel_event=None, inspection_ti
         paths = {asset.kind: asset.path for asset in assets}
         recipe = _json(paths['recipe'])
         admission = validate_recipe(recipe)
+        if 'source_recipe' in paths:
+            _validate_source_recipe(recipe, next(asset for asset in assets if asset.kind == 'source_recipe'))
         sdk = _json(paths['sdk'])
         if (type(sdk['schema_version']) is not int or sdk['schema_version'] != 1
                 or sdk['status'] != 'completed'
@@ -285,8 +331,10 @@ def validate_structured_native_mesh(native):
     """Canonical full-value comparison immediately before atomic adoption."""
     if (not isinstance(native, NativeMesh) or native.source_kind != 'structured_recipe'
             or native.geometry_resource_uuid is not None or not isinstance(native.assets, tuple)
-            or len(native.assets) != 4 or any(not isinstance(a, AssetDigest) for a in native.assets)
-            or {a.kind for a in native.assets} != {'recipe', 'metadata', 'msh', 'sdk'}):
+            or any(not isinstance(a, AssetDigest) for a in native.assets)
+            or len(native.assets) not in (4, 5) or len({a.kind for a in native.assets}) != len(native.assets)
+            or {a.kind for a in native.assets} not in
+            ({'recipe', 'metadata', 'msh', 'sdk'}, {'recipe', 'metadata', 'msh', 'sdk', 'source_recipe'})):
         raise PrepError('invalid_native_mesh', 'Structured adoption requires its exact recipe, MSH, report and manifest; no CAD identity.')
     for asset in native.assets:
         if (not isinstance(asset.path, str) or not isinstance(asset.sha256, str)
