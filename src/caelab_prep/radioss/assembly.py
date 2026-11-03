@@ -15,8 +15,9 @@ ELEMENTS = {"BEAM": 3, "TRUSS": 2, "SHELL": 4, "SH3N": 3, "TETRA4": 4, "BRICK": 
 ELEMENT_NAMESPACE = {"BEAM": "BEAM", "TRUSS": "TRUSS", "SHELL": "SHELL", "SH3N": "SH3N", "TETRA4": "SOLID", "BRICK": "SOLID"}
 GROUPS = {"GRNOD/NODE": "NODE", "GRBEAM/BEAM": "E:BEAM", "GRTRUS/TRUS": "E:TRUSS",
           "GRSHEL/SHEL": "E:SHELL", "GRSH3N/SH3N": "E:SH3N", "GRBRIC/BRIC": "E:SOLID", "SURF/PART": "PART"}
-PAIRS = {"MAT/LAW1", "MAT/ELAST", "PROP/BEAM", "PROP/TYPE3", "PROP/TRUSS", "PROP/TYPE2",
-         "PROP/SHELL", "PROP/TYPE1", "PROP/SOLID", "PROP/TYPE14", "SKEW/FIX", "INIVEL/TRA", "INTER/TYPE7"} | set(GROUPS)
+REFERENCE_FREE_PAIRS = {"MAT/LAW1", "MAT/ELAST", "PROP/BEAM", "PROP/TYPE3", "PROP/TRUSS", "PROP/TYPE2",
+                        "PROP/SHELL", "PROP/TYPE1", "PROP/SOLID", "PROP/TYPE14", "SKEW/FIX"}
+PAIRS = REFERENCE_FREE_PAIRS | {"INIVEL/TRA", "INTER/TYPE7"} | set(GROUPS)
 
 
 def identity(keyword):
@@ -33,6 +34,22 @@ def _int(text, *, zero=False):
         return value
     except ValueError:
         raise PrepError("unsupported_source_profile", "Expected a positive fixed-width native ID.", {"field": text}) from None
+
+
+def element_node_references(family, line):
+    """Include BEAM's optional direction node as a native reference."""
+    fields = []
+    for index in range(1, ELEMENTS[family] + 1):
+        value = _int(line[index * 10:(index + 1) * 10], zero=family == "BEAM" and index == 3)
+        if value: fields.append((index * 10, value))
+    return tuple(fields)
+
+
+def element_part_reference(keyword):
+    words = keyword.strip("/").split("/")
+    if len(words) != 2:
+        raise PrepError("unsupported_source_units", "Element unit overrides are not supported.")
+    return _int(words[1])
 
 
 def _inspect(resources):
@@ -66,14 +83,11 @@ def _inspect(resources):
             if root == "NODE":
                 for row in card.data: define("NODE", _int(lines[row][:10]), rid, row, 0)
             elif root in ELEMENTS:
-                if len(words) != 2:
-                    raise PrepError("unsupported_source_units", "Element unit overrides are not supported.")
-                reference("PART", _int(words[1]), rid, card.start, -1)
+                reference("PART", element_part_reference(card.keyword), rid, card.start, -1)
                 for row in card.data:
                     define("E:" + ELEMENT_NAMESPACE[root], _int(lines[row][:10]), rid, row, 0)
-                    for index in range(1, ELEMENTS[root] + 1):
-                        optional = root == "BEAM" and index == 3
-                        reference("NODE", _int(lines[row][index * 10:(index + 1) * 10], zero=optional), rid, row, index * 10, optional)
+                    for start, identifier in element_node_references(root, lines[row]):
+                        reference("NODE", identifier, rid, row, start)
             elif root == "PART":
                 if len(card.data) != 2: raise PrepError("unsupported_source_profile", "PART requires the standard title and assignment row.")
                 row = card.data[1]
