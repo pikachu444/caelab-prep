@@ -14,6 +14,7 @@ from ..cae_core import PrepError
 from ..radioss import DeckResource
 from ..radioss.assembly import ELEMENTS, GROUPS, inspect
 from ..radioss.modeling import native_identity, member_block
+from .model_relations import supported_condition_fields
 
 
 class ModelRelationsResource:
@@ -279,9 +280,16 @@ class MeshRelationCommands:
         for rid, state in states.items(): trial.document.resources[rid].restore(state)
         for affected in self._stale_conditions():
             card = trial._find_card(affected["card_id"]).card(affected["card_id"])
-            if not card.keyword.upper().startswith(("/CLOAD/", "/INIVEL/TRA/")): continue
+            family = "/".join(card.keyword.upper().strip("/").split("/")[:2])
+            if family == "INTER/TYPE7":
+                checks = trial._contact_reference_checks(trial.condition_values(card.id), allow_pending=True)
+                if checks:
+                    raise PrepError("unsupported_contact_targets", "The final correspondence must support TYPE7 roles and secondary mechanical attachments.",
+                                    {"card_id": card.id, "diagnostics": checks})
+                continue
+            if not card.keyword.upper().startswith(("/BCS/", "/CLOAD/", "/INIVEL/TRA/")): continue
             support = trial.condition_support(card.id)
-            if support["status"] not in ("supported", "stale"):
+            if not supported_condition_fields(family, support, allow_pending=True):
                 raise PrepError("unsupported_condition_dof", "The explicit correspondence does not support the condition's mechanical fields.",
                                 {"card_id":card.id,"diagnostics":support["diagnostics"]})
         return states, tuple(changed_objects), trial, links
