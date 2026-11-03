@@ -80,6 +80,16 @@ R2는 [승인된 경계 고정 recipe](https://github.com/pikachu444/caelab-prep
 
 관련 순수/모의 worker·기존 adapter 검사 120개와 실제 SDK 실행은 별도 근거다. 원 지적자는 저장 경계 exact 검사 누락의 수정을 재확인했다. GUI/OS 입력·VTK·frozen·native Tet10 실행은 이번 범위가 아니다. [F1 판정과 다음 기술 선택](https://github.com/pikachu444/caelab-prep/issues/19#issuecomment-6597963994), [WB MSH/C3D10 소유 경계](https://github.com/pikachu444/caelab-workbench/issues/56#issuecomment-6597946148)를 함께 따른다. 공식 GPL 예제·외부 binary는 Git 배포 자산에 넣지 않았다.
 
+### 추가 F0: Targeted Interior Corner-J
+
+[후속 F0 승인](https://github.com/pikachu444/caelab-prep/issues/19#issuecomment-6598047220)에 따라 `a0b75a9`에 순수 `improve_tet4_corner_j()` prototype을 보존했다. 기존 `tetra_metrics`와 Laplacian의 입력·incident·metric cache를 재사용한다. 기존 Gmsh Relocate3D API에서는 이 corner-J 목적함수·AR 제약·고정 node ID를 직접 지정하는 경로를 확인하지 못해, 표준 라이브러리의 결정적 26방향 내부 좌표 탐색 하나를 구현했다. 새 의존성·worker recipe·GUI 명령은 추가하지 않았다.
+
+고정 경계·ID·connectivity를 보존하고, 모든 incident tet의 양의 체적·AR≤4와 local worst corner-J의 엄격한 개선을 확인한 완료 trial만 채택한다. 이전 AR보다 작아야 한다는 제약은 사용하지 않는다. local 최소 edge의 .1배 step, 정규화된 26방향, 최대 6회 반감, iteration/evaluation budget과 중단 사유를 명시한다. 초기 검증을 포함한 모든 metric 호출을 센다. finite stencil 정체는 전역 최적이나 목표 불가능의 증명이 아니다.
+
+기존 R2 구의 저장된 Tet4를 입력으로 **2회/.1/평가100000**의 순수 F0를 한 번 수행했다. Jmin **.284588→.314196**, 미달 **272→271**, ARmax2.801426, 내부 이동119회이며 1 sweep 완료·두 번째 일부에서 `budget_exhausted`로 종료했다. 목표 미달, 경계·입력 hash 불변을 그대로 보존했다. SDK 재생성·추가 튜닝·세 번째 F1 recipe로 계산하지 않는다. 독립 지적의 예산 마지막 trial 목표 상태 누락과 체적 합 overflow는 이후 focused 회귀로 수정해 원 지적자가 재확인했다(순수 전체66, 재확인2). 원 F0 결과는 수정 전 source hash에 귀속되며 수정 후 실제 구를 다시 실행한 것으로 표시하지 않는다.
+
+이 prototype의 제한된 개선은 기존 F1 no-go나 F2/F3 미실행을 해소하지 않는다. [prepared Tet10의 별도 native/UI 선행 연결](usage.md#prepared-tet10)과 그 실제 Starter 입력 확인도 자동생성 형상군의 품질 통과가 아니다.
+
 ## 5. 현재 구현과 기능별 착수 판단
 
 | 기능 | 지금 가능한 결정 | 다음 작업과 넘어갈 조건 |
