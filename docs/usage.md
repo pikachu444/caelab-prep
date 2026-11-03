@@ -91,6 +91,33 @@ TEXT 지원 범위는 읽을 수 있는 MAT LAW1/ELAST/LAW36/PLAS_TAB의 밀도�
 
 MSH는 2.2/4.1 ASCII에 한정합니다. binary·partition·periodic·data·parametric MSH와 미지원 요소 family는 거부합니다. 문서와 소스 길이 단위가 다르면 자동 환산하지 않습니다. 일반 warped quad, 임의 all-hex, 자동 중립면과 모든 접촉 프로파일은 지원 완료 범위가 아닙니다.
 
+<a id="meshing-criteria"></a>
+
+### Meshing criteria와 출력 최소-edge 검사 (Python API)
+
+독립 criteria JSON은 활성 작업문서와 별도로 저장합니다. 다음은 STEP의 mm 정규화 좌표에서 target=1.5, minimum=.25를 실행하는 예입니다. GUI/CLI의 criteria 선택기는 아직 연결하지 않았습니다.
+
+```python
+from pathlib import Path
+from caelab_prep.adapters.gmsh_backend import GmshBackend
+from caelab_prep.application.mesh_candidates import read_mesh_candidate
+from caelab_prep.application.meshing_criteria import MeshingCriteria
+
+source = Path("part.step")
+MeshingCriteria("mm", 1.5, .25).save("part.criteria.json")
+criteria = MeshingCriteria.load("part.criteria.json")
+result = GmshBackend().generate(source, "candidates", **criteria.gmsh_kwargs(source_path=source))
+candidate = read_mesh_candidate(result)
+report = criteria.audit_minimum_edges(candidate.nodes, candidate.cells, coordinate_length_unit="mm")
+print(report["passed"], report["cleanup_candidate_ids"])
+```
+
+STEP/STP/IGES/IGS 실행 criteria는 mm여야 합니다. BREP/BRP/XAO에는 `gmsh_kwargs(source_path=source, declared_coordinate_length_unit="cm")`처럼 실제 좌표 단위를 명시하고 같은 단위의 profile을 사용합니다. Worker는 복구된 XAO의 내장 단위와 기대 단위가 충돌하면 생성 전에 거부합니다. 이 선언은 metadata를 재명명하거나 좌표를 환산하지 않습니다. 출력 감사의 `coordinate_length_unit`도 실제 출력 좌표 단위이며 원 CAD의 표시 단위를 뜻하지 않습니다.
+
+SDK `Mesh.MeshSizeMin/Max`는 sizing 입력입니다. 모든 출력 edge의 하한/상한 보장이 아니므로 감사 결과를 별도로 확인합니다. 현재 감사는 전체 inventory의 line2/tri3/quad4/tet4/hex8 위상 edge를 측정하며, point annotation은 명시적으로 건너뜁니다. 고차·미지원 family가 하나라도 있으면 전체 감사는 통과하지 않습니다. 짧은 edge의 요소 ID만 cleanup 후보로 반환하고 mesh·문서·원본은 변경하지 않습니다. Warpage/AR/J 판정이나 자동 collapse/swap 완료를 뜻하지 않습니다.
+
+`washer_rim_divisions`, `washer_width`, `washer_layers`, `fillet_suppression_threshold`는 profile에 보존되지만 non-null 실행 요청은 명시 거부합니다. Washer는 hole 주위 mesh ring, fillet suppression은 B-Rep 변경 없는 meshing tangent-edge 억제라는 후속 의미이며 아직 생성/억제하지 않습니다.
+
 <a id="prepared-tet10"></a>
 
 준비된 **직선 Tet10 메시**는 별도 opt-in 경로를 사용합니다. **New solid section… → Element formulation → Straight Tet10 (LAW1)**으로 단면을 만들고, **Import mesh… → Element profile → Straight Tet10 solids (explicit)**에서 실제 MSH를 검사합니다. 기존 선형 프로필은 Tet10 채택을 계속 차단합니다. LAW1 재료와 명시 Tet10 단면을 선택해 채택하면 별도 PART, 한 Undo, 기존 v6 저장·재열기와 두 행 `/TETRA10` RAD 출력을 사용합니다. 원 MSH와 캡처본의 덮어쓰기를 막으며, 검토 후 문서를 재열었으면 다시 검사해야 합니다.
