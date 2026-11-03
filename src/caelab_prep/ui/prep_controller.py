@@ -125,6 +125,7 @@ class PrepController:
         self.prepared_mesh_dialog = None
         self.node_move_dialog = None
         self.node_merge_dialog = None
+        self.shell_normal_dialog = None
         self.source_models_action = self._action(
             "project", "Source models / import RAD…", self.open_source_models,
             action_id="model.sources")
@@ -135,6 +136,12 @@ class PrepController:
                                              action_id="mesh.move_nodes")
         self.node_merge_action = self._action("mesh", "Merge nodes with tolerance…", self.open_node_merge,
                                               action_id="mesh.merge_nodes")
+        self.shell_normal_action = self._action("mesh", "Reverse shell normals…", self.open_shell_normals,
+                                                action_id="mesh.flip_shell_normals")
+
+    def open_shell_normals(self):
+        from .shell_normals import ShellNormalDialog
+        return self._open_model_relation_dialog("shell_normal_dialog", ShellNormalDialog, "changed")
 
     def open_node_merge(self):
         from .node_merges import NodeMergeDialog
@@ -294,6 +301,7 @@ class PrepController:
         self.prepared_mesh_action.setEnabled(loaded and editable)
         self.node_move_action.setEnabled(loaded and editable)
         self.node_merge_action.setEnabled(loaded and editable)
+        self.shell_normal_action.setEnabled(loaded and editable)
         selected_parts = self._selected_part_refs() if loaded else ()
         self.hide_selected_action.setEnabled(bool(selected_parts) and loaded and editable and self.viewport is not None)
         self.isolate_action.setEnabled(self.hide_selected_action.isEnabled())
@@ -1104,7 +1112,7 @@ class PrepController:
                 return
         self._settings.setValue("windowGeometry", self.saveGeometry())
         self._settings.setValue("windowState", self.saveState(self.LAYOUT_VERSION))
-        for dialog in (self.source_models_dialog, self.prepared_mesh_dialog, self.node_move_dialog, self.node_merge_dialog):
+        for dialog in (self.source_models_dialog, self.prepared_mesh_dialog, self.node_move_dialog, self.node_merge_dialog, self.shell_normal_dialog):
             if dialog is not None:
                 dialog.reject()
         if self.viewport:

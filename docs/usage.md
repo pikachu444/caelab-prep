@@ -197,6 +197,16 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 이 검토는 절점 그룹만 지원합니다. 중복이 없는 기존 절점/요소/표면·PART 재연결의 직접 Apply는 유지합니다. 새 링크·입력·허용·그룹·문서 변경과 Close는 이전 preview를 무효화합니다. 남은 stale 속도 그룹은 최종 대상이 알려지지 않았으므로 교집합 목록이 비어도 겹침이 없다고 판단하지 마세요. 곡선/시간 스케일·작용점 모멘트·INCLUDE 실행 순서·유효 초기상태·운동량은 평가하지 않으며 조건값을 자동 합산/평균/분배하지 않습니다.
 
+<a id="shell-normal-flip"></a>
+
+### 선택 셸의 법선 반전
+
+8개 표현의 **Mesh → Reverse shell normals…**에서 현재 요소를 **Add selected elements**로 목록에 추가합니다. 모델에서 다른 요소를 선택해 계속 추가할 수 있고, 같은 source·native ID의 중복은 한 행으로 유지합니다. **Remove selected rows**는 선택한 행을 제거하고 이전 검토를 무효화합니다. Source file·Element ID·Type을 확인한 뒤 **Preview reversal**에서 현재/제안 연결 순서·품질·영향 집합과 조건을 읽고, 검토 체크 후 **Apply reversal**로 한 번 적용합니다. **Close/Escape**는 미적용 목록을 취소합니다. 문서·초안·활성 작업이 바뀌면 오래된 검토를 적용할 수 없습니다.
+
+현재 지원은 닫힌 native 참조 범위의 SH3N과 평면 SHELL입니다. 실제 PART·SHELL/TYPE1 속성·기존 정식화와 품질 검사를 재사용하며, 압력·초기 shell 상태·적층 등 미지원 raw 카드는 preview 전에 거부합니다. 비셸 요소가 섞인 목록을 조용히 걸러 적용하지 않습니다. 좌표·ID·PART·두께와 저장된 각도 값은 보존하고 연결 순서를 반전합니다. 법선과 면내 로컬 축이 함께 바뀌므로 물리 응답은 별도로 검토해야 합니다. 지원 TYPE7은 양면 접촉이며 main/secondary 역할·gap·마찰 값을 유지합니다.
+
+영향 집합은 기존 geometry review/stale로 남아, **Replace prepared mesh / reconnect targets…**에서 현재 대상을 명시적으로 확인하기 전까지 native 출력을 막습니다. 하중·구속·속도·접촉의 값을 자동 보정하지 않습니다. 적용·Undo/Redo·v6 저장과 재열기는 같은 작업문서 계약을 사용합니다. RAD `PrepSession`의 `plan_shell_normal_flip`·`apply_shell_normal_flip`·`cancel_shell_normal_flip`도 같은 source-qualified 경로입니다. 실제 Windows/VTK·solver와 전체 P7b의 확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
+
 <a id="node-move-images"></a>
 
 ### 실제 Windows 화면으로 좌표 이동 확인하기
