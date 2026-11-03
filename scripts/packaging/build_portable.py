@@ -149,7 +149,9 @@ def main():
                 "stage": "building", "versions": versions,
                 "packaging_commit": tooling_sha, "dependency_environment": inputs,
                 "build_tool_inputs": tool_inputs,
-                "packaging_files": {p.name: digest(p) for p in (Path(__file__), tooling / "prep_entry.py", tooling / "portable.spec")},
+                "packaging_files": {p.relative_to(tooling).as_posix(): digest(p)
+                                    for p in (Path(__file__), tooling / "prep_entry.py", tooling / "portable.spec",
+                                              *sorted((tooling / "hooks").glob("*.py")))},
                 "command": command, "external_solver_binaries_bundled": False,
                 "scope": "local internal candidate; no clean-machine or public redistribution acceptance"}
     manifest_path = output / "build-manifest.json"
