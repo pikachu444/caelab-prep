@@ -174,6 +174,7 @@ class DockArrangement:
     source_title: str = "Card source"
     output_below_viewport: bool = False
     outline_fraction: float | None = None
+    property_fraction: float = .27
 
     def install(self, b: ReferenceBindings):
         b.model_dock.setWindowTitle(self.model_title)
@@ -313,33 +314,35 @@ class ReferenceAdapter:
     def defer_scalars(self):
         return self.interaction.mode == "dialog"
 
-    def install(self, b: ReferenceBindings):
+    def install(self, b: ReferenceBindings, *, commands=True):
         b.window.setStyleSheet(b.window.styleSheet() + reference_style(self.key))
         b.editor.set_presentation(profile(self.key).property_mode)
-        self.commands.install(b)
+        if commands:
+            self.commands.install(b)
         self.docks.install(b)
         self.curves.install(b)
         self.interaction.install(b)
         edit = b.edit_action or b.commands["Material"][0]
         edit.triggered.connect(lambda: b.dialog.open() if b.dialog else b.properties_dock.show())
-        menu = QMenu("Property" if self.commands.kind in ("icons", "module") else "Material", b.window.menuBar())
-        b.window.menuBar().addMenu(menu)
-        for group in ("Material", "Section", "Object", "Assignment"):
-            group_actions = b.commands.get(group, ())
-            if group_actions:
-                if menu.actions():
-                    menu.addSeparator()
-                menu.addActions(group_actions)
-        if b.commands.get("Selection"):
-            selection = QMenu("Selection", b.window.menuBar())
-            b.window.menuBar().addMenu(selection)
-            selection.addActions(b.commands["Selection"])
-        if b.commands.get("Conditions"):
-            conditions = QMenu("Conditions", b.window.menuBar())
-            b.window.menuBar().addMenu(conditions)
-            conditions.addActions(b.commands.get("Curve", ()))
-            conditions.addSeparator()
-            conditions.addActions(b.commands["Conditions"])
+        if commands:
+            menu = QMenu("Property" if self.commands.kind in ("icons", "module") else "Material", b.window.menuBar())
+            b.window.menuBar().addMenu(menu)
+            for group in ("Material", "Section", "Object", "Assignment"):
+                group_actions = b.commands.get(group, ())
+                if group_actions:
+                    if menu.actions():
+                        menu.addSeparator()
+                    menu.addActions(group_actions)
+            if b.commands.get("Selection"):
+                selection = QMenu("Selection", b.window.menuBar())
+                b.window.menuBar().addMenu(selection)
+                selection.addActions(b.commands["Selection"])
+            if b.commands.get("Conditions"):
+                conditions = QMenu("Conditions", b.window.menuBar())
+                b.window.menuBar().addMenu(conditions)
+                conditions.addActions(b.commands.get("Curve", ()))
+                conditions.addSeparator()
+                conditions.addActions(b.commands["Conditions"])
         if b.property_tabs is not None:
             b.property_tabs.setTabText(0, self.docks.property_title)
             b.property_tabs.setTabText(1, self.docks.source_title)
@@ -362,8 +365,12 @@ class ReferenceAdapter:
     def resize(self, b: ReferenceBindings):
         if self.docks.adjacent:
             width = max(800, b.window.width())
+            tree_width = round(width * .17)
+            if self.key == "beidprep":
+                tree_width = min(420, tree_width)
+            property_minimum = 250 if self.key == "beidprep" else 320
             b.window.resizeDocks([b.model_dock, b.properties_dock],
-                [round(width * .17), max(320, round(width * .27))], Qt.Orientation.Horizontal)
+                [tree_width, max(property_minimum, round(width * self.docks.property_fraction))], Qt.Orientation.Horizontal)
         else:
             width = round(b.window.width() * profile(self.key).tree_fraction)
             if self.interaction.mode != "dialog":
@@ -391,5 +398,5 @@ ADAPTERS = {
     "nfx": ReferenceAdapter("nfx", CommandSurface("ribbon", (("파일", ("Document", "History")), ("모델", ("Material", "Section", "Assignment", "Object")), ("선택", ("Selection",)), ("조건", ("Curve", "Conditions")))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "재료"), CurveArrangement("stacked")),
     "meshfree": ReferenceAdapter("meshfree", CommandSurface("ribbon", (("Home", ("Document", "History")), ("Material", ("Material", "Section", "Assignment", "Object")), ("Selection", ("Selection",)), ("Analysis", ("Curve", "Conditions")))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "Material"), CurveArrangement("pages", ("Spreadsheet", "Graph"))),
     "naksha": ReferenceAdapter("naksha", CommandSurface("ribbon", (("Materials", ("Material", "Section", "Assignment", "Object")), ("Selections", ("Selection",)), ("Conditions", ("Curve", "Conditions"))), quick_groups=("Document", "History")), DockArrangement("Outline", "Details", outline_fraction=.57), EditorInteraction("details"), CurveArrangement("side"), "global"),
-    "beidprep": ReferenceAdapter("beidprep", CommandSurface("compact", (("MODEL", ("Document", "History", "Material", "Section", "Assignment", "Object")), ("SET", ("Selection",)), ("CONDITION", ("Curve", "Conditions")))), DockArrangement("MODEL", "FORM", adjacent=True, source_title="TEXT"), EditorInteraction("adjacent"), CurveArrangement("stacked"), "bottom"),
+    "beidprep": ReferenceAdapter("beidprep", CommandSurface("compact", (("MODEL", ("Document", "History", "Material", "Section", "Assignment", "Object")), ("SET", ("Selection",)), ("CONDITION", ("Curve", "Conditions")))), DockArrangement("MODEL", "FORM", adjacent=True, source_title="TEXT", property_fraction=1/6), EditorInteraction("adjacent"), CurveArrangement("stacked"), "bottom"),
 }

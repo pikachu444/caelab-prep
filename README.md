@@ -45,7 +45,7 @@ python -m venv .venv
 
 ## 사용 안내
 
-- [설치·Windows 실행·편집·저장·CLI·문제 해결](docs/usage.md)
+- [설치·Windows 실행·MODEL/FORM/TEXT 편집·저장·CLI](docs/usage.md)
 - [열린 GUI의 live 제어](docs/live-control.md), [MCP 클라이언트 연결](docs/mcp-client.md)
 - [8개 프로그램별 표현의 근거와 차이](docs/ui-reference-variants.md)
 - [Windows 확인 범위와 실행 기록](docs/native-windows-validation.md)

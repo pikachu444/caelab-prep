@@ -191,6 +191,7 @@ def test_short_command_labels_and_primary_state_survive_refresh():
 
 def test_wide_initial_sidebar_is_capped_and_later_resize_keeps_user_width(qt_widgets):
     window = MainWindow(enable_viewport=False)
+    window.setWindowState(Qt.WindowState.WindowNoState)
     window.resize(2560, 1369)
     window.show()
     qt_widgets.processEvents()

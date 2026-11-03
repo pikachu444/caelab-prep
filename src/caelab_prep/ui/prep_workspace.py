@@ -10,16 +10,19 @@ timing follows the retained controller.
 """
 
 from PySide6.QtCore import QEvent, QObject, QSize, Qt
-from PySide6.QtGui import QActionGroup, QFont
+from PySide6.QtGui import QActionGroup
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMenu,
-    QPlainTextEdit, QProgressBar, QPushButton, QScrollArea, QSizePolicy,
+    QProgressBar, QPushButton, QScrollArea, QSizePolicy,
     QSplitter, QStackedWidget, QTabWidget, QToolBar, QToolButton, QTreeWidget, QVBoxLayout, QWidget,
 )
 
 from .shell import ViewportFrame, create_dock
 from .theme import STYLESHEET
 from .widgets import CurvePlot, CurveTable, ModelTree, PropertyEditor, VectorEdit
+from .widgets.card_source import CardSourceEditor
+from .native_commands import menu_sections
+from ..application.rad_provider import display_title
 
 
 class _SelectionTypeMenu(QObject):
@@ -68,7 +71,7 @@ class PrepWorkspace:
 
     def build_workspace(self, *, enable_viewport):
         self.setObjectName("caelabPrepWindow")
-        self.setWindowTitle("CAELAB Prep 2026")
+        self.setWindowTitle("CourantPrep 2026")
         self.resize(1440, 900)
         self.setMinimumSize(850, 550)
         self.setStyleSheet(STYLESHEET)
@@ -86,30 +89,12 @@ class PrepWorkspace:
         self.resizeDocks([self.messages_dock], [125], Qt.Orientation.Vertical)
 
     def _install_command_surfaces(self):
-        groups = (
-            ("&File", ((self.mesh_workflow.new_action, self.open_rad_action, self.open_project_action),
-                       (self.source_models_action,),
-                       (self.save_action, self.save_as_action, self.export_action, self.mesh_workflow.export_action), (self.close_action,))),
-            ("&Edit", ((self.undo_action, self.redo_action), (self.reload_properties_action,))),
-            ("&Model", ((self.modeling.actions["material.create"], self.modeling.actions["section.create"]),
-                        (self.modeling.actions["solid_section.create"], self.modeling.actions["coordinate_system.create"]),
-                        (self.modeling.actions["group.create"], self.modeling.actions["element_group.create"], self.modeling.actions["surface.create"]),
-                        (self.modeling.actions["object.edit"],),
-                        (self.modeling.actions["object.copy"], self.modeling.actions["object.delete"]),
-                        (self.modeling.actions["part.assign"],))),
-            ("&Conditions", ((self.modeling.actions["curve.create"],),
-                             tuple(self.modeling.actions[key + ".create"] for key in
-                                   ("constraint", "load", "velocity", "contact")),
-                             (self.mesh_workflow.cases_action,))),
-            ("&Mesh", ((self.mesh_import.action, self.mesh_workflow.mesh_action),
-                       (self.node_move_action, self.node_merge_action, self.prepared_mesh_action))),
-            ("&View", ((self.fit_action, self.fit_selected_action, self.iso_action, *self.standard_view_actions, self.edges_action),
-                       (self.hide_selected_action, self.isolate_action, self.show_all_action))),
-        )
-        for name, sections in groups:
-            if name in ("&Model", "&Conditions") and self.presentation:
+        self.command_menus = {}
+        for name, sections in menu_sections(self):
+            if name in ("&Model", "&Conditions") and self.presentation not in (None, "beidprep"):
                 continue
             menu = QMenu(name, self.menuBar())
+            self.command_menus[name.replace("&", "")] = menu
             self.menuBar().addMenu(menu)
             for index, actions in enumerate(sections):
                 if index:
@@ -124,13 +109,8 @@ class PrepWorkspace:
         bar.setObjectName("documentToolbar")
         bar.setMovable(False)
         bar.setIconSize(QSize(16, 16))
-        bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self.addToolBar(bar)
-        brand = QLabel("CAELAB PREP")
-        brand.setObjectName("applicationBrand")
-        brand.setToolTip("CAELAB Prep 2026 Professional CAE Preprocessor")
-        brand.setContentsMargins(6, 2, 6, 2)
-        bar.addWidget(brand)
         for action, label in ((self.open_rad_action, "Open deck"), (self.save_action, "Save"),
                               (self.export_action, "Export")):
             action.setIconText(label)
@@ -142,17 +122,25 @@ class PrepWorkspace:
         open_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         bar.addSeparator()
         bar.addActions([self.undo_action, self.redo_action])
-        if not self.presentation:
+        if self.presentation in (None, "beidprep"):
             bar.addSeparator()
-            bar.addActions([self.modeling.actions["material.create"], self.modeling.actions["section.create"],
-                            self.modeling.actions["part.assign"]])
+            for title, primary in (("Model", self.modeling.actions["material.create"]),
+                                   ("Mesh", self.mesh_workflow.mesh_action),
+                                   ("Conditions", self.modeling.actions["constraint.create"])):
+                button = QToolButton(bar)
+                button.setIcon(primary.icon())
+                button.setText(title)
+                button.setAccessibleName(title + " commands")
+                button.setToolTip(title + " commands")
+                button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+                button.setMenu(self.command_menus[title])
+                bar.addWidget(button)
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         bar.addWidget(spacer)
         self.document_state = QLabel()
         self.document_state.setObjectName("documentState")
         self.document_state.setContentsMargins(8, 0, 12, 0)
-        bar.addWidget(self.document_state)
 
     def _install_model_view(self, enabled):
         self.viewport = None
@@ -230,6 +218,7 @@ class PrepWorkspace:
         self.model_tree.setColumnHidden(2, False)
         self.model_tree.nodeSelected.connect(self._card_selected)
         self.model_tree.selectedRefsChanged.connect(self._objects_selected)
+        self.model_tree.visibilityRequested.connect(self._tree_visibility_requested)
         self.model_tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.model_tree.customContextMenuRequested.connect(self._model_context_menu)
         layout.addWidget(self.model_filter)
@@ -297,13 +286,13 @@ class PrepWorkspace:
         form_scroll.setFrameShape(QFrame.Shape.NoFrame)
         form_scroll.setWidgetResizable(True)
         form_scroll.setWidget(properties)
-        self.raw_source = QPlainTextEdit()
-        self.raw_source.setAccessibleName("Selected card source")
-        self.raw_source.setReadOnly(True)
-        self.raw_source.setFont(QFont("Consolas", 10))
-        self.raw_source.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self.card_source = CardSourceEditor()
+        self.raw_source = self.card_source.editor
+        self.card_source.editRequested.connect(self._begin_card_text)
+        self.card_source.applyRequested.connect(self._apply_card_text)
+        self.card_source.cancelRequested.connect(self._cancel_card_text)
         self.property_tabs.addTab(form_scroll, "Properties")
-        self.property_tabs.addTab(self.raw_source, "Card source")
+        self.property_tabs.addTab(self.card_source, "Card source")
         self.inspector_stack = QStackedWidget()
         self.inspector_stack.addWidget(self.property_tabs)
         self.modeling.mount(self.inspector_stack)
@@ -326,6 +315,7 @@ class PrepWorkspace:
                                         Qt.DockWidgetArea.BottomDockWidgetArea, self._view_menu)
 
     def _install_status(self):
+        self.statusBar().addPermanentWidget(self.document_state)
         self._counts = QLabel()
         self._counts.setContentsMargins(8, 0, 10, 0)
         self._progress = QProgressBar()
@@ -337,11 +327,13 @@ class PrepWorkspace:
 
     def _present_document(self, summary):
         name = str(summary.get("name") or "Untitled")
-        self.setWindowTitle(f"CAELAB Prep 2026 — {name}{' *' if summary.get('dirty') else ''}")
+        self.setWindowTitle(f"CourantPrep 2026 — {name}{' *' if summary.get('dirty') else ''}")
         self.viewport_frame.title.setText(name if summary.get("document_id") else "Model")
         self.viewport_frame.title.setToolTip(name)
         self.viewport_frame.context.setText("" if summary.get("document_id") else "Open a deck or project")
-        self.document_state.setText("[ UNSAVED ]" if summary.get("dirty") else "OPENRADIOSS" if summary.get("document_id") else "")
+        self.document_state.setText("Unsaved changes" if summary.get("dirty") else "")
+        self.document_state.setVisible(bool(summary.get("dirty")))
+        self._counts.setToolTip("OpenRadioss model" if summary.get("document_id") else "")
         self._counts.setText(f"{summary.get('node_count', 0):,} nodes  ·  {summary.get('element_count', 0):,} elements")
         self.messages.clear()
         for diagnostic in summary.get("diagnostics", ()):
@@ -383,10 +375,7 @@ class PrepWorkspace:
         try:
             self.model_tree.set_nodes(sorted(nodes, key=lambda node: order.get(node.group, len(order))))
             self.model_tree.setColumnHidden(1, True)
-            self.model_tree.setColumnHidden(2, False)
             self.model_tree.model().setHeaderData(2, Qt.Orientation.Horizontal, "Card")
-            if self.model_tree.columnWidth(2) < 95:
-                self.model_tree.setColumnWidth(2, 95)
             if self._selected_card_id not in self._card_refs:
                 self._selected_card_id = None
             self._restore_approved_selection()
@@ -440,7 +429,7 @@ class PrepWorkspace:
             self._selected_card_id = None
             self.property_title.setText("No object selected")
             self.property_subtitle.clear()
-            self.raw_source.clear()
+            self._present_card_source()
             self.modeling.refresh()
             return
         ref = self._card_refs[self._selected_card_id]
@@ -451,7 +440,7 @@ class PrepWorkspace:
         self._field_specs.update({spec.name: {"name": spec.name, "label": spec.label,
                                             "value": spec.value, "type": spec.kind} for spec in specs})
         self.property_editor.set_fields(tuple(spec for spec in specs if spec.kind != "table"),
-                                        title=str(card.get("title") or "Properties"),
+                                        title=display_title(card.get("title") or "Properties"),
                                         subtitle=str(card.get("keyword") or ""))
         if retain_units:
             for name, unit in previous_units.items():
@@ -464,10 +453,7 @@ class PrepWorkspace:
         self._native_unit_baseline = self.property_editor.units()
         self._connect_property_inputs()
         self._refresh_target_roles()
-        source = self.session.card_text(self._selected_card_id)
-        if len(source) > 100_000:
-            source = source[:100_000] + "\n… Card preview truncated; the full card is preserved in the document."
-        self.raw_source.setPlainText(source)
+        self._present_card_source(ref)
         units = self.provider.unit_context(ref)
         self.units_note.setText(self._unit_caption(units))
         table = next((spec for spec in specs if spec.kind == "table"), None)

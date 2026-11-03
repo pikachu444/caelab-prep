@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 
 from PySide6.QtCore import QSettings, Qt, Signal
-from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QLabel
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QLabel, QMenu
 
 from .shell import FileTask as _FileTask
 from .prep_controller import PrepController
@@ -32,14 +32,15 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
             task_factory=lambda *args, **kwargs: _FileTask(*args, **kwargs))
         self._settings = settings if settings is not None else QSettings("CAELab", "Prep" + ("-" + presentation if presentation else ""))
         self._register_commands()
+        from .reference_workspace import _edit_action, configure_native
+        self.edit_properties_action = _edit_action(self)
         self.build_workspace(enable_viewport=enable_viewport)
-        if presentation:
-            from .reference_workspace import configure_native
-            configure_native(self, presentation)
+        configure_native(self, presentation or "beidprep", native_commands=presentation in (None, "beidprep"))
         geometry = self._settings.value("windowGeometry")
         state = self._settings.value("windowState")
-        if geometry:
-            self.restoreGeometry(geometry)
+        geometry_restored = bool(geometry) and self.restoreGeometry(geometry)
+        if not geometry_restored:
+            self.setWindowState(self.windowState() | Qt.WindowState.WindowMaximized)
         restored = bool(state) and self.restoreState(state, self.LAYOUT_VERSION)
         self._initial_sidebar_pending = not restored
         if not restored:
@@ -51,7 +52,9 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
         self._live_control = None
         self._live_label = QLabel("Live control: off")
         self.statusBar().addPermanentWidget(self._live_label)
-        menu = self.menuBar().addMenu("&Automation")
+        menu = QMenu("&Automation", self.menuBar())
+        self.menuBar().addMenu(menu)
+        self.automation_menu = menu
         self.start_live_action = menu.addAction("Start live control…", self._start_live_dialog)
         self.stop_live_action = menu.addAction("Stop live control", self.stop_live_ipc)
         self.stop_live_action.setEnabled(False)
