@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
     QTextBrowser, QVBoxLayout, QWidget)
 
 from .shell import FileTask
-from .widgets.numeric import NumericEdit
+from .widgets.numeric import NumericEdit, VectorEdit
 
 
 def candidate_projection(candidate, *, dimension=None):
@@ -164,6 +164,8 @@ class MeshCandidateDialog(QDialog):
         self._seed_recipe = None
         self._seed_source = None
         self.division_edits = []
+        self.geometry_edits = []
+        self._geometry_dirty = False
         self.setMinimumSize(760, 480)
         available = self.screen().availableGeometry()
         self.resize(min(1100, available.width() - 40), min(760, available.height() - 60))
@@ -228,6 +230,22 @@ class MeshCandidateDialog(QDialog):
         self.layers.setToolTip("One sweep layer count for the whole hex recipe, shared by both patches.")
         self.layers.textChanged.connect(self._divisions_changed)
         form.addRow("Sweep layers", self.layers)
+        self.geometry_toggle = QPushButton("Edit single-patch geometry…")
+        self.geometry_toggle.setCheckable(True)
+        form.addRow(self.geometry_toggle)
+        self.geometry_panel = QWidget()
+        geometry_layout = QVBoxLayout(self.geometry_panel)
+        geometry_layout.setContentsMargins(0,0,0,0)
+        self.geometry_hint = QLabel("Corner order follows the input. Save changed geometry as a new recipe before generation.")
+        self.geometry_hint.setWordWrap(True); geometry_layout.addWidget(self.geometry_hint)
+        self.geometry_form = QFormLayout()
+        self.geometry_form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
+        geometry_layout.addLayout(self.geometry_form)
+        self.fork_button = QPushButton("Save as new recipe…")
+        self.fork_button.clicked.connect(self.fork_geometry)
+        geometry_layout.addWidget(self.fork_button)
+        self.geometry_toggle.toggled.connect(self._sync_geometry)
+        form.addRow(self.geometry_panel)
         self.generate_button = QPushButton("Generate candidate")
         self.cancel_job = QPushButton("Cancel generation"); self.cancel_job.setEnabled(False)
         self.generate_button.clicked.connect(self.generate)
@@ -284,6 +302,56 @@ class MeshCandidateDialog(QDialog):
         self.finished.connect(self._finished)
         self._source_controls()
         self._sync_adoption()
+
+    def _sync_geometry(self):
+        supported = bool(self._structured() and self._seed_recipe and 'patches' not in self._seed_recipe)
+        self.geometry_toggle.setVisible(self._structured())
+        self.geometry_toggle.setEnabled(supported and not self._running_job)
+        self.geometry_toggle.setToolTip("Fixed corner order; a new input file. Two-patch geometry editing is not connected.")
+        self.geometry_panel.setVisible(supported and self.geometry_toggle.isChecked())
+        self.geometry_panel.setEnabled(not self._running_job)
+        self.generate_button.setEnabled(not self._running_job and not self._geometry_dirty)
+
+    def _geometry_changed(self):
+        try:
+            points = [list(editor.numeric_value()) for editor in self.geometry_edits]
+            expected = [*self._seed_recipe['corners'], *([self._seed_recipe['vector']] if self._seed_recipe['mode'] == 'hex' else [])]
+            self._geometry_dirty = points != expected
+        except ValueError:
+            self._geometry_dirty = True
+        self._invalidate_candidate()
+        self.summary.setText("Geometry changed. Save it as a new recipe before generating a new candidate." if self._geometry_dirty
+                             else "Geometry restored. Generate a new candidate to check quality before adoption.")
+
+    def _current_recipe(self):
+        from ..application.structured_geometry import validate_recipe
+        recipe = deepcopy(self._seed_recipe)
+        for patch, edits in zip(recipe.get('patches', [recipe]), self.division_edits):
+            patch['divisions'] = [edit.numeric_value() for edit in edits]
+        if recipe['mode'] == 'hex': recipe['layers'] = self.layers.numeric_value()
+        validate_recipe(recipe)
+        return recipe
+
+    def fork_geometry(self):
+        if self._task is not None or not self.geometry_edits: return False
+        try:
+            from ..application.structured_mesh import fork_geometry_recipe
+            base, origin = self._current_recipe(), self._seed_source
+            corners = [editor.numeric_value() for editor in self.geometry_edits[:4]]
+            vector = self.geometry_edits[4].numeric_value() if base['mode'] == 'hex' else None
+            from ..application.structured_geometry import validate_recipe
+            edited = deepcopy(base); edited['corners'] = [list(point) for point in corners]
+            if vector is not None: edited['vector'] = list(vector)
+            validate_recipe(edited)
+            path, _ = QFileDialog.getSaveFileName(self, "New geometry recipe", "", "Recipe (*.json)")
+            if not path: return False
+            forked = fork_geometry_recipe(base, origin, path, corners=corners, vector=vector)
+            self.source.setText(forked)
+            if not self.load_divisions(): return False
+            self.summary.setText("New geometry recipe saved. Generate a new candidate to check quality before adoption.")
+            return True
+        except Exception as exc:
+            self._show_error(exc); return False
 
     def _selected_parts(self):
         return [self.replace.item(row).data(Qt.ItemDataRole.UserRole) for row in range(self.replace.count())
@@ -348,6 +416,7 @@ class MeshCandidateDialog(QDialog):
         self.form.labelForField(self.divisions).setVisible(structured and self._seed_recipe is not None)
         hex_layers = structured and self._seed_recipe is not None and self._seed_recipe.get("mode") == "hex"
         self.layers.setVisible(hex_layers); self.form.labelForField(self.layers).setVisible(hex_layers)
+        self._sync_geometry()
         self.pick_hint.setText(("Planar quad4 / sweep hex8. Load recipe divisions to edit segment counts and hex layers; units and geometry stay in the recipe. " +
                                ("Preview does not change the model." if self.viewport else "3D preview is disabled."))
                                if structured else "Click the preview to select an entity for local refinement.")
@@ -375,6 +444,11 @@ class MeshCandidateDialog(QDialog):
         self.division_edits = []
         self.divisions.setRowCount(0)
         self.layers.blockSignals(True); self.layers.accept_value(""); self.layers.blockSignals(False)
+        self._geometry_dirty = False
+        self.geometry_edits = []
+        while self.geometry_form.rowCount(): self.geometry_form.removeRow(0)
+        self.geometry_toggle.blockSignals(True); self.geometry_toggle.setChecked(False); self.geometry_toggle.blockSignals(False)
+        self.geometry_panel.hide()
 
     def _recipe_source_changed(self):
         if self._presenting: return
@@ -386,6 +460,13 @@ class MeshCandidateDialog(QDialog):
         self._clear_divisions()
         if recipe.get("mode") not in ("quad", "hex"): return
         self._seed_recipe = deepcopy(recipe); self._seed_source = source
+        if 'patches' not in recipe:
+            points = [*recipe['corners'], *([recipe['vector']] if recipe['mode'] == 'hex' else [])]
+            for index, point in enumerate(points):
+                editor = VectorEdit(point, unit=recipe['unit'])
+                editor.draftChanged.connect(self._geometry_changed)
+                self.geometry_edits.append(editor)
+                self.geometry_form.addRow(f"Corner {index + 1}" if index < 4 else "Sweep vector", editor)
         if recipe["mode"] == "hex":
             self.layers.blockSignals(True); self.layers.accept_value(recipe["layers"]); self.layers.blockSignals(False)
         patches = recipe.get("patches", [recipe])
@@ -404,7 +485,8 @@ class MeshCandidateDialog(QDialog):
 
     def _divisions_changed(self):
         self._invalidate_candidate()
-        self.summary.setText("Divisions changed. Generate a new candidate to check quality before adoption.")
+        self.summary.setText("Geometry changed. Save it as a new recipe before generating a new candidate." if self._geometry_dirty
+                             else "Divisions changed. Generate a new candidate to check quality before adoption.")
 
     def load_divisions(self):
         from ..application.structured_mesh import read_recipe_input
@@ -478,6 +560,7 @@ class MeshCandidateDialog(QDialog):
         if self._structured():
             for widget in (self.size, self.dimension, self.policy, self.local_size, self.length, self.replace, self.preview_mode):
                 widget.setEnabled(False)
+        self._sync_geometry()
 
     def _start(self, function):
         if self._task is not None: return False
@@ -495,17 +578,14 @@ class MeshCandidateDialog(QDialog):
         QThreadPool.globalInstance().start(task); return True
 
     def generate(self):
+        if self._geometry_dirty:
+            self._show_error("Save changed geometry as a new recipe before generation."); return False
         if self._structured():
             source, output = self.source.text(), self.output.text()
             recipe, origin = None, self._seed_source
             if self._seed_recipe is not None:
-                from ..application.structured_geometry import validate_recipe
-                recipe = deepcopy(self._seed_recipe)
                 try:
-                    for patch, edits in zip(recipe.get("patches", [recipe]), self.division_edits):
-                        patch["divisions"] = [edit.numeric_value() for edit in edits]
-                    if recipe["mode"] == "hex": recipe["layers"] = self.layers.numeric_value()
-                    validate_recipe(recipe)
+                    recipe = self._current_recipe()
                 except Exception as exc:
                     self._show_error(exc); return False
             def generate_recipe():
