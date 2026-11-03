@@ -35,8 +35,10 @@ class NodeMergeCommands:
                         text = lines[row]
                         body = text.rstrip("\r\n")
                         ending = text[len(body):]
-                        fields = [(index, node.local_id) for index, node in enumerate(cell.nodes, 1)]
-                        if family == "BEAM" and cell.orientation_node is not None:
+                        previous = candidate.base._cells[ref]
+                        fields = [(index, node.local_id) for index, node in enumerate(cell.nodes, 1)
+                                  if node != previous.nodes[index - 1]]
+                        if family == "BEAM" and cell.orientation_node is not None and cell.orientation_node != previous.orientation_node:
                             fields.append((3, cell.orientation_node.local_id))
                         for index, value in fields:
                             start = index * 10
@@ -67,16 +69,17 @@ class NodeMergeCommands:
         planned._projection_cache = None
         planned._projection_index = {}
         mapping = dict(candidate.merge_map)
-        correspondences = []
+        correspondences, coalescences = [], []
         for group in candidate.base.sets:
             if group.member_kind != "node":
                 continue
-            proposed = tuple(mapping.get(ref, ref) for ref in group.members)
-            if len(set(proposed)) != len(proposed):
-                raise PrepError("unsupported_member_collapse", "This node group would require explicit many-to-one membership coalescence, which is not implemented.",
-                                {"group_id": group.ref.local_id})
+            mapped = tuple(mapping.get(ref, ref) for ref in group.members)
+            proposed = tuple(dict.fromkeys(mapped))
+            if len(proposed) != len(mapped):
+                coalescences.append({"group_ref": asdict(group.ref), "old_link_count": len(mapped),
+                    "projected_unique_count": len(proposed), "scope": "trial only; explicit reviewed coalescence is required at reconnection"})
             correspondences.append({"group_ref": asdict(group.ref),
-                "mapping": [{"before": asdict(before), "proposed": asdict(after)} for before, after in zip(group.members, proposed)]})
+                "mapping": [{"before": asdict(before), "proposed": asdict(after)} for before, after in zip(group.members, mapped)]})
             if proposed != group.members:
                 owner, _, _, state = planned._group_members_state(group.ref.local_id, [asdict(ref) for ref in proposed])
                 if state is not None:
@@ -88,7 +91,7 @@ class NodeMergeCommands:
                 or {cell.ref: cell for cell in after.cells} != {cell.ref: cell for cell in candidate.iter_cells()}):
             raise PrepError("native_merge_mismatch", "The rendered native nodes or elements do not match the reviewed merge candidate.")
         conditions, overlaps, blocked = self._group_member_conditions(candidate, planned, after_snapshot=after)
-        return conditions, overlaps, blocked, correspondences
+        return conditions, overlaps, blocked, correspondences, coalescences
 
     def plan_node_merge(self, mapping, *, tolerance, length_unit, approvals=(), expected_revision=None, expected_document_id=None):
         """Review exact scoped source/keeper pairs, not an automatic nearest search."""
@@ -116,7 +119,7 @@ class NodeMergeCommands:
                 candidate = edits.merge_nodes(self._mesh_edit_snapshot(), pairs, tolerance=tolerance,
                     length_unit=length_unit, approvals=tuple(permissions))
                 states = self._native_node_merge_states(candidate)
-                conditions, overlaps, blocked, correspondences = self._project_node_merge(candidate, states)
+                conditions, overlaps, blocked, correspondences, coalescences = self._project_node_merge(candidate, states)
             except edits.MeshEditError as exc:
                 if exc.code == "component_boundary":
                     raise PrepError("part_boundary", "Cross-PART merge requires permission for this exact source and keeper pair.", {"details": exc.details}) from exc
@@ -136,6 +139,7 @@ class NodeMergeCommands:
                 "quality_after": [asdict(value) for value in candidate.quality_after],
                 "impacts": [asdict(value) for value in candidate.impacts], "conditions": conditions,
                 "initial_velocity_overlaps": overlaps, "projected_correspondences": correspondences,
+                "membership_coalescences": coalescences,
                 "stale_targets": states[self._relations_resource().id]["stale_targets"],
                 "admissible": not blocked, "blocked": blocked,
                 "resource_names": {resource.id: self._paths.get(resource.id, resource.id) for resource in self._deck_resources()},

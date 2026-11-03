@@ -22,7 +22,7 @@ jobs:
       - run: python -m pytest -q tests/test_portable_packaging.py
       - run: python -m pytest -q tests/test_structured_geometry.py
       - run: python -m pytest -q tests/test_structured_adoption.py -k mismatched_original
-      - run: python -m pytest tests/test_document_core.py tests/test_radioss_editing.py tests/test_project_roundtrip.py tests/test_cli_workflow.py tests/test_application_contracts.py tests/test_rad_provider.py tests/test_radioss_modeling.py tests/test_radioss_defaults.py tests/test_modeling_workflow.py tests/test_modeling_commands.py tests/test_condition_workflow.py tests/test_rad_display_units.py tests/test_analysis_cases.py tests/test_curve_csv.py tests/test_multiresource_commands.py tests/test_source_models.py tests/test_mixed_relations.py tests/test_prepared_replacement.py tests/test_projection_contract.py tests/test_instance_references.py tests/test_mesh_edit_candidates.py tests/test_node_moves.py tests/test_group_member_review.py tests/test_node_merge_orientation.py tests/test_node_merges.py
+      - run: python -m pytest tests/test_document_core.py tests/test_radioss_editing.py tests/test_project_roundtrip.py tests/test_cli_workflow.py tests/test_application_contracts.py tests/test_rad_provider.py tests/test_radioss_modeling.py tests/test_radioss_defaults.py tests/test_modeling_workflow.py tests/test_modeling_commands.py tests/test_condition_workflow.py tests/test_rad_display_units.py tests/test_analysis_cases.py tests/test_curve_csv.py tests/test_multiresource_commands.py tests/test_source_models.py tests/test_mixed_relations.py tests/test_prepared_replacement.py tests/test_projection_contract.py tests/test_instance_references.py tests/test_mesh_edit_candidates.py tests/test_node_moves.py tests/test_group_member_review.py tests/test_node_merge_orientation.py tests/test_node_merges.py tests/test_node_coalescence.py
 
   qt-document:
     runs-on: ubuntu-latest
@@ -40,7 +40,7 @@ jobs:
         # The opt-in settings path is also exercised through separate CLI processes.
         run: python -m pytest -q tests/test_settings_isolation.py
       - name: Qt document regression
-        run: python -m pytest -vv tests/test_gui_document_flow.py tests/test_common_widgets.py tests/test_prep_presentation.py tests/test_curve_plot_scale.py tests/test_program_comparison.py tests/test_property_presentations.py tests/test_reference_adapters.py tests/test_modeling_ui.py tests/test_viewport_visibility.py tests/test_conditions_ui.py tests/test_collection_editors.py tests/test_numeric_units.py tests/test_native_units_ui.py tests/test_groups_ui.py tests/test_responsive_inspector.py tests/test_selection_menu.py tests/test_analysis_cases_ui.py tests/test_case_entrypoints.py tests/test_curve_workflow.py tests/test_viewport_scaling.py tests/test_part_property_refresh.py tests/test_node_moves_ui.py tests/test_group_member_review_ui.py tests/test_node_merges_ui.py
+        run: python -m pytest -vv tests/test_gui_document_flow.py tests/test_common_widgets.py tests/test_prep_presentation.py tests/test_curve_plot_scale.py tests/test_program_comparison.py tests/test_property_presentations.py tests/test_reference_adapters.py tests/test_modeling_ui.py tests/test_viewport_visibility.py tests/test_conditions_ui.py tests/test_collection_editors.py tests/test_numeric_units.py tests/test_native_units_ui.py tests/test_groups_ui.py tests/test_responsive_inspector.py tests/test_selection_menu.py tests/test_analysis_cases_ui.py tests/test_case_entrypoints.py tests/test_curve_workflow.py tests/test_viewport_scaling.py tests/test_part_property_refresh.py tests/test_node_moves_ui.py tests/test_group_member_review_ui.py tests/test_node_merges_ui.py tests/test_node_coalescence_ui.py
 
   cad-worker:
     runs-on: ubuntu-latest
@@ -130,7 +130,7 @@ jobs:
           PYCODE
           QT_DEBUG_PLUGINS=1 xvfb-run -a -s "-screen 0 1920x1080x24" python -u -c 'from PySide6.QtWidgets import QApplication; app = QApplication([]); print(app.platformName(), app.primaryScreen().geometry(), flush=True); assert app.platformName() == "xcb"'
       - name: Actual Qt VTK rendering and picking
-        run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -s tests/test_structured_mesh_native.py tests/test_structured_hex_native.py tests/test_group_member_review_native.py tests/test_node_merges_native.py
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -s tests/test_structured_mesh_native.py tests/test_structured_hex_native.py tests/test_group_member_review_native.py tests/test_node_merges_native.py tests/test_node_coalescence_native.py
       - name: Existing native rendering regression
         run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -s tests/test_native_render.py tests/test_case_entrypoints.py tests/test_curve_workflow.py tests/test_external_mesh_native.py tests/test_source_models_ui.py tests/test_prepared_replacement_ui.py tests/test_model_relations_host.py tests/test_large_integer_selection.py
       - uses: actions/upload-artifact@v4

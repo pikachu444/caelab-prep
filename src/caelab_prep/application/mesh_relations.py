@@ -200,66 +200,121 @@ class MeshRelationCommands:
         """
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
-            if not isinstance(targets, dict) or not targets:
-                raise PrepError("invalid_reference", "Provide explicit replacement memberships for stale target UUIDs.")
-            relations = self._relations_resource().snapshot(); candidates = {}; changed_objects = []
-            for card_id, replacement in targets.items():
-                if card_id not in relations["stale_targets"]:
-                    raise PrepError("invalid_reference", "The target is not marked stale.", {"card_id": card_id})
-                resource = self._find_card(card_id); card = resource.card(card_id)
-                stale = relations["stale_targets"][card_id]
-                if (not isinstance(replacement, dict) or set(replacement) != {"mesh_revision", "mapping"}
-                        or type(replacement["mesh_revision"]) is not int or replacement["mesh_revision"] != stale["mesh_revision"]
-                        or replacement["mesh_revision"] != relations["mesh_revisions"].get(stale["mesh_resource_id"])
-                        or not isinstance(replacement["mapping"], dict)):
-                    raise PrepError("stale_reference_mapping", "Use an explicit correspondence for the current mesh generation.")
-                mapping = replacement["mapping"]
-                if any(relations["mesh_revisions"].get(rid) != generation
-                       for rid, generation in stale.get("mesh_dependencies", {}).items()):
-                    raise PrepError("stale_reference_mapping", "A dependent mesh generation changed; review current geometry.")
-                if any(type(key) is not int or key < 1 for key in mapping):
-                    raise PrepError("invalid_reference", "Correspondence keys must be original positive native IDs.")
-                if set(mapping) != set(stale["members"]):
-                    raise PrepError("incomplete_reference_mapping", "Map every original member explicitly; missing targets remain stale.")
-                members = [mapping[value] for value in stale["members"]]
-                family = stale["family"]
-                if family == "SURF/PART":
-                    identifiers = self._surface_part_ids(members)
-                elif family == "GRNOD/NODE":
-                    if not isinstance(members, (tuple,list)) or not members: raise PrepError("invalid_reference", "Choose explicit typed node references.")
-                    identifiers = []
-                    for member in members:
-                        if not isinstance(member, dict) or set(member) != {"resource_id","entity_kind","local_id"} or member["entity_kind"] != "node" or type(member["local_id"]) is not int or self.mesh_view()["node_resources"].get(member["local_id"]) != (member["resource_id"],):
-                            raise PrepError("invalid_reference", "Reconnection requires current resource-qualified node references.")
-                        identifiers.append(member["local_id"])
-                    identifiers = self._node_members(identifiers)
-                else: identifiers, _, _ = self._element_members(members, family)
-                candidate = candidates.setdefault(resource.id, copy(resource))
-                # Only member rows are replaced; preserve title, comments and
-                # non-target card bytes, including comments inside the group.
-                lines = candidate.render().decode("latin1").splitlines(keepends=True)
-                current = candidate.card(card_id)
-                block = lines[current.start:current.stop]
-                data_rows = {index-current.start for index in current.data[1:]}
-                rows = member_block(family, native_identity(card.keyword)[1], card.title, identifiers, newline=resource.newline).splitlines(keepends=True)[2:]
-                output, inserted = [], False
-                for index, line in enumerate(block):
-                    if index in data_rows:
-                        if not inserted: output.extend(rows); inserted=True
-                    else: output.append(line)
-                candidate.restore(candidate.replaced_state(card_id, "".join(output)))
-                del relations["stale_targets"][card_id]; changed_objects.append(card_id)
-            states = {key: value.snapshot() for key,value in candidates.items()}
-            states[self._relations_resource().id] = relations
-            trial = self._planning_snapshot()
-            for rid, state in states.items(): trial.document.resources[rid].restore(state)
-            for affected in self._stale_conditions():
-                card = trial._find_card(affected["card_id"]).card(affected["card_id"])
-                if not card.keyword.upper().startswith(("/CLOAD/", "/INIVEL/TRA/")): continue
-                support = trial.condition_support(card.id)
-                if support["status"] not in ("supported", "stale"):
-                    raise PrepError("unsupported_condition_dof", "The explicit correspondence does not support the condition's mechanical fields.",
-                                    {"card_id":card.id,"diagnostics":support["diagnostics"]})
+            if isinstance(targets, dict) and any(isinstance(value, dict) and value.get("coalesce_duplicates") is True for value in targets.values()):
+                raise PrepError("review_required", "Prepare and apply a reviewed node coalescence candidate.")
+            states, changed_objects, _, _ = self._prepare_mesh_reconnection(targets)
             changed = self.dispatcher.execute_many(states, "Reconnect explicit mesh targets", object_ids=tuple(changed_objects),
                 expected_revision=self.document.revision, kind="structure")
             return {**self.describe(), "mesh_relationships": self.mesh_relationships(), "change": changed.to_dict()}
+
+    def _prepare_mesh_reconnection(self, targets, *, allow_coalescence=False):
+        if not isinstance(targets, dict) or not targets:
+            raise PrepError("invalid_reference", "Provide explicit replacement memberships for stale target UUIDs.")
+        relations = self._relations_resource().snapshot(); candidates = {}; changed_objects = []; links = []
+        for card_id, replacement in targets.items():
+            if card_id not in relations["stale_targets"]:
+                raise PrepError("invalid_reference", "The target is not marked stale.", {"card_id": card_id})
+            resource = self._find_card(card_id); card = resource.card(card_id)
+            stale = relations["stale_targets"][card_id]
+            permitted = ({"mesh_revision", "mapping"}, {"mesh_revision", "mapping", "coalesce_duplicates"}) if allow_coalescence else ({"mesh_revision", "mapping"},)
+            if (not isinstance(replacement, dict) or set(replacement) not in permitted
+                    or type(replacement["mesh_revision"]) is not int or replacement["mesh_revision"] != stale["mesh_revision"]
+                    or replacement["mesh_revision"] != relations["mesh_revisions"].get(stale["mesh_resource_id"])
+                    or not isinstance(replacement["mapping"], dict)):
+                raise PrepError("stale_reference_mapping", "Use an explicit correspondence for the current mesh generation.")
+            mapping = replacement["mapping"]
+            if any(relations["mesh_revisions"].get(rid) != generation
+                   for rid, generation in stale.get("mesh_dependencies", {}).items()):
+                raise PrepError("stale_reference_mapping", "A dependent mesh generation changed; review current geometry.")
+            if any(type(key) is not int or key < 1 for key in mapping):
+                raise PrepError("invalid_reference", "Correspondence keys must be original positive native IDs.")
+            if set(mapping) != set(stale["members"]):
+                raise PrepError("incomplete_reference_mapping", "Map every original member explicitly; missing targets remain stale.")
+            members = [mapping[value] for value in stale["members"]]
+            family = stale["family"]
+            coalesce = replacement.get("coalesce_duplicates", False)
+            if type(coalesce) is not bool or (coalesce and family != "GRNOD/NODE"):
+                raise PrepError("invalid_coalescence", "Explicit coalescence is supported only for node-group targets.")
+            if family == "SURF/PART":
+                identifiers = self._surface_part_ids(members)
+            elif family == "GRNOD/NODE":
+                if not isinstance(members, (tuple,list)) or not members: raise PrepError("invalid_reference", "Choose explicit typed node references.")
+                identifiers = []
+                for member in members:
+                    if not isinstance(member, dict) or set(member) != {"resource_id","entity_kind","local_id"} or member["entity_kind"] != "node" or type(member["local_id"]) is not int or self.mesh_view()["node_resources"].get(member["local_id"]) != (member["resource_id"],):
+                        raise PrepError("invalid_reference", "Reconnection requires current resource-qualified node references.")
+                    identifiers.append(member["local_id"])
+                # Validate every scoped target above before removing duplicates.
+                # A malformed repeated target must never disappear into a set.
+                if coalesce:
+                    self._member_sequence(list(stale["members"]))
+                    identifiers = list(dict.fromkeys(identifiers))
+                identifiers = self._node_members(identifiers)
+            else: identifiers, _, _ = self._element_members(members, family)
+            links.append({"group_id": card_id, "family": family,
+                "old_native_ids": list(stale["members"]),
+                "current_declared_native_ids": self._integer_members(resource, card),
+                "proposed_native_ids": list(identifiers),
+                "mapping": [{"old_native_id": value, "target": deepcopy(mapping[value])} for value in stale["members"]],
+                "old_link_count": len(stale["members"]), "unique_target_count": len(identifiers),
+                "collapsed_count": len(stale["members"]) - len(identifiers), "coalescence_requested": coalesce})
+            candidate = candidates.setdefault(resource.id, copy(resource))
+            # Only member rows are replaced; preserve title, comments and
+            # non-target card bytes, including comments inside the group.
+            lines = candidate.render().decode("latin1").splitlines(keepends=True)
+            current = candidate.card(card_id)
+            block = lines[current.start:current.stop]
+            data_rows = {index-current.start for index in current.data[1:]}
+            rows = member_block(family, native_identity(card.keyword)[1], card.title, identifiers, newline=resource.newline).splitlines(keepends=True)[2:]
+            output, inserted = [], False
+            for index, line in enumerate(block):
+                if index in data_rows:
+                    if not inserted: output.extend(rows); inserted=True
+                else: output.append(line)
+            candidate.restore(candidate.replaced_state(card_id, "".join(output)))
+            del relations["stale_targets"][card_id]; changed_objects.append(card_id)
+        states = {key: value.snapshot() for key,value in candidates.items()}
+        states[self._relations_resource().id] = relations
+        trial = self._planning_snapshot()
+        for rid, state in states.items(): trial.document.resources[rid].restore(state)
+        for affected in self._stale_conditions():
+            card = trial._find_card(affected["card_id"]).card(affected["card_id"])
+            if not card.keyword.upper().startswith(("/CLOAD/", "/INIVEL/TRA/")): continue
+            support = trial.condition_support(card.id)
+            if support["status"] not in ("supported", "stale"):
+                raise PrepError("unsupported_condition_dof", "The explicit correspondence does not support the condition's mechanical fields.",
+                                {"card_id":card.id,"diagnostics":support["diagnostics"]})
+        return states, tuple(changed_objects), trial, links
+
+    def plan_mesh_reconnection(self, targets, *, expected_revision=None, expected_document_id=None):
+        """Review final node correspondences, including explicit many-to-one sets."""
+        from .reconnection_review import reconnection_review
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            states, objects, trial, links = self._prepare_mesh_reconnection(targets, allow_coalescence=True)
+            if any(row["family"] != "GRNOD/NODE" for row in links):
+                raise PrepError("unsupported_reconnection_review", "This reviewed path supports explicit node groups; use the existing direct path for other families.")
+            report = reconnection_review(self, trial, links)
+            plan_id = str(uuid4())
+            self._mesh_reconnection_plan = (plan_id, self._mesh_edit_stamp(), deepcopy(states), objects)
+            return {"plan_id": plan_id, "document_id": self.document.id, "revision": self.document.revision,
+                "document_epoch": self._document_epoch, **report}
+
+    def apply_mesh_reconnection(self, plan_id, *, expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            plan = getattr(self, "_mesh_reconnection_plan", None)
+            if plan is None or plan[0] != plan_id or plan[1] != self._mesh_edit_stamp():
+                raise PrepError("stale_reference_mapping", "Prepare a fresh reconnection review against the current document and sources.")
+            _, _, states, objects = plan
+            changed = self.dispatcher.execute_many(states, "Apply reviewed explicit node targets", object_ids=objects,
+                expected_revision=self.document.revision, kind="structure")
+            if getattr(self, "_mesh_reconnection_plan", None) is plan:
+                self._mesh_reconnection_plan = None
+            return {**self.describe(), "mesh_relationships": self.mesh_relationships(), "change": changed.to_dict()}
+
+    def cancel_mesh_reconnection(self, plan_id):
+        with self._lock:
+            plan = getattr(self, "_mesh_reconnection_plan", None)
+            if plan is not None and plan[0] == plan_id:
+                self._mesh_reconnection_plan = None

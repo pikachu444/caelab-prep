@@ -256,3 +256,51 @@ def test_reopened_same_document_same_revision_rejects_old_session_epoch(shell):
     with pytest.raises(MeshEditError) as caught: result.assert_current(reopened,shell.digest)
     assert caught.value.code=='stale_mesh_candidate'
     with pytest.raises(MeshEditError): replace(shell.stamp,epoch=2)
+
+
+def test_merge_distance_rejects_finite_integer_coordinates_beyond_tolerance():
+    snapshot = MeshSnapshot(stamp(), 'mm', (node(101, (10**308, 0, 0)),
+        node(90001, (-10**308, 0, 0))), (), (), dependency_closure_complete=True)
+    digest = snapshot.digest
+    with pytest.raises(MeshEditError) as error:
+        merge_nodes(snapshot, {ref('node', 101): ref('node', 90001)}, tolerance=1., length_unit='mm')
+    assert error.value.code == 'outside_tolerance' and snapshot.digest == digest
+
+
+@pytest.mark.parametrize('magnitude', [1., 1e-200])
+def test_merge_distance_includes_exact_boundary_without_rounding_up_the_tolerance(magnitude):
+    snapshot = MeshSnapshot(stamp(), 'mm', (node(101, (0., 0., 0.)),
+        node(90001, (3*magnitude, 4*magnitude, 0.))), (), (), dependency_closure_complete=True)
+    distance = math.dist(snapshot.nodes[0].xyz, snapshot.nodes[1].xyz)
+    mapping = {ref('node', 101): ref('node', 90001)}
+    candidate = merge_nodes(snapshot, mapping, tolerance=distance, length_unit='mm')
+    assert candidate.removed_nodes == (ref('node', 101),) and candidate.node_updates == ()
+    with pytest.raises(MeshEditError) as error:
+        merge_nodes(snapshot, mapping, tolerance=math.nextafter(distance, 0.), length_unit='mm')
+    assert error.value.code == 'outside_tolerance'
+
+
+@pytest.mark.parametrize('magnitude', [1e-200, 1e200])
+@pytest.mark.parametrize('collinear', [False, True])
+def test_merge_beam_direction_is_scale_independent_for_finite_coordinates(magnitude, collinear):
+    owner = part('beam', 'one-part', ('BEAM',))
+    keeper = (2*magnitude, 2*magnitude, 0.) if collinear else (0., 0., magnitude)
+    nodes = (node(11, (0., 0., 0.)), node(41, (magnitude, magnitude, 0.)),
+             node(71, (0., 0., 1.)), node(991, keeper))
+    beam = cell(57, 'BEAM', (11, 41), owner, orientation=ref('node', 71))
+    snapshot = MeshSnapshot(stamp(), 'mm', nodes, (beam,), (owner,), dependency_closure_complete=True)
+    assert not _quality(beam, snapshot._nodes.__getitem__).problems
+    digest = snapshot.digest
+    mapping = {ref('node', 71): ref('node', 991)}
+    tolerance = math.dist(nodes[2].xyz, keeper)
+    approvals = (MergeApproval(ref('node', 71), ref('node', 991), cross_components=True),)
+    if collinear:
+        with pytest.raises(MeshEditError) as error:
+            merge_nodes(snapshot, mapping, tolerance=tolerance, length_unit='mm', approvals=approvals)
+        assert error.value.code == 'mesh_quality'
+        assert 'degenerate_beam_orientation' in error.value.details[0].problems
+    else:
+        candidate = merge_nodes(snapshot, mapping, tolerance=tolerance, length_unit='mm', approvals=approvals)
+        assert candidate.cell_updates[0].orientation_node == ref('node', 991)
+        assert all(not quality.problems for quality in candidate.quality_after)
+    assert snapshot.digest == digest

@@ -4,7 +4,7 @@ from __future__ import annotations
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QThreadPool, Qt, Signal
 from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog,
     QFileDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-    QTableView, QTabWidget, QVBoxLayout, QWidget)
+    QScrollArea, QTableView, QTabWidget, QTextBrowser, QVBoxLayout, QWidget)
 
 from ..cae_core import PrepError
 from .shell import FileTask
@@ -725,6 +725,7 @@ class PreparedMeshDialog(QDialog):
         self.is_busy = is_busy or (lambda: False)
         self.last_result = None
         self._plan = self._task = None
+        self._reconnect_plan = None
         self._jobs = []
         self._generation = 0
         self._closing = self._committing = self._refreshing = False
@@ -744,6 +745,12 @@ class PreparedMeshDialog(QDialog):
         self._build_reconnection_tab()
         self.conditions_model = _TableModel(("Affected condition", "Stale target groups"), self)
         self.tabs.addTab(_table(self.conditions_model, "staleMeshConditions"), "Affected conditions")
+        self.reconnect_details = QTextBrowser()
+        self.reconnect_details.setObjectName("reconnectionReview")
+        self.tabs.addTab(self.reconnect_details, "Reconnection review")
+        column.addWidget(self.reconnect_controls)
+        self.tabs.currentChanged.connect(lambda index: self.reconnect_controls.setVisible(index in (1, 3)))
+        self.reconnect_controls.hide()
         self.status = QLabel()
         self.status.setWordWrap(True)
         self.status.setObjectName("preparedMeshStatus")
@@ -825,6 +832,7 @@ class PreparedMeshDialog(QDialog):
         self.reconnect_model = _ReconnectModel(self)
         self.reconnect_table = _table(self.reconnect_model, "explicitMeshReconnection")
         self.reconnect_table.setColumnWidth(1, 570)
+        self.reconnect_table.setMinimumHeight(130)
         self.reconnect_table.selectionModel().currentRowChanged.connect(self._member_changed)
         column.addWidget(self.reconnect_table, 1)
         form = QFormLayout()
@@ -856,15 +864,30 @@ class PreparedMeshDialog(QDialog):
         row.addWidget(self.clear_entry_button)
         row.addStretch()
         column.addLayout(row)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(page)
+        self.tabs.addTab(scroll, "Reconnect stale targets")
+        self.reconnect_controls = QWidget()
+        controls = QVBoxLayout(self.reconnect_controls)
+        controls.setContentsMargins(0, 0, 0, 0)
+        self.coalesce_targets = QCheckBox("Allow repeated node targets to form one set")
+        self.coalesce_targets.toggled.connect(lambda _: self._invalidate_reconnection())
+        controls.addWidget(self.coalesce_targets)
+        self.link_counts = QLabel()
+        self.link_counts.setWordWrap(True)
+        controls.addWidget(self.link_counts)
         row = QHBoxLayout()
-        self.reconnect_reviewed = QCheckBox("I reviewed every explicit link for this group")
+        self.reconnect_preview_button = QPushButton("Preview final mapping")
+        self.reconnect_preview_button.clicked.connect(self.prepare_reconnection)
+        row.addWidget(self.reconnect_preview_button)
+        self.reconnect_reviewed = QCheckBox("Mapping reviewed")
         self.reconnect_reviewed.toggled.connect(self._sync_actions)
         self.reconnect_button = QPushButton("Apply reconnection")
         self.reconnect_button.clicked.connect(self.apply_reconnection)
         row.addWidget(self.reconnect_reviewed, 1)
         row.addWidget(self.reconnect_button)
-        column.addLayout(row)
-        self.tabs.addTab(page, "Reconnect stale targets")
+        controls.addLayout(row)
 
     def _guard(self):
         if self._closing:
@@ -1025,7 +1048,7 @@ class PreparedMeshDialog(QDialog):
     def _group_changed(self):
         had_links = bool(self._mapping)
         self._mapping, self._labels = {}, {}
-        self.reconnect_reviewed.setChecked(False)
+        self._invalidate_reconnection(reset_permission=True)
         self._clear_entry()
         group = self._group()
         self.reconnect_model.show_members(group["members"] if group else [], self._mapping, self._labels)
@@ -1045,7 +1068,46 @@ class PreparedMeshDialog(QDialog):
 
     def _target_edited(self):
         self.target_choice.clear()
+        self._invalidate_reconnection()
+
+    def _invalidate_reconnection(self, *, reset_permission=False):
+        if self._reconnect_plan is not None:
+            self.session.cancel_mesh_reconnection(self._reconnect_plan["plan_id"])
+        self._reconnect_plan = None
+        if hasattr(self, "reconnect_details"):
+            self.reconnect_details.clear()
+        if reset_permission:
+            self.coalesce_targets.blockSignals(True)
+            self.coalesce_targets.setChecked(False)
+            self.coalesce_targets.blockSignals(False)
+        self.reconnect_reviewed.setChecked(False)
         self._sync_actions()
+
+    def _reconnection_request(self):
+        group = self._group()
+        value = {"mesh_revision": group["mesh_revision"], "mapping": dict(self._mapping)}
+        if self.coalesce_targets.isChecked():
+            value["coalesce_duplicates"] = True
+        return {self.target_group.currentData(): value}
+
+    def prepare_reconnection(self):
+        from .mesh_target_text import reconnection_review_text
+        try:
+            self._guard(); self._check_stamp(); self._invalidate_reconnection()
+            group = self._group()
+            if (self._task is not None or not group or set(self._mapping) != set(group["members"])
+                    or self.current_target.text().strip()):
+                raise PrepError("review_required", "Add every explicit link and clear the unfinished entry before previewing.")
+            self._reconnect_plan = self.session.plan_mesh_reconnection(self._reconnection_request(),
+                expected_document_id=self._stamp[0], expected_revision=self._stamp[1])
+            self.reconnect_details.setPlainText(reconnection_review_text(self.session, self._reconnect_plan))
+            self.tabs.setCurrentIndex(3)
+            self.status.setText("Review the final mapping, condition multipliers and unresolved targets before Apply.")
+            self._sync_actions()
+            return True
+        except Exception as exc:
+            self._show_error(exc)
+            return False
 
     def find_current_target(self):
         try:
@@ -1080,7 +1142,7 @@ class PreparedMeshDialog(QDialog):
             self._mapping[identifier] = dict(reference) if isinstance(reference, dict) else reference
             self._labels[identifier] = self.target_choice.currentText()
             self.reconnect_model.show_members(self._group()["members"], self._mapping, self._labels)
-            self.reconnect_reviewed.setChecked(False)
+            self._invalidate_reconnection(reset_permission=True)
             self._clear_entry()
             self.status.setText("Explicit link added to this review. The model is unchanged until Apply reconnection.")
         except Exception as exc:
@@ -1093,7 +1155,7 @@ class PreparedMeshDialog(QDialog):
             self._mapping.pop(identifier, None)
             self._labels.pop(identifier, None)
             self.reconnect_model.show_members(self._group()["members"], self._mapping, self._labels)
-            self.reconnect_reviewed.setChecked(False)
+            self._invalidate_reconnection(reset_permission=True)
             self._clear_entry()
 
     def _sync_actions(self):
@@ -1103,7 +1165,17 @@ class PreparedMeshDialog(QDialog):
         self.replace_button.setEnabled(bool(idle and self._plan and self.replacement_reviewed.isChecked()))
         group = self._group()
         complete = bool(group and set(self._mapping) == set(group["members"]))
-        self.reconnect_button.setEnabled(bool(idle and complete and self.reconnect_reviewed.isChecked()
+        node_group = bool(group and group["family"] == "GRNOD/NODE")
+        self.coalesce_targets.setEnabled(node_group)
+        unique = len({(value["resource_id"], value["entity_kind"], value["local_id"]) if isinstance(value, dict) else value
+                      for value in self._mapping.values()})
+        repeated = unique < len(self._mapping)
+        required = repeated or self.coalesce_targets.isChecked()
+        self.link_counts.setText(f"{len(self._mapping)} / {len(group['members']) if group else 0} old links mapped → {unique} unique current targets. "
+            + ("Repeated targets require explicit permission and a final preview." if repeated else "Other stale groups remain unreviewed."))
+        self.reconnect_preview_button.setEnabled(bool(idle and complete and node_group and not self.current_target.text().strip()))
+        self.reconnect_button.setEnabled(bool(idle and complete and (not required or self._reconnect_plan)
+                                             and self.reconnect_reviewed.isChecked()
                                              and not self.current_target.text().strip()))
 
     def apply_reconnection(self):
@@ -1114,11 +1186,17 @@ class PreparedMeshDialog(QDialog):
             if (self._task is not None or not group or set(self._mapping) != set(group["members"])
                     or self.current_target.text().strip() or not self.reconnect_reviewed.isChecked()):
                 raise PrepError("review_required", "Explicitly map and review every member of this group before applying.")
-            request = {self.target_group.currentData(): {"mesh_revision": group["mesh_revision"], "mapping": dict(self._mapping)}}
+            request = self._reconnection_request()
+            if self.coalesce_targets.isChecked() and self._reconnect_plan is None:
+                raise PrepError("review_required", "Preview and review this final node coalescence mapping before applying.")
             self._committing = True
             try:
-                self.last_result = self.session.reconnect_mesh_targets(request,
-                    expected_document_id=self._stamp[0], expected_revision=self._stamp[1])
+                if self._reconnect_plan is not None:
+                    self.last_result = self.session.apply_mesh_reconnection(self._reconnect_plan["plan_id"],
+                        expected_document_id=self._stamp[0], expected_revision=self._stamp[1])
+                else:
+                    self.last_result = self.session.reconnect_mesh_targets(request,
+                        expected_document_id=self._stamp[0], expected_revision=self._stamp[1])
             finally:
                 self._committing = False
             self.refresh()
@@ -1140,6 +1218,7 @@ class PreparedMeshDialog(QDialog):
 
     def _finished(self, _):
         self._closing = True
+        self._invalidate_reconnection(reset_permission=True)
         self._plan = None
         self._mapping.clear()
         self._sync_actions()

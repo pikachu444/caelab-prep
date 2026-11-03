@@ -140,9 +140,7 @@ class PrepController:
         if self.modeling.active:
             self.statusBar().showMessage("Finish the current model operation before merging nodes.", 8000)
             return None
-        def create(session, parent, *, has_draft, is_busy):
-            return NodeMergeDialog(session, parent, has_draft=lambda: has_draft() or self.modeling.active, is_busy=is_busy)
-        return self._open_model_relation_dialog("node_merge_dialog", create, "changed")
+        return self._open_model_relation_dialog("node_merge_dialog", NodeMergeDialog, "changed")
 
     def open_node_move(self):
         from .node_moves import NodeMoveDialog
@@ -170,7 +168,7 @@ class PrepController:
             return None
         dialog = getattr(self, attribute)
         if dialog is None:
-            dialog = dialog_type(self.session, self, has_draft=self.file_edits.has_draft,
+            dialog = dialog_type(self.session, self, has_draft=lambda: self.file_edits.has_draft() or self.modeling.active,
                                  is_busy=lambda: self._closed or self._busy or self._replacement_conflict)
             setattr(self, attribute, dialog)
             getattr(dialog, signal).connect(lambda _result: self.refresh_document(rebuild_viewport=True))

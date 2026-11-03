@@ -95,7 +95,11 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 표의 각 행을 선택해 실제 PART 사용과 source/contact 경계 허용을 검토합니다. BEAM 방향점으로 사용하는 절점은 기계적 끝점과 구분합니다. **Preview merge**는 연결·방향절점·품질과 조건의 변경 전후 대상을 표시하며 문서를 바꾸지 않습니다. 검토 체크 후 **Apply merge** 한 번이 한 Undo입니다. pair·공차·허용을 바꾸면 검토를 다시 해야 합니다. 모델이 바뀌면 창을 닫고 현재 절점을 다시 선택하세요. **Close/Escape**는 미적용 초안만 버립니다.
 
-조건의 제안 대응은 미리보기이며 실제 Apply에서 원 집합·조건을 자동 변경하지 않습니다. 영향 그룹이 있으면 native 출력을 막으므로 기존 **Replace prepared mesh / reconnect targets…**에서 각 원 멤버를 현재 대상으로 명시 연결하세요. 재연결의 기존 DOF 검사는 CLOAD/INIVEL에 한정하며 BCS·접촉의 물리 검증을 뜻하지 않습니다. 한 그룹 안의 source와 keeper를 합쳐 중복을 축약해야 하는 경우와 기존 native replacement가 보존할 수 없는 카드 layout(예: 변경 카드 안의 file directive)은 현재 merge plan에서 거부합니다. 닫힌 참조 범위·알려진 단위·품질·기계 필드의 기존 제한도 유지합니다. BEAM 기본 frame으로 조용히 전환되는 병합은 거부하지만, 다른 방향점 재배선이나 TRUSS 연결의 물리적 동등성을 보장하지 않습니다. Windows/frozen·solver와 전체 P7b의 확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
+조건의 제안 대응은 미리보기이며 실제 Apply에서 원 집합·조건을 자동 변경하지 않습니다. 영향 그룹이 있으면 native 출력을 막으므로 기존 **Replace prepared mesh / reconnect targets…**에서 각 원 멤버를 현재 대상으로 명시 연결하세요. 재연결의 기존 DOF 검사는 CLOAD/INIVEL에 한정하며 BCS·접촉의 물리 검증을 뜻하지 않습니다. 기존 native replacement가 보존할 수 없는 카드 layout(예: 변경 카드 안의 file directive)은 현재 merge plan에서 거부합니다. 닫힌 참조 범위·알려진 단위·품질·기계 필드의 기존 제한도 유지합니다. BEAM 기본 frame으로 조용히 전환되는 병합은 거부하지만, 다른 방향점 재배선이나 TRUSS 연결의 물리적 동등성을 보장하지 않습니다. Windows/frozen·solver와 전체 P7b의 확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
+
+같은 절점으로 모이는 node-group 링크를 집합 하나로 줄이려면 모든 old ID의 링크를 추가한 뒤 **Allow repeated node targets to form one set**을 직접 체크하고 **Preview final mapping**을 누르세요. **Reconnection review**는 보존된 옛 링크 수·현재 카드 선언·최종 집합, 하중의 미평가 곡선 배수 합과 속도 벡터/좌표계·교집합을 보여 줍니다. 예를 들어 옛 링크 2개가 현재 절점 1개로 모이고 절점별 배수가 3이면 합은 6→3이며 힘의 보존을 뜻하지 않습니다. 현재 mapping은 merge 투영과 달라도 최종 mapping으로 다시 계산합니다. 검토 체크 후 같은 **Apply reconnection**으로 한 번 적용하고 Undo/Redo·저장·재열기는 기존 문서를 사용합니다.
+
+이 검토는 절점 그룹만 지원합니다. 중복이 없는 기존 절점/요소/표면·PART 재연결의 직접 Apply는 유지합니다. 새 링크·입력·허용·그룹·문서 변경과 Close는 이전 preview를 무효화합니다. 남은 stale 속도 그룹은 최종 대상이 알려지지 않았으므로 교집합 목록이 비어도 겹침이 없다고 판단하지 마세요. 곡선/시간 스케일·작용점 모멘트·INCLUDE 실행 순서·유효 초기상태·운동량은 평가하지 않으며 조건값을 자동 합산/평균/분배하지 않습니다.
 
 <a id="node-move-images"></a>
 

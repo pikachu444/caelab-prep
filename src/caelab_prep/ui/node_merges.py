@@ -255,6 +255,8 @@ class NodeMergeDialog(QDialog):
             for row in plan["quality_after"]:
                 ref = row["element"]; old = old_quality[ref["resource_id"], ref["local_id"]]
                 lines.append(f"Element {ref['local_id']}: {row['metric'].replace('_', ' ')} {old['value']:.6g} → {row['value']:.6g}")
+            for row in plan["membership_coalescences"]:
+                lines.append(f"Projected node group: {row['old_link_count']} old links → {row['projected_unique_count']} unique targets. This set change requires explicit permission and a final reconnection preview after merge.")
             lines.extend(("", f"{len(plan['stale_targets'])} target groups require explicit reconnection before native export.",
                 "The target changes below are projections only. Apply merge keeps the original target declarations stale.", "", target_review_text(self.session, plan, group_heading=False)))
             self.preview.setPlainText("\n".join(lines)); self.tabs.setCurrentIndex(1)
