@@ -60,6 +60,7 @@ class PartReassignmentCommands:
             self._part_reassignment_plan = (plan_id, candidate, not blocked, targets)
             return {"plan_id": plan_id, "document_id": self.document.id, "revision": self.document.revision,
                 "document_epoch": self._document_epoch,
+                "unchanged_elements": [asdict(ref) for ref, part in mapping.items() if snapshot._cells[ref].part == part],
                 "cells": [{"reference": asdict(cell.ref), "family": cell.family,
                     "before": asdict(snapshot._cells[cell.ref]), "proposed": asdict(cell),
                     "before_assignment": self.part_assignments(snapshot._cells[cell.ref].part.local_id),

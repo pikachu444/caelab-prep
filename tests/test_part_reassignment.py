@@ -113,7 +113,7 @@ def test_stale_or_cancelled_part_assignment_never_applies(change):
     assert state(session) == before
 
 
-def test_empty_existing_part_uses_actual_property_and_preserves_full_element_row(tmp_path):
+def empty_target(tmp_path):
     session = opened("beam_shell_tet")
     source = next(c for c in session._mesh_edit_snapshot().cells if c.family == "SHELL")
     block = session.card_text(source.part.local_id).splitlines(keepends=True)
@@ -126,6 +126,11 @@ def test_empty_existing_part_uses_actual_property_and_preserves_full_element_row
     source = next(c for c in session._mesh_edit_snapshot().cells if c.family == "SHELL")
     copied = session.resolve_part_reference(900)["card_id"]
     target = Ref(session._find_card(copied).id, "part", copied)
+    return session, source, target
+
+
+def test_empty_existing_part_uses_actual_property_and_preserves_full_element_row(tmp_path):
+    session, source, target = empty_target(tmp_path)
     before = state(session)
     review = session.plan_part_reassignment(request(source, target))
     assert review["admissible"] and state(session) == before

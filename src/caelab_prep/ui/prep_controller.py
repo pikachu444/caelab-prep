@@ -127,6 +127,7 @@ class PrepController:
         self.node_merge_dialog = None
         self.shell_normal_dialog = None
         self.element_deletion_dialog = None
+        self.part_reassignment_dialog = None
         self.source_models_action = self._action(
             "project", "Source models / import RAD…", self.open_source_models,
             action_id="model.sources")
@@ -141,6 +142,12 @@ class PrepController:
                                                 action_id="mesh.flip_shell_normals")
         self.element_deletion_action = self._action("mesh", "Delete elements…", self.open_element_deletion,
                                                    action_id="mesh.delete_elements")
+        self.part_reassignment_action = self._action("mesh", "Move elements to PART…", self.open_part_reassignment,
+                                                    action_id="mesh.reassign_parts")
+
+    def open_part_reassignment(self):
+        from .element_edits import PartReassignmentDialog
+        return self._open_model_relation_dialog("part_reassignment_dialog", PartReassignmentDialog, "changed")
 
     def open_element_deletion(self):
         from .element_edits import ElementDeletionDialog
@@ -310,6 +317,7 @@ class PrepController:
         self.node_merge_action.setEnabled(loaded and editable)
         self.shell_normal_action.setEnabled(loaded and editable)
         self.element_deletion_action.setEnabled(loaded and editable)
+        self.part_reassignment_action.setEnabled(loaded and editable)
         selected_parts = self._selected_part_refs() if loaded else ()
         self.hide_selected_action.setEnabled(bool(selected_parts) and loaded and editable and self.viewport is not None)
         self.isolate_action.setEnabled(self.hide_selected_action.isEnabled())
@@ -1120,7 +1128,7 @@ class PrepController:
                 return
         self._settings.setValue("windowGeometry", self.saveGeometry())
         self._settings.setValue("windowState", self.saveState(self.LAYOUT_VERSION))
-        for dialog in (self.source_models_dialog, self.prepared_mesh_dialog, self.node_move_dialog, self.node_merge_dialog, self.shell_normal_dialog, self.element_deletion_dialog):
+        for dialog in (self.source_models_dialog, self.prepared_mesh_dialog, self.node_move_dialog, self.node_merge_dialog, self.shell_normal_dialog, self.element_deletion_dialog, self.part_reassignment_dialog):
             if dialog is not None:
                 dialog.reject()
         if self.viewport:
