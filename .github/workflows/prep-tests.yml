@@ -66,7 +66,7 @@ jobs:
       - name: Require real SDKs
         run: python -c "import gmsh, OCP; gmsh.initialize(interruptible=False); gmsh.finalize()"
       - name: Real CAD worker and asset checks
-        run: python -m pytest -q tests/test_structured_mesh.py tests/test_structured_adoption.py tests/test_structured_hex_adoption.py tests/test_structured_mesh_ui.py tests/test_structured_hex_ui.py tests/test_structured_seed_edit.py
+        run: python -m pytest -q tests/test_structured_mesh.py tests/test_structured_adoption.py tests/test_structured_hex_adoption.py tests/test_structured_mesh_ui.py tests/test_structured_hex_ui.py tests/test_structured_seed_edit.py tests/test_recipe_archives.py tests/test_recipe_archives_ui.py
       - name: Existing CAD worker regression
         run: python -m pytest tests/test_gmsh_adapter.py tests/test_mesh_candidates.py tests/test_mesh_adoption.py tests/test_mesh_workflow_ui.py tests/test_cad_mesh_replacement.py tests/test_cad_mesh_replacement_ui.py tests/test_external_mesh.py tests/test_external_mesh_sdk.py tests/test_external_mesh_ui.py tests/test_solidcraft_source.py
       - name: Prepared straight Tet10 native and shared import UI
