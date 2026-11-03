@@ -53,6 +53,8 @@ Phase 3.6 폐삼각표면 Auto-Tet의 독립 진단 코드는 `01e0be2`에 보�
 
 ## 현재 개발검증자료와 진행 중 변경
 
+Phase 3.7은 main `31430e10`(PR44) 위 `codex/batch-mesher-feature-recognition`에서 진행한다. 첫 criteria/minimum 코드 e9282e20c9d864e30340d256079c93b6e8b981f는 [사용법](docs/usage.md#meshing-criteria)의 독립 JSON·SDK 입력 clamp·전체 선형 edge 감사이며 N18의 자동 cleanup 완료가 아니다. 실제 plate-with-hole/cylinder의 SDK 생성은 각각 1회, 전체 inventory 독립 읽기는 각각 1회였다. Lmin=.25에서 1,797/1,458 cell 중 point 10/2개를 명시 skip하고, 관측 최단 edge .693558/.674359, 미달·미지원·invalid 0을 확인했다. 원본/출력 hash는 불변이며 수집 근거는 `C:\Users\pikac\.codex\visualizations\2026\11\03\surface-autotet\phase37-minimum-size\report.json`과 `phase37-minimum-edge-audit\report.json`에 보존한다. STEP 정규화·저장 XAO 단위 충돌 P37-R1은 source 경로와 worker identity 대조로 수정하고 원 지적자가 종결했다. 영향 검사 153통과·실제 SDK 통합 2skip을 기록했으며 이번 수정에서 SDK/메시 생성은 0회다. 실제 두 입력의 통합검사는 CAD-worker CI에 연결했다. 기능 인식·ring/억제·batch·실제 cleanup, N12 OS/VTK와 그룹별 잔여 7/16/3은 그대로 남는다.
+
 PR29 `89ef36b`는 정확한 head의 필수 CI 10개 job과 독립 검토 후 main `e929bcd`에 병합했다. push/PR 이벤트의 중복 실행은 별개 검사 수로 합산하지 않는다. N18의 Windows 입력·좌표/참조·저장 결과는 [기록](docs/native-windows-validation.md#node-move-20261102)에 한정한다.
 
 | 관련 PR과 후속 | 기준 | 남은 범위 |

@@ -224,6 +224,12 @@ G1의 객체 생성/삭제·할당과 G2의 조건 관계에 필요한 작은 �
 
 **이번에 안 함:** 모든 CAD 치유, 자동 중립면, hex/sweep, 고차/quad meshing, 일반 mesh 수술, 무제한 contact 생성, 전체 RAD 카드, Engine 자동 작성/solver 실행·후처리.
 
+### Phase 3.7 첫 연결: criteria와 최소-edge 감사
+
+입력은 별도 version-1 criteria JSON과 기존 CAD candidate 경로다. Target/minimum을 독립 검증해 SDK Min/Max에 전달하고 실제 getNumber 값을 recipe에 보존한다. STEP/IGES의 mm 정규화와 단위 없는 BREP/XAO의 명시 좌표 단위를 구분한다. 출력은 기존 MeshNode/MeshCell 전체 inventory에 대한 선형 위상-edge 측정·미달 ID이며 문서 채택이나 자동 수정은 수행하지 않는다.
+
+지정 확인은 profile 저장/재열기·단위 오류·미지원 제어 거절, 실제 두 CAD의 SDK 옵션/전체 inventory/원본 hash 불변, 짧은 edge·미지원 family의 실패다. 현재 기능 인식·시각화, hole 주위 washer ring, 접선 edge 억제, 일반 2D tri/quad·3D mixed batch와 warpage/AR/J 기반 relocation/split/merge는 이 첫 연결의 종료로 닫지 않는다. 원본 B-Rep/물질영역을 바꾸지 않고 기존 candidate/채택/Undo/저장 경계를 재사용한다.
+
 ## 12. P6b — 다중 파트·혼합 필드·집합·조건 관계
 
 G1에는 재료/단면 생성·복사·삭제 영향·파트 할당을, G2에는 집합·조건·곡선의 최소 실제 관계를 먼저 연결한다. 아래 혼합 조립 B 전체 완료를 이 두 작업의 선행 조건으로 삼지 않는다.

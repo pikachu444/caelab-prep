@@ -19,6 +19,8 @@
 | 공용 GUI | 같은 문서·명령을 사용하는 8개 프로그램별 표현, 단위 숫자·벡터·표·곡선 입력, 재료/곡선 갤러리와 부품 카탈로그 |
 | 자동화 | 독립 CLI, 열린 GUI에 접속하는 live 제어와 선택 설치 MCP adapter |
 
+Python API에는 [meshing criteria JSON과 최소-edge 감사](docs/usage.md#meshing-criteria)가 있습니다. 독립 minimum을 SDK에 전달하고 실제 출력의 지원 선형 edge를 검사합니다. Feature 인식·washer ring·fillet 억제·batch/자동 cleanup은 후속입니다.
+
 main에는 **절대좌표 절점 이동의 첫 구현**도 있습니다. 요소 품질과 영향 대상을 미리 검토하고 한 Undo로 적용합니다. 영향 집합을 명시적으로 재검토하기 전에는 native 출력을 막습니다. 다중 자원별 검토 의존성을 보존하며, 하중 시간함수와 작용점 모멘트의 실제 평가는 별도로 확인해야 합니다. 일반 메시 편집 전체의 완료본은 아닙니다.
 
 집합 편집의 선택적 **Preview change…**는 명시 절점·요소 멤버의 출처와 변경 전후 조건 대상을 검토한 뒤 한 Undo로 적용합니다. 지원 native 참조 범위에서 하중 계수·접촉의 두 역할·초기속도 중복 대상을 표시합니다. 물리 응답이나 유효 초기상태를 계산하지 않으며, 전체 part 재배정 기능의 완료를 뜻하지 않습니다. 기존 직접 Apply와 새 검토 경로의 [사용 범위](docs/usage.md#group-member-review)를 구분합니다.
