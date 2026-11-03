@@ -1187,6 +1187,7 @@ class PreparedMeshDialog(QDialog):
             self.reconnect_model.show_members(self._group()["members"], self._mapping, self._labels, dropped=self._dropped)
             self._invalidate_reconnection(reset_permission=True)
             self._clear_entry()
+            self.status.setText("Decision cleared. Map or explicitly Drop this old member again.")
         except Exception as exc:
             self._show_error(exc)
 

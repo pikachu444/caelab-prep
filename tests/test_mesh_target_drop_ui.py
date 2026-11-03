@@ -105,6 +105,7 @@ def test_new_decision_group_document_or_close_invalidates_drop_review(change):
     if change == "clear":
         dialog.tabs.setCurrentIndex(1); dialog.reconnect_table.selectRow(0); dialog.remove_link_button.click()
         assert not dialog._dropped and 1 not in dialog._mapping
+        assert "Decision cleared" in dialog.status.text() and "will be removed" not in dialog.status.text()
     elif change == "link":
         dialog.tabs.setCurrentIndex(1); link(dialog, 1, 1)
         assert not dialog._dropped and 1 in dialog._mapping
@@ -150,4 +151,6 @@ def test_minimum_mapping_keeps_decision_column_visible_and_scrolls_to_drop():
     assert dialog.drop_member_button.visibleRegion().boundingRect().width() >= dialog.drop_member_button.sizeHint().width()
     dialog.reconnect_table.selectRow(0); dialog.drop_member_button.click(); pump()
     assert dialog._dropped == {1} and not dialog.reconnect_reviewed.isChecked()
+    dialog.reconnect_table.selectRow(0); dialog.remove_link_button.click(); pump()
+    assert not dialog._dropped and "Decision cleared" in dialog.status.text()
     dialog.close_button.click(); assert window.close()
