@@ -1,7 +1,9 @@
-"""Raw CAD unit contracts and two dependency-gated actual SDK CI cases."""
+"""Raw CAD/probe unit contracts and three dependency-gated actual SDK CI cases."""
 import hashlib
+from copy import deepcopy
 from importlib.util import find_spec
 import json
+import math
 from pathlib import Path
 import sys
 import threading
@@ -11,6 +13,7 @@ import pytest
 
 from caelab_prep.adapters import gmsh_backend as backend
 from caelab_prep.adapters import gmsh_worker as worker
+from caelab_prep.adapters.gmsh_geometry import cylinder_probe_shape, plan_cylinder_material_probe
 from test_surface_tet_backend import Process
 from test_gmsh_adapter import cad  # existing independent OCP fixture, two shapes
 
@@ -19,6 +22,7 @@ RESOURCE = "00000000-0000-4000-8000-000000000001"
 FACE1 = "00000000-0000-4000-8000-000000000002"
 FACE2 = "00000000-0000-4000-8000-000000000003"
 VOLUME = "00000000-0000-4000-8000-000000000004"
+FACE3 = "00000000-0000-4000-8000-000000000005"
 
 
 @pytest.fixture
@@ -257,17 +261,195 @@ def test_inspection_reuses_common_cancellation_timeout_and_reap(source, tmp_path
         assert process.terminated and process.killed and process.returncode is not None
 
 
-@pytest.mark.skipif(find_spec("OCP") is None or find_spec("gmsh") is None,
-                    reason="Actual CAD inspection integration requires existing OCP and Gmsh test dependencies")
-def test_actual_geometry_inspection_preserves_cad_and_raw_topology_without_mesh(cad, tmp_path):
-    """Run in CAD-worker CI; raw inspection is not shape-classification F1."""
+def probe_geometry(*, axis_sign=1, translation=(0., 0., 0.)):
+    """A closed axis-aligned cylinder's raw GI1 subset, without SDK objects."""
+    x, y, z = translation
+    face = {"uuid": FACE1, "geometry_type": "Cylinder",
+        "analytic_properties": {"reals": [x, y, z, 0., 0., float(axis_sign), 2.]},
+        "bbox": [x-2, y-2, z, x+2, y+2, z+3],
+        "parametric_bounds": {"minimum": [0., 0. if axis_sign == 1 else -3.],
+                              "maximum": [math.tau, 3. if axis_sign == 1 else 0.]},
+        "samples": [{"xyz": [x-2, y, z+1.5], "trim_count": 1}],
+        "orientation_by_volume": [{"volume_uuid": VOLUME, "sign": -1}],
+        "curve_loops": [{"backend_tag": 41, "curve_tags": [11, 13, -12, -13]}]}
+    top = {"uuid": FACE2, "geometry_type": "Plane", "bbox": [x-2,y-2,z+3,x+2,y+2,z+3],
+        "analytic_properties": {"reals": [0., 0., 2., -2*(z+3)]}}
+    bottom = {"uuid": FACE3, "geometry_type": "Plane", "bbox": [x-2,y-2,z,x+2,y+2,z],
+        "analytic_properties": {"reals": [0., 0., -1., z]}}
+    curves = [{"backend_tag": tag, "geometry_type": "Circle", "length": 2*math.tau,
+        "parametric_bounds": {"minimum": [0.], "maximum": [math.tau]},
+        "endpoints": [{"backend_tag": 201, "xyz": [x+2,y,z+3]}]*2 if tag == 11 else []}
+        for tag in (11, 12)]
+    curves.append({"backend_tag": 13, "geometry_type": "Line", "adjacent_surface_uuids": [FACE1]})
+    volumes = [{"uuid": VOLUME, "backend_tag": 5, "surface_uuids": [FACE1, FACE2, FACE3]}]
+    return [face, top, bottom], volumes, curves
+
+
+
+def test_shared_pure_shape_and_plan_preserve_raw_geometry_and_match_worker_query_positions():
+    geometry = probe_geometry(); surfaces, volumes, curves = geometry
+    baseline = deepcopy(geometry)
+    shape = cylinder_probe_shape(surfaces[0], *geometry, 1e-8, "mm")
+    assert shape == {"eligible": True, "reason": None, "volume_uuid": VOLUME,
+                     "axis_index": 2, "axis_point": [0., 0., 0.], "radius": 2.}
+    plan = plan_cylinder_material_probe(surfaces[0], *geometry, 1e-8, "mm")
+    assert plan["status"] == "ready" and plan["reason"] is None
+    assert plan["radial_material_side"] is None
+    assert all(plan[label]["inside_count"] is None for label in ("plus", "minus"))
+    observed, calls = run_fake_probe(*geometry)
+    for key in ("epsilon", "geometry_tolerance", "numerical_margin", "clearance_lower_estimate"):
+        assert observed[0][key] == plan[key]
+    for label, call in zip(("plus", "minus"), calls):
+        assert observed[0][label]["xyz"] == plan[label]["xyz"] == call["xyz"]
+        assert observed[0][label]["signed_radial_residual"] == plan[label]["signed_radial_residual"]
+    assert geometry == baseline
+    json.dumps(plan, allow_nan=False)
+
+
+@pytest.mark.parametrize("field", ["partial_cylinder", "partial_circle", "large_cylinder_parameter", "large_circle_parameter"])
+def test_shared_shape_and_plan_block_nonfull_or_unresolvable_periods(field):
+    geometry = probe_geometry(); surfaces, volumes, curves = geometry
+    bounds = surfaces[0]["parametric_bounds"] if "cylinder" in field else curves[0]["parametric_bounds"]
+    if field.startswith("partial"):
+        bounds["maximum"][0] = math.pi
+    else:
+        bounds["minimum"][0], bounds["maximum"][0] = 1e16, 1e16 + 6
+    before = deepcopy(geometry)
+    shape = cylinder_probe_shape(surfaces[0], *geometry, 1e-8, "mm")
+    plan = plan_cylinder_material_probe(surfaces[0], *geometry, 1e-8, "mm")
+    assert not shape["eligible"] and shape["reason"]
+    assert plan["status"] == "indeterminate" and plan["reason"] == shape["reason"]
+    rows, calls = run_fake_probe(*geometry)
+    assert calls == [] and rows == [plan] and geometry == before
+
+
+def run_fake_probe(surfaces, volumes, curves, *, counts=(1, 0), tolerance=1e-8, unit="mm"):
+    calls, answers = [], iter(counts)
+    def inside(dim, tag, xyz, *, parametric):
+        assert dim == 3 and tag == 5 and parametric is False
+        calls.append({"xyz": list(xyz), "parametric": parametric})
+        answer = next(answers)
+        if isinstance(answer, Exception): raise answer
+        return answer
+    sdk = SimpleNamespace(model=SimpleNamespace(isInside=inside,
+        mesh=SimpleNamespace(generate=lambda *args: pytest.fail("Probe generated a mesh"))))
+    return worker._cylinder_material_side_probes(sdk, surfaces, volumes, curves, tolerance, unit), calls
+
+
+@pytest.mark.parametrize("counts,side", [((1,0), "outward_side_is_material"), ((0,1), "inward_side_is_material")])
+def test_bounded_cylinder_probe_records_raw_single_point_queries_without_normal_flips(counts, side):
+    geometry = probe_geometry(); original = deepcopy(geometry)
+    rows, calls = run_fake_probe(*geometry, counts=counts)
+    row = rows[0]
+    assert row["status"] == "observed" and row["reason"] is None and row["radial_material_side"] == side
+    assert len(calls) == 2 and geometry == original
+    assert [row[k]["inside_count"] for k in ("plus", "minus")] == list(counts)
+    assert row["plus"]["xyz"][0] < -2 and row["minus"]["xyz"][0] > -2
+    margin = 4096*math.ulp(3.)
+    assert row["numerical_margin"] == margin
+    assert row["clearance_lower_estimate"] == 1.5-margin
+    assert row["epsilon"] == (1.5-margin)/64
+    floor = max(128*row["geometry_tolerance"], margin)
+    assert row["plus"]["signed_radial_residual"] >= floor
+    assert row["minus"]["signed_radial_residual"] <= -floor
+
+
+def test_cylinder_axis_direction_flip_keeps_the_same_radial_witness():
+    positive, _ = run_fake_probe(*probe_geometry(axis_sign=1))
+    negative, _ = run_fake_probe(*probe_geometry(axis_sign=-1))
+    assert positive == negative
+
+
+@pytest.mark.parametrize("counts,reason", [((1,1), "ambiguous_equal_inside_counts"),
+    ((0,0), "ambiguous_equal_inside_counts"), ((2,), "invalid_inside_count"),
+    ((None,), "invalid_inside_count"), ((RuntimeError("SDK query failed"),), "volume_query_error")])
+def test_ambiguous_or_unknown_volume_answers_are_indeterminate(counts, reason):
+    rows, calls = run_fake_probe(*probe_geometry(), counts=counts)
+    assert rows[0]["status"] == "indeterminate" and rows[0]["radial_material_side"] is None
+    assert rows[0]["reason"].startswith(reason)
+    assert len(calls) == (2 if len(counts) == 2 else 1)
+    json.dumps(rows, allow_nan=False)
+
+
+@pytest.mark.parametrize("mutant", ["unknown_unit", "large_coords", "near_cap", "unsupported_boundary", "tilted_plane",
+    "tilted_axis", "trim0", "partial_u", "partial_circle", "circle_length", "open_circle",
+    "missing_seam", "shared_seam", "two_owners", "off_surface", "large_tolerance", "nonfinite", "underflow", "underflow_plane"])
+def test_unsafe_geometry_never_queries_the_volume_or_changes_raw_values(mutant):
+    surfaces, volumes, curves = probe_geometry()
+    unit, tolerance = "mm", 1e-8
+    if mutant == "unknown_unit": unit = "unknown"
+    if mutant == "large_coords": surfaces, volumes, curves = probe_geometry(translation=(1e15, 0., 0.))
+    if mutant == "near_cap": surfaces[0]["samples"][0]["xyz"][2] = 1e-7
+    if mutant == "unsupported_boundary": surfaces[1]["geometry_type"] = "Torus"
+    if mutant == "tilted_plane": surfaces[1]["analytic_properties"]["reals"] = [1., 1e-16, 0., 3.]
+    if mutant == "tilted_axis": surfaces[0]["analytic_properties"]["reals"][3:6] = [1e-16, 0., 1.]
+    if mutant == "trim0": surfaces[0]["samples"][0]["trim_count"] = 0
+    if mutant == "partial_u": surfaces[0]["parametric_bounds"]["maximum"][0] = math.pi
+    if mutant == "partial_circle": curves[0]["parametric_bounds"]["maximum"][0] = math.pi
+    if mutant == "circle_length": curves[0]["length"] = math.tau
+    if mutant == "open_circle": curves[0]["endpoints"][1] = {"backend_tag": 202, "xyz": [2.,0.,3.]}
+    if mutant == "missing_seam": surfaces[0]["curve_loops"][0]["curve_tags"] = [11, -12, 13]
+    if mutant == "shared_seam": curves[2]["adjacent_surface_uuids"].append(FACE2)
+    if mutant == "two_owners": surfaces[0]["orientation_by_volume"].append({"volume_uuid": RESOURCE, "sign": 1})
+    if mutant == "off_surface": surfaces[0]["samples"][0]["xyz"][0] = -2.1
+    if mutant == "large_tolerance": tolerance = .1
+    if mutant == "nonfinite": surfaces[1]["bbox"][0] = float("inf")
+    if mutant == "underflow": surfaces[0]["analytic_properties"]["reals"][6] = 1e-320
+    if mutant == "underflow_plane": surfaces[1]["analytic_properties"]["reals"] = [0., 0., 1e300, 1e-300]
+    before = deepcopy((surfaces, volumes, curves))
+    rows, calls = run_fake_probe(surfaces, volumes, curves, unit=unit, tolerance=tolerance)
+    assert rows[0]["status"] == "indeterminate" and rows[0]["reason"] and calls == []
+    assert (surfaces, volumes, curves) == before
+    json.dumps(rows, allow_nan=False)
+
+
+def test_imported_decimal_circle_period_and_negative_seam_occurrences_are_not_rewritten():
+    geometry = probe_geometry(); surfaces, volumes, curves = geometry
+    surfaces[0]["parametric_bounds"]["maximum"][0] = 6.28318530718
+    before = deepcopy(geometry)
+    rows, calls = run_fake_probe(*geometry)
+    assert rows[0]["status"] == "observed" and len(calls) == 2 and geometry == before
+
+
+@pytest.mark.parametrize("flag", [1, 0, None, "true"])
+def test_probe_option_is_boolean_at_both_boundaries(source, tmp_path, flag):
+    with pytest.raises(backend.GmshBackendError) as error:
+        backend.GmshBackend().inspect_geometry(source, tmp_path/"jobs", probe_cylinder_material_side=flag)
+    assert error.value.code == "invalid_request" and not (tmp_path/"jobs").exists()
+    with pytest.raises(worker.WorkerFailure) as error:
+        worker.generate({"source_kind": "cad_geometry_inspection", "probe_cylinder_material_side": flag})
+    assert error.value.code == "invalid_request"
+
+
+@pytest.mark.parametrize("kind", [None, "cad", "closed_tri_surface", "structured_recipe"])
+def test_noninspection_dispatch_rejects_even_false_probe_options(kind):
+    with pytest.raises(worker.WorkerFailure) as error:
+        worker.generate({"source_kind": kind, "probe_cylinder_material_side": False})
+    assert error.value.code == "unsupported_criteria"
+
+
+def test_default_inspection_has_no_probe_field_and_opt_in_does_not_change_raw_samples(source, tmp_path, monkeypatch):
+    _, events = fake_sdk(monkeypatch); call_worker_direct(monkeypatch)
+    baseline = backend.GmshBackend().inspect_geometry(source, tmp_path/"before")
+    assert "cylinder_material_side_probes" not in baseline
+    opted = backend.GmshBackend().inspect_geometry(source, tmp_path/"after", probe_cylinder_material_side=True)
+    assert baseline["surfaces"] == opted["surfaces"] and baseline["curves"] == opted["curves"]
+    assert opted["cylinder_material_side_probes"][0]["status"] == "indeterminate"
+    assert opted["cylinder_material_side_probes"][0]["reason"] == "full_cylinder_period_required"
+    assert all(event[0] != "volume_query" for event in events)
+
+
+def _assert_actual_geometry_inspection(cad, tmp_path):
+    """Assert capture/raw evidence and pure candidate recognition without mesh."""
+    from caelab_prep.application.geometry_features import recognize_cylindrical_holes
     from caelab_prep.application.geometry_inspection import read_geometry_inspection
     from caelab_prep.application.mesh_candidates import read_mesh_candidate
     from caelab_prep.cae_core.errors import PrepError
     original = cad.read_bytes()
     original_hash = hashlib.sha256(original).hexdigest()
     result = backend.GmshBackend().inspect_geometry(cad, tmp_path / "inspections",
-                                                   expected_coordinate_length_unit="mm")
+                                                   expected_coordinate_length_unit="mm",
+                                                   probe_cylinder_material_side=True)
     assert result["schema_version"] == 1 and result["source_kind"] == "cad_geometry_inspection"
     assert result["length_unit"] == "mm" and result["expected_coordinate_length_unit"] == "mm"
     assert result["source"]["sha256"] == original_hash
@@ -282,6 +464,10 @@ def test_actual_geometry_inspection_preserves_cad_and_raw_topology_without_mesh(
     assert inspected.to_dict() == result
     assert read_geometry_inspection(result["assets"]["metadata"]).to_dict() == result
     inspected.verify_assets()
+    recognized = recognize_cylindrical_holes(inspected, length_tolerance=1e-6)
+    assert recognized["modifications"] == 0 and recognized["length_tolerance"] == 1e-6
+    assert recognized["geometry_resource_uuid"] == result["geometry_resource_uuid"]
+    assert recognized["geometry_revision"] == result["geometry_revision"]
     curve_tags = {curve["backend_tag"] for curve in result["curves"]}
     surface_ids = {surface["uuid"] for surface in result["surfaces"]}
     assert curve_tags and surface_ids and result["volumes"]
@@ -304,3 +490,46 @@ def test_actual_geometry_inspection_preserves_cad_and_raw_topology_without_mesh(
         read_mesh_candidate(result)
     assert error.value.code == "invalid_candidate"
     assert {kind: path.read_bytes() for kind, path in paths.items()} == snapshot
+    return result, recognized
+
+
+@pytest.mark.skipif(find_spec("OCP") is None or find_spec("gmsh") is None,
+                    reason="Actual CAD inspection integration requires existing OCP and Gmsh test dependencies")
+def test_actual_geometry_inspection_preserves_cad_and_raw_topology_without_mesh(cad, tmp_path):
+    """CI raw witness/candidate integration; this is not full feature-family F1."""
+    result, recognized = _assert_actual_geometry_inspection(cad, tmp_path)
+    observed = [probe for probe in result["cylinder_material_side_probes"] if probe["status"] == "observed"]
+    assert len(observed) == 1
+    if cad.stem == "plate-with-hole":
+        assert len(recognized["features"]) == 1
+        feature = recognized["features"][0]
+        assert feature["kind"] == "through_hole_candidate" and feature["radius"] == pytest.approx(1., abs=1e-10)
+        assert {cap["kind"] for cap in feature["caps"]} == {"rectangular_opening"}
+        assert observed[0]["radial_material_side"] == "outward_side_is_material"
+    else:
+        assert cad.stem == "cylinder" and recognized["features"] == []
+        assert observed[0]["radial_material_side"] == "inward_side_is_material"
+
+
+@pytest.mark.skipif(find_spec("OCP") is None or find_spec("gmsh") is None,
+                    reason="Actual CAD inspection integration requires existing OCP and Gmsh test dependencies")
+def test_actual_geometry_inspection_blind_hole_candidate(tmp_path):
+    """Generate this toy only in CAD-worker CI; no complete F1 qualification."""
+    from OCP.BRepAlgoAPI import BRepAlgoAPI_Cut
+    from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCylinder
+    from OCP.gp import gp_Ax2, gp_Dir, gp_Pnt
+    from OCP.STEPControl import STEPControl_AsIs, STEPControl_Writer
+    shape = BRepAlgoAPI_Cut(BRepPrimAPI_MakeBox(12, 8, 3).Shape(),
+                           BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(6, 4, 1), gp_Dir(0, 0, 1)), 1, 3).Shape()).Shape()
+    cad = tmp_path / "blind-hole.step"
+    writer = STEPControl_Writer()
+    writer.Transfer(shape, STEPControl_AsIs)
+    assert int(writer.Write(str(cad))) == 1
+    result, recognized = _assert_actual_geometry_inspection(cad, tmp_path)
+    assert len(result["surfaces"]) == 8 and len(result["volumes"]) == 1
+    assert result["volumes"][0]["volume"] == pytest.approx(288-2*math.pi, abs=1e-9)
+    assert len(recognized["features"]) == 1
+    feature = recognized["features"][0]
+    assert feature["kind"] == "blind_hole_candidate" and feature["radius"] == pytest.approx(1., abs=1e-10)
+    assert {cap["kind"] for cap in feature["caps"]} == {"closed_disk", "rectangular_opening"}
+    assert feature["material_side_evidence"]["radial_material_side"] == "outward_side_is_material"

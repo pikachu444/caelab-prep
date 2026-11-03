@@ -710,14 +710,46 @@ def _geometry_bounds(gmsh, dimension, tag):
     return {"minimum": low, "maximum": high}
 
 
+def _cylinder_material_side_probe(gmsh, face, surfaces, volumes, curves, tolerance, unit):
+    from .gmsh_geometry import plan_cylinder_material_probe
+    row = plan_cylinder_material_probe(face, surfaces, volumes, curves, tolerance, unit)
+    if row["status"] != "ready":
+        return row
+    volume = next(v for v in volumes if v["uuid"] == row["volume_uuid"])
+    for label in ("plus", "minus"):
+        try:
+            count = gmsh.model.isInside(3, volume["backend_tag"], row[label]["xyz"], parametric=False)
+        except Exception as exc:
+            row.update(status="indeterminate", reason="volume_query_error: " + str(exc))
+            return row
+        if type(count) is not int or count not in (0, 1):
+            row.update(status="indeterminate", reason="invalid_inside_count: " + repr(count))
+            return row
+        row[label]["inside_count"] = count
+    pair = row["plus"]["inside_count"], row["minus"]["inside_count"]
+    if pair[0] == pair[1]:
+        row.update(status="indeterminate", reason="ambiguous_equal_inside_counts")
+        return row
+    row.update(status="observed", radial_material_side="outward_side_is_material" if pair == (1, 0) else "inward_side_is_material")
+    return row
+
+
+def _cylinder_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit):
+    return [_cylinder_material_side_probe(gmsh, face, surfaces, volumes, curves, tolerance, unit)
+            for face in surfaces if face["geometry_type"] == "Cylinder"]
+
+
 def _inspect_geometry(request):
     from .gmsh_backend import _FORMATS
     supported = {"source_kind", "source", "original_source", "source_sha256", "output_dir",
-                 "expected_coordinate_length_unit"}
+                 "expected_coordinate_length_unit", "probe_cylinder_material_side"}
     unknown = sorted(request.keys() - supported)
     if unknown:
         raise WorkerFailure("unsupported_criteria", "Geometry inspection does not generate or configure a mesh", criteria=unknown)
     expected = request.get("expected_coordinate_length_unit")
+    probe_material = request.get("probe_cylinder_material_side", False)
+    if type(probe_material) is not bool:
+        raise WorkerFailure("invalid_request", "probe_cylinder_material_side must be boolean")
     if expected is not None and expected not in ("mm", "cm", "m"):
         raise WorkerFailure("invalid_request", "Expected coordinate length unit must be mm, cm or m")
     try:
@@ -822,6 +854,7 @@ def _inspect_geometry(request):
                 "parametric_bounds": _geometry_bounds(gmsh, 1, tag),
                 "analytic_properties": _analytic_properties(gmsh, 1, tag, kind),
                 "endpoints": endpoints, "adjacent_surface_uuids": adjacent_refs})
+        probes = _cylinder_material_side_probes(gmsh, surfaces, volumes, curves, tolerance, unit) if probe_material else None
         gmsh.write(str(xao))
         messages = list(gmsh.logger.get())
         errors = [message for message in messages if message.startswith("Error:")]
@@ -841,6 +874,9 @@ def _inspect_geometry(request):
                 "samples": "UV bounds midpoint; trim includes IN or ON, boundary clearance unverified; no volume probes or feature classification"},
             "diagnostics": [{"severity": "warning", "code": "sdk_warning", "message": message}
                             for message in messages if message.startswith("Warning:")], "sdk_error_count": 0}
+        if probes is not None:
+            result["cylinder_material_side_probes"] = probes
+            result["topology_semantics"]["samples"] = "UV bounds midpoint; trim includes IN or ON; boundary clearance unverified; no feature classification"
         temporary = metadata.with_suffix(".json.tmp")
         with temporary.open("x", encoding="utf-8") as stream:
             json.dump(result, stream, ensure_ascii=False, allow_nan=False)
@@ -856,6 +892,8 @@ def _inspect_geometry(request):
 
 
 def generate(request):
+    if request.get("source_kind") != "cad_geometry_inspection" and "probe_cylinder_material_side" in request:
+        raise WorkerFailure("unsupported_criteria", "Cylinder material-side probes require geometry inspection")
     unimplemented = sorted({"washer_rim_divisions", "washer_width", "washer_layers",
                             "fillet_suppression_threshold"} & request.keys())
     if unimplemented:
