@@ -61,6 +61,25 @@ hybrid의 최초 계측 실패 뒤 계측 처리만 한 번 보정하여 재실�
 
 현재 확인한 Gmsh 4.15.2 공식 문서에서 3D recombination/conformity는 experimental이고 기본 conformity는 nonconforming이다. 공식 source의 `-hybrid` 설정은 Algorithm2D=9, Algorithm3D=9, Recombine3DAll=1이다. HXT=10을 켰다는 사실만으로 hex/hybrid를 시험했다고 하지 않는다. source의 trihedron(type140) 같은 전이 형식은 목표 solver 지원을 확인하지 못하면 native export를 차단한다. 이번 metadata 오류의 원인을 type140이라고 확정한 것은 아니다.
 
+### 2026-11-03: 폐삼각표면 Auto-Tet F1
+
+코드 `01e0be2`의 `GmshBackend.generate_surface_volume()`는 명시 단위의 MSH2.2/4.1 ASCII TRI3 폐표면을 캡처하고 기존 worker의 취소·timeout·회수 경로에서 `source_kind=surface_tet` 진단 산출물을 만든다. GUI·문서 채택·native 출력에 연결된 기능은 아니다. 기존 CAD→tet4와 구분한다.
+
+입력의 열린 경계·비다양체·중복·교차·뒤집힌 shell과 삼각면 edge AR>4를 거절한다. AR 초과 오류는 `Surface triangle aspect ratio exceeds tolerance`다. 출력은 원 표면 node ID/좌표와 oriented facet을 SDK 및 저장 MSH에서 정확 비교한다. Tet10은 직선 midpoint·공유 edge·전체 요소의 양의 Jacobian 충분조건을 별도로 검사한다. 부모 Tet4의 Verdict corner-scaled J와 6-edge max/min AR는 이 고차 유효성 검사와 다른 지표다.
+
+Windows/Python3.13.5/Gmsh4.15.2에서 공식 `sphere-discrete.geo`/`sphere-surf.stl`의 648facet과 자체 L형 28facet 입력을 먼저 고정했다. 구는 remesh·공차 용접 없이 정확 좌표의 최초 출현 순서로 ID를 부여한 MSH다. 입력 SHA-256은 각각 `1e7c5c4177b6dd0ff9fd08a156f6a17dd87de74db38f507f77378b42d805a23a`, `ccfd845999301456f57824d19ae9155efd91fca9c3087571d9c6aa7264633221`이다. 제품 STL importer 구현을 뜻하지 않는다.
+
+| 고정 recipe | 공식 구 | 별도 L형 |
+|---|---|---|
+| R1: Delaunay/default Gmsh 최적화→interior Laplacian2회 | Tet4 1639개, Jmin .261033, ARmax2.743912, 496개 미달 | Tet4/Tet10 23개, Jmin .408248, 고정 경계의 네 절점으로 구성된 3개 미달 |
+| R2: 같은 생성→Netgen 내부 volume 최적화→interior Laplacian2회 | Tet4/Tet10 1590개, Jmin .284588, ARmax2.611373, 272개 미달 | Tet4/Tet10 36개, Jmin .513532, ARmax1.849055, 실패0개 |
+
+R2는 [승인된 경계 고정 recipe](https://github.com/pikachu444/caelab-prep/issues/19#issuecomment-6597733928)다. 원 경계·전체 inventory·면 incidence·예상 체적은 두 입력에서 보존했다. 그러나 **구의 J≥.5 실패로 최대 두 recipe의 F1은 품질 미달(no-go)**이며 F2 고정 6입력과 F3 제품 연결은 진행하지 않았다. 구의 실패 요소 모두 내부 절점을 포함한다. 이 결과를 입력 자체나 모든 표면 tet 생성의 불가능으로 확대하지 않는다. 추가 알고리즘은 별도 F0로 결정한다.
+
+실제 Tet10의 element ID 재할당은 유일한 ordered corner 대응으로 복원했다. ASCII 16자리 출력의 중점 상쇄 오차는 좌표 token만 SDK `repr(float)`로 보존해 수정했다. ID·연결·다른 section은 유지하고 strict readback과 기존 8-ULP midpoint/양의 Jacobian 검사를 다시 적용한다. 실패한 원 실행은 보존했다. 완료된 생성도 `status=quality_passed|quality_failed`로 구별하며 모든 품질 실패 요소를 남긴다. `quality_passed` 역시 문서 채택/native/solver 지원 판정은 아니다.
+
+관련 순수/모의 worker·기존 adapter 검사 120개와 실제 SDK 실행은 별도 근거다. 원 지적자는 저장 경계 exact 검사 누락의 수정을 재확인했다. GUI/OS 입력·VTK·frozen·native Tet10 실행은 이번 범위가 아니다. [F1 판정과 다음 기술 선택](https://github.com/pikachu444/caelab-prep/issues/19#issuecomment-6597963994), [WB MSH/C3D10 소유 경계](https://github.com/pikachu444/caelab-workbench/issues/56#issuecomment-6597946148)를 함께 따른다. 공식 GPL 예제·외부 binary는 Git 배포 자산에 넣지 않았다.
+
 ## 5. 현재 구현과 기능별 착수 판단
 
 | 기능 | 지금 가능한 결정 | 다음 작업과 넘어갈 조건 |
