@@ -91,6 +91,8 @@ quad와 hex 밑면의 분할 수는 JSON을 선택한 뒤 **Load recipe division
 5. 곡선·집합을 만들고 BCS, CLOAD, INIVEL/TRA 또는 지원 TYPE7 조건을 연결합니다. 해석 케이스에서 활성 조건·종료 시간·출력 간격을 저장합니다.
 6. `.caeprep`와 후보 자산 폴더를 함께 보관합니다. 작업문서에 native 메시가 있어도 재메시에 필요한 CAD/XAO/MSH 원자산이 모두 동봉되는 것은 아닙니다.
 
+채택한 후보의 캡처 자산과 후보에 기록된 원본 CAD/MSH 경로는 게시 시점부터 작업문서 저장·native 출력의 덮어쓰기에서 보호하며, 작업문서를 재열어도 보호를 유지합니다. 저장할 때는 입력 파일과 다른 새 경로를 선택합니다. 후보가 사용한 CAD 버전은 보관된 캡처 자산을 기준으로 확인합니다.
+
 MSH는 2.2/4.1 ASCII에 한정합니다. binary·partition·periodic·data·parametric MSH와 미지원 요소 family는 거부합니다. 문서와 소스 길이 단위가 다르면 자동 환산하지 않습니다. 일반 warped quad, 임의 all-hex, 자동 중립면과 모든 접촉 프로파일은 지원 완료 범위가 아닙니다.
 
 <a id="meshing-criteria"></a>
