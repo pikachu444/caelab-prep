@@ -234,6 +234,8 @@ G1의 객체 생성/삭제·할당과 G2의 조건 관계에 필요한 작은 �
 
 후속 `0d567fb`는 같은 순수 형상/offset 계획을 worker와 reader에서 재사용하고 실제 저장 XYZ의 반경 잔차·계산된 safety floor를 검사한다. 정확 basis의 full cylinder와 disk/원형 구멍이 있는 직사각 cap에 한정한 through/blind 후보이며, 고정 세 입력의 국소 witness와 cap 판정을 확인했다. 공용 Qt `80a4c4d`는 기존 source-preview/Action/viewport 경계를 사용해 같은 evidence를 8표현의 읽기 전용 표·wireframe에 연결한다. 일반 hole/fillet·설계 의도/전체 공극 외부 연결 또는 washer/suppression·batch·cleanup 완료로 확대하지 않는다.
 
+GI3 `58bca2c`는 mm 축 정렬 quarter-cylinder·두 connected rectangular support에 한정해 같은 shape/offset 검증을 재사용한다. 재료 방향을 반영한 두 법선의 signed G1과 포함 반경 threshold로 blend 후보를 판독하며 원본을 수정하지 않는다. 원추/토러스·일반 fillet 이력·메싱 접선 edge 억제와 Washer Quad/Tria ring 생성은 이 단위의 종료 조건에 포함하지 않고 미완료로 보존한다. 실제 입력/검토/GUI 근거와 잔여 요구는 CURRENT_STATE의 같은 Phase 3.7 기록에 연결한다.
+
 ## 12. P6b — 다중 파트·혼합 필드·집합·조건 관계
 
 G1에는 재료/단면 생성·복사·삭제 영향·파트 할당을, G2에는 집합·조건·곡선의 최소 실제 관계를 먼저 연결한다. 아래 혼합 조립 B 전체 완료를 이 두 작업의 선행 조건으로 삼지 않는다.

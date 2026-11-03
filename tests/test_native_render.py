@@ -206,15 +206,22 @@ def test_geometry_feature_inspect_render_and_private_mouse_pick(tmp_path):
     assert output.is_absolute()
     output.mkdir(parents=True, exist_ok=True)
     assert QApplication.instance().platformName() == "xcb"
-    source = tmp_path / "native-hole.step"
+    source = tmp_path / "native-cylindrical-blend.step"
     # CC0: self-authored analytic CAD fixture, not a user or vendor model.
     script = """import gmsh, sys
 gmsh.initialize(readConfigFiles=False, interruptible=False)
 try:
-    gmsh.model.add('own-hole-fixture')
+    gmsh.model.add('own-quarter-blend-fixture')
     box = gmsh.model.occ.addBox(0, 0, 0, 12, 8, 3)
-    cutter = gmsh.model.occ.addCylinder(6, 4, -1, 0, 0, 5, 1)
-    gmsh.model.occ.cut([(3, box)], [(3, cutter)])
+    gmsh.model.occ.synchronize()
+    edges = []
+    for _, tag in gmsh.model.getEntities(1):
+        ends = sorted(list(gmsh.model.getValue(0, point, [])) for _, point in
+                      gmsh.model.getBoundary([(1, tag)], oriented=False))
+        if ends == [[0., 0., 0.], [0., 0., 3.]]:
+            edges.append(tag)
+    assert len(edges) == 1
+    gmsh.model.occ.fillet([box], edges, [1.], removeVolume=True)
     gmsh.model.occ.synchronize()
     gmsh.write(sys.argv[1])
 finally:
@@ -228,7 +235,7 @@ finally:
     window._allow_close = True
     dialog = GeometryFeaturesDialog(window, backend=GmshBackend(timeout=30), enable_viewport=True)
     evidence = {"status": "running", "source_sha256": source_hash,
-                "scope": "One self-authored CAD through-hole, Linux/X11 real inspection/render/pick; Windows unverified"}
+                "scope": "One self-authored quarter-cylinder blend, Linux/X11 real inspection/render/pick; Windows unverified"}
     try:
         window.show(); dialog.resize(960, 640); dialog.show()
         assert QTest.qWaitForWindowExposed(dialog, 10000)
@@ -237,7 +244,8 @@ finally:
         wait_task(dialog)
         assert dialog.report and dialog.table.rowCount() == 1, dialog.error.text()
         feature, = dialog.report["features"]
-        assert feature["kind"] == "through_hole_candidate" and feature["radius"] == 1.
+        assert feature["kind"] == "cylindrical_blend_candidate" and feature["radius"] == 1.
+        assert len(feature["tangent_edges"]) == 2 and all(join["angle_radians"] <= 1e-6 for join in feature["tangent_edges"])
         view = dialog.viewport; _pump(); view.fit_view(); view.render(); _pump()
         render_window = view._widget.GetRenderWindow()
         assert render_window.GetClassName() == "vtkXOpenGLRenderWindow"

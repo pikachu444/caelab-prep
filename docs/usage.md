@@ -189,13 +189,29 @@ print(candidates["features"], candidates["unclassified"])
 
 이는 검토할 후보입니다. 전체 공극의 외부 연결·CAD 설계 이력·임의 축/일반 polygon/복잡 trim·fillet 인식은 보장하지 않습니다. Washer ring·fillet 억제·mesh 생성/채택은 연결하지 않았으며 후보 판독은 B-Rep·mesh·활성 문서를 변경하지 않습니다. 자산이 바뀌면 다시 검사해야 합니다.
 
+### 제한된 원통 blend 후보 (Python API)
+
+```python
+from caelab_prep.application.geometry_features import recognize_cylindrical_blends
+
+result = GmshBackend().inspect_geometry("part.step", "blend-evidence",
+    expected_coordinate_length_unit="mm", probe_cylindrical_blends=True)
+inspection = read_geometry_inspection(result)
+blends = recognize_cylindrical_blends(inspection, length_tolerance=1e-6,
+    angular_tolerance=1e-6, radius_threshold=1.)
+```
+
+첫 범위는 mm 단위의 축 정렬된 1/4 원통과 같은 volume의 직사각형 평면 지지면 두 개입니다. 실제 shared-vertex cycle·generatrix·끝 호·지지면과 샘플의 유한 패치 내부를 검사합니다. 원통과 지지면 각각의 안전한 두 offset에서 얻은 원시 volume membership으로 재료 외향 법선을 정합니다. Reader는 동일 계획·실제 저장 좌표의 signed residual·계산된 수치 여유와 membership-derived sign을 다시 검사합니다. 공유 직선의 중점에서 **부호 있는** 두 법선의 내적이 `cos(angular_tolerance)` 이상인지를 판정하므로 기하학적으로 접하지만 재료 방향이 반대인 cusp를 제외합니다. Raw face normal과 volume sign의 곱은 사용하지 않습니다.
+
+`radius_threshold`는 mm이며 등호를 포함합니다. `None`은 반경 필터를 사용하지 않습니다. 길이·각도 허용오차의 첫 지원 하한은 각각 `1e-6 mm`·`1e-6 rad`이고 각도는 `pi/2` 미만이어야 합니다. 더 작은 길이 허용오차·다른 단위·불명확한 여유·재료 관측 누락은 후보를 만들지 않습니다. 원추/토러스의 참조 반경을 일정한 fillet 반경으로 대체하지 않으며 이 형상들은 아직 미지원입니다. 결과는 `cylindrical_blend_candidate`와 두 접선 edge의 근거이며 CAD 설계 이력이나 자동 억제 완료를 뜻하지 않습니다. B-Rep·volume·문서·mesh 변경은 0입니다.
+
 ### 공용 창에서 후보 검토하기
 
 8개 표현의 **Mesh → Inspect geometry features…**에서 CAD와 evidence 폴더를 선택한 뒤 **Inspect geometry**를 실행합니다. 활성 모델 없이도 열 수 있습니다. **Open inspection…**은 기존 geometry metadata를 읽으며 SDK를 다시 실행하지 않습니다. STEP/IGES는 mm 정규화 좌표를 사용하고, 저장된 XAO에는 알려진 mm 단위가 필요합니다.
 
-행을 선택하거나 wireframe의 홀 표식을 클릭하면 같은 후보의 반경·깊이·축·끝 cap을 확인합니다. 표시용 선분의 선택은 활성 모델 선택과 분리됩니다. View에는 지원 직선 CAD edge, 인식한 원형 경계의 polyline과 축을 표시합니다. 허용오차를 바꾸면 후보를 다시 판독하며, Escape는 마지막 성공 값과 표시로 복귀합니다. 입력 변경·실패·잘못된 허용오차는 이전 후보와 표식을 지웁니다. **Cancel inspection**과 창 닫기는 진행 중 worker를 중지한 뒤 결과를 폐기합니다.
+행을 선택하거나 wireframe의 표식을 클릭하면 같은 후보의 반경·길이·축·끝 cap 또는 재료 방향의 접선 증거를 확인합니다. 표시용 선분의 선택은 활성 모델 선택과 분리됩니다. View에는 지원 직선 CAD edge, hole의 완전 원형 경계 또는 blend의 부분 호와 축을 표시합니다. **Maximum blend radius**는 선택적 반경 필터입니다. 허용오차·반경을 바꾸면 저장된 자료를 재판독하며 SDK를 다시 조회하지 않습니다. Escape는 마지막 성공 값과 표시로 복귀합니다. 입력 변경·실패·잘못된 값은 이전 후보와 표식을 지웁니다. **Cancel inspection**과 창 닫기는 진행 중 worker를 중지한 뒤 결과를 폐기합니다. 이 창은 mm 전용이며 저장 자료의 unknown 단위를 자동 환산하지 않습니다.
 
-검사 evidence와 이 창의 후보 표시는 작업문서의 메시·조건을 편집하거나 채택하지 않습니다. 현재 인식 지원 형상군은 위 Python API와 같으며, Fillet/Flange/washer ring·일반 batch/cleanup은 후속입니다. Windows OS·VTK 실제 확인은 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
+검사 evidence와 이 창의 후보 표시는 작업문서의 메시·조건을 편집하거나 채택하지 않습니다. 현재 인식 지원 형상군은 위 Python API와 같으며, 일반 fillet/원추·Flange·washer ring 생성·접선 edge 억제·일반 batch/cleanup은 후속입니다. Hole의 64분할 원과 blend의 16분할 부분 호는 표시 선분이며 Washer Quad/Tria 요소가 아닙니다. Windows OS·VTK 실제 확인은 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
 
 <a id="prepared-tet10"></a>
 
