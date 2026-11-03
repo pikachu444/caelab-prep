@@ -66,8 +66,7 @@ def test_narrow_command_groups_offer_full_action_names_and_expand_when_wide(user
         pump()
         page = tabs.currentWidget()
         groups = page.findChildren(QToolButton, "referenceGroupMenu")
-        collapsed = [button for button in groups if button.isVisible()]
-        assert collapsed, "The crowded material/object commands need a reachable group menu"
+        assert groups
 
         def assert_commands_reachable():
             for group in page.findChildren(type(groups[0].parentWidget()), "referenceCommandGroup"):
@@ -89,6 +88,20 @@ def test_narrow_command_groups_offer_full_action_names_and_expand_when_wide(user
 
         assert window.size().width() == 960 and window.size().height() == 640
         assert_commands_reachable()
+        # Exercise the reusable group's constrained state inside the 960 host;
+        # different system fonts need not collapse at the same window width.
+        minimum = page.layout().minimumSize().width()
+        preferred = page.layout().sizeHint().width()
+        assert minimum < preferred
+        maximum = tabs.maximumWidth()
+        chrome = tabs.width() - page.width()
+        tabs.setMaximumWidth(chrome + minimum + (preferred - minimum) // 2)
+        pump()
+        assert (window.width(), window.height()) == (960, 640)
+        assert minimum <= page.width() < preferred
+        assert any(button.isVisible() for button in groups), "Constrained groups need a reachable menu"
+        assert_commands_reachable()
+        tabs.setMaximumWidth(maximum)
         window.resize(1920, 1080)
         pump()
         assert window.size().width() == 1920 and window.size().height() == 1080
