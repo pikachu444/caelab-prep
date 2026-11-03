@@ -195,7 +195,15 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 같은 절점으로 모이는 node-group 링크를 집합 하나로 줄이려면 모든 old ID의 링크를 추가한 뒤 **Allow repeated node targets to form one set**을 직접 체크하고 **Preview final mapping**을 누르세요. **Reconnection review**는 보존된 옛 링크 수·현재 카드 선언·최종 집합, 하중의 미평가 곡선 배수 합과 속도 벡터/좌표계·교집합을 보여 줍니다. 예를 들어 옛 링크 2개가 현재 절점 1개로 모이고 절점별 배수가 3이면 합은 6→3이며 힘의 보존을 뜻하지 않습니다. 현재 mapping은 merge 투영과 달라도 최종 mapping으로 다시 계산합니다. 검토 체크 후 같은 **Apply reconnection**으로 한 번 적용하고 Undo/Redo·저장·재열기는 기존 문서를 사용합니다.
 
-이 검토는 절점 그룹만 지원합니다. 중복이 없는 기존 절점/요소/표면·PART 재연결의 직접 Apply는 유지합니다. 새 링크·입력·허용·그룹·문서 변경과 Close는 이전 preview를 무효화합니다. 남은 stale 속도 그룹은 최종 대상이 알려지지 않았으므로 교집합 목록이 비어도 겹침이 없다고 판단하지 마세요. 곡선/시간 스케일·작용점 모멘트·INCLUDE 실행 순서·유효 초기상태·운동량은 평가하지 않으며 조건값을 자동 합산/평균/분배하지 않습니다.
+반복 대상의 집합 축약은 절점 그룹만 지원합니다. 중복이 없는 기존 절점/요소/표면·PART 재연결의 직접 Apply는 유지합니다. 새 링크·입력·허용·그룹·문서 변경과 Close는 이전 preview를 무효화합니다. 남은 stale 속도 그룹은 최종 대상이 알려지지 않았으므로 교집합 목록이 비어도 겹침이 없다고 판단하지 마세요. 곡선/시간 스케일·작용점 모멘트·INCLUDE 실행 순서·유효 초기상태·운동량은 평가하지 않으며 조건값을 자동 합산/평균/분배하지 않습니다.
+
+<a id="mesh-target-drop"></a>
+
+### 옛 집합 멤버의 명시적 제거
+
+같은 재연결 창의 **Drop selected old member**는 선택한 옛 ID를 최종 집합에서 제거합니다. 메시의 절점·요소나 PART 자체는 삭제하지 않습니다. 절점·요소·SURF/PART 집합을 지원하며, 모든 옛 멤버에 현재 대응 또는 명시적 Drop을 지정해야 합니다. 대응을 비워 둔 것만으로 제거하지 않습니다. **Clear selected decision**은 해당 결정을 미정으로 되돌립니다. 최종 집합에는 유효한 현재 멤버를 하나 이상 유지해야 합니다.
+
+제거가 있으면 **Preview final mapping**에서 제거할 옛 ID·현재 선언·최종 집합과 영향 조건을 읽은 뒤 **Mapping reviewed → Apply reconnection**으로 확정합니다. 제거 수와 반복 대응 축약 수는 별도로 표시하며, 후자는 기존 절점 그룹의 명시 허용을 계속 요구합니다. 원 조건 선언값은 보존해도 대상 수·하중 계수 합·속도 교집합이 달라질 수 있습니다. 최종 BCS/TYPE7/CLOAD/INIVEL의 기존 유효성 검사는 유지합니다. 한 번의 Apply·Undo/Redo·v6 저장과 재열기는 같은 문서 경로를 사용하며, 다른 stale 그룹과 native 출력 차단은 남습니다. API에서는 `plan_mesh_reconnection`의 각 그룹에 `drop_members: [old_id, ...]`를 명시하고 sealed plan을 적용합니다. 직접 `reconnect_mesh_targets`는 Drop을 거부합니다.
 
 <a id="shell-normal-flip"></a>
 
