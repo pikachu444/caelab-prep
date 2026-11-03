@@ -66,7 +66,8 @@ def test_all_profiles_expose_same_relationship_commands_and_local_coordinate_ref
     window = window_for(session, profile, render=native_rendering())
     assert window.source_models_action in menu(window, "File").actions()
     assert window.prepared_mesh_action in menu(window, "Mesh").actions()
-    assert window.modeling.actions["coordinate_system.create"] in menu(window, "Selection").actions()
+    selection_menu = "Model" if profile == "beidprep" else "Selection"
+    assert window.modeling.actions["coordinate_system.create"] in menu(window, selection_menu).actions()
     window.source_models_action.trigger()
     assert window.source_models_dialog.isVisible() and not window.source_models_dialog.isModal()
     previous = window.source_models_dialog

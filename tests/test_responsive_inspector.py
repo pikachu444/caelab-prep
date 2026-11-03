@@ -3,7 +3,7 @@ import os
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
-from PySide6.QtCore import QPoint
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QApplication, QTabWidget, QToolButton
 
 from caelab_prep.ui.main_window import MainWindow
@@ -23,6 +23,7 @@ def test_narrow_inline_part_fields_fit_without_horizontal_scroll(user_model, pro
     window = MainWindow(session, presentation=profile, enable_viewport=False)
     window._allow_close = True
     try:
+        window.setWindowState(Qt.WindowState.WindowNoState)
         window.resize(960, 640)
         window.show()
         part = next(card for card in session.list_cards() if card["keyword"] == "/PART/903")
@@ -52,17 +53,21 @@ def test_narrow_inline_part_fields_fit_without_horizontal_scroll(user_model, pro
 
 
 def test_narrow_command_groups_offer_full_action_names_and_expand_when_wide(user_model):
-    window = MainWindow(user_model[0], presentation="beidprep", enable_viewport=False)
+    window = MainWindow(user_model[0], presentation="hypermesh", enable_viewport=False)
     window._allow_close = True
     try:
+        window.setWindowState(Qt.WindowState.WindowNoState)
         window.resize(960, 640)
         window.show()
         pump()
         tabs = window.findChild(QTabWidget, "referenceCommands")
+        assert tabs is not None
+        tabs.setCurrentIndex(next(index for index in range(tabs.count()) if tabs.tabText(index) == "Materials"))
+        pump()
         page = tabs.currentWidget()
         groups = page.findChildren(QToolButton, "referenceGroupMenu")
         collapsed = [button for button in groups if button.isVisible()]
-        assert collapsed, "The crowded MODEL commands need a reachable group menu"
+        assert collapsed, "The crowded material/object commands need a reachable group menu"
 
         def assert_commands_reachable():
             for group in page.findChildren(type(groups[0].parentWidget()), "referenceCommandGroup"):
@@ -94,6 +99,55 @@ def test_narrow_command_groups_offer_full_action_names_and_expand_when_wide(user
         pump()
         assert not any(button.isVisible() for button in groups)
         assert_commands_reachable()
+    finally:
+        window.close()
+        window.deleteLater()
+
+
+def test_native_beid_commands_remain_reachable_through_menus_at_960(user_model):
+    window = MainWindow(user_model[0], presentation="beidprep", enable_viewport=False)
+    window._allow_close = True
+    try:
+        window.setWindowState(Qt.WindowState.WindowNoState)
+        window.resize(960, 640)
+        window.show()
+        pump()
+        assert (window.width(), window.height()) == (960, 640)
+        menu_bar = window.menuBar()
+        menus = {action.text().replace("&", ""): action.menu() for action in menu_bar.actions()}
+        assert list(menus)[:6] == ["File", "Edit", "Model", "Mesh", "Conditions", "View"]
+        model = window.modeling.actions
+        expected = {
+            "File": (window.mesh_workflow.new_action, window.open_rad_action, window.open_project_action,
+                     window.source_models_action, window.save_action, window.save_as_action,
+                     window.export_action, window.mesh_workflow.export_action, window.close_action),
+            "Edit": (window.undo_action, window.redo_action, window.reload_properties_action),
+            "Model": (window.edit_properties_action,) + tuple(model[key] for key in ("material.create", "section.create", "solid_section.create",
+                          "group.create", "element_group.create", "surface.create", "coordinate_system.create",
+                          "object.edit", "object.copy", "object.delete", "part.assign")),
+            "Mesh": (window.mesh_import.action, window.mesh_workflow.mesh_action, window.node_move_action,
+                     window.node_merge_action, window.prepared_mesh_action),
+            "Conditions": tuple(model[key + ".create"] for key in
+                                ("curve", "constraint", "load", "velocity", "contact"))
+                          + (window.mesh_workflow.cases_action,),
+            "View": (window.fit_action, window.fit_selected_action, window.iso_action,
+                     *window.standard_view_actions, window.edges_action, window.hide_selected_action,
+                     window.isolate_action, window.show_all_action),
+        }
+        for title, actions in expected.items():
+            menu = menus[title]
+            assert set(actions) <= set(menu.actions()), title
+            assert all(action.text() and action.isVisible() for action in actions), title
+            assert menu.menuAction().isVisible()
+            assert menu_bar.contentsRect().contains(menu_bar.actionGeometry(menu.menuAction())), title
+        buttons = {button.accessibleName(): button for button in window.document_toolbar.findChildren(QToolButton)}
+        for title in ("Model", "Mesh", "Conditions"):
+            button = buttons[title + " commands"]
+            assert button.menu() is menus[title]
+            assert button.isVisible() and button.width() >= button.sizeHint().width()
+            position = button.mapTo(window.document_toolbar, QPoint())
+            assert 0 <= position.x() and position.x() + button.width() <= window.document_toolbar.width()
+            assert 0 <= position.y() and position.y() + button.height() <= window.document_toolbar.height()
     finally:
         window.close()
         window.deleteLater()
