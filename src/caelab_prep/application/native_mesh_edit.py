@@ -5,6 +5,7 @@ from dataclasses import asdict
 from ..cae_core import PrepError
 from ..radioss.assembly import ELEMENTS
 from ..radioss.modeling import integer
+from ..radioss.relations import node_support
 from . import mesh_edit_candidates as edits
 from .mesh_relations import explicit_member_state
 
@@ -17,12 +18,14 @@ def native_mesh_edit_states(session, candidate, *, layout_error_code):
     for owner in session._deck_resources():
         resource = copy(owner)
         replacements = {}
+        transfers = {}
         lines = owner.render().decode("latin1").splitlines(keepends=True)
         for card in owner.cards:
             family = card.keyword.upper().strip("/").split("/")[0]
             if family != "NODE" and family not in ELEMENTS:
                 continue
             changed = {}
+            moved_targets = []
             for row in card.data:
                 identifier = int(lines[row][:10])
                 ref = edits.Ref(owner.id, "node" if family == "NODE" else "element", identifier)
@@ -45,12 +48,24 @@ def native_mesh_edit_states(session, candidate, *, layout_error_code):
                     for index, value in fields:
                         start = index * 10
                         body = body[:start].ljust(start) + integer(value) + body[start + 10:]
-                    changed[row] = body + ending
+                    if cell.part != previous.part:
+                        target = session._part_native_references(cell.part.local_id)[2]["native_part_id"]
+                        key = family, target
+                        transfers.setdefault(key, []).append(body + (ending or owner.newline))
+                        moved_targets.append(key)
+                        changed[row] = None
+                    else:
+                        changed[row] = body + ending
             if changed:
                 text = "".join(changed.get(row, lines[row]) or "" for row in range(card.start, card.stop))
                 # Full-card replacement already rejects file directives. Do not
                 # bypass that source boundary or silently discard a directive.
                 replacements[card.id] = (text, all(changed.get(row, lines[row]) is None for row in card.data))
+                if replacements[card.id][1] and moved_targets:
+                    # Keep non-data source comments once when the old block
+                    # becomes empty; directives still fail replacement below.
+                    comments = [lines[index] for index in range(card.start + 1, card.stop) if index not in card.data]
+                    transfers[moved_targets[0]][0:0] = comments
         for card_id, (text, empty) in replacements.items():
             try:
                 state = resource.replaced_state(card_id, text)
@@ -58,6 +73,10 @@ def native_mesh_edit_states(session, candidate, *, layout_error_code):
             except PrepError as exc:
                 raise PrepError(layout_error_code, "The affected card layout is not supported by the existing native replacement contract.",
                                 {"resource_id": owner.id, "card_id": card_id, "reason": exc.message}) from exc
+        if transfers:
+            blocks = [f"/{family}/{part}{owner.newline}" + "".join(rows) for (family, part), rows in transfers.items()]
+            state, _ = resource.inserted_states(blocks)
+            resource.restore(state)
         if replacements:
             states[owner.id] = resource.snapshot()
     states[session._relations_resource().id] = session._mesh_edit_relations(candidate)
@@ -76,9 +95,10 @@ def project_native_mesh_edit(session, candidate, states):
     mapping = dict(candidate.merge_map)
     removed_nodes, removed_cells = set(candidate.removed_nodes), set(candidate.removed_cells)
     live_parts = {cell.part for cell in candidate.iter_cells()}
+    part_changes = {cell.ref for cell in candidate.cell_updates if cell.part != candidate.base._cells[cell.ref].part}
     correspondences, coalescences = [], []
     for group in candidate.base.sets:
-        if group.member_kind != "node" and not removed_cells:
+        if group.member_kind != "node" and not removed_cells and not part_changes:
             continue
         dropped = tuple(ref for ref in group.members if (
             (group.member_kind == "node" and ref in removed_nodes and ref not in mapping)
@@ -87,14 +107,14 @@ def project_native_mesh_edit(session, candidate, states):
         mapped = tuple(mapping.get(ref, ref) for ref in group.members if ref not in dropped)
         proposed = tuple(dict.fromkeys(mapped))
         if dropped and not proposed:
-            raise PrepError("empty_projected_target", "Deletion would leave an explicit target empty. Deleting its group or condition together is not supported.",
+            raise PrepError("empty_projected_target", "The mesh change would leave an explicit target empty. Deleting its group or condition together is not supported.",
                             {"group_ref": asdict(group.ref), "dropped_members": [asdict(ref) for ref in dropped]})
         if len(proposed) != len(mapped):
             coalescences.append({"group_ref": asdict(group.ref), "old_link_count": len(mapped),
                 "projected_unique_count": len(proposed), "scope": "trial only; explicit reviewed coalescence is required at reconnection"})
         row = {"group_ref": asdict(group.ref), "mapping": [
             {"before": asdict(ref), "proposed": asdict(mapping.get(ref, ref))} for ref in group.members if ref not in dropped]}
-        if removed_cells:
+        if removed_cells or part_changes:
             row.update(proposed_members=[asdict(ref) for ref in proposed], dropped_members=[asdict(ref) for ref in dropped],
                        scope="surviving membership proposal only; original declaration stays stale until explicit mapping/Drop")
         correspondences.append(row)
@@ -113,6 +133,15 @@ def project_native_mesh_edit(session, candidate, states):
     if ({node.ref: node.xyz for node in after.nodes} != {node.ref: node.xyz for node in candidate.iter_nodes()}
             or {cell.ref: cell for cell in after.cells} != {cell.ref: cell for cell in candidate.iter_cells()}):
         raise PrepError("native_merge_mismatch", "The rendered native nodes or elements do not match the reviewed mesh candidate.")
+    if part_changes:
+        view = planned.mesh_view()
+        projection = {**view, "cells": [cell for cell in view["cells"]
+            if edits.Ref(cell["resource_id"], "element", cell["id"]) in part_changes]}
+        nodes = sorted({node.local_id for cell in candidate.cell_updates if cell.ref in part_changes for node in cell.nodes})
+        support = node_support(planned._deck_resources(), projection, nodes)
+        if len(projection["cells"]) != len(part_changes) or any(row["status"] != "supported" for row in support):
+            raise PrepError("unsupported_part_profile", "The moved elements need a supported target PART/property/formulation.",
+                            {"node_support": support})
     conditions, overlaps, blocked = session._group_member_conditions(candidate, planned, after_snapshot=after)
     return conditions, overlaps, blocked, correspondences, coalescences
 
