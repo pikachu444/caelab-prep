@@ -69,6 +69,48 @@ def _entities(rows, *, persistent):
     return tags, identities
 
 
+def _observed_probe(data, surface, probe, plan, residual_key):
+    from ..adapters.gmsh_geometry import analytic_signed_residual
+    if plan["status"] != "ready":
+        _invalid("Observed material-side evidence does not satisfy its shape and offset policy.")
+    keys = ("epsilon", "geometry_tolerance", "numerical_margin", "clearance_lower_estimate")
+    if any(type(probe[key]) not in (int, float) or not math.isfinite(probe[key]) or probe[key] < 0 for key in keys):
+        _invalid("Material-side probe lengths and margins must be finite and nonnegative.")
+    for key in keys:
+        allowed = 0 if key in ("geometry_tolerance", "numerical_margin") else plan["numerical_margin"]
+        if abs(probe[key] - plan[key]) > allowed:
+            _invalid("Reported material-side margins differ from the computed offset plan.")
+    floor = max(128 * plan["geometry_tolerance"], plan["numerical_margin"])
+    if probe["epsilon"] <= floor or probe["clearance_lower_estimate"] <= 0 or probe["geometry_tolerance"] != data["geometry_tolerance"]:
+        _invalid("Observed material-side probes need their declared numerical and geometry margins.")
+    if not surface["samples"]:
+        _invalid("An observed material-side probe needs its original face sample.")
+    point, counts = surface["samples"][0]["xyz"], []
+    for side, sign in (("plus", 1), ("minus", -1)):
+        sample = probe[side]
+        if not isinstance(sample, dict):
+            _invalid("Observed material-side samples must be JSON objects.")
+        _vector(sample["xyz"], 3)
+        if any(abs(value - expected) > plan["numerical_margin"]
+               for value, expected in zip(sample["xyz"], plan[side]["xyz"])):
+            _invalid("Reported material-side positions differ from the computed offsets.")
+        count, residual = sample["inside_count"], sample[residual_key]
+        if type(count) is not int or count not in (0, 1):
+            _invalid("Single-point volume membership must be an explicit zero or one.")
+        if type(residual) not in (int, float) or not math.isfinite(residual) or sign * residual <= floor:
+            _invalid("Observed probes must lie on opposite surface sides beyond the numerical margin.")
+        if abs(residual - plan[side][residual_key]) > plan["numerical_margin"]:
+            _invalid("Reported signed residual differs from the computed analytic geometry.")
+        measured = analytic_signed_residual(surface, sample["xyz"])
+        if (measured is None or not math.isfinite(measured) or sign * measured <= floor
+                or abs(residual - measured) > plan["numerical_margin"]):
+            _invalid("Stored probe coordinates do not establish opposite surface sides beyond the margin.")
+        if not floor < math.dist(point, sample["xyz"]) < plan["clearance_lower_estimate"] / 16:
+            _invalid("Observed probe movement must stay within its reported clearance.")
+        counts.append(count)
+    return tuple(counts)
+
+
 def _topology(data):
     surfaces, surface_ids = _entities(data["surfaces"], persistent=True)
     volumes, volume_ids = _entities(data["volumes"], persistent=True)
@@ -140,53 +182,52 @@ def _topology(data):
         if (data["length_unit"] == "unknown" or surface["geometry_type"] != "Cylinder"
                 or [use["volume_uuid"] for use in surface["orientation_by_volume"]] != [probe["volume_uuid"]]):
             _invalid("An observed probe needs a known unit and one owning cylinder volume.")
-        from ..adapters.gmsh_geometry import cylinder_probe_shape, plan_cylinder_material_probe
+        from ..adapters.gmsh_geometry import plan_cylinder_material_probe
         plan = plan_cylinder_material_probe(surface, data["surfaces"], data["volumes"], data["curves"],
                                             data["geometry_tolerance"], data["length_unit"])
-        if plan["status"] != "ready":
-            _invalid("Observed material-side evidence does not satisfy its shape and offset policy.")
-        shape = cylinder_probe_shape(surface, data["surfaces"], data["volumes"], data["curves"],
-                                     data["geometry_tolerance"], data["length_unit"])
-        values = [probe[key] for key in ("epsilon", "geometry_tolerance", "numerical_margin", "clearance_lower_estimate")]
-        if any(type(value) not in (int, float) or not math.isfinite(value) or value < 0 for value in values):
-            _invalid("Material-side probe lengths and margins must be finite and nonnegative.")
-        epsilon, tolerance, margin, clearance = values
-        for key in ("epsilon", "geometry_tolerance", "numerical_margin", "clearance_lower_estimate"):
-            allowed = 0 if key in ("geometry_tolerance", "numerical_margin") else plan["numerical_margin"]
-            if abs(probe[key] - plan[key]) > allowed:
-                _invalid("Reported material-side margins differ from the computed offset plan.")
-        floor = max(128 * plan["geometry_tolerance"], plan["numerical_margin"])
-        if epsilon <= floor or clearance <= 0 or tolerance != data["geometry_tolerance"]:
-            _invalid("Observed material-side probes need their declared numerical and geometry margins.")
-        counts = []
-        if not surface["samples"]:
-            _invalid("An observed material-side probe needs its original face sample.")
-        point = surface["samples"][0]["xyz"]
-        for side, sign in (("plus", 1), ("minus", -1)):
-            sample = probe[side]
-            if not isinstance(sample, dict):
-                _invalid("Observed material-side samples must be JSON objects.")
-            _vector(sample["xyz"], 3)
-            if any(abs(value - expected) > plan["numerical_margin"]
-                   for value, expected in zip(sample["xyz"], plan[side]["xyz"])):
-                _invalid("Reported material-side positions differ from the computed radial offsets.")
-            count, residual = sample["inside_count"], sample["signed_radial_residual"]
-            if type(count) is not int or count not in (0, 1):
-                _invalid("Single-point volume membership must be an explicit zero or one.")
-            if type(residual) not in (int, float) or not math.isfinite(residual) or sign * residual <= floor:
-                _invalid("Observed probes must lie on opposite cylinder sides beyond the numerical margin.")
-            if abs(residual - plan[side]["signed_radial_residual"]) > plan["numerical_margin"]:
-                _invalid("Reported radial residual differs from the computed cylinder geometry.")
-            measured = math.hypot(*(sample["xyz"][index] - shape["axis_point"][index]
-                                    for index in range(3) if index != shape["axis_index"])) - shape["radius"]
-            if not math.isfinite(measured) or sign * measured <= floor or abs(residual - measured) > plan["numerical_margin"]:
-                _invalid("Stored probe coordinates do not establish opposite cylinder sides beyond the margin.")
-            if not floor < math.dist(point, sample["xyz"]) < plan["clearance_lower_estimate"] / 16:
-                _invalid("Observed probe movement must stay within its reported clearance.")
-            counts.append(count)
+        counts = _observed_probe(data, surface, probe, plan, "signed_radial_residual")
         expected = {(1, 0): "outward_side_is_material", (0, 1): "inward_side_is_material"}.get(tuple(counts))
         if expected is None or probe["radial_material_side"] != expected:
             _invalid("Observed material-side labels must match the two raw volume membership counts.")
+    blend_keys = {"blend_material_side_probes", "blend_probe_policy"} & data.keys()
+    if blend_keys:
+        from ..adapters.gmsh_geometry import (BLEND_PROBE_POLICY, cylindrical_blend_shape,
+                                             plan_analytic_material_probe)
+        if len(blend_keys) != 2 or data["blend_probe_policy"] != BLEND_PROBE_POLICY:
+            _invalid("Blend material observations need the supported explicit probe policy.")
+        eligible = {}
+        for surface in surfaces.values():
+            if surface["geometry_type"] != "Cylinder":
+                continue
+            shape = cylindrical_blend_shape(surface, data["surfaces"], data["volumes"], data["curves"],
+                                             data["geometry_tolerance"], data["length_unit"])
+            if shape["eligible"]:
+                for identity in [surface["uuid"], *shape["support_surface_uuids"]]:
+                    eligible[identity] = shape["volume_uuid"]
+        seen = set()
+        for probe in _rows(data["blend_material_side_probes"]):
+            identity = probe["surface_uuid"]
+            if identity not in surface_ids or identity in seen:
+                _invalid("Each blend material observation must reference one unique inspected surface.")
+            seen.add(identity)
+            if probe["status"] not in ("observed", "indeterminate"):
+                _invalid("Blend material observation status must be explicit.")
+            if probe["status"] == "indeterminate":
+                if probe["material_normal_sign"] is not None:
+                    _invalid("Indeterminate observations cannot establish a material normal.")
+                continue
+            surface = surfaces_by_id[identity]
+            if (eligible.get(identity) != probe["volume_uuid"] or identity not in eligible
+                    or [use["volume_uuid"] for use in surface["orientation_by_volume"]] != [probe["volume_uuid"]]):
+                _invalid("Observed blend evidence must belong to its supported connected shape and single volume.")
+            plan = plan_analytic_material_probe(surface, data["surfaces"], data["volumes"],
+                                                data["geometry_tolerance"], data["length_unit"])
+            if probe["normal_reference"] != plan["normal_reference"]:
+                _invalid("Material normal reference differs from the analytic surface.")
+            counts = _observed_probe(data, surface, probe, plan, "signed_surface_residual")
+            sign = {(0, 1): 1, (1, 0): -1}.get(counts)
+            if sign is None or type(probe["material_normal_sign"]) is not int or probe["material_normal_sign"] != sign:
+                _invalid("Material normal sign must match the raw volume membership counts.")
 
 
 def read_geometry_inspection(source) -> GeometryInspection:
