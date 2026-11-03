@@ -5,9 +5,9 @@ import time
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import QPoint, QTimer, Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QScrollArea
 
 from caelab_prep.application import PrepSession
 from caelab_prep.ui.mesh_workflow import MeshCandidateDialog
@@ -156,3 +156,23 @@ def test_each_host_opens_existing_reconnection_after_replacement(real_candidate,
     assert session.document.revision == revision + 1
     reconnect.reject(); session.undo(); assert states(session) == before
     window.close()
+
+
+@pytest.mark.parametrize("size", [(1060,720), (760,480)])
+def test_compact_replacement_review_fits_the_scroll_view(size):
+    from pathlib import Path
+    session = PrepSession()
+    source = Path(__file__).resolve().parents[1] / "scripts/evaluation/models/mixed-assemblies/beam_shell_tet/model_0000.rad"
+    session.open_rad(source)
+    dialog = MeshCandidateDialog(session, enable_viewport=False)
+    dialog.replace.item(0).setCheckState(Qt.CheckState.Checked)
+    assert not dialog.replacement_reviewed.isChecked()
+    dialog.resize(*size); dialog.show(); QApplication.processEvents()
+    scroll = dialog.findChild(QScrollArea)
+    scroll.ensureWidgetVisible(dialog.replacement_reviewed)
+    QApplication.processEvents()
+    point = dialog.replacement_reviewed.mapTo(scroll.viewport(), QPoint(0, 0))
+    assert point.x() >= 0
+    assert point.x() + dialog.replacement_reviewed.width() <= scroll.viewport().width()
+    assert dialog.replacement_reviewed.sizeHint().width() <= scroll.viewport().width()
+    dialog.reject()
