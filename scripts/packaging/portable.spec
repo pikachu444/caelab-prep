@@ -29,7 +29,7 @@ a = Analysis(
         "vtkmodules.qt.QVTKRenderWindowInteractor",
         "gmsh",
     ],
-    hookspath=[],
+    hookspath=[str(Path(SPECPATH) / "hooks")],
     runtime_hooks=[],
     excludes=["PyQt5", "PyQt6", "PySide2", "tkinter", "IPython", "pytest",
               "setuptools", "_distutils_hack", "pkg_resources"],

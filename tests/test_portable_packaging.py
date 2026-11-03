@@ -6,6 +6,8 @@ from pathlib import Path
 import sys
 import sysconfig
 import subprocess
+import runpy
+import types
 
 import pytest
 
@@ -66,3 +68,37 @@ def test_packaged_entry_routes_recipe_worker_and_preserves_json_error_protocol(t
     assert response["ok"] is False and response["error"]["code"] == "structured_mesh_failed"
     assert source.name in response["error"]["message"]
     assert not (tmp_path / "output").exists()
+
+
+@pytest.mark.parametrize("separator,uppercase", [("/", False), ("\\", False), ("\\", True)])
+def test_qtgui_hook_omits_only_optional_plugins_before_dependency_expansion(monkeypatch, separator, uppercase):
+    packages = {}
+    for name in ("PyInstaller", "PyInstaller.utils", "PyInstaller.utils.hooks", "PyInstaller.utils.hooks.qt"):
+        packages[name] = types.ModuleType(name)
+        packages[name].__path__ = []
+        monkeypatch.setitem(sys.modules, name, packages[name])
+    plugins = [("platforminputcontexts", "qtvirtualkeyboardplugin.dll"),
+               ("imageformats", "qpdf.dll"), ("platforms", "qwindows.dll"),
+               ("platforminputcontexts", "native-input.dll"), ("imageformats", "qjpeg.dll"),
+               ("imageformats", "qsvg.dll")]
+    binaries = []
+    for bucket, name in plugins:
+        source = f"C:/selected/PySide6/plugins/{bucket}/{name}"
+        destination = f"PySide6/plugins/{bucket}"
+        pair = (source.replace("/", separator), destination.replace("/", separator))
+        binaries.append(tuple(value.upper() for value in pair) if uppercase else pair)
+    # A DLL with the same basename outside the exact Qt plugin bucket is retained.
+    binaries.append(("C:/other/qpdf.dll", "other/imageformats"))
+    original = list(binaries)
+    calls = []
+    def collect(path):
+        calls.append(Path(path).name)
+        return ["PySide6.QtCore"], binaries, [("translation.qm", "PySide6/translations")]
+    packages["PyInstaller.utils.hooks.qt"].add_qt6_dependencies = collect
+    hook = Path(__file__).parents[1]/"scripts/packaging/hooks/hook-PySide6.QtGui.py"
+    result = runpy.run_path(str(hook))
+    assert calls == [hook.name]
+    assert result["binaries"] == original[2:]
+    assert binaries == original
+    assert result["hiddenimports"] == ["PySide6.QtCore"]
+    assert result["datas"] == [("translation.qm", "PySide6/translations")]
