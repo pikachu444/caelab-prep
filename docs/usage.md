@@ -191,7 +191,7 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 표의 각 행을 선택해 실제 PART 사용과 source/contact 경계 허용을 검토합니다. BEAM 방향점으로 사용하는 절점은 기계적 끝점과 구분합니다. **Preview merge**는 연결·방향절점·품질과 조건의 변경 전후 대상을 표시하며 문서를 바꾸지 않습니다. 검토 체크 후 **Apply merge** 한 번이 한 Undo입니다. pair·공차·허용을 바꾸면 검토를 다시 해야 합니다. 모델이 바뀌면 창을 닫고 현재 절점을 다시 선택하세요. **Close/Escape**는 미적용 초안만 버립니다.
 
-조건의 제안 대응은 미리보기이며 실제 Apply에서 원 집합·조건을 자동 변경하지 않습니다. 영향 그룹이 있으면 native 출력을 막으므로 기존 **Replace prepared mesh / reconnect targets…**에서 각 원 멤버를 현재 대상으로 명시 연결하세요. 재연결의 기존 DOF 검사는 CLOAD/INIVEL에 한정하며 BCS·접촉의 물리 검증을 뜻하지 않습니다. 기존 native replacement가 보존할 수 없는 카드 layout(예: 변경 카드 안의 file directive)은 현재 merge plan에서 거부합니다. 닫힌 참조 범위·알려진 단위·품질·기계 필드의 기존 제한도 유지합니다. BEAM 기본 frame으로 조용히 전환되는 병합은 거부하지만, 다른 방향점 재배선이나 TRUSS 연결의 물리적 동등성을 보장하지 않습니다. Windows/frozen·solver와 전체 P7b의 확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
+조건의 제안 대응은 미리보기이며 실제 Apply에서 원 집합·조건을 자동 변경하지 않습니다. 영향 그룹이 있으면 native 출력을 막으므로 기존 **Replace prepared mesh / reconnect targets…**에서 각 원 멤버를 현재 대상으로 명시 연결하세요. 최종 재연결은 BCS·CLOAD·INIVEL의 기계 필드와 TYPE7의 역할·secondary 기계적 연결을 검사합니다. BCS의 비활성 회전 경고와 무지지 절점은 구분하며, 실제 구속 충분성·접촉력은 별도로 확인합니다. 기존 native replacement가 보존할 수 없는 카드 layout(예: 변경 카드 안의 file directive)은 현재 merge plan에서 거부합니다. 닫힌 참조 범위·알려진 단위·품질·기계 필드의 기존 제한도 유지합니다. BEAM 기본 frame으로 조용히 전환되는 병합은 거부하지만, 다른 방향점 재배선이나 TRUSS 연결의 물리적 동등성을 보장하지 않습니다. Windows/frozen·solver와 전체 P7b의 확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
 
 같은 절점으로 모이는 node-group 링크를 집합 하나로 줄이려면 모든 old ID의 링크를 추가한 뒤 **Allow repeated node targets to form one set**을 직접 체크하고 **Preview final mapping**을 누르세요. **Reconnection review**는 보존된 옛 링크 수·현재 카드 선언·최종 집합, 하중의 미평가 곡선 배수 합과 속도 벡터/좌표계·교집합을 보여 줍니다. 예를 들어 옛 링크 2개가 현재 절점 1개로 모이고 절점별 배수가 3이면 합은 6→3이며 힘의 보존을 뜻하지 않습니다. 현재 mapping은 merge 투영과 달라도 최종 mapping으로 다시 계산합니다. 검토 체크 후 같은 **Apply reconnection**으로 한 번 적용하고 Undo/Redo·저장·재열기는 기존 문서를 사용합니다.
 
@@ -206,6 +206,8 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 현재 지원은 닫힌 native 참조 범위의 SH3N과 평면 SHELL입니다. 실제 PART·SHELL/TYPE1 속성·기존 정식화와 품질 검사를 재사용하며, 압력·초기 shell 상태·적층 등 미지원 raw 카드는 preview 전에 거부합니다. 비셸 요소가 섞인 목록을 조용히 걸러 적용하지 않습니다. 좌표·ID·PART·두께와 저장된 각도 값은 보존하고 연결 순서를 반전합니다. 법선과 면내 로컬 축이 함께 바뀌므로 물리 응답은 별도로 검토해야 합니다. 지원 TYPE7은 양면 접촉이며 main/secondary 역할·gap·마찰 값을 유지합니다.
 
 영향 집합은 기존 geometry review/stale로 남아, **Replace prepared mesh / reconnect targets…**에서 현재 대상을 명시적으로 확인하기 전까지 native 출력을 막습니다. 하중·구속·속도·접촉의 값을 자동 보정하지 않습니다. 적용·Undo/Redo·v6 저장과 재열기는 같은 작업문서 계약을 사용합니다. RAD `PrepSession`의 `plan_shell_normal_flip`·`apply_shell_normal_flip`·`cancel_shell_normal_flip`도 같은 source-qualified 경로입니다. 실제 Windows/VTK·solver와 전체 P7b의 확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
+
+존재하는 절점 ID라도 기계 요소에 붙지 않으면 BCS 또는 TYPE7 secondary의 최종 대상으로 적용할 수 없습니다. 잘못된 대응은 검토/Apply 전에 거절하고 원 선언·stale·입력 링크를 유지합니다. TYPE7은 각 역할을 따로 검사하므로 main의 검토가 남아 있어도 새 secondary 오류를 숨기지 않습니다. 미검토 역할은 계속 pending이며 native 출력을 막습니다. TYPE7의 기존 `condition_support=not-applicable`은 노드 DOF 상태 표기이고 역할/attachment 검사는 별도로 수행합니다. 명시 링크 Drop과 요소 삭제는 아직 이 경로에 연결하지 않았습니다.
 
 <a id="node-move-images"></a>
 
