@@ -201,3 +201,18 @@ def test_open_saved_inspection_reuses_assets_and_requires_no_backend(inspection,
         assert dialog.report and dialog.table.rowCount() == 1
     finally:
         dialog.reject()
+
+
+def test_real_unshown_vtk_pipeline_replaces_the_cleared_preview(inspection):
+    pytest.importorskip("vtk")
+    from test_viewport_visibility import viewport
+    view = viewport({"points": [], "node_ids": [], "cells": []})
+    dialog = GeometryFeaturesDialog(enable_viewport=False)
+    dialog.viewport = view
+    try:
+        assert dialog.present_inspection(inspection)
+        assert not view._initialized and view._widget.GetRenderWindow().GetNeverRendered() == 1
+        assert view._grid.GetNumberOfCells() == len(dialog.projection["cells"])
+        assert view._visible_grid.GetNumberOfCells() == len(dialog.projection["cells"])
+    finally:
+        dialog.reject()

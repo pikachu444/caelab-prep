@@ -160,8 +160,7 @@ class GeometryFeaturesDialog(QDialog):
         self.view_frame.context.setText("No current review")
         self.details.setText("Select a candidate to inspect its axis and end caps.")
         if self.viewport:
-            self.viewport.set_mesh({"document_id": self.preview_id, "document_epoch": self.preview_id,
-                                    "projection_revision": 0, "points": [], "node_ids": [], "cells": []})
+            self.viewport.set_mesh({"points": [], "node_ids": [], "cells": []})
 
     def _source_changed(self):
         if self._task is not None: self.cancel()
