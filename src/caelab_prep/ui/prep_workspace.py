@@ -310,7 +310,7 @@ class PrepWorkspace:
         self.properties_dock = create_dock(self, "propertiesDock", "Inspector", self.inspector_stack,
                                           Qt.DockWidgetArea.LeftDockWidgetArea, self._view_menu)
         self.properties_dock.setMinimumWidth(260)
-        self.properties_dock.setMinimumHeight(220)
+        self.properties_dock.setMinimumHeight(290)
         self._clear_form()
 
     def _install_notices(self):
