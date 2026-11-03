@@ -20,28 +20,28 @@ class _PropertyRow(QFrame):
         self.setObjectName("propertyRow")
         grid = QGridLayout(self)
         self.grid = grid
-        grid.setContentsMargins(0, 2, 0, 2)
+        grid.setContentsMargins(0, 1, 0, 1)
         grid.setHorizontalSpacing(0)
         grid.setVerticalSpacing(0)
         self.label = QLabel(label)
         self.label.setObjectName("propertyLabel")
         self.label.setWordWrap(True)
         self.label.setToolTip(label)
-        self.label.setContentsMargins(7, 0, 5, 0)
+        self.label.setContentsMargins(5, 0, 4, 0)
         self.label.setBuddy(editor)
         grid.addWidget(self.label, 0, 0)
         editor.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.value_cell = QWidget()
         value_layout = QHBoxLayout(self.value_cell)
-        value_layout.setContentsMargins(4, 0, 4, 0)
-        value_layout.setSpacing(4)
+        value_layout.setContentsMargins(2, 0, 2, 0)
+        value_layout.setSpacing(2)
         value_layout.addWidget(editor, 1)
         grid.addWidget(self.value_cell, 0, 1)
         self.editor, self.unit_widget = editor, unit_widget
         self.multiline = bool(getattr(editor, "is_multiline", False))
         self.unit_cell = QWidget()
         unit_layout = QHBoxLayout(self.unit_cell)
-        unit_layout.setContentsMargins(3, 0, 3, 0)
+        unit_layout.setContentsMargins(2, 0, 2, 0)
         if unit_widget is not None:
             if isinstance(unit_widget, QLabel):
                 unit_widget.setWordWrap(True)
@@ -60,11 +60,11 @@ class _PropertyRow(QFrame):
             widget.setMaximumWidth(16777215)
         self.setMinimumWidth(0)
         self.setMaximumWidth(16777215)
-        self.grid.setContentsMargins(0, 2, 0, 2)
+        self.grid.setContentsMargins(0, 1, 0, 1)
         self.grid.setVerticalSpacing(0)
         for column in range(3):
             self.grid.setColumnStretch(column, 0)
-        self.label.setContentsMargins(7, 0, 5, 0)
+        self.label.setContentsMargins(5, 0, 4, 0)
         self.grid.addWidget(self.label, 0, 0)
         self.grid.addWidget(self.value_cell, 0, 1)
         self.grid.addWidget(self.unit_cell, 0, 2)
@@ -118,7 +118,7 @@ class _PropertySection(QFrame):
         heading = QFrame()
         heading.setObjectName("propertySectionHeading")
         line = QHBoxLayout(heading)
-        line.setContentsMargins(7, 3, 7, 3)
+        line.setContentsMargins(5, 2, 5, 2)
         label = QLabel(title)
         label.setObjectName("groupTitle")
         label.setWordWrap(True)
@@ -173,16 +173,16 @@ class _ColumnPresentation:
         widths = panel._column_sizes[:len(self.headers)]
         available = panel.scroll.viewport().width()
         minimum = max((row.value_cell.minimumSizeHint().width() for row in panel._rows.values()
-                       if not row.multiline), default=100)
+                       if not row.multiline), default=70)
         if not self.paired:
             has_units = any(row.unit_widget is not None for row in panel._rows.values())
             panel.column_header.setSectionHidden(2, not has_units)
             widths[2] = (max(widths[2], max((row.unit_cell.minimumSizeHint().width()
-                                           for row in panel._rows.values()), default=64))
+                                           for row in panel._rows.values()), default=50))
                          if has_units else 0)
         if not panel._columns_changed:
-            widths[0] = max(96, min(156, round(available * .40)))
-            widths[1] = max(110, available - widths[0] - sum(widths[2:]))
+            widths[0] = max(70, min(140, round(available * .40)))
+            widths[1] = max(70, available - widths[0] - sum(widths[2:]))
         elif sum(widths) < available:
             widths[1] += available - sum(widths)
         widths[1] = max(widths[1], minimum)
@@ -265,7 +265,7 @@ class PropertyEditor(QWidget):
         self.presentation = "columns"
         self._presentation = _ColumnPresentation()
         self._spec_sequence = ()
-        self._column_sizes = [136, 132, 66]
+        self._column_sizes = [120, 130, 50]
         self._columns_changed = False
         self._adjusting_columns = False
         self._layout = QVBoxLayout(self)
@@ -274,9 +274,9 @@ class PropertyEditor(QWidget):
         header = QFrame()
         header.setObjectName("propertyHeader")
         identity = QGridLayout(header)
-        identity.setContentsMargins(7, 5, 7, 5)
-        identity.setHorizontalSpacing(8)
-        identity.setVerticalSpacing(2)
+        identity.setContentsMargins(6, 2, 6, 2)
+        identity.setHorizontalSpacing(6)
+        identity.setVerticalSpacing(1)
         self.edit_state = QLabel()
         self.edit_state.setObjectName("unitsNote")
         self.edit_state.setAccessibleName("Property edit state")
@@ -296,7 +296,7 @@ class PropertyEditor(QWidget):
         self.column_header.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.column_header.setAccessibleName("Resize property name, value and unit columns")
         self.column_header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-        self.column_header.setMinimumSectionSize(64)
+        self.column_header.setMinimumSectionSize(35)
         self.column_header.setStretchLastSection(False)
         self._header_model = QStandardItemModel(0, 3, self)
         self.column_header.setModel(self._header_model)

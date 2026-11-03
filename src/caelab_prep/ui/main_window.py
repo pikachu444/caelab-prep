@@ -23,6 +23,7 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
     def __init__(self, session=None, *, enable_viewport: bool = True, presentation=None, settings=None):
         super().__init__()
         self.presentation = presentation
+        self._live_control = None
         if session is None:
             from ..application.session import PrepSession
             session = PrepSession()
@@ -90,7 +91,7 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
         return result
 
     def closeEvent(self, event):
-        if self._live_control and self._live_control.status().get("active_jobs"):
+        if getattr(self, "_live_control", None) and self._live_control.status().get("active_jobs"):
             self.stop_live_ipc()
             self.statusBar().showMessage("Stopping the live mesh worker. Close after it has stopped.")
             event.ignore(); return
