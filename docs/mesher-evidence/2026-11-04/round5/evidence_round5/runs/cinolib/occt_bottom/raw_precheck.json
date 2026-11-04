@@ -1,0 +1,8 @@
+{
+  "vertices": 52002,
+  "cells": {
+    "hexahedron": 41070
+  },
+  "nonfinite_vertices": 0,
+  "variant": "raw"
+}

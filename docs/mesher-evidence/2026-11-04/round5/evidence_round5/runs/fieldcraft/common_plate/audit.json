@@ -1,0 +1,318 @@
+{
+  "mesh": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/common_plate/candidate.vtu",
+  "sha256": "0c11c6c00e020fbc7dd68749f34f5e25aee8058e7f6587b07c0f44383612e1ea",
+  "nodes": 26508,
+  "elements": {
+    "hexahedron": 23772
+  },
+  "unsupported_volume_types": [],
+  "shape_function_quality": {
+    "hexahedron": {
+      "sample_count": 27,
+      "min_determinant": 0.00016915371945499226,
+      "min_normalized_jacobian": 0.006486317632094998,
+      "p01_normalized_jacobian": 0.20448094998190156,
+      "median_normalized_jacobian": 0.9975107245646473,
+      "nonpositive_cells": 0,
+      "nonfinite_cells": 0,
+      "cells_below_0p1_normalized_jacobian": 89,
+      "cells_below_0p3_normalized_jacobian": 449,
+      "signed_volume": 7763.077862414933,
+      "min_signed_volume": 0.01997218832263856
+    }
+  },
+  "signed_mesh_volume": 7763.077862414933,
+  "topology": {
+    "external_faces": 5290,
+    "nonmanifold_faces": 0,
+    "shared_faces_without_opposite_orientation": 0,
+    "duplicate_volume_cells": 0,
+    "external_edges_not_twice": 0,
+    "unused_nodes": 0,
+    "duplicate_all_coordinates_rounded_10dp": 0,
+    "duplicate_coordinates_rounded_10dp": 0,
+    "external_faces_missing_from_supplied_surface_cells": null,
+    "boundary_face_owner_families": {
+      "hexahedron": 5290
+    },
+    "boundary_area_by_owner_family": {
+      "hexahedron": 3021.983103033921
+    },
+    "boundary_area_hex_fraction": 1.0,
+    "mixed_shared_faces": {}
+  },
+  "limitations": [
+    "Sampled shape-function normalized Jacobian is not Verdict scaled Jacobian.",
+    "No whole-cell positivity proof, no exhaustive cell-overlap test, no solver analysis.",
+    "Closed boundary alone does not prove CAD coverage; inspect CAD distance and volume."
+  ],
+  "cad": {
+    "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/common_plate/original.brep",
+    "sha256": "582256afd0b945738d4703908256623aed93e7fbdcaa0d04d140c06889595b9a",
+    "unit": "mm per case metadata",
+    "solid_count": 1,
+    "surface_count": 7,
+    "volume": 7497.345175425629,
+    "boundary_nodes_to_trimmed_CAD": {
+      "samples": 1000,
+      "max_mm": 1.4037969327871562,
+      "p95_mm": 0.33361369892300735,
+      "unresolved": 0
+    },
+    "boundary_face_centroids_to_trimmed_CAD": {
+      "samples": 1000,
+      "max_mm": 1.2036480199697794,
+      "p95_mm": 0.3333267481039026,
+      "unresolved": 0
+    },
+    "cell_centroid_samples": 1000,
+    "cell_centroid_samples_outside": 44,
+    "outside_centroid_distance_to_trimmed_CAD": {
+      "samples": 44,
+      "max_mm": 1.1833368103275639,
+      "p95_mm": 1.0381806913269518,
+      "unresolved": 0
+    },
+    "distance_note": "Deterministic finite mesh-to-CAD samples. OCCT8 BRepExtrema_DistShapeShape against a compound of original trimmed boundary faces, including edge/vertex minima. Boundary compound excludes solid interiors as zero-distance targets. No Gmsh closest-point or inverseUV is used. No Hausdorff/global-coverage proof.",
+    "projection_performance": {
+      "backend": "native_OCCT8_boundary",
+      "nodes": 1000,
+      "faces": 1000,
+      "outside": 44
+    },
+    "native_dependencies_sha256": {
+      "cad_query.cpp": "570b460fd895cbc9c326db23ff25698a1c7e859d13f5d59d9690ca805e746849",
+      "cad_query": "9c4db36d2e3056b95586c288b93b415da7f1369da853acbd3cab0578485634db",
+      "cached_classifier.py": "ea176e8c2a7d073d1c7ed86087e64f71a9b9c1d2731cf517173361b508aa351f",
+      "cad_boundary_query.cpp": "e4e55a02c103f422c9eff16fbb86edfd5fbe55328509402576808c63950d4841",
+      "cad_boundary_query": "95688bfa931e0a983507a4a779c510550b5d0665e22d765c1026ceb0627393fb",
+      "cached_boundary_distance.py": "ee0703ca707ef933f9544fcbf56980ff5e93e2e7ad025861edef5d5bbe8de3ef"
+    },
+    "native_boundary_tolerance_mm": 1e-09,
+    "cached_classifier": {
+      "states": {
+        "-1": 0,
+        "0": 44,
+        "1": 956,
+        "2": 0
+      },
+      "tolerance_mm": 1e-07,
+      "ON_policy": "ON included; outside means OUT only"
+    }
+  },
+  "cad_volume_error_percent": 3.5443571127057982,
+  "basic_validity_pass": true,
+  "audit_performance": {
+    "implementation": "vectorized-face-sort-v2",
+    "timings": {
+      "read_seconds": 0.03444980099448003,
+      "quality_and_records_seconds": 1.1302922350005247,
+      "topology_seconds": 0.17523415500181727,
+      "cad_seconds": 0.6137002910036244,
+      "total_seconds": 1.9553462799958652
+    },
+    "peak_rss_kib": 92868,
+    "cad_sample_limit": 1000,
+    "shape_quality_chunk_cells": 8192
+  },
+  "round3_surface_topology": {
+    "external_vertices": 5290,
+    "external_edges": 10580,
+    "external_faces": 5290,
+    "connected_boundary_components": 1,
+    "euler_characteristic": 0,
+    "closed_manifold_edge_incidence": true,
+    "total_genus_if_closed_orientable": 1.0,
+    "quad_two_tri_nonconforming_interfaces": 0,
+    "quad_two_tri_witnesses": [],
+    "note": "Genus valid only for closed orientable manifold boundary; geometric intersections and vertex singularities are not exhaustively excluded."
+  },
+  "volume_fractions": {
+    "signed_volume_by_family_mm3": {
+      "hexahedron": 7763.077862414933
+    },
+    "positive_integrated_volume_by_family_mm3": {
+      "hexahedron": 7763.077862414933
+    },
+    "signed_hex_volume_fraction": 1.0,
+    "positive_volume_hex_fraction": 1.0,
+    "hex_cell_count_fraction": 1.0,
+    "interpretation": "Positive volume fractions can hide inversions; hex dominance is accepted only alongside independent validity and CAD coverage."
+  },
+  "gmsh_independent_quality": {
+    "gmsh_version": "4.15.2",
+    "families": {
+      "hexahedron": {
+        "count": 23772,
+        "minSICN": 0.004155701596924906,
+        "p01SICN": 0.14678297468993756,
+        "minDetJac": 0.00016915371945499212,
+        "nonpositiveDetJac": 0,
+        "below_0p05SICN": 62
+      }
+    }
+  },
+  "thin_features": {
+    "method": "VTK StaticCellLocator point-in-cell on original first-order element connectivity",
+    "feature_probes": [
+      {
+        "point": [
+          30,
+          10,
+          5
+        ],
+        "inside": false,
+        "name": "through_hole",
+        "mesh_contains": false,
+        "containing_cell": -1,
+        "matches_expected": true
+      },
+      {
+        "point": [
+          10,
+          10,
+          5
+        ],
+        "inside": true,
+        "name": "material",
+        "mesh_contains": true,
+        "containing_cell": 368,
+        "matches_expected": true
+      },
+      {
+        "point": [
+          30,
+          14.5,
+          5
+        ],
+        "inside": true,
+        "name": "hole_ligament",
+        "mesh_contains": true,
+        "containing_cell": 23352,
+        "matches_expected": true
+      }
+    ],
+    "feature_probe_failures": 0,
+    "thickness_probe_lines": [
+      {
+        "a": [
+          10,
+          10,
+          0
+        ],
+        "b": [
+          10,
+          10,
+          10
+        ],
+        "name": "plate_thickness",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 8,
+        "cell_id_transitions": 7,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count."
+      }
+    ],
+    "thickness_lines_with_missing_material": 0,
+    "thickness_lines_with_missing_interior_material": 0,
+    "limitations": "Finite point probes cannot prove the complete hole or gap is preserved; combine with surface genus and CAD geometry distances."
+  },
+  "expected_boundary_genus": 1,
+  "boundary_genus_matches": true,
+  "criteria": {
+    "thickness_probe_endpoint_allowance_mm": 0.01,
+    "sampled_normalized_J_min": 0.1,
+    "gmsh_minSICN_min": 0.05,
+    "absolute_CAD_volume_error_percent_max": 1,
+    "boundary_node_and_face_centroid_distance_mm_max": 0.01,
+    "hex_dominant_volume_fraction_min": 0.5,
+    "note": "Project research thresholds, not NFX or solver certification. Hex fraction 50% is an explicit majority criterion, not a universal industry standard.",
+    "primary_CAD_distance_mm": 0.01,
+    "additional_sensitivity_mm": [
+      0.05,
+      0.1
+    ],
+    "unchanged_primary_Round3_thresholds": true
+  },
+  "checks": {
+    "basic": true,
+    "normalized_J": false,
+    "SICN": false,
+    "CAD_volume": false,
+    "sampled_boundary": false,
+    "sampled_outside_centroids": false,
+    "surface_conformity": true,
+    "feature_probes": true,
+    "boundary_genus": true,
+    "explicit_CAD_feature_probes_available": true
+  },
+  "mesh_policy_pass": false,
+  "hex_dominant_policy_pass": false,
+  "case_id": "round5_common_plate",
+  "case_metadata_sha256": "0913fc9e8ca332ef81cdb8343489092f4673cfd54ed95c67401c7530ee3261c8",
+  "audit_source_sha256": {
+    "audit_round3_v2.py": "d58639078b2b051e4523163f4c5dc51a81c620d0d843523135a714fb637c11af",
+    "base_audit.py": "ffa236ac0b52864d2c4106cd719498241957a17c5775c9e644b4d00afe3751c2"
+  },
+  "extended_audit_seconds": 4.033254923997447,
+  "audit_version": "4.3",
+  "feature_coverage_status": "sampled_explicit_probes_only",
+  "sensitivity": {
+    "0.01": {
+      "checks": {
+        "basic": true,
+        "normalized_J": false,
+        "SICN": false,
+        "CAD_volume": false,
+        "sampled_boundary": false,
+        "sampled_outside_centroids": false,
+        "surface_conformity": true,
+        "feature_probes": true,
+        "boundary_genus": true,
+        "explicit_CAD_feature_probes_available": true
+      },
+      "mesh_policy_pass": false,
+      "hex_dominant_policy_pass": false
+    },
+    "0.05": {
+      "checks": {
+        "basic": true,
+        "normalized_J": false,
+        "SICN": false,
+        "CAD_volume": false,
+        "sampled_boundary": false,
+        "sampled_outside_centroids": false,
+        "surface_conformity": true,
+        "feature_probes": true,
+        "boundary_genus": true,
+        "explicit_CAD_feature_probes_available": true
+      },
+      "mesh_policy_pass": false,
+      "hex_dominant_policy_pass": false
+    },
+    "0.1": {
+      "checks": {
+        "basic": true,
+        "normalized_J": false,
+        "SICN": false,
+        "CAD_volume": false,
+        "sampled_boundary": false,
+        "sampled_outside_centroids": false,
+        "surface_conformity": true,
+        "feature_probes": true,
+        "boundary_genus": true,
+        "explicit_CAD_feature_probes_available": true
+      },
+      "mesh_policy_pass": false,
+      "hex_dominant_policy_pass": false
+    }
+  },
+  "feature_coverage_statement": "No global small-feature preservation claim. Only explicitly listed probes/normal chords and sampled CAD distances are tested.",
+  "feature_probe_count": 3,
+  "case_units_note": "mm; independently rebuilt common plate, not practical original CAD",
+  "authoritative_original_cad": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/common_plate/original.brep",
+  "audit_round4_source_sha256": "7e2351da3a3306ced5d61e17278a93254248f47b0978df93a562957685114c4c"
+}

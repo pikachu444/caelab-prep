@@ -1,0 +1,5 @@
+{
+  "same_connectivity": true,
+  "max_boundary_coordinate_change": 5.000001124244591e-08,
+  "note": "MeshImpl output decimal precision can round coordinates; measure rather than assume exact equality"
+}

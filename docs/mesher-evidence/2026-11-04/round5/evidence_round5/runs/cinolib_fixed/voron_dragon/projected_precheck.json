@@ -1,0 +1,8 @@
+{
+  "vertices": 159070,
+  "cells": {
+    "hexahedron": 132058
+  },
+  "nonfinite_vertices": 0,
+  "variant": "projected"
+}

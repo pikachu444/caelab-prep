@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-04",
+  "platform": "Linux x86_64",
+  "cgroup_memory_bytes": 8589934592,
+  "cpu_quota": 8,
+  "new_address_space_cap": null,
+  "quality_limits": "frozen audit4.3 research criteria; no solver approval",
+  "fieldcraft_binary_release": "v0.7.0",
+  "fieldcraft_release_tag_commit": "e9ccf10692a08ea4c6037442c6213e1f68d344b8",
+  "fieldcraft_inspected_default_head": "4b68057129e09e74cce3ea4259d170d07ab9c6f9",
+  "fieldcraft_tar_sha256": "0ae65f04265960cea1df5746abd0553bb4d4ad4656cb93c3574b0b612e3c0d08",
+  "binary_model_magic": "MCMESH01",
+  "default_head_magic": "MCMESH02",
+  "meshio_wheel": "meshioplusplus18.1.0-cp312-manylinux_2_34-x86_64",
+  "meshio_wheel_sha256": "747bdd9c128d31ae95c7d681f0d7a624a154566031e53c762e653730e99af328",
+  "new_native_families": [
+    "FieldCraft",
+    "meshio++",
+    "CinoLib",
+    "HexGen",
+    "C4HexMeshing",
+    "Mesquite",
+    "SMESH Cartesian3D"
+  ],
+  "smesh_cartesian_runtime": "Conda-forge SMESH9.9.0.0 h334bf96_29 + OCCT8, not the latest9.16 body fitting release"
+}

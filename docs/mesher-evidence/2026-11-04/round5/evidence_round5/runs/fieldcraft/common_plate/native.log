@@ -1,0 +1,30 @@
+{
+  "definitions": {
+    "boundary_conditions": 0,
+    "contacts": 0,
+    "couplings": 0,
+    "datums": 0,
+    "defeatures": 0,
+    "face_merges": 0,
+    "face_splits": 0,
+    "fluid_domains": 0,
+    "loads": 0,
+    "masses": 0,
+    "materials": 0,
+    "partitions": 0,
+    "reference_points": 0,
+    "sections": 0,
+    "seeds": 0,
+    "sets": 0,
+    "size_controls": 0,
+    "springs": 0,
+    "steps": 0,
+    "stitches": 0,
+    "ties": 0
+  },
+  "elements": {
+    "hex8": 23772
+  },
+  "nodes": 26508,
+  "units": "unspecified"
+}

@@ -1,0 +1,6 @@
+Triangle information: vertex number 11655 element number 23310
+rockerarm_initial_read.k
+**********************************************************
+Initializing the polycube structure!
+terminate called after throwing an instance of 'std::bad_cast'
+  what():  std::bad_cast

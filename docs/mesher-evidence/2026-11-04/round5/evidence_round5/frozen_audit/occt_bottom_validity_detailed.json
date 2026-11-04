@@ -1,0 +1,19 @@
+{
+  "cad": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/occt_bottom/original.brep",
+  "cad_sha256": "fdf4a89e9a0287859d524e6abade702badd1b840b94876aaebf327ecb03e4588",
+  "returncode": 0,
+  "seconds": 0.31478422899817815,
+  "stdout": "{\"nonzero_statuses\":[],\"valid\":true,\"invalid_subshapes_including_parent_containers\":0,\"invalid_faces\":0,\"invalid_edges\":0,\"geometric_controls\":true,\"parallel\":false,\"method\":\"OCCT8 BRepCheck_Analyzer\"}\n",
+  "stderr": "",
+  "binary_sha256": "16a27ab204e111735e07676e8cb8ac3da1ad1cd53331c7586e95d34f544dd99b",
+  "result": {
+    "nonzero_statuses": [],
+    "valid": true,
+    "invalid_subshapes_including_parent_containers": 0,
+    "invalid_faces": 0,
+    "invalid_edges": 0,
+    "geometric_controls": true,
+    "parallel": false,
+    "method": "OCCT8 BRepCheck_Analyzer"
+  }
+}

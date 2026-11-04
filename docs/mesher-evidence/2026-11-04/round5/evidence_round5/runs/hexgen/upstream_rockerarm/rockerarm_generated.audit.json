@@ -1,0 +1,75 @@
+{
+  "mesh": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/hexgen/upstream_rockerarm/rockerarm_generated.vtu",
+  "sha256": "fe8c253d8d30fb2520a35076ead1b0f9621faf2c7202d8d81c60e055547cfd11",
+  "nodes": 4640,
+  "elements": {
+    "hexahedron": 3456
+  },
+  "unsupported_volume_types": [],
+  "shape_function_quality": {
+    "hexahedron": {
+      "sample_count": 27,
+      "min_determinant": -3.5359669916577984e-07,
+      "min_normalized_jacobian": -0.5295088904690969,
+      "p01_normalized_jacobian": -0.11734673289989771,
+      "median_normalized_jacobian": 0.8793374493546322,
+      "nonpositive_cells": 77,
+      "nonfinite_cells": 0,
+      "cells_below_0p1_normalized_jacobian": 134,
+      "cells_below_0p3_normalized_jacobian": 312,
+      "signed_volume": 0.04193263950396434,
+      "min_signed_volume": -6.600680314284356e-07
+    }
+  },
+  "signed_mesh_volume": 0.04193263950396434,
+  "topology": {
+    "external_faces": 2240,
+    "nonmanifold_faces": 0,
+    "shared_faces_without_opposite_orientation": 0,
+    "duplicate_volume_cells": 0,
+    "external_edges_not_twice": 0,
+    "unused_nodes": 0,
+    "duplicate_all_coordinates_rounded_10dp": 0,
+    "duplicate_coordinates_rounded_10dp": 0,
+    "external_faces_missing_from_supplied_surface_cells": null,
+    "boundary_face_owner_families": {
+      "hexahedron": 2240
+    },
+    "boundary_area_by_owner_family": {
+      "hexahedron": 1.2522540092468262
+    },
+    "boundary_area_hex_fraction": 1.0,
+    "mixed_shared_faces": {}
+  },
+  "limitations": [
+    "Sampled shape-function normalized Jacobian is not Verdict scaled Jacobian.",
+    "No whole-cell positivity proof, no exhaustive cell-overlap test, no solver analysis.",
+    "Closed boundary alone does not prove CAD coverage; inspect CAD distance and volume."
+  ],
+  "basic_validity_pass": false,
+  "audit_performance": {
+    "implementation": "vectorized-face-sort-v2",
+    "timings": {
+      "read_seconds": 0.00282317499659257,
+      "quality_and_records_seconds": 0.11418494800454937,
+      "topology_seconds": 0.026292212001862936,
+      "total_seconds": 0.14364057099737693
+    },
+    "peak_rss_kib": 37436,
+    "cad_sample_limit": 1000,
+    "shape_quality_chunk_cells": 8192
+  },
+  "gmsh_independent_quality": {
+    "gmsh_version": "4.15.2",
+    "families": {
+      "hexahedron": {
+        "count": 3456,
+        "minSICN": -0.4545272708778324,
+        "p01SICN": -0.0681034128183785,
+        "minDetJac": -3.535966991657799e-07,
+        "nonpositiveDetJac": 77,
+        "below_0p05SICN": 131
+      }
+    }
+  }
+}

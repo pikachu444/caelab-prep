@@ -1,0 +1,607 @@
+Input Mesh: rockerarm_generated_lap_pillow.vtk
+# 3D EP: 30
+Sharp feature OFF
+
+Smoothing...
+it: 0
+minJacob eid nBad: -0.640891 2347 93
+minJacob eid nBad: -0.57247 2347 66
+it: 1
+minJacob eid nBad: -0.57247 2347 66
+minJacob eid nBad: -0.479563 2347 53
+it: 2
+minJacob eid nBad: -0.479563 2347 53
+minJacob eid nBad: -0.406019 2347 41
+it: 3
+minJacob eid nBad: -0.406019 2347 41
+minJacob eid nBad: -0.345491 2347 37
+it: 4
+minJacob eid nBad: -0.345491 2347 37
+minJacob eid nBad: -0.293747 2347 29
+it: 5
+minJacob eid nBad: -0.293747 2347 29
+minJacob eid nBad: -0.28915 2347 26
+it: 6
+minJacob eid nBad: -0.28915 2347 26
+minJacob eid nBad: -0.285505 2347 23
+it: 7
+minJacob eid nBad: -0.285505 2347 23
+minJacob eid nBad: -0.282328 2347 22
+it: 8
+minJacob eid nBad: -0.282328 2347 22
+minJacob eid nBad: -0.279467 2347 18
+it: 9
+minJacob eid nBad: -0.279467 2347 18
+minJacob eid nBad: -0.276892 2347 16
+it: 10
+minJacob eid nBad: -0.276892 2347 16
+minJacob eid nBad: -0.274575 2347 15
+it: 11
+minJacob eid nBad: -0.274575 2347 15
+minJacob eid nBad: -0.272513 2347 15
+it: 12
+minJacob eid nBad: -0.272513 2347 15
+minJacob eid nBad: -0.270671 2347 15
+it: 13
+minJacob eid nBad: -0.270671 2347 15
+minJacob eid nBad: -0.269018 2347 12
+it: 14
+minJacob eid nBad: -0.269018 2347 12
+minJacob eid nBad: -0.267529 2347 11
+it: 15
+minJacob eid nBad: -0.267529 2347 11
+minJacob eid nBad: -0.266159 2347 11
+it: 16
+minJacob eid nBad: -0.266159 2347 11
+minJacob eid nBad: -0.264641 2347 10
+it: 17
+minJacob eid nBad: -0.264641 2347 10
+minJacob eid nBad: -0.263041 2347 10
+it: 18
+minJacob eid nBad: -0.263041 2347 10
+minJacob eid nBad: -0.261402 2347 9
+it: 19
+minJacob eid nBad: -0.261402 2347 9
+minJacob eid nBad: -0.261022 2345 9
+it: 20
+minJacob eid nBad: -0.261022 2345 9
+minJacob eid nBad: -0.261022 2345 9
+it: 21
+minJacob eid nBad: -0.261022 2345 9
+minJacob eid nBad: -0.261022 2345 9
+it: 22
+minJacob eid nBad: -0.261022 2345 9
+minJacob eid nBad: -0.261022 2345 9
+it: 23
+minJacob eid nBad: -0.261022 2345 9
+minJacob eid nBad: -0.261022 2345 9
+it: 24
+minJacob eid nBad: -0.261022 2345 9
+minJacob eid nBad: -0.261022 2345 9
+it: 25
+minJacob eid nBad: -0.261022 2345 9
+minJacob eid nBad: -0.261022 2345 9
+it: 26
+minJacob eid nBad: -0.261022 2345 9
+minJacob eid nBad: -0.261022 2345 9
+it: 27
+minJacob eid nBad: -0.261022 2345 9
+minJacob eid nBad: -0.261022 2345 9
+it: 28
+minJacob eid nBad: -0.261022 2345 9
+minJacob eid nBad: -0.261022 2345 9
+it: 29
+minJacob eid nBad: -0.261022 2345 9
+minJacob eid nBad: -0.261022 2345 9
+it: 30
+minJacob eid nBad: -0.261022 2345 9
+minJacob eid nBad: -0.261022 2345 8
+it: 31
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 32
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 33
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 34
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 35
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 36
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 37
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 38
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 39
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 40
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 41
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 42
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 43
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 44
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 45
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 46
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 47
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 48
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 49
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 50
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 51
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 52
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 53
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 54
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 55
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 56
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 8
+it: 57
+minJacob eid nBad: -0.261022 2345 8
+minJacob eid nBad: -0.261022 2345 7
+it: 58
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 59
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 60
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 61
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 62
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 63
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 64
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 65
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 66
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 67
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 68
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 69
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 70
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 71
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 72
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 73
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 74
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 75
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 76
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 77
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 78
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 79
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 80
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 81
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 82
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 83
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 84
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 85
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 86
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 87
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 88
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 89
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 90
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 91
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 92
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 93
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 94
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 95
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 96
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 97
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 98
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 99
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 100
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 101
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 102
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 103
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 104
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 105
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 106
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 107
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 108
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 109
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 110
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 111
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 112
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 113
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 114
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 115
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 116
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 117
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 118
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 119
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 120
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 121
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 122
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 123
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 124
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 125
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 126
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 127
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 128
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 129
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 130
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 131
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 132
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 133
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 134
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 135
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 136
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 137
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 138
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 139
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 140
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 141
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 142
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 143
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 144
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 145
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 146
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 147
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 148
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 149
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 150
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 151
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 152
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 153
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 154
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 7
+it: 155
+minJacob eid nBad: -0.261022 2345 7
+minJacob eid nBad: -0.261022 2345 6
+it: 156
+minJacob eid nBad: -0.261022 2345 6
+minJacob eid nBad: -0.261022 2345 6
+it: 157
+minJacob eid nBad: -0.261022 2345 6
+minJacob eid nBad: -0.261022 2345 6
+it: 158
+minJacob eid nBad: -0.261022 2345 6
+minJacob eid nBad: -0.261022 2345 6
+it: 159
+minJacob eid nBad: -0.261022 2345 6
+minJacob eid nBad: -0.261022 2345 6
+it: 160
+minJacob eid nBad: -0.261022 2345 6
+minJacob eid nBad: -0.261022 2345 6
+it: 161
+minJacob eid nBad: -0.261022 2345 6
+minJacob eid nBad: -0.261022 2345 6
+it: 162
+minJacob eid nBad: -0.261022 2345 6
+minJacob eid nBad: -0.261022 2345 5
+it: 163
+minJacob eid nBad: -0.261022 2345 5
+minJacob eid nBad: -0.261022 2345 5
+it: 164
+minJacob eid nBad: -0.261022 2345 5
+minJacob eid nBad: -0.261022 2345 5
+it: 165
+minJacob eid nBad: -0.261022 2345 5
+minJacob eid nBad: -0.261022 2345 4
+it: 166
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 167
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 168
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 169
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 170
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 171
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 172
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 173
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 174
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 175
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 176
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 177
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 178
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 179
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 180
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 181
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 182
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 183
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 184
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 185
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 186
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 187
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 188
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 189
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 190
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 191
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 192
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 193
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 194
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 195
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 196
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 197
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 198
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+it: 199
+minJacob eid nBad: -0.261022 2345 4
+minJacob eid nBad: -0.261022 2345 4
+Done smoothing!
+Done output control mesh!

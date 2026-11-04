@@ -1,0 +1,28 @@
+[
+  {
+    "command": "geometry.import.mesh",
+    "params": {
+      "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/common_plate/input.3mf"
+    }
+  },
+  {
+    "command": "mesh.hex.octree",
+    "params": {
+      "surface": 0,
+      "size": 2.0,
+      "max_depth": 4,
+      "max_elements": 500000,
+      "attempts": 2
+    }
+  },
+  {
+    "command": "mesh.quality",
+    "params": {}
+  },
+  {
+    "command": "file.save",
+    "params": {
+      "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/common_plate/candidate.fieldcraft"
+    }
+  }
+]

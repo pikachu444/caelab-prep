@@ -1,0 +1,754 @@
+{
+  "id": "drivelink_housing",
+  "directory": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/drivelink_housing",
+  "classification": "selected_original_public_practical_CAD",
+  "status": "input_blocked_common_surface_nonconforming",
+  "step": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/drivelink_housing/original.brep",
+  "cad_for_audit": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/drivelink_housing/original.brep",
+  "cad_original": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/drivelink_housing/original.brep",
+  "step_sha256": "a6c626581de6046be70ee889aa6bfe5f7d2d0a7e5bf8c79706732f0a89a3c5e7",
+  "converted_step": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/drivelink_housing/input.step",
+  "converted_step_sha256": "4dd02543f792e7affc2682f694dcd11e5053c26ec953c08992b2aa428cadbe9c",
+  "cad_input_format": "brep",
+  "cad_volume_mm3": 772173.8359489336,
+  "solid_count": 1,
+  "surface_count": 737,
+  "bounds_mm": [
+    -15.000922158582648,
+    -30.003057456235016,
+    -15.000000100000005,
+    215.003057456235,
+    75.00305745623501,
+    124.00000010000005
+  ],
+  "sizing": {
+    "requested_reference_size_mm": 5,
+    "minimum_mesh_size_mm": 0.8,
+    "curvature_points_per_circle": 20
+  },
+  "features": {
+    "feature_probes": [
+      {
+        "name": "nativeface_720_outside_0.05mm",
+        "point": [
+          6.055181209733566,
+          -0.13283383467013926,
+          44.06505739010881
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 720,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_720_inside_0.05mm",
+        "point": [
+          6.0453703155436385,
+          -0.1638252162646336,
+          43.97048847015062
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 720,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_5_outside_0.05mm",
+        "point": [
+          122.25133821480843,
+          -0.48513520392845877,
+          21.33259652537694
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 5,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_5_inside_0.05mm",
+        "point": [
+          122.25766916932868,
+          -0.5380152952887035,
+          21.247958384136748
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 5,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_728_outside_0.05mm",
+        "point": [
+          -0.5150790110682933,
+          0.04778410197325186,
+          43.827510877492976
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 728,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_728_inside_0.05mm",
+        "point": [
+          -0.5150790110682933,
+          -0.05183536783592193,
+          43.8187953032182
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 728,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_626_outside_0.05mm",
+        "point": [
+          123.55256458642403,
+          -4.949999999999667,
+          16.465099079635298
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 626,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_626_inside_0.05mm",
+        "point": [
+          123.55256458642403,
+          -5.049999999999667,
+          16.465099079635298
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 626,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_616_outside_0.05mm",
+        "point": [
+          0.8487308109811614,
+          -15.998088710429267,
+          124.05
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 616,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_616_inside_0.05mm",
+        "point": [
+          0.8487308109811614,
+          -15.998088710429267,
+          123.95
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 616,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_216_outside_0.05mm",
+        "point": [
+          138.058334028721,
+          32.571798941957425,
+          -8.333333333333334
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 216,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_216_inside_0.05mm",
+        "point": [
+          138.00833402872098,
+          32.485196401578975,
+          -8.333333333333334
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 216,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_113_outside_0.05mm",
+        "point": [
+          50.40632487908359,
+          10.558244223805987,
+          -11.666666666666666
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 113,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_113_inside_0.05mm",
+        "point": [
+          50.306326973785154,
+          10.557596971208751,
+          -11.666666666666666
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 113,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_143_outside_0.05mm",
+        "point": [
+          41.90632487908359,
+          2.558244223806008,
+          -8.333333333333334
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 143,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_143_inside_0.05mm",
+        "point": [
+          41.806326973785154,
+          2.557596971208772,
+          -8.333333333333334
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 143,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_157_outside_0.05mm",
+        "point": [
+          46.82029123979013,
+          12.278835577336686,
+          -8.333333333333334
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 157,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_157_inside_0.05mm",
+        "point": [
+          46.869729655247475,
+          12.365759929948982,
+          -8.333333333333334
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 157,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_330_outside_0.05mm",
+        "point": [
+          164.11785924392098,
+          32.01369288737962,
+          -8.333333333333327
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 330,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_330_inside_0.05mm",
+        "point": [
+          164.167859243921,
+          31.92709034700118,
+          -8.333333333333327
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 330,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_458_outside_0.05mm",
+        "point": [
+          157.40357354453602,
+          61.980385704279385,
+          -8.333333333333327
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 458,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_458_inside_0.05mm",
+        "point": [
+          157.45357354453603,
+          62.06698824465782,
+          -8.333333333333327
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 458,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_485_outside_0.05mm",
+        "point": [
+          145.739287770646,
+          57.448186022315284,
+          -8.333333333333327
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 485,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_485_inside_0.05mm",
+        "point": [
+          145.689287770646,
+          57.36158348193685,
+          -8.333333333333327
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 485,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_478_outside_0.05mm",
+        "point": [
+          156.40357352963503,
+          65.15655003023676,
+          -11.666666666666663
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 478,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_478_inside_0.05mm",
+        "point": [
+          156.45357352963504,
+          65.06994748985832,
+          -11.666666666666663
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 478,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_224_outside_0.05mm",
+        "point": [
+          167.907144898602,
+          35.43449328394727,
+          -11.666666666666663
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 224,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_224_inside_0.05mm",
+        "point": [
+          167.807144898602,
+          35.43449328394727,
+          -11.666666666666663
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 224,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_332_outside_0.05mm",
+        "point": [
+          160.192859184316,
+          35.43449328394727,
+          -11.666666666666663
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 332,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_332_inside_0.05mm",
+        "point": [
+          160.09285918431598,
+          35.43449328394727,
+          -11.666666666666663
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 332,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_504_outside_0.05mm",
+        "point": [
+          152.47857347003,
+          52.00592185537587,
+          -8.333333333333327
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 504,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_504_inside_0.05mm",
+        "point": [
+          152.37857347002998,
+          52.00592185537587,
+          -8.333333333333327
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 504,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_442_outside_0.05mm",
+        "point": [
+          179.5464306724923,
+          48.585121458808224,
+          -11.666666666666663
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 442,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_442_inside_0.05mm",
+        "point": [
+          179.59643067249232,
+          48.498518918429774,
+          -11.666666666666663
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 442,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_446_outside_0.05mm",
+        "point": [
+          180.54643068739367,
+          53.69467141856508,
+          -11.666666666666663
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 446,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_446_inside_0.05mm",
+        "point": [
+          180.59643068739368,
+          53.78127395894353,
+          -11.666666666666663
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 446,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_449_outside_0.05mm",
+        "point": [
+          184.31071634207433,
+          57.44818602231529,
+          -8.333333333333327
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 449,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_449_inside_0.05mm",
+        "point": [
+          184.26071634207432,
+          57.36158348193684,
+          -8.333333333333327
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 449,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_553_outside_0.05mm",
+        "point": [
+          154.45357349983266,
+          21.12916455350074,
+          -11.666666666666663
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 553,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_553_inside_0.05mm",
+        "point": [
+          154.40357349983265,
+          21.21576709387919,
+          -11.666666666666663
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 553,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_575_outside_0.05mm",
+        "point": [
+          -8.41124532601485,
+          72.0,
+          -11.063290164202668
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 575,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_575_inside_0.05mm",
+        "point": [
+          -8.381617767926286,
+          72.0,
+          -11.15880041392336
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 575,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_611_outside_0.05mm",
+        "point": [
+          139.36666666666767,
+          18.828492928140633,
+          109.95
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 611,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_611_inside_0.05mm",
+        "point": [
+          139.36666666666767,
+          18.828492928140633,
+          110.05
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 611,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_589_outside_0.05mm",
+        "point": [
+          191.050000000001,
+          27.1982108469294,
+          102.16666666666667
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 589,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_589_inside_0.05mm",
+        "point": [
+          190.95000000000098,
+          27.1982108469294,
+          102.16666666666667
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 589,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_632_outside_0.05mm",
+        "point": [
+          62.666666666666664,
+          -30.05,
+          71.66666666666667
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_native_face": 632,
+        "surface_centroid_not_exact_projection": true
+      },
+      {
+        "name": "nativeface_632_inside_0.05mm",
+        "point": [
+          62.666666666666664,
+          -29.95,
+          71.66666666666667
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_native_face": 632,
+        "surface_centroid_not_exact_projection": true
+      }
+    ],
+    "thickness_probe_lines": [],
+    "sampled_local_chord_min_mm": null,
+    "source_cad_sha256": "a6c626581de6046be70ee889aa6bfe5f7d2d0a7e5bf8c79706732f0a89a3c5e7",
+    "source_surface_sha256": "9321e1bc5fb66728d125abb96f4a0f8b9257f0617373b3bd0784ad994ab2c4c1",
+    "probe_script_sha256": "793e509f225965ef2b8af147f52c3727f346e516a0ee7be868679631605e02d9",
+    "selection": "24 nativeCAD face groups by display-areaquantiles;largesttriangle centroid\u00b1normal. Coordinates individually verified IN/OUT against originalCAD using cachedOCCT classifier. Not projectedtoexactface; no thicknessclaim.",
+    "skipped": [],
+    "probe_provenance": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/drivelink_housing/feature_probes.json",
+    "expected_boundary_genus": null
+  },
+  "unit_note": "Original STEP millimetre coordinates; selected original housing body192. No repair/defeaturing.",
+  "component_source_provenance": {
+    "source_assembly": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/source_research/drivelink/case__housing.step",
+    "source_sha256": "c417f9ddc61993b47413021d1cb258380ac805fc9532285a6f02f37bddf2ad63",
+    "selected_original_import_tag": 192,
+    "source_units": "STEP imported into mm",
+    "component_selection": true,
+    "defeaturing": false,
+    "healing": false,
+    "scope": "Selected existing solid only; no assembly contact/conformal-interface claim",
+    "assembly_solid_count": 192,
+    "original_selected": {
+      "solid_tag": 192,
+      "name": "Shapes/COMPOUND",
+      "faces": 737,
+      "volume_mm3": 772173.8359489336,
+      "bounds_mm": [
+        -15.0,
+        -30.0,
+        -15.0,
+        215.0,
+        75.0,
+        124.0
+      ]
+    },
+    "bounds_mode": "Geometry.OCCBoundsUseStl=1; tessellation-backed OCC bounds",
+    "selected_before_serialization": {
+      "solid_tag": 192,
+      "name": "Shapes/COMPOUND",
+      "faces": 737,
+      "volume_mm3": 772173.8359489336,
+      "bounds_mm": [
+        -15.0,
+        -30.0,
+        -15.0,
+        215.0,
+        75.0,
+        124.0
+      ]
+    },
+    "selected_brep": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/evidence/component_exports/drivelink_housing/selected.brep",
+    "selected_brep_sha256": "a6c626581de6046be70ee889aa6bfe5f7d2d0a7e5bf8c79706732f0a89a3c5e7",
+    "selected_step": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/evidence/component_exports/drivelink_housing/selected.step",
+    "selected_step_sha256": "d0b96bba97233f3952eeefd833c96f7806cd25dfc3fc382f2f349b491990f9c3",
+    "status": "component_export_ready_preview_interrupted",
+    "worker_source_frozen": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/evidence/source_versions/extract_components_whole_stl_v1.py",
+    "worker_sha256": "7fa5db1dff70f8a05a7d7a9135f5b8719da284d0961b9afe6cc32f7e8e0ce457",
+    "preview_interruption": {
+      "reason": "Selected BREP and STEP export completed; interrupted optional display triangulation. Common mesher inputs will be prepared separately.",
+      "exitcode": 130,
+      "recorded_utc": "2026-11-04T02:15:31.618727+00:00"
+    }
+  },
+  "common_surface_failure": {
+    "returncode": 139,
+    "stage": "Gmsh face37 BSpline 1D intersections curves166/120",
+    "log": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/drivelink_housing_selected_prepare.log"
+  },
+  "bounds_before_native_optimal": [
+    -15.0,
+    -30.0,
+    -15.0,
+    215.0,
+    75.0,
+    124.0
+  ],
+  "extent_mm": [
+    230.00397961481767,
+    105.00611491247003,
+    139.00000020000004
+  ],
+  "bbox_diagonal_mm": 288.5292270520689,
+  "bounds_note": "OCCT8 BRepBndLib::AddOptimal(false,true); source shape tolerance included, raw OCC pole bounds and surface bounds retained separately.",
+  "native_optimal_bounds_provenance": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/engines/cad_tools/selected_component_stats.json",
+  "criteria_predeclared": {
+    "strict_CAD_distance_mm": 0.01,
+    "engineering_CAD_distance_mm": 0.05,
+    "volume_error_percent": 1,
+    "normalized_J_min": 0.1,
+    "minSICN": 0.05,
+    "note": "Both absolute tolerances are reported independently. Neither changes after observing a candidate. Practical scale/feature effects are reported, not used to silently waive failures."
+  },
+  "surface_candidate": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/drivelink_housing_occt_double/surface_original.obj",
+  "surface_candidate_sha256": "9321e1bc5fb66728d125abb96f4a0f8b9257f0617373b3bd0784ad994ab2c4c1",
+  "common_surface_is_closed": false,
+  "common_tet_available": false,
+  "native_CAD_available": true,
+  "bounds_method": "Native OCCT8 AddOptimal",
+  "geometry_modifications": [],
+  "preparation_attempts": [
+    {
+      "route": "GmshAlgorithm6",
+      "status": "nativecrash",
+      "returncode": 139
+    },
+    {
+      "route": "GmshAlgorithm5",
+      "status": "timeout",
+      "seconds": 600
+    },
+    {
+      "route": "OCCTcachedSTL",
+      "triangles": 138522,
+      "closed": false
+    },
+    {
+      "route": "OCCTfreshdoubleOBJ.01",
+      "triangles": 78171,
+      "exact_duplicate_weld_displacement_mm": 0,
+      "zero_length_triangles": 4,
+      "open_edges_excluding_zero_length_triangles": 36,
+      "nonmanifold_edges": 1
+    }
+  ],
+  "original_CAD_validity": {
+    "path": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/engines/cad_tools/drivelink_housing_validity_detailed.json",
+    "result": {
+      "cad": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/evidence/component_exports/drivelink_housing/selected.brep",
+      "cad_sha256": "a6c626581de6046be70ee889aa6bfe5f7d2d0a7e5bf8c79706732f0a89a3c5e7",
+      "returncode": 0,
+      "seconds": 0.5663151089975145,
+      "stdout": "{\"nonzero_statuses\":[],\"valid\":true,\"invalid_subshapes_including_parent_containers\":0,\"invalid_faces\":0,\"invalid_edges\":0,\"geometric_controls\":true,\"parallel\":false,\"method\":\"OCCT8 BRepCheck_Analyzer\"}\n",
+      "stderr": "",
+      "binary_sha256": "16a27ab204e111735e07676e8cb8ac3da1ad1cd53331c7586e95d34f544dd99b",
+      "result": {
+        "nonzero_statuses": [],
+        "valid": true,
+        "invalid_subshapes_including_parent_containers": 0,
+        "invalid_faces": 0,
+        "invalid_edges": 0,
+        "geometric_controls": true,
+        "parallel": false,
+        "method": "OCCT8 BRepCheck_Analyzer"
+      }
+    }
+  }
+}

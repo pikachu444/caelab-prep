@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/cmake331/cmake/data/bin/cmake",
+    "-S",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing",
+    "-B",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/c4",
+    "-DCoinUtils_INCLUDE_DIR=/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/coin_env/include/coin",
+    "-DCLP_INCLUDE_DIR=/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/coin_env/include/coin"
+  ],
+  "seconds": 1.9245677380022244,
+  "returncode": 0,
+  "timeout": false
+}

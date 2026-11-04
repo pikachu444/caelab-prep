@@ -1,0 +1,275 @@
+[ 16%] Building CXX object CMakeFiles/Segmentation.dir/cpp/CVTBasedPolycube.cpp.o
+[ 33%] Building CXX object CMakeFiles/Segmentation.dir/cpp/CellQueue.cpp.o
+In file included from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.h:4,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp:1:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.h:337:8: warning: extra tokens at end of #endif directive [-Wendif-labels]
+  337 | #endif _RAWMESH_
+      |        ^~~~~~~~~
+In file included from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.h:5:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/GeometricMethod.h:356:8: warning: extra tokens at end of #endif directive [-Wendif-labels]
+  356 | #endif _GeometricMethod_Liang_
+      |        ^~~~~~~~~~~~~~~~~~~~~~~
+[ 50%] Building CXX object CMakeFiles/Segmentation.dir/cpp/GeometricMethod.cpp.o
+In file included from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/GeometricMethod.cpp:1:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/GeometricMethod.h:356:8: warning: extra tokens at end of #endif directive [-Wendif-labels]
+  356 | #endif _GeometricMethod_Liang_
+      |        ^~~~~~~~~~~~~~~~~~~~~~~
+[ 66%] Building CXX object CMakeFiles/Segmentation.dir/cpp/Main.cpp.o
+In file included from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.h:4,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/Main.cpp:9:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.h:337:8: warning: extra tokens at end of #endif directive [-Wendif-labels]
+  337 | #endif _RAWMESH_
+      |        ^~~~~~~~~
+In file included from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.h:5:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/GeometricMethod.h:356:8: warning: extra tokens at end of #endif directive [-Wendif-labels]
+  356 | #endif _GeometricMethod_Liang_
+      |        ^~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp: In member function ‘bool CVTBasedPolycube::GetNeighboringElementInRings(int)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp:545:1: warning: control reaches end of non-void function [-Wreturn-type]
+  545 | }
+      | ^
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp: In member function ‘bool CVTBasedPolycube::UpdateGenerator(Centroid&, CVTElement&, int)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp:1165:1: warning: control reaches end of non-void function [-Wreturn-type]
+ 1165 | }
+      | ^
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp: In member function ‘bool CVTBasedPolycube::EnforceLabelConnectivity()’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp:1678:1: warning: control reaches end of non-void function [-Wreturn-type]
+ 1678 | }
+      | ^
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp: In member function ‘bool CVTBasedPolycube::EnforceBoundaryConnectivity()’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp:1937:1: warning: control reaches end of non-void function [-Wreturn-type]
+ 1937 | }
+      | ^
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp: In member function ‘int CVTBasedPolycube::FindOneCornerPoint(Polycube&)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp:3270:1: warning: control reaches end of non-void function [-Wreturn-type]
+ 3270 | }
+      | ^
+[ 83%] Building CXX object CMakeFiles/Segmentation.dir/cpp/RawMesh.cpp.o
+In file included from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.h:337:8: warning: extra tokens at end of #endif directive [-Wendif-labels]
+  337 | #endif _RAWMESH_
+      |        ^~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘virtual bool RawMesh::Read(const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1429:24: error: ‘_strdup’ was not declared in this scope; did you mean ‘strdup’?
+ 1429 |         cTmp = _strupr(_strdup(filename));
+      |                        ^~~~~~~
+      |                        strdup
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1429:16: error: ‘_strupr’ was not declared in this scope
+ 1429 |         cTmp = _strupr(_strdup(filename));
+      |                ^~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::Read_RawMesh(const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1474:20: error: ‘_strupr’ was not declared in this scope
+ 1474 |         if (strcmp(_strupr(title), "VERSION") != 0)
+      |                    ^~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1484:25: warning: format ‘%d’ expects argument of type ‘int*’, but argument 3 has type ‘bool*’ [-Wformat=]
+ 1484 |         fscanf(input, "%d %d %d %d\n", &meshInfo.isUseVertexNormal, &meshInfo.isUseVertexColor, &meshInfo.isUseElementNormal, &meshInfo.isUseElementColor);
+      |                        ~^              ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                         |              |
+      |                         int*           bool*
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1484:28: warning: format ‘%d’ expects argument of type ‘int*’, but argument 4 has type ‘bool*’ [-Wformat=]
+ 1484 |         fscanf(input, "%d %d %d %d\n", &meshInfo.isUseVertexNormal, &meshInfo.isUseVertexColor, &meshInfo.isUseElementNormal, &meshInfo.isUseElementColor);
+      |                           ~^                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                            |                                        |
+      |                            int*                                     bool*
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1484:31: warning: format ‘%d’ expects argument of type ‘int*’, but argument 5 has type ‘bool*’ [-Wformat=]
+ 1484 |         fscanf(input, "%d %d %d %d\n", &meshInfo.isUseVertexNormal, &meshInfo.isUseVertexColor, &meshInfo.isUseElementNormal, &meshInfo.isUseElementColor);
+      |                              ~^                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                               |                                                                 |
+      |                               int*                                                              bool*
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1484:34: warning: format ‘%d’ expects argument of type ‘int*’, but argument 6 has type ‘bool*’ [-Wformat=]
+ 1484 |         fscanf(input, "%d %d %d %d\n", &meshInfo.isUseVertexNormal, &meshInfo.isUseVertexColor, &meshInfo.isUseElementNormal, &meshInfo.isUseElementColor);
+      |                                 ~^                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                  |                                                                                            |
+      |                                  int*                                                                                         bool*
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::Read_RawFile(const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1644:24: error: ‘_strdup’ was not declared in this scope; did you mean ‘strdup’?
+ 1644 |         cTmp = _strupr(_strdup(filename));
+      |                        ^~~~~~~
+      |                        strdup
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1644:16: error: ‘_strupr’ was not declared in this scope
+ 1644 |         cTmp = _strupr(_strdup(filename));
+      |                ^~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::ReadRaw_ReadVertex(FILE*&, const char*, bool)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2313:20: error: ‘_stricmp’ was not declared in this scope; did you mean ‘strncmp’?
+ 2313 |                 if(_stricmp(type, "raw") == 0)
+      |                    ^~~~~~~~
+      |                    strncmp
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2383:20: error: ‘_stricmp’ was not declared in this scope; did you mean ‘strncmp’?
+ 2383 |                 if(_stricmp(type, "raw") == 0)
+      |                    ^~~~~~~~
+      |                    strncmp
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘virtual bool RawMesh::Write(const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2733:24: error: ‘_strdup’ was not declared in this scope; did you mean ‘strdup’?
+ 2733 |         cTmp = _strupr(_strdup(filename));
+      |                        ^~~~~~~
+      |                        strdup
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2733:16: error: ‘_strupr’ was not declared in this scope
+ 2733 |         cTmp = _strupr(_strdup(filename));
+      |                ^~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::WriteRaw_WriteVertex(FILE*&, const char*, bool)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2910:20: error: ‘_stricmp’ was not declared in this scope; did you mean ‘strncmp’?
+ 2910 |                 if(_stricmp(type, "raw") == 0)
+      |                    ^~~~~~~~
+      |                    strncmp
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2963:20: error: ‘_stricmp’ was not declared in this scope; did you mean ‘strncmp’?
+ 2963 |                 if(_stricmp(type, "raw") == 0)
+      |                    ^~~~~~~~
+      |                    strncmp
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘void RawMesh::OutputError(const char*, const char*, int)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:5540:25: warning: too many arguments for format [-Wformat-extra-args]
+ 5540 |         fprintf(stderr, "Error. %s: %s: .\n", className, message, index);
+      |                         ^~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::Read_RawMesh(const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1473:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1473 |         fscanf(input, "%s %s\n", title, tmpVersion);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1483:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1483 |         fscanf(input,"%d %d %d\n", &vertexNumber, &elementNumber, &elementType);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1484:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1484 |         fscanf(input, "%d %d %d %d\n", &meshInfo.isUseVertexNormal, &meshInfo.isUseVertexColor, &meshInfo.isUseElementNormal, &meshInfo.isUseElementColor);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1492:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1492 |                 fscanf(input, "%lf %lf %lf %d", &x, &y, &z, &vSign);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1506:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1506 |                         fscanf(input, "%lf %lf %lf", &nx, &ny, &nz);
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1520:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1520 |                         fscanf(input, "%lf %lf %lf", &r, &g, &b);
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1533:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1533 |                         fscanf(input, "%d ", &elemInd);
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1537:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1537 |                 fscanf(input, "%d\n", &eSign);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1548:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1548 |                         fscanf(input, "%lf %lf %lf", &nx, &ny, &nz);
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1562:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1562 |                         fscanf(input, "%lf %lf %lf", &r, &g, &b);
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::Read_RawMesh_OldVersion(const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1590:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1590 |         fscanf(input,"%d %d %d\n", &vertexNumber, &elementNumber, &elementType);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1597:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1597 |                 fscanf(input, "%lf %lf %lf %d", &x, &y, &z, &vSign);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1608:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1608 |                         fscanf(input, "%d ", &elemInd);
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1612:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1612 |                 fscanf(input, "%d\n", &eSign);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::Read_Ply(const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1691:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1691 |         fscanf(input, "%s\n", str[0]);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1692:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1692 |         fscanf(input, "%s %s %s\n", str[0], str[1], str[2]);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1693:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1693 |         fscanf(input, "%s ", str[0]);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1694:14: warning: ignoring return value of ‘char* fgets(char*, int, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1694 |         fgets(str[1], 100, input);
+      |         ~~~~~^~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1698:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1698 |                 fscanf(input, "%s %s %d\n", str[0], str[1], &vertexNumber);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1699:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1699 |         fscanf(input, "%s %s %s\n", str[0], str[1], str[2]);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1703:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1703 |                 fscanf(input, "%s %s %s\n", str[0], str[1], str[2]);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1706:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1706 |         fscanf(input, "%s", str[0]);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1707:14: warning: ignoring return value of ‘char* fgets(char*, int, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1707 |         fgets(str[1], 100, input);
+      |         ~~~~~^~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1711:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1711 |                 fscanf(input, "%s", str[0]);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1712:22: warning: ignoring return value of ‘char* fgets(char*, int, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1712 |                 fgets(str[1], 100, input);
+      |                 ~~~~~^~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1723:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1723 |                         fscanf(input, "%lf %lf %lf\n", &x, &y, &z);
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1735:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1735 |                         fscanf(input, "%lf %lf %lf %lf\n", &x, &y, &z, &tmp);
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1747:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1747 |                         fscanf(input, "%lf %lf %lf %lf %lf\n", &x, &y, &z, &tmp, &tmp);
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1759:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1759 |                         fscanf(input, "%d ", &elemInd); //Pass
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1762:39: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1762 |                                 fscanf(input, "%d ", &elemInd);
+      |                                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1773:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1773 |                         fscanf(input, "%d ", &elemInd); //Pass
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1776:39: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1776 |                                 fscanf(input, "%d ", &elemInd);
+      |                                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:1780:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1780 |                         fscanf(input, "%d\n", &eSign);
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::ReadRaw_tet(const char*, const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2466:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2466 |         fscanf(input,"%d %d\n", &vertexNumber, &elementNumber);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2476:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2476 |                 fscanf(input, "%d %d %d %d\n", &v0, &v1, &v2, &v3);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::ReadRaw_tri(const char*, const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2502:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2502 |         fscanf(input,"%d %d\n", &vertexNumber, &elementNumber);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2512:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2512 |                 fscanf(input, "%d %d %d\n", &v0, &v1, &v2);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::ReadRaw_quad(const char*, const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2539:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2539 |         fscanf(input,"%d %d\n", &vertexNumber, &elementNumber);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2549:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2549 |                 fscanf(input, "%d %d %d %d\n", &v0, &v1, &v2, &v3);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::ReadRaw_line(const char*, const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2576:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2576 |         fscanf(input,"%d %d\n", &vertexNumber, &elementNumber);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2586:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2586 |                 fscanf(input, "%d %d\n", &v0, &v1);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::ReadRaw_hex(const char*, const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2611:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2611 |         fscanf(input,"%d %d\n", &vertexNumber, &elementNumber);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2621:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2621 |                 fscanf(input, "%d %d %d %d %d %d %d %d\n", &v0, &v1, &v2, &v3, &v4, &v5, &v6, &v7);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp: In member function ‘bool RawMesh::Read_Mesh(const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2653:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2653 |         fscanf(input,"%d %d %d %d %d %d %d\n", &vertexNumber, &nHex, &nPyr, &nTet, &nQuad, &nTri, &nLine);
+      |         ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2692:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2692 |                 fscanf(input, "%lf %lf %lf %d\n", &x, &y, &z, &sign);
+      |                 ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2704:31: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2704 |                         fscanf(input, "%d", &v0);
+      |                         ~~~~~~^~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/1-HBECVT/src/cpp/RawMesh.cpp:2707:23: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 2707 |                 fscanf(input, "\n");
+      |                 ~~~~~~^~~~~~~~~~~~~
+gmake[2]: *** [CMakeFiles/Segmentation.dir/build.make:135: CMakeFiles/Segmentation.dir/cpp/RawMesh.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+gmake[1]: *** [CMakeFiles/Makefile2:87: CMakeFiles/Segmentation.dir/all] Error 2
+gmake: *** [Makefile:91: all] Error 2

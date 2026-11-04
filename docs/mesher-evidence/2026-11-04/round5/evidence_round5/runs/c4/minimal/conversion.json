@@ -1,0 +1,10 @@
+{
+  "source": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/minimal/candidate.ovm_100_hex.ovm",
+  "source_sha256": "58ccc7f01ceba8b221f0f857613d7030ae67dfe412cc5c86485826187d52ea51",
+  "output": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/minimal/candidate.vtu",
+  "output_sha256": "7648dd3ea18d0e601d7836d1473689489983623b8c13316df5345897177a165c",
+  "native_face_multiset_checked": true,
+  "vertices": 125,
+  "hexes": 64,
+  "method": "libHexHex official MESH exporter convention: unchanged first half-face order + topology-matched opposite vertices; coordinates unchanged; fixed for all cells; no per-cell flips"
+}

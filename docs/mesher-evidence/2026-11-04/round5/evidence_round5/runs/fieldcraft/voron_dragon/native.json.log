@@ -1,0 +1,1 @@
+error: step 2 (mesh.hex.octree): body `voron_dragon`: limit reached: the part has a face 0.0002 wide, which two cells across need cells of 0.0001: 9 levels below a size of 2.0000; or 8 levels below a size of 0.8017; the limits are 2 levels (`max_depth`) and 600000 cells (`max_elements`); use a smaller size, more levels or cells, or a structured (swept) hex mesh

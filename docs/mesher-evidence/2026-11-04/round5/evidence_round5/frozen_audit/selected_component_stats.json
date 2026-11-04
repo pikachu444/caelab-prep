@@ -1,0 +1,16 @@
+[
+  {
+    "case": "drivelink_housing",
+    "returncode": 0,
+    "stdout": "{\"solids\":1,\"faces\":737,\"volume\":772173.83594893222,\"optimal_bounds\":[-15.000922158582648,-30.003057456235016,-15.000000100000005,215.00305745623501,75.003057456235013,124.00000010000005],\"bound_method\":\"OCCT8 BRepBndLib::AddOptimal(false,true)\"}\n",
+    "stderr": "",
+    "seconds": 1.0874634689971572
+  },
+  {
+    "case": "voron_dragon",
+    "returncode": 0,
+    "stdout": "{\"solids\":1,\"faces\":544,\"volume\":42427.323119474888,\"optimal_bounds\":[-35.534092769327295,-27.403706467786368,2.3644350039427522,35.533569440147502,0.0092064967724998989,61.508097689643265],\"bound_method\":\"OCCT8 BRepBndLib::AddOptimal(false,true)\"}\n",
+    "stderr": "",
+    "seconds": 1.6265749170052004
+  }
+]

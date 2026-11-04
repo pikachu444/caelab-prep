@@ -1,0 +1,206 @@
+[
+  {
+    "tool": "HexGen",
+    "case": "upstream_rockerarm",
+    "stage": "raw_or_canary",
+    "scope": "Prepared manual segmentation/block or seamless-map input; no original CAD-policy grade, upstream units not independently established.",
+    "elements": {
+      "hexahedron": 3456
+    },
+    "quality27": {
+      "hexahedron": {
+        "sample_count": 27,
+        "min_determinant": -3.5359669916577984e-07,
+        "min_normalized_jacobian": -0.5295088904690969,
+        "p01_normalized_jacobian": -0.11734673289989771,
+        "median_normalized_jacobian": 0.8793374493546322,
+        "nonpositive_cells": 77,
+        "nonfinite_cells": 0,
+        "cells_below_0p1_normalized_jacobian": 134,
+        "cells_below_0p3_normalized_jacobian": 312,
+        "signed_volume": 0.04193263950396434,
+        "min_signed_volume": -6.600680314284356e-07
+      }
+    },
+    "gmsh_independent_quality": {
+      "gmsh_version": "4.15.2",
+      "families": {
+        "hexahedron": {
+          "count": 3456,
+          "minSICN": -0.4545272708778324,
+          "p01SICN": -0.0681034128183785,
+          "minDetJac": -3.535966991657799e-07,
+          "nonpositiveDetJac": 77,
+          "below_0p05SICN": 131
+        }
+      }
+    },
+    "basic_pass": false,
+    "source": "runs/hexgen/upstream_rockerarm/rockerarm_generated.audit.json",
+    "source_sha256": "3d10fc61560a9cd6ee4e938302ef6d8e336208db86171bd76ec397957a827a56"
+  },
+  {
+    "tool": "HexGen",
+    "case": "upstream_rockerarm",
+    "stage": "post",
+    "scope": "Prepared manual segmentation/block or seamless-map input; no original CAD-policy grade, upstream units not independently established.",
+    "elements": {
+      "hexahedron": 5696
+    },
+    "quality27": {
+      "hexahedron": {
+        "sample_count": 27,
+        "min_determinant": -1.0918885593817834e-07,
+        "min_normalized_jacobian": -0.17811464865151921,
+        "p01_normalized_jacobian": 0.014112438281190598,
+        "median_normalized_jacobian": 0.8599070017932946,
+        "nonpositive_cells": 14,
+        "nonfinite_cells": 0,
+        "cells_below_0p1_normalized_jacobian": 114,
+        "cells_below_0p3_normalized_jacobian": 237,
+        "signed_volume": 0.04195120652463541,
+        "min_signed_volume": 5.0050830513791096e-08
+      }
+    },
+    "gmsh_independent_quality": {
+      "gmsh_version": "4.15.2",
+      "families": {
+        "hexahedron": {
+          "count": 5696,
+          "minSICN": -0.1592424167550302,
+          "p01SICN": 0.010844257889476343,
+          "minDetJac": -1.0918885593817857e-07,
+          "nonpositiveDetJac": 17,
+          "below_0p05SICN": 95
+        }
+      }
+    },
+    "basic_pass": false,
+    "source": "runs/hexgen/upstream_rockerarm/rockerarm_generated_lap_pillow_smooth_opt.audit.json",
+    "source_sha256": "37b5a2305cea321a7d9cbd8b59a8257b9593d2e74656d6c2c6f5474bf6333e2d"
+  },
+  {
+    "tool": "C4",
+    "case": "minimal",
+    "stage": "raw_or_canary",
+    "scope": "Prepared manual segmentation/block or seamless-map input; no original CAD-policy grade, upstream units not independently established.",
+    "elements": {
+      "hexahedron": 64
+    },
+    "quality27": {
+      "hexahedron": {
+        "sample_count": 27,
+        "min_determinant": 0.0019531250000000017,
+        "min_normalized_jacobian": 1.0000000000000009,
+        "p01_normalized_jacobian": 1.0000000000000009,
+        "median_normalized_jacobian": 1.0000000000000009,
+        "nonpositive_cells": 0,
+        "nonfinite_cells": 0,
+        "cells_below_0p1_normalized_jacobian": 0,
+        "cells_below_0p3_normalized_jacobian": 0,
+        "signed_volume": 1.0000000000000009,
+        "min_signed_volume": 0.01562500000000001
+      }
+    },
+    "gmsh_independent_quality": {
+      "gmsh_version": "4.15.2",
+      "families": {
+        "hexahedron": {
+          "count": 64,
+          "minSICN": 1.0,
+          "p01SICN": 1.0,
+          "minDetJac": 0.001953125,
+          "nonpositiveDetJac": 0,
+          "below_0p05SICN": 0
+        }
+      }
+    },
+    "basic_pass": true,
+    "source": "runs/c4/minimal/audit.json",
+    "source_sha256": "2a3b534b0fdb4937e7b0b9a4c241bc5dfb96cf0d353a281795f7fc01b6f6afda"
+  },
+  {
+    "tool": "C4",
+    "case": "fancy_ring",
+    "scope": "Prepared seamless-map input; no original CAD-policy grade",
+    "result": {
+      "command": [
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/c4/Build/bin/c4hex_cli",
+        "--input",
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern/QGP3D/extern/MC3D/tests/resources/fancy_ring.hexex",
+        "--collapse",
+        "--num-hexes",
+        "10000",
+        "--untangling-iter",
+        "100",
+        "--output-hex-file",
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/fancy_ring/candidate.ovm",
+        "--output-igm-file",
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/fancy_ring/igm.hexex"
+      ],
+      "seconds": 600.0557322320019,
+      "returncode": -9,
+      "timeout": true,
+      "input_sha256": "c2f270387afea040b03571f4c7cb06fa86f67c7f0cef9b2e34b8a3d0ae12609f",
+      "input_scope": "Author supplied tetrahedra with precomputed seamless parametrization. Not raw CAD."
+    },
+    "source": "runs/c4/fancy_ring/result.json",
+    "source_sha256": "c5477baabfdb4e4479e97d4ce480080b44d3b16d299c9b36207012e17b09149d"
+  },
+  {
+    "tool": "C4",
+    "case": "fandisk_algohex",
+    "scope": "Prepared seamless-map input; no original CAD-policy grade",
+    "result": {
+      "command": [
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/c4/Build/bin/c4hex_cli",
+        "--input",
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern/QGP3D/extern/MC3D/tests/resources/fandisk_algohex.hexex",
+        "--collapse",
+        "--num-hexes",
+        "10000",
+        "--untangling-iter",
+        "100",
+        "--output-hex-file",
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/fandisk_algohex/candidate.ovm",
+        "--output-igm-file",
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/fandisk_algohex/igm.hexex"
+      ],
+      "seconds": 600.0551236530009,
+      "returncode": -9,
+      "timeout": true,
+      "input_sha256": "8b5d1e0895e8dceb64a3bf029e4a3c538f6ff55f29e939e8c01b6ef299d2958a",
+      "input_scope": "Author supplied tetrahedra with precomputed seamless parametrization. Not raw CAD."
+    },
+    "source": "runs/c4/fandisk_algohex/result.json",
+    "source_sha256": "eabf7f4a0cc69e8b3ea941ac65e98613c26b65eebffb4fb9b7b762af384b1935"
+  },
+  {
+    "tool": "C4",
+    "case": "rockerarm",
+    "scope": "Prepared seamless-map input; no original CAD-policy grade",
+    "result": {
+      "command": [
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/c4/Build/bin/c4hex_cli",
+        "--input",
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern/QGP3D/extern/MC3D/tests/resources/rockerarm.hexex",
+        "--collapse",
+        "--num-hexes",
+        "10000",
+        "--untangling-iter",
+        "100",
+        "--output-hex-file",
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/rockerarm/candidate.ovm",
+        "--output-igm-file",
+        "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/rockerarm/igm.hexex"
+      ],
+      "seconds": 606.6770864389982,
+      "returncode": -9,
+      "timeout": true,
+      "input_sha256": "19f7cd27090354a9c642f83436d9dab25b2734aff84b7e30b7ffe3df90243df7",
+      "input_scope": "Author supplied tetrahedra with precomputed seamless parametrization. Not raw CAD."
+    },
+    "source": "runs/c4/rockerarm/result.json",
+    "source_sha256": "e46c354e1a76801e77949a0575878bd9487ba3589fa204fadf384141108e287b"
+  }
+]

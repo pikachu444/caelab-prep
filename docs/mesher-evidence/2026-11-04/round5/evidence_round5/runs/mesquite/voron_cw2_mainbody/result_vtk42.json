@@ -1,0 +1,11 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/mesquite_driver",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/mesquite/voron_cw2_mainbody/input_vtk42.vtk",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/mesquite/voron_cw2_mainbody/candidate_vtk42.vtk"
+  ],
+  "seconds": 61.191466529002355,
+  "returncode": 0,
+  "timeout": false,
+  "scope": "Identical CinoLib patched native arrays, compatible VTK4.2 serialization only. Boundary nodes fixed, 120s untangle +120s shape CPU limits,20 outer iterations. Native optimizer errors must be reviewed even for rc0."
+}

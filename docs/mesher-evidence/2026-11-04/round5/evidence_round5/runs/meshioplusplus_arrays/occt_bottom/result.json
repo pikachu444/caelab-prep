@@ -1,0 +1,17 @@
+{
+  "command": [
+    "python",
+    "-u",
+    "-X",
+    "faulthandler",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/meshioplusplus_worker_arrays.py",
+    "occt_bottom",
+    "1.5",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/meshioplusplus_arrays/occt_bottom"
+  ],
+  "seconds": 76.77036215899716,
+  "returncode": 0,
+  "timeout": false,
+  "worker_sha256": "45628dd0ed910b9341434be6d904394b9a5bea5c1d51698f6b685fb35bfcc9e2",
+  "conversion": "C++ native output arrays to ASCII VTK2 + NPZ; no mp.write; no mesh changes"
+}

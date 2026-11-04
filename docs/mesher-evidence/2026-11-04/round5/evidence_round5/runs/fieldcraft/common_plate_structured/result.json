@@ -1,0 +1,12 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/fieldcraft_release/fieldcraft-0.7.0-linux-x86_64/bin/fieldcraft-cli",
+    "run",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/common_plate_structured/script.json"
+  ],
+  "seconds": 0.47047348500200314,
+  "returncode": 1,
+  "timeout": false,
+  "mode": "structured auto",
+  "size_mm": 1.5
+}

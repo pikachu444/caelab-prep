@@ -1,0 +1,21 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/smesh_cartesian_driver",
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/occt_bottom/original.brep",
+    "4.0",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/smesh_cartesian/occt_bottom/native"
+  ],
+  "seconds": 2.238088705998962,
+  "returncode": 0,
+  "timeout": false,
+  "input_sha256": "fdf4a89e9a0287859d524e6abade702badd1b840b94876aaebf327ecb03e4588",
+  "engine": "Conda-forge SMESH9.9.0.0 h334bf96_29 with OCCT8 runtime, already pinned previous worker",
+  "settings": {
+    "spacing_mm": 4.0,
+    "size_threshold": 4,
+    "implement_edges": true,
+    "create_faces": true,
+    "viscous_layers": false,
+    "healing": false
+  }
+}

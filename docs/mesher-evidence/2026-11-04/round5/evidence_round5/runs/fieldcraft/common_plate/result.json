@@ -1,0 +1,11 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/fieldcraft_release/fieldcraft-0.7.0-linux-x86_64/bin/fieldcraft-cli",
+    "run",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/common_plate/script.json"
+  ],
+  "seconds": 74.37925331599399,
+  "returncode": 0,
+  "timeout": false,
+  "format": "Correct face count on object + every triangle tagged"
+}

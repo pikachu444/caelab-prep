@@ -1,0 +1,16 @@
+{
+  "command": [
+    "g++",
+    "-std=c++17",
+    "-O1",
+    "-DSERIALIZE_PARALLEL_FOR",
+    "-pthread",
+    "-I/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include",
+    "-I/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/external/eigen",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/cinolib_driver.cpp",
+    "-o",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/cinolib_driver_fixed"
+  ],
+  "seconds": 13.169073639000999,
+  "returncode": 0
+}

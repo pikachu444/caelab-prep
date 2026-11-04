@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "clone",
+    "--depth",
+    "1",
+    "https://github.com/sandialabs/mesquite",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mesquite"
+  ],
+  "seconds": 19.01149740499386,
+  "returncode": 0,
+  "commit": "7ae51c8e8617c67e63018c8a7effc0f5455f58b4"
+}

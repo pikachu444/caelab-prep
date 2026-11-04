@@ -1,0 +1,34 @@
+In file included from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/io_utilities.h:78,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/read_IV.cpp:37,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/read_IV.h:55,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/read_write.h:42,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/meshes/abstract_polygonmesh.cpp:38,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/meshes/abstract_polygonmesh.h:206,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/meshes/trimesh.h:42,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/cinolib_driver.cpp:1:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/io_utilities.cpp: In function ‘bool cinolib::eat_double(FILE*, double&)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/io_utilities.cpp:87:11: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   87 |     fscanf(f, "%lf", &d);
+      |     ~~~~~~^~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/io_utilities.cpp: In function ‘bool cinolib::seek_keyword(FILE*, const char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/io_utilities.cpp:49:15: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   49 |         fscanf(f, "%4096s", s);
+      |         ~~~~~~^~~~~~~~~~~~~~~~
+In file included from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/read_MESH.h:71,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/read_write.h:54:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/read_MESH.cpp: In function ‘void cinolib::read_MESH(const char*, std::vector<mat<3, 1, double> >&, std::vector<std::vector<unsigned int> >&, std::vector<int>&, std::vector<int>&)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/read_MESH.cpp:107:18: warning: ignoring return value of ‘char* fgets(char*, int, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  107 |             fgets(line, 1024, f);
+      |             ~~~~~^~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/io_utilities.cpp: In function ‘bool cinolib::eat_int(FILE*, int&)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/io_utilities.cpp:97:11: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   97 |     fscanf(f, "%d", &i);
+      |     ~~~~~~^~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/io_utilities.cpp: In function ‘bool cinolib::eat_uint(FILE*, uint&)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/io_utilities.cpp:107:11: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  107 |     fscanf(f, "%d", &i);
+      |     ~~~~~~^~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/io_utilities.cpp: In function ‘bool cinolib::eat_word(FILE*, char*)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include/cinolib/io/io_utilities.cpp:77:11: warning: ignoring return value of ‘int fscanf(FILE*, const char*, ...)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   77 |     fscanf(f, "%s", word);
+      |     ~~~~~~^~~~~~~~~~~~~~~

@@ -1,0 +1,49 @@
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I20261104 14:28:24.591163 139784105885568 main.cpp:169] Running algorithm variant 0 with flexible singularities and feature distortion objective
+I20261104 14:28:24.592096 139784105885568 main.cpp:179] Reading seamless map...
+I20261104 14:28:24.592410 139784105885568 Reader.cpp:26] Reading parametrized tet mesh from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern/QGP3D/extern/MC3D/tests/resources/minimal.hexex
+I20261104 14:28:24.593743 139784105885568 Reader.cpp:138] Mesh has 8 vertices
+I20261104 14:28:24.594088 139784105885568 Reader.cpp:172] Mesh has 5 tets
+I20261104 14:28:24.594909 139784105885568 Reader.cpp:282] No features specified
+I20261104 14:28:24.594915 139784105885568 Reader.cpp:476] Seamless parametrization was read in floating point format, sanitizing...
+I20261104 14:28:24.597223 139784105885568 Reader.cpp:522] Sanitization successful
+I20261104 14:28:24.597478 139784105885568 main.cpp:179] Reading seamless map was successful!
+I20261104 14:28:24.597509 139784105885568 main.cpp:186] Scaling parametrization by factor 4 to match target hex count
+I20261104 14:28:24.597557 139784105885568 main.cpp:202] Tracing and connecting the raw MC...
+I20261104 14:28:24.597640 139784105885568 SingularityInitializer.cpp:26] Determined nonzero transition functions for 0 of 16 faces
+I20261104 14:28:24.597741 139784105885568 SingularityInitializer.cpp:80] Found 12 singular edges out of 18 total edges
+I20261104 14:28:24.597872 139784105885568 MCGenerator.cpp:62] Tracing the motorcycle complex
+I20261104 14:28:24.597877 139784105885568 MCGenerator.cpp:63] ...avoiding toroidal blocks in the process
+I20261104 14:28:24.597880 139784105885568 MCGenerator.cpp:64] ...avoiding selfadjacent blocks in the process
+I20261104 14:28:24.598802 139784105885568 MCBuilder.cpp:97] Building the motorcycle complex structure on the basis of an OVM::PolyMesh
+I20261104 14:28:24.601260 139784105885568 MCGenerator.cpp:121] Tracing and connecting the raw motorcycle complex was successful, raw MC has 1 blocks and 6 walls.
+I20261104 14:28:24.601285 139784105885568 main.cpp:202] Tracing and connecting the raw MC was successful!
+I20261104 14:28:24.601306 139784105885568 main.cpp:206] Reducing the raw MC...
+I20261104 14:28:24.601309 139784105885568 MCGenerator.cpp:130] Starting to reduce raw MC with 1 blocks and 6 walls.
+I20261104 14:28:24.601412 139784105885568 MCGenerator.cpp:139] Reduced MC to 1 blocks and 6 walls.
+I20261104 14:28:24.601415 139784105885568 main.cpp:206] Reducing the raw MC was successful!
+I20261104 14:28:24.601429 139784105885568 main.cpp:286] Derefining the base mesh after MC computation...
+I20261104 14:28:24.601774 139784105885568 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 5 remaining tets
+I20261104 14:28:24.602049 139784105885568 ObjectiveBuilder.cpp:42] Critical seeds: 8
+I20261104 14:28:24.602911 139784105885568 main.cpp:333] Quantization (ISP initialize)...
+I20261104 14:28:24.610288 139784105885568 ISPQuantizer.cpp:169] Sheet-pump-quantized MC, nHexes: 64, iterations: 1, minArcLength 4, objective: 0
+I20261104 14:28:24.610351 139784105885568 main.cpp:333] Quantization (ISP initialize) was successful!
+I20261104 14:28:24.610363 139784105885568 main.cpp:357] Collapsing 0-arcs...
+I20261104 14:28:24.610405 139784105885568 MCCollapser.cpp:988] Collapsing randomOrder: 0 and direction: 0
+I20261104 14:28:24.610696 139784105885568 MCCollapser.cpp:995] 0 blocks, 0 patches, 0 arcs to collapse
+I20261104 14:28:24.610705 139784105885568 main.cpp:357] Collapsing 0-arcs was successful!
+I20261104 14:28:24.610726 139784105885568 main.cpp:392] Generating IGM...
+I20261104 14:28:24.610734 139784105885568 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 5 remaining tets
+I20261104 14:28:24.611944 139784105885568 IGMInitializer.cpp:216] Split 0 edges and 0 faces, to prevent degenerate boundary IGM
+I20261104 14:28:24.612160 139784105885568 IGMInitializer.cpp:239] Split 0 edges and 0 faces, to prevent overconstrained inverted interior IGM
+I20261104 14:28:24.612234 139784105885568 IGMGenerator.cpp:57] After initializing the IGM via naive 3D tutte, the following blocks have inversions:
+I20261104 14:28:24.612303 139784105885568 IGMGenerator.cpp:67] ...proceeding to IGM untangling
+I20261104 14:28:24.612446 139784105885568 IGMUntangler.cpp:279] After igm optimization, bad/all blocks: 0/1; bad/all tets: 0/5 (0%); neg/total volume: 0/64 (0%)
+I20261104 14:28:24.612537 139784105885568 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 5 remaining tets
+I20261104 14:28:24.612544 139784105885568 main.cpp:395] Generating IGM was successful
+I20261104 14:28:24.612633 139784105885568 main.cpp:440] Extracting hex mesh...
+I20261104 14:28:24.620624 139784105885568 main.cpp:440] Extracting hex mesh was successful!
+I20261104 14:28:24.620644 139784105885568 main.cpp:441] Smoothing hex mesh (preserves features, projects back to boundary)...
+I20261104 14:28:24.621340 139784105885568 main.cpp:441] Smoothing hex mesh (preserves features, projects back to boundary) was successful!
+I20261104 14:28:24.621347 139784105885568 main.cpp:444] Writing hex mesh...
+I20261104 14:28:24.623516 139784105885568 main.cpp:444] Writing hex mesh was successful!

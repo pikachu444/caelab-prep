@@ -1,0 +1,14 @@
+{
+  "scope": "Independent archival and data-consistency review; no native mesher rerun, Windows, GUI or solver execution",
+  "base_sha": "f18739cb5ff8e9b52c5a81e6ccd901d6aff82b3f",
+  "byte_identical_source_files": 343,
+  "source_file_bytes": 5774807,
+  "summary_raw_evidence_sha_and_data_checks": 76,
+  "candidate_json_csv_entries": 68,
+  "independent_CAD_policy_rows_checked": 8,
+  "prepared_input_rows_checked": 6,
+  "SMESH_native_volume_inventory_rows_checked": 3,
+  "python_harness_syntax_files": 23,
+  "local_markdown_links_checked": 18,
+  "passed": true
+}

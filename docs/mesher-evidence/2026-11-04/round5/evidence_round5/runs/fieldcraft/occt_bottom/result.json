@@ -1,0 +1,15 @@
+{
+  "case": "occt_bottom",
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/fieldcraft_release/fieldcraft-0.7.0-linux-x86_64/bin/fieldcraft-cli",
+    "run",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/occt_bottom/script.json"
+  ],
+  "size_mm": 4.0,
+  "seconds": 1.3211269869934767,
+  "returncode": 1,
+  "timeout": false,
+  "version": "0.7.0",
+  "binary_sha256": "8f61fb9ad05296754d7e8e0eaa949729cd61c4ddd28a434610c8aca4afecd9e3",
+  "saved_model_exists": false
+}

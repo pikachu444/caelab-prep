@@ -1,0 +1,272 @@
+{
+  "output": "hex",
+  "origin": [
+    -40.8726437954033,
+    -18.249997100746686,
+    51.04546701974853
+  ],
+  "root_cells": [
+    30,
+    16,
+    32
+  ],
+  "max_level": 2,
+  "finest_level": 2,
+  "surface_level": 2,
+  "num_leaves": 159931,
+  "num_points": 127826,
+  "num_cells": 109132,
+  "num_hexahedra": 109132,
+  "num_tetrahedra": 0,
+  "num_inside": 109132,
+  "num_boundary_cells": 0,
+  "num_surrogate_faces": 0,
+  "num_hanging": 0,
+  "num_cut_points": 0,
+  "num_warped": 0,
+  "num_warp_refused": 0,
+  "num_inverted": 36,
+  "num_boundary_edges_open": 0,
+  "num_non_manifold_boundary_edges": 0,
+  "num_corners": 554,
+  "num_corners_snapped": 549,
+  "num_feature_chains": 693,
+  "num_feature_chains_missed": 172,
+  "num_feature_moves": 5984,
+  "num_optimized_moves": 205142,
+  "num_flips": 0,
+  "num_winding_rechecks": 197,
+  "num_winding_skipped": 668465,
+  "root_size": 2.8,
+  "min_size": 0.7,
+  "max_size": 2.8,
+  "min_dihedral": 0.0,
+  "max_dihedral": 0.0,
+  "min_scaled_jacobian": -0.9339063652219272,
+  "hausdorff_to_skin": 0.7555883362477616,
+  "leaves_per_level": [
+    10974,
+    18821,
+    130136
+  ],
+  "guarantee_applies": false,
+  "quality": {
+    "num_cells": 109132,
+    "num_inverted": 36,
+    "num_degenerate": 888,
+    "metrics": {
+      "quality:volume": {
+        "min": -0.08306805330164188,
+        "max": 0.9574349777140851,
+        "mean": 0.22282540595370223,
+        "count": 109132,
+        "histogram": [
+          454,
+          26151,
+          30598,
+          16071,
+          35511,
+          297,
+          36,
+          8,
+          5,
+          1
+        ]
+      },
+      "quality:scaled_jacobian": {
+        "min": -0.9339063652219272,
+        "max": 1.0000000000000002,
+        "mean": 0.807426358861272,
+        "count": 108244,
+        "histogram": [
+          9,
+          29,
+          40,
+          211,
+          2623,
+          2540,
+          3725,
+          10001,
+          21994,
+          67072
+        ]
+      },
+      "quality:aspect_ratio": {
+        "min": NaN,
+        "max": NaN,
+        "mean": NaN,
+        "count": 0,
+        "histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "quality:skewness": {
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.2557270081439793,
+        "count": 108244,
+        "histogram": [
+          46365,
+          7976,
+          8141,
+          10832,
+          13074,
+          10859,
+          3971,
+          2362,
+          1984,
+          2680
+        ]
+      },
+      "quality:min_angle": {
+        "min": NaN,
+        "max": NaN,
+        "mean": NaN,
+        "count": 0,
+        "histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "quality:max_angle": {
+        "min": NaN,
+        "max": NaN,
+        "mean": NaN,
+        "count": 0,
+        "histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "quality:warpage": {
+        "min": NaN,
+        "max": NaN,
+        "mean": NaN,
+        "count": 0,
+        "histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "quality:min_dihedral": {
+        "min": NaN,
+        "max": NaN,
+        "mean": NaN,
+        "count": 0,
+        "histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "quality:max_dihedral": {
+        "min": NaN,
+        "max": NaN,
+        "mean": NaN,
+        "count": 0,
+        "histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "quality:inverted": {
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.0003298757468020379,
+        "count": 109132,
+        "histogram": [
+          109096,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          36
+        ]
+      },
+      "quality:degenerate": {
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.008136935087783601,
+        "count": 109132,
+        "histogram": [
+          108244,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          888
+        ]
+      }
+    }
+  },
+  "timings": {
+    "skin": 0.095929594,
+    "size_field": 0.212054414,
+    "octree": 1.391141476,
+    "output": 89.784688042,
+    "quality": 0.206684826
+  },
+  "warnings": [
+    "meshio++: octree_mesh: 5 of 554 feature corners not recovered",
+    "meshio++: octree_mesh: 172 of 693 feature chains not recovered",
+    "meshio++: octree_mesh: untangling left a hexahedron with a non-positive corner Jacobian; raise untangle_iterations or lower surface_size",
+    "meshio++: octree_mesh: 36 cells have a non-positive volume"
+  ],
+  "call_seconds": 91.78889907700068
+}

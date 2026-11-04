@@ -1,0 +1,71 @@
+{
+  "case": "voron_dragon",
+  "raw_sha256": "5de23034adce5b7ef1cce702a726fd8210b6ffa48c9905831654d147dfa5b0dd",
+  "nodes": 17272,
+  "volumes": 6711,
+  "inventory": {
+    "hexahedron": 3270,
+    "wedge": 31,
+    "polyhedron": 3410
+  },
+  "hex_count_fraction": 0.48725972284309343,
+  "exterior_faces": 13492,
+  "faces_used_more_than_twice": 0,
+  "exterior_edges_not_twice": 110,
+  "finite_coordinates": true,
+  "cad": {
+    "path": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/voron_dragon/original.brep",
+    "sha256": "1922dc5ff4be731ce75abe18c1e1e8d9ac4a857fd5bb5c1cd70ff53e2c6ae8e9",
+    "unit": "mm per case metadata",
+    "solid_count": 1,
+    "surface_count": 544,
+    "volume": 42427.32311947489,
+    "boundary_nodes_to_trimmed_CAD": {
+      "samples": 1000,
+      "max_mm": 1.7793557174042467,
+      "p95_mm": 0.5070041979617238,
+      "unresolved": 0
+    },
+    "boundary_face_centroids_to_trimmed_CAD": {
+      "samples": 1000,
+      "max_mm": 1.4977290382523614,
+      "p95_mm": 0.36501302501758864,
+      "unresolved": 0
+    },
+    "cell_centroid_samples": 1000,
+    "cell_centroid_samples_outside": 15,
+    "outside_centroid_distance_to_trimmed_CAD": {
+      "samples": 15,
+      "max_mm": 0.48764876769692656,
+      "p95_mm": 0.38458614014240383,
+      "unresolved": 0
+    },
+    "distance_note": "Deterministic finite mesh-to-CAD samples. OCCT8 BRepExtrema_DistShapeShape against a compound of original trimmed boundary faces, including edge/vertex minima. Boundary compound excludes solid interiors as zero-distance targets. No Gmsh closest-point or inverseUV is used. No Hausdorff/global-coverage proof.",
+    "projection_performance": {
+      "backend": "native_OCCT8_boundary",
+      "nodes": 1000,
+      "faces": 1000,
+      "outside": 15
+    },
+    "native_dependencies_sha256": {
+      "cad_query.cpp": "570b460fd895cbc9c326db23ff25698a1c7e859d13f5d59d9690ca805e746849",
+      "cad_query": "9c4db36d2e3056b95586c288b93b415da7f1369da853acbd3cab0578485634db",
+      "cached_classifier.py": "ea176e8c2a7d073d1c7ed86087e64f71a9b9c1d2731cf517173361b508aa351f",
+      "cad_boundary_query.cpp": "e4e55a02c103f422c9eff16fbb86edfd5fbe55328509402576808c63950d4841",
+      "cad_boundary_query": "95688bfa931e0a983507a4a779c510550b5d0665e22d765c1026ceb0627393fb",
+      "cached_boundary_distance.py": "ee0703ca707ef933f9544fcbf56980ff5e93e2e7ad025861edef5d5bbe8de3ef"
+    },
+    "native_boundary_tolerance_mm": 1e-09,
+    "cached_classifier": {
+      "states": {
+        "-1": 0,
+        "0": 15,
+        "1": 985,
+        "2": 0
+      },
+      "tolerance_mm": 1e-07,
+      "ON_policy": "ON included; outside means OUT only"
+    }
+  },
+  "scope": "Native SMESH polygon faces retained. Finite CAD distance and face incidence only; no standard FE Jacobian, integrated volume, convexity, cell overlap, global topology or solver acceptance for polyhedra. Vertex-average centroids may lie outside nonconvex cells; outside samples are diagnostic, not proof of invalid volume."
+}

@@ -1,0 +1,60 @@
+CMake Deprecation Warning at CMakeLists.txt:3 (CMAKE_MINIMUM_REQUIRED):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Looking for times
+-- Looking for times - found
+-- Looking for clock
+-- Looking for clock - found
+-- Looking for cbrt
+-- Looking for cbrt - not found
+-- Looking for vsnprintf
+-- Looking for vsnprintf - found
+-- Looking for vsprintf
+-- Looking for vsprintf - found
+-- Looking for finite
+-- Looking for finite - found
+-- Looking for _Isfinite
+-- Looking for _Isfinite - not found
+-- Looking for ieeefp.h
+-- Looking for ieeefp.h - not found
+-- Looking for ieeefp.h
+-- Looking for ieeefp.h - not found
+-- Looking for inttypes.h
+-- Looking for inttypes.h - found
+-- Looking for termios.h
+-- Looking for termios.h - found
+-- Looking for sys/ioctl.h
+-- Looking for sys/ioctl.h - found
+-- Looking for dlfcn.h
+-- Looking for dlfcn.h - found
+-- Looking for fcntl.h
+-- Looking for fcntl.h - found
+CMake Error at itaps/CMakeLists.txt:3 (INCLUDE):
+  INCLUDE could not find requested file:
+
+    TribitsLibraryMacros
+
+
+CMake Error at CMakeLists.txt:226 (TRIBITS_EXCLUDE_FILES):
+  Unknown CMake command "TRIBITS_EXCLUDE_FILES".
+
+
+-- Configuring incomplete, errors occurred!

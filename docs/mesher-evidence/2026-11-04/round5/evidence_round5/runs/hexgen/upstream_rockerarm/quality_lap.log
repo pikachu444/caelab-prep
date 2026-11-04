@@ -1,0 +1,38 @@
+Input Mesh: rockerarm_generated.vtk
+# 3D EP: 0
+Sharp feature OFF
+
+Laplace Smoothing...
+istep: 0
+minJacob eid nBad: -0.529508 2347 77
+minJacob eid nBad: -0.441546 2347 65
+istep: 1
+minJacob eid nBad: -0.441546 2347 65
+minJacob eid nBad: -0.43671 2347 70
+istep: 2
+minJacob eid nBad: -0.43671 2347 70
+minJacob eid nBad: -0.439138 2347 69
+istep: 3
+minJacob eid nBad: -0.439138 2347 69
+minJacob eid nBad: -0.44206 2347 69
+istep: 4
+minJacob eid nBad: -0.44206 2347 69
+minJacob eid nBad: -0.44409 2347 69
+istep: 5
+minJacob eid nBad: -0.44409 2347 69
+minJacob eid nBad: -0.445258 2347 69
+istep: 6
+minJacob eid nBad: -0.445258 2347 69
+minJacob eid nBad: -0.445838 2347 69
+istep: 7
+minJacob eid nBad: -0.445838 2347 69
+minJacob eid nBad: -0.446073 2347 69
+istep: 8
+minJacob eid nBad: -0.446073 2347 69
+minJacob eid nBad: -0.446133 2347 69
+istep: 9
+minJacob eid nBad: -0.446133 2347 69
+minJacob eid nBad: -0.446113 2347 69
+Done smoothing!
+Done output control mesh!
+done lap!

@@ -1,0 +1,15 @@
+{
+  "stage": "2-POLYCUBE",
+  "configure_returncode": 0,
+  "command": [
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/cmake331/cmake/data/bin/cmake",
+    "-S",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/2-POLYCUBE/src",
+    "-B",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/hexgen_2-POLYCUBE",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DEIGEN3_INCLUDE_DIR=/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/external/eigen",
+    "-DCMAKE_CXX_FLAGS=-O1"
+  ],
+  "seconds": 1.374537044997851
+}

@@ -1,0 +1,41 @@
+[  8%] Built target glog_internal
+[  8%] Built target CLI11
+[ 10%] Built target glog
+[ 39%] Built target OpenVolumeMesh
+[ 50%] Built target HexEx
+[ 54%] Built target TS3D
+[ 73%] Built target MC3D
+[ 75%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/IQP/GurobiIQPSolver.cpp.o
+[ 76%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/IQP/BonminIQPSolver.cpp.o
+[ 76%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/IQP/IQPQuantizer.cpp.o
+[ 78%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/ISP/BaseLPSolver.cpp.o
+[ 79%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/ISP/GurobiLPSolver.cpp.o
+[ 79%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/ISP/ClpLPSolver.cpp.o
+[ 80%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/ISP/ISPQuantizer.cpp.o
+[ 82%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/StructurePreserver.cpp.o
+[ 83%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/ConstraintExtractor.cpp.o
+[ 83%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/ConstraintWriter.cpp.o
+[ 84%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/ObjectiveBuilder.cpp.o
+[ 86%] Building CXX object src/extern/QGP3D/src/CMakeFiles/QGP3D.dir/Quantizer.cpp.o
+[ 86%] Linking CXX shared library ../../../../Build/lib/libQGP3D.so
+[ 86%] Built target QGP3D
+[ 87%] Building CXX object src/CMakeFiles/C4Hex.dir/Algorithm/HexExtractor.cpp.o
+[ 87%] Building CXX object src/CMakeFiles/C4Hex.dir/Algorithm/EmbeddingCollapser.cpp.o
+[ 89%] Building CXX object src/CMakeFiles/C4Hex.dir/Algorithm/IGMInitializer.cpp.o
+[ 89%] Building CXX object src/CMakeFiles/C4Hex.dir/Algorithm/IGMUntangler.cpp.o
+[ 90%] Building CXX object src/CMakeFiles/C4Hex.dir/Algorithm/MCCollapser.cpp.o
+[ 91%] Building CXX object src/CMakeFiles/C4Hex.dir/Algorithm/MCSmoother.cpp.o
+[ 91%] Building CXX object src/CMakeFiles/C4Hex.dir/Algorithm/MCSplitter.cpp.o
+[ 93%] Building CXX object src/CMakeFiles/C4Hex.dir/Algorithm/PathRouter.cpp.o
+[ 94%] Building CXX object src/CMakeFiles/C4Hex.dir/Algorithm/SurfaceRouter.cpp.o
+[ 94%] Building CXX object src/CMakeFiles/C4Hex.dir/Interface/HexRemesher.cpp.o
+[ 95%] Building CXX object src/CMakeFiles/C4Hex.dir/Interface/IGMGenerator.cpp.o
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/src/Interface/HexRemesher.cpp: In member function ‘void c4hex::HexRemesher::viewHexMesh(mc3d::HexMeshProps&) const’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/src/Interface/HexRemesher.cpp:469:45: warning: unused parameter ‘hexMeshProps’ [-Wunused-parameter]
+  469 | void HexRemesher::viewHexMesh(HexMeshProps& hexMeshProps) const
+      |                               ~~~~~~~~~~~~~~^~~~~~~~~~~~
+[ 97%] Linking CXX shared library ../Build/lib/libC4Hex.so
+[ 97%] Built target C4Hex
+[ 98%] Building CXX object cli/CMakeFiles/c4hex_cli.dir/main.cpp.o
+[100%] Linking CXX executable ../Build/bin/c4hex_cli
+[100%] Built target c4hex_cli

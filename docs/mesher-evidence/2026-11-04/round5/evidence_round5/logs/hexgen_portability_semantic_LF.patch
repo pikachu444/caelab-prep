@@ -1,0 +1,719 @@
+--- a/HexGen/1-HBECVT/src/CMakeLists.txt
++++ b/HexGen/1-HBECVT/src/CMakeLists.txt
+@@ -72,7 +72,7 @@
+ IF(MSVC)
+ SET_TARGET_PROPERTIES(Segmentation PROPERTIES COMPILE_FLAGS "/MP")
+ ELSE(MSVC)
+-add_definitions(-boost_system -boost_filesystem)
++set(CMAKE_CXX_STANDARD 17)
+ ENDIF(MSVC)
+  
+ 
+--- a/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.h
++++ b/HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.h
+@@ -1,7 +1,7 @@
+ #pragma once
+ #include <vector>
+ #include <fstream>
+-#include "rawmesh.h"
++#include "RawMesh.h"
+ #include "GeometricMethod.h"
+ #include <algorithm>
+ #include <sstream>
+--- a/HexGen/1-HBECVT/src/cpp/CellQueue.cpp
++++ b/HexGen/1-HBECVT/src/cpp/CellQueue.cpp
+@@ -11,4 +11,4 @@
+ #include <memory.h>
+ #include <malloc.h>
+ #include <string.h>
+-#include "cellQueue.h"
++#include "CellQueue.h"
+--- a/HexGen/1-HBECVT/src/cpp/Main.cpp
++++ b/HexGen/1-HBECVT/src/cpp/Main.cpp
+@@ -7,7 +7,8 @@
+ #include <vector>
+ #include "cxxopts.hpp"
+ #include "CVTBasedPolycube.h"
+-#include "atlstr.h" 
++#include <cstring>
++static char* PathRemoveExtensionA(char* p){ char* dot=std::strrchr(p,'.'); if(dot)*dot='\0';return p;} 
+ using namespace std;
+ 
+ 
+--- a/HexGen/1-HBECVT/src/cpp/RawMesh.cpp
++++ b/HexGen/1-HBECVT/src/cpp/RawMesh.cpp
+@@ -1,3 +1,10 @@
++// Round5 POSIX string compatibility
++#include <cstring>
++#include <strings.h>
++#include <cctype>
++#define _strdup strdup
++#define _stricmp strcasecmp
++static char* _strupr(char* s) { for(char* p=s; *p; ++p) *p=static_cast<char>(std::toupper(static_cast<unsigned char>(*p))); return s; }
+ #include "RawMesh.h"
+ 
+ #define _CRT_SECURE_NO_DEPRECATE
+@@ -255,7 +262,7 @@
+ }
+ 
+ 
+-inline bool	RawMesh::IsEmpty()
++bool	RawMesh::IsEmpty()
+ {
+ 	if (vertexNumber == 0 || vertex == NULL || elementNumber == 0 || element == NULL)
+ 		return true;
+@@ -263,7 +270,7 @@
+ 	return false;
+ }
+ 
+-inline bool RawMesh::IsInElement(const int vertexID, const int elementID)
++bool RawMesh::IsInElement(const int vertexID, const int elementID)
+ {
+ 	for (int i=0; i<elementProperty.vertexNumber; ++i)
+ 		if (element[elementID][i] == vertexID)
+@@ -331,7 +338,7 @@
+ 		return false;
+ }
+ 
+-inline bool RawMesh::IsBoundaryFace(int elementID, int faceIndex)
++bool RawMesh::IsBoundaryFace(int elementID, int faceIndex)
+ {
+ 	int face[20];
+ 	GetElementFace(elementID, faceIndex, face);
+@@ -881,7 +888,7 @@
+ 	return;
+ }
+ 
+-inline void RawMesh::Rotate(double xRad, double yRad, double zRad, bool rotateAtCenter)
++void RawMesh::Rotate(double xRad, double yRad, double zRad, bool rotateAtCenter)
+ {
+ 	double rad[3];
+ 
+@@ -1111,7 +1118,7 @@
+ 	return *myEementProperty;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(double ** &matrix, int const dim1, int const dim2, double initialValue)
++bool RawMesh::InitiateMatrix(double ** &matrix, int const dim1, int const dim2, double initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1133,7 +1140,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(int ** &matrix, int const dim1, int const dim2, int initialValue)
++bool RawMesh::InitiateMatrix(int ** &matrix, int const dim1, int const dim2, int initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1210,7 +1217,7 @@
+ }
+ 
+ 
+-inline bool RawMesh::InitiateMatrix(bool ** &matrix, int const dim1, int const dim2, bool initialValue)
++bool RawMesh::InitiateMatrix(bool ** &matrix, int const dim1, int const dim2, bool initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1232,7 +1239,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(double * &matrix, int const dim, double initialValue)
++bool RawMesh::InitiateMatrix(double * &matrix, int const dim, double initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1247,7 +1254,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(bool * &matrix, int const dim, bool initialValue)
++bool RawMesh::InitiateMatrix(bool * &matrix, int const dim, bool initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1262,7 +1269,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(int * &matrix, int const dim, int initialValue)
++bool RawMesh::InitiateMatrix(int * &matrix, int const dim, int initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1277,7 +1284,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(double (* &matrix)[3], int const dim, double initialValue)
++bool RawMesh::InitiateMatrix(double (* &matrix)[3], int const dim, double initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1296,7 +1303,7 @@
+ 	return true;
+ }
+ 
+-inline void RawMesh::FreeMatrix(double ** &matrix)
++void RawMesh::FreeMatrix(double ** &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1308,7 +1315,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(int ** &matrix)
++void RawMesh::FreeMatrix(int ** &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1320,7 +1327,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(bool ** &matrix)
++void RawMesh::FreeMatrix(bool ** &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1332,7 +1339,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(bool * &matrix)
++void RawMesh::FreeMatrix(bool * &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1343,7 +1350,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(double * &matrix)
++void RawMesh::FreeMatrix(double * &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1354,7 +1361,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(int * &matrix)
++void RawMesh::FreeMatrix(int * &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1366,7 +1373,7 @@
+ }
+ 
+ 
+-inline void RawMesh::FreeMatrix(double (* &matrix)[3])
++void RawMesh::FreeMatrix(double (* &matrix)[3])
+ {
+ 	if (matrix != NULL)
+ 	{
+--- a/HexGen/2-POLYCUBE/src/CMakeLists.txt
++++ b/HexGen/2-POLYCUBE/src/CMakeLists.txt
+@@ -72,7 +72,7 @@
+ IF(MSVC)
+ SET_TARGET_PROPERTIES(Polycube PROPERTIES COMPILE_FLAGS "/MP")
+ ELSE(MSVC)
+-add_definitions(-boost_system -boost_filesystem)
++set(CMAKE_CXX_STANDARD 17)
+ ENDIF(MSVC)
+  
+ 
+--- a/HexGen/2-POLYCUBE/src/cpp/Main.cpp
++++ b/HexGen/2-POLYCUBE/src/cpp/Main.cpp
+@@ -7,7 +7,8 @@
+ #include <vector>
+ #include "cxxopts.hpp"
+ #include "Polycube.h"
+-#include "atlstr.h" 
++#include <cstring>
++static char* PathRemoveExtensionA(char* p){ char* dot=std::strrchr(p,'.'); if(dot)*dot='\0';return p;} 
+ 
+ using namespace std;
+ 
+--- a/HexGen/2-POLYCUBE/src/cpp/Polycube.h
++++ b/HexGen/2-POLYCUBE/src/cpp/Polycube.h
+@@ -1,7 +1,7 @@
+ ﻿#pragma once
+ #include <vector>
+ #include <fstream>
+-#include "rawmesh.h"
++#include "RawMesh.h"
+ 
+ #include "Eigen/Dense"
+ #include "Eigen/LU"
+--- a/HexGen/2-POLYCUBE/src/cpp/RawMesh.cpp
++++ b/HexGen/2-POLYCUBE/src/cpp/RawMesh.cpp
+@@ -1,3 +1,10 @@
++// Round5 POSIX string compatibility
++#include <cstring>
++#include <strings.h>
++#include <cctype>
++#define _strdup strdup
++#define _stricmp strcasecmp
++static char* _strupr(char* s) { for(char* p=s; *p; ++p) *p=static_cast<char>(std::toupper(static_cast<unsigned char>(*p))); return s; }
+ #include "RawMesh.h"
+ 
+ #define _CRT_SECURE_NO_DEPRECATE
+@@ -255,7 +262,7 @@
+ }
+ 
+ 
+-inline bool	RawMesh::IsEmpty()
++bool	RawMesh::IsEmpty()
+ {
+ 	if (vertexNumber == 0 || vertex == NULL || elementNumber == 0 || element == NULL)
+ 		return true;
+@@ -263,7 +270,7 @@
+ 	return false;
+ }
+ 
+-inline bool RawMesh::IsInElement(const int vertexID, const int elementID)
++bool RawMesh::IsInElement(const int vertexID, const int elementID)
+ {
+ 	for (int i=0; i<elementProperty.vertexNumber; ++i)
+ 		if (element[elementID][i] == vertexID)
+@@ -331,7 +338,7 @@
+ 		return false;
+ }
+ 
+-inline bool RawMesh::IsBoundaryFace(int elementID, int faceIndex)
++bool RawMesh::IsBoundaryFace(int elementID, int faceIndex)
+ {
+ 	int face[20];
+ 	GetElementFace(elementID, faceIndex, face);
+@@ -881,7 +888,7 @@
+ 	return;
+ }
+ 
+-inline void RawMesh::Rotate(double xRad, double yRad, double zRad, bool rotateAtCenter)
++void RawMesh::Rotate(double xRad, double yRad, double zRad, bool rotateAtCenter)
+ {
+ 	double rad[3];
+ 
+@@ -1111,7 +1118,7 @@
+ 	return *myEementProperty;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(double ** &matrix, int const dim1, int const dim2, double initialValue)
++bool RawMesh::InitiateMatrix(double ** &matrix, int const dim1, int const dim2, double initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1133,7 +1140,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(int ** &matrix, int const dim1, int const dim2, int initialValue)
++bool RawMesh::InitiateMatrix(int ** &matrix, int const dim1, int const dim2, int initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1210,7 +1217,7 @@
+ }
+ 
+ 
+-inline bool RawMesh::InitiateMatrix(bool ** &matrix, int const dim1, int const dim2, bool initialValue)
++bool RawMesh::InitiateMatrix(bool ** &matrix, int const dim1, int const dim2, bool initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1232,7 +1239,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(double * &matrix, int const dim, double initialValue)
++bool RawMesh::InitiateMatrix(double * &matrix, int const dim, double initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1247,7 +1254,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(bool * &matrix, int const dim, bool initialValue)
++bool RawMesh::InitiateMatrix(bool * &matrix, int const dim, bool initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1262,7 +1269,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(int * &matrix, int const dim, int initialValue)
++bool RawMesh::InitiateMatrix(int * &matrix, int const dim, int initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1277,7 +1284,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(double (* &matrix)[3], int const dim, double initialValue)
++bool RawMesh::InitiateMatrix(double (* &matrix)[3], int const dim, double initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1296,7 +1303,7 @@
+ 	return true;
+ }
+ 
+-inline void RawMesh::FreeMatrix(double ** &matrix)
++void RawMesh::FreeMatrix(double ** &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1308,7 +1315,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(int ** &matrix)
++void RawMesh::FreeMatrix(int ** &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1320,7 +1327,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(bool ** &matrix)
++void RawMesh::FreeMatrix(bool ** &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1332,7 +1339,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(bool * &matrix)
++void RawMesh::FreeMatrix(bool * &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1343,7 +1350,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(double * &matrix)
++void RawMesh::FreeMatrix(double * &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1354,7 +1361,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(int * &matrix)
++void RawMesh::FreeMatrix(int * &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1366,7 +1373,7 @@
+ }
+ 
+ 
+-inline void RawMesh::FreeMatrix(double (* &matrix)[3])
++void RawMesh::FreeMatrix(double (* &matrix)[3])
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -4889,7 +4896,7 @@
+ 	return true;
+ }
+ 
+-inline void RawMesh::CrossProduct(double vector_1[3], double vector_2[3], double result[3])
++void RawMesh::CrossProduct(double vector_1[3], double vector_2[3], double result[3])
+ {
+ 	result[0] = vector_1[1]*vector_2[2] - vector_1[2]*vector_2[1];
+ 	result[1] = vector_1[2]*vector_2[0] - vector_1[0]*vector_2[2];
+@@ -4898,7 +4905,7 @@
+ 	return;
+ }
+ 
+-inline void RawMesh::CrossProduct(double point_1[3], double point_2[3], double point_3[3], double result[3])
++void RawMesh::CrossProduct(double point_1[3], double point_2[3], double point_3[3], double result[3])
+ {
+ 	double vector_1[3], vector_2[3];
+ 
+@@ -5518,7 +5525,7 @@
+ 	return;
+ }
+ 
+-inline void RawMesh::Normalize(double vector[3])
++void RawMesh::Normalize(double vector[3])
+ {
+ 	double sum;
+ 	
+--- a/HexGen/3-PARAMETRICMAPPING/src/CMakeLists.txt
++++ b/HexGen/3-PARAMETRICMAPPING/src/CMakeLists.txt
+@@ -72,7 +72,7 @@
+ IF(MSVC)
+ SET_TARGET_PROPERTIES(ParametricMapping PROPERTIES COMPILE_FLAGS "/MP")
+ ELSE(MSVC)
+-add_definitions(-boost_system -boost_filesystem)
++set(CMAKE_CXX_STANDARD 17)
+ ENDIF(MSVC)
+  
+ 
+--- a/HexGen/3-PARAMETRICMAPPING/src/cpp/CellQueue.cpp
++++ b/HexGen/3-PARAMETRICMAPPING/src/cpp/CellQueue.cpp
+@@ -11,4 +11,4 @@
+ #include <memory.h>
+ #include <malloc.h>
+ #include <string.h>
+-#include "cellQueue.h"
++#include "CellQueue.h"
+--- a/HexGen/3-PARAMETRICMAPPING/src/cpp/Main.cpp
++++ b/HexGen/3-PARAMETRICMAPPING/src/cpp/Main.cpp
+@@ -9,7 +9,8 @@
+ #include "physical_polycube.h"
+ #include "Main.h"
+ #include "cxxopts.hpp"
+-#include "atlstr.h" 
++#include <cstring>
++static char* PathRemoveExtensionA(char* p){ char* dot=std::strrchr(p,'.'); if(dot)*dot='\0';return p;} 
+ using namespace std;
+ 
+ int main(int argc, char* argv[])
+--- a/HexGen/3-PARAMETRICMAPPING/src/cpp/RawMesh.cpp
++++ b/HexGen/3-PARAMETRICMAPPING/src/cpp/RawMesh.cpp
+@@ -1,3 +1,10 @@
++// Round5 POSIX string compatibility
++#include <cstring>
++#include <strings.h>
++#include <cctype>
++#define _strdup strdup
++#define _stricmp strcasecmp
++static char* _strupr(char* s) { for(char* p=s; *p; ++p) *p=static_cast<char>(std::toupper(static_cast<unsigned char>(*p))); return s; }
+ #include "RawMesh.h"
+ 
+ #define _CRT_SECURE_NO_DEPRECATE
+@@ -255,7 +262,7 @@
+ }
+ 
+ 
+-inline bool	RawMesh::IsEmpty()
++bool	RawMesh::IsEmpty()
+ {
+ 	if (vertexNumber == 0 || vertex == NULL || elementNumber == 0 || element == NULL)
+ 		return true;
+@@ -263,7 +270,7 @@
+ 	return false;
+ }
+ 
+-inline bool RawMesh::IsInElement(const int vertexID, const int elementID)
++bool RawMesh::IsInElement(const int vertexID, const int elementID)
+ {
+ 	for (int i=0; i<elementProperty.vertexNumber; ++i)
+ 		if (element[elementID][i] == vertexID)
+@@ -331,7 +338,7 @@
+ 		return false;
+ }
+ 
+-inline bool RawMesh::IsBoundaryFace(int elementID, int faceIndex)
++bool RawMesh::IsBoundaryFace(int elementID, int faceIndex)
+ {
+ 	int face[20];
+ 	GetElementFace(elementID, faceIndex, face);
+@@ -881,7 +888,7 @@
+ 	return;
+ }
+ 
+-inline void RawMesh::Rotate(double xRad, double yRad, double zRad, bool rotateAtCenter)
++void RawMesh::Rotate(double xRad, double yRad, double zRad, bool rotateAtCenter)
+ {
+ 	double rad[3];
+ 
+@@ -1111,7 +1118,7 @@
+ 	return *myEementProperty;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(double ** &matrix, int const dim1, int const dim2, double initialValue)
++bool RawMesh::InitiateMatrix(double ** &matrix, int const dim1, int const dim2, double initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1133,7 +1140,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(int ** &matrix, int const dim1, int const dim2, int initialValue)
++bool RawMesh::InitiateMatrix(int ** &matrix, int const dim1, int const dim2, int initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1210,7 +1217,7 @@
+ }
+ 
+ 
+-inline bool RawMesh::InitiateMatrix(bool ** &matrix, int const dim1, int const dim2, bool initialValue)
++bool RawMesh::InitiateMatrix(bool ** &matrix, int const dim1, int const dim2, bool initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1232,7 +1239,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(double * &matrix, int const dim, double initialValue)
++bool RawMesh::InitiateMatrix(double * &matrix, int const dim, double initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1247,7 +1254,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(bool * &matrix, int const dim, bool initialValue)
++bool RawMesh::InitiateMatrix(bool * &matrix, int const dim, bool initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1262,7 +1269,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(int * &matrix, int const dim, int initialValue)
++bool RawMesh::InitiateMatrix(int * &matrix, int const dim, int initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1277,7 +1284,7 @@
+ 	return true;
+ }
+ 
+-inline bool RawMesh::InitiateMatrix(double (* &matrix)[3], int const dim, double initialValue)
++bool RawMesh::InitiateMatrix(double (* &matrix)[3], int const dim, double initialValue)
+ {
+ 	if (matrix != NULL)
+ 		FreeMatrix(matrix);
+@@ -1296,7 +1303,7 @@
+ 	return true;
+ }
+ 
+-inline void RawMesh::FreeMatrix(double ** &matrix)
++void RawMesh::FreeMatrix(double ** &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1308,7 +1315,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(int ** &matrix)
++void RawMesh::FreeMatrix(int ** &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1320,7 +1327,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(bool ** &matrix)
++void RawMesh::FreeMatrix(bool ** &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1332,7 +1339,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(bool * &matrix)
++void RawMesh::FreeMatrix(bool * &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1343,7 +1350,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(double * &matrix)
++void RawMesh::FreeMatrix(double * &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1354,7 +1361,7 @@
+ 	return;	
+ }
+ 
+-inline void RawMesh::FreeMatrix(int * &matrix)
++void RawMesh::FreeMatrix(int * &matrix)
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -1366,7 +1373,7 @@
+ }
+ 
+ 
+-inline void RawMesh::FreeMatrix(double (* &matrix)[3])
++void RawMesh::FreeMatrix(double (* &matrix)[3])
+ {
+ 	if (matrix != NULL)
+ 	{
+@@ -4915,7 +4922,7 @@
+ 	return true;
+ }
+ 
+-inline void RawMesh::CrossProduct(double vector_1[3], double vector_2[3], double result[3])
++void RawMesh::CrossProduct(double vector_1[3], double vector_2[3], double result[3])
+ {
+ 	result[0] = vector_1[1]*vector_2[2] - vector_1[2]*vector_2[1];
+ 	result[1] = vector_1[2]*vector_2[0] - vector_1[0]*vector_2[2];
+@@ -4924,7 +4931,7 @@
+ 	return;
+ }
+ 
+-inline void RawMesh::CrossProduct(double point_1[3], double point_2[3], double point_3[3], double result[3])
++void RawMesh::CrossProduct(double point_1[3], double point_2[3], double point_3[3], double result[3])
+ {
+ 	double vector_1[3], vector_2[3];
+ 
+@@ -5544,7 +5551,7 @@
+ 	return;
+ }
+ 
+-inline void RawMesh::Normalize(double vector[3])
++void RawMesh::Normalize(double vector[3])
+ {
+ 	double sum;
+ 	
+--- a/HexGen/3-PARAMETRICMAPPING/src/cpp/physical_polycube.h
++++ b/HexGen/3-PARAMETRICMAPPING/src/cpp/physical_polycube.h
+@@ -1,7 +1,7 @@
+ ﻿#pragma once
+ #include <vector>
+ #include <fstream>
+-#include "rawmesh.h"
++#include "RawMesh.h"
+ #include "GeometricMethod.h"
+ #include "Eigen/Dense"
+ #include "Eigen/LU"
+--- a/HexGen/4-QUALITY/src/CMakeLists.txt
++++ b/HexGen/4-QUALITY/src/CMakeLists.txt
+@@ -73,7 +73,7 @@
+ IF(MSVC)
+ SET_TARGET_PROPERTIES(Quality PROPERTIES COMPILE_FLAGS "/MP")
+ ELSE(MSVC)
+-add_definitions(-boost_system -boost_filesystem)
++set(CMAKE_CXX_STANDARD 17)
+ ENDIF(MSVC)
+  
+ 
+--- a/HexGen/4-QUALITY/src/cpp/hex_quality.cpp
++++ b/HexGen/4-QUALITY/src/cpp/hex_quality.cpp
+@@ -739,7 +739,7 @@
+ 	string fld;
+ 	string fn_out;
+ 
+-	std::experimental::filesystem::path path_in = fn;
++	std::filesystem::path path_in = fn;
+ 	fld = path_in.parent_path().string();
+ 
+ 	size_t lastindex = fn.find_last_of(".");

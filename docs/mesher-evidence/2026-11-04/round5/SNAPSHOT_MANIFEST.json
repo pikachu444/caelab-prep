@@ -1,0 +1,2065 @@
+{
+  "schema_version": 1,
+  "purpose": "Selected byte-identical research evidence; not runtime assets",
+  "source_snapshot": "mesher_handoff_round5_20261104",
+  "files": [
+    {
+      "path": "CANDIDATE_CATALOG.csv",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/CANDIDATE_CATALOG.csv",
+      "bytes": 44041,
+      "sha256": "dc760c8e030d68a245cf39909d9f012724b1157c12ea42bec3f4141a578ac73e"
+    },
+    {
+      "path": "CANDIDATE_CATALOG.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/CANDIDATE_CATALOG.json",
+      "bytes": 74073,
+      "sha256": "d52124b9ce4dd5471d42b3691f98b23c49b00f220db134e8e3156882b2a8ba84"
+    },
+    {
+      "path": "EVIDENCE_SUMMARY.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/EVIDENCE_SUMMARY.json",
+      "bytes": 645845,
+      "sha256": "5e38a420955038c959180202259295e82a1ff9aed29498f8ffd2fba5beacea0c"
+    },
+    {
+      "path": "INDEPENDENT_RESULT_TABLE.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/INDEPENDENT_RESULT_TABLE.json",
+      "bytes": 4243,
+      "sha256": "a8949758c3aefe13cbff1b542a51f73e37272ebeb2efbfae30bd0584137040eb"
+    },
+    {
+      "path": "MESHER_CONSOLIDATED_REVIEW_KO.md",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/MESHER_CONSOLIDATED_REVIEW_KO.md",
+      "bytes": 60366,
+      "sha256": "0359c31e64c1c4242f0856f9cbd716126b003b23b640dd0d5e12380977ebafdb"
+    },
+    {
+      "path": "PREPARED_INPUT_QUALITY_TABLE.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/PREPARED_INPUT_QUALITY_TABLE.json",
+      "bytes": 7789,
+      "sha256": "821bcc735353886e0ce3fcdd278a5067d51a1355dc686df1f421be6d26081601"
+    },
+    {
+      "path": "REPOSITORY_AGENT_HANDOFF_KO.md",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/REPOSITORY_AGENT_HANDOFF_KO.md",
+      "bytes": 3574,
+      "sha256": "7a95d227354b97ef42b4f6153629e359506aca08592092e1725ecfcdf103257c"
+    },
+    {
+      "path": "RESULT_TABLE_SCOPES.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/RESULT_TABLE_SCOPES.json",
+      "bytes": 446,
+      "sha256": "46225b6ffa0271737fa222afc798f10e4f736c6c5dbd81a0ba9c734cf4780765"
+    },
+    {
+      "path": "ROUND5_ADDITIONAL_REVIEW_KO.md",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/ROUND5_ADDITIONAL_REVIEW_KO.md",
+      "bytes": 23959,
+      "sha256": "0558a2708f5196fe9b5ffadc36e11716e5cef08a53d0c29b0ae433171b711e9f"
+    },
+    {
+      "path": "assets/beam_hex80_transition.png",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/assets/beam_hex80_transition.png",
+      "bytes": 325401,
+      "sha256": "bff687da39f583f01c2edb281332e51063488d4bec50b960cc6eda108c2e36c4"
+    },
+    {
+      "path": "assets/mesquite_before_after.png",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/assets/mesquite_before_after.png",
+      "bytes": 46934,
+      "sha256": "603aa12c1cef93457047de889126d4120083a40477290443e070b567389810ea"
+    },
+    {
+      "path": "assets/occt_bottom_tethex_audit_v43_cad_mesh_cutaway.png",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/assets/occt_bottom_tethex_audit_v43_cad_mesh_cutaway.png",
+      "bytes": 1842353,
+      "sha256": "33f6c917e0f5ea6276a925e90c77b82ece2cd86fc05115b7e2a6ede595935cbf"
+    },
+    {
+      "path": "assets/practical_cad_overview.png",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/assets/practical_cad_overview.png",
+      "bytes": 765754,
+      "sha256": "8b2f6ee0e2df0fcf59d890b1535837011e25d96d64a6297d767170fde81e4fde"
+    },
+    {
+      "path": "evidence_round5/COMMON_INPUT_MANIFEST.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/COMMON_INPUT_MANIFEST.json",
+      "bytes": 2687,
+      "sha256": "59b8de4ee49176fb6ba12ba8cbaa868d32658be07618ecaec1e42ed938ae2324"
+    },
+    {
+      "path": "evidence_round5/REPRODUCTION_GUIDE.md",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/REPRODUCTION_GUIDE.md",
+      "bytes": 2811,
+      "sha256": "9901bb874d00277f5a788ad8fff4532a57d4ca731133776d8993b4e494ae917b"
+    },
+    {
+      "path": "evidence_round5/SEARCH_COVERAGE.md",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/SEARCH_COVERAGE.md",
+      "bytes": 2595,
+      "sha256": "85940d6e53b452ad97750cc0b456ad12e255fe7e2fdd47452c4be2ab1ddbfa76"
+    },
+    {
+      "path": "evidence_round5/audit_cinolib.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/audit_cinolib.py",
+      "bytes": 1560,
+      "sha256": "a01aab6228948778e6b68618c136c8da535369e42b9a5852fdd1d2da6fbc0bac"
+    },
+    {
+      "path": "evidence_round5/audit_cinolib_fixed.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/audit_cinolib_fixed.py",
+      "bytes": 1566,
+      "sha256": "337028ef4e7669a3175d8787e7132cac32751b2527f27ba4770c5705e2499da2"
+    },
+    {
+      "path": "evidence_round5/audit_smesh_poly.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/audit_smesh_poly.py",
+      "bytes": 2768,
+      "sha256": "c66501cf8da4dfe820f1d71eacbbbfa90d5a3dc604f8ab9b0561b7d3b70bef51"
+    },
+    {
+      "path": "evidence_round5/build_remaining.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/build_remaining.py",
+      "bytes": 2580,
+      "sha256": "78b6e8d0caf549fa0cd7cddbcc3c30aa7b09a580f74991e70ee9f55553f499e3"
+    },
+    {
+      "path": "evidence_round5/cinolib_driver.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/cinolib_driver.cpp",
+      "bytes": 1152,
+      "sha256": "ea16789d3a5f2f64e2b3ce19f6880062f1e247ac6237bba167cc823e337f704a"
+    },
+    {
+      "path": "evidence_round5/common_inputs/drivelink_housing/metadata.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/common_inputs/drivelink_housing/metadata.json",
+      "bytes": 23831,
+      "sha256": "4d35e963ca33dc9b22de473f84e3c4d6d4b881619806f75c6040f4c1f6790ea5"
+    },
+    {
+      "path": "evidence_round5/common_inputs/occt_bottom/metadata.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/common_inputs/occt_bottom/metadata.json",
+      "bytes": 26634,
+      "sha256": "f6d43d3bcc408d45f225e561089f7263a7e5cb0e763b952b7ce65a8f4d3b51c3"
+    },
+    {
+      "path": "evidence_round5/common_inputs/voron_cw2_mainbody/metadata.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/common_inputs/voron_cw2_mainbody/metadata.json",
+      "bytes": 29580,
+      "sha256": "468fda205308de42d7ee1a68bd328252ead14ef6059ddeafc375fa1fe3d58fce"
+    },
+    {
+      "path": "evidence_round5/common_inputs/voron_dragon/metadata.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/common_inputs/voron_dragon/metadata.json",
+      "bytes": 33182,
+      "sha256": "4c12bcfe0ad7e0bddf1e0b48cbff9bb3bed854ad02aa5363f84b246f962856ff"
+    },
+    {
+      "path": "evidence_round5/fieldcraft_canary.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/fieldcraft_canary.py",
+      "bytes": 3219,
+      "sha256": "16da79700f993b38c7a3b0861c0191ce54da878d08f97b91bee0199f6eca8f62"
+    },
+    {
+      "path": "evidence_round5/fieldcraft_extract.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/fieldcraft_extract.py",
+      "bytes": 1413,
+      "sha256": "4e8c5c03a8db554ec538b9d038cdde010db1ef0244eeaa2d71e41370442608a4"
+    },
+    {
+      "path": "evidence_round5/finalize_round5_package.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/finalize_round5_package.py",
+      "bytes": 2837,
+      "sha256": "8ac1d2340995bc38e99e194d1a9afd06f155e01f0beefc32aa2e0c537431bf6f"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/audit_round3_v2.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/audit_round3_v2.py",
+      "bytes": 10489,
+      "sha256": "d58639078b2b051e4523163f4c5dc51a81c620d0d843523135a714fb637c11af"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/audit_round4_v43_frozen.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/audit_round4_v43_frozen.py",
+      "bytes": 9225,
+      "sha256": "7e2351da3a3306ced5d61e17278a93254248f47b0978df93a562957685114c4c"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/base_audit.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/base_audit.py",
+      "bytes": 13110,
+      "sha256": "ffa236ac0b52864d2c4106cd719498241957a17c5775c9e644b4d00afe3751c2"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/boundary_build_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/boundary_build_provenance.json",
+      "bytes": 1081,
+      "sha256": "651a01c04c8da14a936750dc165cc2c081e016a1aca000daab648fea1a01aec8"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/build_boundary_query.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/build_boundary_query.py",
+      "bytes": 3005,
+      "sha256": "ddab6f2e5f5f48d157769b61cbb97e74dd5f7c660fbc3cb041e14f1f15788e02"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/build_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/build_provenance.json",
+      "bytes": 1064,
+      "sha256": "7e54b96fbaab2c18f0ea09e66d1a2897b3cb6453393feba911febbb2f0bb36c6"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/cached_boundary_distance.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/cached_boundary_distance.py",
+      "bytes": 3098,
+      "sha256": "ee0703ca707ef933f9544fcbf56980ff5e93e2e7ad025861edef5d5bbe8de3ef"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/cached_classifier.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/cached_classifier.py",
+      "bytes": 3116,
+      "sha256": "ea176e8c2a7d073d1c7ed86087e64f71a9b9c1d2731cf517173361b508aa351f"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/cad_boundary_query.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/cad_boundary_query.cpp",
+      "bytes": 4791,
+      "sha256": "e4e55a02c103f422c9eff16fbb86edfd5fbe55328509402576808c63950d4841"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/cad_prepare.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/cad_prepare.cpp",
+      "bytes": 6981,
+      "sha256": "42c67de38067ec3457a768075854eca6ca6bc4a4498db7f0eaff6d81973a63eb"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/cad_prepare_detailed.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/cad_prepare_detailed.cpp",
+      "bytes": 7931,
+      "sha256": "cdaee4810c1e795e27bb8ebefeee055c9c68dd58164efc808d665b90b66a9099"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/cad_query.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/cad_query.cpp",
+      "bytes": 4127,
+      "sha256": "570b460fd895cbc9c326db23ff25698a1c7e859d13f5d59d9690ca805e746849"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/cad_repair_experimental.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/cad_repair_experimental.cpp",
+      "bytes": 9026,
+      "sha256": "680ec8b6aea130161005ee08c5cac3a3720149d156757c24aa2432eb357afefd"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/cad_repair_experimental_v2.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/cad_repair_experimental_v2.cpp",
+      "bytes": 9152,
+      "sha256": "ccff4c2e9c74e8897482b51c6ac39cec523fe2b131c86853ef65210e4c04e89f"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/cad_sameparameter_control.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/cad_sameparameter_control.cpp",
+      "bytes": 11109,
+      "sha256": "3fdbe4230e03fd6422b0757e20b6cc68f89123703f1643d39be094c8edf63b7c"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/cad_triangulate_double.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/cad_triangulate_double.cpp",
+      "bytes": 10090,
+      "sha256": "d5b0ee6a23abc3b438c0157a45b79c111262eb0814efefd38ee2b479a7a1f880"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/cad_triangulate_precise.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/cad_triangulate_precise.cpp",
+      "bytes": 10321,
+      "sha256": "710ca09407ea8b94b45dc923db14e0d4f00cd776d16ac1b77d3c1d787639294c"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/detailed_build_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/detailed_build_provenance.json",
+      "bytes": 1118,
+      "sha256": "c3ac286bc9aa50af2d45d027ee12aec3a346f463230f997914945cb188b4ddd2"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/drivelink_housing_validity.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/drivelink_housing_validity.json",
+      "bytes": 872,
+      "sha256": "c4f23e9280a1e97d86bf1fa38b7ab1bc8b0480dd3d793beff1b71b53c514fbb4"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/drivelink_housing_validity_detailed.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/drivelink_housing_validity_detailed.json",
+      "bytes": 877,
+      "sha256": "c14563163858c4616795cb614093c107e45b4e2122f02ba5fdace52af723e791"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/occt_bottom_validity_detailed.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/occt_bottom_validity_detailed.json",
+      "bytes": 852,
+      "sha256": "8f4b66b1bfd01f1cdc8bc21fd1110922d261463dd03982decfed88718671d884"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/prepare_build_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/prepare_build_provenance.json",
+      "bytes": 1100,
+      "sha256": "d6171ac8be43250acd277f37e7942afa2bb4d0ec3d9d33db7bcb06de09eff37d"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/repair_build_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/repair_build_provenance.json",
+      "bytes": 1146,
+      "sha256": "e0acec17e459286e1c8bd5dea37bb215e7c374999a8bef8b4516b43f1236e01e"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/repair_trials.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/repair_trials.py",
+      "bytes": 1611,
+      "sha256": "6d7daa350dd1c7939d13cc3c20255e59cda4411a8e5caff73ac2e811aba9965c"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/repair_v2_build_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/repair_v2_build_provenance.json",
+      "bytes": 1152,
+      "sha256": "c67241806d4571c19437808075cb17f5b63082d4a923dffbaf1181f8511938c3"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/run_native_preparation.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/run_native_preparation.py",
+      "bytes": 1956,
+      "sha256": "8e2096a6aa3ef35402c5f77294bbeb5446bc519f8fe99c879f59d8774fe440b7"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/run_sameparameter_control.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/run_sameparameter_control.py",
+      "bytes": 1514,
+      "sha256": "13c64f6dd48227cb72e693825f7fed8eb505bb9d4529d9822f6f4343f0732816"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/sameparameter_build_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/sameparameter_build_provenance.json",
+      "bytes": 1128,
+      "sha256": "637f31c0af05ff66864dec46d08d71f48e98a81bdbe8dc31babe38da14508677"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/selected_component_stats.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/selected_component_stats.json",
+      "bytes": 785,
+      "sha256": "9b353019a336fae3c45c3acb31b4df20ce19877677885447f39dc2710f00316f"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/triangulate_double_build_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/triangulate_double_build_provenance.json",
+      "bytes": 1121,
+      "sha256": "4352988d16de0a14b38780b7392f2247af52d064fddd1b4b3c5e2b6b41242b61"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/triangulate_precise_build_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/triangulate_precise_build_provenance.json",
+      "bytes": 1124,
+      "sha256": "1dfa7eae875e9aabf85950756d519e96b7dbd005f6f5e26db0bd6b9b0b32cfc8"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/validate_boundary_hole.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/validate_boundary_hole.py",
+      "bytes": 1184,
+      "sha256": "fb122c0697fe44e856dc46828a2ac2980e1ea64eed995d65c402c8d2bd93b235"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/validate_boundary_query.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/validate_boundary_query.py",
+      "bytes": 2919,
+      "sha256": "f6811ca264f43096ef9e2f59f84ec177c4b7af8b4501c6fbfde6eab481a8983a"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/validation.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/validation.json",
+      "bytes": 880,
+      "sha256": "490b90f65f7d5b2f7ca76c9e0761674b00c182247869b30922d00704248f46ba"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/voron_cw2_mainbody_native_validity_detailed.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/voron_cw2_mainbody_native_validity_detailed.json",
+      "bytes": 1304,
+      "sha256": "7ec65ddfc885bcaf9a8d76c5811d81a49e2301831cf7dab804e67370fd42b0b4"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/voron_dragon_validity.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/voron_dragon_validity.json",
+      "bytes": 869,
+      "sha256": "a92459824157d6864b1f009738c8f427b3437592e6c4f42c4ca0a3da5b211a0b"
+    },
+    {
+      "path": "evidence_round5/frozen_audit/voron_dragon_validity_detailed.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/frozen_audit/voron_dragon_validity_detailed.json",
+      "bytes": 1495,
+      "sha256": "85a1ded263487b80081acf5d4381398a1c341a27fea5f071661498bc882c3457"
+    },
+    {
+      "path": "evidence_round5/licenses/Mesquite230_lgpl.txt",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/licenses/Mesquite230_lgpl.txt",
+      "bytes": 26500,
+      "sha256": "242e0cafa92039a5058ecd3a0168d1b4ac8193e37e042e8a9a3359babc528e1f"
+    },
+    {
+      "path": "evidence_round5/licenses/meshioplusplus_LICENSE-BINARIES.md",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/licenses/meshioplusplus_LICENSE-BINARIES.md",
+      "bytes": 1812,
+      "sha256": "5b1750a5686fd027b1e92656ab3294ae695c72e24c6521770610859eee1e0045"
+    },
+    {
+      "path": "evidence_round5/licenses/mymesh_LICENSE.md",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/licenses/mymesh_LICENSE.md",
+      "bytes": 1077,
+      "sha256": "6d8998404a4fedc0af68d54224cf98f781ad869c11a8ddb127681656ce5d27ef"
+    },
+    {
+      "path": "evidence_round5/logs/C4HexMeshing_clone.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/C4HexMeshing_clone.json",
+      "bytes": 222,
+      "sha256": "00450deae76736c2df27c960c405de74a083da76b47d0e2983ca1acfac6735e7"
+    },
+    {
+      "path": "evidence_round5/logs/C4HexMeshing_clone.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/C4HexMeshing_clone.log",
+      "bytes": 1476,
+      "sha256": "0dbb6e30cfd0f8a9f9a064e47b36f4e4f1ddd4bc79a343ba9d26991048bfb9e9"
+    },
+    {
+      "path": "evidence_round5/logs/HexGen_Hex2Spline_clone.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/HexGen_Hex2Spline_clone.json",
+      "bytes": 225,
+      "sha256": "07c42d992721127377d7337b2eaa8490c9c37b3f6b8cece41252101ffe7f23fa"
+    },
+    {
+      "path": "evidence_round5/logs/HexGen_Hex2Spline_clone.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/HexGen_Hex2Spline_clone.log",
+      "bytes": 3192,
+      "sha256": "887a9ecd459f869f7658f3ae2563728b514db7dded3351c02dbc469d2c712fa5"
+    },
+    {
+      "path": "evidence_round5/logs/Medial-HexMeshing_clone.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/Medial-HexMeshing_clone.json",
+      "bytes": 227,
+      "sha256": "9e0ee693deeb59817ca4462ef659835768a341e6da42b21fcbb696a735cadac1"
+    },
+    {
+      "path": "evidence_round5/logs/Medial-HexMeshing_clone.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/Medial-HexMeshing_clone.log",
+      "bytes": 95,
+      "sha256": "eb1bf4fdafa94f15d05a7fe16d37c27c4eda221673c4637679dbf2ce698defd7"
+    },
+    {
+      "path": "evidence_round5/logs/RELEASE_AND_ENVIRONMENT.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/RELEASE_AND_ENVIRONMENT.json",
+      "bytes": 1027,
+      "sha256": "689b76db6bb87b5807ec3366730a90ade617847de40b39aca65ec25b4dd9541b"
+    },
+    {
+      "path": "evidence_round5/logs/ReadMe_HBECVT_Segmentation.txt",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/ReadMe_HBECVT_Segmentation.txt",
+      "bytes": 1596,
+      "sha256": "1b2c6bca73891ff66222ffe0dba5ba0199c79b8e63e65992adae606798973a10"
+    },
+    {
+      "path": "evidence_round5/logs/ReadMe_ParametricMapping.txt",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/ReadMe_ParametricMapping.txt",
+      "bytes": 1848,
+      "sha256": "6dbbe408fcebb9e242b10ec1c42cd474db9c7c0cbd1ea03dbdf81c37d27dbff0"
+    },
+    {
+      "path": "evidence_round5/logs/ReadMe_Polycube.txt",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/ReadMe_Polycube.txt",
+      "bytes": 1839,
+      "sha256": "94adc57aad750613f6d937dae2f3e4dded68cf2bdbb7b10b7082db773731b31c"
+    },
+    {
+      "path": "evidence_round5/logs/ReadMe_Quality.txt",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/ReadMe_Quality.txt",
+      "bytes": 1591,
+      "sha256": "75c51bbe987bf60f686dcc8e8e93bc6093847895f9f24d09220514b518f637fb"
+    },
+    {
+      "path": "evidence_round5/logs/c4_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_build.json",
+      "bytes": 328,
+      "sha256": "c2ac5daebb60f687b66604a02e4518a123659395228e91cf799023ed2af933fd"
+    },
+    {
+      "path": "evidence_round5/logs/c4_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_build.log",
+      "bytes": 12983,
+      "sha256": "38bd91033d50df3d072d4714a953163ad12ae260980b3ded798423585c209ba1"
+    },
+    {
+      "path": "evidence_round5/logs/c4_build2.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_build2.json",
+      "bytes": 328,
+      "sha256": "222da855bc6bd077febed1444b1dca9428e0a14dc43457d9940aba71e4e513ac"
+    },
+    {
+      "path": "evidence_round5/logs/c4_build2.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_build2.log",
+      "bytes": 3032,
+      "sha256": "bd59be32a3aa4b47cefe161627b2adec8e3d5984065261a0c9834f7ddda0f389"
+    },
+    {
+      "path": "evidence_round5/logs/c4_configure.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_configure.json",
+      "bytes": 742,
+      "sha256": "163d82edccb532079055d5476b1234c6f9c9d12b22abb8d73c78a61bbb68299d"
+    },
+    {
+      "path": "evidence_round5/logs/c4_configure.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_configure.log",
+      "bytes": 12296,
+      "sha256": "e4f4b7e8da76445600cd84e3cb7bdfa29e5007ac97ed90542cf4f5482a1070af"
+    },
+    {
+      "path": "evidence_round5/logs/c4_configure2.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_configure2.json",
+      "bytes": 664,
+      "sha256": "16e11f094fdb54bbf070b7dda82fb65e84831fb70be53cfda90225c7d7129155"
+    },
+    {
+      "path": "evidence_round5/logs/c4_configure2.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_configure2.log",
+      "bytes": 7489,
+      "sha256": "a0485418708448d598aaa44173cdbc46d45b51ff86b643da4135c3bf893a3233"
+    },
+    {
+      "path": "evidence_round5/logs/c4_configure3.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_configure3.json",
+      "bytes": 1222,
+      "sha256": "1c197e51c2814e4ddd7e45940f18d45fb8e2919da65db9f6dcf9cda9805e116e"
+    },
+    {
+      "path": "evidence_round5/logs/c4_configure3.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_configure3.log",
+      "bytes": 6319,
+      "sha256": "a22acef952a3d529c972368aec7e80cfc6c32533948f71da2d690ad2f0e01d71"
+    },
+    {
+      "path": "evidence_round5/logs/c4_configure4.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_configure4.json",
+      "bytes": 679,
+      "sha256": "673938873f3b15abc5841a6bed27a05c15f147482694ab899d4f946532140cad"
+    },
+    {
+      "path": "evidence_round5/logs/c4_configure4.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/c4_configure4.log",
+      "bytes": 6591,
+      "sha256": "2c5e4bd4fde8141601bc3d17356e8d1ccaac7450128a3f677f8ce09526b5072e"
+    },
+    {
+      "path": "evidence_round5/logs/cinolib_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/cinolib_build.json",
+      "bytes": 478,
+      "sha256": "320a46654236839289e17be0c6929c910e51677f9070141ae93f7346e89a3202"
+    },
+    {
+      "path": "evidence_round5/logs/cinolib_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/cinolib_build.log",
+      "bytes": 4276,
+      "sha256": "347e47df85cc316aaf6b8b254d89e191069a1087dffc214a1029290480f02a8d"
+    },
+    {
+      "path": "evidence_round5/logs/cinolib_clone.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/cinolib_clone.json",
+      "bytes": 204,
+      "sha256": "382c698e2e429961ea8807b0f26a53775c00fa17c0baa0d3d597228499064dd8"
+    },
+    {
+      "path": "evidence_round5/logs/cinolib_clone.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/cinolib_clone.log",
+      "bytes": 224,
+      "sha256": "f0b2f0068583666e53caceea333ec8e2838f04030937d2c24c29def05cf0fb01"
+    },
+    {
+      "path": "evidence_round5/logs/cinolib_fixed_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/cinolib_fixed_build.json",
+      "bytes": 516,
+      "sha256": "3760cb0ab244611c1c254542a041f304852bd126600d041c10e0abbbbc2de39d"
+    },
+    {
+      "path": "evidence_round5/logs/cinolib_fixed_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/cinolib_fixed_build.log",
+      "bytes": 4276,
+      "sha256": "347e47df85cc316aaf6b8b254d89e191069a1087dffc214a1029290480f02a8d"
+    },
+    {
+      "path": "evidence_round5/logs/cinolib_init.patch",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/cinolib_init.patch",
+      "bytes": 627,
+      "sha256": "0c00df42d89b264743145c7a2c64eb60a30eb58147d532fbb7c836f784a6dd53"
+    },
+    {
+      "path": "evidence_round5/logs/eigen_configure.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/eigen_configure.json",
+      "bytes": 557,
+      "sha256": "5e20173fb6f0d526126301e12b49853abdb8e18ba1c50373a14c66253542ad07"
+    },
+    {
+      "path": "evidence_round5/logs/eigen_configure.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/eigen_configure.log",
+      "bytes": 6363,
+      "sha256": "0ed27dddf7d28f91916572aae54f197885365d9493b19053220b6da2ba03a4a7"
+    },
+    {
+      "path": "evidence_round5/logs/eigen_install.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/eigen_install.json",
+      "bytes": 314,
+      "sha256": "2ea1e8a5cea1667773bb156b3067585c03b6394851ca31aa8f3f15e443384efc"
+    },
+    {
+      "path": "evidence_round5/logs/eigen_install.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/eigen_install.log",
+      "bytes": 82823,
+      "sha256": "393f67550da690d356369855f0cc27e52697d939373146624c3abdd4edced79f"
+    },
+    {
+      "path": "evidence_round5/logs/fieldcraft_release_tag_fetch.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/fieldcraft_release_tag_fetch.log",
+      "bytes": 91,
+      "sha256": "b5d2d76ae9a498e6f45e1a27a926f30723bae8610a62403866bfc3a2fb1daa4a"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_configure.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_configure.json",
+      "bytes": 616,
+      "sha256": "2b82aa20248e203a5a0f5d75013ea99607ce952707a7d83915aefde1fec89460"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_configure.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_configure.log",
+      "bytes": 1188,
+      "sha256": "de6af60c5ce1bec279daa4b593f7ae0391377873a118aa59619b187b5d8a43f9"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_original_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_original_build.json",
+      "bytes": 344,
+      "sha256": "46ca76c7fb648ab26a2751b13cb694578d3dca05e307599c85fddd6325345b14"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_original_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_original_build.log",
+      "bytes": 827,
+      "sha256": "027ad30de20c849d05d17742a38d2012aad40949d605a0299bd64bec43225ae4"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_portable2_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_portable2_build.json",
+      "bytes": 69,
+      "sha256": "f1e3386872d30f5a87ff2cb9a67b59e301b1480ab2da49d6e9b6db2b54d71317"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_portable2_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_portable2_build.log",
+      "bytes": 34033,
+      "sha256": "e28c794a9b6f13c9136faf013c85b27cc0e7169da09427711a1cfa7415bbc960"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_portable3_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_portable3_build.json",
+      "bytes": 340,
+      "sha256": "cc1ed2f22d1f9febc93982b16c95a46a3289696aa40183d29e10930fc863475b"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_portable3_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_portable3_build.log",
+      "bytes": 31839,
+      "sha256": "e385b1b20ae213573fb773a155658efe1d08c81e2d0e497370160f29522dd5ed"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_portable4_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_portable4_build.json",
+      "bytes": 341,
+      "sha256": "027665ef8e57174acf29916396032f0924f9f5abb2a640505b9974846b6e1f81"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_portable4_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_portable4_build.log",
+      "bytes": 31395,
+      "sha256": "028adcb907015205733e30b159885050a986f2d9a7422458c6b49c9db62edb6a"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_portable_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_portable_build.json",
+      "bytes": 345,
+      "sha256": "5727e8846c28063cadc0b1d43e098c206cf72cfbc21915f970dc6a6dc5e679f7"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_1-HBECVT_portable_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_1-HBECVT_portable_build.log",
+      "bytes": 1761,
+      "sha256": "d31cd18ef49136881f08ee1cee72aad7888e702af9b61871087447c7a8f4cdf8"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_configure.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_configure.json",
+      "bytes": 622,
+      "sha256": "cab03142f52a50858b878bd9ada7f12a01a22e1e49f252a30632e85d44c793d1"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_configure.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_configure.log",
+      "bytes": 1190,
+      "sha256": "cfe6a14317a836e488bc23759492527d009ad32af7df50489c9f714831f7b198"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_original_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_original_build.json",
+      "bytes": 349,
+      "sha256": "9bea9e892b85edf192da7389209a5ff3e86eacfde3464c61c2694c2baea0aad2"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_original_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_original_build.log",
+      "bytes": 773,
+      "sha256": "7d160f59051f9b8a565cbc21886c51ee066c54592a61b80698e1835236964aea"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_portable2_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_portable2_build.json",
+      "bytes": 71,
+      "sha256": "8d304cb35d9d2e808e0ea197dde3b24163a506e2aa016a07044ae42bff2c385d"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_portable2_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_portable2_build.log",
+      "bytes": 33485,
+      "sha256": "8b857e66f379cb276893fbf7efac025645002b8f9e8ae9938d0622e7759ea242"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_portable3_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_portable3_build.json",
+      "bytes": 342,
+      "sha256": "9b8bf70828a3099577b0406134476172e00e5b492f17be4b829f9a13b8670a2e"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_portable3_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_portable3_build.log",
+      "bytes": 33759,
+      "sha256": "e0763026def859709871da1b4322c89f0ff0c4b4daa710a4f5458c7a7efe8fdf"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_portable4_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_portable4_build.json",
+      "bytes": 342,
+      "sha256": "e2be5883158b5a75e7d180447c6c8707de389a54505140633fe920f45d0332df"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_portable4_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_portable4_build.log",
+      "bytes": 31541,
+      "sha256": "266b1804ff2d2a6b5a299da60fc3fe1ac76491d77fcef9559783383e649683a7"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_portable_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_portable_build.json",
+      "bytes": 349,
+      "sha256": "f9301e968ccfe33b6068f7629859d4b6f57a2b1a14b1ac51d308498d37b5c981"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_2-POLYCUBE_portable_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_2-POLYCUBE_portable_build.log",
+      "bytes": 1826,
+      "sha256": "ab390f7c3ce4ba61223d3ace43f52cade002d94390b0de4bf323df42ad172a3f"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_configure.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_configure.json",
+      "bytes": 650,
+      "sha256": "40b987e43341f95f7dab91c2a60fec431128144a3a31115c8cdd98bb7e43f15f"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_configure.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_configure.log",
+      "bytes": 1199,
+      "sha256": "251eacee3fd6872e859e16137d37bc16c694ad26b92b839029c7da068a8acff4"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_original_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_original_build.json",
+      "bytes": 367,
+      "sha256": "b192491b7fbf3bd13cb2c88cf3c62144f31e4ccbc898b69f17c2d3a37cac00b4"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_original_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_original_build.log",
+      "bytes": 860,
+      "sha256": "63182a87dedbd2b3d1c4ea6bb5980d8cb3c855f1049bd6fe309f70efe8376d15"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable2_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable2_build.json",
+      "bytes": 79,
+      "sha256": "743bad1830115690056c253985026c9a160b1d46cc53051e2fac0dc89e81e543"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable2_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable2_build.log",
+      "bytes": 31911,
+      "sha256": "5ccb8e9611e3d2a33b153cb9db386e9b828a3486ba989fe516a0e268042b576a"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable3_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable3_build.json",
+      "bytes": 351,
+      "sha256": "e494ac124e89b45ae6a8d4eb1971829f5a3e251191171ba1328933c2cb3da807"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable3_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable3_build.log",
+      "bytes": 38577,
+      "sha256": "1a39beefdacbe086aebf50e0ec3476a7c385ac020883b5b3dccfc6920a3546d9"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable4_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable4_build.json",
+      "bytes": 351,
+      "sha256": "a244a06703d2a3ce17a9e6c6fc931e0c440ea3cb3d383b80524304929bd7ab55"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable4_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable4_build.log",
+      "bytes": 32279,
+      "sha256": "b7e35b78f752c1e07f08db36c328630df8c8b518debf4183e747ad2f5cf2c19c"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable_build.json",
+      "bytes": 366,
+      "sha256": "bfac0583a6dc6315e8577203ba509be1c4249333f9df8939b5e06873db99e1fe"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_3-PARAMETRICMAPPING_portable_build.log",
+      "bytes": 1718,
+      "sha256": "22f4e2bd9c079b471718be87ff33e50571ab83225b83805825585ab37580907e"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_4-QUALITY_configure.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_4-QUALITY_configure.json",
+      "bytes": 620,
+      "sha256": "d1bc36293eaff4e828c00a3ababe7f8927cde4ccec9eeafc0feefe9cf591928f"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_4-QUALITY_configure.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_4-QUALITY_configure.log",
+      "bytes": 1189,
+      "sha256": "0c784092ecb670b7d729126946eeaf6c9b033fe088fca0695bc5ffa590670e32"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_4-QUALITY_original_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_4-QUALITY_original_build.json",
+      "bytes": 346,
+      "sha256": "619725c9029682005f997f6f631633580eed680c946882977c6dbda83a9d4172"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_4-QUALITY_original_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_4-QUALITY_original_build.log",
+      "bytes": 800,
+      "sha256": "6d0d928382bf4fa10dbf98ec545aa7c34025fd23dd8f249c36e15570dda303b1"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_4-QUALITY_portable2_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_4-QUALITY_portable2_build.json",
+      "bytes": 70,
+      "sha256": "1c8af2b74107f37f3e3fa7a84832b00e887668d3c6b4521366543a1c91f72d69"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_4-QUALITY_portable2_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_4-QUALITY_portable2_build.log",
+      "bytes": 3494,
+      "sha256": "fb326b9208d3e4109770984caeda50ac8fb03beb05b9d9a25e5588fb06efcd83"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_4-QUALITY_portable_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_4-QUALITY_portable_build.json",
+      "bytes": 344,
+      "sha256": "0af986881e736f73a92aa933c70d31030651badeaf2487ca166ab1d73c14a966"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_4-QUALITY_portable_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_4-QUALITY_portable_build.log",
+      "bytes": 3659,
+      "sha256": "98518783ad56a9b1d1f4bb8f9750715c0e8e4b62aadba7152be0f7c42edf8500"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_patch_note.md",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_patch_note.md",
+      "bytes": 366,
+      "sha256": "0c1368eb465fb2b2e6428b2c31355b4d5b2d052d5272d7d47c5f37200f79d95d"
+    },
+    {
+      "path": "evidence_round5/logs/hexgen_portability_semantic_LF.patch",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/hexgen_portability_semantic_LF.patch",
+      "bytes": 18790,
+      "sha256": "bba389caec5cbdbf9565eacd5c1c204d16ca0695ce389a7af19fd1219ba3c1ae"
+    },
+    {
+      "path": "evidence_round5/logs/meshioplusplus_clone.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/meshioplusplus_clone.json",
+      "bytes": 313,
+      "sha256": "6244dfdf8d9058fb55b8990857a48effc3fe80206a40bf1cb2dc150b3177d383"
+    },
+    {
+      "path": "evidence_round5/logs/meshioplusplus_clone.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/meshioplusplus_clone.log",
+      "bytes": 8982,
+      "sha256": "6c0967d7e3a089c2db5be788530526476cf3f4ce8ccc026b039e50321abcda6e"
+    },
+    {
+      "path": "evidence_round5/logs/meshioplusplus_writer_workaround.md",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/meshioplusplus_writer_workaround.md",
+      "bytes": 360,
+      "sha256": "e52f84838b42f5a522942772d6458a03d8978163bdd50a9fbc8d615b31373afb"
+    },
+    {
+      "path": "evidence_round5/logs/mesquite_autoconf_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mesquite_autoconf_build.json",
+      "bytes": 115,
+      "sha256": "79e7fee41ddc9d68c6a13297e531be311e58994f7a17469b77e789982a25ec47"
+    },
+    {
+      "path": "evidence_round5/logs/mesquite_autoconf_configure.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mesquite_autoconf_configure.json",
+      "bytes": 391,
+      "sha256": "f56e258f8805ffe155676bdfe95a3793cdf3c42a63716ec6c675342d83e3046d"
+    },
+    {
+      "path": "evidence_round5/logs/mesquite_autoconf_configure.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mesquite_autoconf_configure.log",
+      "bytes": 8477,
+      "sha256": "622f841c988572eb8731eff3b44745edc7e58979705fcd8bdbfb2f254cda9b35"
+    },
+    {
+      "path": "evidence_round5/logs/mesquite_clone.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mesquite_clone.json",
+      "bytes": 297,
+      "sha256": "3053342f2cb59da09ccdfc984e7db09f8f99b6376950de3cbe60649b67a76b84"
+    },
+    {
+      "path": "evidence_round5/logs/mesquite_clone.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mesquite_clone.log",
+      "bytes": 1611,
+      "sha256": "8169c44f61319cb814a0c57617d28f480f7430616c6ac8f3a85f97ad39f937ba"
+    },
+    {
+      "path": "evidence_round5/logs/mesquite_configure.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mesquite_configure.json",
+      "bytes": 662,
+      "sha256": "fa14c5d854554fc926ea3853ed49a5c9bb07a1d2de3987d5f9c46c615564f57d"
+    },
+    {
+      "path": "evidence_round5/logs/mesquite_configure.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mesquite_configure.log",
+      "bytes": 1935,
+      "sha256": "78f50189d81ee355b7f12cc32b0bab92b348ac85eb76eb22c06f633687902d65"
+    },
+    {
+      "path": "evidence_round5/logs/mesquite_driver_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mesquite_driver_build.json",
+      "bytes": 489,
+      "sha256": "33e93d8a7a92433a31153341095f2ed57309274b4f0b99ff27c962e99eaefa8d"
+    },
+    {
+      "path": "evidence_round5/logs/mesquite_driver_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mesquite_driver_build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence_round5/logs/mesquite_install.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mesquite_install.json",
+      "bytes": 120,
+      "sha256": "15a68746f79116a93ebe67439e2f5cb092a7c266053c087e911bbff8ec5a046f"
+    },
+    {
+      "path": "evidence_round5/logs/mesquite_install.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mesquite_install.log",
+      "bytes": 57771,
+      "sha256": "52535f585a67e8b73b59cf097bba862ae10b8e461bc5e34548eaa26da89ce76a"
+    },
+    {
+      "path": "evidence_round5/logs/mymesh_clone.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mymesh_clone.json",
+      "bytes": 290,
+      "sha256": "390b3647d541e3923a1de439a8f9c77487b113d6fd1f688595fc2349727b6671"
+    },
+    {
+      "path": "evidence_round5/logs/mymesh_clone.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/mymesh_clone.log",
+      "bytes": 84,
+      "sha256": "34ee0f891490ab6b0a66fcddf5c2d672dc35f8b2123daea6d3af433841072d92"
+    },
+    {
+      "path": "evidence_round5/logs/smesh_cartesian_build.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/smesh_cartesian_build.json",
+      "bytes": 3118,
+      "sha256": "8f4212cbd23915a10a2a71f070adc079e32290f84d0c01ab88a2567394a5d589"
+    },
+    {
+      "path": "evidence_round5/logs/smesh_cartesian_build.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/smesh_cartesian_build.log",
+      "bytes": 2281,
+      "sha256": "27ee9a1b8b686c84a73267eaa267e8ce0cbe2d069d932c124f036fa07c89a628"
+    },
+    {
+      "path": "evidence_round5/logs/smesh_cartesian_build2.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/smesh_cartesian_build2.json",
+      "bytes": 3197,
+      "sha256": "70633b8b5ea99a2d3cceb3e4c2c3b77840db8e1f71bc081c16ea9dabf5d971a9"
+    },
+    {
+      "path": "evidence_round5/logs/smesh_cartesian_build2.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/smesh_cartesian_build2.log",
+      "bytes": 1953,
+      "sha256": "27d9e1c6c6cd98d53287aaf55a7f63b8db83d8480491e6a6f6b35ccedfd71a22"
+    },
+    {
+      "path": "evidence_round5/logs/source_inventory.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/logs/source_inventory.json",
+      "bytes": 5240,
+      "sha256": "62b2d96375034555f781aecbbbb381ea69e72203c59b87d75bdfcad2857b27c8"
+    },
+    {
+      "path": "evidence_round5/meshioplusplus_worker.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/meshioplusplus_worker.py",
+      "bytes": 662,
+      "sha256": "24fe3e03da445083d6482e16f9be8a72616a8c283928843d071b9aeba228b1ce"
+    },
+    {
+      "path": "evidence_round5/meshioplusplus_worker_arrays.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/meshioplusplus_worker_arrays.py",
+      "bytes": 1227,
+      "sha256": "45628dd0ed910b9341434be6d904394b9a5bea5c1d51698f6b685fb35bfcc9e2"
+    },
+    {
+      "path": "evidence_round5/meshioplusplus_worker_retry.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/meshioplusplus_worker_retry.py",
+      "bytes": 1227,
+      "sha256": "45628dd0ed910b9341434be6d904394b9a5bea5c1d51698f6b685fb35bfcc9e2"
+    },
+    {
+      "path": "evidence_round5/mesquite_driver.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/mesquite_driver.cpp",
+      "bytes": 648,
+      "sha256": "e8cd8207eb90036fb878fcabc5754d474be100e61451a53fc576d55a3439d00c"
+    },
+    {
+      "path": "evidence_round5/run_cinolib.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/run_cinolib.py",
+      "bytes": 1914,
+      "sha256": "9ad37ff96bc8e94bb828c3514bf7c4a24b41ba00b7217c109f387ce3d170fdc6"
+    },
+    {
+      "path": "evidence_round5/run_cinolib_fixed.py",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/run_cinolib_fixed.py",
+      "bytes": 1926,
+      "sha256": "9544b2873ce8ed4625436d0655ae8c0f8a45f8d3f955561de6b4ada28371941b"
+    },
+    {
+      "path": "evidence_round5/runs/c4/fancy_ring/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/c4/fancy_ring/native.log",
+      "bytes": 73245,
+      "sha256": "eef4fa7454c14ddf509e3645d4b276bd22733732da74a49cffbc47083cf727e1"
+    },
+    {
+      "path": "evidence_round5/runs/c4/fancy_ring/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/c4/fancy_ring/result.json",
+      "bytes": 846,
+      "sha256": "c5477baabfdb4e4479e97d4ce480080b44d3b16d299c9b36207012e17b09149d"
+    },
+    {
+      "path": "evidence_round5/runs/c4/fandisk_algohex/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/c4/fandisk_algohex/native.log",
+      "bytes": 155422,
+      "sha256": "27130c8f4203513c9099279bfe30904e679519258a5e598fe27200309f42f744"
+    },
+    {
+      "path": "evidence_round5/runs/c4/fandisk_algohex/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/c4/fandisk_algohex/result.json",
+      "bytes": 861,
+      "sha256": "eabf7f4a0cc69e8b3ea941ac65e98613c26b65eebffb4fb9b7b762af384b1935"
+    },
+    {
+      "path": "evidence_round5/runs/c4/minimal/audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/c4/minimal/audit.json",
+      "bytes": 2437,
+      "sha256": "2a3b534b0fdb4937e7b0b9a4c241bc5dfb96cf0d353a281795f7fc01b6f6afda"
+    },
+    {
+      "path": "evidence_round5/runs/c4/minimal/conversion.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/c4/minimal/conversion.json",
+      "bytes": 654,
+      "sha256": "55aedf730915a7f48d0e2de0546682b35a3c79724c6c9d7597096283b09186a7"
+    },
+    {
+      "path": "evidence_round5/runs/c4/minimal/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/c4/minimal/native.log",
+      "bytes": 5281,
+      "sha256": "483cc11b833cafb47760c7c22204c057c75b3058b13d4cee812836b2a39e2963"
+    },
+    {
+      "path": "evidence_round5/runs/c4/minimal/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/c4/minimal/result.json",
+      "bytes": 603,
+      "sha256": "000faee5ad06fe2ceb36e0a4432d28d41f8d118f5516fc041c5e056bc839f910"
+    },
+    {
+      "path": "evidence_round5/runs/c4/rockerarm/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/c4/rockerarm/native.log",
+      "bytes": 119379,
+      "sha256": "d01a254fd0bbe628b67633fb2a9fc4efbab1083ed843d36fa65e04f8a2e7302c"
+    },
+    {
+      "path": "evidence_round5/runs/c4/rockerarm/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/c4/rockerarm/result.json",
+      "bytes": 843,
+      "sha256": "e46c354e1a76801e77949a0575878bd9487ba3589fa204fadf384141108e287b"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/occt_bottom/audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/occt_bottom/audit.log",
+      "bytes": 679,
+      "sha256": "4d9172bb58515b682a72cf5b62cf38a788f2957e7dcf8f57b40dd10780c2327f"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/occt_bottom/audit_correct_env.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/occt_bottom/audit_correct_env.log",
+      "bytes": 679,
+      "sha256": "4d9172bb58515b682a72cf5b62cf38a788f2957e7dcf8f57b40dd10780c2327f"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/occt_bottom/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/occt_bottom/native.log",
+      "bytes": 147,
+      "sha256": "e1ba10962645c3287ba35cbbd16521206d1d8ea441e5f673d400c667d0a82eda"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/occt_bottom/projected_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/occt_bottom/projected_precheck.json",
+      "bytes": 121,
+      "sha256": "866c4401546d86c4cc1190e08250f4e4c820f748b2d8007974764e0c76c730c5"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/occt_bottom/raw_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/occt_bottom/raw_audit.json",
+      "bytes": 35586,
+      "sha256": "2960cec5c43152677ab053f6ccf978566aab6e28cb1089f6adef116b705bbfdd"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/occt_bottom/raw_audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/occt_bottom/raw_audit.log",
+      "bytes": 2313,
+      "sha256": "fd963e138a7d190ea7a64f25ad6ced7dc06061bcbbdebedb6dca7d6891cc3860"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/occt_bottom/raw_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/occt_bottom/raw_precheck.json",
+      "bytes": 112,
+      "sha256": "bb4237d15576609231d976e26473719a0b653d7dffe244ba1e02c8a54b5f6410"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/occt_bottom/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/occt_bottom/result.json",
+      "bytes": 961,
+      "sha256": "604fba68186d5520aa5b3d8736b971b3e8ca9267efd3008d0f3ef0ccb402342b"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_cw2_mainbody/audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_cw2_mainbody/audit.log",
+      "bytes": 679,
+      "sha256": "4d9172bb58515b682a72cf5b62cf38a788f2957e7dcf8f57b40dd10780c2327f"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_cw2_mainbody/audit_correct_env.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_cw2_mainbody/audit_correct_env.log",
+      "bytes": 679,
+      "sha256": "4d9172bb58515b682a72cf5b62cf38a788f2957e7dcf8f57b40dd10780c2327f"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_cw2_mainbody/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_cw2_mainbody/native.log",
+      "bytes": 149,
+      "sha256": "d851d3e22b56f3578baa7330631a57a4253d6dcb71426a8e5689ed0b1e6605ed"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_cw2_mainbody/projected_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_cw2_mainbody/projected_precheck.json",
+      "bytes": 121,
+      "sha256": "3465593bbde744e3ee57d7ac4144632cb6e2954f3fc87c870f19df7d24225fa9"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_cw2_mainbody/raw_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_cw2_mainbody/raw_audit.json",
+      "bytes": 36432,
+      "sha256": "4c6924cbfc1645d940c67b0f91ce9f824cd2dd4b8caea63fc0a5bf73c0d89260"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_cw2_mainbody/raw_audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_cw2_mainbody/raw_audit.log",
+      "bytes": 2328,
+      "sha256": "1783d02185413a5201db7a52c46d7847606acba819fb6488c0229564d7bea010"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_cw2_mainbody/raw_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_cw2_mainbody/raw_precheck.json",
+      "bytes": 112,
+      "sha256": "baa23b0ad34039cea9a6569710805e03a3e85684274d599a996e7de5064d09aa"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_cw2_mainbody/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_cw2_mainbody/result.json",
+      "bytes": 985,
+      "sha256": "3f3277f7c330d1cb820c19081db155784c229c65fc02f77c4b1912b39a92019e"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_dragon/audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_dragon/audit.log",
+      "bytes": 679,
+      "sha256": "4d9172bb58515b682a72cf5b62cf38a788f2957e7dcf8f57b40dd10780c2327f"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_dragon/audit_correct_env.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_dragon/audit_correct_env.log",
+      "bytes": 679,
+      "sha256": "4d9172bb58515b682a72cf5b62cf38a788f2957e7dcf8f57b40dd10780c2327f"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_dragon/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_dragon/native.log",
+      "bytes": 152,
+      "sha256": "ebd5ef6b81ffcea87ed49b366916176c0151d0b152b25e7da3a2fa1d439486ef"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_dragon/projected_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_dragon/projected_precheck.json",
+      "bytes": 123,
+      "sha256": "932541b6d781e1b2763bf583d7a3fe3abd448ea96c63279533b2a025d611db33"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_dragon/raw_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_dragon/raw_audit.json",
+      "bytes": 34880,
+      "sha256": "8a251a54e3929b9e1099e9661f6ec39662dd65e48578da705e2a739fea648328"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_dragon/raw_audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_dragon/raw_audit.log",
+      "bytes": 2321,
+      "sha256": "9b5576c1dceb72c5e8980c9e2b9bcf61691e494e697f712e44b3b4537e80291d"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_dragon/raw_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_dragon/raw_precheck.json",
+      "bytes": 114,
+      "sha256": "0d54bdb5ff01fb39b4deaac134d4c933160657d8dd58d61bf044e6998b1feaf6"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib/voron_dragon/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib/voron_dragon/result.json",
+      "bytes": 962,
+      "sha256": "3554345906a21a707edd1aaf9642e90bca9ff51097739369a86f0214bae97954"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/occt_bottom/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/occt_bottom/native.log",
+      "bytes": 156,
+      "sha256": "426d182898926a8a8c586e39a1553f52d4eae44650c5625b2171260630935f0e"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/occt_bottom/projected_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/occt_bottom/projected_audit.json",
+      "bytes": 35637,
+      "sha256": "3ad0cec8e0f4f2346d5fff3ceb793b1c1a9e39f687c5146354ec60da97d84dd3"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/occt_bottom/projected_audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/occt_bottom/projected_audit.log",
+      "bytes": 2323,
+      "sha256": "6e1b268243897c2c6edaba173212bdcb37af2cbe234779b985fd3c278c469139"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/occt_bottom/projected_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/occt_bottom/projected_precheck.json",
+      "bytes": 118,
+      "sha256": "445b7cf759e8fe1b02b9ca0111b1cc018a11c8e3a032d79291a8cedc3b52dda5"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/occt_bottom/raw_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/occt_bottom/raw_audit.json",
+      "bytes": 35591,
+      "sha256": "4de60216775d2571c45be3301ec1fa30aea8ac230839c3984f0ecb6068fb3b1d"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/occt_bottom/raw_audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/occt_bottom/raw_audit.log",
+      "bytes": 2313,
+      "sha256": "fd963e138a7d190ea7a64f25ad6ced7dc06061bcbbdebedb6dca7d6891cc3860"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/occt_bottom/raw_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/occt_bottom/raw_precheck.json",
+      "bytes": 112,
+      "sha256": "bb4237d15576609231d976e26473719a0b653d7dffe244ba1e02c8a54b5f6410"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/occt_bottom/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/occt_bottom/result.json",
+      "bytes": 970,
+      "sha256": "0267f51aad6c95f0a24b5382979f89e7e03a10c4d73b6bc189a90942567434df"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/native.log",
+      "bytes": 156,
+      "sha256": "0d4019fb354ea84e46dd93a9cd7d1088a776cb7e8239301ebc2957bf6f1d517b"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/projected_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/projected_audit.json",
+      "bytes": 36448,
+      "sha256": "5d47d5caec6ec0abfaa4ee2179ad7bc310e137fe7a5a92cce8a085308f106e39"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/projected_audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/projected_audit.log",
+      "bytes": 2336,
+      "sha256": "e467495e3fd66d311f5027dfcd991afb07f484d2bde032305b08ebab5e53098c"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/projected_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/projected_precheck.json",
+      "bytes": 118,
+      "sha256": "16d21b7efb21c5f9e9e881d5c367f7c30b8fde59d4ac73b67c1812b95a5211eb"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/raw_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/raw_audit.json",
+      "bytes": 36438,
+      "sha256": "3267c83e811ada395ba62fae086e433cf0de619555329188de3ff623c53d3177"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/raw_audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/raw_audit.log",
+      "bytes": 2328,
+      "sha256": "1783d02185413a5201db7a52c46d7847606acba819fb6488c0229564d7bea010"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/raw_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/raw_precheck.json",
+      "bytes": 112,
+      "sha256": "baa23b0ad34039cea9a6569710805e03a3e85684274d599a996e7de5064d09aa"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_cw2_mainbody/result.json",
+      "bytes": 998,
+      "sha256": "e6317b16d4c9026f22317cfeb525b94519eb60edd560316db38d77fea6341d7d"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_dragon/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_dragon/native.log",
+      "bytes": 159,
+      "sha256": "a884a32a3cfcd0cdc1612c3b61ca4de8131d910927892da46fb021aec1b92c8d"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_dragon/projected_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_dragon/projected_audit.json",
+      "bytes": 34902,
+      "sha256": "c17e10f2122e8bf50c4a9f4ebdc399976e886eabe62fec837c7b26762f450d5c"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_dragon/projected_audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_dragon/projected_audit.log",
+      "bytes": 2331,
+      "sha256": "be0f3f494b5025ca678ac7875970fb0c36a87d9015da72b14c99bfa8cc5f7f14"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_dragon/projected_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_dragon/projected_precheck.json",
+      "bytes": 120,
+      "sha256": "38c307012690b846e4f91fa289b3a126e8c024586224463557f0d41489c5ce5f"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_dragon/raw_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_dragon/raw_audit.json",
+      "bytes": 34889,
+      "sha256": "bbb2096507e2b8dc199c8f93f846c95955d33f7505182c06e5d682dd11c8f88d"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_dragon/raw_audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_dragon/raw_audit.log",
+      "bytes": 2321,
+      "sha256": "9b5576c1dceb72c5e8980c9e2b9bcf61691e494e697f712e44b3b4537e80291d"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_dragon/raw_precheck.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_dragon/raw_precheck.json",
+      "bytes": 114,
+      "sha256": "0d54bdb5ff01fb39b4deaac134d4c933160657d8dd58d61bf044e6998b1feaf6"
+    },
+    {
+      "path": "evidence_round5/runs/cinolib_fixed/voron_dragon/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/cinolib_fixed/voron_dragon/result.json",
+      "bytes": 973,
+      "sha256": "1cd5a87ca43df8f9e1188929bc1656312ab5ee373eed2e0b76b56f98427bd266"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate/audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate/audit.json",
+      "bytes": 11069,
+      "sha256": "ef7a5e10229665a22ee9e8225315daa3679ae28d2192c736666368a13419017a"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate/audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate/audit.log",
+      "bytes": 2323,
+      "sha256": "92e4f13bd9cd2c2c3d4cda6222d33242142bf8b99f7c40d7702748b32d575e57"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate/conversion.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate/conversion.json",
+      "bytes": 490,
+      "sha256": "976f25c3b5a6c732f219f6ae43e1e904575f58a7999879d01f9c476f703f71f1"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate/input_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate/input_provenance.json",
+      "bytes": 423,
+      "sha256": "f67b33b8a19e06ca27b8f2f45910ccba3fc9066aaeee1c60b5643ce937c1783a"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate/metadata.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate/metadata.json",
+      "bytes": 992,
+      "sha256": "0913fc9e8ca332ef81cdb8343489092f4673cfd54ed95c67401c7530ee3261c8"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate/native.log",
+      "bytes": 527,
+      "sha256": "c911a072b418e916ef6d52b65041d57487c00e1744962c9fcaba99fb59cdab6a"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate/package_manifest.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate/package_manifest.json",
+      "bytes": 649,
+      "sha256": "75f1d4bdcd71e2b47367075b2bb641a061c9a0288a56f91ffa18599ddd3c3095"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate/result.json",
+      "bytes": 404,
+      "sha256": "37ef78ce2b6d1d84432d0317e02eb22cd93879aa2c29d9edfdceb4cd7a30a0bb"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate/script.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate/script.json",
+      "bytes": 595,
+      "sha256": "6cabe01acf350b894af813d01a32e1d1bcbd05fb9f7fc92658ad84d7d28e84dd"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate_format0/FORMAT_NOTE.txt",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate_format0/FORMAT_NOTE.txt",
+      "bytes": 221,
+      "sha256": "b71860899bedfd4346c79b5870997fc6e92e61063634ba9bd39cbc4f39fb9f42"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate_format0/input_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate_format0/input_provenance.json",
+      "bytes": 423,
+      "sha256": "f67b33b8a19e06ca27b8f2f45910ccba3fc9066aaeee1c60b5643ce937c1783a"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate_format0/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate_format0/native.log",
+      "bytes": 527,
+      "sha256": "c911a072b418e916ef6d52b65041d57487c00e1744962c9fcaba99fb59cdab6a"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate_format0/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate_format0/result.json",
+      "bytes": 336,
+      "sha256": "0539ba818335c86c7a006523d53e1a52ba2f68d269a39e3424995370bf27e637"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate_format0/script.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate_format0/script.json",
+      "bytes": 595,
+      "sha256": "6cabe01acf350b894af813d01a32e1d1bcbd05fb9f7fc92658ad84d7d28e84dd"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate_structured/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate_structured/native.log",
+      "bytes": 465,
+      "sha256": "0785058b241f6b60419b5ea04d550ed1b8dcb69c232d1d9e637892918e830736"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate_structured/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate_structured/result.json",
+      "bytes": 396,
+      "sha256": "19665e521df219071247f1da015d9b9a6c359bd7309102fd5ee6fca52136f525"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/common_plate_structured/script.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/common_plate_structured/script.json",
+      "bytes": 502,
+      "sha256": "9543148f98aa6f6e51f288738b17acd3bb3fcfd9f8de6e1e740a4c620169734c"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/occt_bottom/input_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/occt_bottom/input_provenance.json",
+      "bytes": 5404,
+      "sha256": "edf54b88fa7d12daf474d2d46781798f68ebd6a0ccfb03101e2ae18d30e6f120"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/occt_bottom/native.json.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/occt_bottom/native.json.log",
+      "bytes": 401,
+      "sha256": "7c94a394f8f10aa768fc6178702531fcf7f7e44cf770002962c993f60b088881"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/occt_bottom/native_retry.json.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/occt_bottom/native_retry.json.log",
+      "bytes": 516,
+      "sha256": "af54e14e220de35006e1a46905c147e4a7d062e602f2f60bc4354854867df8e5"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/occt_bottom/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/occt_bottom/result.json",
+      "bytes": 519,
+      "sha256": "27854b9f05984e84277b8343e215c56deedb7260b008baadd94302a453c69dfd"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/occt_bottom/result_retry.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/occt_bottom/result_retry.json",
+      "bytes": 268,
+      "sha256": "3e15d24ca4b988a5e139cf49b35ff2b40b712b7d62e5895165e2c160b6b08816"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/occt_bottom/script.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/occt_bottom/script.json",
+      "bytes": 636,
+      "sha256": "9b1b4005241b79973ddd63f3bf479339379080a4905990dd0c74f0e4abb5c058"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/occt_bottom/script_retry.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/occt_bottom/script_retry.json",
+      "bytes": 643,
+      "sha256": "0c278de8e83e4f26ceb83f8dd2496f686792a4af8fd38752139a100e24dafeed"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/upstream_filleted_bracket/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/upstream_filleted_bracket/native.log",
+      "bytes": 63,
+      "sha256": "7fb9496bc4bfbe2eaa721c5c2b282da24f7e694cd6caeb5b040a8141dbabb516"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/upstream_filleted_bracket/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/upstream_filleted_bracket/result.json",
+      "bytes": 200,
+      "sha256": "9b91d53b60629fcb8a9dc1d49c7ae58afe239c634dd9210aadfbd1bf60d0934f"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/upstream_filleted_bracket/script.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/upstream_filleted_bracket/script.json",
+      "bytes": 1486,
+      "sha256": "6772f85a2c3af4d2b2fcd99a65bfa284573297f30bb3e25872a635ebaec21500"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_cw2_mainbody/input_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_cw2_mainbody/input_provenance.json",
+      "bytes": 7571,
+      "sha256": "d8d149a6f97b0969d234f2bad406787df549a7581bd6d606bc095e2f3581b04e"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_cw2_mainbody/native.json.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_cw2_mainbody/native.json.log",
+      "bytes": 370,
+      "sha256": "cd8e14b90f1e2d4fcf0b211c26376041649c2345f13f2377534a5906c575f60c"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_cw2_mainbody/native_retry.json.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_cw2_mainbody/native_retry.json.log",
+      "bytes": 525,
+      "sha256": "ca03b42bd3d430e233d06749f044db1d488d3a329b21bb9bbe0bf7ed256cf3e0"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_cw2_mainbody/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_cw2_mainbody/result.json",
+      "bytes": 534,
+      "sha256": "1bece57cf8c86ad2b5587cf56e5603f9aac24509a2e49f7204b76eec4cb7079d"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_cw2_mainbody/result_retry.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_cw2_mainbody/result_retry.json",
+      "bytes": 268,
+      "sha256": "28c807fcc1721ffb23afa0e23fbe35b2c7f083259a2d48a80c476173d5b1ed2b"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_cw2_mainbody/script.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_cw2_mainbody/script.json",
+      "bytes": 650,
+      "sha256": "e4b1528be4bce170e30c1a57bc4d4c9072ce04ed6126a880bd31bbde5a344ba9"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_cw2_mainbody/script_retry.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_cw2_mainbody/script_retry.json",
+      "bytes": 657,
+      "sha256": "65b585ff0fdc39854f2d23cc7dd8366760b443f9a48b48545d2a115b06ba26b4"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_dragon/input_provenance.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_dragon/input_provenance.json",
+      "bytes": 8941,
+      "sha256": "fff68b12b99d29f4a66fb371584883a2ffbc9c7e963ade44610a77b43cac8990"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_dragon/native.json.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_dragon/native.json.log",
+      "bytes": 364,
+      "sha256": "d0b717e884cd0532aefa1f8f61e1b22a55721745da303093c9bc52b27505e7de"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_dragon/native_retry.json.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_dragon/native_retry.json.log",
+      "bytes": 365,
+      "sha256": "8f6fa99fbb64aa949f08a507700255a4cb0124425f8e3b7dbec4d73f8e48a6b7"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_dragon/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_dragon/result.json",
+      "bytes": 521,
+      "sha256": "b97be10577d0643e6e2d33de2da1131800ccedf0c0ad3bc5189d00d29a5adf39"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_dragon/result_retry.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_dragon/result_retry.json",
+      "bytes": 269,
+      "sha256": "6e908b85644d4fe247329170011ff3bb718ff198c107c410dd09e2543c691020"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_dragon/script.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_dragon/script.json",
+      "bytes": 638,
+      "sha256": "e9627039fd75e627663e42b58a2af42104f762e0b0fba47bb6a3525e364f2dad"
+    },
+    {
+      "path": "evidence_round5/runs/fieldcraft/voron_dragon/script_retry.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/fieldcraft/voron_dragon/script_retry.json",
+      "bytes": 645,
+      "sha256": "00566968b6bcfdcd63345089cd96d6437287b41204edbfd76da92a70210efe01"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/occt_bottom/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/occt_bottom/result.json",
+      "bytes": 463,
+      "sha256": "3d97d178f15995da13536b6fe0f0f9705bb941d683118f70b9b9886d68234927"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/occt_bottom/segmentation.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/occt_bottom/segmentation.log",
+      "bytes": 63,
+      "sha256": "e6a7e313ca602649de2526b6a951aea9cf2232ecce655637ab324c7695c27f02"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/mapping.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/mapping.json",
+      "bytes": 497,
+      "sha256": "95fa37901e8aa518deff2f98475576e1aa87298354a16f7216d4025e35d79275"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/mapping.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/mapping.log",
+      "bytes": 232,
+      "sha256": "5912eb3059976886f6a65a72493de41457c2da217bfd2fd45da731ca61b76a8d"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/polycube.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/polycube.json",
+      "bytes": 439,
+      "sha256": "e141f6cc012a44a48b4df84856385fd3af41acb98d2195be723a23bd20abd551"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/polycube.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/polycube.log",
+      "bytes": 272,
+      "sha256": "56e0e9759ec0bb65b372d0c69d1c07f389c7abe7ac687b3a035b9114e403c033"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/quality_lap.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/quality_lap.json",
+      "bytes": 370,
+      "sha256": "d8e44b32745ed7fc92a9168b6c05f71755ea1df813b4cefa6fb5446c3a444eed"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/quality_lap.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/quality_lap.log",
+      "bytes": 963,
+      "sha256": "278d6777a22b4cea73654989550ba7946a3aaf230f5560f70cea12cbb1c6bb89"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/quality_opt.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/quality_opt.json",
+      "bytes": 407,
+      "sha256": "2385ef063a7e0efd1503c1ba5c161e811e88dd1f307066c268270bae5a9112b9"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/quality_opt.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/quality_opt.log",
+      "bytes": 3787,
+      "sha256": "c9fac04cd6dde8aa1a33f8df768e2c9c5e511810d3a7ca88944e6871dbc5317f"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/quality_pillow.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/quality_pillow.json",
+      "bytes": 381,
+      "sha256": "1c6e61757de49e4fbafa60f65977b7a007dfef20f348c2e2d5857a93e1637a07"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/quality_pillow.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/quality_pillow.log",
+      "bytes": 145,
+      "sha256": "e2a0b4c89f34880c030b808f29cdb88d82d688d98dd4b57bff325aa05b74fcdc"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/quality_smooth.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/quality_smooth.json",
+      "bytes": 395,
+      "sha256": "b54a567b7aed1eeddf467fe7ceb29f8779c69a8ab1c88166c005bcec25cb3145"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/quality_smooth.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/quality_smooth.log",
+      "bytes": 16056,
+      "sha256": "0ec9c99f271788a3b32f74eb89961acba0ccd27365e395b9d2b1ea3c382de9df"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/rockerarm_generated.audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/rockerarm_generated.audit.json",
+      "bytes": 2543,
+      "sha256": "3d10fc61560a9cd6ee4e938302ef6d8e336208db86171bd76ec397957a827a56"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/rockerarm_generated_lap_pillow_smooth_opt.audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/rockerarm_generated_lap_pillow_smooth_opt.audit.json",
+      "bytes": 2565,
+      "sha256": "37b5a2305cea321a7d9cbd8b59a8257b9593d2e74656d6c2c6f5474bf6333e2d"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/rockerarm_manual.txt",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/rockerarm_manual.txt",
+      "bytes": 7,
+      "sha256": "f0f7128001712310bc43149807af957c76c9fc2e7ed896a96269b0276fd66219"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/segmentation.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/segmentation.json",
+      "bytes": 465,
+      "sha256": "4c0f5017fb9ab302f8e9f3ee61066ac53cbf4988da1ce706c50467b8c6c6d23e"
+    },
+    {
+      "path": "evidence_round5/runs/hexgen/upstream_rockerarm/segmentation.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/hexgen/upstream_rockerarm/segmentation.log",
+      "bytes": 63,
+      "sha256": "615b8986fc5bd05b22a290a49c50d94790361384ef05eb9bff94a33d2cedf3b1"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus/occt_bottom/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus/occt_bottom/native.log",
+      "bytes": 920,
+      "sha256": "0f7bd1c8457ba7fbdd095b63c140f0aba12ba6fe2bee333878a1771d7b37255d"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus/occt_bottom/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus/occt_bottom/result.json",
+      "bytes": 465,
+      "sha256": "91dbcb6aa0490b24e07d46f6b2597b56c71abf4ab9c57bb8bd93f98d47ea9858"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus/voron_cw2_mainbody/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus/voron_cw2_mainbody/native.log",
+      "bytes": 469,
+      "sha256": "2e0433a8e204115c56af01372a423ef0ffd740c4d8056c3466f6b2bf3de614ae"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus/voron_cw2_mainbody/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus/voron_cw2_mainbody/result.json",
+      "bytes": 479,
+      "sha256": "c67fc99edc464edba82739d651e910b9a353e3079eccb6d58d6ea23d468e2d0d"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus/voron_dragon/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus/voron_dragon/native.log",
+      "bytes": 920,
+      "sha256": "b1cd9d1ad62137b4c967d0ae2f44dc5306f9878b663a6096b24b55d2e143f5fb"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus/voron_dragon/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus/voron_dragon/result.json",
+      "bytes": 467,
+      "sha256": "ad3bc1375108db907cb0177c46c240f4fb77d1a7ff25f2bbaf2b6d5ea7f74970"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_arrays/occt_bottom/audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_arrays/occt_bottom/audit.json",
+      "bytes": 35617,
+      "sha256": "e1bd9e1ee1f780515edcc53389e8fe059193f972ddec432572ee8e4d9aab7712"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_arrays/occt_bottom/audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_arrays/occt_bottom/audit.log",
+      "bytes": 2325,
+      "sha256": "11542f88f70b0dec673977584192f2f18002aaebe606695f0bd9cc00da6aa345"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_arrays/occt_bottom/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_arrays/occt_bottom/native.log",
+      "bytes": 3617,
+      "sha256": "1697f916151820261debd367e1107881c83408b189ac2ed8850680878999304a"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_arrays/occt_bottom/native_report.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_arrays/occt_bottom/native_report.json",
+      "bytes": 5156,
+      "sha256": "b05486a679d3d589b5c58844755972e6ededa8460f2424bc9e39b716b9569264"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_arrays/occt_bottom/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_arrays/occt_bottom/result.json",
+      "bytes": 552,
+      "sha256": "6aca6334bbd25ee7bfd435580fa67f54661aed4dbfdc5e87130a2ec46a90c827"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_retry/occt_bottom/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_retry/occt_bottom/native.log",
+      "bytes": 470,
+      "sha256": "8a41572bbfd0fa5466bd55417d43cfb24a3ed3eaea4fc5ab795e808fbea9ebb5"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_retry/occt_bottom/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_retry/occt_bottom/result.json",
+      "bytes": 478,
+      "sha256": "e82685e6ea24fa202b5a11524fc2077b682ab4d364ea58a76a3ff86060c8f04f"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_retry/voron_cw2_mainbody/audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_retry/voron_cw2_mainbody/audit.json",
+      "bytes": 36392,
+      "sha256": "4a2448237aaffb9b595442d2b99d538f251d6528ad58bb22e968b4fd7d334f0e"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_retry/voron_cw2_mainbody/audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_retry/voron_cw2_mainbody/audit.log",
+      "bytes": 2327,
+      "sha256": "c9c7fd32fd30b5e3978a7f740664dcb04e259fb3f64e118eea94e5d0ce7ea44e"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_retry/voron_cw2_mainbody/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_retry/voron_cw2_mainbody/native.log",
+      "bytes": 3647,
+      "sha256": "e6892b1ce0b4f0158fb0600a443c3152d0d1caa2e83ad3a1b39ada8e9a874555"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_retry/voron_cw2_mainbody/native_report.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_retry/voron_cw2_mainbody/native_report.json",
+      "bytes": 5187,
+      "sha256": "4653f6dae940b4531616ceff2c17ac73b7c5c4ebcc7f0962fb1a80a23d5a5a73"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_retry/voron_cw2_mainbody/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_retry/voron_cw2_mainbody/result.json",
+      "bytes": 490,
+      "sha256": "01c4703da631cded5427b61adb82555412e6e6ba2a5c23d82ed19a1bc7e3766a"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_retry/voron_dragon/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_retry/voron_dragon/native.log",
+      "bytes": 472,
+      "sha256": "614e1ab0e76800b8bdaa8341c6c77a757b24b5df8ada6f0555d30ea81fbf1c9e"
+    },
+    {
+      "path": "evidence_round5/runs/meshioplusplus_retry/voron_dragon/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/meshioplusplus_retry/voron_dragon/result.json",
+      "bytes": 481,
+      "sha256": "a9ad8bbfa03a8fc262431758ddbbac2e09f81d376b2cdb18ccc5de8ba9f8e040"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/occt_bottom/audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/occt_bottom/audit.json",
+      "bytes": 35644,
+      "sha256": "fb1454139359949edd64bb3d964561d995a1c9018d9f2afe2f62284e4076df8c"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/occt_bottom/audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/occt_bottom/audit.log",
+      "bytes": 2325,
+      "sha256": "fe6b0d72257efd15529fdbff17983a0a424189ba38b7d990f3d51950eae228b4"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/occt_bottom/boundary_unchanged.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/occt_bottom/boundary_unchanged.json",
+      "bytes": 202,
+      "sha256": "674a06a9723947c411bcefc417f81d8003e6adab2381c12820a6c2241c4cc017"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/occt_bottom/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/occt_bottom/native.log",
+      "bytes": 1333,
+      "sha256": "f525d37d4103072359690ca6a6a244bc98459a28dba7aa88e80ddfc39e9bd578"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/occt_bottom/native_vtk42.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/occt_bottom/native_vtk42.log",
+      "bytes": 2276,
+      "sha256": "8e8fd857f4c4dcb39f89be8f395fcd2fc7a2ec995f31de6c5bd702b849f09384"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/occt_bottom/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/occt_bottom/result.json",
+      "bytes": 509,
+      "sha256": "2c559b66c62da4ac5231b0db6ca12ae9ea21ce15b9438001a7132013b6689233"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/occt_bottom/result_vtk42.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/occt_bottom/result_vtk42.json",
+      "bytes": 616,
+      "sha256": "925162533052330c220b307c69711cd259ee3a7f7367482435c6ff1125213e49"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/voron_cw2_mainbody/audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/voron_cw2_mainbody/audit.json",
+      "bytes": 36446,
+      "sha256": "3a99b832860605330df71b6057011bab9b1d65e72ffb9cdda4c0b9e6ae572f7c"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/voron_cw2_mainbody/audit.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/voron_cw2_mainbody/audit.log",
+      "bytes": 2336,
+      "sha256": "50f21814f7ec931984b72261d846bc8a28a087f8be346a7dc4dab0d1185fe062"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/voron_cw2_mainbody/boundary_unchanged.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/voron_cw2_mainbody/boundary_unchanged.json",
+      "bytes": 202,
+      "sha256": "674a06a9723947c411bcefc417f81d8003e6adab2381c12820a6c2241c4cc017"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/voron_cw2_mainbody/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/voron_cw2_mainbody/native.log",
+      "bytes": 1333,
+      "sha256": "f525d37d4103072359690ca6a6a244bc98459a28dba7aa88e80ddfc39e9bd578"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/voron_cw2_mainbody/native_vtk42.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/voron_cw2_mainbody/native_vtk42.log",
+      "bytes": 2276,
+      "sha256": "b1b49a6bffc141a57188f60f9b2f33371d1473eaadaa1d45457f4f5908f73a9a"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/voron_cw2_mainbody/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/voron_cw2_mainbody/result.json",
+      "bytes": 523,
+      "sha256": "18fee0855203da980ec2fd75155215b9eeb35e06029be9f9a40383da5fd8f3ab"
+    },
+    {
+      "path": "evidence_round5/runs/mesquite/voron_cw2_mainbody/result_vtk42.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/mesquite/voron_cw2_mainbody/result_vtk42.json",
+      "bytes": 631,
+      "sha256": "dfd92f228b3a6e702cefe81e24c88bb039c46ac2367e3c4af1a1fdefe443b561"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/occt_bottom/native.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/occt_bottom/native.json",
+      "bytes": 149,
+      "sha256": "3b3a3d506928fa5d6ec894f0dfbc658e119c40fbdfeaf6dc6ca219f3c90ed1b6"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/occt_bottom/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/occt_bottom/native.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/occt_bottom/poly_geometry_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/occt_bottom/poly_geometry_audit.json",
+      "bytes": 2999,
+      "sha256": "ef0faa4c980c6fcde407d6ce8a67360d6477994a9a633cb5f13f83f5424e0ddd"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/occt_bottom/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/occt_bottom/result.json",
+      "bytes": 761,
+      "sha256": "607e9fb3eb7327df0044e1b881c8ec437defad79494c8b3eae9cca5519db4370"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/voron_cw2_mainbody/native.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/voron_cw2_mainbody/native.json",
+      "bytes": 148,
+      "sha256": "59024503da5487337151467590fb05b876cfa6928c4e56342bb72d461d5833a7"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/voron_cw2_mainbody/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/voron_cw2_mainbody/native.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/voron_cw2_mainbody/poly_geometry_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/voron_cw2_mainbody/poly_geometry_audit.json",
+      "bytes": 3010,
+      "sha256": "4a70eccc69af02b95c7195d4446e7c192fc9cba76ad1ba28a24688a608915128"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/voron_cw2_mainbody/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/voron_cw2_mainbody/result.json",
+      "bytes": 776,
+      "sha256": "e9fb02710f6082820b9f40fee77d734c3f590cd715cd46e6a8886b008856550d"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/voron_dragon/native.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/voron_dragon/native.json",
+      "bytes": 151,
+      "sha256": "38d1c34e9a9ce43126354fe38c980b3c4b59c724e00684fc3b496b9673a90f3c"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/voron_dragon/native.log",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/voron_dragon/native.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/voron_dragon/poly_geometry_audit.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/voron_dragon/poly_geometry_audit.json",
+      "bytes": 3006,
+      "sha256": "ab575f979b960be77258a77aeac13d0c4a88b2ac57abd727a233a4fde537d261"
+    },
+    {
+      "path": "evidence_round5/runs/smesh_cartesian/voron_dragon/result.json",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/runs/smesh_cartesian/voron_dragon/result.json",
+      "bytes": 762,
+      "sha256": "9134d89e6e26223b6da45a565ff4671c2f8af667acafbaa460c4848c69b59070"
+    },
+    {
+      "path": "evidence_round5/smesh_cartesian_driver.cpp",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_handoff_round5_20261104/evidence_round5/smesh_cartesian_driver.cpp",
+      "bytes": 2357,
+      "sha256": "be73931aa76475cd404d6a531d3b7fe53d7ab399cfcc972e899751bbd156697b"
+    },
+    {
+      "path": "third_party_notices/HexGen_Hex2Spline-LICENSE.txt",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/LICENSE",
+      "bytes": 1516,
+      "sha256": "214f1272fa3ef6e8e05a37dc63e9a5feba047ce7ad487af675db58fdfa9365f4"
+    },
+    {
+      "path": "third_party_notices/cinolib-LICENSE.txt",
+      "source_path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/LICENSE",
+      "bytes": 1070,
+      "sha256": "8d075fa5c342e5154a491648e8e2f426efd16aba1850f2e27bd7541ca7f0f1b3"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "command": [
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/cmake331/cmake/data/bin/cmake",
+    "-S",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing",
+    "-B",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/c4",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DCMAKE_CXX_FLAGS_RELEASE=-O1 -DNDEBUG",
+    "-DMC3D_WITH_VIEWER=OFF",
+    "-DMC3D_BUILD_TESTS=OFF",
+    "-DCMAKE_PREFIX_PATH=/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/coin_env;/workspace/scratch/826174ffc51a/mesher_round5_20261104/deps/eigen",
+    "-DCoinUtils_INCLUDE_DIR=/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/coin_env/include/coin-or",
+    "-DCLP_INCLUDE_DIR=/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/coin_env/include/coin-or",
+    "-DEigen3_DIR=/workspace/scratch/826174ffc51a/mesher_round5_20261104/deps/eigen/share/eigen3/cmake",
+    "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF",
+    "-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=OFF"
+  ],
+  "seconds": 1.4821596649999265,
+  "returncode": 0,
+  "timeout": false
+}

@@ -1,0 +1,137 @@
+[
+  {
+    "name": "C4HexMeshing",
+    "commit": "e5258a35c0603dcaacb20fa3e9b53d2170ecc591",
+    "origin": "https://github.com/HendrikBrueckler/C4HexMeshing.git",
+    "dirty": [],
+    "licenses": [
+      {
+        "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/LICENSE",
+        "sha256": "557f5b77061f21261911505c9729cdef47c0a6deaf38e0eede94e4f406f4bb65"
+      }
+    ]
+  },
+  {
+    "name": "HexGen_Hex2Spline",
+    "commit": "e6d5c15c721a3a2b6dd61bebc1f4109a06dc297b",
+    "origin": "https://github.com/CMU-CBML/HexGen_Hex2Spline.git",
+    "dirty": [
+      " M HexGen/1-HBECVT/src/CMakeLists.txt",
+      " M HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.cpp",
+      " M HexGen/1-HBECVT/src/cpp/CVTBasedPolycube.h",
+      " M HexGen/1-HBECVT/src/cpp/CellQueue.cpp",
+      " M HexGen/1-HBECVT/src/cpp/GeometricMethod.cpp",
+      " M HexGen/1-HBECVT/src/cpp/GeometricMethod.h",
+      " M HexGen/1-HBECVT/src/cpp/Main.cpp",
+      " M HexGen/1-HBECVT/src/cpp/RawMesh.cpp",
+      " M HexGen/1-HBECVT/src/cpp/RawMesh.h",
+      " M HexGen/1-HBECVT/src/cpp/StaticVars.h",
+      " M HexGen/2-POLYCUBE/src/CMakeLists.txt",
+      " M HexGen/2-POLYCUBE/src/cpp/Main.cpp",
+      " M HexGen/2-POLYCUBE/src/cpp/Polycube.cpp",
+      " M HexGen/2-POLYCUBE/src/cpp/Polycube.h",
+      " M HexGen/2-POLYCUBE/src/cpp/RawMesh.cpp",
+      " M HexGen/2-POLYCUBE/src/cpp/RawMesh.h",
+      " M HexGen/2-POLYCUBE/src/cpp/StaticVars.h",
+      " M HexGen/3-PARAMETRICMAPPING/src/CMakeLists.txt",
+      " M HexGen/3-PARAMETRICMAPPING/src/cpp/CellQueue.cpp",
+      " M HexGen/3-PARAMETRICMAPPING/src/cpp/GeometricMethod.cpp",
+      " M HexGen/3-PARAMETRICMAPPING/src/cpp/GeometricMethod.h",
+      " M HexGen/3-PARAMETRICMAPPING/src/cpp/Main.cpp",
+      " M HexGen/3-PARAMETRICMAPPING/src/cpp/RawMesh.cpp",
+      " M HexGen/3-PARAMETRICMAPPING/src/cpp/RawMesh.h",
+      " M HexGen/3-PARAMETRICMAPPING/src/cpp/StaticVars.h",
+      " M HexGen/3-PARAMETRICMAPPING/src/cpp/physical_polycube.cpp",
+      " M HexGen/3-PARAMETRICMAPPING/src/cpp/physical_polycube.h",
+      " M HexGen/4-QUALITY/src/CMakeLists.txt",
+      " M HexGen/4-QUALITY/src/cpp/BasicDataStructure.cpp",
+      " M HexGen/4-QUALITY/src/cpp/BasicDataStructure.h",
+      " M HexGen/4-QUALITY/src/cpp/hex_quality.cpp",
+      " M HexGen/4-QUALITY/src/cpp/hex_quality.h",
+      " M HexGen/4-QUALITY/src/cpp/main.cpp"
+    ],
+    "licenses": [
+      {
+        "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/LICENSE",
+        "sha256": "214f1272fa3ef6e8e05a37dc63e9a5feba047ce7ad487af675db58fdfa9365f4"
+      }
+    ]
+  },
+  {
+    "name": "Medial-HexMeshing",
+    "commit": "9f0dc32005be4965d6abf7d674b411fbe0ae40d0",
+    "origin": "https://github.com/Shane-Bambu/Medial-HexMeshing.git",
+    "dirty": [],
+    "licenses": []
+  },
+  {
+    "name": "cinolib",
+    "commit": "151dc5c46309affedadb9b45619cc137fb7326ed",
+    "origin": "https://github.com/mlivesu/cinolib.git",
+    "dirty": [
+      " M include/cinolib/grid_projector.cpp"
+    ],
+    "licenses": [
+      {
+        "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/LICENSE",
+        "sha256": "8d075fa5c342e5154a491648e8e2f426efd16aba1850f2e27bd7541ca7f0f1b3"
+      }
+    ]
+  },
+  {
+    "name": "fieldcraft",
+    "commit": "4b68057129e09e74cce3ea4259d170d07ab9c6f9",
+    "origin": "https://github.com/tangency-labs/fieldcraft.git",
+    "dirty": [],
+    "licenses": [
+      {
+        "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/fieldcraft/LICENSE-APACHE",
+        "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+      },
+      {
+        "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/fieldcraft/LICENSE-MIT",
+        "sha256": "c02b5403ec1011de4994339fe25b426edea91e8085b92d9a8fcfb86187f70373"
+      }
+    ]
+  },
+  {
+    "name": "meshioplusplus",
+    "commit": "35f5e5616bee3e1860394d45ceae37782a37a90d",
+    "origin": "https://github.com/loumalouomega/meshioplusplus",
+    "dirty": [],
+    "licenses": [
+      {
+        "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/meshioplusplus/LICENSE",
+        "sha256": "58f25d6a0154028a238dc49ce52cca6d246c1238f8e53da221deef43f584eb91"
+      },
+      {
+        "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/meshioplusplus/LICENSE-BINARIES.md",
+        "sha256": "5b1750a5686fd027b1e92656ab3294ae695c72e24c6521770610859eee1e0045"
+      }
+    ]
+  },
+  {
+    "name": "mesquite",
+    "commit": "7ae51c8e8617c67e63018c8a7effc0f5455f58b4",
+    "origin": "https://github.com/sandialabs/mesquite",
+    "dirty": [],
+    "licenses": [
+      {
+        "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mesquite/LICENSE",
+        "sha256": "7632fdaa3eaa8e4320f9b015799c11380705afdfb627a1beaff61926c5f274d1"
+      }
+    ]
+  },
+  {
+    "name": "mymesh",
+    "commit": "eb5e68907031f9faa0017dbb63d4286be655ec0e",
+    "origin": "https://github.com/BU-SMBL/mymesh",
+    "dirty": [],
+    "licenses": [
+      {
+        "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mymesh/LICENSE.md",
+        "sha256": "6d8998404a4fedc0af68d54224cf98f781ad869c11a8ddb127681656ce5d27ef"
+      }
+    ]
+  }
+]

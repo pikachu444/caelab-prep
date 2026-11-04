@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/workspace/scratch/826174ffc51a/mesher_round5_20261104/meshioplusplus_worker.py", line 6, in <module>
+    m,report=mp.octree_mesh(skin,output="hex",min_size=spacing,max_size=4*spacing,surface_size=spacing,hex_grading="uniform",untangle_iterations=50,max_cells=1000000,max_tets=1500000,return_report=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/826174ffc51a/mesher_round5_20261104/deps/meshioplusplus/meshioplusplus/_octree_mesh.py", line 291, in octree_mesh
+    res = _core.octree_mesh(mesh, **opts)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: meshio++: octree_mesh: the hexahedral grid would have 1444352 cells, more than max_cells (1000000); raise surface_size or max_cells

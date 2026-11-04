@@ -1,0 +1,21 @@
+{
+  "command": [
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/engines/cad_tools/cad_prepare",
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/evidence/component_exports/drivelink_housing/selected.brep",
+    "--validity"
+  ],
+  "returncode": 0,
+  "seconds": 0.6260540709990892,
+  "stdout": "{\"valid\":true,\"invalid_subshapes_including_parent_containers\":0,\"invalid_faces\":0,\"invalid_edges\":0,\"geometric_controls\":true,\"parallel\":false,\"method\":\"OCCT8 BRepCheck_Analyzer\"}\n",
+  "stderr": "",
+  "binary_sha256": "26e64b2621b3c4abe8f6f2b9d89f250e389d30c8d9de1211308c1cff3146a60d",
+  "parsed": {
+    "valid": true,
+    "invalid_subshapes_including_parent_containers": 0,
+    "invalid_faces": 0,
+    "invalid_edges": 0,
+    "geometric_controls": true,
+    "parallel": false,
+    "method": "OCCT8 BRepCheck_Analyzer"
+  }
+}

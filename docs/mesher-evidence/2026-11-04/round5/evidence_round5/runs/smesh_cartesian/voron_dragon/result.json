@@ -1,0 +1,21 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/smesh_cartesian_driver",
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/voron_dragon/original.brep",
+    "2.0",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/smesh_cartesian/voron_dragon/native"
+  ],
+  "seconds": 8.66262371600169,
+  "returncode": 0,
+  "timeout": false,
+  "input_sha256": "1922dc5ff4be731ce75abe18c1e1e8d9ac4a857fd5bb5c1cd70ff53e2c6ae8e9",
+  "engine": "Conda-forge SMESH9.9.0.0 h334bf96_29 with OCCT8 runtime, already pinned previous worker",
+  "settings": {
+    "spacing_mm": 2.0,
+    "size_threshold": 4,
+    "implement_edges": true,
+    "create_faces": true,
+    "viscous_layers": false,
+    "healing": false
+  }
+}
