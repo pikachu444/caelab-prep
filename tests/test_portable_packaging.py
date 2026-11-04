@@ -8,6 +8,7 @@ import sysconfig
 import subprocess
 import runpy
 import types
+import zipfile
 
 import pytest
 
@@ -16,6 +17,154 @@ spec = importlib.util.spec_from_file_location(
     "build_portable", Path(__file__).parents[1] / "scripts/packaging/build_portable.py")
 builder = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(builder)
+
+archive_spec = importlib.util.spec_from_file_location(
+    "archive_portable", Path(__file__).parents[1] / "scripts/packaging/archive_portable.py")
+archiver = importlib.util.module_from_spec(archive_spec)
+archive_spec.loader.exec_module(archiver)
+
+
+@pytest.fixture
+def portable_candidate(tmp_path):
+    candidate = tmp_path / "candidate"
+    files = {"caelab-prep.exe": b"fixture executable", "_internal/runtime.dll": b"fixture runtime",
+             "_internal/resources/icon.svg": b"fixture resource",
+             "notices/pkg/licenses/LICENSE": b"package license",
+             "notices/pkg/licenses/vendor/LICENSE": b"vendor license",
+             "analysis-inputs.json": b'[{"source":"C:/private-user/environment/module.py"}]'}
+    for name, data in files.items():
+        path = candidate / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+    records = [{"path": name, "bytes": len(data), "sha256": builder.digest(candidate / name)}
+               for name, data in files.items()]
+    manifest = {"stage": "built", "build_exit_code": 0, "source_commit": "a" * 40,
+                "packaging_commit": "b" * 40, "files": records, "file_count": len(records),
+                "total_bytes": sum(item["bytes"] for item in records),
+                "analysis_inputs_sha256": builder.digest(candidate / "analysis-inputs.json"),
+                "dependency_environment": {"base_prefix": "C:/private-user/python"},
+                "command": ["C:/private-user/python/python.exe"],
+                "notices": {"files": [{"source": "C:/private-user/license"}],
+                            "no_installed_notice_found": ["missing-license"], "unresolved": ["terms pending"]}}
+    (candidate / "build-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    return candidate, manifest
+
+
+def test_archive_preserves_payload_notices_and_private_candidate(portable_candidate, tmp_path):
+    candidate, original = portable_candidate
+    before = {p.relative_to(candidate).as_posix(): p.read_bytes() for p in candidate.rglob("*") if p.is_file()}
+    archive_path = archiver.archive_candidate(candidate, tmp_path / "handoff")
+    with zipfile.ZipFile(archive_path) as archive:
+        assert archive.testzip() is None
+        public = json.loads(archive.read("CAELab-Prep/build-manifest.json"))
+        assert "CAELab-Prep/analysis-inputs.json" not in archive.namelist()
+        assert b"private-user" not in archive.read("CAELab-Prep/build-manifest.json")
+        assert public["source_commit"] == original["source_commit"]
+        assert public["packaging_commit"] == original["packaging_commit"]
+        assert public["source_manifest_sha256"] == builder.digest(candidate / "build-manifest.json")
+        assert public["analysis_inputs_sha256"] == original["analysis_inputs_sha256"]
+        assert public["redistribution_accepted"] is False
+        assert public["notice_gaps"] == public["unresolved_redistribution_conditions"] == 1
+        assert set(archive.namelist()) == {"CAELab-Prep/" + name for name in before if name != "analysis-inputs.json"}
+        for item in public["files"]:
+            assert archive.read("CAELab-Prep/" + item["path"]) == before[item["path"]]
+    checksum = archive_path.with_suffix(".zip.sha256").read_text(encoding="ascii")
+    assert checksum == f"{builder.digest(archive_path)}  {archive_path.name}\n"
+    assert before == {p.relative_to(candidate).as_posix(): p.read_bytes() for p in candidate.rglob("*") if p.is_file()}
+
+
+@pytest.mark.parametrize("change", ["modified", "missing", "unrecorded"])
+def test_archive_rejects_changed_inventory(portable_candidate, tmp_path, change):
+    candidate, _ = portable_candidate
+    if change == "modified":
+        (candidate / "caelab-prep.exe").write_bytes(b"altered executable")
+    elif change == "missing":
+        (candidate / "_internal/runtime.dll").unlink()
+    else:
+        (candidate / "private-build.log").write_text("local build details")
+    output = tmp_path / "handoff"
+    with pytest.raises(ValueError, match="missing or changed|outside its recorded inventory"):
+        archiver.archive_candidate(candidate, output)
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("name", ["../outside", "/absolute", "C:/absolute", "dir\\file",
+                                  "dir/./file", "dir//file", "CAELAB-PREP.EXE", "build-manifest.json"])
+def test_archive_rejects_unsafe_or_duplicate_paths(portable_candidate, tmp_path, name):
+    candidate, manifest = portable_candidate
+    manifest["files"].append({"path": name, "bytes": 0, "sha256": "0" * 64})
+    (candidate / "build-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="Unsafe or duplicate"):
+        archiver.archive_candidate(candidate, tmp_path / "handoff")
+
+
+@pytest.mark.parametrize("field,value", [("stage", "failed"), ("build_exit_code", 1),
+                                         ("source_commit", "HEAD"), ("packaging_commit", "dirty"),
+                                         ("file_count", 0), ("analysis_inputs_sha256", "0" * 64)])
+def test_archive_requires_successful_pinned_build(portable_candidate, tmp_path, field, value):
+    candidate, manifest = portable_candidate
+    manifest[field] = value
+    (candidate / "build-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError):
+        archiver.archive_candidate(candidate, tmp_path / "handoff")
+
+
+def test_archive_preserves_existing_output_and_rejects_output_inside_candidate(portable_candidate, tmp_path):
+    candidate, _ = portable_candidate
+    output = tmp_path / "existing"
+    output.mkdir()
+    sentinel = output / "existing.zip"
+    sentinel.write_bytes(b"preserve")
+    for path in (output, candidate / "nested-output"):
+        with pytest.raises(ValueError, match="new and outside"):
+            archiver.archive_candidate(candidate, path)
+    assert sentinel.read_bytes() == b"preserve"
+
+
+def test_archive_detects_change_during_compression_without_handoff_zip(portable_candidate, tmp_path, monkeypatch):
+    candidate, _ = portable_candidate
+    write = archiver.zipfile.ZipFile.write
+
+    def changed_write(archive, filename, *args, **kwargs):
+        if Path(filename).name == "caelab-prep.exe":
+            Path(filename).write_bytes(b"changed during compression")
+        return write(archive, filename, *args, **kwargs)
+
+    monkeypatch.setattr(archiver.zipfile.ZipFile, "write", changed_write)
+    output = tmp_path / "handoff"
+    with pytest.raises(ValueError, match="changed while archiving"):
+        archiver.archive_candidate(candidate, output)
+    assert list(output.iterdir()) == []
+
+
+def test_archive_cli_creates_handoff_and_refuses_to_overwrite_it(portable_candidate, tmp_path):
+    candidate, _ = portable_candidate
+    output = tmp_path / "handoff"
+    script = Path(__file__).parents[1] / "scripts/packaging/archive_portable.py"
+    command = [sys.executable, str(script), "--candidate", str(candidate), "--output", str(output)]
+    result = subprocess.run(command, capture_output=True, text=True, timeout=15)
+    assert result.returncode == 0, result.stderr
+    archive = Path(result.stdout.strip())
+    assert archive.is_file() and archive.parent == output
+    checksum = builder.digest(archive)
+    repeated = subprocess.run(command, capture_output=True, text=True, timeout=15)
+    assert repeated.returncode == 2 and "new and outside" in repeated.stderr
+    assert builder.digest(archive) == checksum
+
+
+def test_archive_cleans_checksum_when_final_publication_fails(portable_candidate, tmp_path, monkeypatch):
+    candidate, _ = portable_candidate
+    before = {p.relative_to(candidate).as_posix(): p.read_bytes() for p in candidate.rglob("*") if p.is_file()}
+
+    def failed_replace(path, target):
+        raise PermissionError("publication denied")
+
+    monkeypatch.setattr(Path, "replace", failed_replace)
+    output = tmp_path / "handoff"
+    with pytest.raises(PermissionError, match="publication denied"):
+        archiver.archive_candidate(candidate, output)
+    assert list(output.iterdir()) == []
+    assert before == {p.relative_to(candidate).as_posix(): p.read_bytes() for p in candidate.rglob("*") if p.is_file()}
 
 
 def test_notices_keep_nested_files_with_the_same_basename(tmp_path):
