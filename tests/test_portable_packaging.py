@@ -18,6 +18,83 @@ spec = importlib.util.spec_from_file_location(
 builder = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(builder)
 
+@pytest.fixture
+def native_runtime(tmp_path, monkeypatch):
+    dependencies, tools, base, windows = (tmp_path / name for name in ("selected", "tools", "python", "windows"))
+    for path in (dependencies, tools, base, windows):
+        path.mkdir()
+    monkeypatch.setattr(sys, "base_prefix", str(base))
+    monkeypatch.setenv("SystemRoot", str(windows))
+    return dependencies, tools, base, windows
+
+
+def test_native_search_does_not_inherit_desktop_cache_paths(native_runtime, tmp_path, monkeypatch):
+    dependencies, _, base, windows = native_runtime
+    cache = tmp_path / "desktop-cache/bin"
+    monkeypatch.setenv("PATH", str(cache))
+    paths = builder.native_search_path(dependencies).split(builder.os.pathsep)
+    assert str(cache) not in paths
+    assert {str(path.resolve()) for path in (dependencies / "Scripts", dependencies / "Lib",
+                                           base, base / "DLLs", windows / "System32")}.issubset(paths)
+    assert builder.os.environ["PATH"] == str(cache)
+
+
+@pytest.mark.parametrize("origin", ["selected", "tools", "python", "system"])
+def test_native_origin_accepts_only_declared_runtime_roots(native_runtime, origin):
+    dependencies, tools, base, windows = native_runtime
+    roots = {"selected": dependencies / "Lib/site-packages/vendor", "tools": tools / "vendor",
+             "python": base / "DLLs", "system": windows / "System32"}
+    path = roots[origin] / "runtime.dll"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"native fixture")
+    builder.validate_native_input(path, dependencies, tools)
+
+
+@pytest.mark.parametrize("origin", ["poppler-cache", "libheif-cache", "global-site", "prefix-sibling"])
+def test_native_origin_rejects_ambient_cache_and_global_packages(native_runtime, tmp_path, origin):
+    dependencies, tools, base, _ = native_runtime
+    roots = {"poppler-cache": tmp_path / "desktop/poppler/bin", "libheif-cache": tmp_path / "desktop/libheif/bin",
+             "global-site": base / "Lib/site-packages/global", "prefix-sibling": tmp_path / "selected-other"}
+    path = roots[origin] / "runtime.dll"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"ambient fixture")
+    with pytest.raises(ValueError, match="Native input outside"):
+        builder.validate_native_input(path, dependencies, tools)
+
+
+@pytest.mark.parametrize("ambient", [False, True])
+def test_spec_applies_native_origin_guard_before_recording_or_building(native_runtime, tmp_path, monkeypatch, ambient):
+    dependencies, tools, _, _ = native_runtime
+    source = tmp_path / "source"
+    source.mkdir()
+    native = (tmp_path / "desktop-cache" if ambient else dependencies / "Lib") / "runtime.dll"
+    native.parent.mkdir(parents=True, exist_ok=True)
+    native.write_bytes(b"native fixture")
+    inputs = tmp_path / "analysis-inputs.json"
+    for key, path in {"PREP_BUNDLE_SOURCE": source, "PREP_BUNDLE_DEPENDENCIES": dependencies,
+                      "PREP_BUNDLE_TOOLS": tools, "PREP_BUNDLE_INPUTS": inputs}.items():
+        monkeypatch.setenv(key, str(path))
+    for name in ("PyInstaller", "_pyinstaller_hooks_contrib"):
+        module = types.ModuleType(name)
+        module.__file__ = str(tools / name / "__init__.py")
+        monkeypatch.setitem(sys.modules, name, module)
+    # The spec mutates sys.path; keep that mutation local to this verification.
+    monkeypatch.setattr(sys, "path", list(sys.path))
+    spec_path = Path(__file__).parents[1] / "scripts/packaging/portable.spec"
+    globals_ = {"SPECPATH": str(spec_path.parent),
+                "Analysis": lambda *a, **kw: types.SimpleNamespace(scripts=[], pure=[], datas=[],
+                                                                  binaries=[("runtime.dll", str(native), "BINARY")]),
+                "PYZ": lambda *a, **kw: object(), "EXE": lambda *a, **kw: object(),
+                "COLLECT": lambda *a, **kw: object()}
+    if ambient:
+        with pytest.raises(ValueError, match="Native input outside"):
+            runpy.run_path(str(spec_path), init_globals=globals_)
+        assert not inputs.exists()
+    else:
+        runpy.run_path(str(spec_path), init_globals=globals_)
+        assert json.loads(inputs.read_text())[0]["sha256"] == builder.digest(native)
+
+
 archive_spec = importlib.util.spec_from_file_location(
     "archive_portable", Path(__file__).parents[1] / "scripts/packaging/archive_portable.py")
 archiver = importlib.util.module_from_spec(archive_spec)
