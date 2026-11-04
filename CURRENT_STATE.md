@@ -69,6 +69,8 @@ Phase 3.6 폐삼각표면 Auto-Tet의 독립 진단 코드는 `01e0be2`에 보�
 
 관련 파일의 수정 전 검사는28pass/0.90s이고, 원 critic의 N13-ARCH-R1(최종 이동 실패 때 checksum 잔여)을 수정한 뒤 영향3검사는3pass/26deselected/0.51s다. 합성 EXE/DLL/resource/license fixture를 실제 ZIP으로 묶은 코드/CLI 검사이며 frozen 앱 실행이 아니다. 실패 이동 주입 뒤 출력 폴더가 비고 후보 bytes가 유지되는 회귀와 원 critic의 소스/검사/사용법 재확인으로 R1을 종결했다. 새 build·OS/VTK·solver·전체 suite는 실행하지 않았으며 이 커밋은 `[skip ci]`다. 이 archive 단계의 종료는 최신 source의 Windows 납품·정상 INI 복원·새 PC·전체 재배포 조건 승인이나 N13/N14 전체 완료를 뜻하지 않는다. 기존 후보·실패와 그룹별7/16/3은 유지한다.
 
+같은 archive 코드로 보존된 실제 source `0ada7ce1143e04931e1554430270247f3d994df9`/packaging `2168300ce8985ed28a55561a1aeefcec3e4c4192` 후보를1회 묶었다. 입력1,432파일/500,048,626B를 검증했고 ZIP은1,432members(원 payload1,431+filtered manifest1), 174,399,742B·SHA256 `cd6f77402e585b6a8ed6838e3a5b357a5b9aa9cc6aa8cccfd9071bdd854fb067`다. archive 명령exit0의 ZIP CRC/전체 payload hash와 별도 sidecar SHA·public field allowlist를 확인했으며 원 private manifest/analysis bytes는 불변이다. 고지 미확보1·조건 미해결2와 배포 미승인 상태를 유지한다. [PR66](https://github.com/pikachu444/caelab-prep/pull/66)은 이 코드·검사·실제 후보 호환성 근거를 연결하며, 새 source 빌드나 실제 앱/Windows 확인을 수행한 것으로 세지 않는다.
+
 <a id="quad-divisions-progress"></a>
 
 2026-11-04 N24의 [PR58](https://github.com/pikachu444/caelab-prep/pull/58) quad divisions 편집 코드는 `a230d322f71cc2da8104239c7441fa4745c54f27`이다. 기존 candidate 창에서 Load quad divisions로 원 JSON을 읽고 patch의 순서 있는 Edge 1–2/2–3 정수 분할 수만 바꾼다. 입력을 바꾸면 즉시 이전 candidate/Passed/Adopt를 지우고, 기존 generation·예산·공유 edge·실제 lattice/연결·Jacobian/AR·native 반올림 검사를 다시 적용한다. 단위·좌표·patch 정체성은 보존하고 원본 JSON의 같은 bounded bytes로 내용/hash를 묶는다. 수정 snapshot과 선택 source_recipe 자산은 기존 manifest/read/native.assets의 검증·publish 전 원본 보호·rollback·v6 경로를 사용한다. 별도 문서/codec/worker나 CAD/독립 MSH family 확대는 없다.
