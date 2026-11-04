@@ -82,6 +82,14 @@ quad와 hex 밑면의 분할 수는 JSON을 선택한 뒤 **Load recipe division
 
 개발 API는 `application.structured_mesh.generate_structured_mesh(recipe, output_dir, recipe_path=original_json)`와 후보의 `to_native_mesh()`, 기존 `session.adopt_mesh_candidate()`를 사용합니다. 파일 입력은 `recipe_path`로 원본을 지정하면 내용/hash를 검증하고 기존 원본 덮어쓰기 보호에 포함합니다. dict만 전달하면 후보 폴더에 recipe snapshot을 생성합니다. quad/hex 분할 수 편집은 `read_recipe_input(original_json)`이 돌려준 출처를 `source_recipe=`로 전달합니다. 원본과 같은 mode를 유지하고 차이를 divisions와 hex의 공통 layers로 제한하며 snapshot과 원본 둘 다 채택·저장 이후 덮어쓰기에서 보호합니다. 아래 CAD/독립 MSH 경로의 허용 요소 family를 quad/hex까지 넓힌 것은 아닙니다.
 
+<a id="recipe-geometry-fork"></a>
+
+단일 patch 입력을 불러온 뒤 **Edit single-patch geometry…**에서 source 순서의 corner1–4 XYZ와 hex의 sweep vector를 편집할 수 있습니다. 기존 `VectorEdit`의 단위를 유지하며 mode·unit·corner 순서나 topology는 바꾸지 않습니다. 현재 divisions/layers 값도 함께 사용합니다. 두 patch 입력은 기존 분할 수 편집을 유지하고 geometry editor는 비활성입니다.
+
+형상 draft를 바꾸면 이전 후보·품질·교체 검토를 폐기하고 Generate를 막습니다. **Save as new recipe…**로 새 파일을 선택해 입력을 검증·저장한 뒤 Generate로 새 후보를 만듭니다. 원본 hash·유한 수치·평면/convex 순서·양의 sweep·예산과 직렬화1MiB 제한을 검사하며 기존 파일은 덮어쓰지 않습니다. 취소/실패는 draft를 보존합니다. Escape로 마지막 저장 형상에 돌아가도 옛 품질 판정은 복구하지 않으므로 새 후보 생성이 필요합니다.
+
+이 작업은 원본을 수정하지 않고 **새 입력으로 분기**합니다. 새 후보에는 원본과의 geometry 편집 이력을 기록하거나 기존 `source_recipe`의 동일 geometry 관계로 가장하지 않습니다. 파일 저장은 문서 Undo 밖의 자산이며 실제 채택은 기존 mesh+recipe archive의 한 Undo를 사용합니다. 이미 편집한 native 메시·조건을 자동 변경하거나 대응시키지 않습니다. 두 patch의 공유 vertex·patch 구성 변경·일반 곡면/sweep는 후속입니다. 개발 helper `fork_geometry_recipe(base, source_digest, new_path, corners=..., vector=...)`는 같은 경계를 사용합니다. 실제 지원 범위와 미확인은 [현재 상태](../CURRENT_STATE.md#recipe-geometry-fork-progress)를 따릅니다.
+
 <a id="project-recipes"></a>
 
 이후에 채택하는 structured 후보는 **그 채택에 사용한 recipe 원문**과 선택적 원본 `source_recipe`를 작업문서에도 보관합니다. 문서를 재열고 같은 메시 창의 structured 모드에서 **Open project recipe…**를 누르면 보관 입력을 선택해 새 하위 폴더로 꺼내고 분할 수를 불러옵니다. **Generate candidate**를 다시 실행해 현재 생성기와 품질 검사를 거친 새 후보를 만듭니다. 기존 문서는 바뀌지 않습니다. 보관 입력은 채택 당시의 기록이며 이후 절점 이동·삭제·PART 변경을 역으로 복원하지 않습니다. 선택 도중 문서를 바꾸거나 재열면 다시 선택해야 합니다.
