@@ -24,6 +24,27 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def native_search_path(dependencies):
+    """Keep the analysis DLL search independent of the launching desktop tools."""
+    base = Path(sys.base_prefix)
+    windows = Path(os.environ["SystemRoot"])
+    paths = (dependencies / "Scripts", dependencies / "Lib", base, base / "DLLs",
+             windows / "System32", windows)
+    return os.pathsep.join(str(path.resolve()) for path in paths)
+
+
+def validate_native_input(path, dependencies, build_tools):
+    path = path.resolve()
+    selected = (dependencies.resolve(), build_tools.resolve())
+    if (any(part.casefold() == "site-packages" for part in path.parts)
+            and not any(path.is_relative_to(root) for root in selected)):
+        raise ValueError(f"Native input outside selected environment: {path}")
+    roots = (*selected, Path(sys.base_prefix).resolve(),
+             (Path(os.environ["SystemRoot"]) / "System32").resolve())
+    if not any(path.is_relative_to(root) for root in roots):
+        raise ValueError(f"Native input outside declared runtime roots: {path}")
+
+
 def dependency_inventory(dependencies):
     """Inspect the selected environment without PYTHONPATH or user-site fallback."""
     probe = r'''
@@ -132,6 +153,7 @@ def main():
     env["PYTHONPATH"] = os.pathsep.join((str(source / "src"), str(site), str(build_tools)))
     env["PYTHONNOUSERSITE"] = "1"
     env.pop("PYTHONHOME", None)
+    env["PATH"] = native_search_path(dependencies)
     env.update(PREP_BUNDLE_SOURCE=str(source), PREP_BUNDLE_DEPENDENCIES=str(dependencies),
                PREP_BUNDLE_TOOLS=str(build_tools),
                PREP_BUNDLE_INPUTS=str(output / "analysis-inputs.json"),
@@ -148,6 +170,8 @@ def main():
     manifest = {"source_commit": sha, "source_kind": "git archive; no working-tree application edits",
                 "stage": "building", "versions": versions,
                 "packaging_commit": tooling_sha, "dependency_environment": inputs,
+                "native_search_path": env["PATH"].split(os.pathsep),
+                "native_input_scope": "selected dependencies, staged tools, base Python and Windows System32",
                 "build_tool_inputs": tool_inputs,
                 "packaging_files": {p.relative_to(tooling).as_posix(): digest(p)
                                     for p in (Path(__file__), tooling / "prep_entry.py", tooling / "portable.spec",

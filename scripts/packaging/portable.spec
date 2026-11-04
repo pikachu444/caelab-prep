@@ -3,6 +3,7 @@ import os
 import sys
 import hashlib
 import json
+import runpy
 from pathlib import Path
 
 import PyInstaller
@@ -13,6 +14,7 @@ dependencies = Path(os.environ["PREP_BUNDLE_DEPENDENCIES"])
 build_tools = Path(os.environ["PREP_BUNDLE_TOOLS"])
 entry = Path(SPECPATH) / "prep_entry.py"
 site = dependencies / "Lib" / "site-packages"
+validate_native_input = runpy.run_path(str(Path(SPECPATH) / "build_portable.py"))["validate_native_input"]
 dependency_paths = [site]
 # Selected-venv .pth files are not processed merely by placing site on
 # PYTHONPATH. Reuse pywin32's two installed search paths and standard hooks.
@@ -53,6 +55,8 @@ for kind, entries in (("scripts", a.scripts), ("modules", a.pure), ("binaries", 
         path = Path(origin).resolve()
         if not path.is_file():
             continue
+        if kind == "binaries" or path.suffix.casefold() in (".dll", ".pyd", ".exe"):
+            validate_native_input(path, dependencies, build_tools)
         if (("site-packages" in path.parts or path.is_relative_to(build_tools)) and not path.is_relative_to(dependencies)
                 and not any(path.is_relative_to(root) for root in packager_roots)):
             raise ValueError(f"Application input outside selected dependency environment: {path}")

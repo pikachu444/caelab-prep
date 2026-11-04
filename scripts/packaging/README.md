@@ -11,6 +11,15 @@ Commit packaging changes first. The builder snapshots the selected source with
 and project hooks. It rejects an existing output directory and preserves earlier
 candidates. Do not change the packaging checkout while the build is running.
 
+The analysis child receives a DLL search `PATH` limited to the selected
+environment, its base Python and Windows directories. It does not inherit native
+caches from desktop tools. Analysis also rejects DLL/PYD/EXE inputs outside the
+selected environment, staged build tools, base Python and Windows System32;
+global `site-packages` cannot fall back through the base-Python allowance.
+The manifest records the search path. Unexpected native origins fail the build
+before PYZ/EXE creation rather than being silently removed from the candidate.
+An allowed origin is provenance evidence, not redistribution clearance.
+
 The QtGui hook uses PyInstaller's normal dependency collection, excluding only
 the Windows Qt Virtual Keyboard input-context plugin and PDF image-reader
 plugin before their DLL dependencies are expanded. Prep's QtWidgets UI does not
