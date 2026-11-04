@@ -136,6 +136,26 @@ def _write_json(path, value):
         stream.write('\n')
 
 
+def fork_geometry_recipe(base, source, destination, *, corners, vector=None):
+    """Save an explicit single-patch input; do not claim same-geometry lineage."""
+    _validate_source_recipe(base, source)
+    if 'patches' in base:
+        raise PrepError('invalid_recipe', 'Geometry forks currently support a single patch.')
+    edited = deepcopy(base)
+    edited['corners'] = [list(point) for point in corners]
+    if edited['mode'] == 'hex':
+        if vector is None: raise PrepError('invalid_recipe', 'Provide the new sweep vector explicitly.')
+        edited['vector'] = list(vector)
+    elif vector is not None: raise PrepError('invalid_recipe', 'A quad recipe has no sweep vector.')
+    validate_recipe(edited)
+    raw = (json.dumps(edited, ensure_ascii=False, indent=2, allow_nan=False) + '\n').encode('utf-8')
+    if len(raw) > MAX_RECIPE_BYTES:
+        raise PrepError('invalid_recipe', 'The serialized new recipe exceeds the 1 MiB input limit.')
+    target = Path(destination).expanduser().resolve()
+    with target.open('xb') as stream: stream.write(raw)
+    return str(target)
+
+
 def _child(module, arguments, *, cancel_event=None, timeout=30):
     if type(timeout) not in (int, float) or not math.isfinite(timeout) or timeout <= 0:
         raise PrepError('invalid_request', 'A positive finite worker timeout is required.')
