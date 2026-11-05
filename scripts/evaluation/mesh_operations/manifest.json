@@ -1,0 +1,30 @@
+{
+  "mesh_operations.py": {
+    "bytes": 29821,
+    "sha256": "e10e9f37d3e4521d128e1b54aaf91626cb7fdd81edd2ea478666b88a32939ccc"
+  },
+  "test_mesh_operations.py": {
+    "bytes": 14110,
+    "sha256": "d07b0d39a42b7ea8439aca4a1c92cff06f459a565ff9d3c079f27c2e7ff56de9"
+  },
+  "API.md": {
+    "bytes": 3820,
+    "sha256": "94b00e9668992f75196649790632aba6fa8911ec2719fb87bfa3818cfb00b50b"
+  },
+  "HANDOFF.md": {
+    "bytes": 6577,
+    "sha256": "2923fcea7e891300855231495940e48bd3e9a98a5b1f9259485f453dd666ccdd"
+  },
+  "pytest-final.log": {
+    "bytes": 99,
+    "sha256": "a689e51406fb3a0e78492a6aa12e7db399c021ceedeb12376913d2c0434f2630"
+  },
+  "fixtures.json": {
+    "bytes": 24258,
+    "sha256": "2d287316d5261b5ce91e616416ddeb6a3d73a2a20cfae576ddacf42957d8bf89"
+  },
+  "candidate-evidence.json": {
+    "bytes": 48255,
+    "sha256": "7663d9be8aab82387efeecab3fe29f3ed2111c14363d85e7a90476267e4a29b7"
+  }
+}

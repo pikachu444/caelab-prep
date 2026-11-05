@@ -1,0 +1,985 @@
+{
+  "shell_contact": {
+    "stamp": {
+      "document_id": "00000000-0000-0000-0000-000000000003",
+      "revision": 7,
+      "epoch": "00000000-0000-0000-0000-000000000004",
+      "resources": [
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "state_token": "original-r",
+          "mesh_revision": 4
+        },
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000002",
+          "state_token": "original-s",
+          "mesh_revision": 8
+        }
+      ]
+    },
+    "length_unit": "mm",
+    "nodes": [
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 1
+        },
+        "xyz": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 2
+        },
+        "xyz": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 3
+        },
+        "xyz": [
+          1,
+          1,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 4
+        },
+        "xyz": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 5
+        },
+        "xyz": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 6
+        },
+        "xyz": [
+          2,
+          1,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 7
+        },
+        "xyz": [
+          2.0001,
+          1,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 8
+        },
+        "xyz": [
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 99
+        },
+        "xyz": [
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000002",
+          "entity_kind": "node",
+          "local_id": 1
+        },
+        "xyz": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000002",
+          "entity_kind": "node",
+          "local_id": 2
+        },
+        "xyz": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000002",
+          "entity_kind": "node",
+          "local_id": 3
+        },
+        "xyz": [
+          1,
+          1,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000002",
+          "entity_kind": "node",
+          "local_id": 4
+        },
+        "xyz": [
+          0,
+          1,
+          0
+        ]
+      }
+    ],
+    "cells": [
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "element",
+          "local_id": 1
+        },
+        "family": "SHELL",
+        "nodes": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 1
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 2
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 3
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 4
+          }
+        ],
+        "part": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "1"
+        },
+        "source_scope": "/SHELL/1",
+        "orientation_node": null
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "element",
+          "local_id": 2
+        },
+        "family": "SHELL",
+        "nodes": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 2
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 5
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 6
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 3
+          }
+        ],
+        "part": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "2"
+        },
+        "source_scope": "/SHELL/2",
+        "orientation_node": null
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "element",
+          "local_id": 3
+        },
+        "family": "SH3N",
+        "nodes": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 5
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 8
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 7
+          }
+        ],
+        "part": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "2"
+        },
+        "source_scope": "/SH3N/3",
+        "orientation_node": null
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000002",
+          "entity_kind": "element",
+          "local_id": 1
+        },
+        "family": "SHELL",
+        "nodes": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "entity_kind": "node",
+            "local_id": 1
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "entity_kind": "node",
+            "local_id": 2
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "entity_kind": "node",
+            "local_id": 3
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "entity_kind": "node",
+            "local_id": 4
+          }
+        ],
+        "part": {
+          "resource_id": "00000000-0000-0000-0000-000000000002",
+          "entity_kind": "part",
+          "local_id": "3"
+        },
+        "source_scope": "/SHELL/1",
+        "orientation_node": null
+      }
+    ],
+    "parts": [
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "1"
+        },
+        "component_id": "left",
+        "families": [
+          "SHELL"
+        ],
+        "native_scope": "/PART/1"
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "2"
+        },
+        "component_id": "right",
+        "families": [
+          "SHELL",
+          "SH3N"
+        ],
+        "native_scope": "/PART/2"
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000002",
+          "entity_kind": "part",
+          "local_id": "3"
+        },
+        "component_id": "contact-other",
+        "families": [
+          "SHELL"
+        ],
+        "native_scope": "/PART/3"
+      }
+    ],
+    "sets": [
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "set",
+          "local_id": "left-surface"
+        },
+        "member_kind": "node",
+        "members": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 1
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 4
+          }
+        ],
+        "orientation_sensitive": true
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "set",
+          "local_id": "right-surface"
+        },
+        "member_kind": "node",
+        "members": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "entity_kind": "node",
+            "local_id": 1
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "entity_kind": "node",
+            "local_id": 4
+          }
+        ],
+        "orientation_sensitive": true
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "set",
+          "local_id": "nodal-load"
+        },
+        "member_kind": "node",
+        "members": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 1
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "entity_kind": "node",
+            "local_id": 1
+          }
+        ],
+        "orientation_sensitive": false
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "set",
+          "local_id": "shells"
+        },
+        "member_kind": "element",
+        "members": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 2
+          }
+        ],
+        "orientation_sensitive": true
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "set",
+          "local_id": "part-region"
+        },
+        "member_kind": "part",
+        "members": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "part",
+            "local_id": "1"
+          }
+        ],
+        "orientation_sensitive": false
+      }
+    ],
+    "uses": [
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "condition",
+          "local_id": "contact"
+        },
+        "kind": "contact",
+        "targets": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "left-surface"
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "right-surface"
+          }
+        ],
+        "orientation_sensitive": true,
+        "per_node_value": null
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "condition",
+          "local_id": "force"
+        },
+        "kind": "load",
+        "targets": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "nodal-load"
+          }
+        ],
+        "orientation_sensitive": false,
+        "per_node_value": [
+          5.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "condition",
+          "local_id": "material-direction"
+        },
+        "kind": "material-axis",
+        "targets": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "shells"
+          }
+        ],
+        "orientation_sensitive": true,
+        "per_node_value": null
+      }
+    ],
+    "dependency_closure_complete": true
+  },
+  "mixed": {
+    "stamp": {
+      "document_id": "00000000-0000-0000-0000-000000000003",
+      "revision": 7,
+      "epoch": "00000000-0000-0000-0000-000000000004",
+      "resources": [
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "state_token": "original-r",
+          "mesh_revision": 4
+        },
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000002",
+          "state_token": "original-s",
+          "mesh_revision": 8
+        }
+      ]
+    },
+    "length_unit": "mm",
+    "nodes": [
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 1
+        },
+        "xyz": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 2
+        },
+        "xyz": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 3
+        },
+        "xyz": [
+          1,
+          1,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 4
+        },
+        "xyz": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 5
+        },
+        "xyz": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 6
+        },
+        "xyz": [
+          1,
+          0,
+          1
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 7
+        },
+        "xyz": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 8
+        },
+        "xyz": [
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 9
+        },
+        "xyz": [
+          2,
+          0.5,
+          0.5
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 10
+        },
+        "xyz": [
+          3,
+          0.5,
+          0.5
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 11
+        },
+        "xyz": [
+          2,
+          0.5,
+          1.5
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 12
+        },
+        "xyz": [
+          4,
+          0.5,
+          0.5
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 99
+        },
+        "xyz": [
+          100,
+          100,
+          100
+        ]
+      }
+    ],
+    "cells": [
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "element",
+          "local_id": 1
+        },
+        "family": "BRICK",
+        "nodes": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 1
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 2
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 3
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 4
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 5
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 6
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 7
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 8
+          }
+        ],
+        "part": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "hex"
+        },
+        "source_scope": "/BRICK/1",
+        "orientation_node": null
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "element",
+          "local_id": 2
+        },
+        "family": "TETRA4",
+        "nodes": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 2
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 3
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 6
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 9
+          }
+        ],
+        "part": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "tet"
+        },
+        "source_scope": "/TETRA4/2",
+        "orientation_node": null
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "element",
+          "local_id": 3
+        },
+        "family": "BEAM",
+        "nodes": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 9
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 10
+          }
+        ],
+        "part": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "beam"
+        },
+        "source_scope": "/BEAM/3",
+        "orientation_node": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 11
+        }
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "element",
+          "local_id": 4
+        },
+        "family": "TRUSS",
+        "nodes": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 10
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 12
+          }
+        ],
+        "part": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "beam"
+        },
+        "source_scope": "/TRUSS/4",
+        "orientation_node": null
+      }
+    ],
+    "parts": [
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "hex"
+        },
+        "component_id": "body",
+        "families": [
+          "BRICK"
+        ],
+        "native_scope": "/PART/hex"
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "tet"
+        },
+        "component_id": "body",
+        "families": [
+          "TETRA4"
+        ],
+        "native_scope": "/PART/tet"
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "part",
+          "local_id": "beam"
+        },
+        "component_id": "frame",
+        "families": [
+          "BEAM",
+          "TRUSS"
+        ],
+        "native_scope": "/PART/beam"
+      }
+    ],
+    "sets": [
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "set",
+          "local_id": "loaded"
+        },
+        "member_kind": "node",
+        "members": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 9
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 10
+          }
+        ],
+        "orientation_sensitive": false
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "set",
+          "local_id": "solids"
+        },
+        "member_kind": "element",
+        "members": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 2
+          }
+        ],
+        "orientation_sensitive": false
+      }
+    ],
+    "uses": [
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "condition",
+          "local_id": "force"
+        },
+        "kind": "load",
+        "targets": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "loaded"
+          }
+        ],
+        "orientation_sensitive": false,
+        "per_node_value": [
+          0.0,
+          2.0,
+          0.0
+        ]
+      },
+      {
+        "ref": {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "condition",
+          "local_id": "frame"
+        },
+        "kind": "material-axis",
+        "targets": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "loaded"
+          }
+        ],
+        "orientation_sensitive": true,
+        "per_node_value": null
+      }
+    ],
+    "dependency_closure_complete": true
+  }
+}

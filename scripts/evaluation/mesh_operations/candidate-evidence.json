@@ -1,0 +1,1550 @@
+{
+  "python": "3.12.14",
+  "snapshots": {
+    "shell": "549e65cc6f85909aba6237fb03dd6c8a8b380f07d60a8c5089e0927a8bc429c4",
+    "mixed": "e25a3aad0e144c887e9e3b9d31b71cdd3eb42b4495c09c5acf0c347e6352b3a5"
+  },
+  "operations": {
+    "shell_move": {
+      "operation": "move_nodes",
+      "source_digest": "549e65cc6f85909aba6237fb03dd6c8a8b380f07d60a8c5089e0927a8bc429c4",
+      "node_updates": [
+        {
+          "ref": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 2
+          },
+          "xyz": [
+            1.05,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "cell_updates": [],
+      "set_updates": [],
+      "removed_nodes": [],
+      "removed_cells": [],
+      "merge_map": [],
+      "merge_tolerance": null,
+      "merge_approvals": [],
+      "orphan_policy": null,
+      "new_orphans": [],
+      "affected_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "mesh_revision_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "quality_before": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          "metric": "quad_min_corner_scaled_jacobian",
+          "value": 1.0,
+          "signed_measure": 1.0,
+          "problems": []
+        },
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 2
+          },
+          "metric": "quad_min_corner_scaled_jacobian",
+          "value": 1.0,
+          "signed_measure": 1.0,
+          "problems": []
+        }
+      ],
+      "quality_after": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          "metric": "quad_min_corner_scaled_jacobian",
+          "value": 0.9987523388778446,
+          "signed_measure": 1.0250000000000001,
+          "problems": []
+        },
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 2
+          },
+          "metric": "quad_min_corner_scaled_jacobian",
+          "value": 0.9987523388778446,
+          "signed_measure": 0.975,
+          "problems": []
+        }
+      ],
+      "impacts": [
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "left-surface"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "nodal-load"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "shells"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "part-region"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 1,
+          "surviving_cardinality": 1,
+          "projected_cardinality_after_mapping": 1,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "contact"
+          },
+          "reasons": [
+            "contact_pair_membership_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 4,
+          "surviving_cardinality": 4,
+          "projected_cardinality_after_mapping": 4,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "force"
+          },
+          "reasons": [
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "projected_resultant_after_mapping": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "material-direction"
+          },
+          "reasons": [
+            "material_axis_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 6,
+          "surviving_cardinality": 6,
+          "projected_cardinality_after_mapping": 6,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        }
+      ],
+      "source_stamp": {
+        "document_id": "00000000-0000-0000-0000-000000000003",
+        "revision": 7,
+        "epoch": "00000000-0000-0000-0000-000000000004",
+        "resources": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "state_token": "original-r",
+            "mesh_revision": 4
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "state_token": "original-s",
+            "mesh_revision": 8
+          }
+        ]
+      }
+    },
+    "shell_merge": {
+      "operation": "merge_nodes",
+      "source_digest": "549e65cc6f85909aba6237fb03dd6c8a8b380f07d60a8c5089e0927a8bc429c4",
+      "node_updates": [],
+      "cell_updates": [
+        {
+          "ref": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 3
+          },
+          "family": "SH3N",
+          "nodes": [
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 5
+            },
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 8
+            },
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 6
+            }
+          ],
+          "part": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "part",
+            "local_id": "2"
+          },
+          "source_scope": "/SH3N/3",
+          "orientation_node": null
+        }
+      ],
+      "set_updates": [],
+      "removed_nodes": [
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 7
+        }
+      ],
+      "removed_cells": [],
+      "merge_map": [
+        [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 7
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 6
+          }
+        ]
+      ],
+      "merge_tolerance": 0.001,
+      "merge_approvals": [],
+      "orphan_policy": null,
+      "new_orphans": [],
+      "affected_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "mesh_revision_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "quality_before": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 3
+          },
+          "metric": "triangle_mean_ratio",
+          "value": 0.8660687028892396,
+          "signed_measure": 0.5,
+          "problems": []
+        }
+      ],
+      "quality_after": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 3
+          },
+          "metric": "triangle_mean_ratio",
+          "value": 0.8660254037844386,
+          "signed_measure": 0.5,
+          "problems": []
+        }
+      ],
+      "impacts": [
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "left-surface"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "nodal-load"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "shells"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "part-region"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 1,
+          "surviving_cardinality": 1,
+          "projected_cardinality_after_mapping": 1,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "contact"
+          },
+          "reasons": [
+            "contact_pair_membership_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 4,
+          "surviving_cardinality": 4,
+          "projected_cardinality_after_mapping": 4,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "force"
+          },
+          "reasons": [
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "projected_resultant_after_mapping": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "material-direction"
+          },
+          "reasons": [
+            "material_axis_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 6,
+          "surviving_cardinality": 6,
+          "projected_cardinality_after_mapping": 6,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        }
+      ],
+      "source_stamp": {
+        "document_id": "00000000-0000-0000-0000-000000000003",
+        "revision": 7,
+        "epoch": "00000000-0000-0000-0000-000000000004",
+        "resources": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "state_token": "original-r",
+            "mesh_revision": 4
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "state_token": "original-s",
+            "mesh_revision": 8
+          }
+        ]
+      }
+    },
+    "shell_delete": {
+      "operation": "delete_elements",
+      "source_digest": "549e65cc6f85909aba6237fb03dd6c8a8b380f07d60a8c5089e0927a8bc429c4",
+      "node_updates": [],
+      "cell_updates": [],
+      "set_updates": [],
+      "removed_nodes": [
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 7
+        },
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 8
+        }
+      ],
+      "removed_cells": [
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "element",
+          "local_id": 3
+        }
+      ],
+      "merge_map": [],
+      "merge_tolerance": null,
+      "merge_approvals": [],
+      "orphan_policy": "delete_new",
+      "new_orphans": [
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 7
+        },
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 8
+        }
+      ],
+      "affected_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "mesh_revision_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "quality_before": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 3
+          },
+          "metric": "triangle_mean_ratio",
+          "value": 0.8660687028892396,
+          "signed_measure": 0.5,
+          "problems": []
+        }
+      ],
+      "quality_after": [],
+      "impacts": [
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "left-surface"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "nodal-load"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "shells"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "part-region"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 1,
+          "surviving_cardinality": 1,
+          "projected_cardinality_after_mapping": 1,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "contact"
+          },
+          "reasons": [
+            "contact_pair_membership_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 4,
+          "surviving_cardinality": 4,
+          "projected_cardinality_after_mapping": 4,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "force"
+          },
+          "reasons": [
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "projected_resultant_after_mapping": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "material-direction"
+          },
+          "reasons": [
+            "material_axis_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 6,
+          "surviving_cardinality": 6,
+          "projected_cardinality_after_mapping": 6,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        }
+      ],
+      "source_stamp": {
+        "document_id": "00000000-0000-0000-0000-000000000003",
+        "revision": 7,
+        "epoch": "00000000-0000-0000-0000-000000000004",
+        "resources": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "state_token": "original-r",
+            "mesh_revision": 4
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "state_token": "original-s",
+            "mesh_revision": 8
+          }
+        ]
+      }
+    },
+    "shell_flip": {
+      "operation": "flip_shell_normals",
+      "source_digest": "549e65cc6f85909aba6237fb03dd6c8a8b380f07d60a8c5089e0927a8bc429c4",
+      "node_updates": [],
+      "cell_updates": [
+        {
+          "ref": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          "family": "SHELL",
+          "nodes": [
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 1
+            },
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 4
+            },
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 3
+            },
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 2
+            }
+          ],
+          "part": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "part",
+            "local_id": "1"
+          },
+          "source_scope": "/SHELL/1",
+          "orientation_node": null
+        }
+      ],
+      "set_updates": [],
+      "removed_nodes": [],
+      "removed_cells": [],
+      "merge_map": [],
+      "merge_tolerance": null,
+      "merge_approvals": [],
+      "orphan_policy": null,
+      "new_orphans": [],
+      "affected_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "mesh_revision_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "quality_before": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          "metric": "quad_min_corner_scaled_jacobian",
+          "value": 1.0,
+          "signed_measure": 1.0,
+          "problems": []
+        }
+      ],
+      "quality_after": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          "metric": "quad_min_corner_scaled_jacobian",
+          "value": 1.0,
+          "signed_measure": 1.0,
+          "problems": []
+        }
+      ],
+      "impacts": [
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "left-surface"
+          },
+          "reasons": [
+            "mesh_generation_changed",
+            "surface_orientation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "nodal-load"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "shells"
+          },
+          "reasons": [
+            "mesh_generation_changed",
+            "surface_orientation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "part-region"
+          },
+          "reasons": [
+            "mesh_generation_changed",
+            "surface_orientation_changed"
+          ],
+          "previous_cardinality": 1,
+          "surviving_cardinality": 1,
+          "projected_cardinality_after_mapping": 1,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "contact"
+          },
+          "reasons": [
+            "contact_pair_membership_review",
+            "directed_condition_orientation_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 4,
+          "surviving_cardinality": 4,
+          "projected_cardinality_after_mapping": 4,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "force"
+          },
+          "reasons": [
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "projected_resultant_after_mapping": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "material-direction"
+          },
+          "reasons": [
+            "directed_condition_orientation_review",
+            "material_axis_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 6,
+          "surviving_cardinality": 6,
+          "projected_cardinality_after_mapping": 6,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        }
+      ],
+      "source_stamp": {
+        "document_id": "00000000-0000-0000-0000-000000000003",
+        "revision": 7,
+        "epoch": "00000000-0000-0000-0000-000000000004",
+        "resources": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "state_token": "original-r",
+            "mesh_revision": 4
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "state_token": "original-s",
+            "mesh_revision": 8
+          }
+        ]
+      }
+    },
+    "shell_part": {
+      "operation": "reassign_parts",
+      "source_digest": "549e65cc6f85909aba6237fb03dd6c8a8b380f07d60a8c5089e0927a8bc429c4",
+      "node_updates": [],
+      "cell_updates": [
+        {
+          "ref": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          "family": "SHELL",
+          "nodes": [
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 1
+            },
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 2
+            },
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 3
+            },
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 4
+            }
+          ],
+          "part": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "part",
+            "local_id": "2"
+          },
+          "source_scope": "/SHELL/1",
+          "orientation_node": null
+        }
+      ],
+      "set_updates": [],
+      "removed_nodes": [],
+      "removed_cells": [],
+      "merge_map": [],
+      "merge_tolerance": null,
+      "merge_approvals": [],
+      "orphan_policy": null,
+      "new_orphans": [],
+      "affected_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "mesh_revision_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "quality_before": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          "metric": "quad_min_corner_scaled_jacobian",
+          "value": 1.0,
+          "signed_measure": 1.0,
+          "problems": []
+        }
+      ],
+      "quality_after": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          "metric": "quad_min_corner_scaled_jacobian",
+          "value": 1.0,
+          "signed_measure": 1.0,
+          "problems": []
+        }
+      ],
+      "impacts": [
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "left-surface"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "nodal-load"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "shells"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "part-region"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 1,
+          "surviving_cardinality": 1,
+          "projected_cardinality_after_mapping": 1,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "contact"
+          },
+          "reasons": [
+            "contact_pair_membership_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 4,
+          "surviving_cardinality": 4,
+          "projected_cardinality_after_mapping": 4,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "force"
+          },
+          "reasons": [
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "projected_resultant_after_mapping": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "material-direction"
+          },
+          "reasons": [
+            "material_axis_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 6,
+          "surviving_cardinality": 6,
+          "projected_cardinality_after_mapping": 6,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        }
+      ],
+      "source_stamp": {
+        "document_id": "00000000-0000-0000-0000-000000000003",
+        "revision": 7,
+        "epoch": "00000000-0000-0000-0000-000000000004",
+        "resources": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "state_token": "original-r",
+            "mesh_revision": 4
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "state_token": "original-s",
+            "mesh_revision": 8
+          }
+        ]
+      }
+    },
+    "shell_set": {
+      "operation": "reassign_set",
+      "source_digest": "549e65cc6f85909aba6237fb03dd6c8a8b380f07d60a8c5089e0927a8bc429c4",
+      "node_updates": [],
+      "cell_updates": [],
+      "set_updates": [
+        {
+          "ref": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "nodal-load"
+          },
+          "member_kind": "node",
+          "members": [
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 5
+            },
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 6
+            },
+            {
+              "resource_id": "00000000-0000-0000-0000-000000000001",
+              "entity_kind": "node",
+              "local_id": 7
+            }
+          ],
+          "orientation_sensitive": false
+        }
+      ],
+      "removed_nodes": [],
+      "removed_cells": [],
+      "merge_map": [],
+      "merge_tolerance": null,
+      "merge_approvals": [],
+      "orphan_policy": null,
+      "new_orphans": [],
+      "affected_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "mesh_revision_resources": [],
+      "quality_before": [],
+      "quality_after": [],
+      "impacts": [
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "nodal-load"
+          },
+          "reasons": [
+            "explicit_membership_replaced"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 3,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "force"
+          },
+          "reasons": [
+            "mechanical_components_require_validation",
+            "per_node_load_resultant_changes_if_mapping_accepted",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 3,
+          "previous_resultant": [
+            10.0,
+            0.0,
+            0.0
+          ],
+          "projected_resultant_after_mapping": [
+            15.0,
+            0.0,
+            0.0
+          ],
+          "status": "requires_explicit_reconnection"
+        }
+      ],
+      "source_stamp": {
+        "document_id": "00000000-0000-0000-0000-000000000003",
+        "revision": 7,
+        "epoch": "00000000-0000-0000-0000-000000000004",
+        "resources": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "state_token": "original-r",
+            "mesh_revision": 4
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "state_token": "original-s",
+            "mesh_revision": 8
+          }
+        ]
+      }
+    },
+    "mixed_move": {
+      "operation": "move_nodes",
+      "source_digest": "e25a3aad0e144c887e9e3b9d31b71cdd3eb42b4495c09c5acf0c347e6352b3a5",
+      "node_updates": [
+        {
+          "ref": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "node",
+            "local_id": 7
+          },
+          "xyz": [
+            1.0,
+            1.0,
+            1.1
+          ]
+        }
+      ],
+      "cell_updates": [],
+      "set_updates": [],
+      "removed_nodes": [],
+      "removed_cells": [],
+      "merge_map": [],
+      "merge_tolerance": null,
+      "merge_approvals": [],
+      "orphan_policy": null,
+      "new_orphans": [],
+      "affected_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "mesh_revision_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "quality_before": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          "metric": "hex_min_scaled_jacobian_27",
+          "value": 1.0,
+          "signed_measure": 1.0000000000000002,
+          "problems": []
+        }
+      ],
+      "quality_after": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 1
+          },
+          "metric": "hex_min_scaled_jacobian_27",
+          "value": 0.9900990099009903,
+          "signed_measure": 1.0249999999999997,
+          "problems": []
+        }
+      ],
+      "impacts": [
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "loaded"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "solids"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "force"
+          },
+          "reasons": [
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": [
+            0.0,
+            4.0,
+            0.0
+          ],
+          "projected_resultant_after_mapping": [
+            0.0,
+            4.0,
+            0.0
+          ],
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "frame"
+          },
+          "reasons": [
+            "material_axis_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        }
+      ],
+      "source_stamp": {
+        "document_id": "00000000-0000-0000-0000-000000000003",
+        "revision": 7,
+        "epoch": "00000000-0000-0000-0000-000000000004",
+        "resources": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "state_token": "original-r",
+            "mesh_revision": 4
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "state_token": "original-s",
+            "mesh_revision": 8
+          }
+        ]
+      }
+    },
+    "mixed_delete": {
+      "operation": "delete_elements",
+      "source_digest": "e25a3aad0e144c887e9e3b9d31b71cdd3eb42b4495c09c5acf0c347e6352b3a5",
+      "node_updates": [],
+      "cell_updates": [],
+      "set_updates": [],
+      "removed_nodes": [
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 11
+        }
+      ],
+      "removed_cells": [
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "element",
+          "local_id": 3
+        }
+      ],
+      "merge_map": [],
+      "merge_tolerance": null,
+      "merge_approvals": [],
+      "orphan_policy": "delete_new",
+      "new_orphans": [
+        {
+          "resource_id": "00000000-0000-0000-0000-000000000001",
+          "entity_kind": "node",
+          "local_id": 11
+        }
+      ],
+      "affected_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "mesh_revision_resources": [
+        "00000000-0000-0000-0000-000000000001"
+      ],
+      "quality_before": [
+        {
+          "element": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "element",
+            "local_id": 3
+          },
+          "metric": "normalized_length",
+          "value": 1.0,
+          "signed_measure": 1.0,
+          "problems": []
+        }
+      ],
+      "quality_after": [],
+      "impacts": [
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "loaded"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "set",
+            "local_id": "solids"
+          },
+          "reasons": [
+            "mesh_generation_changed"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "force"
+          },
+          "reasons": [
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": [
+            0.0,
+            4.0,
+            0.0
+          ],
+          "projected_resultant_after_mapping": [
+            0.0,
+            4.0,
+            0.0
+          ],
+          "status": "requires_explicit_reconnection"
+        },
+        {
+          "target": {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "entity_kind": "condition",
+            "local_id": "frame"
+          },
+          "reasons": [
+            "material_axis_review",
+            "mechanical_components_require_validation",
+            "target_set_requires_reconnection"
+          ],
+          "previous_cardinality": 2,
+          "surviving_cardinality": 2,
+          "projected_cardinality_after_mapping": 2,
+          "previous_resultant": null,
+          "projected_resultant_after_mapping": null,
+          "status": "requires_explicit_reconnection"
+        }
+      ],
+      "source_stamp": {
+        "document_id": "00000000-0000-0000-0000-000000000003",
+        "revision": 7,
+        "epoch": "00000000-0000-0000-0000-000000000004",
+        "resources": [
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000001",
+            "state_token": "original-r",
+            "mesh_revision": 4
+          },
+          {
+            "resource_id": "00000000-0000-0000-0000-000000000002",
+            "state_token": "original-s",
+            "mesh_revision": 8
+          }
+        ]
+      }
+    }
+  }
+}
