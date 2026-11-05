@@ -1,0 +1,45 @@
+************************************************************************
+**                                                                    **
+**                                                                    **
+**                        OpenCourant Starter                         **
+**                                                                    **
+**            Non-linear Finite Element Analysis Software             **
+**                                                                    **
+**                                                                    **
+**                                                                    **
+**                    Linux 64 bits, GNU compiler                     **
+**                      Double Precision Version                      **
+**                                                                    **
+**                                                                    **
+** CommitID: cb760c206e346eff12161a2268b134ef9d48a4ef                 **
+************************************************************************
+** OpenCourant Software                                               **
+** COPYRIGHT (C) 2026 Siemens                                         **
+** Licensed under GNU Affero General Public License.                  **
+** See License file.                                                  **
+************************************************************************
+ 
+
+ .. UNITS SYSTEM                                                                         
+ .. CONTROL VARIABLES                                                                    
+ .. STARTER RUNNING ON    1 THREAD
+ .. MATERIALS                                                                            
+ .. NODES                                                                                
+ .. PROPERTIES                                                                           
+ .. 3D SOLID ELEMENTS                                                                    
+ .. SUBSETS
+ .. ELEMENT GROUPS
+ .. PART GROUPS
+ .. NODE GROUP
+ .. BOUNDARY CONDITIONS                                                                  
+ .. DOMAIN DECOMPOSITION
+ .. ELEMENT GROUPS                                                                       
+ .. ELEMENT BUFFER INITIALIZATION                                                        
+ .. GEOMETRY PLOT FILE                                                                   
+ .. PARALLEL RESTART FILES GENERATION                                                    
+ ** ERROR TRAPPED : REPORT TO LISTING FILE
+
+ERROR ID :    760
+
+
+ RADIOSS STOP DUE TO INPUT ERROR

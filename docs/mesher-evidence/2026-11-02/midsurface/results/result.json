@@ -1,0 +1,360 @@
+{
+  "scope": "F1 bounded synthetic-fixture feasibility only; no automatic pairing, no Prep UI/Undo/native integration, no F2 qualification.",
+  "versions": {
+    "cadquery-ocp": "7.8.1.1.post1",
+    "cadquery": "2.7.0"
+  },
+  "fixed_recipe": {
+    "kernel": "OCCT7.8.1",
+    "offset": "PerformByJoin",
+    "join": "GeomAbs_Intersection",
+    "Intersection": false,
+    "SelfInter": false,
+    "tolerance_mm": 1e-06,
+    "normal_tolerance_one_minus_dot": 1e-08,
+    "units": "mm"
+  },
+  "budget": {
+    "per_process_timeout_seconds": 120,
+    "measured_peak_rss_limit_MiB": 2048,
+    "algorithm_recipe_search": "one fixed join recipe; initial sharp-junction probe retained, no tuning loop"
+  },
+  "positive": {
+    "plate": {
+      "source_brep_sha256": "fcd5c3b19cc01fe19bd4387debe66b4ebddfa9c67b3ba6e8994b6dc9150c8499",
+      "source_unchanged": true,
+      "pairs": [
+        {
+          "outer_face_index": 4,
+          "inner_face_index": 5,
+          "kind": "PLANE",
+          "measured_thickness_mm": 2.0,
+          "thickness_error_mm": 0.0,
+          "outer_area_mm2": 999.9999999999998,
+          "inner_area_mm2": 999.9999999999998
+        }
+      ],
+      "thickness_mm": 2,
+      "fraction_from_outer": 0.5,
+      "reference_shift_from_mid_along_outer_normal_mm": 0.0,
+      "candidate_role": "midsurface",
+      "topology": {
+        "faces": 1,
+        "components": 1,
+        "free_edges": 4,
+        "shared_edges": 0,
+        "nonmanifold_edges": 0,
+        "seam_lengths_mm": []
+      },
+      "outer_offset_area_mm2": 999.9999999999998,
+      "inner_offset_area_mm2": 999.9999999999998,
+      "common_area_mm2": 999.9999999999998,
+      "boundary_overlap_area_error_mm2": 0.0,
+      "candidate_brep_sha256": "ab52d09810c0c40c795128ed92e9f6c227641fc4994d0f451550993ad3592dda",
+      "measurements": {
+        "analytic_area_mm2": 1000,
+        "area_mm2": 999.9999999999998,
+        "bbox_mm": [
+          0.0,
+          0.0,
+          1.0,
+          40.0,
+          25.0,
+          1.0
+        ],
+        "source_volume_mm3": 2000.0,
+        "surface_samples_including_boundaries": 25,
+        "errors": {
+          "area_error_mm2": 2.2737367544323206e-13,
+          "bbox_max_error_mm": 0.0,
+          "thickness_ray_outer_max_error_mm": 0.0,
+          "thickness_ray_inner_max_error_mm": 0.0,
+          "outer_normal_max_one_minus_dot": 0.0,
+          "boundary_max_error_mm": 0.0,
+          "shared_edge_surface_max_error_mm": 0.0,
+          "seam_tangency_max_one_minus_dot": 0.0
+        },
+        "topology": {
+          "faces": 1,
+          "components": 1,
+          "free_edges": 4,
+          "shared_edges": 0,
+          "nonmanifold_edges": 0,
+          "seam_lengths_mm": []
+        }
+      },
+      "seconds": 0.02548138899874175,
+      "reopened_measurements": {
+        "analytic_area_mm2": 1000,
+        "area_mm2": 999.9999999999998,
+        "bbox_mm": [
+          0.0,
+          0.0,
+          1.0,
+          40.0,
+          25.0,
+          1.0
+        ],
+        "source_volume_mm3": 2000.0,
+        "surface_samples_including_boundaries": 25,
+        "errors": {
+          "area_error_mm2": 2.2737367544323206e-13,
+          "bbox_max_error_mm": 0.0,
+          "thickness_ray_outer_max_error_mm": 0.0,
+          "thickness_ray_inner_max_error_mm": 0.0,
+          "outer_normal_max_one_minus_dot": 0.0,
+          "boundary_max_error_mm": 0.0,
+          "shared_edge_surface_max_error_mm": 0.0,
+          "seam_tangency_max_one_minus_dot": 0.0
+        },
+        "topology": {
+          "faces": 1,
+          "components": 1,
+          "free_edges": 4,
+          "shared_edges": 0,
+          "nonmanifold_edges": 0,
+          "seam_lengths_mm": []
+        }
+      },
+      "source_file_sha256": "fcd5c3b19cc01fe19bd4387debe66b4ebddfa9c67b3ba6e8994b6dc9150c8499",
+      "output_file_sha256": "ab52d09810c0c40c795128ed92e9f6c227641fc4994d0f451550993ad3592dda"
+    },
+    "rounded_L": {
+      "source_brep_sha256": "48d59575dd900a7c6a4f175c8eb53c7fe899b0d2ffbe3d366c4fcd4cc7941bfe",
+      "source_unchanged": true,
+      "pairs": [
+        {
+          "outer_face_index": 0,
+          "inner_face_index": 6,
+          "kind": "PLANE",
+          "measured_thickness_mm": 2.000000000000001,
+          "thickness_error_mm": 8.881784197001252e-16,
+          "outer_area_mm2": 999.9999999999998,
+          "inner_area_mm2": 999.9999999999998
+        },
+        {
+          "outer_face_index": 1,
+          "inner_face_index": 5,
+          "kind": "CYLINDER",
+          "measured_thickness_mm": 2.0000000000000053,
+          "thickness_error_mm": 5.329070518200751e-15,
+          "outer_area_mm2": 471.2388980384689,
+          "inner_area_mm2": 392.6990816987242
+        },
+        {
+          "outer_face_index": 2,
+          "inner_face_index": 4,
+          "kind": "PLANE",
+          "measured_thickness_mm": 2.0,
+          "thickness_error_mm": 0.0,
+          "outer_area_mm2": 699.9999999999998,
+          "inner_area_mm2": 699.9999999999998
+        }
+      ],
+      "thickness_mm": 2,
+      "fraction_from_outer": 0.5,
+      "reference_shift_from_mid_along_outer_normal_mm": 0.0,
+      "candidate_role": "midsurface",
+      "topology": {
+        "faces": 3,
+        "components": 1,
+        "free_edges": 8,
+        "shared_edges": 2,
+        "nonmanifold_edges": 0,
+        "seam_lengths_mm": [
+          25.0,
+          25.0
+        ]
+      },
+      "outer_offset_area_mm2": 2131.9689898685956,
+      "inner_offset_area_mm2": 2131.9689898685956,
+      "common_area_mm2": 2131.9689898685956,
+      "boundary_overlap_area_error_mm2": 0.0,
+      "candidate_brep_sha256": "a10a49181632a895f67d4266632d7cedb4c0d9dcfc62868c797dd7904e3699ed",
+      "measurements": {
+        "analytic_area_mm2": 2131.9689898685965,
+        "area_mm2": 2131.9689898685956,
+        "bbox_mm": [
+          0.0,
+          -25.0,
+          1.0,
+          51.0,
+          0.0,
+          40.0
+        ],
+        "source_volume_mm3": 4263.937979737191,
+        "surface_samples_including_boundaries": 75,
+        "errors": {
+          "area_error_mm2": 9.094947017729282e-13,
+          "bbox_max_error_mm": 0.0,
+          "thickness_ray_outer_max_error_mm": 2.4424906541753444e-15,
+          "thickness_ray_inner_max_error_mm": 2.6645352591003757e-15,
+          "outer_normal_max_one_minus_dot": 0.0,
+          "boundary_max_error_mm": 1.7763568394002505e-15,
+          "shared_edge_surface_max_error_mm": 8.881784197001252e-16,
+          "seam_tangency_max_one_minus_dot": 0.0
+        },
+        "topology": {
+          "faces": 3,
+          "components": 1,
+          "free_edges": 8,
+          "shared_edges": 2,
+          "nonmanifold_edges": 0,
+          "seam_lengths_mm": [
+            25.0,
+            25.0
+          ]
+        }
+      },
+      "seconds": 0.07217149299685843,
+      "reopened_measurements": {
+        "analytic_area_mm2": 2131.9689898685965,
+        "area_mm2": 2131.9689898685956,
+        "bbox_mm": [
+          0.0,
+          -25.0,
+          1.0,
+          51.0,
+          0.0,
+          40.0
+        ],
+        "source_volume_mm3": 4263.937979737191,
+        "surface_samples_including_boundaries": 75,
+        "errors": {
+          "area_error_mm2": 9.094947017729282e-13,
+          "bbox_max_error_mm": 0.0,
+          "thickness_ray_outer_max_error_mm": 5.5067062021407764e-14,
+          "thickness_ray_inner_max_error_mm": 4.796163466380676e-14,
+          "outer_normal_max_one_minus_dot": 2.220446049250313e-16,
+          "boundary_max_error_mm": 8.881784197001252e-16,
+          "shared_edge_surface_max_error_mm": 0.0,
+          "seam_tangency_max_one_minus_dot": 0.0
+        },
+        "topology": {
+          "faces": 3,
+          "components": 1,
+          "free_edges": 8,
+          "shared_edges": 2,
+          "nonmanifold_edges": 0,
+          "seam_lengths_mm": [
+            25.0,
+            25.0
+          ]
+        }
+      },
+      "source_file_sha256": "48d59575dd900a7c6a4f175c8eb53c7fe899b0d2ffbe3d366c4fcd4cc7941bfe",
+      "output_file_sha256": "a10a49181632a895f67d4266632d7cedb4c0d9dcfc62868c797dd7904e3699ed"
+    }
+  },
+  "safe_rejections": [
+    {
+      "case": "variable_thickness_wedge",
+      "reason": "Selected face normals are not opposed",
+      "source_unchanged": true,
+      "previous_output_unchanged": true,
+      "source_sha256": "198f34122684208dc557d886caeadb3c987cd43a444161187b76b243700997fb"
+    },
+    {
+      "case": "sharp_junction_not_uniform_ray_thickness",
+      "reason": "Supported recipes: one planar pair, or two planar pairs plus an explicit rounded bend pair; sharp junction thickness is unresolved",
+      "source_unchanged": true,
+      "previous_output_unchanged": true,
+      "source_sha256": "ea18375ba03fb8566112e3183d965abdb173575bbc3a3ef8098ba3c403846916"
+    },
+    {
+      "case": "wrong_declared_thickness",
+      "reason": "Pair thickness differs from the declared uniform thickness",
+      "source_unchanged": true,
+      "previous_output_unchanged": true,
+      "source_sha256": "fcd5c3b19cc01fe19bd4387debe66b4ebddfa9c67b3ba6e8994b6dc9150c8499"
+    },
+    {
+      "case": "missing_explicit_bend_pair",
+      "reason": "Supported recipes: one planar pair, or two planar pairs plus an explicit rounded bend pair; sharp junction thickness is unresolved",
+      "source_unchanged": true,
+      "previous_output_unchanged": true,
+      "source_sha256": "48d59575dd900a7c6a4f175c8eb53c7fe899b0d2ffbe3d366c4fcd4cc7941bfe"
+    },
+    {
+      "case": "offset_outside_wall",
+      "reason": "Offset fraction must be strictly between the paired faces",
+      "source_unchanged": true,
+      "previous_output_unchanged": true,
+      "source_sha256": "fcd5c3b19cc01fe19bd4387debe66b4ebddfa9c67b3ba6e8994b6dc9150c8499"
+    },
+    {
+      "case": "unresolved_units",
+      "reason": "Declare positive millimetre thickness; automatic unit conversion is not supported",
+      "source_unchanged": true,
+      "previous_output_unchanged": true,
+      "source_sha256": "fcd5c3b19cc01fe19bd4387debe66b4ebddfa9c67b3ba6e8994b6dc9150c8499"
+    }
+  ],
+  "reference_offset_contract": {
+    "source_brep_sha256": "fcd5c3b19cc01fe19bd4387debe66b4ebddfa9c67b3ba6e8994b6dc9150c8499",
+    "source_unchanged": true,
+    "pairs": [
+      {
+        "outer_face_index": 4,
+        "inner_face_index": 5,
+        "kind": "PLANE",
+        "measured_thickness_mm": 2.0,
+        "thickness_error_mm": 0.0,
+        "outer_area_mm2": 999.9999999999998,
+        "inner_area_mm2": 999.9999999999998
+      }
+    ],
+    "thickness_mm": 2,
+    "fraction_from_outer": 0.25,
+    "reference_shift_from_mid_along_outer_normal_mm": 0.5,
+    "candidate_role": "offset reference surface, not midsurface",
+    "topology": {
+      "faces": 1,
+      "components": 1,
+      "free_edges": 4,
+      "shared_edges": 0,
+      "nonmanifold_edges": 0,
+      "seam_lengths_mm": []
+    },
+    "outer_offset_area_mm2": 999.9999999999998,
+    "inner_offset_area_mm2": 999.9999999999998,
+    "common_area_mm2": 999.9999999999998,
+    "boundary_overlap_area_error_mm2": 0.0,
+    "candidate_brep_sha256": "6f1eb22182d707d8e1f5df352aeb9c44a8a17649da8bb259de50d32be2384c8d",
+    "measurements": {
+      "analytic_area_mm2": 1000,
+      "area_mm2": 999.9999999999998,
+      "bbox_mm": [
+        0.0,
+        0.0,
+        0.5,
+        40.0,
+        25.0,
+        0.5
+      ],
+      "source_volume_mm3": 2000.0,
+      "surface_samples_including_boundaries": 25,
+      "errors": {
+        "area_error_mm2": 2.2737367544323206e-13,
+        "bbox_max_error_mm": 0.0,
+        "thickness_ray_outer_max_error_mm": 0.0,
+        "thickness_ray_inner_max_error_mm": 0.0,
+        "outer_normal_max_one_minus_dot": 0.0,
+        "boundary_max_error_mm": 0.0,
+        "shared_edge_surface_max_error_mm": 0.0,
+        "seam_tangency_max_one_minus_dot": 0.0
+      },
+      "topology": {
+        "faces": 1,
+        "components": 1,
+        "free_edges": 4,
+        "shared_edges": 0,
+        "nonmanifold_edges": 0,
+        "seam_lengths_mm": []
+      }
+    }
+  },
+  "status": "passed_bounded_recipe_only",
+  "seconds_total_including_imported_backend_work": 0.2789143879999756,
+  "peak_rss_MiB": 427.5546875
+}

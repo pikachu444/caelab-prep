@@ -1,0 +1,129 @@
+{
+  "select": {
+    "count": 8,
+    "mean_ms": 598.2661953730712,
+    "median_ms": 595.7710164984746,
+    "components": {
+      "vtkRenderWindow.frame": {
+        "mean_ms": 537.8069251264606,
+        "mean_calls": 1
+      },
+      "MainWindow._refresh_fields.inclusive": {
+        "mean_ms": 49.64334912619961,
+        "mean_calls": 1
+      },
+      "MainWindow._refresh_fields.self": {
+        "mean_ms": 26.277034875420213,
+        "mean_calls": 1
+      },
+      "RadProvider.properties.inclusive": {
+        "mean_ms": 21.131676252480247,
+        "mean_calls": 3
+      },
+      "RadProvider._assignment_fields.inclusive": {
+        "mean_ms": 14.242525375266268,
+        "mean_calls": 1
+      },
+      "RadProvider.available_operations.inclusive": {
+        "mean_ms": 1.963618377885723,
+        "mean_calls": 2
+      },
+      "MainWindow._refresh_actions.inclusive": {
+        "mean_ms": 1.652411373470386,
+        "mean_calls": 1
+      }
+    }
+  },
+  "scalar": {
+    "count": 8,
+    "mean_ms": 73.06590437201521,
+    "median_ms": 68.78895749468938,
+    "components": {
+      "MainWindow._refresh_fields.inclusive": {
+        "mean_ms": 54.06623087492335,
+        "mean_calls": 1
+      },
+      "MainWindow._refresh_fields.self": {
+        "mean_ms": 28.518382750917226,
+        "mean_calls": 1
+      },
+      "RadProvider.properties.inclusive": {
+        "mean_ms": 22.919887623174873,
+        "mean_calls": 3
+      },
+      "RadProvider._assignment_fields.inclusive": {
+        "mean_ms": 15.222368250761065,
+        "mean_calls": 1
+      },
+      "RadProvider.available_operations.inclusive": {
+        "mean_ms": 2.9521723754442064,
+        "mean_calls": 2
+      },
+      "MainWindow._refresh_actions.inclusive": {
+        "mean_ms": 2.3982100010471186,
+        "mean_calls": 1
+      },
+      "MainWindow._refresh_tree.inclusive": {
+        "mean_ms": 9.716129500702664,
+        "mean_calls": 1
+      }
+    }
+  },
+  "undo": {
+    "count": 8,
+    "mean_ms": 73.12381199881202,
+    "median_ms": 71.14524149801582,
+    "components": {
+      "MainWindow._refresh_fields.inclusive": {
+        "mean_ms": 55.48429099962959,
+        "mean_calls": 1
+      },
+      "MainWindow._refresh_fields.self": {
+        "mean_ms": 29.56021450154367,
+        "mean_calls": 1
+      },
+      "RadProvider.properties.inclusive": {
+        "mean_ms": 23.17022149964032,
+        "mean_calls": 3
+      },
+      "RadProvider._assignment_fields.inclusive": {
+        "mean_ms": 15.226137374156679,
+        "mean_calls": 1
+      },
+      "RadProvider.available_operations.inclusive": {
+        "mean_ms": 2.631945373650524,
+        "mean_calls": 2
+      },
+      "MainWindow._refresh_actions.inclusive": {
+        "mean_ms": 1.9046509987674654,
+        "mean_calls": 1
+      },
+      "MainWindow._refresh_tree.inclusive": {
+        "mean_ms": 9.411064125742996,
+        "mean_calls": 1
+      }
+    }
+  },
+  "hide_show": {
+    "count": 8,
+    "mean_ms": 1201.0306051251973,
+    "median_ms": 1219.9683305007056,
+    "components": {
+      "vtkRenderWindow.frame": {
+        "mean_ms": 1197.942395247992,
+        "mean_calls": 2
+      }
+    }
+  },
+  "render": {
+    "count": 3,
+    "mean_ms": 523.6401013316936,
+    "median_ms": 529.9852430034662,
+    "components": {
+      "vtkRenderWindow.frame": {
+        "mean_ms": 523.5025183331649,
+        "mean_calls": 1
+      }
+    }
+  }
+}

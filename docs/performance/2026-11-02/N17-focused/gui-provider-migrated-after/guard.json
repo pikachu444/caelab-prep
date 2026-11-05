@@ -1,0 +1,15 @@
+{
+  "returncode": 0,
+  "wall_seconds": 39.85130091800238,
+  "guard_reason": null,
+  "last_phase": [
+    "direct_render_breakdown",
+    1793582904.566235
+  ],
+  "max_sampled_process_rss_bytes": 2942889984,
+  "sample_interval_seconds": 0.05,
+  "command": [
+    "<workspace>/envs/g3-gmsh/bin/python",
+    "<workspace>/audit/N17-focused/gui-provider-migrated-after/baseline.py"
+  ]
+}

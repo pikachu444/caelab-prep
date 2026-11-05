@@ -1,0 +1,59 @@
+{
+  "note": "Original result.json and solver inputs/logs remain unchanged. The initial observer incorrectly expected NUMELC (4-node shell) instead of NUMELS (3D solid); this is a read-only correction from the existing listing, with no solver rerun, no changed count expectation (one solid), and no weakened termination gate. Failed prism is still failed.",
+  "results": {
+    "pyramid5": {
+      "source_report_sha256": "8b3e0242e32d83678c8cf89e313a39334319aa317937c7f905be410ced1edb54",
+      "counts": {
+        "NUMNOD": 5,
+        "NUMELS": 1,
+        "NUMELC": 0,
+        "NUMMAT": 1,
+        "NUMGEO": 1,
+        "NPART": 1
+      },
+      "actual_mass": 8e-09,
+      "expected_mass": 8e-09,
+      "mass_relative_error": 0.0,
+      "actual_lumped_mass_center": [
+        1.0,
+        1.5,
+        2.0
+      ],
+      "geometric_uniform_density_centroid": [
+        1,
+        1.5,
+        1
+      ],
+      "classification": "SOLID-HEXA / ordinary eight-slot BRICK",
+      "normal_starter_and_engine": true,
+      "scope_verdict": "count/mass/normal-termination checks passed; mass-distribution equivalence NOT established"
+    },
+    "prism6": {
+      "source_report_sha256": "8b3e0242e32d83678c8cf89e313a39334319aa317937c7f905be410ced1edb54",
+      "counts": {
+        "NUMNOD": 6,
+        "NUMELS": 1,
+        "NUMELC": 0,
+        "NUMMAT": 1,
+        "NUMGEO": 1,
+        "NPART": 1
+      },
+      "actual_mass": 1.2e-08,
+      "expected_mass": 1.2000000000000002e-08,
+      "mass_relative_error": 1.378634354255046e-16,
+      "actual_lumped_mass_center": [
+        10.5,
+        20.75,
+        32.0
+      ],
+      "geometric_uniform_density_centroid": [
+        10.666666666666666,
+        21,
+        32
+      ],
+      "classification": "SOLID-HEXA / ordinary eight-slot BRICK",
+      "normal_starter_and_engine": false,
+      "scope_verdict": "count/mass read correctly; normal termination FAILED: Starter restart-writing segfault ERROR 760; Engine not executed"
+    }
+  }
+}

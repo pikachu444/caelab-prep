@@ -1,0 +1,7 @@
+{
+  "path": "<workspace>/audit/N17-after/million.caelab",
+  "sha256": "c4f6bcaac342eab7fbb694d0cfdae931bf07b8899e25a698e20e97465cbe903e",
+  "bytes": 13450396,
+  "render_context": "vtkXOpenGLRenderWindow, LP_NUM_THREADS=2, software OpenGL",
+  "input_source": "original N17-after saved project; not edited or replaced"
+}

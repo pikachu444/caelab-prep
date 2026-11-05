@@ -1,0 +1,25 @@
+{"event": "environment", "time": 1793582730.075229, "rss_bytes": 13234176, "peak_rss_bytes": 13238272, "host_pid": 90987, "namespace_pid": 10, "scope": "PART context cache focused GUI diagnostic; source-manifest.json pins source; not acceptance campaign"}
+{"event": "start", "time": 1793582730.1438267, "rss_bytes": 22364160, "peak_rss_bytes": 22212608, "phase": "focused_core_open"}
+Traceback (most recent call last):
+  File "<workspace>/audit/N17-focused/gui-provider-after/snapshot/src/caelab_prep/application/session.py", line 1684, in open_project
+    relations = ModelRelationsResource(document.id, manifest["model_relations"])
+                                                    ~~~~~~~~^^^^^^^^^^^^^^^^^^^
+KeyError: 'model_relations'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<workspace>/audit/N17-focused/gui-provider-after/baseline.py", line 35, in <module>
+    phase('focused_core_open',lambda:session.open_project('<workspace>/audit/N17-after/million.caelab'))
+  File "<workspace>/audit/N17-focused/gui-provider-after/baseline.py", line 16, in phase
+    emit('start',phase=name);t=time.perf_counter();v=fn();emit('finish',phase=name,seconds=time.perf_counter()-t);return v
+                                                     ^^^^
+  File "<workspace>/audit/N17-focused/gui-provider-after/baseline.py", line 35, in <lambda>
+    phase('focused_core_open',lambda:session.open_project('<workspace>/audit/N17-after/million.caelab'))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/audit/N17-focused/gui-provider-after/snapshot/src/caelab_prep/application/session.py", line 39, in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/audit/N17-focused/gui-provider-after/snapshot/src/caelab_prep/application/session.py", line 1732, in open_project
+    raise PrepError("invalid_project", "작업 문서를 읽지 못했습니다.", {"reason": str(exc)}) from exc
+caelab_prep.cae_core.errors.PrepError: 작업 문서를 읽지 못했습니다.
