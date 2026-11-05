@@ -7,7 +7,7 @@ it is a numerical guard, not a solver criterion or a shape-quality target.
 from collections import defaultdict
 from dataclasses import dataclass
 from fractions import Fraction
-from itertools import combinations
+from itertools import combinations, product
 import math
 from pathlib import Path
 
@@ -24,6 +24,8 @@ MAX_SMOOTH_ITERATIONS = 100
 RELATIVE_DEGENERACY = 1e-12
 QUALITY_ROUNDOFF = 1e-12
 MAX_SURFACE_EDGE_ASPECT = 4
+_CORNER_J_DIRECTIONS = tuple(tuple(value / math.sqrt(sum(v * v for v in direction)) for value in direction)
+                             for direction in product((-1, 0, 1), repeat=3) if any(direction))
 
 
 @dataclass(frozen=True)
@@ -326,39 +328,41 @@ def tetra_metrics(points):
             "edge_aspect_ratio": aspect, "problem": problem}
 
 
-def smooth_tet4(node_ids, coordinates, tetrahedra, boundary_node_ids, *, iterations=2, relaxation=.5):
-    """Sequential ID-ordered Laplacian moves; seven attempts allow six halvings."""
-    if type(iterations) is not int or not 0 <= iterations <= MAX_SMOOTH_ITERATIONS:
-        _fail("invalid_smoothing", "Iterations must be a bounded nonnegative integer.")
-    if type(relaxation) not in (int, float) or not math.isfinite(relaxation) or not 0 < relaxation <= 1:
-        _fail("invalid_smoothing", "Relaxation must be finite and in (0, 1].")
+@dataclass
+class _Tet4State:
+    ids: tuple
+    original: tuple
+    cells: tuple
+    fixed: frozenset
+    points: dict
+    neighbors: dict
+    incident: dict
+    metrics: list
+
+
+def _prepare_tet4(node_ids, coordinates, tetrahedra, boundary_node_ids, *, code="invalid_smoothing", metric_budget=None):
     try:
         ids, boundary = tuple(node_ids), tuple(boundary_node_ids)
         cells = tuple(tuple(cell) for cell in tetrahedra)
     except TypeError as exc:
-        raise PrepError("invalid_smoothing", "Expected node IDs, boundary IDs and four-node connectivities.") from exc
-    xyz = _coordinates(coordinates, "invalid_smoothing")
+        raise PrepError(code, "Expected node IDs, boundary IDs and four-node connectivities.") from exc
+    xyz = _coordinates(coordinates, code)
     if (not ids or len(ids) != len(xyz) or len(ids) > MAX_NODES
             or any(type(i) is not int or i <= 0 for i in (*ids, *boundary))
             or len(set(ids)) != len(ids)
             or any(not math.isfinite(v) for p in xyz for v in p)):
-        _fail("invalid_smoothing", "Node identities, fixed nodes or coordinates are invalid.")
+        _fail(code, "Node identities, fixed nodes or coordinates are invalid.")
     known = set(ids)
     fixed = frozenset(boundary)
     if not fixed <= known:
-        _fail("invalid_smoothing", "Fixed node IDs must belong to the supplied mesh.")
+        _fail(code, "Fixed node IDs must belong to the supplied mesh.")
     if (not cells or len(cells) > MAX_TETRAHEDRA
             or any(len(c) != 4 or any(type(i) is not int or i not in known for i in c) or len(set(c)) != 4 for c in cells)
             or len({tuple(sorted(c)) for c in cells}) != len(cells)):
-        _fail("invalid_smoothing", "Expected distinct TET4 connectivities using the supplied nodes.")
+        _fail(code, "Expected distinct TET4 connectivities using the supplied nodes.")
     points = dict(zip(ids, xyz))
     neighbors, incident, faces = defaultdict(set), defaultdict(list), defaultdict(int)
-    metrics = []
     for index, cell in enumerate(cells):
-        quality = tetra_metrics([points[node] for node in cell])
-        if quality["problem"] is not None:
-            _fail("invalid_smoothing", "The initial mesh must have positive, nondegenerate TET4 cells.", tetrahedron=index, problem=quality["problem"])
-        metrics.append(quality)
         for face in combinations(cell, 3):
             faces[tuple(sorted(face))] += 1
         for node in cell:
@@ -366,7 +370,26 @@ def smooth_tet4(node_ids, coordinates, tetrahedra, boundary_node_ids, *, iterati
             incident[node].append(index)
     actual_boundary = {node for face, count in faces.items() if count == 1 for node in face}
     if set(neighbors) != set(ids) or any(count > 2 for count in faces.values()) or not actual_boundary <= fixed:
-        _fail("invalid_smoothing", "All nodes must be used, and every boundary-face node must be fixed.")
+        _fail(code, "All nodes must be used, and every boundary-face node must be fixed.")
+    metrics = []
+    if metric_budget is None or len(cells) <= metric_budget:
+        for index, cell in enumerate(cells):
+            quality = tetra_metrics([points[node] for node in cell])
+            if quality["problem"] is not None or quality["signed_volume"] <= 0:
+                _fail(code, "The initial mesh must have positive, nondegenerate TET4 cells.", tetrahedron=index, problem=quality["problem"])
+            metrics.append(quality)
+    return _Tet4State(ids, xyz, cells, fixed, points, neighbors, incident, metrics)
+
+
+def smooth_tet4(node_ids, coordinates, tetrahedra, boundary_node_ids, *, iterations=2, relaxation=.5):
+    """Sequential ID-ordered Laplacian moves; seven attempts allow six halvings."""
+    if type(iterations) is not int or not 0 <= iterations <= MAX_SMOOTH_ITERATIONS:
+        _fail("invalid_smoothing", "Iterations must be a bounded nonnegative integer.")
+    if type(relaxation) not in (int, float) or not math.isfinite(relaxation) or not 0 < relaxation <= 1:
+        _fail("invalid_smoothing", "Relaxation must be finite and in (0, 1].")
+    state = _prepare_tet4(node_ids, coordinates, tetrahedra, boundary_node_ids)
+    ids, xyz, cells, fixed = state.ids, state.original, state.cells, state.fixed
+    points, neighbors, incident, metrics = state.points, state.neighbors, state.incident, state.metrics
     interior = sorted(set(ids) - fixed)
     report = {"iterations_requested": iterations, "iterations": 0, "moves": 0, "rejected": 0,
               "interior_nodes": len(interior), "max_displacement": 0.0}
@@ -402,3 +425,147 @@ def smooth_tet4(node_ids, coordinates, tetrahedra, boundary_node_ids, *, iterati
                 report["rejected"] += 1
     report["max_displacement"] = max(math.dist(original, points[node]) for node, original in zip(ids, xyz))
     return tuple(points[node] for node in ids), report
+
+
+def _corner_j_summary(metrics):
+    try:
+        total_volume = math.fsum(value["signed_volume"] for value in metrics)
+    except OverflowError:
+        total_volume = None
+    if total_volume is not None and not math.isfinite(total_volume):
+        total_volume = None
+    return {"minimum_corner_scaled_jacobian": min(value["corner_scaled_jacobian"] for value in metrics),
+            "maximum_edge_aspect_ratio": max(value["edge_aspect_ratio"] for value in metrics),
+            "minimum_signed_volume": min(value["signed_volume"] for value in metrics),
+            "total_signed_volume": total_volume,
+            "total_signed_volume_problem": "nonfinite_measure" if total_volume is None else None,
+            "failed_tetrahedron_indices": [i for i, value in enumerate(metrics) if value["corner_scaled_jacobian"] < .5]}
+
+
+def improve_tet4_corner_j(node_ids, coordinates, tetrahedra, boundary_node_ids, *, iterations=2,
+                          initial_step=.1, max_evaluations=100000):
+    """Bounded 26-direction search for the minimum incident corner J.
+
+    Every tetra_metrics call, including initial validation, consumes budget.
+    Failed cells are zero-based input connectivity indices, never invented IDs.
+    iterations counts completed sweeps; passes_started also includes a partial
+    sweep. rejected counts full node polls accepting no move. Only fully
+    evaluated candidates may be committed when a trial exhausts the budget.
+    """
+    if type(iterations) is not int or not 0 <= iterations <= 20:
+        _fail("invalid_corner_j", "Corner-J iterations must be an integer in [0, 20].")
+    if type(initial_step) not in (int, float) or not math.isfinite(initial_step) or initial_step <= 0:
+        _fail("invalid_corner_j", "Initial step must be a finite positive local edge fraction.")
+    if type(max_evaluations) is not int or not 0 < max_evaluations <= 1_000_000:
+        _fail("invalid_corner_j", "Metric evaluation budget must be an integer in [1, 1000000].")
+    state = _prepare_tet4(node_ids, coordinates, tetrahedra, boundary_node_ids,
+                         code="invalid_corner_j", metric_budget=max_evaluations)
+    interior = sorted(set(state.ids) - state.fixed)
+    report = {"method": "targeted_interior_corner_j/1", "status": None, "stop_reason": None,
+              "iterations_requested": iterations, "initial_step": initial_step, "max_evaluations": max_evaluations,
+              "iterations": 0, "passes_started": 0, "metrics_calls": len(state.metrics),
+              "moves": 0, "rejected": 0, "complete_trials": 0, "partial_trials_discarded": 0,
+              "invalid_trials": 0, "non_improving_trials": 0, "unrepresentable_trials": 0,
+              "interior_nodes": len(interior), "input_validated": bool(state.metrics),
+              "before": None, "after": None, "all_boundary_bad_tetrahedron_indices": None,
+              "cell_index_basis": "zero_based_input_tetrahedra", "max_displacement": 0.0,
+              "minimum_scaled_jacobian": .5, "maximum_edge_aspect_ratio": 4.0}
+    if not state.metrics:
+        report.update(status="budget_exhausted", stop_reason="initial_validation_budget")
+        return state.original, report
+    if any(value["edge_aspect_ratio"] > 4 for value in state.metrics):
+        _fail("invalid_corner_j", "The initial mesh must already satisfy edge aspect ratio <= 4.")
+    report["before"] = _corner_j_summary(state.metrics)
+    failed = set(report["before"]["failed_tetrahedron_indices"])
+    report["all_boundary_bad_tetrahedron_indices"] = [i for i in sorted(failed) if set(state.cells[i]) <= state.fixed]
+    if not failed:
+        report.update(status="target_met", stop_reason="initial_target_met")
+    elif not interior:
+        report.update(status="no_interior", stop_reason="all_nodes_fixed")
+    elif report["metrics_calls"] == max_evaluations:
+        report.update(status="budget_exhausted", stop_reason="trial_budget")
+    for _ in range(iterations if report["status"] is None else 0):
+        report["passes_started"] += 1
+        pass_moves = 0
+        for node in interior:
+            affected = state.incident[node]
+            before_j = min(state.metrics[index]["corner_scaled_jacobian"] for index in affected)
+            if before_j >= .5:
+                continue
+            current = state.points[node]
+            edges = {tuple(sorted(edge)) for index in affected for edge in combinations(state.cells[index], 2)}
+            minimum_edge = min(math.dist(state.points[a], state.points[b]) for a, b in edges)
+            accepted, exhausted = False, False
+            for halving in range(7):
+                step = minimum_edge * initial_step / 2 ** halving
+                best, best_j, representable = None, before_j, False
+                for direction in _CORNER_J_DIRECTIONS:
+                    candidate = tuple(value + step * delta for value, delta in zip(current, direction))
+                    if candidate == current:
+                        report["unrepresentable_trials"] += 1
+                        continue
+                    representable = True
+                    quality = []
+                    for index in affected:
+                        if report["metrics_calls"] >= max_evaluations:
+                            exhausted = True
+                            break
+                        values = [candidate if vertex == node else state.points[vertex] for vertex in state.cells[index]]
+                        quality.append(tetra_metrics(values))
+                        report["metrics_calls"] += 1
+                    if exhausted:
+                        if quality:
+                            report["partial_trials_discarded"] += 1
+                        break
+                    report["complete_trials"] += 1
+                    valid = all(value["problem"] is None and value["signed_volume"] > 0
+                                and value["edge_aspect_ratio"] <= 4 for value in quality)
+                    if not valid:
+                        report["invalid_trials"] += 1
+                        continue
+                    trial_j = min(value["corner_scaled_jacobian"] for value in quality)
+                    if trial_j <= before_j:
+                        report["non_improving_trials"] += 1
+                    elif trial_j > best_j:
+                        best, best_j = (candidate, quality), trial_j
+                if best is not None:
+                    state.points[node], quality = best
+                    for index, value in zip(affected, quality):
+                        state.metrics[index] = value
+                        if value["corner_scaled_jacobian"] < .5:
+                            failed.add(index)
+                        else:
+                            failed.discard(index)
+                    report["moves"] += 1
+                    pass_moves += 1
+                    accepted = True
+                if exhausted:
+                    if not failed:
+                        report.update(status="target_met", stop_reason="target_met_at_budget")
+                    else:
+                        report.update(status="budget_exhausted", stop_reason="incident_trial_budget")
+                    break
+                if accepted or not representable:
+                    break
+            if not accepted and not exhausted:
+                report["rejected"] += 1
+            if exhausted:
+                break
+            if not failed:
+                report.update(status="target_met", stop_reason="target_met_at_budget"
+                              if report["metrics_calls"] == max_evaluations else "target_met")
+                break
+        else:
+            report["iterations"] += 1
+            if not pass_moves:
+                report.update(status="stalled_finite_stencil", stop_reason="zero_accepted_full_sweep")
+        if report["status"] is not None:
+            break
+        if report["metrics_calls"] == max_evaluations:
+            report.update(status="budget_exhausted", stop_reason="trial_budget")
+            break
+    if report["status"] is None:
+        report.update(status="iteration_limit", stop_reason="iteration_limit")
+    report["after"] = _corner_j_summary(state.metrics)
+    report["max_displacement"] = max(math.dist(point, state.points[node]) for node, point in zip(state.ids, state.original))
+    return tuple(state.points[node] for node in state.ids), report

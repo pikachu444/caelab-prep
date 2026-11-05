@@ -2,11 +2,12 @@
 from dataclasses import FrozenInstanceError, asdict
 import json
 import math
+from itertools import combinations
 
 import pytest
 
 from caelab_prep.application import surface_tet
-from caelab_prep.application.surface_tet import load_closed_surface, smooth_tet4, tetra_metrics
+from caelab_prep.application.surface_tet import improve_tet4_corner_j, load_closed_surface, smooth_tet4, tetra_metrics
 from caelab_prep.cae_core.errors import PrepError
 
 
@@ -254,3 +255,148 @@ def test_smoothing_boundary_rejects_invalid_arguments(change):
     with pytest.raises(PrepError) as error:
         smooth_tet4(ids, points, cells, boundary, **kwargs)
     assert error.value.code == "invalid_smoothing"
+
+
+def patch_metrics(ids, points, cells):
+    lookup = dict(zip(ids, points))
+    values = [tetra_metrics([lookup[node] for node in cell]) for cell in cells]
+    return min(q["corner_scaled_jacobian"] for q in values), max(q["edge_aspect_ratio"] for q in values), values
+
+
+def test_corner_j_search_improves_actual_coordinates_and_preserves_fixed_mesh():
+    ids, _, cells, boundary = star()
+    points = ((0., 0., 0.), (1., 0., 0.), (0., 1., 0.), (0., 0., 1.), (.25, .25, .25))
+    before_j, before_ar, _ = patch_metrics(ids, points, cells)
+    # At the neighbor mean Laplacian cannot move. Corner-J improvement needs
+    # some AR increase here; the approved constraint is AR <= 4, not AR descent.
+    assert smooth_tet4(ids, points, cells, boundary)[0] == points
+    moved, report = improve_tet4_corner_j(ids, points, cells, boundary)
+    after_j, after_ar, quality = patch_metrics(ids, moved, cells)
+    assert moved[:-1] == points[:-1] and moved[-1] != points[-1]
+    assert after_j > before_j and before_ar < after_ar <= 4
+    assert all(q["problem"] is None and q["signed_volume"] > 0 for q in quality)
+    assert report["moves"] > 0 and report["input_validated"]
+    assert report["before"]["minimum_corner_scaled_jacobian"] == before_j
+    assert report["after"]["minimum_corner_scaled_jacobian"] == after_j
+    assert improve_tet4_corner_j(ids, points, cells, boundary) == (moved, report)
+    json.dumps(report, allow_nan=False)
+
+
+def test_corner_j_search_reports_immutable_bad_cells_and_initial_aspect_precondition():
+    ids = (11, 31, 71, 101)
+    points = ((0., 0., 0.), (1., 0., 0.), (0., 1., 0.), (.25, .25, .1))
+    moved, report = improve_tet4_corner_j(ids, points, (ids,), ids)
+    assert moved == points and report["status"] == "no_interior"
+    assert report["all_boundary_bad_tetrahedron_indices"] == [0]
+    assert report["after"]["failed_tetrahedron_indices"] == [0]
+    assert report["moves"] == report["iterations"] == 0
+    with pytest.raises(PrepError) as error:
+        improve_tet4_corner_j(ids, (*points[:3], (.1, .1, .01)), (ids,), ids)
+    assert error.value.code == "invalid_corner_j"
+
+
+@pytest.mark.parametrize("scale", [1e-6, 1., 1e6])
+def test_corner_j_search_is_scale_covariant_and_uses_id_order(scale):
+    ids, points, cells, boundary = star()
+    reference, _ = improve_tet4_corner_j(ids, points, cells, boundary)
+    shifted = tuple(tuple((value + 1024) * scale for value in point) for point in points)
+    order = (4, 2, 0, 3, 1)
+    moved, report = improve_tet4_corner_j(tuple(ids[i] for i in order), tuple(shifted[i] for i in order),
+                                        tuple(reversed(cells)), boundary)
+    result = dict(zip((ids[i] for i in order), moved))
+    for node, point in zip(ids, reference):
+        assert tuple(value / scale - 1024 for value in result[node]) == pytest.approx(point, abs=1e-10)
+    assert report["moves"] > 0
+
+
+@pytest.mark.parametrize("budget", [2, 4, 13])
+def test_corner_j_budget_counts_initial_and_partial_trials_without_partial_commit(monkeypatch, budget):
+    ids, points, cells, boundary = star()
+    points = (*points[:-1], (.6, .35, .3))
+    original = surface_tet.tetra_metrics
+    calls = []
+    def measured(values):
+        calls.append(tuple(values))
+        return original(values)
+    monkeypatch.setattr(surface_tet, "tetra_metrics", measured)
+    moved, report = improve_tet4_corner_j(ids, points, cells, boundary, max_evaluations=budget)
+    assert report["metrics_calls"] == len(calls) <= budget
+    assert report["status"] == "budget_exhausted"
+    assert moved[:-1] == points[:-1]
+    if budget < len(cells):
+        assert not report["input_validated"] and report["before"] is report["after"] is None
+        assert moved == points
+    else:
+        assert report["input_validated"] and report["after"] is not None
+        if budget == 13:
+            assert report["complete_trials"] == 2 and report["partial_trials_discarded"] == 1
+            edges = {tuple(sorted(edge)) for cell in cells for edge in combinations(cell, 2)}
+            lookup = dict(zip(ids, points))
+            step = min(math.dist(lookup[a], lookup[b]) for a, b in edges) * .1
+            allowed = [points[-1]]
+            for direction in ((-1, -1, -1), (-1, -1, 0)):
+                norm = math.sqrt(sum(v * v for v in direction))
+                allowed.append(tuple(v + step * d / norm for v, d in zip(points[-1], direction)))
+            assert any(moved[-1] == pytest.approx(point, abs=1e-15) for point in allowed)
+    assert len(calls) == report["metrics_calls"]
+
+
+def test_corner_j_equal_global_worst_does_not_stop_other_patch_and_tiny_step_is_finite():
+    ids, points, cells, boundary = star()
+    frozen_ids = (1001, 1003, 1007, 1011)
+    frozen_points = ((10., 0., 0.), (11., 0., 0.), (10., 1., 0.), (10.25, .25, .1))
+    joined_ids, joined_points = ids + frozen_ids, points + frozen_points
+    moved, report = improve_tet4_corner_j(joined_ids, joined_points, (frozen_ids, *cells),
+                                        boundary + frozen_ids, iterations=2)
+    assert report["before"]["minimum_corner_scaled_jacobian"] == report["after"]["minimum_corner_scaled_jacobian"]
+    assert report["moves"] > 0 and report["passes_started"] == 2
+    assert report["all_boundary_bad_tetrahedron_indices"] == [0]
+    assert moved[-4:] == frozen_points
+    unchanged, stalled = improve_tet4_corner_j(ids, points, cells, boundary, initial_step=math.ulp(0.))
+    assert unchanged == points and stalled["status"] == "stalled_finite_stencil"
+    assert stalled["iterations"] == 1 and stalled["moves"] == 0
+    assert stalled["metrics_calls"] == len(cells)
+
+
+@pytest.mark.parametrize("kwargs", [{"iterations": True}, {"iterations": -1}, {"iterations": 21},
+    {"initial_step": 0}, {"initial_step": math.nan}, {"max_evaluations": 0},
+    {"max_evaluations": True}, {"max_evaluations": 1_000_001}])
+def test_corner_j_search_rejects_invalid_controls(kwargs):
+    with pytest.raises(PrepError) as error:
+        improve_tet4_corner_j(*star(), **kwargs)
+    assert error.value.code == "invalid_corner_j"
+
+
+def test_corner_j_target_met_by_last_complete_budget_trial_has_priority():
+    ids = (11, 31, 71, 101, 151, 191, 501)
+    points = ((1., 0., 0.), (-1., 0., 0.), (0., 1., 0.), (0., -1., 0.),
+              (0., 0., 1.), (0., 0., -1.), (.15, .15, .15))
+    faces = ((0, 2, 4), (0, 5, 2), (0, 4, 3), (0, 3, 5),
+             (1, 4, 2), (1, 2, 5), (1, 3, 4), (1, 5, 3))
+    cells = tuple((ids[-1], *(ids[i] for i in face)) for face in faces)
+    moved, report = improve_tet4_corner_j(ids, points, cells, ids[:-1], max_evaluations=16)
+    assert report["before"]["minimum_corner_scaled_jacobian"] == pytest.approx(.44392387)
+    assert report["after"]["minimum_corner_scaled_jacobian"] == pytest.approx(.54438926)
+    assert report["after"]["failed_tetrahedron_indices"] == []
+    assert report["status"] == "target_met" and report["stop_reason"] == "target_met_at_budget"
+    assert report["metrics_calls"] == 16 and report["complete_trials"] == 1
+    assert moved[:-1] == points[:-1] and moved[-1] != points[-1]
+
+
+def test_corner_j_volume_sum_overflow_is_json_safe_without_changing_cell_metrics():
+    scale = 1e103
+    ids = (11, 31, 71, 101, 151, 191, 251, 301)
+    first = ((0., 0., 0.), (scale, 0., 0.), (0., scale, 0.), (0., 0., scale))
+    second = tuple((x + 3 * scale, y, z) for x, y, z in first)
+    points = first + second
+    cells = (ids[:4], ids[4:])
+    original_metrics = (tetra_metrics(first), tetra_metrics(second))
+    assert all(q["problem"] is None and math.isfinite(q["signed_volume"]) for q in original_metrics)
+    moved, report = improve_tet4_corner_j(ids, points, cells, ids)
+    assert moved == points and report["status"] == "target_met" and report["metrics_calls"] == 2
+    for summary in (report["before"], report["after"]):
+        assert summary["total_signed_volume"] is None
+        assert summary["total_signed_volume_problem"] == "nonfinite_measure"
+        assert summary["minimum_signed_volume"] == min(q["signed_volume"] for q in original_metrics)
+    assert (tetra_metrics(first), tetra_metrics(second)) == original_metrics
+    json.dumps(report, allow_nan=False)
