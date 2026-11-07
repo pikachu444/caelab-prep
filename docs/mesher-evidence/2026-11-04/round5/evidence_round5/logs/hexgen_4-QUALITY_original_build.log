@@ -1,0 +1,11 @@
+[ 25%] Building CXX object CMakeFiles/Quality.dir/cpp/BasicDataStructure.cpp.o
+c++: error: unrecognized command-line option ‘-boost_system’
+c++: error: unrecognized command-line option ‘-boost_filesystem’
+gmake[2]: *** [CMakeFiles/Quality.dir/build.make:79: CMakeFiles/Quality.dir/cpp/BasicDataStructure.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+[ 50%] Building CXX object CMakeFiles/Quality.dir/cpp/hex_quality.cpp.o
+c++: error: unrecognized command-line option ‘-boost_system’
+c++: error: unrecognized command-line option ‘-boost_filesystem’
+gmake[2]: *** [CMakeFiles/Quality.dir/build.make:93: CMakeFiles/Quality.dir/cpp/hex_quality.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:87: CMakeFiles/Quality.dir/all] Error 2
+gmake: *** [Makefile:91: all] Error 2

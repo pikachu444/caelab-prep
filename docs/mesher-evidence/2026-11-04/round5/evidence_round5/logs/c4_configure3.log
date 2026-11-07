@@ -1,0 +1,70 @@
+Configuring C4Hex as standalone project...
+-- Updating submodules in /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern
+Submodule path 'LBFGSpp': checked out '1695839b5c4c3448ca13680ff954d7606c7e3d0f'
+Submodule path 'QGP3D': checked out '7ee1eeab1f711400824ea4946b686a60433e1435'
+Submodule path 'QGP3D/extern/MC3D': checked out '29c321fad52aec2371f035f51ccd2d1e9f0f2c64'
+Submodule path 'QGP3D/extern/MC3D/extern/CLI11': checked out 'fb7eb86af71afde547c13d062e5aebfa27fc45c5'
+Submodule path 'QGP3D/extern/MC3D/extern/TrulySeamless3D': checked out '218a4b1ff858eff2ce78e7a0d4b7f8e4f00cc720'
+Submodule path 'QGP3D/extern/MC3D/extern/TrulySeamless3D/extern/OpenVolumeMesh': checked out 'b70df3adab139d37fbd118d3287577d541b3590a'
+Submodule path 'QGP3D/extern/MC3D/extern/TrulySeamless3D/extern/libHexEx': checked out 'f394a5d638f3bdac92bb74f2502021757d2365d6'
+Submodule path 'QGP3D/extern/MC3D/extern/glog': checked out '53d58e4531c7c90f71ddab503d915e027432447a'
+Submodule path 'QGP3D/extern/MC3D/extern/googletest': checked out 'b66cffcd5f5d6ee34a4f96d57bf016d9a22cb023'
+Submodule path 'QGP3D/extern/MC3D/extern/polyhydra': checked out 'a525a990ca79f4e5612b533c9852cad126926923'
+Submodule path 'QGP3D/extern/MC3D/extern/polyhydra/ext/OpenVolumeMesh': checked out 'b70df3adab139d37fbd118d3287577d541b3590a'
+Submodule path 'QGP3D/extern/MC3D/extern/polyhydra/ext/glfw': checked out '56a4cb0a3a2c7a44a2fd8ab3335adf915e19d30c'
+Submodule path 'QGP3D/extern/MC3D/extern/polyhydra/ext/glm': checked out '6f14f4792a0cde5d0cf2c910506724d61cb95834'
+Submodule path 'QGP3D/extern/MC3D/extern/polyhydra/ext/imgui': checked out '29653273c1c6cec453be68d9cbe625f5d5c69fe8'
+Submodule path 'QGP3D/extern/MC3D/extern/polyhydra/ext/json-develop': checked out '4da932f518feb262d29b08aedec10ec0c45fa501'
+Submodule path 'QGP3D/extern/MC3D/extern/polyhydra/ext/stb': checked out 'af1a5bc352164740c1cc1354942b1c6b72eacb8a'
+Submodule path 'QGP3D/extern/MC3D/extern/polyhydra/ext/tinyfiledialogs': checked out '2681e426ddaebc8e2764a7823b4b9d69564d1684'
+Configuring QGP3D inside another cmake project...
+-- Updating submodules in /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern/QGP3D/extern
+Submodule path 'MC3D': checked out '29c321fad52aec2371f035f51ccd2d1e9f0f2c64'
+Submodule path 'MC3D/extern/CLI11': checked out 'fb7eb86af71afde547c13d062e5aebfa27fc45c5'
+Submodule path 'MC3D/extern/TrulySeamless3D': checked out '218a4b1ff858eff2ce78e7a0d4b7f8e4f00cc720'
+Submodule path 'MC3D/extern/TrulySeamless3D/extern/OpenVolumeMesh': checked out 'b70df3adab139d37fbd118d3287577d541b3590a'
+Submodule path 'MC3D/extern/TrulySeamless3D/extern/libHexEx': checked out 'f394a5d638f3bdac92bb74f2502021757d2365d6'
+Submodule path 'MC3D/extern/glog': checked out '53d58e4531c7c90f71ddab503d915e027432447a'
+Submodule path 'MC3D/extern/googletest': checked out 'b66cffcd5f5d6ee34a4f96d57bf016d9a22cb023'
+Submodule path 'MC3D/extern/polyhydra': checked out 'a525a990ca79f4e5612b533c9852cad126926923'
+Submodule path 'MC3D/extern/polyhydra/ext/OpenVolumeMesh': checked out 'b70df3adab139d37fbd118d3287577d541b3590a'
+Submodule path 'MC3D/extern/polyhydra/ext/glfw': checked out '56a4cb0a3a2c7a44a2fd8ab3335adf915e19d30c'
+Submodule path 'MC3D/extern/polyhydra/ext/glm': checked out '6f14f4792a0cde5d0cf2c910506724d61cb95834'
+Submodule path 'MC3D/extern/polyhydra/ext/imgui': checked out '29653273c1c6cec453be68d9cbe625f5d5c69fe8'
+Submodule path 'MC3D/extern/polyhydra/ext/json-develop': checked out '4da932f518feb262d29b08aedec10ec0c45fa501'
+Submodule path 'MC3D/extern/polyhydra/ext/stb': checked out 'af1a5bc352164740c1cc1354942b1c6b72eacb8a'
+Submodule path 'MC3D/extern/polyhydra/ext/tinyfiledialogs': checked out '2681e426ddaebc8e2764a7823b4b9d69564d1684'
+Configuring MC3D inside another cmake project...
+-- Updating submodules in /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern/QGP3D/extern/MC3D/extern
+Submodule path 'CLI11': checked out 'fb7eb86af71afde547c13d062e5aebfa27fc45c5'
+Submodule path 'TrulySeamless3D': checked out '218a4b1ff858eff2ce78e7a0d4b7f8e4f00cc720'
+Submodule path 'TrulySeamless3D/extern/OpenVolumeMesh': checked out 'b70df3adab139d37fbd118d3287577d541b3590a'
+Submodule path 'TrulySeamless3D/extern/libHexEx': checked out 'f394a5d638f3bdac92bb74f2502021757d2365d6'
+Submodule path 'glog': checked out '53d58e4531c7c90f71ddab503d915e027432447a'
+Submodule path 'googletest': checked out 'b66cffcd5f5d6ee34a4f96d57bf016d9a22cb023'
+Submodule path 'polyhydra': checked out 'a525a990ca79f4e5612b533c9852cad126926923'
+Submodule path 'polyhydra/ext/OpenVolumeMesh': checked out 'b70df3adab139d37fbd118d3287577d541b3590a'
+Submodule path 'polyhydra/ext/glfw': checked out '56a4cb0a3a2c7a44a2fd8ab3335adf915e19d30c'
+Submodule path 'polyhydra/ext/glm': checked out '6f14f4792a0cde5d0cf2c910506724d61cb95834'
+Submodule path 'polyhydra/ext/imgui': checked out '29653273c1c6cec453be68d9cbe625f5d5c69fe8'
+Submodule path 'polyhydra/ext/json-develop': checked out '4da932f518feb262d29b08aedec10ec0c45fa501'
+Submodule path 'polyhydra/ext/stb': checked out 'af1a5bc352164740c1cc1354942b1c6b72eacb8a'
+Submodule path 'polyhydra/ext/tinyfiledialogs': checked out '2681e426ddaebc8e2764a7823b4b9d69564d1684'
+Configuring TS3D inside another cmake project...
+-- Updating submodules in /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern/QGP3D/extern/MC3D/extern/TrulySeamless3D/extern
+Submodule path 'OpenVolumeMesh': checked out 'b70df3adab139d37fbd118d3287577d541b3590a'
+Submodule path 'libHexEx': checked out 'f394a5d638f3bdac92bb74f2502021757d2365d6'
+Configuring HexEx inside another cmake project...
+Not building with local OpenVolumeMesh
+-- Could NOT find GTest (missing: GTest_DIR)
+-- Could NOT find Unwind (missing: Unwind_INCLUDE_DIR Unwind_LIBRARY) 
+QGP3D: Not using gurobi, looking for alternatives.
+-- Could NOT find CBC (missing: CBC_INCLUDE_DIR) 
+Looking for Bonmin in 
+-- Could NOT find BONMIN (missing: BONMIN_INCLUDE_DIR) 
+QGP3D: Compiling without IQP solver support, only heuristic solver
+-- Could NOT find NLOPT (missing: NLOPT_INCLUDE_DIRS NLOPT_LIBRARIES) 
+-- Eigen3 version: 3.4.0
+-- Configuring done (1.3s)
+-- Generating done (0.2s)
+-- Build files have been written to: /workspace/scratch/826174ffc51a/mesher_round5_20261104/build/c4

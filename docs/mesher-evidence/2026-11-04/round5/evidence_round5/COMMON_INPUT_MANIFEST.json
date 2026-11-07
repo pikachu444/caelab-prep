@@ -1,0 +1,56 @@
+[
+  {
+    "path": "evidence_round5/common_inputs/occt_bottom/metadata.json",
+    "source": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/occt_bottom/metadata.json",
+    "sha256": "f6d43d3bcc408d45f225e561089f7263a7e5cb0e763b952b7ce65a8f4d3b51c3",
+    "bytes": 26634
+  },
+  {
+    "path": "evidence_round5/common_inputs/occt_bottom/original.brep",
+    "source": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/occt_bottom/original.brep",
+    "sha256": "fdf4a89e9a0287859d524e6abade702badd1b840b94876aaebf327ecb03e4588",
+    "bytes": 3839135
+  },
+  {
+    "path": "evidence_round5/common_inputs/occt_bottom/surface.obj",
+    "source": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/occt_bottom/surface.obj",
+    "sha256": "d663fbca5fdb1d5006e4357109ed5b8e806ab2988ead68e7ce200bce63dcb6be",
+    "bytes": 2554037
+  },
+  {
+    "path": "evidence_round5/common_inputs/voron_dragon/metadata.json",
+    "source": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/voron_dragon/metadata.json",
+    "sha256": "4c12bcfe0ad7e0bddf1e0b48cbff9bb3bed854ad02aa5363f84b246f962856ff",
+    "bytes": 33182
+  },
+  {
+    "path": "evidence_round5/common_inputs/voron_dragon/original.brep",
+    "source": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/voron_dragon/original.brep",
+    "sha256": "1922dc5ff4be731ce75abe18c1e1e8d9ac4a857fd5bb5c1cd70ff53e2c6ae8e9",
+    "bytes": 4273369
+  },
+  {
+    "path": "evidence_round5/common_inputs/voron_dragon/surface.obj",
+    "source": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/voron_dragon/surface.obj",
+    "sha256": "276084814b0c5722e389391a49f95ccb0468474defc05e0495793992375d642d",
+    "bytes": 2660778
+  },
+  {
+    "path": "evidence_round5/common_inputs/voron_cw2_mainbody/metadata.json",
+    "source": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/voron_cw2_mainbody/metadata.json",
+    "sha256": "468fda205308de42d7ee1a68bd328252ead14ef6059ddeafc375fa1fe3d58fce",
+    "bytes": 29580
+  },
+  {
+    "path": "evidence_round5/common_inputs/voron_cw2_mainbody/original.brep",
+    "source": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/voron_cw2_mainbody/original.brep",
+    "sha256": "0fe54c11be26a066e65f330512786b59e70594e22c5bc0a4848a2005e568a86b",
+    "bytes": 1019037
+  },
+  {
+    "path": "evidence_round5/common_inputs/voron_cw2_mainbody/surface.obj",
+    "source": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/voron_cw2_mainbody/surface.obj",
+    "sha256": "62e352b3cbbdc83b08d5eb77303d7c0874ce4b0dcf39794d2d1d753a7899fee4",
+    "bytes": 1747773
+  }
+]

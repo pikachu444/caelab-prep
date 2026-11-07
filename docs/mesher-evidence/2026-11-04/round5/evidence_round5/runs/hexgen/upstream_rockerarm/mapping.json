@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/hexgen_3-PARAMETRICMAPPING/ParametricMapping",
+    "-i",
+    "rockerarm_initial_read.k",
+    "-p",
+    "rockerarm_polycube_structure_hex.k",
+    "-o",
+    "rockerarm_generated.vtk",
+    "-s",
+    "2"
+  ],
+  "seconds": 1.3744352409994463,
+  "returncode": 0,
+  "timeout": false,
+  "input_scope": "Author supplied manual segmentation + hand prepared hex block structure. Does not establish automated arbitrary CAD."
+}

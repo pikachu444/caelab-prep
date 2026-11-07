@@ -1,0 +1,1186 @@
+{
+  "mesh": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/cinolib_fixed/occt_bottom/raw.vtu",
+  "sha256": "294d622706f8171927a559f5548460b7028bbbfff987905fe0964bfe83e5c893",
+  "nodes": 52002,
+  "elements": {
+    "hexahedron": 41070
+  },
+  "unsupported_volume_types": [],
+  "shape_function_quality": {
+    "hexahedron": {
+      "sample_count": 27,
+      "min_determinant": 1.2982841509262801,
+      "min_normalized_jacobian": 0.9999999999999998,
+      "p01_normalized_jacobian": 1.0,
+      "median_normalized_jacobian": 1.0,
+      "nonpositive_cells": 0,
+      "nonfinite_cells": 0,
+      "cells_below_0p1_normalized_jacobian": 0,
+      "cells_below_0p3_normalized_jacobian": 0,
+      "signed_volume": 426567.78860841936,
+      "min_signed_volume": 10.386273207410222
+    }
+  },
+  "signed_mesh_volume": 426567.78860841936,
+  "topology": {
+    "external_faces": 21662,
+    "nonmanifold_faces": 0,
+    "shared_faces_without_opposite_orientation": 0,
+    "duplicate_volume_cells": 0,
+    "external_edges_not_twice": 0,
+    "unused_nodes": 0,
+    "duplicate_all_coordinates_rounded_10dp": 0,
+    "duplicate_coordinates_rounded_10dp": 0,
+    "external_faces_missing_from_supplied_surface_cells": null,
+    "boundary_face_owner_families": {
+      "hexahedron": 21662
+    },
+    "boundary_area_by_owner_family": {
+      "hexahedron": 103119.4921875
+    },
+    "boundary_area_hex_fraction": 1.0,
+    "mixed_shared_faces": {}
+  },
+  "limitations": [
+    "Sampled shape-function normalized Jacobian is not Verdict scaled Jacobian.",
+    "No whole-cell positivity proof, no exhaustive cell-overlap test, no solver analysis.",
+    "Closed boundary alone does not prove CAD coverage; inspect CAD distance and volume."
+  ],
+  "cad": {
+    "path": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/occt_bottom/original.brep",
+    "sha256": "fdf4a89e9a0287859d524e6abade702badd1b840b94876aaebf327ecb03e4588",
+    "unit": "mm per case metadata",
+    "solid_count": 1,
+    "surface_count": 323,
+    "volume": 310018.63821060164,
+    "boundary_nodes_to_trimmed_CAD": {
+      "samples": 1000,
+      "max_mm": 3.5756609488102535,
+      "p95_mm": 2.8533539787548836,
+      "unresolved": 0
+    },
+    "boundary_face_centroids_to_trimmed_CAD": {
+      "samples": 1000,
+      "max_mm": 2.636710427904326,
+      "p95_mm": 2.295794675372043,
+      "unresolved": 0
+    },
+    "cell_centroid_samples": 1000,
+    "cell_centroid_samples_outside": 287,
+    "outside_centroid_distance_to_trimmed_CAD": {
+      "samples": 287,
+      "max_mm": 1.7719168474093991,
+      "p95_mm": 1.3642144626758939,
+      "unresolved": 0
+    },
+    "distance_note": "Deterministic finite mesh-to-CAD samples. OCCT8 BRepExtrema_DistShapeShape against a compound of original trimmed boundary faces, including edge/vertex minima. Boundary compound excludes solid interiors as zero-distance targets. No Gmsh closest-point or inverseUV is used. No Hausdorff/global-coverage proof.",
+    "projection_performance": {
+      "backend": "native_OCCT8_boundary",
+      "nodes": 1000,
+      "faces": 1000,
+      "outside": 287
+    },
+    "native_dependencies_sha256": {
+      "cad_query.cpp": "570b460fd895cbc9c326db23ff25698a1c7e859d13f5d59d9690ca805e746849",
+      "cad_query": "9c4db36d2e3056b95586c288b93b415da7f1369da853acbd3cab0578485634db",
+      "cached_classifier.py": "ea176e8c2a7d073d1c7ed86087e64f71a9b9c1d2731cf517173361b508aa351f",
+      "cad_boundary_query.cpp": "e4e55a02c103f422c9eff16fbb86edfd5fbe55328509402576808c63950d4841",
+      "cad_boundary_query": "95688bfa931e0a983507a4a779c510550b5d0665e22d765c1026ceb0627393fb",
+      "cached_boundary_distance.py": "ee0703ca707ef933f9544fcbf56980ff5e93e2e7ad025861edef5d5bbe8de3ef"
+    },
+    "native_boundary_tolerance_mm": 1e-09,
+    "cached_classifier": {
+      "states": {
+        "-1": 0,
+        "0": 287,
+        "1": 713,
+        "2": 0
+      },
+      "tolerance_mm": 1e-07,
+      "ON_policy": "ON included; outside means OUT only"
+    }
+  },
+  "cad_volume_error_percent": 37.59423984007169,
+  "basic_validity_pass": true,
+  "audit_performance": {
+    "implementation": "vectorized-face-sort-v2",
+    "timings": {
+      "read_seconds": 0.03189531400130363,
+      "quality_and_records_seconds": 1.3562237719961558,
+      "topology_seconds": 0.43130224600463407,
+      "cad_seconds": 15.075411382000311,
+      "total_seconds": 16.896710027001973
+    },
+    "peak_rss_kib": 131732,
+    "cad_sample_limit": 1000,
+    "shape_quality_chunk_cells": 8192
+  },
+  "round3_surface_topology": {
+    "external_vertices": 21654,
+    "external_edges": 43324,
+    "external_faces": 21662,
+    "connected_boundary_components": 1,
+    "euler_characteristic": -8,
+    "closed_manifold_edge_incidence": true,
+    "total_genus_if_closed_orientable": 5.0,
+    "quad_two_tri_nonconforming_interfaces": 0,
+    "quad_two_tri_witnesses": [],
+    "note": "Genus valid only for closed orientable manifold boundary; geometric intersections and vertex singularities are not exhaustively excluded."
+  },
+  "volume_fractions": {
+    "signed_volume_by_family_mm3": {
+      "hexahedron": 426567.78860841936
+    },
+    "positive_integrated_volume_by_family_mm3": {
+      "hexahedron": 426567.78860841936
+    },
+    "signed_hex_volume_fraction": 1.0,
+    "positive_volume_hex_fraction": 1.0,
+    "hex_cell_count_fraction": 1.0,
+    "interpretation": "Positive volume fractions can hide inversions; hex dominance is accepted only alongside independent validity and CAD coverage."
+  },
+  "gmsh_independent_quality": {
+    "gmsh_version": "4.15.2",
+    "families": {
+      "hexahedron": {
+        "count": 41070,
+        "minSICN": 0.999999999982338,
+        "p01SICN": 0.9999999999904897,
+        "minDetJac": 1.2982841509262801,
+        "nonpositiveDetJac": 0,
+        "below_0p05SICN": 0
+      }
+    }
+  },
+  "thin_features": {
+    "method": "VTK StaticCellLocator point-in-cell on original first-order element connectivity",
+    "feature_probes": [
+      {
+        "name": "face_278_inside_0.05mm",
+        "point": [
+          -63.04491508623861,
+          -221.12129758826998,
+          -16.991569688949795
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 278,
+        "mesh_contains": true,
+        "containing_cell": 20941,
+        "matches_expected": true
+      },
+      {
+        "name": "face_278_outside_0.05mm",
+        "point": [
+          -63.04491508623861,
+          -221.22129758827,
+          -16.991569688949795
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 278,
+        "mesh_contains": true,
+        "containing_cell": 20941,
+        "matches_expected": false
+      },
+      {
+        "name": "face_243_inside_0.05mm",
+        "point": [
+          -96.30376109004544,
+          -113.22129079256366,
+          -45.024424116083495
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 243,
+        "mesh_contains": true,
+        "containing_cell": 8100,
+        "matches_expected": true
+      },
+      {
+        "name": "face_243_outside_0.05mm",
+        "point": [
+          -96.30376109004544,
+          -113.12129079256367,
+          -45.02442410098392
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 243,
+        "mesh_contains": true,
+        "containing_cell": 8100,
+        "matches_expected": false
+      },
+      {
+        "name": "face_274_inside_0.05mm",
+        "point": [
+          -71.15777829724404,
+          -218.22129621256275,
+          -9.129402367054167
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 274,
+        "mesh_contains": true,
+        "containing_cell": 17561,
+        "matches_expected": true
+      },
+      {
+        "name": "face_274_outside_0.05mm",
+        "point": [
+          -71.15777829724404,
+          -218.12129621256273,
+          -9.129402351954587
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 274,
+        "mesh_contains": true,
+        "containing_cell": 17561,
+        "matches_expected": false
+      },
+      {
+        "name": "face_17_inside_0.05mm",
+        "point": [
+          -45.4949174708236,
+          -126.86234180560464,
+          -41.65852590419606
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 17,
+        "mesh_contains": true,
+        "containing_cell": 29350,
+        "matches_expected": true
+      },
+      {
+        "name": "face_17_outside_0.05mm",
+        "point": [
+          -45.594917470823596,
+          -126.86234180619883,
+          -41.65852590419606
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 17,
+        "mesh_contains": true,
+        "containing_cell": 29350,
+        "matches_expected": false
+      },
+      {
+        "name": "face_259_inside_0.05mm",
+        "point": [
+          -122.99490524218945,
+          -152.6383144818369,
+          -23.46388894582957
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 259,
+        "mesh_contains": true,
+        "containing_cell": 83,
+        "matches_expected": true
+      },
+      {
+        "name": "face_259_outside_0.05mm",
+        "point": [
+          -123.09490524218944,
+          -152.6383144818369,
+          -23.463888968478937
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 259,
+        "mesh_contains": false,
+        "containing_cell": -1,
+        "matches_expected": true
+      },
+      {
+        "name": "face_109_inside_0.05mm",
+        "point": [
+          -107.05092681141745,
+          -159.65734101133103,
+          29.931522650119533
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 109,
+        "mesh_contains": true,
+        "containing_cell": 2601,
+        "matches_expected": true
+      },
+      {
+        "name": "face_109_outside_0.05mm",
+        "point": [
+          -107.05092683406683,
+          -159.65734102643063,
+          30.031522650119527
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 109,
+        "mesh_contains": true,
+        "containing_cell": 2601,
+        "matches_expected": false
+      },
+      {
+        "name": "face_264_inside_0.05mm",
+        "point": [
+          -61.59491305058877,
+          -212.27898531357891,
+          15.828476656374537
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 264,
+        "mesh_contains": true,
+        "containing_cell": 22037,
+        "matches_expected": true
+      },
+      {
+        "name": "face_264_outside_0.05mm",
+        "point": [
+          -61.49491305058878,
+          -212.27898531357891,
+          15.828476648824747
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 264,
+        "mesh_contains": true,
+        "containing_cell": 22037,
+        "matches_expected": false
+      },
+      {
+        "name": "face_94_inside_0.05mm",
+        "point": [
+          -12.803784500848764,
+          -103.22129581679313,
+          -11.750455026577521
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 94,
+        "mesh_contains": true,
+        "containing_cell": 40938,
+        "matches_expected": true
+      },
+      {
+        "name": "face_94_outside_0.05mm",
+        "point": [
+          -12.803784500848764,
+          -103.12129581679314,
+          -11.750455011477941
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 94,
+        "mesh_contains": true,
+        "containing_cell": 40962,
+        "matches_expected": false
+      },
+      {
+        "name": "face_297_inside_0.05mm",
+        "point": [
+          -62.63692257863717,
+          -221.08503990648072,
+          25.702244921087466
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 297,
+        "mesh_contains": true,
+        "containing_cell": 20956,
+        "matches_expected": true
+      },
+      {
+        "name": "face_297_outside_0.05mm",
+        "point": [
+          -62.636922576571294,
+          -221.18122330839762,
+          25.72960827606614
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 297,
+        "mesh_contains": true,
+        "containing_cell": 20956,
+        "matches_expected": false
+      },
+      {
+        "name": "face_235_inside_0.05mm",
+        "point": [
+          -61.287468873890575,
+          -217.91366631912499,
+          -11.561052011468512
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 235,
+        "mesh_contains": true,
+        "containing_cell": 21977,
+        "matches_expected": true
+      },
+      {
+        "name": "face_235_outside_0.05mm",
+        "point": [
+          -61.216749468609635,
+          -217.84296436924583,
+          -11.56105200613198
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 235,
+        "mesh_contains": true,
+        "containing_cell": 21977,
+        "matches_expected": false
+      },
+      {
+        "name": "face_156_inside_0.05mm",
+        "point": [
+          -112.70838585126224,
+          -162.16802258729058,
+          -14.718110351747997
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 156,
+        "mesh_contains": true,
+        "containing_cell": 853,
+        "matches_expected": true
+      },
+      {
+        "name": "face_156_outside_0.05mm",
+        "point": [
+          -112.7213342879373,
+          -162.24145674527045,
+          -14.65147880944665
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 156,
+        "mesh_contains": true,
+        "containing_cell": 853,
+        "matches_expected": false
+      },
+      {
+        "name": "face_180_inside_0.05mm",
+        "point": [
+          -122.88613151915182,
+          -162.77362773218468,
+          17.404792328295063
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 180,
+        "mesh_contains": true,
+        "containing_cell": 10,
+        "matches_expected": true
+      },
+      {
+        "name": "face_180_outside_0.05mm",
+        "point": [
+          -122.97468067920057,
+          -162.82009327054007,
+          17.404792301223136
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 180,
+        "mesh_contains": true,
+        "containing_cell": 10,
+        "matches_expected": false
+      },
+      {
+        "name": "face_111_inside_0.05mm",
+        "point": [
+          -120.04412538153966,
+          -142.84491215906218,
+          29.493317061511004
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 111,
+        "mesh_contains": true,
+        "containing_cell": 319,
+        "matches_expected": true
+      },
+      {
+        "name": "face_111_outside_0.05mm",
+        "point": [
+          -120.0587548636187,
+          -142.7619443206521,
+          29.547190209216158
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 111,
+        "mesh_contains": true,
+        "containing_cell": 319,
+        "matches_expected": false
+      },
+      {
+        "name": "face_7_inside_0.05mm",
+        "point": [
+          -47.97344010681493,
+          -121.03339557493099,
+          -46.745970184643944
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 7,
+        "mesh_contains": true,
+        "containing_cell": 28337,
+        "matches_expected": true
+      },
+      {
+        "name": "face_7_outside_0.05mm",
+        "point": [
+          -47.97344008543494,
+          -121.06834400138327,
+          -46.839664407990476
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 7,
+        "mesh_contains": true,
+        "containing_cell": 28337,
+        "matches_expected": false
+      },
+      {
+        "name": "face_276_inside_0.05mm",
+        "point": [
+          -74.75088391188413,
+          -222.0519468634247,
+          7.567877122095467
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 276,
+        "mesh_contains": true,
+        "containing_cell": 16587,
+        "matches_expected": true
+      },
+      {
+        "name": "face_276_outside_0.05mm",
+        "point": [
+          -74.83480363768271,
+          -222.05194687163623,
+          7.622259836462154
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 276,
+        "mesh_contains": true,
+        "containing_cell": 16587,
+        "matches_expected": false
+      },
+      {
+        "name": "face_120_inside_0.05mm",
+        "point": [
+          -72.2371025212199,
+          -197.68422530859945,
+          40.018643419541995
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 120,
+        "mesh_contains": true,
+        "containing_cell": 17681,
+        "matches_expected": true
+      },
+      {
+        "name": "face_120_outside_0.05mm",
+        "point": [
+          -72.2906105145698,
+          -197.7687054521106,
+          40.01864342358174
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 120,
+        "mesh_contains": true,
+        "containing_cell": 17681,
+        "matches_expected": false
+      },
+      {
+        "name": "face_207_inside_0.05mm",
+        "point": [
+          -63.289426843137626,
+          -165.8288904855925,
+          67.56325150600054
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 207,
+        "mesh_contains": true,
+        "containing_cell": 21602,
+        "matches_expected": true
+      },
+      {
+        "name": "face_207_outside_0.05mm",
+        "point": [
+          -63.28994210551442,
+          -165.74460679495573,
+          67.61706594641697
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 207,
+        "mesh_contains": true,
+        "containing_cell": 21602,
+        "matches_expected": false
+      },
+      {
+        "name": "face_205_inside_0.05mm",
+        "point": [
+          -65.052777726803,
+          -200.7517991970736,
+          22.672994053200323
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 205,
+        "mesh_contains": true,
+        "containing_cell": 20246,
+        "matches_expected": true
+      },
+      {
+        "name": "face_205_outside_0.05mm",
+        "point": [
+          -65.10194118627821,
+          -200.79292565221468,
+          22.74975060953241
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 205,
+        "mesh_contains": true,
+        "containing_cell": 20246,
+        "matches_expected": false
+      },
+      {
+        "name": "face_257_inside_0.05mm",
+        "point": [
+          -113.9343933570588,
+          -148.88053603040618,
+          -14.266766775912956
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 257,
+        "mesh_contains": true,
+        "containing_cell": 981,
+        "matches_expected": true
+      },
+      {
+        "name": "face_257_outside_0.05mm",
+        "point": [
+          -113.96009040814612,
+          -148.97715480360597,
+          -14.26465153815191
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 257,
+        "mesh_contains": true,
+        "containing_cell": 981,
+        "matches_expected": false
+      },
+      {
+        "name": "face_233_inside_0.05mm",
+        "point": [
+          -61.50305702395778,
+          -217.76659977451536,
+          -13.493941931238991
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 233,
+        "mesh_contains": true,
+        "containing_cell": 21976,
+        "matches_expected": true
+      },
+      {
+        "name": "face_233_outside_0.05mm",
+        "point": [
+          -61.41180749682806,
+          -217.72986040688622,
+          -13.511934781619528
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 233,
+        "mesh_contains": true,
+        "containing_cell": 21976,
+        "matches_expected": false
+      },
+      {
+        "name": "face_25_inside_0.05mm",
+        "point": [
+          -32.97560274253488,
+          -176.2387682202956,
+          -41.309475156143144
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 25,
+        "mesh_contains": true,
+        "containing_cell": 33764,
+        "matches_expected": true
+      },
+      {
+        "name": "face_25_outside_0.05mm",
+        "point": [
+          -32.94560941153983,
+          -176.29049320001175,
+          -41.3896307958024
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 25,
+        "mesh_contains": true,
+        "containing_cell": 33764,
+        "matches_expected": false
+      },
+      {
+        "name": "face_154_inside_0.05mm",
+        "point": [
+          -77.07340960619273,
+          -172.33468538400612,
+          42.4118619176303
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 154,
+        "mesh_contains": true,
+        "containing_cell": 16091,
+        "matches_expected": true
+      },
+      {
+        "name": "face_154_outside_0.05mm",
+        "point": [
+          -77.11510030800595,
+          -172.3103828592239,
+          42.49944771939938
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 154,
+        "mesh_contains": true,
+        "containing_cell": 16091,
+        "matches_expected": false
+      },
+      {
+        "name": "face_135_inside_0.05mm",
+        "point": [
+          -43.541646374850714,
+          -188.79059085348092,
+          22.314012500648534
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 135,
+        "mesh_contains": true,
+        "containing_cell": 29525,
+        "matches_expected": true
+      },
+      {
+        "name": "face_135_outside_0.05mm",
+        "point": [
+          -43.49210618457256,
+          -188.80486440225883,
+          22.39969817828774
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 135,
+        "mesh_contains": true,
+        "containing_cell": 29525,
+        "matches_expected": false
+      },
+      {
+        "name": "face_93_inside_0.05mm",
+        "point": [
+          -86.45499837102352,
+          -119.4809740263602,
+          -36.48594681732905
+        ],
+        "inside": true,
+        "CAD_inside_confirmed": true,
+        "source_face": 93,
+        "mesh_contains": true,
+        "containing_cell": 11579,
+        "matches_expected": true
+      },
+      {
+        "name": "face_93_outside_0.05mm",
+        "point": [
+          -86.40116282677201,
+          -119.47312811656954,
+          -36.40204106141981
+        ],
+        "inside": false,
+        "CAD_inside_confirmed": false,
+        "source_face": 93,
+        "mesh_contains": true,
+        "containing_cell": 11579,
+        "matches_expected": false
+      }
+    ],
+    "feature_probe_failures": 23,
+    "thickness_probe_lines": [
+      {
+        "name": "face_264_local_normal_chord",
+        "source_face": 264,
+        "a": [
+          -61.544913050588775,
+          -212.27898531357891,
+          15.828476652599642
+        ],
+        "b": [
+          -64.54491336886286,
+          -212.27898531357891,
+          15.828476879093367
+        ],
+        "length_mm": 3.0000003182740986,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count.",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 3,
+        "cell_id_transitions": 2
+      },
+      {
+        "name": "face_259_local_normal_chord",
+        "source_face": 259,
+        "a": [
+          -123.04490524218944,
+          -152.6383144818369,
+          -23.463888957154253
+        ],
+        "b": [
+          -118.22451401197364,
+          -152.63831448183706,
+          -23.46388786536601
+        ],
+        "length_mm": 4.820391230215932,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count.",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 3,
+        "cell_id_transitions": 2
+      },
+      {
+        "name": "face_274_local_normal_chord",
+        "source_face": 274,
+        "a": [
+          -71.15777829724404,
+          -218.17129621256274,
+          -9.129402359504377
+        ],
+        "b": [
+          -71.15777829724404,
+          -223.17129671267486,
+          -9.129403114483448
+        ],
+        "length_mm": 5.000000500112175,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count.",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 3,
+        "cell_id_transitions": 2
+      },
+      {
+        "name": "face_235_local_normal_chord",
+        "source_face": 235,
+        "a": [
+          -61.252109171250105,
+          -217.8783153441854,
+          -11.561052008800246
+        ],
+        "b": [
+          -66.54639654847762,
+          -223.17129595259712,
+          -11.561052408310504
+        ],
+        "length_mm": 7.486329043910184,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count.",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 6,
+        "cell_id_transitions": 5
+      },
+      {
+        "name": "face_156_local_normal_chord",
+        "source_face": 156,
+        "a": [
+          -112.71486006959977,
+          -162.20473966628052,
+          -14.684794580597323
+        ],
+        "b": [
+          -111.74403065456937,
+          -156.69889811768329,
+          -19.680599314278993
+        ],
+        "length_mm": 7.497657357363298,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count.",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 7,
+        "cell_id_transitions": 6
+      },
+      {
+        "name": "face_94_local_normal_chord",
+        "source_face": 94,
+        "a": [
+          -12.803784500848764,
+          -103.17129581679313,
+          -11.750455019027731
+        ],
+        "b": [
+          -12.803784500848765,
+          -113.17640440650636,
+          -11.750456529757098
+        ],
+        "length_mm": 10.005108589713343,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count.",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 5,
+        "cell_id_transitions": 4
+      },
+      {
+        "name": "face_17_local_normal_chord",
+        "source_face": 17,
+        "a": [
+          -45.5449174708236,
+          -126.86234180590174,
+          -41.65852590419606
+        ],
+        "b": [
+          -26.80034399177331,
+          -126.86234169452497,
+          -41.65852590419606
+        ],
+        "length_mm": 18.74457347905029,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count.",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 10,
+        "cell_id_transitions": 9
+      },
+      {
+        "name": "face_243_local_normal_chord",
+        "source_face": 243,
+        "a": [
+          -96.30376109004544,
+          -113.17129079256367,
+          -45.02442410853371
+        ],
+        "b": [
+          -96.30376109004544,
+          -133.8065211845753,
+          -45.02442722436681
+        ],
+        "length_mm": 20.63523039201187,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count.",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 10,
+        "cell_id_transitions": 9
+      },
+      {
+        "name": "face_278_local_normal_chord",
+        "source_face": 278,
+        "a": [
+          -63.04491508623861,
+          -221.17129758827,
+          -16.991569688949795
+        ],
+        "b": [
+          -63.0449150862386,
+          -199.10739783104765,
+          -16.9915696889498
+        ],
+        "length_mm": 22.06389975722235,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count.",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 11,
+        "cell_id_transitions": 10
+      },
+      {
+        "name": "face_297_local_normal_chord",
+        "source_face": 297,
+        "a": [
+          -62.63692257760423,
+          -221.13313160743917,
+          25.715926598576804
+        ],
+        "b": [
+          -62.636923070981574,
+          -198.16238430683316,
+          19.180945510521667
+        ],
+        "length_mm": 23.88223627237484,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count.",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 15,
+        "cell_id_transitions": 14
+      },
+      {
+        "name": "face_180_local_normal_chord",
+        "source_face": 180,
+        "a": [
+          -122.9304060991762,
+          -162.79686050136237,
+          17.4047923147591
+        ],
+        "b": [
+          -99.98902316884887,
+          -150.75853390528857,
+          17.404799328574526
+        ],
+        "length_mm": 25.908075150224896,
+        "note": "Sampled line cell intersections, not certified element layers; oblique tetrahedra can inflate count.",
+        "samples": 199,
+        "material_samples": 199,
+        "missing_material_samples": 0,
+        "missing_interior_material_samples": 0,
+        "endpoint_allowance_mm": 0.01,
+        "distinct_intersected_cells": 17,
+        "cell_id_transitions": 16
+      }
+    ],
+    "thickness_lines_with_missing_material": 0,
+    "thickness_lines_with_missing_interior_material": 0,
+    "limitations": "Finite point probes cannot prove the complete hole or gap is preserved; combine with surface genus and CAD geometry distances."
+  },
+  "expected_boundary_genus": 5.0,
+  "boundary_genus_matches": true,
+  "criteria": {
+    "thickness_probe_endpoint_allowance_mm": 0.01,
+    "sampled_normalized_J_min": 0.1,
+    "gmsh_minSICN_min": 0.05,
+    "absolute_CAD_volume_error_percent_max": 1,
+    "boundary_node_and_face_centroid_distance_mm_max": 0.01,
+    "hex_dominant_volume_fraction_min": 0.5,
+    "note": "Project research thresholds, not NFX or solver certification. Hex fraction 50% is an explicit majority criterion, not a universal industry standard.",
+    "primary_CAD_distance_mm": 0.01,
+    "additional_sensitivity_mm": [
+      0.05,
+      0.1
+    ],
+    "unchanged_primary_Round3_thresholds": true
+  },
+  "checks": {
+    "basic": true,
+    "normalized_J": true,
+    "SICN": true,
+    "CAD_volume": false,
+    "sampled_boundary": false,
+    "sampled_outside_centroids": false,
+    "surface_conformity": true,
+    "feature_probes": false,
+    "boundary_genus": true,
+    "explicit_CAD_feature_probes_available": true
+  },
+  "mesh_policy_pass": false,
+  "hex_dominant_policy_pass": false,
+  "case_id": "occt_bottom",
+  "case_metadata_sha256": "f6d43d3bcc408d45f225e561089f7263a7e5cb0e763b952b7ce65a8f4d3b51c3",
+  "audit_source_sha256": {
+    "audit_round3_v2.py": "d58639078b2b051e4523163f4c5dc51a81c620d0d843523135a714fb637c11af",
+    "base_audit.py": "ffa236ac0b52864d2c4106cd719498241957a17c5775c9e644b4d00afe3751c2"
+  },
+  "extended_audit_seconds": 18.97605222999846,
+  "audit_version": "4.3",
+  "feature_coverage_status": "sampled_explicit_probes_only",
+  "sensitivity": {
+    "0.01": {
+      "checks": {
+        "basic": true,
+        "normalized_J": true,
+        "SICN": true,
+        "CAD_volume": false,
+        "sampled_boundary": false,
+        "sampled_outside_centroids": false,
+        "surface_conformity": true,
+        "feature_probes": false,
+        "boundary_genus": true,
+        "explicit_CAD_feature_probes_available": true
+      },
+      "mesh_policy_pass": false,
+      "hex_dominant_policy_pass": false
+    },
+    "0.05": {
+      "checks": {
+        "basic": true,
+        "normalized_J": true,
+        "SICN": true,
+        "CAD_volume": false,
+        "sampled_boundary": false,
+        "sampled_outside_centroids": false,
+        "surface_conformity": true,
+        "feature_probes": false,
+        "boundary_genus": true,
+        "explicit_CAD_feature_probes_available": true
+      },
+      "mesh_policy_pass": false,
+      "hex_dominant_policy_pass": false
+    },
+    "0.1": {
+      "checks": {
+        "basic": true,
+        "normalized_J": true,
+        "SICN": true,
+        "CAD_volume": false,
+        "sampled_boundary": false,
+        "sampled_outside_centroids": false,
+        "surface_conformity": true,
+        "feature_probes": false,
+        "boundary_genus": true,
+        "explicit_CAD_feature_probes_available": true
+      },
+      "mesh_policy_pass": false,
+      "hex_dominant_policy_pass": false
+    }
+  },
+  "feature_coverage_statement": "No global small-feature preservation claim. Only explicitly listed probes/normal chords and sampled CAD distances are tested.",
+  "feature_probe_count": 48,
+  "case_units_note": "BREP does not declare units; original numeric coordinates interpreted as mm for this test, no scaling.",
+  "authoritative_original_cad": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/occt_bottom/original.brep",
+  "audit_round4_source_sha256": "7e2351da3a3306ced5d61e17278a93254248f47b0978df93a562957685114c4c"
+}

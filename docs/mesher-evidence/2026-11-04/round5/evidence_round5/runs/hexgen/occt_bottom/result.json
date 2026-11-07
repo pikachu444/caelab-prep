@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/hexgen_1-HBECVT/Segmentation",
+    "-i",
+    "input.k",
+    "-o",
+    "segmented.k",
+    "-l",
+    "0.1"
+  ],
+  "seconds": 0.4686495480054873,
+  "returncode": -11,
+  "timeout": false,
+  "vertices": 26240,
+  "triangles": 52496,
+  "input_scope": "unchanged original OCCT Bottom common OBJ, lossless coordinates/triangle order serialized to LS-DYNA shell K; no manual segmentation"
+}

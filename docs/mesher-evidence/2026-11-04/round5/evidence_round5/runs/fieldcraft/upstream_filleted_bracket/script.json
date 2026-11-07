@@ -1,0 +1,104 @@
+[
+  {
+    "command": "sketch.create",
+    "params": {
+      "plane": "XY",
+      "name": "Profile"
+    }
+  },
+  {
+    "command": "sketch.line",
+    "params": {
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          60,
+          0
+        ],
+        [
+          60,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          8,
+          50
+        ],
+        [
+          0,
+          50
+        ]
+      ],
+      "closed": true
+    }
+  },
+  {
+    "command": "sketch.finish",
+    "params": {}
+  },
+  {
+    "command": "solid.extrude",
+    "params": {
+      "distance": 40,
+      "body_name": "Bracket"
+    }
+  },
+  {
+    "command": "solid.fillet",
+    "params": {
+      "edges": [
+        [
+          8,
+          8,
+          20
+        ]
+      ],
+      "radius": 6
+    }
+  },
+  {
+    "command": "solid.hole",
+    "params": {
+      "position": [
+        40,
+        8,
+        20
+      ],
+      "diameter": 8
+    }
+  },
+  {
+    "command": "solid.hole",
+    "params": {
+      "position": [
+        8,
+        32,
+        20
+      ],
+      "diameter": 8
+    }
+  },
+  {
+    "command": "mesh.hex.octree",
+    "params": {
+      "max_elements": 500000,
+      "attempts": 2
+    }
+  },
+  {
+    "command": "mesh.quality",
+    "params": {}
+  },
+  {
+    "command": "file.save",
+    "params": {
+      "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/upstream_filleted_bracket/candidate.fieldcraft"
+    }
+  }
+]

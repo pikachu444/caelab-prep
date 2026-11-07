@@ -1,0 +1,15 @@
+{
+  "command": [
+    "g++",
+    "-std=c++17",
+    "-O1",
+    "-pthread",
+    "-I/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/include",
+    "-I/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/cinolib/external/eigen",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/cinolib_driver.cpp",
+    "-o",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/cinolib_driver"
+  ],
+  "returncode": 0,
+  "seconds": 15.440719434001949
+}

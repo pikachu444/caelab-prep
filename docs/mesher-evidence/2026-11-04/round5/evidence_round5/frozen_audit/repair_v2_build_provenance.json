@@ -1,0 +1,31 @@
+{
+  "command": [
+    "g++",
+    "-std=c++17",
+    "-O2",
+    "-I/workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/include/opencascade",
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/engines/cad_tools/cad_repair_experimental_v2.cpp",
+    "-o",
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/engines/cad_tools/cad_repair_experimental_v2",
+    "-L/workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/lib",
+    "-Wl,-rpath,/workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/lib",
+    "-lTKDESTEP",
+    "-lTKXSBase",
+    "-lTKBRep",
+    "-lTKTopAlgo",
+    "-lTKernel",
+    "-lTKMath",
+    "-lTKG3d",
+    "-lTKG2d",
+    "-lTKGeomBase",
+    "-lTKMesh",
+    "-lTKDESTL",
+    "-lTKShHealing"
+  ],
+  "returncode": 0,
+  "seconds": 3.2916561379970517,
+  "source_sha256": "ccff4c2e9c74e8897482b51c6ac39cec523fe2b131c86853ef65210e4c04e89f",
+  "OCC_version": "8.0.1 from prior read-only native_env",
+  "no_original_files_modified": true,
+  "binary_sha256": "d736e595fd1502e57cb075edc742808ef6786375416a65ca77523c98d65c6d1a"
+}

@@ -1,0 +1,12 @@
+{
+  "stage": "3-PARAMETRICMAPPING",
+  "returncode": 2,
+  "seconds": 0.9746735189983156,
+  "command": [
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/cmake331/cmake/data/bin/cmake",
+    "--build",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/hexgen_3-PARAMETRICMAPPING",
+    "-j",
+    "2"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "command": [
+    "make",
+    "install"
+  ],
+  "seconds": 1.2253372900013346,
+  "returncode": 0,
+  "timeout": false
+}

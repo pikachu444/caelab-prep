@@ -1,0 +1,15 @@
+{
+  "command": [
+    "g++",
+    "-std=c++11",
+    "-O1",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/mesquite_driver.cpp",
+    "-I/workspace/scratch/826174ffc51a/mesher_round5_20261104/deps/mesquite/include",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/deps/mesquite/lib/libmesquite.a",
+    "-o",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/mesquite_driver"
+  ],
+  "seconds": 0.9224750610010233,
+  "returncode": 0,
+  "timeout": false
+}

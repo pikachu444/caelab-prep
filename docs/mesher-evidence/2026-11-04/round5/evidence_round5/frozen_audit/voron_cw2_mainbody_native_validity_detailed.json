@@ -1,0 +1,32 @@
+{
+  "cad": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/evidence/component_exports/voron_cw2_mainbody_native/selected.brep",
+  "cad_sha256": "0fe54c11be26a066e65f330512786b59e70594e22c5bc0a4848a2005e568a86b",
+  "returncode": 0,
+  "seconds": 0.2908525640013977,
+  "stdout": "{\"nonzero_statuses\":[{\"shape_index\":2088,\"shape_type\":4,\"context_index\":0,\"status_code\":27},{\"shape_index\":2089,\"shape_type\":5,\"context_index\":2088,\"status_code\":28}],\"valid\":false,\"invalid_subshapes_including_parent_containers\":3,\"invalid_faces\":1,\"invalid_edges\":0,\"geometric_controls\":true,\"parallel\":false,\"method\":\"OCCT8 BRepCheck_Analyzer\"}\n",
+  "stderr": "",
+  "binary_sha256": "16a27ab204e111735e07676e8cb8ac3da1ad1cd53331c7586e95d34f544dd99b",
+  "result": {
+    "nonzero_statuses": [
+      {
+        "shape_index": 2088,
+        "shape_type": 4,
+        "context_index": 0,
+        "status_code": 27
+      },
+      {
+        "shape_index": 2089,
+        "shape_type": 5,
+        "context_index": 2088,
+        "status_code": 28
+      }
+    ],
+    "valid": false,
+    "invalid_subshapes_including_parent_containers": 3,
+    "invalid_faces": 1,
+    "invalid_edges": 0,
+    "geometric_controls": true,
+    "parallel": false,
+    "method": "OCCT8 BRepCheck_Analyzer"
+  }
+}

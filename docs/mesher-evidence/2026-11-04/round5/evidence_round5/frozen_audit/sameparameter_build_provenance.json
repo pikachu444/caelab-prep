@@ -1,0 +1,30 @@
+{
+  "command": [
+    "g++",
+    "-std=c++17",
+    "-O2",
+    "-I/workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/include/opencascade",
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/engines/cad_tools/cad_sameparameter_control.cpp",
+    "-o",
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/engines/cad_tools/cad_sameparameter_control",
+    "-L/workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/lib",
+    "-Wl,-rpath,/workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/lib",
+    "-lTKDESTEP",
+    "-lTKXSBase",
+    "-lTKBRep",
+    "-lTKTopAlgo",
+    "-lTKernel",
+    "-lTKMath",
+    "-lTKG3d",
+    "-lTKG2d",
+    "-lTKGeomBase",
+    "-lTKMesh",
+    "-lTKDESTL"
+  ],
+  "returncode": 0,
+  "seconds": 7.618925230002787,
+  "source_sha256": "3fdbe4230e03fd6422b0757e20b6cc68f89123703f1643d39be094c8edf63b7c",
+  "OCC_version": "8.0.1 from prior read-only native_env",
+  "no_original_files_modified": true,
+  "binary_sha256": "fa7552014acef406a9f80f11cf52bdd195e644f276f720fad5d84a736eeab201"
+}

@@ -1,0 +1,663 @@
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I20261104 14:19:55.769151 139935841955712 main.cpp:169] Running algorithm variant 0 with flexible singularities and feature distortion objective
+I20261104 14:19:55.769987 139935841955712 main.cpp:179] Reading seamless map...
+I20261104 14:19:55.770185 139935841955712 Reader.cpp:26] Reading parametrized tet mesh from /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern/QGP3D/extern/MC3D/tests/resources/fancy_ring.hexex
+I20261104 14:19:55.770743 139935841955712 Reader.cpp:138] Mesh has 4106 vertices
+I20261104 14:19:55.785119 139935841955712 Reader.cpp:172] Mesh has 14640 tets
+I20261104 14:19:57.293875 139935841955712 Reader.cpp:282] No features specified
+I20261104 14:19:57.294079 139935841955712 Reader.cpp:476] Seamless parametrization was read in floating point format, sanitizing...
+I20261104 14:19:58.137667 139935841955712 Reader.cpp:522] Sanitization successful
+I20261104 14:19:58.159945 139935841955712 main.cpp:179] Reading seamless map was successful!
+I20261104 14:19:58.245295 139935841955712 main.cpp:186] Scaling parametrization by factor 2.01616 to match target hex count
+I20261104 14:19:58.245502 139935841955712 main.cpp:202] Tracing and connecting the raw MC...
+I20261104 14:19:58.572491 139935841955712 SingularityInitializer.cpp:26] Determined nonzero transition functions for 88 of 30744 faces
+I20261104 14:19:58.748712 139935841955712 SingularityInitializer.cpp:80] Found 732 singular edges out of 19337 total edges
+I20261104 14:19:58.751734 139935841955712 MCGenerator.cpp:62] Tracing the motorcycle complex
+I20261104 14:19:58.751759 139935841955712 MCGenerator.cpp:63] ...avoiding toroidal blocks in the process
+I20261104 14:19:58.751762 139935841955712 MCGenerator.cpp:64] ...avoiding selfadjacent blocks in the process
+I20261104 14:20:05.482459 139935841955712 MCBuilder.cpp:56] 10 toroidal blocks encountered during block discovery!
+I20261104 14:20:05.482882 139935841955712 MCGenerator.cpp:81] Splitting toroidal blocks. 10 remaining
+I20261104 14:20:05.819469 139935841955712 MCGenerator.cpp:81] Splitting toroidal blocks. 9 remaining
+I20261104 14:20:06.395128 139935841955712 MCGenerator.cpp:81] Splitting toroidal blocks. 8 remaining
+I20261104 14:20:06.912713 139935841955712 MCGenerator.cpp:81] Splitting toroidal blocks. 7 remaining
+I20261104 14:20:07.163006 139935841955712 MCGenerator.cpp:81] Splitting toroidal blocks. 6 remaining
+I20261104 14:20:07.373328 139935841955712 MCGenerator.cpp:81] Splitting toroidal blocks. 5 remaining
+I20261104 14:20:07.582550 139935841955712 MCGenerator.cpp:81] Splitting toroidal blocks. 4 remaining
+I20261104 14:20:07.732156 139935841955712 MCGenerator.cpp:81] Splitting toroidal blocks. 3 remaining
+I20261104 14:20:08.065544 139935841955712 MCGenerator.cpp:81] Splitting toroidal blocks. 2 remaining
+I20261104 14:20:08.293816 139935841955712 MCGenerator.cpp:81] Splitting toroidal blocks. 1 remaining
+I20261104 14:20:08.545704 139935841955712 MCGenerator.cpp:99] Splitting selfadjacent blocks. 10 remaining
+I20261104 14:20:09.800013 139935841955712 MCGenerator.cpp:99] Splitting selfadjacent blocks. 9 remaining
+I20261104 14:20:10.977682 139935841955712 MCGenerator.cpp:99] Splitting selfadjacent blocks. 8 remaining
+I20261104 14:20:11.958070 139935841955712 MCGenerator.cpp:99] Splitting selfadjacent blocks. 7 remaining
+I20261104 14:20:13.186101 139935841955712 MCGenerator.cpp:99] Splitting selfadjacent blocks. 6 remaining
+I20261104 14:20:13.959312 139935841955712 MCGenerator.cpp:99] Splitting selfadjacent blocks. 5 remaining
+I20261104 14:20:14.831764 139935841955712 MCGenerator.cpp:99] Splitting selfadjacent blocks. 4 remaining
+I20261104 14:20:15.441301 139935841955712 MCGenerator.cpp:99] Splitting selfadjacent blocks. 3 remaining
+I20261104 14:20:16.147109 139935841955712 MCGenerator.cpp:99] Splitting selfadjacent blocks. 2 remaining
+I20261104 14:20:16.516393 139935841955712 MCGenerator.cpp:99] Splitting selfadjacent blocks. 1 remaining
+I20261104 14:20:17.245234 139935841955712 MCBuilder.cpp:97] Building the motorcycle complex structure on the basis of an OVM::PolyMesh
+I20261104 14:20:17.592797 139935841955712 MCGenerator.cpp:121] Tracing and connecting the raw motorcycle complex was successful, raw MC has 20 blocks and 94 walls.
+I20261104 14:20:17.593017 139935841955712 main.cpp:202] Tracing and connecting the raw MC was successful!
+I20261104 14:20:17.593053 139935841955712 main.cpp:206] Reducing the raw MC...
+I20261104 14:20:17.593056 139935841955712 MCGenerator.cpp:130] Starting to reduce raw MC with 20 blocks and 94 walls.
+I20261104 14:20:17.594125 139935841955712 MCGenerator.cpp:139] Reduced MC to 20 blocks and 94 walls.
+I20261104 14:20:17.594139 139935841955712 main.cpp:206] Reducing the raw MC was successful!
+I20261104 14:20:17.594160 139935841955712 main.cpp:286] Derefining the base mesh after MC computation...
+I20261104 14:20:28.392425 139935841955712 TetRemesher.cpp:1052] Collapsed 2342 halfedges, mesh has 54213 remaining tets
+I20261104 14:20:28.399418 139935841955712 ObjectiveBuilder.cpp:42] Critical seeds: 25
+I20261104 14:20:28.413781 139935841955712 main.cpp:333] Quantization (ISP initialize)...
+I20261104 14:20:28.720649 139935841955712 ISPQuantizer.cpp:169] Sheet-pump-quantized MC, nHexes: 9760, iterations: 1, minArcLength 0, objective: 0.00656663
+I20261104 14:20:28.721673 139935841955712 main.cpp:333] Quantization (ISP initialize) was successful!
+I20261104 14:20:28.724987 139935841955712 main.cpp:357] Collapsing 0-arcs...
+I20261104 14:20:28.725244 139935841955712 MCCollapser.cpp:988] Collapsing randomOrder: 0 and direction: 0
+I20261104 14:20:28.725670 139935841955712 MCCollapser.cpp:995] 10 blocks, 39 patches, 34 arcs to collapse
+I20261104 14:20:28.733070 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 54213 remaining tets
+I20261104 14:20:28.733916 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 276
+I20261104 14:20:28.787727 139935841955712 TetRemesher.cpp:1052] Collapsed 16 halfedges, mesh has 54207 remaining tets
+I20261104 14:20:28.788294 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 134
+I20261104 14:20:28.942831 139935841955712 TetRemesher.cpp:1052] Collapsed 40 halfedges, mesh has 54243 remaining tets
+I20261104 14:20:28.943132 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 93
+I20261104 14:20:29.148352 139935841955712 TetRemesher.cpp:1052] Collapsed 46 halfedges, mesh has 54241 remaining tets
+I20261104 14:20:29.149227 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 141
+I20261104 14:20:29.196051 139935841955712 TetRemesher.cpp:1052] Collapsed 8 halfedges, mesh has 54236 remaining tets
+I20261104 14:20:29.196122 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 62
+I20261104 14:20:29.467794 139935841955712 TetRemesher.cpp:1052] Collapsed 62 halfedges, mesh has 54129 remaining tets
+I20261104 14:20:29.468391 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 243
+I20261104 14:20:29.553500 139935841955712 TetRemesher.cpp:1052] Collapsed 17 halfedges, mesh has 54147 remaining tets
+I20261104 14:20:29.553585 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 63
+I20261104 14:20:33.015007 139935841955712 TetRemesher.cpp:1052] Collapsed 894 halfedges, mesh has 52555 remaining tets
+I20261104 14:20:33.015559 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 238
+I20261104 14:20:33.129436 139935841955712 TetRemesher.cpp:1052] Collapsed 27 halfedges, mesh has 52576 remaining tets
+I20261104 14:20:33.130162 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 180
+I20261104 14:20:33.676165 139935841955712 TetRemesher.cpp:1052] Collapsed 136 halfedges, mesh has 52564 remaining tets
+I20261104 14:20:33.676350 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 53
+I20261104 14:20:34.390161 139935841955712 TetRemesher.cpp:1052] Collapsed 231 halfedges, mesh has 52576 remaining tets
+I20261104 14:20:34.390274 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 79
+I20261104 14:20:34.456181 139935841955712 TetRemesher.cpp:1052] Collapsed 17 halfedges, mesh has 52571 remaining tets
+I20261104 14:20:34.457361 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 9
+I20261104 14:20:34.667178 139935841955712 TetRemesher.cpp:1052] Collapsed 21 halfedges, mesh has 52439 remaining tets
+I20261104 14:20:34.668598 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 237
+I20261104 14:20:34.688931 139935841955712 TetRemesher.cpp:1052] Collapsed 8 halfedges, mesh has 52425 remaining tets
+I20261104 14:20:34.689458 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 185
+I20261104 14:20:34.724426 139935841955712 TetRemesher.cpp:1052] Collapsed 13 halfedges, mesh has 52415 remaining tets
+I20261104 14:20:34.767450 139935841955712 MCCollapser.cpp:1630] Bisected patch 43
+I20261104 14:20:34.896317 139935841955712 TetRemesher.cpp:1052] Collapsed 88 halfedges, mesh has 52426 remaining tets
+I20261104 14:20:34.897196 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 283
+I20261104 14:20:34.936640 139935841955712 TetRemesher.cpp:1052] Collapsed 12 halfedges, mesh has 52465 remaining tets
+I20261104 14:20:34.936721 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 95
+I20261104 14:20:35.034062 139935841955712 TetRemesher.cpp:1052] Collapsed 44 halfedges, mesh has 52386 remaining tets
+I20261104 14:20:35.035267 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 272
+I20261104 14:20:35.139707 139935841955712 TetRemesher.cpp:1052] Collapsed 36 halfedges, mesh has 52436 remaining tets
+I20261104 14:20:35.140348 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 263
+I20261104 14:20:35.169465 139935841955712 TetRemesher.cpp:1052] Collapsed 7 halfedges, mesh has 52415 remaining tets
+I20261104 14:20:35.169810 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 256
+I20261104 14:20:35.635971 139935841955712 TetRemesher.cpp:1052] Collapsed 110 halfedges, mesh has 52425 remaining tets
+I20261104 14:20:35.636406 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 148
+I20261104 14:20:35.654277 139935841955712 TetRemesher.cpp:1052] Collapsed 5 halfedges, mesh has 52426 remaining tets
+I20261104 14:20:35.654511 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 91
+I20261104 14:20:35.698709 139935841955712 TetRemesher.cpp:1052] Collapsed 2 halfedges, mesh has 52423 remaining tets
+I20261104 14:20:35.699260 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 191
+I20261104 14:20:35.760366 139935841955712 TetRemesher.cpp:1052] Collapsed 20 halfedges, mesh has 52408 remaining tets
+I20261104 14:20:35.760500 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 54
+I20261104 14:20:40.242920 139935841955712 TetRemesher.cpp:1052] Collapsed 813 halfedges, mesh has 53066 remaining tets
+I20261104 14:20:40.243564 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 64
+I20261104 14:20:40.396723 139935841955712 TetRemesher.cpp:1052] Collapsed 17 halfedges, mesh has 53062 remaining tets
+I20261104 14:20:40.397271 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 215
+I20261104 14:20:40.513071 139935841955712 TetRemesher.cpp:1052] Collapsed 5 halfedges, mesh has 53058 remaining tets
+I20261104 14:20:40.513489 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 73
+I20261104 14:20:40.651777 139935841955712 TetRemesher.cpp:1052] Collapsed 9 halfedges, mesh has 53056 remaining tets
+I20261104 14:20:40.945595 139935841955712 MCCollapser.cpp:1630] Bisected patch 51
+I20261104 14:20:41.934210 139935841955712 TetRemesher.cpp:1052] Collapsed 265 halfedges, mesh has 53057 remaining tets
+I20261104 14:20:41.934653 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 289
+I20261104 14:20:41.983739 139935841955712 TetRemesher.cpp:1052] Collapsed 6 halfedges, mesh has 53053 remaining tets
+I20261104 14:20:41.983885 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 97
+I20261104 14:20:44.567916 139935841955712 TetRemesher.cpp:1052] Collapsed 493 halfedges, mesh has 53536 remaining tets
+I20261104 14:20:44.573876 139935841955712 MCCollapser.cpp:1630] Bisected patch 56
+I20261104 14:20:44.574071 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 53536 remaining tets
+I20261104 14:20:44.574780 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 294
+I20261104 14:20:44.596660 139935841955712 TetRemesher.cpp:1052] Collapsed 1 halfedges, mesh has 53553 remaining tets
+I20261104 14:20:44.597041 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 99
+I20261104 14:20:45.835935 139935841955712 TetRemesher.cpp:1052] Collapsed 306 halfedges, mesh has 52449 remaining tets
+I20261104 14:20:45.880129 139935841955712 MCCollapser.cpp:1630] Bisected patch 96
+I20261104 14:20:45.880478 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 52449 remaining tets
+I20261104 14:20:45.881878 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 301
+I20261104 14:20:50.884720 139935841955712 TetRemesher.cpp:1052] Collapsed 1023 halfedges, mesh has 52540 remaining tets
+I20261104 14:20:50.884899 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 101
+I20261104 14:20:52.880242 139935841955712 TetRemesher.cpp:1052] Collapsed 539 halfedges, mesh has 52855 remaining tets
+I20261104 14:20:52.915090 139935841955712 MCCollapser.cpp:1630] Bisected patch 98
+I20261104 14:20:52.981396 139935841955712 TetRemesher.cpp:1052] Collapsed 70 halfedges, mesh has 52855 remaining tets
+I20261104 14:20:52.981708 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 306
+I20261104 14:20:52.993274 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 52855 remaining tets
+I20261104 14:20:52.993343 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 103
+I20261104 14:20:53.087038 139935841955712 TetRemesher.cpp:1052] Collapsed 26 halfedges, mesh has 52766 remaining tets
+I20261104 14:20:53.088323 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 224
+I20261104 14:20:53.112118 139935841955712 TetRemesher.cpp:1052] Collapsed 2 halfedges, mesh has 52754 remaining tets
+I20261104 14:20:53.113006 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 230
+I20261104 14:20:53.141239 139935841955712 TetRemesher.cpp:1052] Collapsed 4 halfedges, mesh has 52750 remaining tets
+I20261104 14:20:53.141427 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 36
+I20261104 14:20:53.300548 139935841955712 TetRemesher.cpp:1052] Collapsed 41 halfedges, mesh has 52693 remaining tets
+I20261104 14:20:53.300915 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 87
+I20261104 14:20:53.706574 139935841955712 TetRemesher.cpp:1052] Collapsed 142 halfedges, mesh has 52719 remaining tets
+I20261104 14:20:53.706977 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 150
+I20261104 14:20:53.793469 139935841955712 TetRemesher.cpp:1052] Collapsed 47 halfedges, mesh has 52722 remaining tets
+I20261104 14:20:53.793549 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 42
+I20261104 14:20:53.987543 139935841955712 TetRemesher.cpp:1052] Collapsed 40 halfedges, mesh has 52732 remaining tets
+I20261104 14:20:53.989295 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 159
+I20261104 14:20:54.024643 139935841955712 TetRemesher.cpp:1052] Collapsed 27 halfedges, mesh has 52736 remaining tets
+I20261104 14:20:54.025796 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 162
+I20261104 14:20:54.059819 139935841955712 TetRemesher.cpp:1052] Collapsed 7 halfedges, mesh has 52724 remaining tets
+I20261104 14:20:54.060023 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 37
+I20261104 14:20:54.699741 139935841955712 TetRemesher.cpp:1052] Collapsed 186 halfedges, mesh has 52908 remaining tets
+I20261104 14:20:54.700019 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 76
+I20261104 14:20:54.948173 139935841955712 TetRemesher.cpp:1052] Collapsed 49 halfedges, mesh has 52930 remaining tets
+I20261104 14:20:54.948491 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 226
+I20261104 14:20:54.966193 139935841955712 TetRemesher.cpp:1052] Collapsed 5 halfedges, mesh has 52925 remaining tets
+I20261104 14:20:54.966447 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 66
+I20261104 14:20:55.420442 139935841955712 TetRemesher.cpp:1052] Collapsed 134 halfedges, mesh has 52574 remaining tets
+I20261104 14:20:55.420690 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 228
+I20261104 14:20:55.441642 139935841955712 TetRemesher.cpp:1052] Collapsed 7 halfedges, mesh has 52563 remaining tets
+I20261104 14:20:55.441712 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 68
+I20261104 14:20:56.050149 139935841955712 TetRemesher.cpp:1052] Collapsed 153 halfedges, mesh has 52685 remaining tets
+I20261104 14:20:56.050242 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 87
+I20261104 14:20:56.260076 139935841955712 TetRemesher.cpp:1052] Collapsed 70 halfedges, mesh has 52734 remaining tets
+I20261104 14:20:56.265864 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 14
+I20261104 14:20:57.193067 139935841955712 TetRemesher.cpp:1052] Collapsed 342 halfedges, mesh has 50916 remaining tets
+I20261104 14:20:57.193283 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 234
+I20261104 14:20:57.215329 139935841955712 TetRemesher.cpp:1052] Collapsed 4 halfedges, mesh has 50912 remaining tets
+I20261104 14:20:57.215407 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 70
+I20261104 14:20:58.038756 139935841955712 TetRemesher.cpp:1052] Collapsed 288 halfedges, mesh has 50552 remaining tets
+I20261104 14:20:58.039258 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 88
+I20261104 14:20:58.363432 139935841955712 TetRemesher.cpp:1052] Collapsed 73 halfedges, mesh has 50621 remaining tets
+I20261104 14:20:58.365944 139935841955712 MCCollapser.cpp:1630] Bisected patch 67
+I20261104 14:20:58.366156 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 50621 remaining tets
+I20261104 14:20:58.366401 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 313
+I20261104 14:20:58.382751 139935841955712 TetRemesher.cpp:1052] Collapsed 9 halfedges, mesh has 50595 remaining tets
+I20261104 14:20:58.382812 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 105
+I20261104 14:20:58.680262 139935841955712 TetRemesher.cpp:1052] Collapsed 131 halfedges, mesh has 50220 remaining tets
+I20261104 14:20:58.680989 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 246
+I20261104 14:20:58.729398 139935841955712 TetRemesher.cpp:1052] Collapsed 8 halfedges, mesh has 50212 remaining tets
+I20261104 14:20:58.729470 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 65
+I20261104 14:20:58.925083 139935841955712 TetRemesher.cpp:1052] Collapsed 38 halfedges, mesh has 50273 remaining tets
+I20261104 14:20:58.925280 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 260
+I20261104 14:20:58.982052 139935841955712 TetRemesher.cpp:1052] Collapsed 9 halfedges, mesh has 50287 remaining tets
+I20261104 14:20:58.982120 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 48
+I20261104 14:20:59.240394 139935841955712 TetRemesher.cpp:1052] Collapsed 56 halfedges, mesh has 50313 remaining tets
+I20261104 14:20:59.240632 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 90
+I20261104 14:20:59.284616 139935841955712 TetRemesher.cpp:1052] Collapsed 2 halfedges, mesh has 50313 remaining tets
+I20261104 14:20:59.285046 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 8
+I20261104 14:20:59.496188 139935841955712 TetRemesher.cpp:1052] Collapsed 21 halfedges, mesh has 50202 remaining tets
+I20261104 14:20:59.500586 139935841955712 MCCollapser.cpp:1630] Bisected patch 72
+I20261104 14:20:59.500945 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 50202 remaining tets
+I20261104 14:20:59.504235 139935841955712 MCCollapser.cpp:1630] Bisected patch 55
+I20261104 14:20:59.504542 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 50202 remaining tets
+I20261104 14:20:59.508198 139935841955712 MCCollapser.cpp:1839] Bisecting block 19 which consists of halfpatches 200 (79, 137, 296, ), 104 (78, 128, 136, ), 216 (320, 316, 298, ), 218 (321, 286, 314, ), 213 (317, 319, 299, 297, 129, ), 215 (315, 287, 318, ),  by a pillow patch
+I20261104 14:20:59.508298 139935841955712 MCCollapser.cpp:1844] ...which has the following halfarcs on its boundary: 320, 319, 
+I20261104 14:20:59.583366 139935841955712 TetRemesher.cpp:1052] Collapsed 24 halfedges, mesh has 50184 remaining tets
+I20261104 14:20:59.583923 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 110
+I20261104 14:20:59.641749 139935841955712 TetRemesher.cpp:1052] Collapsed 8 halfedges, mesh has 50188 remaining tets
+I20261104 14:20:59.642817 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 20
+I20261104 14:21:00.308311 139935841955712 TetRemesher.cpp:1052] Collapsed 146 halfedges, mesh has 49381 remaining tets
+I20261104 14:21:00.308900 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 319
+I20261104 14:21:00.339632 139935841955712 TetRemesher.cpp:1052] Collapsed 3 halfedges, mesh has 49390 remaining tets
+I20261104 14:21:00.339713 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 107
+I20261104 14:21:00.706763 139935841955712 TetRemesher.cpp:1052] Collapsed 56 halfedges, mesh has 49076 remaining tets
+I20261104 14:21:00.706948 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 108
+I20261104 14:21:03.361651 139935841955712 TetRemesher.cpp:1052] Collapsed 820 halfedges, mesh has 49691 remaining tets
+I20261104 14:21:03.362702 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 153
+I20261104 14:21:03.426076 139935841955712 TetRemesher.cpp:1052] Collapsed 24 halfedges, mesh has 49689 remaining tets
+I20261104 14:21:03.426223 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 47
+I20261104 14:21:05.202301 139935841955712 TetRemesher.cpp:1052] Collapsed 168 halfedges, mesh has 49835 remaining tets
+I20261104 14:21:05.202698 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 170
+I20261104 14:21:05.219696 139935841955712 TetRemesher.cpp:1052] Collapsed 8 halfedges, mesh has 49833 remaining tets
+I20261104 14:21:05.219953 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 38
+I20261104 14:21:06.026099 139935841955712 TetRemesher.cpp:1052] Collapsed 96 halfedges, mesh has 49991 remaining tets
+I20261104 14:21:06.026404 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 199
+I20261104 14:21:06.078150 139935841955712 TetRemesher.cpp:1052] Collapsed 10 halfedges, mesh has 49977 remaining tets
+I20261104 14:21:06.078642 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 200
+I20261104 14:21:06.113409 139935841955712 TetRemesher.cpp:1052] Collapsed 9 halfedges, mesh has 49972 remaining tets
+I20261104 14:21:06.113581 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 83
+I20261104 14:21:06.223401 139935841955712 TetRemesher.cpp:1052] Collapsed 50 halfedges, mesh has 49936 remaining tets
+I20261104 14:21:06.268912 139935841955712 MCCollapser.cpp:1630] Bisected patch 58
+I20261104 14:21:06.390268 139935841955712 TetRemesher.cpp:1052] Collapsed 117 halfedges, mesh has 49936 remaining tets
+I20261104 14:21:06.392952 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 326
+I20261104 14:21:06.402453 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 49936 remaining tets
+I20261104 14:21:06.402515 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 112
+I20261104 14:21:07.116328 139935841955712 TetRemesher.cpp:1052] Collapsed 123 halfedges, mesh has 49550 remaining tets
+I20261104 14:21:07.157142 139935841955712 MCCollapser.cpp:1677] Bisected patch 44
+I20261104 14:21:07.299200 139935841955712 TetRemesher.cpp:1052] Collapsed 93 halfedges, mesh has 49550 remaining tets
+I20261104 14:21:07.302089 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 332
+I20261104 14:21:07.332530 139935841955712 TetRemesher.cpp:1052] Collapsed 1 halfedges, mesh has 49557 remaining tets
+I20261104 14:21:07.332610 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 113
+I20261104 14:21:08.466521 139935841955712 TetRemesher.cpp:1052] Collapsed 169 halfedges, mesh has 49317 remaining tets
+I20261104 14:21:08.466750 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 114
+I20261104 14:21:08.890088 139935841955712 TetRemesher.cpp:1052] Collapsed 130 halfedges, mesh has 49151 remaining tets
+I20261104 14:21:09.037555 139935841955712 MCCollapser.cpp:1705] Bisected block 15
+I20261104 14:21:09.358520 139935841955712 TetRemesher.cpp:1052] Collapsed 109 halfedges, mesh has 49089 remaining tets
+I20261104 14:21:09.359218 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 121
+I20261104 14:21:09.518253 139935841955712 TetRemesher.cpp:1052] Collapsed 38 halfedges, mesh has 49143 remaining tets
+I20261104 14:21:09.535708 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 22
+I20261104 14:21:11.434968 139935841955712 TetRemesher.cpp:1052] Collapsed 280 halfedges, mesh has 47555 remaining tets
+I20261104 14:21:11.819791 139935841955712 MCCollapser.cpp:1705] Bisected block 23
+I20261104 14:21:12.641371 139935841955712 TetRemesher.cpp:1052] Collapsed 224 halfedges, mesh has 47584 remaining tets
+I20261104 14:21:12.641624 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 122
+I20261104 14:21:13.179829 139935841955712 TetRemesher.cpp:1052] Collapsed 87 halfedges, mesh has 47642 remaining tets
+I20261104 14:21:13.184005 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 24
+I20261104 14:21:14.062650 139935841955712 TetRemesher.cpp:1052] Collapsed 118 halfedges, mesh has 47020 remaining tets
+I20261104 14:21:14.069174 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 25
+I20261104 14:21:14.862678 139935841955712 TetRemesher.cpp:1052] Collapsed 163 halfedges, mesh has 46129 remaining tets
+I20261104 14:21:14.869942 139935841955712 MCCollapser.cpp:1677] Bisected patch 52
+I20261104 14:21:14.870172 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 46129 remaining tets
+I20261104 14:21:14.946748 139935841955712 MCCollapser.cpp:1630] Bisected patch 100
+I20261104 14:21:15.522951 139935841955712 TetRemesher.cpp:1052] Collapsed 145 halfedges, mesh has 46140 remaining tets
+I20261104 14:21:15.529459 139935841955712 MCCollapser.cpp:1839] Bisecting block 21 which consists of halfpatches 250 (137, 350, 345, ), 252 (351, 296, 347, ), 213 (298, 299, 297, 129, ), 246 (348, 136, 344, ), 248 (128, 349, 346, ),  by a pillow patch
+I20261104 14:21:15.529553 139935841955712 MCCollapser.cpp:1844] ...which has the following halfarcs on its boundary: 350, 348, 
+I20261104 14:21:15.725472 139935841955712 TetRemesher.cpp:1052] Collapsed 50 halfedges, mesh has 46136 remaining tets
+I20261104 14:21:15.725768 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 127
+I20261104 14:21:15.864734 139935841955712 TetRemesher.cpp:1052] Collapsed 20 halfedges, mesh has 46179 remaining tets
+I20261104 14:21:15.865697 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 27
+I20261104 14:21:15.987004 139935841955712 TetRemesher.cpp:1052] Collapsed 21 halfedges, mesh has 46073 remaining tets
+I20261104 14:21:15.987636 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 351
+I20261104 14:21:16.213429 139935841955712 TetRemesher.cpp:1052] Collapsed 68 halfedges, mesh has 46207 remaining tets
+I20261104 14:21:16.213522 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 124
+I20261104 14:21:19.617464 139935841955712 TetRemesher.cpp:1052] Collapsed 1074 halfedges, mesh has 46730 remaining tets
+I20261104 14:21:19.617683 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 125
+I20261104 14:21:20.266455 139935841955712 TetRemesher.cpp:1052] Collapsed 164 halfedges, mesh has 46818 remaining tets
+I20261104 14:21:20.266634 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 126
+I20261104 14:21:33.279370 139935841955712 TetRemesher.cpp:1052] Collapsed 3034 halfedges, mesh has 49227 remaining tets
+I20261104 14:21:33.280060 139935841955712 MCCollapser.cpp:1186] Collapsing cigar block 26
+I20261104 14:21:36.474441 139935841955712 TetRemesher.cpp:1052] Collapsed 612 halfedges, mesh has 45914 remaining tets
+I20261104 14:21:36.480695 139935841955712 MCCollapser.cpp:1677] Bisected patch 59
+I20261104 14:21:36.481077 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 45914 remaining tets
+I20261104 14:21:36.516997 139935841955712 MCCollapser.cpp:1630] Bisected patch 104
+I20261104 14:21:36.598416 139935841955712 TetRemesher.cpp:1052] Collapsed 78 halfedges, mesh has 45921 remaining tets
+I20261104 14:21:36.598911 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 357
+I20261104 14:21:36.619234 139935841955712 TetRemesher.cpp:1052] Collapsed 12 halfedges, mesh has 45875 remaining tets
+I20261104 14:21:36.619300 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 128
+I20261104 14:21:36.721079 139935841955712 TetRemesher.cpp:1052] Collapsed 15 halfedges, mesh has 45889 remaining tets
+I20261104 14:21:36.721161 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 129
+I20261104 14:21:37.098302 139935841955712 TetRemesher.cpp:1052] Collapsed 131 halfedges, mesh has 45651 remaining tets
+I20261104 14:21:37.099191 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 362
+I20261104 14:21:37.136068 139935841955712 TetRemesher.cpp:1052] Collapsed 10 halfedges, mesh has 45687 remaining tets
+I20261104 14:21:37.136138 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 131
+I20261104 14:21:37.626432 139935841955712 TetRemesher.cpp:1052] Collapsed 190 halfedges, mesh has 45297 remaining tets
+I20261104 14:21:37.794823 139935841955712 MCCollapser.cpp:1677] Bisected patch 60
+I20261104 14:21:38.141697 139935841955712 TetRemesher.cpp:1052] Collapsed 190 halfedges, mesh has 45303 remaining tets
+I20261104 14:21:38.142608 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 369
+I20261104 14:21:38.217401 139935841955712 TetRemesher.cpp:1052] Collapsed 43 halfedges, mesh has 45309 remaining tets
+I20261104 14:21:38.217923 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 132
+I20261104 14:21:39.071589 139935841955712 TetRemesher.cpp:1052] Collapsed 288 halfedges, mesh has 45028 remaining tets
+I20261104 14:21:39.071674 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 133
+I20261104 14:21:39.968579 139935841955712 TetRemesher.cpp:1052] Collapsed 365 halfedges, mesh has 44515 remaining tets
+I20261104 14:21:40.029808 139935841955712 MCCollapser.cpp:1677] Bisected patch 61
+I20261104 14:21:40.280940 139935841955712 TetRemesher.cpp:1052] Collapsed 111 halfedges, mesh has 44540 remaining tets
+I20261104 14:21:40.281151 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 374
+I20261104 14:21:40.363619 139935841955712 TetRemesher.cpp:1052] Collapsed 19 halfedges, mesh has 44602 remaining tets
+I20261104 14:21:40.363768 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 134
+I20261104 14:21:40.633537 139935841955712 TetRemesher.cpp:1052] Collapsed 60 halfedges, mesh has 44609 remaining tets
+I20261104 14:21:40.633649 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 135
+I20261104 14:21:41.895769 139935841955712 TetRemesher.cpp:1052] Collapsed 345 halfedges, mesh has 44127 remaining tets
+I20261104 14:21:41.917917 139935841955712 MCCollapser.cpp:1705] Bisected block 10
+I20261104 14:21:41.939300 139935841955712 TetRemesher.cpp:1052] Collapsed 9 halfedges, mesh has 44130 remaining tets
+I20261104 14:21:41.939367 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 138
+I20261104 14:21:42.039003 139935841955712 TetRemesher.cpp:1052] Collapsed 24 halfedges, mesh has 44130 remaining tets
+I20261104 14:21:42.046480 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 28
+I20261104 14:21:42.888758 139935841955712 TetRemesher.cpp:1052] Collapsed 226 halfedges, mesh has 42902 remaining tets
+I20261104 14:21:42.890225 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 29
+I20261104 14:21:43.079427 139935841955712 TetRemesher.cpp:1052] Collapsed 54 halfedges, mesh has 42608 remaining tets
+I20261104 14:21:43.159357 139935841955712 MCCollapser.cpp:1677] Bisected patch 69
+I20261104 14:21:43.407614 139935841955712 TetRemesher.cpp:1052] Collapsed 149 halfedges, mesh has 42612 remaining tets
+I20261104 14:21:43.408019 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 382
+I20261104 14:21:43.436747 139935841955712 TetRemesher.cpp:1052] Collapsed 3 halfedges, mesh has 42627 remaining tets
+I20261104 14:21:43.436920 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 139
+I20261104 14:21:43.577003 139935841955712 TetRemesher.cpp:1052] Collapsed 56 halfedges, mesh has 42577 remaining tets
+I20261104 14:21:43.577079 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 140
+I20261104 14:21:44.897528 139935841955712 TetRemesher.cpp:1052] Collapsed 509 halfedges, mesh has 41865 remaining tets
+I20261104 14:21:44.929359 139935841955712 MCCollapser.cpp:1677] Bisected patch 94
+I20261104 14:21:45.093689 139935841955712 TetRemesher.cpp:1052] Collapsed 79 halfedges, mesh has 41883 remaining tets
+I20261104 14:21:45.094401 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 389
+I20261104 14:21:45.479341 139935841955712 TetRemesher.cpp:1052] Collapsed 213 halfedges, mesh has 41952 remaining tets
+I20261104 14:21:45.479423 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 141
+I20261104 14:21:45.629690 139935841955712 TetRemesher.cpp:1052] Collapsed 33 halfedges, mesh has 41929 remaining tets
+I20261104 14:21:45.629769 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 142
+I20261104 14:21:46.603166 139935841955712 TetRemesher.cpp:1052] Collapsed 256 halfedges, mesh has 41527 remaining tets
+I20261104 14:21:46.722962 139935841955712 MCCollapser.cpp:1705] Bisected block 7
+I20261104 14:21:46.966087 139935841955712 TetRemesher.cpp:1052] Collapsed 106 halfedges, mesh has 41515 remaining tets
+I20261104 14:21:46.966312 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 149
+I20261104 14:21:47.105293 139935841955712 TetRemesher.cpp:1052] Collapsed 23 halfedges, mesh has 41535 remaining tets
+I20261104 14:21:47.105958 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 30
+I20261104 14:21:47.253782 139935841955712 TetRemesher.cpp:1052] Collapsed 21 halfedges, mesh has 41424 remaining tets
+I20261104 14:21:48.416187 139935841955712 MCCollapser.cpp:1705] Bisected block 31
+I20261104 14:21:54.400272 139935841955712 TetRemesher.cpp:1052] Collapsed 1782 halfedges, mesh has 40686 remaining tets
+I20261104 14:21:54.400501 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 150
+I20261104 14:21:56.893582 139935841955712 TetRemesher.cpp:1052] Collapsed 266 halfedges, mesh has 40942 remaining tets
+I20261104 14:21:56.908833 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 32
+I20261104 14:21:59.871703 139935841955712 TetRemesher.cpp:1052] Collapsed 534 halfedges, mesh has 37941 remaining tets
+I20261104 14:21:59.872630 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 33
+I20261104 14:22:01.107223 139935841955712 TetRemesher.cpp:1052] Collapsed 71 halfedges, mesh has 37550 remaining tets
+I20261104 14:22:01.108674 139935841955712 MCCollapser.cpp:1677] Bisected patch 102
+I20261104 14:22:01.108950 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 37550 remaining tets
+I20261104 14:22:01.109359 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 405
+I20261104 14:22:01.129139 139935841955712 TetRemesher.cpp:1052] Collapsed 9 halfedges, mesh has 37521 remaining tets
+I20261104 14:22:01.129204 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 151
+I20261104 14:22:01.912785 139935841955712 TetRemesher.cpp:1052] Collapsed 117 halfedges, mesh has 37066 remaining tets
+I20261104 14:22:01.913941 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 152
+I20261104 14:22:02.113074 139935841955712 TetRemesher.cpp:1052] Collapsed 12 halfedges, mesh has 37038 remaining tets
+I20261104 14:22:02.455365 139935841955712 MCCollapser.cpp:1705] Bisected block 17
+I20261104 14:22:02.865730 139935841955712 TetRemesher.cpp:1052] Collapsed 118 halfedges, mesh has 37067 remaining tets
+I20261104 14:22:02.865879 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 177
+I20261104 14:22:03.306490 139935841955712 TetRemesher.cpp:1052] Collapsed 82 halfedges, mesh has 37099 remaining tets
+I20261104 14:22:03.307463 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 35
+I20261104 14:22:04.160800 139935841955712 TetRemesher.cpp:1052] Collapsed 74 halfedges, mesh has 36692 remaining tets
+I20261104 14:22:04.360063 139935841955712 MCCollapser.cpp:1705] Bisected block 34
+I20261104 14:22:05.113906 139935841955712 TetRemesher.cpp:1052] Collapsed 175 halfedges, mesh has 36706 remaining tets
+I20261104 14:22:05.114043 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 178
+I20261104 14:22:05.571061 139935841955712 TetRemesher.cpp:1052] Collapsed 57 halfedges, mesh has 36712 remaining tets
+I20261104 14:22:05.573220 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 37
+I20261104 14:22:06.373173 139935841955712 TetRemesher.cpp:1052] Collapsed 118 halfedges, mesh has 36071 remaining tets
+I20261104 14:22:06.555965 139935841955712 MCCollapser.cpp:1705] Bisected block 36
+I20261104 14:22:06.831731 139935841955712 TetRemesher.cpp:1052] Collapsed 95 halfedges, mesh has 36070 remaining tets
+I20261104 14:22:06.832029 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 179
+I20261104 14:22:07.026777 139935841955712 TetRemesher.cpp:1052] Collapsed 43 halfedges, mesh has 36107 remaining tets
+I20261104 14:22:07.032526 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 39
+I20261104 14:22:07.488082 139935841955712 TetRemesher.cpp:1052] Collapsed 86 halfedges, mesh has 35641 remaining tets
+I20261104 14:22:07.582995 139935841955712 MCCollapser.cpp:1705] Bisected block 38
+I20261104 14:22:07.774151 139935841955712 TetRemesher.cpp:1052] Collapsed 112 halfedges, mesh has 35597 remaining tets
+I20261104 14:22:07.774275 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 180
+I20261104 14:22:07.931587 139935841955712 TetRemesher.cpp:1052] Collapsed 22 halfedges, mesh has 35619 remaining tets
+I20261104 14:22:07.935120 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 41
+I20261104 14:22:08.651967 139935841955712 TetRemesher.cpp:1052] Collapsed 169 halfedges, mesh has 34700 remaining tets
+I20261104 14:22:08.734999 139935841955712 MCCollapser.cpp:1705] Bisected block 40
+I20261104 14:22:08.943145 139935841955712 TetRemesher.cpp:1052] Collapsed 90 halfedges, mesh has 34662 remaining tets
+I20261104 14:22:08.943790 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 181
+I20261104 14:22:09.069548 139935841955712 TetRemesher.cpp:1052] Collapsed 6 halfedges, mesh has 34672 remaining tets
+I20261104 14:22:09.071149 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 43
+I20261104 14:22:09.334298 139935841955712 TetRemesher.cpp:1052] Collapsed 7 halfedges, mesh has 34636 remaining tets
+I20261104 14:22:09.629989 139935841955712 MCCollapser.cpp:1705] Bisected block 42
+I20261104 14:22:09.963581 139935841955712 TetRemesher.cpp:1052] Collapsed 120 halfedges, mesh has 34629 remaining tets
+I20261104 14:22:09.963955 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 182
+I20261104 14:22:10.127479 139935841955712 TetRemesher.cpp:1052] Collapsed 46 halfedges, mesh has 34656 remaining tets
+I20261104 14:22:10.134405 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 45
+I20261104 14:22:11.434882 139935841955712 TetRemesher.cpp:1052] Collapsed 268 halfedges, mesh has 33183 remaining tets
+I20261104 14:22:11.565647 139935841955712 MCCollapser.cpp:1705] Bisected block 44
+I20261104 14:22:11.831776 139935841955712 TetRemesher.cpp:1052] Collapsed 100 halfedges, mesh has 33218 remaining tets
+I20261104 14:22:11.832257 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 183
+I20261104 14:22:12.217940 139935841955712 TetRemesher.cpp:1052] Collapsed 105 halfedges, mesh has 33243 remaining tets
+I20261104 14:22:12.220923 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 46
+I20261104 14:22:12.514745 139935841955712 TetRemesher.cpp:1052] Collapsed 52 halfedges, mesh has 32965 remaining tets
+I20261104 14:22:12.518687 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 47
+I20261104 14:22:12.785441 139935841955712 TetRemesher.cpp:1052] Collapsed 53 halfedges, mesh has 32680 remaining tets
+I20261104 14:22:12.791665 139935841955712 MCCollapser.cpp:1677] Bisected patch 111
+I20261104 14:22:12.792137 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 32680 remaining tets
+I20261104 14:22:12.792944 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 454
+I20261104 14:22:12.816945 139935841955712 TetRemesher.cpp:1052] Collapsed 5 halfedges, mesh has 32656 remaining tets
+I20261104 14:22:12.817059 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 184
+I20261104 14:22:12.918300 139935841955712 TetRemesher.cpp:1052] Collapsed 28 halfedges, mesh has 32572 remaining tets
+I20261104 14:22:12.918393 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 185
+I20261104 14:22:13.236922 139935841955712 TetRemesher.cpp:1052] Collapsed 109 halfedges, mesh has 32204 remaining tets
+I20261104 14:22:13.285004 139935841955712 MCCollapser.cpp:1705] Bisected block 6
+I20261104 14:22:13.304568 139935841955712 TetRemesher.cpp:1052] Collapsed 11 halfedges, mesh has 32204 remaining tets
+I20261104 14:22:13.304683 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 200
+I20261104 14:22:13.386202 139935841955712 TetRemesher.cpp:1052] Collapsed 19 halfedges, mesh has 32242 remaining tets
+I20261104 14:22:13.389090 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 49
+I20261104 14:22:13.622559 139935841955712 TetRemesher.cpp:1052] Collapsed 71 halfedges, mesh has 31866 remaining tets
+I20261104 14:22:13.641317 139935841955712 MCCollapser.cpp:1705] Bisected block 48
+I20261104 14:22:13.656228 139935841955712 TetRemesher.cpp:1052] Collapsed 7 halfedges, mesh has 31876 remaining tets
+I20261104 14:22:13.656370 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 201
+I20261104 14:22:13.818116 139935841955712 TetRemesher.cpp:1052] Collapsed 46 halfedges, mesh has 31935 remaining tets
+I20261104 14:22:13.820993 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 51
+I20261104 14:22:14.131929 139935841955712 TetRemesher.cpp:1052] Collapsed 93 halfedges, mesh has 31460 remaining tets
+I20261104 14:22:14.170621 139935841955712 MCCollapser.cpp:1705] Bisected block 50
+I20261104 14:22:14.171185 139935841955712 TetRemesher.cpp:1052] Collapsed 0 halfedges, mesh has 31460 remaining tets
+I20261104 14:22:14.171295 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 202
+I20261104 14:22:14.248672 139935841955712 TetRemesher.cpp:1052] Collapsed 13 halfedges, mesh has 31482 remaining tets
+I20261104 14:22:14.251978 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 53
+I20261104 14:22:14.731930 139935841955712 TetRemesher.cpp:1052] Collapsed 134 halfedges, mesh has 30761 remaining tets
+I20261104 14:22:14.744244 139935841955712 MCCollapser.cpp:1705] Bisected block 52
+I20261104 14:22:14.782531 139935841955712 TetRemesher.cpp:1052] Collapsed 15 halfedges, mesh has 30761 remaining tets
+I20261104 14:22:14.782735 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 203
+I20261104 14:22:14.865086 139935841955712 TetRemesher.cpp:1052] Collapsed 19 halfedges, mesh has 30787 remaining tets
+I20261104 14:22:14.866302 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 54
+I20261104 14:22:15.038459 139935841955712 TetRemesher.cpp:1052] Collapsed 52 halfedges, mesh has 30501 remaining tets
+I20261104 14:22:15.038821 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 55
+I20261104 14:22:15.113143 139935841955712 TetRemesher.cpp:1052] Collapsed 15 halfedges, mesh has 30429 remaining tets
+I20261104 14:22:15.125599 139935841955712 MCCollapser.cpp:1677] Bisected patch 130
+I20261104 14:22:15.149760 139935841955712 TetRemesher.cpp:1052] Collapsed 24 halfedges, mesh has 30443 remaining tets
+I20261104 14:22:15.150454 139935841955712 MCCollapser.cpp:1140] Collapsing halfarc 482
+I20261104 14:22:15.212413 139935841955712 TetRemesher.cpp:1052] Collapsed 20 halfedges, mesh has 30505 remaining tets
+I20261104 14:22:15.212494 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 204
+I20261104 14:22:15.325780 139935841955712 TetRemesher.cpp:1052] Collapsed 51 halfedges, mesh has 30343 remaining tets
+I20261104 14:22:15.325973 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 205
+I20261104 14:22:15.415035 139935841955712 TetRemesher.cpp:1052] Collapsed 39 halfedges, mesh has 30223 remaining tets
+I20261104 14:22:15.496950 139935841955712 MCCollapser.cpp:1705] Bisected block 5
+I20261104 14:22:15.566831 139935841955712 TetRemesher.cpp:1052] Collapsed 26 halfedges, mesh has 30223 remaining tets
+I20261104 14:22:15.567292 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 224
+I20261104 14:22:15.772818 139935841955712 TetRemesher.cpp:1052] Collapsed 50 halfedges, mesh has 30434 remaining tets
+I20261104 14:22:15.777240 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 57
+I20261104 14:22:16.185444 139935841955712 TetRemesher.cpp:1052] Collapsed 118 halfedges, mesh has 29811 remaining tets
+I20261104 14:22:16.284219 139935841955712 MCCollapser.cpp:1705] Bisected block 56
+I20261104 14:22:16.402731 139935841955712 TetRemesher.cpp:1052] Collapsed 64 halfedges, mesh has 29896 remaining tets
+I20261104 14:22:16.403444 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 225
+I20261104 14:22:16.770157 139935841955712 TetRemesher.cpp:1052] Collapsed 115 halfedges, mesh has 30087 remaining tets
+I20261104 14:22:16.771509 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 59
+I20261104 14:22:17.035146 139935841955712 TetRemesher.cpp:1052] Collapsed 62 halfedges, mesh has 29742 remaining tets
+I20261104 14:22:17.060109 139935841955712 MCCollapser.cpp:1705] Bisected block 58
+I20261104 14:22:17.080246 139935841955712 TetRemesher.cpp:1052] Collapsed 15 halfedges, mesh has 29742 remaining tets
+I20261104 14:22:17.080425 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 226
+I20261104 14:22:17.171232 139935841955712 TetRemesher.cpp:1052] Collapsed 27 halfedges, mesh has 29757 remaining tets
+I20261104 14:22:17.172431 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 61
+I20261104 14:22:17.584865 139935841955712 TetRemesher.cpp:1052] Collapsed 80 halfedges, mesh has 29316 remaining tets
+I20261104 14:22:17.608111 139935841955712 MCCollapser.cpp:1705] Bisected block 60
+I20261104 14:22:17.635608 139935841955712 TetRemesher.cpp:1052] Collapsed 15 halfedges, mesh has 29316 remaining tets
+I20261104 14:22:17.635714 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 227
+I20261104 14:22:17.772218 139935841955712 TetRemesher.cpp:1052] Collapsed 36 halfedges, mesh has 29421 remaining tets
+I20261104 14:22:17.772945 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 63
+I20261104 14:22:17.916285 139935841955712 TetRemesher.cpp:1052] Collapsed 28 halfedges, mesh has 29284 remaining tets
+I20261104 14:22:17.938154 139935841955712 MCCollapser.cpp:1705] Bisected block 62
+I20261104 14:22:17.959585 139935841955712 TetRemesher.cpp:1052] Collapsed 13 halfedges, mesh has 29284 remaining tets
+I20261104 14:22:17.960047 139935841955712 MCCollapser.cpp:1150] Collapsing pillow patch 228
+I20261104 14:22:18.058308 139935841955712 TetRemesher.cpp:1052] Collapsed 26 halfedges, mesh has 29351 remaining tets
+I20261104 14:22:18.059199 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 64
+I20261104 14:22:18.183341 139935841955712 TetRemesher.cpp:1052] Collapsed 26 halfedges, mesh has 29205 remaining tets
+I20261104 14:22:18.187089 139935841955712 MCCollapser.cpp:1166] Collapsing minimal pillow block 65
+I20261104 14:22:18.632087 139935841955712 TetRemesher.cpp:1052] Collapsed 150 halfedges, mesh has 28434 remaining tets
+I20261104 14:22:18.640542 139935841955712 MCCollapser.cpp:1092] POST-COLLAPSE stats: 54213; 28434; 110518; 58475; 67021; 35933; 11589; 6765; 20; 10; 94; 46; 139; 67; 65; 31; 10; 39; 34; 33; 78; 48; 23; 56; 31; 109914; 96561; 0
+I20261104 14:22:18.640835 139935841955712 main.cpp:357] Collapsing 0-arcs was successful!
+I20261104 14:22:18.640897 139935841955712 main.cpp:392] Generating IGM...
+I20261104 14:22:19.105091 139935841955712 TetRemesher.cpp:1052] Collapsed 19 halfedges, mesh has 28323 remaining tets
+I20261104 14:22:25.016316 139935841955712 IGMInitializer.cpp:216] Split 1042 edges and 187 faces, to prevent degenerate boundary IGM
+W20261104 14:22:25.439408 139935841955712 IGMInitializer.cpp:568] Boundary hf 524134 of block 13 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:25.439538 139935841955712 IGMInitializer.cpp:568] Boundary hf 530236 of block 13 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:25.439546 139935841955712 IGMInitializer.cpp:568] Boundary hf 530238 of block 13 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:25.439636 139935841955712 IGMInitializer.cpp:568] Boundary hf 536939 of block 13 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:25.439642 139935841955712 IGMInitializer.cpp:568] Boundary hf 536945 of block 13 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:25.439647 139935841955712 IGMInitializer.cpp:568] Boundary hf 536947 of block 13 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:25.439669 139935841955712 IGMInitializer.cpp:568] Boundary hf 537015 of block 13 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:25.439690 139935841955712 IGMInitializer.cpp:568] Boundary hf 537069 of block 13 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:34.427151 139935841955712 IGMInitializer.cpp:568] Boundary hf 438358 of block 16 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:34.427428 139935841955712 IGMInitializer.cpp:568] Boundary hf 438674 of block 16 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:34.427734 139935841955712 IGMInitializer.cpp:568] Boundary hf 451613 of block 16 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:34.427741 139935841955712 IGMInitializer.cpp:568] Boundary hf 451617 of block 16 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:34.427757 139935841955712 IGMInitializer.cpp:568] Boundary hf 451689 of block 16 inverted! Have to recompute tutte in exact coords
+W20261104 14:22:36.508802 139935841955712 IGMInitializer.cpp:568] Boundary hf 773658 of block 3 inverted! Have to recompute tutte in exact coords
+I20261104 14:23:14.944106 139935841955712 IGMInitializer.cpp:239] Split 166 edges and 0 faces, to prevent overconstrained inverted interior IGM
+W20261104 14:23:16.327170 139935841955712 IGMInitializer.cpp:56] Initial IGM obtained via naive 3D Tutte has invalid elements, IGM untangling is needed
+I20261104 14:23:16.327373 139935841955712 IGMGenerator.cpp:57] After initializing the IGM via naive 3D tutte, the following blocks have inversions:
+I20261104 14:23:16.330122 139935841955712 IGMGenerator.cpp:65] Block 0 nTetsInvalidIGM 19
+I20261104 14:23:35.849593 139935841955712 IGMGenerator.cpp:65] Block 1 nTetsInvalidIGM 340
+I20261104 14:23:36.154300 139935841955712 IGMGenerator.cpp:65] Block 2 nTetsInvalidIGM 32
+I20261104 14:23:39.551579 139935841955712 IGMGenerator.cpp:65] Block 3 nTetsInvalidIGM 33
+I20261104 14:23:42.308287 139935841955712 IGMGenerator.cpp:65] Block 4 nTetsInvalidIGM 212
+I20261104 14:23:42.373653 139935841955712 IGMGenerator.cpp:65] Block 11 nTetsInvalidIGM 7
+I20261104 14:23:42.378865 139935841955712 IGMGenerator.cpp:65] Block 12 nTetsInvalidIGM 17
+I20261104 14:24:05.514280 139935841955712 IGMGenerator.cpp:65] Block 13 nTetsInvalidIGM 338
+I20261104 14:24:07.470062 139935841955712 IGMGenerator.cpp:65] Block 16 nTetsInvalidIGM 368
+I20261104 14:24:07.514593 139935841955712 IGMGenerator.cpp:65] Block 18 nTetsInvalidIGM 90
+I20261104 14:24:07.514650 139935841955712 IGMGenerator.cpp:67] ...proceeding to IGM untangling
+I20261104 14:24:33.472544 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 0
+I20261104 14:24:33.473894 139935841955712 IGMUntangler.cpp:529] Initial F 1198.76, MinDetJ -0.0481514, nFlipped 19
+I20261104 14:24:33.486986 139935841955712 IGMUntangler.cpp:658] Iter 20 e 1.63904 F 3242.77, MinDetJ -0.570733, nFlipped 13
+I20261104 14:24:33.501302 139935841955712 IGMUntangler.cpp:658] Iter 40 e 0.427159 F 7384.73, MinDetJ -0.445328, nFlipped 13
+I20261104 14:24:33.517484 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.13259 F 13604.2, MinDetJ -0.194055, nFlipped 12
+I20261104 14:24:33.530591 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.043972 F 19437.2, MinDetJ -0.0803863, nFlipped 8
+I20261104 14:24:33.542822 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.0138035 F 22021.5, MinDetJ -0.0108444, nFlipped 8
+I20261104 14:24:33.542879 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -0.0481752, nFlipped 6
+I20261104 14:24:33.551364 139935841955712 IGMUntangler.cpp:217] BLOCK 0: after FFM, bad/all tets: 6/260 (2.30769%); neg/total volume: 0.0379161/32 (0.118488%)
+I20261104 14:24:54.213148 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 1
+I20261104 14:24:54.232914 139935841955712 IGMUntangler.cpp:529] Initial F 1.51576e+07, MinDetJ -47.6775, nFlipped 346
+I20261104 14:24:54.875001 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.56667 F 2.88946e+07, MinDetJ -47.6413, nFlipped 455
+I20261104 14:24:55.513443 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.27776 F 5.59074e+07, MinDetJ -47.5816, nFlipped 456
+I20261104 14:24:56.152876 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.45802 F 1.04687e+08, MinDetJ -47.5163, nFlipped 446
+I20261104 14:24:56.787604 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.164192 F 1.96545e+08, MinDetJ -47.4713, nFlipped 451
+I20261104 14:24:57.734450 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.0588604 F 3.96842e+08, MinDetJ -47.432, nFlipped 458
+I20261104 14:24:57.734565 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -47.6775, nFlipped 346
+I20261104 14:25:14.813059 139935841955712 IGMUntangler.cpp:678] Tet 169787 volume is 3.46045e-29, but detJ is -3.0653e-22
+I20261104 14:25:15.322668 139935841955712 IGMUntangler.cpp:678] Tet 172017 volume is 5.75896e-34, but detJ is -1.10177e-23
+I20261104 14:25:15.358744 139935841955712 IGMUntangler.cpp:678] Tet 172021 volume is 3.88092e-44, but detJ is -4.14801e-25
+I20261104 14:25:15.416434 139935841955712 IGMUntangler.cpp:678] Tet 172044 volume is 3.83613e-32, but detJ is -2.37951e-25
+I20261104 14:25:15.472474 139935841955712 IGMUntangler.cpp:678] Tet 172060 volume is 2.20033e-29, but detJ is -1.05736e-22
+I20261104 14:25:15.510782 139935841955712 IGMUntangler.cpp:678] Tet 172062 volume is 4.09041e-30, but detJ is -4.59974e-23
+I20261104 14:25:51.055186 139935841955712 IGMUntangler.cpp:217] BLOCK 1: after FFM, bad/all tets: 340/5941 (5.72294%); neg/total volume: 1.06614/1920 (0.0555284%)
+I20261104 14:25:51.874978 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 2
+I20261104 14:25:51.880092 139935841955712 IGMUntangler.cpp:529] Initial F 15062.5, MinDetJ -55.4983, nFlipped 32
+I20261104 14:25:52.131248 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.56992 F 34949.6, MinDetJ -49.7384, nFlipped 105
+I20261104 14:25:52.382543 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.27896 F 87242.9, MinDetJ -47.6527, nFlipped 112
+I20261104 14:25:52.673628 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.458449 F 220022, MinDetJ -45.5547, nFlipped 120
+I20261104 14:25:52.930084 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.164245 F 530053, MinDetJ -4.02589, nFlipped 67
+I20261104 14:25:53.218951 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.0565617 F 1.25891e+06, MinDetJ -0.178166, nFlipped 51
+I20261104 14:25:53.219491 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -55.4983, nFlipped 32
+I20261104 14:25:53.363866 139935841955712 IGMUntangler.cpp:217] BLOCK 2: after FFM, bad/all tets: 32/3363 (0.951531%); neg/total volume: 0.125981/1344 (0.00937356%)
+I20261104 14:25:57.607172 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 3
+I20261104 14:25:57.613414 139935841955712 IGMUntangler.cpp:529] Initial F 22619.3, MinDetJ -22.6601, nFlipped 34
+I20261104 14:25:57.839686 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.50863 F 44314, MinDetJ -22.4356, nFlipped 132
+I20261104 14:25:58.083393 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.25421 F 97741.5, MinDetJ -22.3646, nFlipped 155
+I20261104 14:25:58.343950 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.44945 F 223096, MinDetJ -22.2241, nFlipped 153
+I20261104 14:25:58.593133 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.151839 F 298697, MinDetJ -20.5657, nFlipped 146
+I20261104 14:25:58.796326 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.0544318 F 493742, MinDetJ -16.5363, nFlipped 95
+I20261104 14:25:58.796383 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -22.6601, nFlipped 34
+I20261104 14:26:02.048718 139935841955712 IGMUntangler.cpp:678] Tet 304239 volume is 7.01165e-48, but detJ is -2.03755e-41
+I20261104 14:26:05.343174 139935841955712 IGMUntangler.cpp:217] BLOCK 3: after FFM, bad/all tets: 33/2517 (1.31108%); neg/total volume: 0.131484/896 (0.0146746%)
+I20261104 14:26:08.304365 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 4
+I20261104 14:26:08.311352 139935841955712 IGMUntangler.cpp:529] Initial F 506013, MinDetJ -3269.65, nFlipped 216
+I20261104 14:26:08.726204 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.58486 F 804532, MinDetJ -3258.46, nFlipped 280
+I20261104 14:26:09.125998 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.28512 F 1.31121e+06, MinDetJ -3233.76, nFlipped 286
+I20261104 14:26:09.525942 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.460697 F 2.5862e+06, MinDetJ -3219.59, nFlipped 304
+I20261104 14:26:09.943476 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.165154 F 7.16444e+06, MinDetJ -3180.03, nFlipped 305
+I20261104 14:26:10.344657 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.0592052 F 3.24609e+07, MinDetJ -3124.84, nFlipped 311
+I20261104 14:26:10.344715 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -3269.65, nFlipped 216
+I20261104 14:26:11.726465 139935841955712 IGMUntangler.cpp:678] Tet 143700 volume is 2.60367e-37, but detJ is -3.22817e-30
+I20261104 14:26:12.517911 139935841955712 IGMUntangler.cpp:678] Tet 305222 volume is -1.1452e-25, but detJ is 5.45612e-17
+I20261104 14:26:12.620303 139935841955712 IGMUntangler.cpp:678] Tet 305315 volume is 6.03732e-42, but detJ is -7.49781e-27
+I20261104 14:26:12.632217 139935841955712 IGMUntangler.cpp:678] Tet 305319 volume is 4.4178e-31, but detJ is -2.41855e-16
+I20261104 14:26:12.700082 139935841955712 IGMUntangler.cpp:678] Tet 305349 volume is 1.16385e-47, but detJ is 0
+I20261104 14:26:12.751235 139935841955712 IGMUntangler.cpp:678] Tet 305387 volume is 8.4382e-35, but detJ is -9.82369e-29
+I20261104 14:26:15.853169 139935841955712 IGMUntangler.cpp:217] BLOCK 4: after FFM, bad/all tets: 212/3792 (5.59072%); neg/total volume: 0.260885/544 (0.0479568%)
+I20261104 14:26:16.058363 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 11
+I20261104 14:26:16.059754 139935841955712 IGMUntangler.cpp:529] Initial F 2082.23, MinDetJ -0.0145859, nFlipped 7
+I20261104 14:26:16.131771 139935841955712 IGMUntangler.cpp:658] Iter 20 e 1.22788 F 11571.8, MinDetJ -0.0138585, nFlipped 8
+I20261104 14:26:16.209064 139935841955712 IGMUntangler.cpp:658] Iter 40 e 0.161105 F 59729, MinDetJ -0.0145789, nFlipped 9
+I20261104 14:26:16.273320 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.0297811 F 120136, MinDetJ -0.016558, nFlipped 9
+I20261104 14:26:16.344347 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.00881073 F 129479, MinDetJ -0.0155397, nFlipped 8
+I20261104 14:26:16.413074 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.00300949 F 130616, MinDetJ -0.00992936, nFlipped 5
+I20261104 14:26:16.413116 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -0.00992936, nFlipped 5
+I20261104 14:26:16.464797 139935841955712 IGMUntangler.cpp:217] BLOCK 11: after FFM, bad/all tets: 5/1462 (0.341997%); neg/total volume: 0.000554043/608 (9.11255e-05%)
+I20261104 14:26:16.490750 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 12
+I20261104 14:26:16.491333 139935841955712 IGMUntangler.cpp:529] Initial F 53564.7, MinDetJ -164.554, nFlipped 17
+I20261104 14:26:16.514029 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.33095 F 115256, MinDetJ -619.933, nFlipped 16
+I20261104 14:26:16.527197 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.19409 F 874017, MinDetJ -619.933, nFlipped 16
+I20261104 14:26:16.544793 139935841955712 IGMUntangler.cpp:658] Iter 60 e 1 F 7.81987e+06, MinDetJ -184.903, nFlipped 14
+I20261104 14:26:16.566041 139935841955712 IGMUntangler.cpp:658] Iter 80 e 1 F 5.22877e+07, MinDetJ -184.903, nFlipped 14
+I20261104 14:26:16.615824 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.189087 F 273462, MinDetJ -79.2282, nFlipped 12
+I20261104 14:26:16.615895 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -89.9147, nFlipped 11
+I20261104 14:26:16.621645 139935841955712 IGMUntangler.cpp:217] BLOCK 12: after FFM, bad/all tets: 11/221 (4.97738%); neg/total volume: 0.0433248/32 (0.13539%)
+I20261104 14:26:40.362455 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 13
+I20261104 14:26:40.393386 139935841955712 IGMUntangler.cpp:529] Initial F 1.42761e+06, MinDetJ -4487.13, nFlipped 342
+I20261104 14:26:42.417007 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.58486 F 2.62623e+06, MinDetJ -4486.59, nFlipped 437
+I20261104 14:26:44.379823 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.28512 F 5.60822e+06, MinDetJ -4486.57, nFlipped 438
+I20261104 14:26:45.780702 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.460698 F 1.76926e+07, MinDetJ -4485.06, nFlipped 452
+I20261104 14:26:46.606426 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.165154 F 9.21988e+07, MinDetJ -4479.46, nFlipped 456
+I20261104 14:26:47.493637 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.0592053 F 6.36268e+08, MinDetJ -4472.4, nFlipped 466
+I20261104 14:26:47.493822 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -4487.13, nFlipped 342
+I20261104 14:27:01.474026 139935841955712 IGMUntangler.cpp:678] Tet 100651 volume is 1.43251e-22, but detJ is -6.86528e-17
+I20261104 14:27:12.012646 139935841955712 IGMUntangler.cpp:678] Tet 303317 volume is 0, but detJ is 1.548e-18
+I20261104 14:27:12.413195 139935841955712 IGMUntangler.cpp:678] Tet 303783 volume is 9.54381e-54, but detJ is -1.5479e-46
+I20261104 14:27:12.724418 139935841955712 IGMUntangler.cpp:678] Tet 303811 volume is 1.58813e-46, but detJ is -1.17095e-36
+I20261104 14:27:12.834999 139935841955712 IGMUntangler.cpp:678] Tet 303820 volume is 1.14034e-52, but detJ is -5.40976e-39
+I20261104 14:27:12.864877 139935841955712 IGMUntangler.cpp:678] Tet 303821 volume is 2.4541e-57, but detJ is -5.32697e-38
+I20261104 14:27:12.897426 139935841955712 IGMUntangler.cpp:678] Tet 303822 volume is 5.88132e-52, but detJ is -5.31114e-38
+I20261104 14:27:13.195708 139935841955712 IGMUntangler.cpp:678] Tet 303851 volume is -2.65311e-47, but detJ is 1.56783e-42
+I20261104 14:27:46.220169 139935841955712 IGMUntangler.cpp:217] BLOCK 13: after FFM, bad/all tets: 338/8393 (4.02717%); neg/total volume: 1.17849/1408 (0.0836997%)
+I20261104 14:27:50.377644 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 16
+I20261104 14:27:50.391955 139935841955712 IGMUntangler.cpp:529] Initial F 8.45991e+06, MinDetJ -66.3272, nFlipped 372
+I20261104 14:27:50.937864 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.57537 F 1.62318e+07, MinDetJ -66.3272, nFlipped 372
+I20261104 14:27:51.476659 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.28128 F 3.22535e+07, MinDetJ -66.3272, nFlipped 372
+I20261104 14:27:52.207216 139935841955712 IGMUntangler.cpp:658] Iter 60 e 1 F 4.06205e+07, MinDetJ -66.3272, nFlipped 372
+I20261104 14:27:54.086487 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.457903 F 4.61628e+06, MinDetJ -1344.87, nFlipped 861
+I20261104 14:27:55.643276 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.164152 F 1.38351e+07, MinDetJ -1344.67, nFlipped 859
+I20261104 14:27:55.643438 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -66.3272, nFlipped 372
+I20261104 14:27:57.522577 139935841955712 IGMUntangler.cpp:678] Tet 304375 volume is 1.34717e-85, but detJ is -4.93135e-74
+I20261104 14:27:57.544015 139935841955712 IGMUntangler.cpp:678] Tet 304384 volume is 2.81815e-64, but detJ is -3.49409e-57
+I20261104 14:27:57.550517 139935841955712 IGMUntangler.cpp:678] Tet 304385 volume is 5.43138e-64, but detJ is -1.94433e-57
+I20261104 14:27:57.565823 139935841955712 IGMUntangler.cpp:678] Tet 304392 volume is 1.78829e-57, but detJ is -1.40988e-50
+I20261104 14:28:00.128638 139935841955712 IGMUntangler.cpp:217] BLOCK 16: after FFM, bad/all tets: 368/6492 (5.66852%); neg/total volume: 0.0192545/1920 (0.00100284%)
+I20261104 14:28:00.313711 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 18
+I20261104 14:28:00.316611 139935841955712 IGMUntangler.cpp:529] Initial F 14802.3, MinDetJ -206.013, nFlipped 90
+I20261104 14:28:00.488862 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.58384 F 31604.4, MinDetJ -184.618, nFlipped 106
+I20261104 14:28:00.646319 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.28455 F 56103.9, MinDetJ -86.018, nFlipped 94
+I20261104 14:28:00.794731 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.46049 F 127695, MinDetJ -328.208, nFlipped 99
+I20261104 14:28:00.956490 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.165079 F 310615, MinDetJ -328.208, nFlipped 99
+I20261104 14:28:01.204694 139935841955712 IGMUntangler.cpp:658] Iter 100 e 1 F 418020, MinDetJ -205.982, nFlipped 84
+I20261104 14:28:01.204877 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -205.982, nFlipped 84
+I20261104 14:28:01.288047 139935841955712 IGMUntangler.cpp:217] BLOCK 18: after FFM, bad/all tets: 84/2653 (3.16623%); neg/total volume: 0.130272/1056 (0.0123364%)
+I20261104 14:28:01.596012 139935841955712 IGMUntangler.cpp:275] Found splittable edges, splitting and trying to untangle again...
+I20261104 14:28:24.850229 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 0
+I20261104 14:28:24.851331 139935841955712 IGMUntangler.cpp:529] Initial F 1198.76, MinDetJ -0.0481752, nFlipped 7
+I20261104 14:28:24.865500 139935841955712 IGMUntangler.cpp:658] Iter 20 e 1.49767 F 3438.34, MinDetJ -0.702294, nFlipped 13
+I20261104 14:28:24.877755 139935841955712 IGMUntangler.cpp:658] Iter 40 e 0.403634 F 7625.05, MinDetJ -0.386555, nFlipped 14
+I20261104 14:28:24.891566 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.121855 F 14103.6, MinDetJ -0.16293, nFlipped 15
+I20261104 14:28:24.906082 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.0400604 F 19784.5, MinDetJ -0.0761816, nFlipped 12
+I20261104 14:28:24.917616 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.0136714 F 22055.5, MinDetJ -0.0232026, nFlipped 8
+I20261104 14:28:24.917701 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -0.0481752, nFlipped 7
+I20261104 14:28:24.945348 139935841955712 IGMUntangler.cpp:217] BLOCK 0: after FFM, bad/all tets: 7/265 (2.64151%); neg/total volume: 0.0379161/32 (0.118488%)
+I20261104 14:28:48.361479 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 1
+I20261104 14:28:48.381541 139935841955712 IGMUntangler.cpp:529] Initial F 1.51576e+07, MinDetJ -47.6775, nFlipped 357
+I20261104 14:28:49.331356 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.56667 F 2.8921e+07, MinDetJ -47.6625, nFlipped 460
+I20261104 14:28:49.953413 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.27776 F 5.62591e+07, MinDetJ -47.6428, nFlipped 467
+I20261104 14:28:50.478017 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.458021 F 1.06936e+08, MinDetJ -47.6021, nFlipped 446
+I20261104 14:28:51.067416 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.164192 F 2.01523e+08, MinDetJ -47.5767, nFlipped 448
+I20261104 14:28:51.823008 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.0588605 F 4.02299e+08, MinDetJ -47.5552, nFlipped 461
+I20261104 14:28:51.823308 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -47.6775, nFlipped 357
+I20261104 14:29:03.956856 139935841955712 IGMUntangler.cpp:678] Tet 169787 volume is 3.46045e-29, but detJ is -3.0653e-22
+I20261104 14:29:04.403746 139935841955712 IGMUntangler.cpp:678] Tet 172017 volume is 5.75896e-34, but detJ is -1.10177e-23
+I20261104 14:29:04.437892 139935841955712 IGMUntangler.cpp:678] Tet 172021 volume is 3.88092e-44, but detJ is -4.14801e-25
+I20261104 14:29:04.500832 139935841955712 IGMUntangler.cpp:678] Tet 172044 volume is 3.83613e-32, but detJ is -2.37951e-25
+I20261104 14:29:04.552907 139935841955712 IGMUntangler.cpp:678] Tet 172060 volume is 2.20033e-29, but detJ is -1.05736e-22
+I20261104 14:29:04.591503 139935841955712 IGMUntangler.cpp:678] Tet 172062 volume is 4.09041e-30, but detJ is -4.59974e-23
+I20261104 14:29:36.076157 139935841955712 IGMUntangler.cpp:217] BLOCK 1: after FFM, bad/all tets: 351/5990 (5.85977%); neg/total volume: 1.06614/1920 (0.0555284%)
+I20261104 14:29:36.872622 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 2
+I20261104 14:29:36.876500 139935841955712 IGMUntangler.cpp:529] Initial F 15062.5, MinDetJ -55.4983, nFlipped 38
+I20261104 14:29:37.124101 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.5708 F 34941.3, MinDetJ -53.0759, nFlipped 112
+I20261104 14:29:37.387342 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.27939 F 87214.7, MinDetJ -52.0432, nFlipped 118
+I20261104 14:29:37.666981 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.45861 F 219954, MinDetJ -50.6, nFlipped 127
+I20261104 14:29:37.966217 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.164399 F 532606, MinDetJ -18.0137, nFlipped 137
+I20261104 14:29:38.215771 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.0576154 F 1.24069e+06, MinDetJ -0.125824, nFlipped 54
+I20261104 14:29:38.216156 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -55.4983, nFlipped 38
+I20261104 14:29:38.379066 139935841955712 IGMUntangler.cpp:217] BLOCK 2: after FFM, bad/all tets: 38/3380 (1.12426%); neg/total volume: 0.125981/1344 (0.00937356%)
+I20261104 14:29:41.700490 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 3
+I20261104 14:29:41.704373 139935841955712 IGMUntangler.cpp:529] Initial F 22619.2, MinDetJ -22.6601, nFlipped 37
+I20261104 14:29:41.917795 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.51478 F 44235.9, MinDetJ -24.6587, nFlipped 135
+I20261104 14:29:42.152881 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.25709 F 97537.9, MinDetJ -25.7026, nFlipped 158
+I20261104 14:29:42.413344 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.450528 F 222649, MinDetJ -28.1517, nFlipped 156
+I20261104 14:29:42.645528 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.151769 F 294224, MinDetJ -10.024, nFlipped 150
+I20261104 14:29:42.840912 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.054402 F 480844, MinDetJ -21.084, nFlipped 103
+I20261104 14:29:42.840997 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -22.6601, nFlipped 37
+I20261104 14:29:46.202262 139935841955712 IGMUntangler.cpp:678] Tet 304239 volume is 7.01165e-48, but detJ is -2.03755e-41
+I20261104 14:29:50.028988 139935841955712 IGMUntangler.cpp:217] BLOCK 3: after FFM, bad/all tets: 36/2531 (1.42236%); neg/total volume: 0.131484/896 (0.0146746%)
+I20261104 14:29:53.102400 139935841955712 IGMUntangler.cpp:478] Fixing/optimizing by FFM block 4
+I20261104 14:29:53.111779 139935841955712 IGMUntangler.cpp:529] Initial F 505900, MinDetJ -3269.65, nFlipped 302
+I20261104 14:29:53.588395 139935841955712 IGMUntangler.cpp:658] Iter 20 e 3.58486 F 804180, MinDetJ -3259.2, nFlipped 411
+I20261104 14:29:54.085302 139935841955712 IGMUntangler.cpp:658] Iter 40 e 1.28512 F 1.29677e+06, MinDetJ -3232.14, nFlipped 425
+I20261104 14:29:54.555540 139935841955712 IGMUntangler.cpp:658] Iter 60 e 0.460697 F 2.50686e+06, MinDetJ -3216.04, nFlipped 432
+I20261104 14:29:54.990793 139935841955712 IGMUntangler.cpp:658] Iter 80 e 0.165154 F 6.7912e+06, MinDetJ -3180.55, nFlipped 437
+I20261104 14:29:55.482298 139935841955712 IGMUntangler.cpp:658] Iter 100 e 0.0592052 F 2.96907e+07, MinDetJ -3122.5, nFlipped 443
+I20261104 14:29:55.482376 139935841955712 IGMUntangler.cpp:669] Final MinDetJ -3269.65, nFlipped 302

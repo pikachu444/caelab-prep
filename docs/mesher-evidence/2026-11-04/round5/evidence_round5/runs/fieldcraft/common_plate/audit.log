@@ -1,0 +1,82 @@
+{
+  "case_id": "round5_common_plate",
+  "elements": {
+    "hexahedron": 23772
+  },
+  "volume_fractions": {
+    "signed_volume_by_family_mm3": {
+      "hexahedron": 7763.077862414933
+    },
+    "positive_integrated_volume_by_family_mm3": {
+      "hexahedron": 7763.077862414933
+    },
+    "signed_hex_volume_fraction": 1.0,
+    "positive_volume_hex_fraction": 1.0,
+    "hex_cell_count_fraction": 1.0,
+    "interpretation": "Positive volume fractions can hide inversions; hex dominance is accepted only alongside independent validity and CAD coverage."
+  },
+  "checks": {
+    "basic": true,
+    "normalized_J": false,
+    "SICN": false,
+    "CAD_volume": false,
+    "sampled_boundary": false,
+    "sampled_outside_centroids": false,
+    "surface_conformity": true,
+    "feature_probes": true,
+    "boundary_genus": true,
+    "explicit_CAD_feature_probes_available": true
+  },
+  "mesh_policy_pass": false,
+  "sensitivity": {
+    "0.01": {
+      "checks": {
+        "basic": true,
+        "normalized_J": false,
+        "SICN": false,
+        "CAD_volume": false,
+        "sampled_boundary": false,
+        "sampled_outside_centroids": false,
+        "surface_conformity": true,
+        "feature_probes": true,
+        "boundary_genus": true,
+        "explicit_CAD_feature_probes_available": true
+      },
+      "mesh_policy_pass": false,
+      "hex_dominant_policy_pass": false
+    },
+    "0.05": {
+      "checks": {
+        "basic": true,
+        "normalized_J": false,
+        "SICN": false,
+        "CAD_volume": false,
+        "sampled_boundary": false,
+        "sampled_outside_centroids": false,
+        "surface_conformity": true,
+        "feature_probes": true,
+        "boundary_genus": true,
+        "explicit_CAD_feature_probes_available": true
+      },
+      "mesh_policy_pass": false,
+      "hex_dominant_policy_pass": false
+    },
+    "0.1": {
+      "checks": {
+        "basic": true,
+        "normalized_J": false,
+        "SICN": false,
+        "CAD_volume": false,
+        "sampled_boundary": false,
+        "sampled_outside_centroids": false,
+        "surface_conformity": true,
+        "feature_probes": true,
+        "boundary_genus": true,
+        "explicit_CAD_feature_probes_available": true
+      },
+      "mesh_policy_pass": false,
+      "hex_dominant_policy_pass": false
+    }
+  },
+  "error": null
+}

@@ -1,0 +1,21 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/c4/Build/bin/c4hex_cli",
+    "--input",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern/QGP3D/extern/MC3D/tests/resources/fancy_ring.hexex",
+    "--collapse",
+    "--num-hexes",
+    "10000",
+    "--untangling-iter",
+    "100",
+    "--output-hex-file",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/fancy_ring/candidate.ovm",
+    "--output-igm-file",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/fancy_ring/igm.hexex"
+  ],
+  "seconds": 600.0557322320019,
+  "returncode": -9,
+  "timeout": true,
+  "input_sha256": "c2f270387afea040b03571f4c7cb06fa86f67c7f0cef9b2e34b8a3d0ae12609f",
+  "input_scope": "Author supplied tetrahedra with precomputed seamless parametrization. Not raw CAD."
+}

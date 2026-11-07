@@ -1,0 +1,39 @@
+CMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /workspace/scratch/826174ffc51a/mesher_round5_20261104/build/hexgen_4-QUALITY
+[ 25%] Building CXX object CMakeFiles/Quality.dir/cpp/BasicDataStructure.cpp.o
+[ 50%] Building CXX object CMakeFiles/Quality.dir/cpp/hex_quality.cpp.o
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp: In member function ‘void HexQuality::run_MeshQualityImprove(int, int, double, int, double, std::string)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp:742:14: error: ‘std::experimental’ has not been declared
+  742 |         std::experimental::filesystem::path path_in = fn;
+      |              ^~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp:743:15: error: ‘path_in’ was not declared in this scope
+  743 |         fld = path_in.parent_path().string();
+      |               ^~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp: In member function ‘void HexQuality::Smoothing_Adapt(int, double)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp:2195:51: warning: narrowing conversion of ‘j’ from ‘uint’ {aka ‘unsigned int’} to ‘int’ [-Wnarrowing]
+ 2195 |                         array<int, 2> itmp = { il,j };
+      |                                                   ^
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp:2200:51: warning: narrowing conversion of ‘j’ from ‘uint’ {aka ‘unsigned int’} to ‘int’ [-Wnarrowing]
+ 2200 |                         array<int, 2> itmp = { il,j };
+      |                                                   ^
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp: In member function ‘void HexQuality::GlobalMinJacob_Adapt(double&, std::array<int, 2>&, std::vector<std::array<int, 2> >&)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp:2566:64: warning: narrowing conversion of ‘i’ from ‘uint’ {aka ‘unsigned int’} to ‘int’ [-Wnarrowing]
+ 2566 |                                         array<int, 2> itmp = { i,j };
+      |                                                                ^
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp:2566:66: warning: narrowing conversion of ‘j’ from ‘uint’ {aka ‘unsigned int’} to ‘int’ [-Wnarrowing]
+ 2566 |                                         array<int, 2> itmp = { i,j };
+      |                                                                  ^
+gmake[2]: *** [CMakeFiles/Quality.dir/build.make:93: CMakeFiles/Quality.dir/cpp/hex_quality.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+gmake[1]: *** [CMakeFiles/Makefile2:87: CMakeFiles/Quality.dir/all] Error 2
+gmake: *** [Makefile:91: all] Error 2

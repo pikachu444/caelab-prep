@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/cmake331/cmake/data/bin/cmake",
+    "-S",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mesquite230/mesquite-2.3.0",
+    "-B",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/mesquite",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DCMAKE_CXX_FLAGS=-std=c++11",
+    "-DCMAKE_CXX_FLAGS_RELEASE=-O1 -DNDEBUG",
+    "-DCMAKE_INSTALL_PREFIX=/workspace/scratch/826174ffc51a/mesher_round5_20261104/deps/mesquite",
+    "-DMesquite_ENABLE_TESTS=OFF"
+  ],
+  "seconds": 2.780383678000362,
+  "returncode": 1,
+  "timeout": false
+}

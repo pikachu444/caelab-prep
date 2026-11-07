@@ -1,0 +1,1 @@
+Initial adapter omitted object ft:faces attribute; source parser may treat object as one face. Do not use as correctly tagged baseline. Subsequent common_plate directory regenerates correct attribute. Geometry identical.

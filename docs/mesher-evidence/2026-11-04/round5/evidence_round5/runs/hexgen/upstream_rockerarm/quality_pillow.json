@@ -1,0 +1,21 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/hexgen_4-QUALITY/Quality",
+    "-I",
+    "rockerarm_generated_lap.vtk",
+    "-m",
+    "1",
+    "-n",
+    "1",
+    "-p",
+    "0.1",
+    "-s",
+    "0",
+    "-t",
+    "0.3"
+  ],
+  "seconds": 0.16624531500565354,
+  "returncode": 0,
+  "timeout": false,
+  "output": "rockerarm_generated_lap_pillow.vtk"
+}

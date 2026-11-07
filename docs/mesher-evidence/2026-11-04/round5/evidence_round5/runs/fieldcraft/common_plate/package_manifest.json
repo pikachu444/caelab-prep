@@ -1,0 +1,26 @@
+{
+  "format": "fieldcraft/1",
+  "generator": "FieldCraft 0.7.0",
+  "geometry": {
+    "meshes": [
+      {
+        "path": "input.3mf",
+        "sha256": "f3ae095ca8a8f3b04c2484527efe9a86ca5c275294ca04dab88b18b607d3ab23"
+      }
+    ]
+  },
+  "parts": {
+    "journal.json": {
+      "bytes": 271,
+      "sha256": "38fc1c0514bd90dcc18cd462fcc7d7b4595b834df7ec9250c15067f4c5a7ff25"
+    },
+    "mesh.bin": {
+      "bytes": 1886091,
+      "sha256": "9c4e5fe144819cd69dc492ffdfef7ea0522b1175d148d921e6f047f1fa81acaf"
+    },
+    "model.json": {
+      "bytes": 184,
+      "sha256": "b75de98804249d21ff2c70bf94d7da586b8a6fec38919c74d0b42565d3c6c560"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+[ 25%] Building CXX object CMakeFiles/Polycube.dir/cpp/Main.cpp.o
+c++: error: unrecognized command-line option ‘-boost_system’
+[ 50%] Building CXX object CMakeFiles/Polycube.dir/cpp/Polycube.cpp.o
+c++: error: unrecognized command-line option ‘-boost_filesystem’
+gmake[2]: *** [CMakeFiles/Polycube.dir/build.make:79: CMakeFiles/Polycube.dir/cpp/Main.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+c++: error: unrecognized command-line option ‘-boost_system’
+c++: error: unrecognized command-line option ‘-boost_filesystem’
+gmake[2]: *** [CMakeFiles/Polycube.dir/build.make:93: CMakeFiles/Polycube.dir/cpp/Polycube.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:87: CMakeFiles/Polycube.dir/all] Error 2
+gmake: *** [Makefile:91: all] Error 2

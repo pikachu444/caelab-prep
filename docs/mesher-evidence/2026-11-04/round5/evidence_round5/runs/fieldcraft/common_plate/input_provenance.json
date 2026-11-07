@@ -1,0 +1,17 @@
+{
+  "geometry": "40x20x10 mm plate minus R4 through hole at (30,10)",
+  "exact_volume_mm3": 7497.345175425633,
+  "vertices": 13926,
+  "triangles": 27852,
+  "face_mapping": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "source": "Independent Gmsh OCC construction of the same analytic S1 common plate; not complex original CAD",
+  "cad_sha256": "582256afd0b945738d4703908256623aed93e7fbdcaa0d04d140c06889595b9a"
+}

@@ -1,0 +1,14 @@
+In file included from /workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/include/smesh/SMESH/SMESH_Gen.hxx:45,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/smesh_cartesian_driver.cpp:4:
+/workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/include/opencascade/TopTools_IndexedMapOfShape.hxx:28:13: warning: TopTools_IndexedMapOfShape.hxx is deprecated since OCCT 8.0.0. Use 
+   28 |   "NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher> directly.")
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
+In file included from /workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/include/opencascade/TopTools_IndexedDataMapOfShapeListOfShape.hxx:25,
+                 from /workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/include/smesh/SMESH/SMESH_Mesh.hxx:41,
+                 from /workspace/scratch/826174ffc51a/mesher_round5_20261104/smesh_cartesian_driver.cpp:5:
+/workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/include/opencascade/TopTools_ListOfShape.hxx:27:13: warning: TopTools_ListOfShape.hxx is deprecated since OCCT 8.0.0. Use NCollection types directly.
+   27 |   "TopTools_ListOfShape.hxx is deprecated since OCCT 8.0.0. Use NCollection types directly.")
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~         
+/workspace/scratch/1d5c10ddf0e3/caelab_mesher_engine_20261104/smesh_layer/native_env/include/opencascade/TopTools_IndexedDataMapOfShapeListOfShape.hxx:31:13: warning: TopTools_IndexedDataMapOfShapeListOfShape.hxx is deprecated since OCCT 
+   31 |                            "TopTools_ListOfShape, TopTools_ShapeMapHasher> directly.")
+      |             ^              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

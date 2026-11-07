@@ -1,0 +1,22 @@
+{
+  "case": "voron_dragon",
+  "resolution": 96,
+  "projection_iterations": 10,
+  "returncode": 0,
+  "timeout": false,
+  "seconds": 54.53588108600525,
+  "peak_RSS_KiB_sampled": 0,
+  "max_OS_threads_observed": 0,
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/cinolib_driver_fixed",
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/voron_dragon/surface.obj",
+    "96",
+    "10",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/cinolib_fixed/voron_dragon/candidate.mesh"
+  ],
+  "input_sha256": "276084814b0c5722e389391a49f95ccb0468474defc05e0495793992375d642d",
+  "input_cad_metadata": "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round4_20261104/corpus/voron_dragon/metadata.json",
+  "native_output_exists": true,
+  "native_source_commit": "151dc5c46309affedadb9b45619cc137fb7326ed",
+  "policy_note": "No 2GiB address-space limit; physical cgroup host8GiB. Raw and projected mesh both retained."
+}

@@ -1,0 +1,11 @@
+[ 16%] Building CXX object CMakeFiles/Segmentation.dir/cpp/CVTBasedPolycube.cpp.o
+[ 33%] Building CXX object CMakeFiles/Segmentation.dir/cpp/CellQueue.cpp.o
+c++: error: unrecognized command-line option ‘-boost_system’
+c++: error: unrecognized command-line option ‘-boost_filesystem’
+gmake[2]: *** [CMakeFiles/Segmentation.dir/build.make:79: CMakeFiles/Segmentation.dir/cpp/CVTBasedPolycube.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+c++: error: unrecognized command-line option ‘-boost_system’
+c++: error: unrecognized command-line option ‘-boost_filesystem’
+gmake[2]: *** [CMakeFiles/Segmentation.dir/build.make:93: CMakeFiles/Segmentation.dir/cpp/CellQueue.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:87: CMakeFiles/Segmentation.dir/all] Error 2
+gmake: *** [Makefile:91: all] Error 2

@@ -1,0 +1,15 @@
+{
+  "seconds": 79.03397367599973,
+  "returncode": 1,
+  "timeout": false,
+  "parameters": {
+    "surface": 0,
+    "size": 4.0,
+    "max_depth": 5,
+    "max_elements": 2000000,
+    "attempts": 2,
+    "max_sweeps": 60,
+    "weld": 0.0
+  },
+  "saved_model_exists": false
+}

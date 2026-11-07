@@ -1,0 +1,10 @@
+{
+  "command": [
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/cmake331/cmake/data/bin/cmake",
+    "--install",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/eigen"
+  ],
+  "seconds": 0.2650260820009862,
+  "returncode": 0,
+  "timeout": false
+}

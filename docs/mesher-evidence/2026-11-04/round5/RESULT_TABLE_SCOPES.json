@@ -1,0 +1,5 @@
+{
+  "INDEPENDENT_RESULT_TABLE.json": "8 original-CAD policy audit rows: CinoLib3,Mesquite2,meshio++2,FieldCraft1 analytic common plate; common plate is not practical CAD.",
+  "PREPARED_INPUT_QUALITY_TABLE.json": "Prepared map/manual segmentation and block inputs. Basic quality only; not general CAD automation.",
+  "SMESH_poly": "Native Hex/Wedge/poly inventory and finite CAD/face incidence diagnostics; no standard FE Jacobian policy pass."
+}

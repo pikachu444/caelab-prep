@@ -1,0 +1,13 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mesquite230/mesquite-2.3.0/configure",
+    "--prefix=/workspace/scratch/826174ffc51a/mesher_round5_20261104/deps/mesquite",
+    "--disable-dependency-tracking",
+    "--disable-shared",
+    "CXXFLAGS=-O1 -std=c++11",
+    "CFLAGS=-O1"
+  ],
+  "seconds": 12.034367018000921,
+  "returncode": 0,
+  "timeout": false
+}

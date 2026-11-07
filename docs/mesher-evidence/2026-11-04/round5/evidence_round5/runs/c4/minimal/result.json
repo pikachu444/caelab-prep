@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/c4/Build/bin/c4hex_cli",
+    "--input",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern/QGP3D/extern/MC3D/tests/resources/minimal.hexex",
+    "--collapse",
+    "--num-hexes",
+    "64",
+    "--untangling-iter",
+    "100",
+    "--output-hex-file",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/minimal/candidate.ovm"
+  ],
+  "seconds": 0.13415051500487607,
+  "returncode": 0,
+  "timeout": false,
+  "input_scope": "Minimal mapped tet canary, no practicalCAD claim"
+}

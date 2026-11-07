@@ -1,0 +1,7 @@
+Input Mesh: rockerarm_generated_lap.vtk
+# 3D EP: 0
+Sharp feature OFF
+Pillowing
+min edge len: 0.0025153
+Done pillowing!
+Done output control mesh!

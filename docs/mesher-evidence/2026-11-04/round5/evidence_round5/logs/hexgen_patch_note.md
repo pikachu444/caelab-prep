@@ -1,0 +1,1 @@
+The full original hexgen_portability.patch preserves the actual working-tree diff including CRLF→LF rewrites. The semantic_LF patch compares both sides after LF normalization, isolating code/portability edits. Normalize line endings before applying it; it is supplementary, not a byte-exact replacement for the full diff. No meshing algorithm change was intended.

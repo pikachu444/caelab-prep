@@ -1,0 +1,21 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/c4/Build/bin/c4hex_cli",
+    "--input",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/C4HexMeshing/extern/QGP3D/extern/MC3D/tests/resources/fandisk_algohex.hexex",
+    "--collapse",
+    "--num-hexes",
+    "10000",
+    "--untangling-iter",
+    "100",
+    "--output-hex-file",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/fandisk_algohex/candidate.ovm",
+    "--output-igm-file",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/c4/fandisk_algohex/igm.hexex"
+  ],
+  "seconds": 600.0551236530009,
+  "returncode": -9,
+  "timeout": true,
+  "input_sha256": "8b5d1e0895e8dceb64a3bf029e4a3c538f6ff55f29e939e8c01b6ef299d2958a",
+  "input_scope": "Author supplied tetrahedra with precomputed seamless parametrization. Not raw CAD."
+}

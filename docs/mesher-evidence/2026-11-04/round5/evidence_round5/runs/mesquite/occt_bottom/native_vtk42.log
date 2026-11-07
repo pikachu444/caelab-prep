@@ -1,0 +1,68 @@
+
+************** QualityAssessor(free only) Summary **************
+
+  Evaluating quality for 41047 free elements of 41070 total elements.
+  This mesh had 41070 hexahedron elements.
+  There were no inverted elements detected. 
+  No entities had undefined values for any computed metric.
+
+     Element Quality Statistics
+
+     minimum     average         rms     maximum    std.dev.
+           0     5.91787     371.717     53668.8     371.669
+
+     Number of statistics = 41047
+     Metric = ElementPMeanP(untangle(TSizeNB1))
+     Element Quality not based on sample points.
+
+
+************** QualityAssessor(free only) Summary **************
+
+  Evaluating quality for 41047 free elements of 41070 total elements.
+  This mesh had 41070 hexahedron elements.
+  There were no inverted elements detected. 
+  No entities had undefined values for any computed metric.
+
+     Element Quality Statistics
+
+     minimum     average         rms     maximum    std.dev.
+           0     5.91787     371.717     53668.8     371.669
+
+     Number of statistics = 41047
+     Metric = ElementPMeanP(untangle(TSizeNB1))
+     Element Quality not based on sample points.
+
+
+************** QualityAssessor(free only) Summary **************
+
+  Evaluating quality for 41047 free elements of 41070 total elements.
+  This mesh had 41070 hexahedron elements.
+  There were no inverted elements detected. 
+  No entities had undefined values for any computed metric.
+
+     Element Quality Statistics
+
+     minimum     average         rms     maximum    std.dev.
+ 0.000263841     3.27612     19.1045     1633.44     18.8215
+
+     Number of statistics = 41047
+     Metric = ElementPMeanP(TShapeB1)
+     Element Quality not based on sample points.
+
+
+************** QualityAssessor(free only) Summary **************
+
+  Evaluating quality for 41047 free elements of 41070 total elements.
+  This mesh had 41070 hexahedron elements.
+  There were no inverted elements detected. 
+  No entities had undefined values for any computed metric.
+
+     Element Quality Statistics
+
+     minimum     average         rms     maximum    std.dev.
+ 0.000263847     1.57046     3.49559     259.715     3.12295
+
+     Number of statistics = 41047
+     Metric = ElementPMeanP(TShapeB1)
+     Element Quality not based on sample points.
+

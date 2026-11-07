@@ -1,0 +1,10 @@
+{
+  "source_sha256": "28bb70bc8472a6b2efae1428a748957fccfd1e70d9e24238515ae0c1f5dbc5b8",
+  "nodes": 26508,
+  "hexes": 23772,
+  "entities": 8,
+  "tagged_elements": 23772,
+  "tagged_nodes": 0,
+  "unit": "Encoding MCMESH01 coordinate scaling to mm: x1; MCMESH01 model units unspecified, matched against input plate dimensions; unchanged standard Hex8 ordering",
+  "geometry_tag_note": "Native tags retained in fieldcraft package; array-only independent audit conversion does not export them"
+}

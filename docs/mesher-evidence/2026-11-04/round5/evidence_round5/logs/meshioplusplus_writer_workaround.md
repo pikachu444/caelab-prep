@@ -1,0 +1,1 @@
+The unmodified PyPI18.1.0 VTU writer crashes at vtu/__init__.py:71 even on the HexGen rockerarm output read successfully (4640points/3456hex). Mesher is unchanged. Retry worker extracts native points and connectivity and writes standard ASCII VTK plus NPZ. VTU output crash is an IO failure, not mesher generation failure. Per-case report saved before export.

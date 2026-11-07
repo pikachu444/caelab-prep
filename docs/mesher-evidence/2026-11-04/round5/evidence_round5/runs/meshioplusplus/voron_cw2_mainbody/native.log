@@ -1,0 +1,4 @@
+meshio warning [octree_mesh.cpp:371] meshio++: octree_mesh: 5 of 554 feature corners not recovered
+meshio warning [octree_mesh.cpp:371] meshio++: octree_mesh: 172 of 693 feature chains not recovered
+meshio warning [octree_mesh.cpp:371] meshio++: octree_mesh: untangling left a hexahedron with a non-positive corner Jacobian; raise untangle_iterations or lower surface_size
+meshio warning [octree_mesh.cpp:371] meshio++: octree_mesh: 36 cells have a non-positive volume

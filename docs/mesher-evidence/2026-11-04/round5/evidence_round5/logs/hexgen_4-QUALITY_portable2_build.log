@@ -1,0 +1,25 @@
+[ 25%] Building CXX object CMakeFiles/Quality.dir/cpp/BasicDataStructure.cpp.o
+[ 50%] Building CXX object CMakeFiles/Quality.dir/cpp/hex_quality.cpp.o
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp: In member function ‘void HexQuality::Smoothing_Adapt(int, double)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp:2195:51: warning: narrowing conversion of ‘j’ from ‘uint’ {aka ‘unsigned int’} to ‘int’ [-Wnarrowing]
+ 2195 |                         array<int, 2> itmp = { il,j };
+      |                                                   ^
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp:2200:51: warning: narrowing conversion of ‘j’ from ‘uint’ {aka ‘unsigned int’} to ‘int’ [-Wnarrowing]
+ 2200 |                         array<int, 2> itmp = { il,j };
+      |                                                   ^
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp: In member function ‘void HexQuality::GlobalMinJacob_Adapt(double&, std::array<int, 2>&, std::vector<std::array<int, 2> >&)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp:2566:64: warning: narrowing conversion of ‘i’ from ‘uint’ {aka ‘unsigned int’} to ‘int’ [-Wnarrowing]
+ 2566 |                                         array<int, 2> itmp = { i,j };
+      |                                                                ^
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/hex_quality.cpp:2566:66: warning: narrowing conversion of ‘j’ from ‘uint’ {aka ‘unsigned int’} to ‘int’ [-Wnarrowing]
+ 2566 |                                         array<int, 2> itmp = { i,j };
+      |                                                                  ^
+[ 75%] Building CXX object CMakeFiles/Quality.dir/cpp/main.cpp.o
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/main.cpp: In function ‘void Commandline(int, char**)’:
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/main.cpp:45:33: warning: unknown escape sequence: '\;'
+   45 |                                 "Improvement methods: 0-Laplacian Smoothing interior points (Give iternation number -n)\; 1-Pillowing (Give pillow layer number -n)\; 2-Smoothing (Give iteration number -n and smooth step -p)\; 3-Optimization (Give iteration number -n and optimization step -p)", cxxopts::value<int>(flag_quality_option))
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/main.cpp:45:33: warning: unknown escape sequence: '\;'
+/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/HexGen_Hex2Spline/HexGen/4-QUALITY/src/cpp/main.cpp:45:33: warning: unknown escape sequence: '\;'
+[100%] Linking CXX executable Quality
+[100%] Built target Quality

@@ -1,0 +1,12 @@
+{
+  "command": [
+    "/workspace/scratch/1d5c10ddf0e3/caelab_mesher_round3_20261104/extra_candidates/root_research/cmake331/cmake/data/bin/cmake",
+    "--build",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/c4",
+    "-j",
+    "2"
+  ],
+  "seconds": 143.09572332300013,
+  "returncode": 0,
+  "timeout": false
+}

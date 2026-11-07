@@ -1,0 +1,15 @@
+{
+  "command": [
+    "python",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/meshioplusplus_worker_retry.py",
+    "occt_bottom",
+    "1.5",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/meshioplusplus_retry/occt_bottom"
+  ],
+  "seconds": 94.46200267499808,
+  "returncode": -11,
+  "timeout": false,
+  "size_mm": 1.5,
+  "version": "18.1.0",
+  "input": "Original common surface.obj, unchanged coordinates and triangles; no healing or defeaturing"
+}

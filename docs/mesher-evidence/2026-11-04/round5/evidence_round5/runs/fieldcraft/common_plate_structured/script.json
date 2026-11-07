@@ -1,0 +1,22 @@
+[
+  {
+    "command": "geometry.import.mesh",
+    "params": {
+      "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/common_plate/input.3mf"
+    }
+  },
+  {
+    "command": "mesh.hex.generate",
+    "params": {
+      "surface": 0,
+      "size": 1.5,
+      "method": "auto"
+    }
+  },
+  {
+    "command": "file.save",
+    "params": {
+      "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/common_plate_structured/candidate.fieldcraft"
+    }
+  }
+]

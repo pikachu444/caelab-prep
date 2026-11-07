@@ -1,0 +1,9 @@
+{
+  "command": [
+    "make",
+    "-j2"
+  ],
+  "seconds": 99.05448158599756,
+  "returncode": 0,
+  "timeout": false
+}

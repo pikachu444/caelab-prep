@@ -1,0 +1,7 @@
+MESQUITE ERROR 8 : Syntax error at line 6: expected integer, got "OFFSETS"
+  at bool Mesquite2::FileTokenizer::get_long_int_internal(long int&, Mesquite2::MsqError&) at /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mesquite230/mesquite-2.3.0/src/Misc/FileTokenizer.cpp:206
+  in bool Mesquite2::FileTokenizer::get_long_ints(size_t, long int*, Mesquite2::MsqError&) at /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mesquite230/mesquite-2.3.0/src/Misc/FileTokenizer.cpp:350
+  in void Mesquite2::MeshImpl::vtk_read_unstructured_grid(Mesquite2::FileTokenizer&, Mesquite2::MsqError&) at /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mesquite230/mesquite-2.3.0/src/Mesh/MeshImpl.cpp:1911
+  in int Mesquite2::FileTokenizer::match_token(const char* const*, Mesquite2::MsqError&) at /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mesquite230/mesquite-2.3.0/src/Misc/FileTokenizer.cpp:409
+  in void Mesquite2::MeshImpl::vtk_read_dataset(Mesquite2::FileTokenizer&, Mesquite2::MsqError&) at /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mesquite230/mesquite-2.3.0/src/Mesh/MeshImpl.cpp:1638
+  in void Mesquite2::MeshImpl::read_vtk(const char*, Mesquite2::MsqError&) at /workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mesquite230/mesquite-2.3.0/src/Mesh/MeshImpl.cpp:1453

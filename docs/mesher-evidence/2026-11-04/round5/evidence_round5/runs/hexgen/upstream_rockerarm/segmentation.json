@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/build/hexgen_1-HBECVT/Segmentation",
+    "-i",
+    "rockerarm_tri.k",
+    "-o",
+    "rockerarm_initial_write.k",
+    "-m",
+    "rockerarm_manual.txt",
+    "-l",
+    "0.1"
+  ],
+  "seconds": 0.26539950099686394,
+  "returncode": -11,
+  "timeout": false,
+  "input_scope": "Author supplied manual segmentation + hand prepared hex block structure. Does not establish automated arbitrary CAD."
+}

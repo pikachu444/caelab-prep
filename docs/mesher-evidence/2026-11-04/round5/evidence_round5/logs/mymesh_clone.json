@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "clone",
+    "--depth",
+    "1",
+    "https://github.com/BU-SMBL/mymesh",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/src/mymesh"
+  ],
+  "seconds": 10.12302582400298,
+  "returncode": 0,
+  "commit": "eb5e68907031f9faa0017dbb63d4286be655ec0e"
+}

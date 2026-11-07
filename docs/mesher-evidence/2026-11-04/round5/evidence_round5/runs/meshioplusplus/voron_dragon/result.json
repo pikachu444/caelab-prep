@@ -1,0 +1,15 @@
+{
+  "command": [
+    "python",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/meshioplusplus_worker.py",
+    "voron_dragon",
+    "0.6",
+    "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/meshioplusplus/voron_dragon"
+  ],
+  "seconds": 2.7084804459955194,
+  "returncode": 1,
+  "timeout": false,
+  "size_mm": 0.6,
+  "version": "18.1.0",
+  "input": "Original common surface.obj, unchanged coordinates and triangles; no healing or defeaturing"
+}

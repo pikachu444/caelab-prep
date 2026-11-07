@@ -1,0 +1,30 @@
+[
+  {
+    "command": "geometry.import.mesh",
+    "params": {
+      "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/occt_bottom/input.3mf"
+    }
+  },
+  {
+    "command": "mesh.hex.octree",
+    "params": {
+      "surface": 0,
+      "size": 4.0,
+      "max_depth": 5,
+      "max_elements": 2000000,
+      "attempts": 2,
+      "max_sweeps": 60,
+      "weld": 0.0
+    }
+  },
+  {
+    "command": "mesh.quality",
+    "params": {}
+  },
+  {
+    "command": "file.save",
+    "params": {
+      "path": "/workspace/scratch/826174ffc51a/mesher_round5_20261104/runs/fieldcraft/occt_bottom/candidate_retry.fieldcraft"
+    }
+  }
+]
