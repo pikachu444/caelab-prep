@@ -82,6 +82,27 @@ R2는 [승인된 경계 고정 recipe](https://github.com/pikachu444/caelab-prep
 
 관련 순수/모의 worker·기존 adapter 검사 120개와 실제 SDK 실행은 별도 근거다. 원 지적자는 저장 경계 exact 검사 누락의 수정을 재확인했다. GUI/OS 입력·VTK·frozen·native Tet10 실행은 이번 범위가 아니다. [F1 판정과 다음 기술 선택](https://github.com/pikachu444/caelab-prep/issues/19#issuecomment-6597963994), [WB MSH/C3D10 소유 경계](https://github.com/pikachu444/caelab-workbench/issues/56#issuecomment-6597946148)를 함께 따른다. 공식 GPL 예제·외부 binary는 Git 배포 자산에 넣지 않았다.
 
+<a id="targeted-corner-j-f0"></a>
+
+### 추가 F0: Targeted Interior Corner-J 기록 보존
+
+[PR43](https://github.com/pikachu444/caelab-prep/pull/43)의 prototype과 목표 미달 결과를 기록한다. **이 절은 문서 보존이며 해당 prototype 코드의 main 병합이나 제품 기능 승인이 아니다.** [후속 F0 승인](https://github.com/pikachu444/caelab-prep/issues/19#issuecomment-6598047220)에 따른 코드 [a0b75a9](https://github.com/pikachu444/caelab-prep/commit/a0b75a9e377832cb1d0a1d086303305b56412a69), 근거 문서 [f6ec0f4](https://github.com/pikachu444/caelab-prep/commit/f6ec0f47b61e6fa2cfbd7150bd50ee7bf364fc02)를 별도로 보존한다.
+
+`improve_tet4_corner_j()`는 고정 Tet4의 내부 절점만 결정적 정규화 26방향으로 이동한다. 초기 검증을 포함한 모든 metric 호출을 예산에 세며, 모든 incident tet의 양의 체적·AR≤4와 local worst corner-J의 엄격한 개선을 확인한 완료 trial만 채택한다. 경계·절점 ID·connectivity는 고정한다. 이전 AR보다 감소해야 한다는 제약은 아니며, local 최소 edge 대비 step과 최대 6회 반감을 사용한다. finite-stencil 정체는 전역 최적이나 목표 불가능의 증명이 아니다.
+
+| 고정 실험 조건/지표 | 기록된 결과 |
+|---|---|
+| 입력·실행 | 위 R2 구의 저장된 Tet4, iterations=2, initial_step=.1, max_evaluations=100000의 순수 F0 한 번 |
+| 최소 corner-scaled J | .284588 → .314196; 목표 J≥.5 미달 |
+| 미달 요소 수 | 272 → 271 |
+| 최대 edge AR | 2.611373 → 2.801426; 제한 AR≤4 안에서 증가 |
+| 이동·종료 | 내부 이동 119회, 1 sweep 완료·두 번째 일부에서 `budget_exhausted` |
+| 보존 | 경계·ID·connectivity·입력 hash 불변으로 보고됨 |
+
+**측정 소스와 수정 후 코드를 혼동하지 않는다.** PR 원문은 구 측정이 수정 전 source hash에 귀속됨을 명시한다. 이후 마지막 완료 budget trial에서 목표를 달성했는데 budget 실패로 표시하던 경계 사례를 `target_met_at_budget` 우선으로 수정했고, 체적 합 overflow는 개별 metric을 유지한 JSON-safe null 및 명시 진단으로 수정했다. 게시된 a0b75a9에는 이 두 수정과 회귀검사가 이미 포함돼 있다. f6ec0f4는 문서만 추가한 commit이며 수정 전 구 측정 소스의 대체 SHA가 아니다. PR에 기록된 순수 검사 66개·원 지적자의 focused 재확인 2개는 해당 검사의 근거이지, 수정 후 실제 구를 다시 측정했다는 뜻이 아니다. 이번 문서 보존에서도 구 실험을 재실행하지 않았다.
+
+기존 Laplacian의 입력·incident·metric cache 준비를 공유하도록 refactor했지만 `tetra_metrics` 정의는 유지했다. 새 의존성·worker recipe·GUI 명령은 추가하지 않았다. SDK 재생성·추가 튜닝·세 번째 F1 recipe·F2 고정 6입력·F3 자동생성 제품 연결은 이 실험으로 수행하거나 통과한 것이 아니다. 기존 **F1 no-go 및 F2/F3 미실행은 그대로**다. [prepared Tet10의 별도 native/UI 경로](usage.md#prepared-tet10)와 그 Starter 확인도 자동생성 형상군 품질 통과로 확대하지 않는다.
+
 ## 5. 현재 구현과 기능별 착수 판단
 
 | 기능 | 지금 가능한 결정 | 다음 작업과 넘어갈 조건 |
