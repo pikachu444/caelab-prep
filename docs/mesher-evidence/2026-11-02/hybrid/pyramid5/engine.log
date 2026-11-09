@@ -1,0 +1,66 @@
+************************************************************************
+**                                                                    **
+**                                                                    **
+**                         OpenCourant Engine                         **
+**                                                                    **
+**            Non-linear Finite Element Analysis Software             **
+**                                                                    **
+**                                                                    **
+**                                                                    **
+**                    Linux 64 bits, GNU compiler                     **
+**                      Double Precision Version                      **
+**                                                                    **
+**                                                                    **
+** CommitID: cb760c206e346eff12161a2268b134ef9d48a4ef                 **
+************************************************************************
+** OpenCourant Software                                               **
+** COPYRIGHT (C) 2026 Siemens                                         **
+** Licensed under GNU Affero General Public License.                  **
+** See License file.                                                  **
+************************************************************************
+ 
+ ROOT: pyramid5  RESTART: 0001
+ NUMBER OF HMPP PROCESSES     1
+ 02/11/2026
+ NC=       0 T= 0.0000E+00 DT= 1.3961E-07 ERR=  0.0% DM/M= 0.0000E+00
+     ANIMATION FILE: pyramid5A001 WRITTEN
+     ANIMATION FILE: pyramid5A002 WRITTEN
+     RESTART FILES: pyramid5_0001_[0001-0001].rst WRITTEN
+  
+                           ** CPU USER TIME **
+  
+  
+                        ** SUMMARY **
+  
+ #PROC  ELEMENT   KINCOND   INTEG     IO        T0        ASM       RESOL    
+   1   .8910E-03 .1010E-03 .5300E-04 .2485E-02 .1630E-03 .1020E-03 .5637E-02
+ 
+                   ** CUMULATIVE CPU TIME SUMMARY **
+  
+ CONTACT SORTING.............: .0000E+00     0.00 % 
+ CONTACT FORCES..............: .1000E-05     0.02 % 
+ ELEMENT FORCES..............: .8910E-03    15.81 % 
+ KINEMATIC COND..............: .1010E-03     1.79 % 
+ INTEGRATION.................: .5300E-04     0.94 % 
+ ASSEMBLING..................: .1020E-03     1.81 % 
+ OTHERS (including I/O)......: .4489E-02    79.63 % 
+ TOTAL.......................: .5637E-02   100.00 % 
+  
+                   ** MEMORY USAGE STATISTICS **
+  
+ TOTAL MEMORY USED .........................:        0 MB
+ MAXIMUM MEMORY PER PROCESSOR...............:        0 MB
+ MINIMUM MEMORY PER PROCESSOR...............:        0 MB
+ AVERAGE MEMORY PER PROCESSOR...............:        0 MB
+  
+                   ** DISK USAGE STATISTICS **
+  
+ TOTAL DISK SPACE USED .....................:          0 MB
+ ANIMATION/H3D/TH/OUTP SIZE ................:          0 MB
+ RESTART FILE SIZE .........................:          0 MB
+  
+ ELAPSED TIME     =          0.02 s
+                          0:00:00
+  
+     NORMAL TERMINATION      
+     TOTAL NUMBER OF CYCLES  :       8

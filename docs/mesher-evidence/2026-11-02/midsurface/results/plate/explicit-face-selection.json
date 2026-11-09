@@ -1,0 +1,102 @@
+{
+  "unit": "mm",
+  "thickness_mm": 2,
+  "pairs": [
+    {
+      "outer": 4,
+      "inner": 5
+    }
+  ],
+  "faces": [
+    {
+      "index": 0,
+      "kind": "PLANE",
+      "center_mm": [
+        0.0,
+        12.5,
+        1.0
+      ],
+      "outward_normal_at_uv_mid": [
+        -1.0,
+        -0.0,
+        0.0
+      ],
+      "area_mm2": 50.0
+    },
+    {
+      "index": 1,
+      "kind": "PLANE",
+      "center_mm": [
+        40.0,
+        12.5,
+        1.0
+      ],
+      "outward_normal_at_uv_mid": [
+        1.0,
+        0.0,
+        -0.0
+      ],
+      "area_mm2": 50.0
+    },
+    {
+      "index": 2,
+      "kind": "PLANE",
+      "center_mm": [
+        20.0,
+        0.0,
+        1.0
+      ],
+      "outward_normal_at_uv_mid": [
+        -0.0,
+        -1.0,
+        -0.0
+      ],
+      "area_mm2": 80.0
+    },
+    {
+      "index": 3,
+      "kind": "PLANE",
+      "center_mm": [
+        20.0,
+        25.0,
+        1.0
+      ],
+      "outward_normal_at_uv_mid": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "area_mm2": 80.0
+    },
+    {
+      "index": 4,
+      "kind": "PLANE",
+      "center_mm": [
+        20.0,
+        12.5,
+        0.0
+      ],
+      "outward_normal_at_uv_mid": [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      "area_mm2": 999.9999999999998
+    },
+    {
+      "index": 5,
+      "kind": "PLANE",
+      "center_mm": [
+        20.0,
+        12.5,
+        2.0
+      ],
+      "outward_normal_at_uv_mid": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "area_mm2": 999.9999999999998
+    }
+  ]
+}

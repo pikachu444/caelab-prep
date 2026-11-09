@@ -1,0 +1,32 @@
+[
+  {
+    "path": "N17-baseline-source.zip",
+    "bytes": 193113,
+    "sha256": "4d32052d987c0ed97be33cfbce4f996795d788bad32530179c1012b7481c205e",
+    "source_files": 53
+  },
+  {
+    "path": "N17-after-source.zip",
+    "bytes": 212170,
+    "sha256": "24556c1a8d4276e27253aa06044ebb039758c5c62f409fd3c4c06f15b74be180",
+    "source_files": 58
+  },
+  {
+    "path": "N17-focused-seal-after-source.zip",
+    "bytes": 230694,
+    "sha256": "7cb16421bd1d642b7c244bc16ec4470aea913daaf7d6315858cf925d2ff12bc2",
+    "source_files": 60
+  },
+  {
+    "path": "N17-focused-gui-provider-after-source.zip",
+    "bytes": 248847,
+    "sha256": "2fa9ed8efe7f3056c8852b4b21f8dffd19482198aaebb499e72e1d85c8ad11a0",
+    "source_files": 63
+  },
+  {
+    "path": "N17-focused-gui-provider-migrated-after-source.zip",
+    "bytes": 250558,
+    "sha256": "be316a634cc055c84bf2bb8e6ebbc89d70e6b084ef56cd71b0be3e6e064d762c",
+    "source_files": 63
+  }
+]

@@ -1,0 +1,34 @@
+#RADIOSS STARTER
+/BEGIN
+prism6 official degenerate BRICK full integration
+      2024         0
+                  Mg                  mm                   s
+                  Mg                  mm                   s
+/MAT/LAW1/41
+Linear elastic diagnostic
+               1e-09
+                1000                0.25
+/PROP/SOLID/207
+Explicit full integration; no reduced pressure
+        17         4         0         3         0         0      1000         1                   0
+                 1.1                0.05                 0.1                   0                   0
+                   0                   0                   0                   0                   0
+/NODE
+       101                  10                  20                  30
+       203                  12                  20                  30
+       307                  10                  23                  30
+       401                  10                  20                  34
+       503                  12                  20                  34
+       607                  10                  23                  34
+/PART/902
+prism6
+       207        41         0
+/BRICK/902
+      1301       101       203       307       101       401       503       607       401
+/GRNOD/NODE/59
+All physical vertices
+       101       203       307       401       503       607
+/BCS/83
+Fully fixed finite probe
+   111 111         0        59
+/END
