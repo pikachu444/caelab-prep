@@ -108,11 +108,16 @@ def test_preview_import_independent_same_ids_one_undo_and_reopen(owner, tmp_path
     assert dialog.native_model.rowCount() == len(plan["source"]["id_map"])
     assert any(dialog.native_model.value(row, 3) == "Collision — renumbered" for row in range(dialog.native_model.rowCount()))
     assert "0 nodes explicitly shared" in dialog.summary.text()
-    assert not dialog.apply_button.isEnabled()
+    assert dialog.reviewed.isChecked() and dialog.apply_button.isEnabled()
+    dialog.reviewed.setChecked(False)
+    assert not dialog.apply_button.isEnabled() and not dialog.apply_import()
+    assert "review_required" in dialog.status.text() and state(session) == before
+    prepare(dialog, source)
+    assert dialog.reviewed.isChecked() and dialog.apply_button.isEnabled()
     capture(dialog, "independent-source-preview", session)
     events = []
     unsubscribe = session.subscribe(lambda event: events.append((event, QThread.currentThread() == window.thread())))
-    dialog.reviewed.setChecked(True)
+    assert dialog.reviewed.isChecked()
     QTest.mouseClick(dialog.apply_button, Qt.MouseButton.LeftButton)
     QApplication.processEvents()
     assert dialog.result is not None, dialog.status.text()
@@ -169,7 +174,7 @@ def test_shared_node_requires_explicit_typed_choice_review_and_persists(owner, t
     assert next(dialog.native_model.value(row, 3) for row in range(dialog.native_model.rowCount())
                 if dialog.native_model.value(row, 0) == "NODE" and dialog.native_model.value(row, 1) == 1) == "Explicitly shared"
     capture(dialog, "explicit-shared-node-review", session)
-    dialog.reviewed.setChecked(True)
+    assert dialog.reviewed.isChecked()
     QTest.mouseClick(dialog.apply_button, Qt.MouseButton.LeftButton)
     assert dialog.result is not None, dialog.status.text()
     cells = session.mesh_view()["cells"]
@@ -350,7 +355,7 @@ def test_instance_reference_metadata_separate_from_archives_one_undo_save_reopen
     window, session, source = owner
     dialog = dialog_for(window, session)
     prepare(dialog, source)
-    dialog.reviewed.setChecked(True)
+    assert dialog.reviewed.isChecked()
     QTest.mouseClick(dialog.apply_button, Qt.MouseButton.LeftButton)
     source_id = session.source_models()[0]["id"]
     mesh = session.mesh_view()

@@ -48,16 +48,22 @@ def test_each_presentation_merge_cancel_apply_undo_save_and_new_process_export(n
     dialog.cross_parts.setChecked(True); dialog.preview_button.click(); pump()
     assert dialog._plan and dialog._plan["admissible"], dialog.status.text()
     assert "Keeper coordinates stay fixed" in dialog.preview.toPlainText()
-    assert not dialog.apply_button.isEnabled() and state(session) == before
+    assert dialog.reviewed.isChecked() and dialog.apply_button.isEnabled() and state(session) == before
+    dialog.reviewed.setChecked(False)
+    assert not dialog.apply_button.isEnabled()
+    dialog.apply_merge()
+    assert state(session) == before and dialog._plan is None
+    dialog.preview_button.click()
+    assert dialog.reviewed.isChecked() and dialog.apply_button.isEnabled()
     QTest.mouseClick(dialog.close_button, Qt.MouseButton.LeftButton); pump()
     assert window.node_merge_dialog is None and state(session) == before
     window.node_merge_action.trigger(); pump(); dialog = window.node_merge_dialog
     add_pair(dialog, source, keeper); dialog.tolerance.setText("20"); dialog.cross_parts.setChecked(True)
-    dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    dialog.preview_button.click()
     assert dialog.apply_button.isEnabled()
     dialog.tolerance.setText("21")
     assert dialog._plan is None and not dialog.apply_button.isEnabled()
-    dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    dialog.preview_button.click()
     QTest.mouseClick(dialog.apply_button, Qt.MouseButton.LeftButton); pump()
     assert session.document.revision == before[0] + 1, dialog.status.text()
     assert dialog._pairs == [] and dialog.table.rowCount() == 0 and not dialog.cross_parts.isChecked()
@@ -88,7 +94,7 @@ def test_multiple_pairs_keep_individual_permissions_and_one_history_step():
     dialog.table.selectRow(0); pump(); dialog.cross_parts.setChecked(False)
     assert dialog._plan is None and not dialog._pairs[0]["cross_parts"] and dialog._pairs[1]["cross_parts"]
     dialog.preview_button.click(); assert dialog._plan is None and state(session) == before
-    dialog.cross_parts.setChecked(True); dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    dialog.cross_parts.setChecked(True); dialog.preview_button.click()
     dialog.apply_button.click(); pump()
     assert session.document.revision == before[0] + 1 and len(session._mesh_edit_snapshot().nodes) == 7
     assert window.close()
@@ -129,7 +135,7 @@ def test_external_change_and_active_model_operation_block_merge_without_losing_d
     session = opened("beam_shell_tet")
     window, dialog = open_merge(session)
     add_pair(dialog, 6, 8); dialog.cross_parts.setChecked(True); dialog.tolerance.setText("20")
-    dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    dialog.preview_button.click()
     window.modeling.actions["material.create"].trigger(); pump()
     assert window.modeling.active
     before = state(session); dialog.apply_merge()

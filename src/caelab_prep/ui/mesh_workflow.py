@@ -236,7 +236,8 @@ class MeshCandidateDialog(QDialog):
         self.geometry_panel = QWidget()
         geometry_layout = QVBoxLayout(self.geometry_panel)
         geometry_layout.setContentsMargins(0,0,0,0)
-        self.geometry_hint = QLabel("Corner order follows the input. Save changed geometry as a new recipe before generation.")
+        self.geometry_hint = QLabel("Save geometry changes as a new recipe.")
+        self.geometry_hint.setToolTip("Corner order follows the input. Save changed geometry as a new recipe before generation.")
         self.geometry_hint.setWordWrap(True); geometry_layout.addWidget(self.geometry_hint)
         self.geometry_form = QFormLayout()
         self.geometry_form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
@@ -658,6 +659,7 @@ class MeshCandidateDialog(QDialog):
             if not candidate["affected_conditions"]: lines.append("None")
             lines += ["", "Old groups and conditions remain unchanged. Analysis export stays blocked until every stale target is explicitly reconnected. New boundary nodes are not added automatically; review the physical region and load distribution after reconnection."]
             self.replacement_details.setPlainText("\n".join(lines))
+            self.replacement_reviewed.setChecked(True)
             self._running(False); return
         if self._closing: super().reject(); return
         if self._cancel.is_set(): self._running(False); self.summary.setText("Generation cancelled. The model is unchanged."); return

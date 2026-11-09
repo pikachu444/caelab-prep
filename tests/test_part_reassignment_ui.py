@@ -49,12 +49,18 @@ def test_each_presentation_explicit_part_review_cancel_apply_undo_and_v6(first, 
     assert "Element ownership" in text and "MAT " in text and "PROP " in text
     assert "Stored shell angle and element thickness overrides stay unchanged" in text
     assert "no physical equivalence is certified" in text
-    assert not dialog.apply_button.isEnabled() and state(session) == before
+    assert dialog.reviewed.isChecked() and dialog.apply_button.isEnabled() and state(session) == before
+    dialog.reviewed.setChecked(False)
+    assert not dialog.apply_button.isEnabled()
+    dialog.apply_change()
+    assert state(session) == before and dialog._plan is None
+    dialog.preview_button.click()
+    assert dialog.reviewed.isChecked() and dialog.apply_button.isEnabled()
     QTest.keyClick(dialog, Qt.Key.Key_Escape); pump()
     assert window.part_reassignment_dialog is None and state(session) == before
     assert getattr(session, "_part_reassignment_plan", None) is None
     window.part_reassignment_action.trigger(); pump(); dialog = window.part_reassignment_dialog
-    choose_target(dialog, target.part); dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    choose_target(dialog, target.part); dialog.preview_button.click()
     QTest.mouseClick(dialog.apply_button, Qt.MouseButton.LeftButton); pump()
     assert session.document.revision == before[0]+1 and dialog.table.rowCount() == 0 and not dialog.apply_button.isEnabled()
     changed = next(c for c in session._mesh_edit_snapshot().cells if c.ref == source.ref)
@@ -72,7 +78,7 @@ def test_no_implicit_target_and_target_change_cancels_review_preserving_pending_
     session, (source, target) = two_sources(); session.select_entity("element", source.ref.local_id)
     before = state(session); window, dialog = open_ownership(session)
     dialog.preview_button.click(); assert dialog._plan is None and "explicitly" in dialog.status.text()
-    choose_target(dialog, target.part); dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    choose_target(dialog, target.part); dialog.preview_button.click()
     assert dialog.apply_button.isEnabled()
     choose_target(dialog, source.part)
     assert dialog._plan is None and getattr(session, "_part_reassignment_plan", None) is None
@@ -86,7 +92,7 @@ def test_shared_list_accumulates_sources_and_reports_already_owned_rows():
     before = state(session); window, dialog = open_ownership(session)
     session.select_entity("element", target.ref.local_id); dialog.use_selection_button.click()
     dialog.use_selection_button.click(); assert dialog.table.rowCount() == 2
-    choose_target(dialog, target.part); dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    choose_target(dialog, target.part); dialog.preview_button.click()
     assert len(dialog._plan["cells"]) == 1 and dialog._plan["unchanged_elements"] == [asdict(target.ref)]
     assert "Already in chosen PART, unchanged" in dialog.preview.toPlainText()
     dialog.table.selectRow(1); dialog.remove_button.click()
@@ -110,10 +116,10 @@ def test_existing_empty_part_is_a_typed_picker_target(tmp_path):
 def test_draft_and_document_change_block_old_ownership_and_disable_options():
     session, (source, target) = two_sources(); session.select_entity("element", source.ref.local_id)
     window, dialog = open_ownership(session)
-    choose_target(dialog, target.part); dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    choose_target(dialog, target.part); dialog.preview_button.click()
     window.modeling.actions["material.create"].trigger(); pump(); before = state(session)
     dialog.apply_change(); assert state(session) == before and window.modeling.active
-    window.modeling.cancel(); dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    window.modeling.cancel(); dialog.preview_button.click()
     session.create_curve("External", [(0, 0), (1, 1)]); pump()
     assert not dialog.preview_button.isEnabled() and not dialog.target_part.isEnabled()
     dialog.table.selectRow(0); assert not dialog.remove_button.isEnabled()

@@ -187,6 +187,7 @@ class NodeMoveDialog(QDialog):
             lines.append("Moved load/constraint points and contact gaps require engineering review; this preview does not qualify their physical response.")
             self.preview.setPlainText("\n".join(lines))
             self.status.setText("Preview ready. Review every coordinate and affected target before applying.")
+            self.reviewed.setChecked(True)
             self._sync()
         except (PrepError, ValueError) as exc:
             self.status.setText(str(exc))

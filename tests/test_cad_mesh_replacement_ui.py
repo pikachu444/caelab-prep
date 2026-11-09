@@ -48,8 +48,12 @@ def test_review_apply_and_existing_reconnection_ui(real_candidate, tmp_path):
     assert states(session) == before and session.document.revision == revision
     assert "Old explicit nodes" in dialog.replacement_details.toPlainText()
     assert "Selected old nodes" in dialog.replacement_details.toPlainText()
-    assert not dialog.adopt_button.isEnabled()
-    dialog.replacement_reviewed.setChecked(True)
+    assert dialog.replacement_reviewed.isChecked() and dialog.adopt_button.isEnabled()
+    dialog.replacement_reviewed.setChecked(False)
+    assert not dialog.adopt_button.isEnabled() and not dialog.adopt()
+    assert states(session) == before and session.document.revision == revision
+    review(dialog)
+    assert dialog.replacement_reviewed.isChecked()
     assert dialog.adopt_button.isEnabled()
     QTest.mouseClick(dialog.adopt_button, Qt.MouseButton.LeftButton); pump_until(dialog)
     assert dialog.result is not None, dialog.error.text()
@@ -141,7 +145,7 @@ def test_each_host_opens_existing_reconnection_after_replacement(real_candidate,
             for row in range(dialog.replace.count()):
                 if dialog.replace.item(row).data(Qt.ItemDataRole.UserRole) in old["part_ids"]:
                     dialog.replace.item(row).setCheckState(Qt.CheckState.Checked)
-            review(dialog); dialog.replacement_reviewed.setChecked(True)
+            review(dialog); assert dialog.replacement_reviewed.isChecked()
             QTest.mouseClick(dialog.adopt_button, Qt.MouseButton.LeftButton); pump_until(dialog)
             assert dialog.result is not None, dialog.error.text()
         except BaseException as exc:
@@ -175,4 +179,49 @@ def test_compact_replacement_review_fits_the_scroll_view(size):
     assert point.x() >= 0
     assert point.x() + dialog.replacement_reviewed.width() <= scroll.viewport().width()
     assert dialog.replacement_reviewed.sizeHint().width() <= scroll.viewport().width()
+    dialog.reject()
+
+
+@pytest.mark.parametrize("outcome", ["valid", "input", "model", "failure"])
+def test_async_replacement_checks_review_only_for_current_success(outcome, monkeypatch):
+    """Synthetic callback/plan state, independent of native CAD dependencies."""
+    from pathlib import Path
+    from types import SimpleNamespace
+    from caelab_prep.cae_core import PrepError
+    session = PrepSession()
+    session.open_rad(Path(__file__).resolve().parents[1] /
+        "scripts/evaluation/models/mixed-assemblies/beam_shell_tet/model_0000.rad")
+    dialog = MeshCandidateDialog(session, enable_viewport=False)
+    dialog.candidate = SimpleNamespace(quality=SimpleNamespace(passed=True),
+        length_unit="mm", dimension=3, to_native_mesh=lambda **_: None)
+    dialog.replace.item(0).setCheckState(Qt.CheckState.Checked)
+    dialog.show(); QApplication.processEvents()
+    cancelled = []
+    monkeypatch.setattr(session, "cancel_cad_mesh_replacement", cancelled.append)
+    plan = {**session.describe(), "plan_id": "synthetic-plan", "old_node_count": 8,
+            "node_count": 10, "old_element_count": 2, "element_count": 4,
+            "stale_targets": {}, "affected_conditions": []}
+    dialog._reviewing = True
+    dialog._task_review_generation = dialog._review_generation
+    if outcome == "input":
+        dialog.size.setText("2")
+    elif outcome == "model":
+        session.create_material("Concurrent material", 1e-9, 1000, .2)
+    if outcome == "failure":
+        dialog._failed(PrepError("invalid_mesh", "Replacement failed"))
+    else:
+        dialog._completed(plan)
+    if outcome == "valid":
+        assert dialog.replacement_reviewed.isChecked() and dialog.adopt_button.isEnabled()
+        before = session.describe()
+        dialog.replacement_reviewed.setChecked(False)
+        assert not dialog.adopt_button.isEnabled() and not dialog.adopt()
+        assert session.describe() == before and "Review the replacement" in dialog.error.text()
+        dialog.size.setText("2")
+        assert dialog._replacement_plan is None and not dialog.replacement_reviewed.isChecked()
+    else:
+        assert dialog._replacement_plan is None and not dialog.replacement_reviewed.isChecked()
+        assert not dialog.adopt_button.isEnabled()
+    if outcome in ("valid", "input", "model"):
+        assert "synthetic-plan" in cancelled
     dialog.reject()

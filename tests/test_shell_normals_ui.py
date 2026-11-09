@@ -40,11 +40,17 @@ def test_each_presentation_selection_review_cancel_apply_undo_and_save(name, pro
         dialog.preview_button.click(); pump()
         assert dialog._plan and dialog._plan["admissible"], dialog.status.text()
         assert "local axes" in dialog.preview.toPlainText() and "TYPE7" in dialog.preview.toPlainText()
-        assert not dialog.apply_button.isEnabled() and state(session) == before
+        assert dialog.reviewed.isChecked() and dialog.apply_button.isEnabled() and state(session) == before
+        dialog.reviewed.setChecked(False)
+        assert not dialog.apply_button.isEnabled()
+        dialog.apply_change()
+        assert state(session) == before and dialog._plan is None
+        dialog.preview_button.click()
+        assert dialog.reviewed.isChecked() and dialog.apply_button.isEnabled()
         QTest.keyClick(dialog, Qt.Key.Key_Escape); pump()
         assert window.shell_normal_dialog is None and state(session) == before
         window.shell_normal_action.trigger(); pump(); dialog = window.shell_normal_dialog
-        dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+        dialog.preview_button.click()
         assert dialog.apply_button.isEnabled()
         QTest.mouseClick(dialog.apply_button, Qt.MouseButton.LeftButton); pump()
         assert session.document.revision == before[0] + 1, dialog.status.text()
@@ -66,7 +72,7 @@ def test_triangular_shell_uses_the_same_action(tmp_path):
     session = copied_model(tmp_path, triangular=True); session.select_entity("element", 77)
     window, dialog = open_flip(session)
     try:
-        dialog.preview_button.click(); dialog.reviewed.setChecked(True); dialog.apply_button.click(); pump()
+        dialog.preview_button.click(); dialog.apply_button.click(); pump()
         shell = next(c for c in session._mesh_edit_snapshot().cells if c.ref.local_id == 77)
         assert shell.family == "SH3N" and [n.local_id for n in shell.nodes] == [1, 3, 2]
     finally:
@@ -90,7 +96,7 @@ def test_collects_two_source_selections_without_replacing_the_pending_list():
         assert dialog.table.rowCount() == 1 and dialog._plan is None and not dialog.apply_button.isEnabled()
         session.select_entity("node", 1); dialog.use_selection_button.click()
         assert dialog.table.rowCount() == 1 and dialog._references[0]["resource_id"] == shells[0].ref.resource_id
-        dialog.preview_button.click(); dialog.reviewed.setChecked(True); dialog.apply_button.click(); pump()
+        dialog.preview_button.click(); dialog.apply_button.click(); pump()
         assert session.document.revision == before[0] + 1
         current = {cell.ref: cell for cell in session._mesh_edit_snapshot().cells}
         assert current[shells[0].ref].nodes == tuple(shells[0].nodes[i] for i in (0, 3, 2, 1))
@@ -115,7 +121,7 @@ def test_external_change_and_busy_draft_block_reviewed_apply():
     session = opened("beam_shell_tet"); session.select_entity("element", 77)
     window, dialog = open_flip(session)
     try:
-        dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+        dialog.preview_button.click()
         window.modeling.actions["material.create"].trigger(); pump()
         assert window.modeling.active
         before = state(session); dialog.apply_reversal()

@@ -42,8 +42,13 @@ def test_presentations_explicit_drop_needs_final_preview_and_one_undo(profile, t
     assert "Remove these old IDs from the group: [1]" in text
     assert "1 explicitly removed; 0 repeated links coalesced" in text
     assert "[6.0, 0.0, 0.0] → [3.0, 0.0, 0.0]" in text
-    assert state(session) == before and not dialog.reconnect_reviewed.isChecked()
-    dialog.reconnect_reviewed.setChecked(True); dialog.reconnect_button.click(); pump()
+    assert state(session) == before and dialog.reconnect_reviewed.isChecked()
+    assert dialog.reconnect_button.isEnabled()
+    dialog.reconnect_reviewed.setChecked(False)
+    assert not dialog.reconnect_button.isEnabled() and not dialog.apply_reconnection()
+    assert "review_required" in dialog.status.text() and state(session) == before
+    assert dialog.prepare_reconnection() and dialog.reconnect_reviewed.isChecked()
+    dialog.reconnect_button.click(); pump()
     assert session.document.revision == before[0] + 1
     assert session.group_members(group)["member_ids"] == [2]
     assert not dialog._dropped and dialog._reconnect_plan is None

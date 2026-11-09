@@ -130,6 +130,7 @@ class NativeElementDialog(QDialog):
             plan = self._plan
             self.preview.setPlainText(self._review_text(plan))
             self.status.setText("Review the proposed changes before Apply." if plan["admissible"] else "Unsupported condition targets block Apply.")
+            self.reviewed.setChecked(plan["admissible"])
             self._sync()
         except (PrepError, ValueError) as exc: self.status.setText(str(getattr(exc, "message", exc)))
 

@@ -260,6 +260,7 @@ class NodeMergeDialog(QDialog):
                 "The target changes below are projections only. Apply merge keeps the original target declarations stale.", "", target_review_text(self.session, plan, group_heading=False)))
             self.preview.setPlainText("\n".join(lines)); self.tabs.setCurrentIndex(1)
             self.status.setText("Review the complete merge before Apply." if plan["admissible"] else "Unsupported projected condition targets block Apply. Revise the node pairs.")
+            self.reviewed.setChecked(plan["admissible"])
             self._sync()
         except (PrepError, ValueError) as exc: self.status.setText(str(getattr(exc, "message", exc)))
 

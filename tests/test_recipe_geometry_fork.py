@@ -61,6 +61,8 @@ def test_geometry_draft_blocks_generation_cancel_preserves_then_fork_retargets(m
     source=tmp_path/'original.json';raw=json.dumps(recipe(mode)).encode();source.write_bytes(raw)
     session=PrepSession();session.new_document('Input',{'mass':'Mg','length':'mm','time':'s'})
     dialog=MeshCandidateDialog(session,enable_viewport=False)
+    assert dialog.geometry_hint.text() == 'Save geometry changes as a new recipe.'
+    assert 'Corner order follows the input.' in dialog.geometry_hint.toolTip()
     choose(dialog.source_kind,'structured_recipe');dialog.source.setText(str(source));assert dialog.load_divisions()
     dialog.show();dialog.geometry_toggle.setChecked(True)
     revision=session.document.revision

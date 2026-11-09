@@ -10,7 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QMenu
+from PySide6.QtWidgets import QLabel, QMenu
 
 from caelab_prep.adapters.gmsh_geometry import plan_cylinder_material_probe
 from caelab_prep.application import PrepSession
@@ -25,6 +25,16 @@ from test_conical_blends import cone_evidence
 
 
 pytestmark = pytest.mark.usefixtures("qt_widgets")
+
+
+def test_scope_hint_is_concise_and_keeps_formula_in_tooltip():
+    dialog = GeometryFeaturesDialog(enable_viewport=False)
+    note = next(label for label in dialog.findChildren(QLabel) if label.text().startswith("Review units:"))
+    assert "mm" in note.text() and "display lines" in note.text()
+    assert "\n" not in note.text() and len(note.text()) < 80
+    assert "max(r / |cos(alpha)|)" in note.toolTip()
+    assert "No mesh or edge suppression" in note.toolTip()
+    dialog.reject()
 
 
 @pytest.fixture

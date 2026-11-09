@@ -64,6 +64,8 @@ Qt XCB와 OpenGL 런타임, 한글 글꼴이 필요합니다. Ubuntu 의존성�
 
 MODEL은 실제 카드 분류와 native header를 표시합니다. 생성된 CAD part 이름의 내부 UUID 접미사는 화면에서만 숨기며 원문 이름과 객체 참조는 유지합니다. 3D에 실제 표시되는 PART에는 가시성 체크와 읽기 전용 색 칩이 나타납니다. 이 표시는 현재 viewport 상태이며 문서의 물성색이나 영구 설정이 아닙니다. `--no-3d`에서는 이 표시가 없습니다.
 
+절점 이동·merge·요소 삭제/셸 반전/PART 이동·소스 import·준비 메시/CAD 교체·재연결은 유효한 **Preview** 또는 **Review replacement**가 끝나면 해당 검토 체크가 자동으로 켜져 Apply를 바로 누를 수 있습니다. 입력이나 문서가 바뀌면 계획과 체크가 해제됩니다. 체크를 직접 끄면 Apply와 직접 적용 호출도 차단되며, 실패하거나 이전 입력에 대한 비동기 결과에는 자동 체크하지 않습니다.
+
 FORM은 기존 지원 속성을 편집합니다. TEXT에서 **Edit supported values**를 누르면 같은 카드 전체의 native 원문을 열고, 지원되는 고정 폭 값만 수정할 수 있습니다. 숫자는 입력 덱 단위이며 FORM에서 선택한 표시 단위로 해석하지 않습니다. **Apply TEXT** 한 번은 한 Undo이고, **Cancel TEXT**는 원래 문서 값을 유지합니다. TEXT 편집 중에는 FORM을 잠그며 선택 변경·저장·내보내기 전에 Apply 또는 Cancel을 요구합니다. 모델이 외부에서 변경되면 오래된 TEXT 적용을 거부하고 초안을 유지합니다.
 
 TEXT 지원 범위는 읽을 수 있는 MAT LAW1/ELAST/LAW36/PLAS_TAB의 밀도·E·ν, shell/beam/truss PROP의 기존 지원 수치, PART 재료·속성 참조, 기존 FUNCT 점 값, INIVEL/TRA 속도, BCS의 지원 boolean, INTER의 지원 friction입니다. 구조·header와 카드 자체의 ID·제목·comment·행 수 및 나머지 필드는 보존합니다. 집합 멤버 추가나 curve 행 추가 등은 기존 FORM/전용 편집기를 이용합니다. 기존 writer가 보호 영역을 보존하지 못하는 FUNCT 행 뒤 suffix·마지막 개행 누락, 비표준 BCS 정렬/padding 등의 레이아웃은 TEXT 읽기 전용입니다. 잘못된 숫자나 지원 밖 변경은 오류를 표시하고 초안을 남깁니다. 긴 읽기 전용 미리보기의 생략 안내는 편집 정본에 포함되지 않습니다.
@@ -115,7 +117,7 @@ MSH는 2.2/4.1 ASCII에 한정합니다. binary·partition·periodic·data·para
 
 ### 참조된 CAD 메시 교체
 
-기존 CAD에서 채택한 PART를 크기 변경 후보로 교체하려면 같은 창에서 새 후보를 생성하거나 엽니다. 재료·단면을 선택하고 **Replace parts**에서 교체할 기존 PART를 고른 뒤 **Review replacement**를 누릅니다. 이 단계에서는 모델이 바뀌지 않습니다. 전후 절점·요소 수, stale이 될 그룹·표면과 영향 조건을 읽고 검토 체크를 한 뒤 **Apply replacement**로 확정합니다. 후보·크기·입력 경로·단위·재료·단면·PART 또는 문서가 바뀌면 검토를 다시 해야 합니다. 취소와 닫기는 검토 상태를 폐기합니다.
+기존 CAD에서 채택한 PART를 크기 변경 후보로 교체하려면 같은 창에서 새 후보를 생성하거나 엽니다. 재료·단면을 선택하고 **Replace parts**에서 교체할 기존 PART를 고른 뒤 **Review replacement**를 누릅니다. 이 단계에서는 모델이 바뀌지 않습니다. 유효한 검토 결과가 준비되면 체크가 자동으로 켜지고 **Apply replacement**를 바로 사용할 수 있습니다. 전후 절점·요소 수와 stale 대상은 같은 검토 창에서 확인합니다. 후보·크기·입력 경로·단위·재료·단면·PART 또는 문서가 바뀌면 검토를 다시 해야 합니다. 취소와 닫기는 검토 상태를 폐기합니다.
 
 교체는 기존 root에 CAD 후보 채택으로 만든 PART와 소유가 확인되는 요소에 한정합니다. 알려진 native 참조 범위·같은 길이 단위·후보 전체 품질을 요구하며, 외부 INCLUDE의 요소 소유나 미확인 참조·변환 범위를 추정하지 않습니다. 다른 요소의 BEAM 방향점으로 쓰는 절점과 잔존 절점의 이동 좌표는 보존합니다. 새 후보의 PART·절점 번호를 기존 번호로 자동 대응하지 않습니다.
 
@@ -245,7 +247,7 @@ STEP/XAO 검사 체적을 비교할 때는 `python scripts/evaluation/geometry_v
 
 고정 L의 87절점/36 Tet10은 한 Undo·v6·새 Python 재열기·RAD 재해석과 첫 Windows Starter에서 총질량 `2.34e-8 Mg`를 확인했습니다. 첫 reader 확인은 Engine 파일 부재 경고1을 남겼습니다. 후속 케이스 내보내기 누락을 `04d9233`에서 수정한 뒤, 같은 메시의 명시 all87 집합·YZ 구속·초기 Vx2.5를 저장·새 프로세스 재열기·선택 케이스의 Starter/Engine 출력으로 확인했습니다. 각 한 번의 실제 실행은 오류0·경고0, Engine 44 cycles 정상 종료이며 초기 KE `7.3125e-8 N·mm`가 기준과 일치했습니다. 제품 Engine 원문과 관측용 `/TFILE/4` 추가본은 구분합니다. T01은 생성됐지만 Windows에 기존 converter/reader가 없어 시간별 운동량·에너지 유지·최종 표본시간의 전체 응답 판정은 미확인입니다. 실제 VTK 렌더/픽·OS 입력·frozen 확인도 남습니다. Qt offscreen 조작·미리보기 10슬롯 데이터와 VTK cell의 edge 순서 검사는 이 실제 화면 확인을 대신하지 않습니다. 폐표면 자동생성의 [F1 품질 미달](mesher-feasibility-roadmap.md#2026-11-03-폐삼각표면-auto-tet-f1)도 별도로 유지합니다.
 
-main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 절점 ID를 선택하고 입력 덱 길이 단위의 절대좌표를 입력합니다. **Preview move**에서 품질과 영향 대상을 확인하고 검토 체크 후 **Apply move**로 확정합니다. ID·연결·집합 멤버를 보존해도 하중 작용점과 접촉 간격은 달라질 수 있습니다. 영향 집합은 **Replace prepared mesh / reconnect targets…**에서 명시적으로 검토하기 전까지 native 출력을 막습니다. 다중 자원에서는 집합별 실제 변경 자원에 검토 상태를 연결합니다. API의 하중 진단은 시간함수 평가 전 계수이며 실제 시각의 힘·모멘트나 작용점 모멘트를 계산한 결과가 아닙니다. 일반 메시 편집 전체의 완료본은 아닙니다.
+main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 절점 ID를 선택하고 입력 덱 길이 단위의 절대좌표를 입력합니다. **Preview move**에서 품질과 영향 대상을 확인하고 **Apply move**로 확정합니다. ID·연결·집합 멤버를 보존해도 하중 작용점과 접촉 간격은 달라질 수 있습니다. 영향 집합은 **Replace prepared mesh / reconnect targets…**에서 명시적으로 검토하기 전까지 native 출력을 막습니다. 다중 자원에서는 집합별 실제 변경 자원에 검토 상태를 연결합니다. API의 하중 진단은 시간함수 평가 전 계수이며 실제 시각의 힘·모멘트나 작용점 모멘트를 계산한 결과가 아닙니다. 일반 메시 편집 전체의 완료본은 아닙니다.
 
 <a id="group-member-review"></a>
 
@@ -257,11 +259,11 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 **Mesh → Merge nodes with tolerance…**에서 **Remove node**와 **Keep node**의 출처·native ID를 지정하거나 각각 **Use selected**로 현재 절점 하나를 가져온 뒤 **Add pair**를 누릅니다. 여러 pair를 추가할 수 있으며 선택 순서나 최근접 위치로 대응을 추정하지 않습니다. keeper 좌표는 바꾸지 않습니다. **Tolerance**는 빈칸에서 입력 덱 길이 단위로 직접 지정합니다. 예제의 거리나 다른 프로그램의 기본값을 권장 공차로 사용하지 않습니다.
 
-표의 각 행을 선택해 실제 PART 사용과 source/contact 경계 허용을 검토합니다. BEAM 방향점으로 사용하는 절점은 기계적 끝점과 구분합니다. **Preview merge**는 연결·방향절점·품질과 조건의 변경 전후 대상을 표시하며 문서를 바꾸지 않습니다. 검토 체크 후 **Apply merge** 한 번이 한 Undo입니다. pair·공차·허용을 바꾸면 검토를 다시 해야 합니다. 모델이 바뀌면 창을 닫고 현재 절점을 다시 선택하세요. **Close/Escape**는 미적용 초안만 버립니다.
+표의 각 행을 선택해 실제 PART 사용과 source/contact 경계 허용을 검토합니다. BEAM 방향점으로 사용하는 절점은 기계적 끝점과 구분합니다. **Preview merge**는 연결·방향절점·품질과 조건의 변경 전후 대상을 표시하며 문서를 바꾸지 않습니다. **Apply merge** 한 번이 한 Undo입니다. pair·공차·허용을 바꾸면 검토를 다시 해야 합니다. 모델이 바뀌면 창을 닫고 현재 절점을 다시 선택하세요. **Close/Escape**는 미적용 초안만 버립니다.
 
 조건의 제안 대응은 미리보기이며 실제 Apply에서 원 집합·조건을 자동 변경하지 않습니다. 영향 그룹이 있으면 native 출력을 막으므로 기존 **Replace prepared mesh / reconnect targets…**에서 각 원 멤버를 현재 대상으로 명시 연결하세요. 최종 재연결은 BCS·CLOAD·INIVEL의 기계 필드와 TYPE7의 역할·secondary 기계적 연결을 검사합니다. BCS의 비활성 회전 경고와 무지지 절점은 구분하며, 실제 구속 충분성·접촉력은 별도로 확인합니다. 기존 native replacement가 보존할 수 없는 카드 layout(예: 변경 카드 안의 file directive)은 현재 merge plan에서 거부합니다. 닫힌 참조 범위·알려진 단위·품질·기계 필드의 기존 제한도 유지합니다. BEAM 기본 frame으로 조용히 전환되는 병합은 거부하지만, 다른 방향점 재배선이나 TRUSS 연결의 물리적 동등성을 보장하지 않습니다. Windows/frozen·solver와 전체 P7b의 확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
 
-같은 절점으로 모이는 node-group 링크를 집합 하나로 줄이려면 모든 old ID의 링크를 추가한 뒤 **Allow repeated node targets to form one set**을 직접 체크하고 **Preview final mapping**을 누르세요. **Reconnection review**는 보존된 옛 링크 수·현재 카드 선언·최종 집합, 하중의 미평가 곡선 배수 합과 속도 벡터/좌표계·교집합을 보여 줍니다. 예를 들어 옛 링크 2개가 현재 절점 1개로 모이고 절점별 배수가 3이면 합은 6→3이며 힘의 보존을 뜻하지 않습니다. 현재 mapping은 merge 투영과 달라도 최종 mapping으로 다시 계산합니다. 검토 체크 후 같은 **Apply reconnection**으로 한 번 적용하고 Undo/Redo·저장·재열기는 기존 문서를 사용합니다.
+같은 절점으로 모이는 node-group 링크를 집합 하나로 줄이려면 모든 old ID의 링크를 추가한 뒤 **Allow repeated node targets to form one set**을 직접 체크하고 **Preview final mapping**을 누르세요. **Reconnection review**는 보존된 옛 링크 수·현재 카드 선언·최종 집합, 하중의 미평가 곡선 배수 합과 속도 벡터/좌표계·교집합을 보여 줍니다. 예를 들어 옛 링크 2개가 현재 절점 1개로 모이고 절점별 배수가 3이면 합은 6→3이며 힘의 보존을 뜻하지 않습니다. 현재 mapping은 merge 투영과 달라도 최종 mapping으로 다시 계산합니다. 같은 **Apply reconnection**으로 한 번 적용하고 Undo/Redo·저장·재열기는 기존 문서를 사용합니다.
 
 반복 대상의 집합 축약은 절점 그룹만 지원합니다. 중복이 없는 기존 절점/요소/표면·PART 재연결의 직접 Apply는 유지합니다. 새 링크·입력·허용·그룹·문서 변경과 Close는 이전 preview를 무효화합니다. 남은 stale 속도 그룹은 최종 대상이 알려지지 않았으므로 교집합 목록이 비어도 겹침이 없다고 판단하지 마세요. 곡선/시간 스케일·작용점 모멘트·INCLUDE 실행 순서·유효 초기상태·운동량은 평가하지 않으며 조건값을 자동 합산/평균/분배하지 않습니다.
 
@@ -277,7 +279,7 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 ### 선택 셸의 법선 반전
 
-8개 표현의 **Mesh → Reverse shell normals…**에서 현재 요소를 **Add selected elements**로 목록에 추가합니다. 모델에서 다른 요소를 선택해 계속 추가할 수 있고, 같은 source·native ID의 중복은 한 행으로 유지합니다. **Remove selected rows**는 선택한 행을 제거하고 이전 검토를 무효화합니다. Source file·Element ID·Type을 확인한 뒤 **Preview reversal**에서 현재/제안 연결 순서·품질·영향 집합과 조건을 읽고, 검토 체크 후 **Apply reversal**로 한 번 적용합니다. **Close/Escape**는 미적용 목록을 취소합니다. 문서·초안·활성 작업이 바뀌면 오래된 검토를 적용할 수 없습니다.
+8개 표현의 **Mesh → Reverse shell normals…**에서 현재 요소를 **Add selected elements**로 목록에 추가합니다. 모델에서 다른 요소를 선택해 계속 추가할 수 있고, 같은 source·native ID의 중복은 한 행으로 유지합니다. **Remove selected rows**는 선택한 행을 제거하고 이전 검토를 무효화합니다. Source file·Element ID·Type을 확인한 뒤 **Preview reversal**에서 현재/제안 연결 순서·품질·영향 집합과 조건을 읽고, **Apply reversal**로 한 번 적용합니다. **Close/Escape**는 미적용 목록을 취소합니다. 문서·초안·활성 작업이 바뀌면 오래된 검토를 적용할 수 없습니다.
 
 현재 지원은 닫힌 native 참조 범위의 SH3N과 평면 SHELL입니다. 실제 PART·SHELL/TYPE1 속성·기존 정식화와 품질 검사를 재사용하며, 압력·초기 shell 상태·적층 등 미지원 raw 카드는 preview 전에 거부합니다. 비셸 요소가 섞인 목록을 조용히 걸러 적용하지 않습니다. 좌표·ID·PART·두께와 저장된 각도 값은 보존하고 연결 순서를 반전합니다. 법선과 면내 로컬 축이 함께 바뀌므로 물리 응답은 별도로 검토해야 합니다. 지원 TYPE7은 양면 접촉이며 main/secondary 역할·gap·마찰 값을 유지합니다.
 
@@ -293,7 +295,7 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 **Preview deletion**은 삭제할 요소/연결·새 고립 절점과 삭제 여부·삭제 요소의 기존 품질·집합과 조건의 생존 대상 제안을 보여 줍니다. 살아남은 요소의 연결을 바꾸거나 품질 개선을 주장하지 않습니다. 조건의 기계 성분을 지지하지 못하거나 TYPE7 secondary가 무지지이면 Apply를 막습니다. 빈 최종 집합이나 마지막 main shell을 제거하는 제안은 현재 거부하며, 조건·집합을 함께 삭제하거나 전체 고립 절점을 자동 정리하지 않습니다. 지원 밖 raw 카드와 보존할 수 없는 file directive/layout도 거부합니다.
 
-검토 체크 후 **Apply deletion** 한 번은 한 Undo입니다. 정책·목록·문서 변경은 이전 preview를 무효화하며 **Close/Escape**는 미적용 목록을 취소합니다. 실제 삭제는 요소와 명시 정책의 새 고립 절점에만 적용합니다. 기존 PART 카드·집합 멤버·조건 선언은 보존하고 영향 집합은 stale로 남깁니다. 저장·재열기 뒤에도 native 출력 차단은 유지됩니다. **Replace prepared mesh / reconnect targets…**에서 생존 대상의 명시 mapping과 삭제된 멤버의 [Drop](#mesh-target-drop)을 검토해야 복구됩니다. 삭제 후에도 존재하는 절점이 DOF 지지를 잃을 수 있으므로 최종 재연결에서 기존 성분 검사를 다시 수행합니다.
+**Apply deletion** 한 번은 한 Undo입니다. 정책·목록·문서 변경은 이전 preview를 무효화하며 **Close/Escape**는 미적용 목록을 취소합니다. 실제 삭제는 요소와 명시 정책의 새 고립 절점에만 적용합니다. 기존 PART 카드·집합 멤버·조건 선언은 보존하고 영향 집합은 stale로 남깁니다. 저장·재열기 뒤에도 native 출력 차단은 유지됩니다. **Replace prepared mesh / reconnect targets…**에서 생존 대상의 명시 mapping과 삭제된 멤버의 [Drop](#mesh-target-drop)을 검토해야 복구됩니다. 삭제 후에도 존재하는 절점이 DOF 지지를 잃을 수 있으므로 최종 재연결에서 기존 성분 검사를 다시 수행합니다.
 
 질량·운동량·운동에너지와 TYPE7 main segment·면적·gap/stiffness의 계산 근거가 달라질 수 있습니다. 표시한 CLOAD 합계는 미평가 곡선 배수이며 실제 힘·모멘트나 응답 보존이 아닙니다. API의 `plan_element_deletion(references, orphan_policy="keep" | "delete_new")`·`apply_element_deletion`·`cancel_element_deletion`도 기존 sealed candidate/CAS·v6·Undo 경로를 사용합니다. 실제 OS/VTK·frozen·solver와 전체 P7b의 미확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
 
@@ -305,7 +307,7 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 **Preview ownership**은 각 변경 요소의 기존/제안 PART·MAT·PROP native ID와 이름·source, 조건과 접촉 대상의 변화를 보여 줍니다. 현재 요소가 있는 PART와 비어 있던 기존 PART 모두 참조 유일성·선언된 속성 family를 확인한 뒤, 실제 native trial의 이동 요소에서 기존 기계 프로필 검사로 정식화를 검증합니다. PROP 이름이나 기존 요소의 존재만으로 승인하지 않습니다. 모든 MAT 수치값·PROP 필드와 solver 수용을 인증한 결과는 아닙니다. 중복 PART ID·잘못된 assignment 원문도 목록을 읽을 수 있고, Preview에서 진단과 함께 Apply를 차단합니다.
 
-검토 체크 후 **Apply ownership** 한 번이 한 Undo입니다. native 요소 ID와 source resource, 좌표·연결·BEAM orientation·원문 행 suffix를 유지하며 source resource의 요소 행을 새 PART 헤더 블록으로 옮깁니다. 블록을 다시 구성하면 그 native 카드 블록 UUID는 바뀔 수 있습니다. 저장된 셸 각도·요소별 두께 override를 보존하므로 대상 PROP 두께를 무조건 덮어썼다고 표시하지 않습니다. PART의 MAT/PROP를 편집하는 기존 **Assign material / section…**과 다른 명령이며, 이 소유 이동은 두 PART의 MAT/PROP 선언 자체를 바꾸지 않습니다.
+**Apply ownership** 한 번이 한 Undo입니다. native 요소 ID와 source resource, 좌표·연결·BEAM orientation·원문 행 suffix를 유지하며 source resource의 요소 행을 새 PART 헤더 블록으로 옮깁니다. 블록을 다시 구성하면 그 native 카드 블록 UUID는 바뀔 수 있습니다. 저장된 셸 각도·요소별 두께 override를 보존하므로 대상 PROP 두께를 무조건 덮어썼다고 표시하지 않습니다. PART의 MAT/PROP를 편집하는 기존 **Assign material / section…**과 다른 명령이며, 이 소유 이동은 두 PART의 MAT/PROP 선언 자체를 바꾸지 않습니다.
 
 원 집합·조건 선언은 보존하고 old/new PART의 실제 요소와 유입 source를 포함해 영향 집합을 stale로 남깁니다. PART ID가 같아도 main surface의 segment가 늘거나 줄 수 있습니다. 기존 **Replace prepared mesh / reconnect targets…**에서 현재 대상의 명시 mapping/필요한 [Drop](#mesh-target-drop)을 검토하기 전까지 native 출력을 막습니다. 빈 최종 집합·마지막 main support 제거, 보존할 수 없는 directive/layout와 지원 밖 native profile은 거부합니다. 대상 선택·목록·문서 변경은 preview를 무효화하며 **Close/Escape**는 미적용 초안만 취소합니다. 저장·재열기·한 Undo는 기존 v6 경로를 사용합니다.
 

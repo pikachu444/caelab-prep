@@ -101,7 +101,7 @@ def preview(dialog, path):
 
 def replace(dialog, path):
     preview(dialog, path)
-    dialog.replacement_reviewed.setChecked(True)
+    assert dialog.replacement_reviewed.isChecked() and dialog.replace_button.isEnabled()
     QTest.mouseClick(dialog.replace_button, Qt.MouseButton.LeftButton)
     assert dialog.last_result is not None, dialog.status.text()
 
@@ -148,12 +148,18 @@ def test_real_replacement_stales_even_same_ids_explicit_links_undo_save_reopen(o
     plan = preview(dialog, path)
     assert state(session) == original
     assert set(plan["stale_targets"]) == {ids[key] for key in ("group", "elements", "surface")}
-    assert dialog.targets_model.rowCount() == 3 and not dialog.replace_button.isEnabled()
+    assert dialog.targets_model.rowCount() == 3 and dialog.replace_button.isEnabled()
+    assert dialog.replacement_reviewed.isChecked()
+    dialog.replacement_reviewed.setChecked(False)
+    assert not dialog.replace_button.isEnabled() and not dialog.apply_replacement()
+    assert "review_required" in dialog.status.text() and state(session) == original
+    preview(dialog, path)
+    assert dialog.replacement_reviewed.isChecked() and dialog.replace_button.isEnabled()
     if same_ids:
         capture(dialog, "prepared-mesh-preview", session)
     events = []
     unsubscribe = session.subscribe(lambda event: events.append((event, QThread.currentThread() == window.thread())))
-    dialog.replacement_reviewed.setChecked(True)
+    assert dialog.replacement_reviewed.isChecked() and dialog.replace_button.isEnabled()
     QTest.mouseClick(dialog.replace_button, Qt.MouseButton.LeftButton)
     assert session.document.revision == original[1] + 1
     assert len([event for event, _ in events if event["kind"] == "structure"]) == 1

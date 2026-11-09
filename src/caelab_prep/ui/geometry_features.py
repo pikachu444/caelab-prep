@@ -169,7 +169,8 @@ class GeometryFeaturesDialog(QDialog):
         self.details.setWordWrap(True); self.details.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         side.addWidget(self.details)
         split.addWidget(panel); split.setSizes([650, 340])
-        note = QLabel("Review units: mm. Supported: axis-aligned circular holes, quarter cylinders and finite quarter cones. "
+        note = QLabel("Review units: mm. Markers are display lines; geometry is unchanged.")
+        note.setToolTip("Supported: axis-aligned circular holes, quarter cylinders and finite quarter cones. "
                       "Cone radius is max(r / |cos(alpha)|); section radii are shown in the details. "
                       "Blend joins require material-oriented tangency on connected planar supports. "
                       "Markers are display lines. No mesh or edge suppression is applied.")

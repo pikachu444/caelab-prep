@@ -38,13 +38,19 @@ def test_each_presentation_explicit_orphan_deletion_cancel_apply_undo_v6(name, r
     assert dialog._plan and dialog._plan["admissible"], dialog.status.text()
     assert "pre-existing orphan nodes are preserved" in dialog.preview.toPlainText()
     assert "physical response is not certified" in dialog.preview.toPlainText()
-    assert not dialog.apply_button.isEnabled() and state(session) == before
+    assert dialog.reviewed.isChecked() and dialog.apply_button.isEnabled() and state(session) == before
+    dialog.reviewed.setChecked(False)
+    assert not dialog.apply_button.isEnabled()
+    dialog.apply_change()
+    assert state(session) == before and dialog._plan is None
+    dialog.preview_button.click()
+    assert dialog.reviewed.isChecked() and dialog.apply_button.isEnabled()
     QTest.keyClick(dialog, Qt.Key.Key_Escape); pump()
     assert window.element_deletion_dialog is None and state(session) == before
     assert getattr(session, "_element_deletion_plan", None) is None
     window.element_deletion_action.trigger(); pump(); dialog = window.element_deletion_dialog
     dialog.orphan_policy.setCurrentIndex(dialog.orphan_policy.findData("delete_new"))
-    dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    dialog.preview_button.click()
     QTest.mouseClick(dialog.apply_button, Qt.MouseButton.LeftButton); pump()
     assert session.document.revision == before[0]+1 and session.describe()["element_count"] == 2
     assert session.describe()["node_count"] == remaining and dialog.table.rowCount() == 0
@@ -64,7 +70,7 @@ def test_policy_is_explicit_and_change_cancels_preview_without_mutation():
     before = state(session); window, dialog = open_delete(session)
     dialog.preview_button.click(); assert dialog._plan is None and state(session) == before
     dialog.orphan_policy.setCurrentIndex(dialog.orphan_policy.findData("keep"))
-    dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    dialog.preview_button.click()
     assert dialog._plan and dialog.apply_button.isEnabled()
     dialog.orphan_policy.setCurrentIndex(dialog.orphan_policy.findData("delete_new"))
     assert dialog._plan is None and not dialog.apply_button.isEnabled() and not dialog.reviewed.isChecked()
@@ -83,7 +89,7 @@ def test_shared_list_accumulates_two_sources_and_remove_invalidates_preview():
     dialog.use_selection_button.click(); assert dialog.table.rowCount() == 2
     assert {dialog.table.item(row, 2).text() for row in range(2)} == {"BEAM", "TRUSS"}
     dialog.orphan_policy.setCurrentIndex(dialog.orphan_policy.findData("keep"))
-    dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    dialog.preview_button.click()
     assert len(dialog._plan["removed_cells"]) == 2
     dialog.table.selectRow(1); dialog.remove_button.click()
     assert dialog.table.rowCount() == 1 and dialog._plan is None and not dialog.apply_button.isEnabled()
@@ -120,10 +126,10 @@ def test_model_change_or_active_draft_blocks_old_delete_preview():
     session = opened("beam_shell_tet"); session.select_entity("element", 78)
     window, dialog = open_delete(session)
     dialog.orphan_policy.setCurrentIndex(dialog.orphan_policy.findData("keep"))
-    dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    dialog.preview_button.click()
     window.modeling.actions["material.create"].trigger(); pump(); before = state(session)
     dialog.apply_change(); assert state(session) == before and window.modeling.active
-    window.modeling.cancel(); dialog.preview_button.click(); dialog.reviewed.setChecked(True)
+    window.modeling.cancel(); dialog.preview_button.click()
     session.create_curve("External", [(0, 0), (1, 1)]); pump()
     assert not dialog.preview_button.isEnabled() and not dialog.orphan_policy.isEnabled()
     dialog.table.selectRow(0); assert not dialog.remove_button.isEnabled()

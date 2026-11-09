@@ -57,6 +57,12 @@ Phase 3.6 폐삼각표면 Auto-Tet의 독립 진단 코드는 `01e0be2`에 보�
 
 <a id="wbs-c1-c2"></a>
 
+2026-11-09 **WBS-C1-C2 Part3 QA 후속**(검토 기준 `4dfcf39a30abbc736d1714e6d6ab60654bdb5133`): 사용자 QA가 수용한 Hex8·도킹·PR 통합은 유지하고, merge/move·공유 요소 편집·소스 import·준비 메시/CAD 교체·최종 재연결의 유효한 Preview가 완료되면 해당 검토 체크를 자동으로 켠다. 비동기 결과는 문서/revision/입력 generation 검사를 통과한 뒤에만 체크한다. 입력 편집·무효화·실패/지연 결과는 체크 해제를 유지하고, 직접 체크를 끄면 버튼 비활성화와 기존 review_required 적용 차단이 동작한다. PART/source/contact 경계 허용과 반복 대상 병합의 별도 명시 허용은 자동 추정하지 않는다.
+
+기존 영향 검사14파일은250pass/60skip(OCP 미설치)이며, 추가한 CAD 비동기 callback4건(성공·입력변경·문서변경·실패)과 형상 hint1건은5pass다. 고유255pass/60skip이며 별도 실행을 단일 full-run으로 쓰지 않는다. mesh recipe hint의 두 기존 quad/hex 사례에 짧은 문구와 원 corner-order 툴팁을 확인하는 assertion을 추가해 해당2pass로 재검사했으며 중복 합산하지 않았다. 실제 source import/준비 메시·재연결과 native 편집의 Preview→Apply·수동 해제 거절·Undo·편집 무효화는 기존 RAD 입력/8표현 경로로 확인했다. CAD callback 네 건은 모의 UI 결과이며 실제 CAD 교체 실행이나 SDK/solver 검증으로 세지 않는다.
+
+형상 하단 안내는 단위·표시용 선·원본 불변의 한 줄로 줄이고 원뿔 공식·형상 범위를 툴팁으로 옮겼다. 같은 저장 conical-P metadata와 Segoe UI를 사용한 source/offscreen 1040×700·760×520 전후 그림에서 안내 높이는32→16px·48→16px다. root가 원해상도 그림을 읽었으며 OS 입력/실제 VTK 창·solver는 실행하지 않았다. 보관처 `C:/Users/pikac/.codex/visualizations/2026/11/09/wbs-c1-c2/preview-followup`와 부모의 `preview-followup-{ui,new,hint}.xml`에 하네스·그림·검사 결과를 유지하고, 후속 report에 최종 코드SHA/환경/범위를 연결한다. 독립 검토자는 소스·XML·전후 원해상도 그림4장을 읽고 mesh hint의 추가 검사2건을 재확인해 이번 Part3 후속을 승인했다. 이번 변경으로 기존 N 행과 그룹별7/16/3을 닫지 않는다.
+
 2026-11-09 **WBS-C1-C2 구현 코드 `0ea4ca4470a98a32a6b412bc33b0974ce4187c82`**, 기준 `940a9cba`·브랜치 `feat/prep-core-ui`: PR47 두 커밋과 PR50의 지정 네 커밋만 이식했다. PR48의 두 커밋·Washer 모듈/버튼은 제외했다. 원통/유한 원뿔 후보 판독과 공용 창은 읽기 전용 범위를 유지한다. 새 `create_solid_section(..., element_family="hexa8")`와 공용 선택은 기존 PROP/SOLID `Isolid=1, Ismstr=4`·BRICK 채택 경로를 사용한다. H-N3/H-D2 recipe의 실제 SDK 생성→새 Hex8 단면→채택→RAD 출력에서 모든 ordered connectivity를 확인했다. 새 formulation·일반 CAD all-hex·N25 전체 완료는 아니다.
 
 BeidPrep 기본 레이아웃 v4는 표시 후 리사이즈와 첫 수동 dock drag를 구분한다. 동일 two_shell_plates 입력/Steel 선택의 1440×900 offscreen Qt에서 MODEL/FORM/중앙은 이전245/250/937px→187/240/1009px(70.07%)이고, 960×640에서는175/240/541px다. v3 dock state 초기화·v4 수동 배치 복원도 확인했다. 검사/후보/MSH 가져오기는 실행 전 고유 임시 경로를 채우고, 명시적 빈 경로 거절과 기존 출력 widget을 유지한다. 일곱 편집창의 첫 안내와 ID 입력 placeholder만 줄였으며 상세 영향 검토·16MiB 검증은 보존했다.
