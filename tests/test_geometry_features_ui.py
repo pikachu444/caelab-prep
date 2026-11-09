@@ -296,7 +296,7 @@ def test_conical_review_preserves_section_radii_and_signed_material_joins(tmp_pa
     try:
         assert dialog.present_inspection(persist(data, metadata))
         assert dialog.table.rowCount() == (0 if cusp else 1)
-        assert not dialog.washer_button.isEnabled() and not dialog.open_washer_controls()
+        assert not hasattr(dialog, "washer_button")
         if cusp:
             assert "material normals not g1" in dialog.summary.toolTip()
             assert not any(dialog._primitive_owners.values())
@@ -316,7 +316,7 @@ def test_conical_review_preserves_section_radii_and_signed_material_joins(tmp_pa
         identifier = owned[0]["id"]
         dialog.table.clearSelection()
         dialog.pick_entity({"document_id": dialog.preview_id, "id": identifier})
-        assert dialog.table.selectedItems() and not dialog.washer_button.isEnabled()
+        assert dialog.table.selectedItems() and not hasattr(dialog, "washer_button")
     finally:
         dialog.reject()
 

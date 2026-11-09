@@ -138,6 +138,55 @@ def test_first_launch_maximizes_and_valid_geometry_is_restored(tmp_path):
     assert not restored.isMaximized()
 
 
+def test_beidprep_resizes_after_show_and_preserves_manual_dock_widths():
+    window, _ = model_window()
+    window._allow_close = True
+    window.setWindowState(Qt.WindowState.WindowNoState)
+    window.resize(960, 640); window.show(); QApplication.processEvents()
+    window.resize(1440, 900); QApplication.processEvents()
+    assert window.model_dock.width() >= 170
+    assert window.properties_dock.geometry().left() > window.model_dock.geometry().left()
+    assert window.model_dock.width() + window.properties_dock.width() <= .32 * window.width()
+    assert window.viewport_frame.width() >= .70 * window.width()
+    from PySide6.QtCore import QPoint
+    rect = window.model_dock.geometry()
+    separator = QPoint(rect.right() + 1, rect.center().y())
+    QTest.mousePress(window, Qt.MouseButton.LeftButton, pos=separator)
+    QTest.mouseMove(window, separator + QPoint(30, 0))
+    QTest.mouseRelease(window, Qt.MouseButton.LeftButton, pos=separator + QPoint(30, 0))
+    assert not window._automatic_sidebar
+    window.resizeDocks([window.model_dock, window.properties_dock], [280, 300], Qt.Orientation.Horizontal)
+    QApplication.processEvents()
+    widths = window.model_dock.width(), window.properties_dock.width()
+    window.resize(1600, 900); QApplication.processEvents()
+    assert (window.model_dock.width(), window.properties_dock.width()) == widths
+    window.close()
+
+
+def test_old_dock_state_resets_but_current_manual_layout_restores(tmp_path):
+    settings = QSettings(str(tmp_path / "dock-version.ini"), QSettings.Format.IniFormat)
+    first = MainWindow(enable_viewport=False, settings=settings)
+    first.setWindowState(Qt.WindowState.WindowNoState)
+    first.show(); first.resize(1440, 900); QApplication.processEvents()
+    first.resizeDocks([first.model_dock, first.properties_dock], [350, 400], Qt.Orientation.Horizontal)
+    QApplication.processEvents()
+    geometry, old, current = first.saveGeometry(), first.saveState(3), first.saveState(4)
+    first.close()
+    settings.setValue("windowGeometry", geometry)
+    settings.setValue("windowState", old)
+    reset = MainWindow(enable_viewport=False, settings=settings)
+    reset.show(); reset.resize(1440, 900); QApplication.processEvents()
+    assert reset._automatic_sidebar and reset.viewport_frame.width() >= reset.width() * .70
+    reset.close()
+    settings.setValue("windowGeometry", geometry)
+    settings.setValue("windowState", current)
+    restored = MainWindow(enable_viewport=False, settings=settings)
+    restored.resize(1440, 900); restored.show(); QApplication.processEvents()
+    assert not restored._automatic_sidebar
+    assert restored.model_dock.width() == 350 and restored.properties_dock.width() == 400
+    restored.close()
+
+
 def test_generated_uuid_hidden_without_changing_arbitrary_names():
     suffix = "caelab:surface:159aa420-d6a4-4a35-b096-a085d72372ca"
     assert display_title("Bracket: " + suffix) == "Bracket"

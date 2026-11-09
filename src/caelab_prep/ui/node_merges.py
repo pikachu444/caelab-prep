@@ -26,8 +26,7 @@ class NodeMergeDialog(QDialog):
         area = self.screen().availableGeometry()
         self.resize(min(960, area.width() - 40), min(760, area.height() - 60))
         column = QVBoxLayout(self)
-        introduction = QLabel("Choose each removed node and its keeper. Keeper coordinates stay fixed. "
-            "Beam directions, connections and condition targets can change.")
+        introduction = QLabel("Merge explicit node pairs; keeper coordinates stay fixed.")
         introduction.setWordWrap(True); column.addWidget(introduction)
         self.tabs = QTabWidget(); column.addWidget(self.tabs, 1)
         page = QWidget(); body = QVBoxLayout(page)

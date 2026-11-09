@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
     QPushButton, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem,
     QTextBrowser, QVBoxLayout, QWidget)
 
-from .shell import FileTask
+from .shell import FileTask, default_asset_directory
 from .widgets.numeric import NumericEdit, VectorEdit
 
 
@@ -193,7 +193,7 @@ class MeshCandidateDialog(QDialog):
         self.source_kind.addItem("CAD / XAO", "cad_gmsh")
         self.source_kind.addItem("Structured quad / sweep hex recipe", "structured_recipe")
         form.addRow("Source type", self.source_kind)
-        self.source = QLineEdit(); self.output = QLineEdit()
+        self.source = QLineEdit(); self.output = QLineEdit(default_asset_directory())
         self._browse_buttons = []
         for label, field, callback in (("CAD / XAO", self.source, self.browse_source), ("Candidate folder", self.output, self.browse_output)):
             row = QHBoxLayout(); row.addWidget(field)

@@ -27,8 +27,7 @@ class NodeMoveDialog(QDialog):
         self.resize(900, 680)
         self.setMinimumSize(640, 480)
         column = QVBoxLayout(self)
-        explanation = QLabel("Enter absolute coordinates in the input deck's length unit. Preview does not change the model. "
-                             "Affected groups and conditions require review before native export.")
+        explanation = QLabel("Move nodes by absolute coordinates in the input deck's length unit.")
         explanation.setWordWrap(True)
         column.addWidget(explanation)
         row = QHBoxLayout()

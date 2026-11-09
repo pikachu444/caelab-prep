@@ -20,8 +20,7 @@ class GroupMemberReviewDialog(QDialog):
         screen = self.screen().availableGeometry()
         self.resize(min(900, screen.width() - 40), min(680, screen.height() - 60))
         layout = QVBoxLayout(self)
-        explanation = QLabel("Review the current and proposed targets. Apply changes this membership once; "
-                             "Cancel keeps the original draft and model. Geometry is unchanged.")
+        explanation = QLabel("Review current and proposed group targets before Apply.")
         explanation.setWordWrap(True); layout.addWidget(explanation)
         self.details = QTextBrowser()
         self.details.setPlainText(self._description())

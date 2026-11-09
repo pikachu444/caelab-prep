@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QFileDialog, QFormLayout, QHB
     QLabel, QLineEdit, QPushButton, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QWidget)
 
-from .shell import FileTask
+from .shell import FileTask, default_asset_directory
 
 
 def import_projection(candidate):
@@ -57,7 +57,7 @@ class ImportMeshDialog(QDialog):
         hint = QLabel("Import a CAD-independent Gmsh MSH 2.2/4.1 ASCII file using an explicit element profile. Physical regions become parts and element sets. Boundary face/edge groups become NODE sets; their elements remain source annotations, not shell/beam bodies or contact surfaces. Unsupported data blocks the whole import.")
         hint.setWordWrap(True); column.addWidget(hint)
         form = QFormLayout(); form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows); column.addLayout(form)
-        self.source, self.output = QLineEdit(), QLineEdit()
+        self.source, self.output = QLineEdit(), QLineEdit(default_asset_directory())
         self.browse_buttons = []
         self.source.setAccessibleName("Standalone MSH file"); self.output.setAccessibleName("Keep imported mesh assets")
         for label, field, callback in (("MSH file", self.source, self.browse_source), ("Keep import assets in", self.output, self.browse_output)):

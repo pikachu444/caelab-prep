@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sys
 
-from PySide6.QtCore import QSettings, Qt, Signal
+from PySide6.QtCore import QEvent, QSettings, Qt, Signal
 from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QLabel, QMenu
 
 from .shell import FileTask as _FileTask
@@ -18,7 +18,7 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
     operationFinished = Signal(str, bool)
     selectionChanged = Signal(dict)
     _sessionEvent = Signal(object)
-    LAYOUT_VERSION = 3
+    LAYOUT_VERSION = 4
 
     def __init__(self, session=None, *, enable_viewport: bool = True, presentation=None, settings=None):
         super().__init__()
@@ -43,6 +43,7 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
             self.setWindowState(self.windowState() | Qt.WindowState.WindowMaximized)
         restored = bool(state) and self.restoreState(state, self.LAYOUT_VERSION)
         self._initial_sidebar_pending = not restored
+        self._automatic_sidebar = not restored
         if not restored:
             self.messages_dock.setVisible(bool(presentation and self.reference_adapter.docks.output))
             self._size_initial_sidebar()
@@ -106,6 +107,25 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
         if self._initial_sidebar_pending:
             self._size_initial_sidebar()
             self._initial_sidebar_pending = False
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if getattr(self, "_automatic_sidebar", False):
+            self._size_initial_sidebar()
+
+    def event(self, event):
+        if (event.type() == QEvent.Type.MouseButtonPress
+                and event.button() == Qt.MouseButton.LeftButton
+                and getattr(self, "_automatic_sidebar", False)):
+            # QMainWindow owns dock separators; preserve the first manual drag.
+            x, y = event.position().x(), event.position().y()
+            panels = sorted((dock.geometry() for dock in (self.model_dock, self.properties_dock)
+                             if dock.isVisible() and not dock.isFloating()), key=lambda rect: rect.left())
+            for rect in panels:
+                if rect.top() <= y <= rect.bottom() and rect.right() < x <= rect.right() + 8:
+                    self._automatic_sidebar = False
+                    break
+        return super().event(event)
 
 
 def run(session=None, argv=None):

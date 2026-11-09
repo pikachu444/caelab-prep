@@ -60,7 +60,7 @@ Qt XCB와 OpenGL 런타임, 한글 글꼴이 필요합니다. Ubuntu 의존성�
 
 ### MODEL·FORM·TEXT 작업 공간
 
-기본 CourantPrep 창과 `compare --rad`의 BeidPrep 표현은 MODEL 옆에 FORM/TEXT를 배치합니다. **File / Edit / Model / Mesh / Conditions / View** 메뉴와 상단 기능 아이콘은 같은 명령을 사용합니다. 재료·shell/solid 단면 생성, 복사·삭제·할당은 **Model**에서 선택합니다. 아이콘이 좁은 창에서 접혀도 메뉴로 접근할 수 있습니다. 첫 실행은 최대화하며 이후에는 저장된 창 크기와 도킹 배치를 복원합니다.
+기본 CourantPrep 창과 `compare --rad`의 BeidPrep 표현은 MODEL 옆에 FORM/TEXT를 배치합니다. **File / Edit / Model / Mesh / Conditions / View** 메뉴와 상단 기능 아이콘은 같은 명령을 사용합니다. 재료·shell/solid 단면 생성, 복사·삭제·할당은 **Model**에서 선택합니다. 아이콘이 좁은 창에서 접혀도 메뉴로 접근할 수 있습니다. 첫 실행은 최대화하며 이후에는 저장된 창 크기와 도킹 배치를 복원합니다. 새 배치는 1440px 창에서 MODEL/FORM을 약 187/240px로 시작합니다. 처음 구분선을 직접 조절하기 전에는 창 크기에 맞춰 비율을 유지하며, 직접 조절한 폭은 유지합니다. 이전 버전의 도킹 배치는 한 번 초기화합니다.
 
 MODEL은 실제 카드 분류와 native header를 표시합니다. 생성된 CAD part 이름의 내부 UUID 접미사는 화면에서만 숨기며 원문 이름과 객체 참조는 유지합니다. 3D에 실제 표시되는 PART에는 가시성 체크와 읽기 전용 색 칩이 나타납니다. 이 표시는 현재 viewport 상태이며 문서의 물성색이나 영구 설정이 아닙니다. `--no-3d`에서는 이 표시가 없습니다.
 
@@ -70,7 +70,7 @@ TEXT 지원 범위는 읽을 수 있는 MAT LAW1/ELAST/LAW36/PLAS_TAB의 밀도�
 
 ## 새 모델에 CAD·메시와 조건 연결하기
 
-명시한 planar quad/sweep hex8 recipe는 **Mesh → CAD / mesh candidate… → Source type: Structured quad / sweep hex recipe**에서 생성합니다. recipe JSON과 후보 폴더를 선택하고 **Generate candidate**로 준비합니다. 원본 파일과 문서는 바꾸지 않으며 실행 중 **Cancel generation**으로 중지할 수 있습니다. 전체 후보의 scaled Jacobian·edge aspect·면적/체적과 단위를 검토하고 재료·quad의 shell 또는 hex의 solid 단면을 고른 뒤 **Adopt candidate**로 한 번에 채택합니다. 길이 단위는 recipe에서 읽으며 문서 단위와 같아야 합니다.
+명시한 planar quad/sweep hex8 recipe는 **Mesh → CAD / mesh candidate… → Source type: Structured quad / sweep hex recipe**에서 생성합니다. recipe JSON을 선택하고 **Generate candidate**로 준비합니다. 원본 파일과 문서는 바꾸지 않으며 실행 중 **Cancel generation**으로 중지할 수 있습니다. 전체 후보의 scaled Jacobian·edge aspect·면적/체적과 단위를 검토하고 재료·quad의 shell 또는 hex의 solid 단면을 고른 뒤 **Adopt candidate**로 한 번에 채택합니다. 길이 단위는 recipe에서 읽으며 문서 단위와 같아야 합니다.
 
 quad와 hex 밑면의 분할 수는 JSON을 선택한 뒤 **Load recipe divisions**로 읽어 각 patch의 **Edge 1–2 / Edge 2–3**에서 편집할 수 있습니다. hex의 **Sweep layers**는 recipe의 sweep vector를 따라 나눈 공통 분할 수입니다. 값은 전역 X/Y가 아닌 recipe의 순서 있는 모서리 방향에 대한 분할 수이며 정수 1..10000과 전체 생성 예산을 적용합니다. 두 patch의 공유 변 분할 수는 같아야 합니다. 입력을 바꾸면 이전 품질 결과와 Adopt가 무효화되므로 **Generate candidate**로 새 결과를 검사합니다. 수정한 recipe는 새 후보 폴더에 보관하고 원본 JSON은 수정하지 않습니다. 원본이 외부에서 바뀌면 다시 불러와야 합니다.
 
@@ -98,7 +98,7 @@ quad와 hex 밑면의 분할 수는 JSON을 선택한 뒤 **Load recipe division
 
 개발 API의 `structured_mesh_recipes()`는 archive UUID·채택 mesh UUID·mode/단위·원문 역할과 조회 시 문서 ID/epoch/revision을 반환합니다. `export_structured_recipe(archive_id, new_directory, expected_document_id=..., expected_document_epoch=..., expected_revision=...)`로 그 조회에 묶어 추출할 수 있습니다. 반환된 `recipe_path`를 기존 `read_recipe_input`·`generate_structured_mesh(..., recipe_path=...)`에 전달합니다. 실제 확인과 남은 플랫폼·좌표/patch 편집 범위는 [현재 상태](../CURRENT_STATE.md#recipe-archive-progress)를 따릅니다.
 
-같은 GUI/API에서 `mode: "hex"`인 명시 planar source의 직선/경사 sweep hex8도 채택할 수 있습니다. 예를 들어 위 quad JSON의 `"mode"`를 `"hex"`로 바꾸고 `"vector":[0,0,10],"layers":4`를 추가합니다. GUI의 solid 단면 또는 `session.create_solid_property()`가 만든 명시 `Isolid=1` 속성과 재료 ID로 채택하면 BRICK/GRBRIC을 작성하고 한 번의 Undo와 기존 작업문서 저장·재열기를 사용합니다. 상속/기타 Isolid 값을 자동 치환하지 않습니다. `describe()["capabilities"]["mesh_adoption_sources"]`가 출처별 family를 구분합니다. 27점 Jacobian 검사는 기하 품질 검사이며 solver 적분점 수를 뜻하지 않습니다. Starter 읽기는 기존 PR34의 225/525요소 입력에서 확인한 범위이며, 이번 divisions/layers 편집 출력(360/720요소)의 Starter는 실행하지 않았습니다. Engine·해석 응답·물성의 타당성·Windows/frozen GUI도 미확인입니다. 비틀림·곡면·일반 CAD 분할·임의 외부 hex는 지원하지 않습니다.
+같은 GUI/API에서 `mode: "hex"`인 명시 planar source의 직선/경사 sweep hex8도 채택할 수 있습니다. 예를 들어 위 quad JSON의 `"mode"`를 `"hex"`로 바꾸고 `"vector":[0,0,10],"layers":4`를 추가합니다. GUI의 **New solid section → Linear Hex8** 또는 `session.create_solid_section("Hex8 Section", element_family="hexa8")`가 만든 명시 `Isolid=1, Ismstr=4` 속성과 재료 ID로 채택하면 BRICK/GRBRIC을 작성하고 한 번의 Undo와 기존 작업문서 저장·재열기를 사용합니다. 상속/기타 Isolid 값을 자동 치환하지 않습니다. `describe()["capabilities"]["mesh_adoption_sources"]`가 출처별 family를 구분합니다. 27점 Jacobian 검사는 기하 품질 검사이며 solver 적분점 수를 뜻하지 않습니다. Starter 읽기는 기존 PR34의 225/525요소 입력에서 확인한 범위이며, 이번 divisions/layers 편집 출력(360/720요소)의 Starter는 실행하지 않았습니다. Engine·해석 응답·물성의 타당성·Windows/frozen GUI도 미확인입니다. 비틀림·곡면·일반 CAD 분할·임의 외부 hex는 지원하지 않습니다.
 
 1. **File → New model…**에서 이름과 질량·길이·시간 단위를 명시합니다. 단위 없는 입력에 임의 단위를 추정하지 않습니다.
 2. 재료와 요소 family에 맞는 shell 또는 solid 단면을 만듭니다.
@@ -189,6 +189,8 @@ print(candidates["features"], candidates["unclassified"])
 
 이는 검토할 후보입니다. 전체 공극의 외부 연결·CAD 설계 이력·임의 축/일반 polygon/복잡 trim·fillet 인식은 보장하지 않습니다. Washer ring·fillet 억제·mesh 생성/채택은 연결하지 않았으며 후보 판독은 B-Rep·mesh·활성 문서를 변경하지 않습니다. 자산이 바뀌면 다시 검사해야 합니다.
 
+검사·후보 생성·MSH 가져오기 창은 고유한 시스템 임시 폴더 경로를 미리 채웁니다. Browse로 다른 폴더를 지정할 수 있고 경로를 비우면 실행 전에 오류를 표시합니다. 실제 자산은 실행할 때 생성되며, 저장한 `.caeprep`에는 채택에 필요한 자산이 동봉됩니다.
+
 ### 제한된 원통 blend 후보 (Python API)
 
 ```python
@@ -221,9 +223,11 @@ blends = recognize_conical_blends(inspection, length_tolerance=1e-6,
 
 원뿔은 일정 반경이 아니므로 판정 반경은 trim 전체의 **최대 유한 주곡률 반경 `r / |cos(alpha)|`**입니다. 결과의 `radius`·`finite_principal_radius_range`와 실제 단면의 `cross_section_radius_range`·끝 호 `radius`를 구분합니다. `radius_threshold`는 이 계산된 최대값에 정확한 `<=`를 적용하며 숨은 허용오차나 반올림은 없습니다. `None`이면 필터를 사용하지 않습니다. 결과는 `conical_blend_candidate`이며 CAD fillet 이력·억제·메시 변경을 뜻하지 않습니다. 일반 축·apex를 지나는 trim·일반 원뿔/토러스 fillet은 미지원입니다.
 
+STEP/XAO 검사 체적을 비교할 때는 `python scripts/evaluation/geometry_volume.py step-metadata.json xao-metadata.json`을 사용합니다. mm³ 절대 차이 `<= 1e-9`를 적용하며 반경 필터의 정확한 등호 판정과는 별개입니다. 저장된 관측을 평가하며 SDK를 실행하지 않습니다.
+
 ### 공용 창에서 후보 검토하기
 
-8개 표현의 **Mesh → Inspect geometry features…**에서 CAD와 evidence 폴더를 선택한 뒤 **Inspect geometry**를 실행합니다. 활성 모델 없이도 열 수 있습니다. **Open inspection…**은 기존 geometry metadata를 읽으며 SDK를 다시 실행하지 않습니다. STEP/IGES는 mm 정규화 좌표를 사용하고, 저장된 XAO에는 알려진 mm 단위가 필요합니다.
+8개 표현의 **Mesh → Inspect geometry features…**에서 CAD를 선택한 뒤 **Inspect geometry**를 실행합니다. 활성 모델 없이도 열 수 있습니다. **Open inspection…**은 기존 geometry metadata를 읽으며 SDK를 다시 실행하지 않습니다. STEP/IGES는 mm 정규화 좌표를 사용하고, 저장된 XAO에는 알려진 mm 단위가 필요합니다.
 
 행을 선택하거나 wireframe의 표식을 클릭하면 같은 후보의 반경·길이·축·끝 cap 또는 재료 방향의 접선 증거를 확인합니다. 표시용 선분의 선택은 활성 모델 선택과 분리됩니다. View에는 지원 직선 CAD edge, hole의 완전 원형 경계 또는 blend의 부분 호와 축을 표시합니다. 원뿔의 두 끝 호는 각 단면 반경으로 그리며 상세 값에서 최대 정상곡률 반경과 구분합니다. **Maximum blend radius**는 선택적 반경 필터입니다. 허용오차·반경을 바꾸면 저장된 자료를 재판독하며 SDK를 다시 조회하지 않습니다. Escape는 마지막 성공 값과 표시로 복귀합니다. 입력 변경·실패·잘못된 값은 이전 후보와 표식을 지웁니다. **Cancel inspection**과 창 닫기는 진행 중 worker를 중지한 뒤 결과를 폐기합니다. 이 창은 mm 전용이며 저장 자료의 unknown 단위를 자동 환산하지 않습니다.
 

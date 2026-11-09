@@ -6,6 +6,8 @@
 
 **2026-11-04 추가 연구:** [Round5 근거와 저장소 반영 판단](mesher-evidence/2026-11-04/round5/README.md)에 누락 후보 조사, 실제 Linux 실행, 독립 품질 감사와 실패 기록을 보존했다. 기존 50개에 18개를 더한 68개 검토 항목에는 생성기·후처리·wrapper·배포판이 섞여 있으며 68개 독립 엔진 또는 전체 검증 완료를 뜻하지 않는다. 새 복잡 CAD 자동 범용 메셔의 제품 채택, F2/F3 종결 또는 solver export 확대 근거는 확보하지 못했다. 아래 과거 실험과 N24/N25의 기존 제한 구현, N26의 native/물리 검증 잔여를 그대로 유지한다.
 
+**2026-11-09 WBS-C1-C2:** PR47의 원통 blend와 PR50의 유한 원뿔 blend를 Washer draft(PR48) 없이 통합했다. 후보 판독 범위와 사용법은 [사용 안내](usage.md#geometry-features), 현재 코드·검증은 [현황](../CURRENT_STATE.md#current-progress)을 따른다. STEP/XAO 체적 회귀 평가는 `scripts/evaluation/geometry_volume.py`에서 mm³ 절대 차이 `<= 1e-9`를 사용한다. 이는 SDK 표현 간 체적 비교 기준이며, 원통/원뿔의 반경 threshold·접선 판정이나 기존 frozen 실패 기록을 바꾸지 않는다. Hex8 단면 생성은 기존 `Isolid=1` 채택 경로를 연결하며 새 formulation·일반 all-hex 실증으로 세지 않는다.
+
 ## 1. 앞선 계획에서 바로잡는 판단
 
 공용 문서/GUI·기존 Gmsh 연결과 상용 수준의 자동 메셔 커널을 같은 확실성으로 계획하면 안 된다. 앞선 P7c의 “후보를 선택하고 구현”이라는 표에는 요구 기능에 대응하는 실제 코드·실행 결과가 부족했다. 문서의 단계와 종료 조건이 일관된다는 검토는 기술적 실현 가능성 검증이 아니다. Codex/Astra가 작성·검토했다는 사실도 커널의 성공률을 입증하지 않는다.

@@ -52,7 +52,7 @@ class IntegerListEdit(QLineEdit):
                       "Larger edits are rejected without changing the existing IDs.")
         self.setMaxLength(maximum_bytes + 1)
         self.setValidator(_IdTextLimit(maximum_bytes, self))
-        self.setPlaceholderText("IDs separated by spaces or commas")
+        self.setPlaceholderText("IDs: 1, 2, 3")
         self.set_raw_value(value)
         self.textEdited.connect(self._edited)
         self.inputRejected.connect(self._rejected)

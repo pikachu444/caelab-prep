@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QDialog, QDialogBut
     QFormLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QPushButton,
     QSplitter, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
-from .shell import FileTask, ViewportFrame
+from .shell import FileTask, default_asset_directory, ViewportFrame
 from .widgets.numeric import NumericEdit
 from ..application.geometry_features import recognize_geometry_features
 from ..application.geometry_inspection import read_geometry_inspection
@@ -100,7 +100,7 @@ class GeometryFeaturesDialog(QDialog):
         title = QLabel("Inspect hole and blend candidates"); title.setObjectName("groupTitle")
         layout.addWidget(title)
         form = QFormLayout(); layout.addLayout(form)
-        self.source, self.output = QLineEdit(), QLineEdit()
+        self.source, self.output = QLineEdit(), QLineEdit(default_asset_directory())
         self.source.setPlaceholderText("STEP, IGES or saved XAO")
         self.output.setPlaceholderText("Folder for inspection evidence")
         self.source_button, self.output_button = QPushButton("Browse…"), QPushButton("Browse…")
