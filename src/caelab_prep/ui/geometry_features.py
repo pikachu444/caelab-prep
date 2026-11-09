@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QDialog, QDialogBut
 
 from .shell import FileTask, ViewportFrame
 from .widgets.numeric import NumericEdit
-from ..application.geometry_features import recognize_cylindrical_holes, recognize_cylindrical_blends
+from ..application.geometry_features import recognize_geometry_features
 from ..application.geometry_inspection import read_geometry_inspection
 
 
@@ -52,16 +52,17 @@ def geometry_projection(inspection, report, preview_id):
         matches = set(curve["adjacent_surface_uuids"]) & features.keys()
         path([point["xyz"] for point in endpoints], owner=next(iter(matches)) if len(matches) == 1 else None)
     for feature in report["features"]:
-        if feature["kind"] == "cylindrical_blend_candidate":
+        if feature["kind"] in ("cylindrical_blend_candidate", "conical_blend_candidate"):
             for arc in feature["end_arcs"]:
                 center = arc["center"]
-                directions = [[(value - c) / feature["radius"] for value, c in zip(point, center)]
+                radius = arc.get("radius", feature["radius"])
+                directions = [[(value - c) / radius for value, c in zip(point, center)]
                               for point in arc["endpoints"]]
                 angle = math.acos(max(-1., min(1., sum(a * b for a, b in zip(*directions)))))
                 points = [arc["endpoints"][0]]
                 for step in range(1, 16):
                     fraction = step / 16
-                    points.append([c + feature["radius"] * (math.sin((1-fraction)*angle)*a
+                    points.append([c + radius * (math.sin((1-fraction)*angle)*a
                         + math.sin(fraction*angle)*b) / math.sin(angle)
                         for c, a, b in zip(center, *directions)])
                 points.append(arc["endpoints"][1])
@@ -96,7 +97,7 @@ class GeometryFeaturesDialog(QDialog):
         self.setWindowTitle("Geometry features")
         self.resize(1040, 700); self.setMinimumSize(760, 520)
         layout = QVBoxLayout(self)
-        title = QLabel("Inspect hole and cylindrical blend candidates"); title.setObjectName("groupTitle")
+        title = QLabel("Inspect hole and blend candidates"); title.setObjectName("groupTitle")
         layout.addWidget(title)
         form = QFormLayout(); layout.addLayout(form)
         self.source, self.output = QLineEdit(), QLineEdit()
@@ -118,6 +119,7 @@ class GeometryFeaturesDialog(QDialog):
         self.tolerance.draftChanged.connect(self._tolerance_changed)
         filters = QHBoxLayout(); layout.addLayout(filters)
         self.limit_blend_radius = QCheckBox("Maximum blend radius (mm)")
+        self.limit_blend_radius.setToolTip("For cones, use the maximum finite principal radius r / |cos(alpha)| over the trim.")
         filters.addWidget(self.limit_blend_radius)
         self.blend_radius = NumericEdit(1., unit="mm", minimum=0)
         self.blend_radius.setMaximumWidth(130); self.blend_radius.setEnabled(False)
@@ -167,8 +169,9 @@ class GeometryFeaturesDialog(QDialog):
         self.details.setWordWrap(True); self.details.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         side.addWidget(self.details)
         split.addWidget(panel); split.setSizes([650, 340])
-        note = QLabel("Review units: mm. Supported: axis-aligned circular holes and quarter-cylinder blends with rectangular supports. "
-                      "Blend joins require material-oriented tangency; conical blends remain unclassified. "
+        note = QLabel("Review units: mm. Supported: axis-aligned circular holes, quarter cylinders and finite quarter cones. "
+                      "Cone radius is max(r / |cos(alpha)|); section radii are shown in the details. "
+                      "Blend joins require material-oriented tangency on connected planar supports. "
                       "Markers are display lines. No mesh or edge suppression is applied.")
         note.setObjectName("propertySubtitle"); note.setWordWrap(True); layout.addWidget(note)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
@@ -243,7 +246,7 @@ class GeometryFeaturesDialog(QDialog):
         source, output = self.source.text(), self.output.text()
         return self._start(lambda: read_geometry_inspection(backend.inspect_geometry(source, output,
             expected_coordinate_length_unit="mm", probe_cylinder_material_side=True,
-            probe_cylindrical_blends=True, cancel_event=self._cancel)))
+            probe_cylindrical_blends=True, probe_conical_blends=True, cancel_event=self._cancel)))
 
     def open_inspection(self, path=None):
         if not isinstance(path, (str, Path)):
@@ -282,32 +285,28 @@ class GeometryFeaturesDialog(QDialog):
         if self._task is not None or self.inspection is None: return False
         self._clear_result(keep_inspection=True); self.error.clear()
         try:
-            report = recognize_cylindrical_holes(self.inspection, length_tolerance=self.tolerance.numeric_value())
-            blends = recognize_cylindrical_blends(self.inspection, length_tolerance=self.tolerance.numeric_value(),
-                radius_threshold=self.blend_radius.numeric_value() if self.limit_blend_radius.isChecked() else None)
-            report["features"].extend(blends["features"])
-            recognized = {feature["surface_uuid"] for feature in report["features"]}
-            blend_reasons = {row["surface_uuid"]: row["reason"] for row in blends["unclassified"]}
-            report["unclassified"] = [{**row, "blend_reason": blend_reasons.get(row["surface_uuid"])}
-                for row in report["unclassified"] if row["surface_uuid"] not in recognized]
-            report["blend_review"] = {key: blends[key] for key in ("scope", "radius_threshold", "angular_tolerance_radians")}
+            report = recognize_geometry_features(self.inspection, length_tolerance=self.tolerance.numeric_value(),
+                blend_radius_threshold=self.blend_radius.numeric_value() if self.limit_blend_radius.isChecked() else None)
             projection, owners = geometry_projection(self.inspection, report, self.preview_id)
         except Exception as exc:
             self.summary.setText("Review needs valid evidence, a positive tolerance and a valid radius filter.")
             self._show_error(exc); return False
         self.report, self.projection, self._primitive_owners = report, projection, owners
         self.tolerance.accept_value(report["length_tolerance"])
-        if self.limit_blend_radius.isChecked(): self.blend_radius.accept_value(blends["radius_threshold"])
+        if self.limit_blend_radius.isChecked(): self.blend_radius.accept_value(report["blend_review"]["radius_threshold"])
         self.table.setRowCount(len(report["features"]))
         for row, feature in enumerate(report["features"]):
-            blend = feature["kind"] == "cylindrical_blend_candidate"
+            blend = feature["kind"] in ("cylindrical_blend_candidate", "conical_blend_candidate")
             depth = (feature["axial_range"][1] - feature["axial_range"][0]) if blend else math.dist(*(cap["center"] for cap in feature["caps"]))
-            label = "Cylindrical blend" if blend else ("Through hole" if feature["kind"] == "through_hole_candidate" else "Blind hole")
+            label = ("Conical blend" if feature["kind"] == "conical_blend_candidate" else "Cylindrical blend") if blend else (
+                "Through hole" if feature["kind"] == "through_hole_candidate" else "Blind hole")
             for column, value in enumerate((label, f"{feature['radius']:.6g}", f"{depth:.6g}")):
                 self.table.setItem(row, column, QTableWidgetItem(value))
+            if feature["kind"] == "conical_blend_candidate":
+                self.table.item(row, 1).setToolTip("Maximum finite principal radius over the conical trim.")
         count = len(report["features"])
         self.summary.setText(f"{count} feature candidate{'s' if count != 1 else ''}. "
-                             f"{len(report['unclassified'])} cylindrical surface(s) unclassified. Geometry is read-only.")
+                             f"{len(report['unclassified'])} cylinder/cone surface(s) unclassified. Geometry is read-only.")
         self.summary.setToolTip("\n".join("; ".join(reason.replace("_", " ") for reason in
             (row["reason"], row.get("blend_reason")) if reason) for row in report["unclassified"]))
         if self.viewport: self.viewport.set_mesh(projection)
@@ -320,12 +319,16 @@ class GeometryFeaturesDialog(QDialog):
         row = self.table.currentRow()
         if not 0 <= row < len(self.report["features"]): return
         feature = self.report["features"][row]
-        if feature["kind"] == "cylindrical_blend_candidate":
+        if feature["kind"] in ("cylindrical_blend_candidate", "conical_blend_candidate"):
             boundary = "Material-oriented tangent joins: " + ", ".join(
                 f"edge {join['shared_line_tag']} ({join['angle_radians']:.6g} rad)" for join in feature["tangent_edges"])
+            if feature["kind"] == "conical_blend_candidate":
+                sections = ", ".join(f"{value:.6g}" for value in feature["cross_section_radius_range"])
+                boundary = f"Section radii: {sections} mm\n" + boundary
         else:
             boundary = "End caps: " + ", ".join(cap["kind"].replace("_", " ") for cap in feature["caps"])
-        self.details.setText(f"Radius: {feature['radius']:.6g} mm\n"
+        radius_label = "Max normal radius" if feature["kind"] == "conical_blend_candidate" else "Radius"
+        self.details.setText(f"{radius_label}: {feature['radius']:.6g} mm\n"
             f"Axis point: {', '.join(f'{value:.6g}' for value in feature['axis_point'])} mm\n"
             f"Axis direction: {', '.join(f'{value:.6g}' for value in feature['axis_direction'])}\n"
             + boundary)

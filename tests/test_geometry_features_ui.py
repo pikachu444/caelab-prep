@@ -21,6 +21,7 @@ from caelab_prep.ui.reference_profiles import PROFILES
 from test_external_mesh_ui import pump, wait_task
 from test_geometry_features import hole
 from test_cylindrical_blends import blend_evidence, persist
+from test_conical_blends import cone_evidence
 
 
 pytestmark = pytest.mark.usefixtures("qt_widgets")
@@ -173,6 +174,8 @@ def test_cancel_and_changed_input_cannot_present_a_late_worker_result(inspection
     class Backend:
         def inspect_geometry(self, source, output, **options):
             assert options["probe_cylinder_material_side"] is True
+            assert options["probe_cylindrical_blends"] is True
+            assert options["probe_conical_blends"] is True
             assert options["expected_coordinate_length_unit"] == "mm"
             options["cancel_event"].wait(3)
             return inspection.to_dict()  # deliberately late successful response
@@ -281,5 +284,61 @@ def test_saved_unknown_unit_evidence_cannot_be_displayed_with_mm_labels(inspecti
         assert not dialog.present_inspection(non_mm)
         assert dialog.inspection is None and dialog.report is None and not dialog.projection
         assert dialog.table.rowCount() == 0 and "not rescaled" in dialog.error.text()
+    finally:
+        dialog.reject()
+
+
+@pytest.mark.parametrize("cusp", [False, True])
+@pytest.mark.parametrize("axis_sign", [1, -1])
+def test_conical_review_preserves_section_radii_and_signed_material_joins(tmp_path, cusp, axis_sign):
+    data, metadata = cone_evidence(tmp_path, cusp=cusp, axis_sign=axis_sign)
+    dialog = GeometryFeaturesDialog(enable_viewport=False)
+    try:
+        assert dialog.present_inspection(persist(data, metadata))
+        assert dialog.table.rowCount() == (0 if cusp else 1)
+        assert not dialog.washer_button.isEnabled() and not dialog.open_washer_controls()
+        if cusp:
+            assert "material normals not g1" in dialog.summary.toolTip()
+            assert not any(dialog._primitive_owners.values())
+            return
+        assert dialog.table.item(0, 0).text() == "Conical blend"
+        assert dialog.table.item(0, 1).text() == "7.5" and dialog.table.item(0, 2).text() == "4"
+        assert "Max normal radius: 7.5 mm" in dialog.details.text()
+        assert "Section radii: 3, 6 mm" in dialog.details.text()
+        face = dialog.report["features"][0]["surface_uuid"]
+        owned = [cell for cell in dialog.projection["cells"] if dialog._primitive_owners[cell["id"]] == face]
+        assert len(owned) == 35  # Two generatrices, two partial arcs and axis.
+        points = dict(zip(dialog.projection["node_ids"], dialog.projection["points"]))
+        marker_points = {points[node] for cell in owned for node in cell["nodes"]}
+        for x, y, z in marker_points:
+            assert z in (4., 8.) and min(x, y) >= -1e-12
+            assert math.hypot(x, y) == pytest.approx(0. if x == y == 0. else .75 * z)
+        identifier = owned[0]["id"]
+        dialog.table.clearSelection()
+        dialog.pick_entity({"document_id": dialog.preview_id, "id": identifier})
+        assert dialog.table.selectedItems() and not dialog.washer_button.isEnabled()
+    finally:
+        dialog.reject()
+
+
+def test_saved_cone_threshold_filter_uses_normal_radius_without_querying_sdk(tmp_path, monkeypatch):
+    data, metadata = cone_evidence(tmp_path)
+    dialog = GeometryFeaturesDialog(enable_viewport=False)
+    try:
+        monkeypatch.setattr("caelab_prep.adapters.gmsh_backend.GmshBackend.inspect_geometry",
+                            lambda *args, **kwargs: pytest.fail("Saved cone filtering must not query the SDK"))
+        assert dialog.present_inspection(persist(data, metadata))
+        dialog.limit_blend_radius.setChecked(True)
+        dialog.blend_radius.setText("6")  # Maximum section radius is smaller than the normal radius.
+        assert dialog.reclassify() and dialog.table.rowCount() == 0
+        assert "radius above threshold" in dialog.summary.toolTip()
+        dialog.blend_radius.setText("8")
+        assert dialog.reclassify() and dialog.table.rowCount() == 1
+        assert dialog.report["conical_review"]["radius_threshold"] == 8
+        dialog.blend_radius.setText("invalid")
+        assert not dialog.reclassify() and not dialog.projection
+        dialog.blend_radius.revert()
+        assert dialog.report["conical_review"]["radius_threshold"] == 8
+        assert dialog.table.rowCount() == 1
     finally:
         dialog.reject()
