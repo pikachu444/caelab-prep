@@ -196,12 +196,13 @@ def test_wide_initial_sidebar_is_capped_and_later_resize_keeps_user_width(qt_wid
     window.resize(2560, 1369)
     window.show()
     qt_widgets.processEvents()
-    assert 410 <= window.model_dock.width() <= 430
-    window.resizeDocks([window.model_dock], [380], Qt.Orientation.Horizontal)
+    assert 200 <= window.model_dock.width() <= 220
+    assert 610 <= window.model_dock.width() + window.properties_dock.width() <= 630
+    window.resizeDocks([window.model_dock], [260], Qt.Orientation.Horizontal)
     qt_widgets.processEvents()
     window.resize(2400, 1300)
     qt_widgets.processEvents()
-    assert 370 <= window.model_dock.width() <= 390
+    assert 250 <= window.model_dock.width() <= 270
 
 
 def test_compact_material_inspector_fits_three_fields_and_unit_context(qt_widgets):
