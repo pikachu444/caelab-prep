@@ -46,7 +46,11 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
         self._automatic_sidebar = not restored
         if not restored:
             self.messages_dock.setVisible(bool(presentation and self.reference_adapter.docks.output))
-            self._size_initial_sidebar()
+            self._sizing_initial_sidebar = True
+            try:
+                self._size_initial_sidebar()
+            finally:
+                self._sizing_initial_sidebar = False
         self._sessionEvent.connect(self._session_changed, Qt.ConnectionType.QueuedConnection)
         self._unsubscribe = self.session.subscribe(self._sessionEvent.emit)
         self.refresh_document(rebuild_viewport=bool(self._summary().get("document_id")))
@@ -105,13 +109,21 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
     def showEvent(self, event):
         super().showEvent(event)
         if self._initial_sidebar_pending:
-            self._size_initial_sidebar()
+            self._sizing_initial_sidebar = True
+            try:
+                self._size_initial_sidebar()
+            finally:
+                self._sizing_initial_sidebar = False
             self._initial_sidebar_pending = False
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         if getattr(self, "_automatic_sidebar", False):
-            self._size_initial_sidebar()
+            self._sizing_initial_sidebar = True
+            try:
+                self._size_initial_sidebar()
+            finally:
+                self._sizing_initial_sidebar = False
 
     def event(self, event):
         if (event.type() == QEvent.Type.MouseButtonPress
@@ -126,6 +138,11 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
                     self._automatic_sidebar = False
                     break
         return super().event(event)
+
+    def resizeDocks(self, docks, sizes, orientation):
+        if not getattr(self, '_sizing_initial_sidebar', False):
+            self._automatic_sidebar = False
+        super().resizeDocks(docks, sizes, orientation)
 
 
 def run(session=None, argv=None):
