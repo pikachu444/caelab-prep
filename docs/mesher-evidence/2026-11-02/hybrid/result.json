@@ -1,0 +1,263 @@
+{
+  "scope": "Two explicit low-order vertex fixtures only, not N26 hybrid-interface/F2/product completion. No placement, elements, nodes or density corrected/dropped.",
+  "official_mapping": {
+    "prism": "BRICK_4.svg: a b c a d e f d",
+    "pyramid": "BRICK_7.svg: a b c d e e e e; explicitly not recommended but sometimes needed"
+  },
+  "profile": {
+    "Isolid": 17,
+    "Ismstr": 4,
+    "Iale": 0,
+    "Icpre": 3,
+    "Itetra10": 0,
+    "Inpts": 0,
+    "Itetra4": 1000,
+    "Iframe": 1,
+    "dn": 0.0
+  },
+  "density_Mg_mm3": 1e-09,
+  "E_N_mm2": 1000,
+  "nu": 0.25,
+  "expected_reader_family": "BRICK ordinary 8-slot; no dedicated pyramid/prism reader classification",
+  "solver_release": "latest-20261011",
+  "runs": {
+    "pyramid5": {
+      "gmsh_type": 7,
+      "ids": [
+        101,
+        203,
+        307,
+        401,
+        503
+      ],
+      "xyz": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          0,
+          3,
+          0
+        ],
+        [
+          1,
+          1.5,
+          4
+        ]
+      ],
+      "mapping": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        4,
+        4,
+        4
+      ],
+      "volume": 8.0,
+      "connectivity": [
+        101,
+        203,
+        307,
+        401,
+        503,
+        503,
+        503,
+        503
+      ],
+      "expected_mass": 8e-09,
+      "input_sha256": {
+        "pyramid5_0000.rad": "6d50bc4ba3cb30cedd6b72e812ae3b5d63f42698e6deaa401eee00c4af7c2b1d",
+        "pyramid5_0001.rad": "3e04932325d9f21d1d3046f65ed712c5cd5b18479766d8bde60da580c09a599c"
+      },
+      "executions": [
+        {
+          "label": "starter",
+          "returncode": 0,
+          "normal": true,
+          "seconds": 0.3659292969969101,
+          "binary_sha256": "0bbea37273656b270bea53cf756b115bcd5d9a8875a3c41283922a3b927719d1"
+        },
+        {
+          "label": "engine",
+          "returncode": 0,
+          "normal": true,
+          "seconds": 0.032517753999854904,
+          "binary_sha256": "54cc9fc2a7cea6f1215afb6da9109d368650ff1fa7985625cb111f47d7e92be4"
+        }
+      ],
+      "counts": {
+        "NUMNOD": 5,
+        "NUMELC": 0,
+        "NUMMAT": 1,
+        "NUMGEO": 1,
+        "NPART": 1
+      },
+      "actual_mass": 8e-09,
+      "mass_relative_error": 0.0,
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"<workspace>/audit/hybrid-native-f1/probe_native.py\", line 53, in run\n    assert counts==dict(NUMNOD=len(f['ids']),NUMELC=1,NUMMAT=1,NUMGEO=1,NPART=1),counts\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: {'NUMNOD': 5, 'NUMELC': 0, 'NUMMAT': 1, 'NUMGEO': 1, 'NPART': 1}\n",
+      "artifacts": {
+        "engine.log": {
+          "bytes": 3148,
+          "sha256": "393d5d8c3d388ac1b4b21fa3a4f7aebd8eb38d33da2c7049f38ea848dc842b95"
+        },
+        "pyramid5A001": {
+          "bytes": 908,
+          "sha256": "d210bf123721bc383bbad1be8fac927ea432f95714ca47e937f36657dbab29c9"
+        },
+        "pyramid5A002": {
+          "bytes": 908,
+          "sha256": "97171961934eef453f31f33922bf80699611e079f458ac75d4cb5858bc48662d"
+        },
+        "pyramid5T01": {
+          "bytes": 728,
+          "sha256": "0966e1ff2193a25a84145653344d3d5e258dac061f3737fedd512f37f7dee64e"
+        },
+        "pyramid5_0001_0001.rst": {
+          "bytes": 264574,
+          "sha256": "466d7d4f7a102bc6131d039277155d9f2953376dd5673f3308cb0787a1e4a712"
+        },
+        "starter.log": {
+          "bytes": 3281,
+          "sha256": "a8ac7253835159e9d2cf110ba899353e6682b22f9b92383bda8275d420764c7b"
+        },
+        "pyramid5_0000.out": {
+          "bytes": 21453,
+          "sha256": "fa43b24054771af8c577fe699711c6d4c087125915ed7fd11a3a40abb9e61e60"
+        },
+        "pyramid5_0001.rad": {
+          "bytes": 53,
+          "sha256": "3e04932325d9f21d1d3046f65ed712c5cd5b18479766d8bde60da580c09a599c"
+        },
+        "pyramid5_0001.out": {
+          "bytes": 9382,
+          "sha256": "c3de58e03c307b5bad8511c3c7e116d18085de4ff9e65d26f274675e96c7ac58"
+        },
+        "pyramid5_0000_0001.rst": {
+          "bytes": 264334,
+          "sha256": "6ca9a5c8cdd270cc347e88170ae7f01bebf6c58341f401f410b9f342b885faf7"
+        },
+        "pyramid5_0000.rad": {
+          "bytes": 1356,
+          "sha256": "6d50bc4ba3cb30cedd6b72e812ae3b5d63f42698e6deaa401eee00c4af7c2b1d"
+        }
+      }
+    },
+    "prism6": {
+      "gmsh_type": 6,
+      "ids": [
+        101,
+        203,
+        307,
+        401,
+        503,
+        607
+      ],
+      "xyz": [
+        [
+          10,
+          20,
+          30
+        ],
+        [
+          12,
+          20,
+          30
+        ],
+        [
+          10,
+          23,
+          30
+        ],
+        [
+          10,
+          20,
+          34
+        ],
+        [
+          12,
+          20,
+          34
+        ],
+        [
+          10,
+          23,
+          34
+        ]
+      ],
+      "mapping": [
+        0,
+        1,
+        2,
+        0,
+        3,
+        4,
+        5,
+        3
+      ],
+      "volume": 12.0,
+      "connectivity": [
+        101,
+        203,
+        307,
+        101,
+        401,
+        503,
+        607,
+        401
+      ],
+      "expected_mass": 1.2000000000000002e-08,
+      "input_sha256": {
+        "prism6_0000.rad": "a56788a7ca87399468f46bc1ebfddc17ef87fa66fae568c92347150219b04042",
+        "prism6_0001.rad": "fa9f13162e1503fa8e6f6b8621b7ceb0c0a56a6fc651b9888062cefe0271efc0"
+      },
+      "executions": [
+        {
+          "label": "starter",
+          "returncode": 3,
+          "normal": false,
+          "seconds": 0.36556467699847417,
+          "binary_sha256": "0bbea37273656b270bea53cf756b115bcd5d9a8875a3c41283922a3b927719d1"
+        }
+      ],
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"<workspace>/audit/hybrid-native-f1/probe_native.py\", line 44, in run\n    assert entry['returncode']==0 and entry['normal'],text[-5000:]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: ************************************************************************\n**                                                                    **\n**                                                                    **\n**                        OpenCourant Starter                         **\n**                                                                    **\n**            Non-linear Finite Element Analysis Software             **\n**                                                                    **\n**                                                                    **\n**                                                                    **\n**                    Linux 64 bits, GNU compiler                     **\n**                      Double Precision Version                      **\n**                                                                    **\n**                                                                    **\n** CommitID: cb760c206e346eff12161a2268b134ef9d48a4ef                 **\n************************************************************************\n** OpenCourant Software                                               **\n** COPYRIGHT (C) 2026 Siemens                                         **\n** Licensed under GNU Affero General Public License.                  **\n** See License file.                                                  **\n************************************************************************\n \n\n .. UNITS SYSTEM                                                                         \n .. CONTROL VARIABLES                                                                    \n .. STARTER RUNNING ON    1 THREAD\n .. MATERIALS                                                                            \n .. NODES                                                                                \n .. PROPERTIES                                                                           \n .. 3D SOLID ELEMENTS                                                                    \n .. SUBSETS\n .. ELEMENT GROUPS\n .. PART GROUPS\n .. NODE GROUP\n .. BOUNDARY CONDITIONS                                                                  \n .. DOMAIN DECOMPOSITION\n .. ELEMENT GROUPS                                                                       \n .. ELEMENT BUFFER INITIALIZATION                                                        \n .. GEOMETRY PLOT FILE                                                                   \n .. PARALLEL RESTART FILES GENERATION                                                    \n ** ERROR TRAPPED : REPORT TO LISTING FILE\n\nERROR ID :    760\n\n\n RADIOSS STOP DUE TO INPUT ERROR\n\n",
+      "artifacts": {
+        "prism6_0000_0001.rst": {
+          "bytes": 264464,
+          "sha256": "edb504cdc3af321a544adca380be2f90ae1b1ac9b79c20fb0fcd68b939d7e2bb"
+        },
+        "starter.log": {
+          "bytes": 2672,
+          "sha256": "4d8f26465e26eea138a61a201e3d7bd2f7e6a61383190ec69771a3573650c64b"
+        },
+        "prism6_0000.rad": {
+          "bytes": 1433,
+          "sha256": "a56788a7ca87399468f46bc1ebfddc17ef87fa66fae568c92347150219b04042"
+        },
+        "prism6_0001.rad": {
+          "bytes": 51,
+          "sha256": "fa9f13162e1503fa8e6f6b8621b7ceb0c0a56a6fc651b9888062cefe0271efc0"
+        },
+        "prism6_0000.out": {
+          "bytes": 23051,
+          "sha256": "886010de3de86433645748a644ee0c9bec6fbd1a4a18080dae93f83921e6184c"
+        }
+      }
+    }
+  }
+}

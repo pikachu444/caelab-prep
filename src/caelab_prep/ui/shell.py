@@ -1,6 +1,8 @@
 """Small composable shell pieces with app-owned state and renderer injection."""
 
 from uuid import uuid4
+from pathlib import Path
+from tempfile import gettempdir
 
 from PySide6.QtCore import QObject, QRunnable, QSize, Qt, Signal
 from PySide6.QtGui import QPainter
@@ -9,6 +11,10 @@ from PySide6.QtWidgets import QDockWidget, QFrame, QHBoxLayout, QLabel, QMessage
 
 from ..application.contracts import OperationState
 
+
+def default_asset_directory():
+    """Reserve a unique name; the worker creates it only when work starts."""
+    return str(Path(gettempdir()) / "caelab-prep" / str(uuid4()))
 
 class FileEditCoordinator:
     """Ask before replacing/closing; only Save finishes and validates drafts."""

@@ -1,0 +1,2818 @@
+{
+  "select": [
+    {
+      "operation": 0,
+      "total_seconds": 0.6460726920049638,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.1358002666383982e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 1,
+          "sum_seconds": 1.1358002666383982e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 1,
+          "sum_seconds": 0.5416995790001238
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.5417422940008692
+        },
+        "MeshViewport.render.self": {
+          "calls": 1,
+          "sum_seconds": 0.5417422940008692
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.5423170520007261
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0005633999971905723
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03725042299629422
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03725042299629422
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.05713553699752083
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.01988511400122661
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.0022274360017036088
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 2,
+          "sum_seconds": 0.0022274360017036088
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.04075296399969375
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0019477730020298623
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.07368503600446275
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.0336272720087436
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0003945260032196529
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0003945260032196529
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.02156678499886766
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0012321909962338395
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.6390003360065748
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 0.0001185489963972941
+        }
+      }
+    },
+    {
+      "operation": 1,
+      "total_seconds": 0.6680176879963255,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.2870004866272211e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 1,
+          "sum_seconds": 1.2870004866272211e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 1,
+          "sum_seconds": 0.5828870840050513
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.5829252319963416
+        },
+        "MeshViewport.render.self": {
+          "calls": 1,
+          "sum_seconds": 0.5829252319963416
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.583551757998066
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0006136559968581423
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03371986700221896
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03371986700221896
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.051326339998922776
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.017606472996703815
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.0020817360054934397
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 2,
+          "sum_seconds": 0.0020817360054934397
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.03595786800724454
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0017654060065979138
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.05813599700195482
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.022115142994152848
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0002157159979105927
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0002157159979105927
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.018851642998924945
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007471889985026792
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.6620264659941313
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 0.0002231779944850132
+        }
+      }
+    },
+    {
+      "operation": 2,
+      "total_seconds": 0.6120140119965072,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.101599627872929e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 1,
+          "sum_seconds": 1.101599627872929e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 1,
+          "sum_seconds": 0.5137226990045747
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.5137557289999677
+        },
+        "MeshViewport.render.self": {
+          "calls": 1,
+          "sum_seconds": 0.5137557289999677
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.5144021449959837
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0006353999997372739
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03919588999997359
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03919588999997359
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.06032025301101385
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.02112436301104026
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.002163878998544533
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 2,
+          "sum_seconds": 0.002163878998544533
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.04314599500503391
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0019298569968668744
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06808282600104576
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.02556692799407756
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0006072680043871514
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0006072680043871514
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.024253859999589622
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0033340669979224913
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.6086164379958063
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 0.00029204099701019004
+        }
+      }
+    },
+    {
+      "operation": 3,
+      "total_seconds": 0.779035154999292,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.1818003258667886e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 1,
+          "sum_seconds": 1.1818003258667886e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 1,
+          "sum_seconds": 0.6629245030053426
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.6629600769956596
+        },
+        "MeshViewport.render.self": {
+          "calls": 1,
+          "sum_seconds": 0.6629600769956596
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.6637322130045504
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007603180056321435
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.04933509199327091
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.04933509199327091
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.07065832800435601
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.0213232360110851
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.0024198569954023696
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 2,
+          "sum_seconds": 0.0024198569954023696
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.04221302000223659
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0021295990009093657
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.08511848600028316
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.030886835003911983
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0009287339998991229
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0009287339998991229
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.020622948999516666
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.00072626699693501
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.7716760660041473
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 0.0001942329981829971
+        }
+      }
+    },
+    {
+      "operation": 4,
+      "total_seconds": 0.7569386930044857,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.5443001757375896e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 1,
+          "sum_seconds": 1.5443001757375896e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 1,
+          "sum_seconds": 0.6621151049985201
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.6621542840002803
+        },
+        "MeshViewport.render.self": {
+          "calls": 1,
+          "sum_seconds": 0.6621542840002803
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.6629394810006488
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007697539986111224
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03572449700004654
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03572449700004654
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.05580477500188863
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.02008027800184209
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.002185171004384756
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 2,
+          "sum_seconds": 0.002185171004384756
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.03846841199992923
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0017418520001228899
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06291684099414852
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.023342848988249898
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0007126469936338253
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007126469936338253
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.019805274001555517
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0008185970000340603
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.7477709719969425
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 0.00022560000797966495
+        }
+      }
+    },
+    {
+      "operation": 5,
+      "total_seconds": 0.6790584089976619,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.2168995453976095e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 1,
+          "sum_seconds": 1.2168995453976095e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 1,
+          "sum_seconds": 0.5843409410008462
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.5843736410024576
+        },
+        "MeshViewport.render.self": {
+          "calls": 1,
+          "sum_seconds": 0.5843736410024576
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.5850295519994688
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.000643742001557257
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.034807120995537844
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.034807120995537844
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.054402847003075294
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.01959572600753745
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.002066301000013482
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 2,
+          "sum_seconds": 0.002066301000013482
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.0377405409963103
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0017097519885282964
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06269550699653337
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.02394196500245016
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0007906839964562096
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007906839964562096
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.019097143995168153
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007155819985200651
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.668986701995891
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 0.00033001900737872347
+        }
+      }
+    },
+    {
+      "operation": 6,
+      "total_seconds": 0.7327988560064114,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.242900179931894e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 1,
+          "sum_seconds": 1.242900179931894e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 1,
+          "sum_seconds": 0.6252329339986318
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.6252677369993762
+        },
+        "MeshViewport.render.self": {
+          "calls": 1,
+          "sum_seconds": 0.6252677369993762
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.6260911200006376
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0008109539994620718
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.04372906999924453
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.04372906999924453
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.06614274400635622
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.022413674007111695
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.00301691799541004
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 2,
+          "sum_seconds": 0.00301691799541004
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.04900663500302471
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0022154690013849176
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.07034106900391635
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.02537822399608558
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.000931167000089772
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.000931167000089772
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.026030970002466347
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0009202200017170981
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.7249434670011397
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 0.0002476049994584173
+        }
+      }
+    },
+    {
+      "operation": 7,
+      "total_seconds": 0.6665156700037187,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.5424004232045263e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 1,
+          "sum_seconds": 1.5424004232045263e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 1,
+          "sum_seconds": 0.5626773449985194
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.5627138799973181
+        },
+        "MeshViewport.render.self": {
+          "calls": 1,
+          "sum_seconds": 0.5627138799973181
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.5634700720038381
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007407680022879504
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03822391100402456
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03822391100402456
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.059305072005372494
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.021081161001347937
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.002058149992080871
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 2,
+          "sum_seconds": 0.002058149992080871
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.04275336399587104
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.002370510992477648
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06567957299557747
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.02529087199945934
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0025356910045957193
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0025356910045957193
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.02325113900587894
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0008612910096417181
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.6561068139999406
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 0.0002151549924747087
+        }
+      }
+    }
+  ],
+  "scalar": [
+    {
+      "operation": 0,
+      "total_seconds": 0.11170052899979055,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0001718499988783151
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.0001718499988783151
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.009820687002502382
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.009820687002502382
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0001763969994499348
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0001763969994499348
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03981189100886695
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03981189100886695
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.06210412999644177
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.02229223898757482
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0011173180027981289
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0011173180027981289
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.04322707000392256
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.002575171005446464
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0703580960034742
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.025106367000262253
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.02271699200355215
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.002172102002077736
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.6766003682278097e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 1.6766003682278097e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.10349828600010369
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00023749798856442794
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.10367575400596252
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 0.00017746800585882738
+        }
+      }
+    },
+    {
+      "operation": 1,
+      "total_seconds": 0.12043873099901248,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 4.0289996832143515e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 4.0289996832143515e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.008918994994019158
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.008918994994019158
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0001504869942436926
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0001504869942436926
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.04668686199875083
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.04668686199875083
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.07110125899635023
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.024414396997599397
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0011220250016776845
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0011220250016776845
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.05240122500254074
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0023848020064178854
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.07727814599638805
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.028563641993969213
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.02681613599997945
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.000922553997952491
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 2.160299482056871e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 2.160299482056871e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.11339748699538177
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00017183001909870654
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.11346567099826643
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 6.818400288466364e-05
+        }
+      }
+    },
+    {
+      "operation": 2,
+      "total_seconds": 0.10726525200152537,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 4.727199848275632e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 4.727199848275632e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.010235514004307333
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.010235514004307333
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00020548000611597672
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00020548000611597672
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03751200399710797
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03751200399710797
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.05806585900427308
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.02055385500716511
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.001450010997359641
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.001450010997359641
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.039953594001417514
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0019669419998535886
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06913943000108702
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.028051510998921003
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.02129880899883574
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0009039159995154478
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.5933997929096222e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 1.5933997929096222e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.10110346400324488
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00016102499648695812
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.10117086499667494
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 6.740099343005568e-05
+        }
+      }
+    },
+    {
+      "operation": 3,
+      "total_seconds": 0.10332221499993466,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 4.28749990533106e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 4.28749990533106e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.008474864000163507
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.008474864000163507
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0001547030042274855
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0001547030042274855
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03930682800273644
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03930682800273644
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.059473034998518415
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.020166206995781977
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.001141945002018474
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.001141945002018474
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.040646820998517796
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.001923226001963485
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06773371600138489
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.025283449998823926
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.02087257600214798
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007846360022085719
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.630400220165029e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 1.630400220165029e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09744628699991154
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.0001512489907327108
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09754663900093874
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 0.0001003520010272041
+        }
+      }
+    },
+    {
+      "operation": 4,
+      "total_seconds": 0.10086475199932465,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 4.160300159128383e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 4.160300159128383e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.008469585998682305
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.008469585998682305
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00013631600450025871
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00013631600450025871
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.039091823004127946
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.039091823004127946
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.05956935100402916
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.020477527999901213
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0010566359997028485
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0010566359997028485
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.040424735998385586
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0019745839963434264
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06740554099815199
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.02411893099633744
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.020063202995515894
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007492419972550124
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.7116006347350776e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 1.7116006347350776e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09627129300497472
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00013792800018563867
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09636192899779417
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 9.063599281944335e-05
+        }
+      }
+    },
+    {
+      "operation": 5,
+      "total_seconds": 0.09721676100161858,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 4.0962004277389497e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 4.0962004277389497e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.007352818996878341
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.007352818996878341
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00013659599790116772
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00013659599790116772
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.036769323000044096
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.036769323000044096
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.05581402700045146
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.019044704000407364
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0010788799991132692
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0010788799991132692
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.0382136249972973
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.002354055999603588
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06356023099942831
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.023565614996186923
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.02005317699513398
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0008008299992070533
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00025427399668842554
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00025427399668842554
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09155358399584657
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00015552500553894788
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09161444599885726
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 6.086200301069766e-05
+        }
+      }
+    },
+    {
+      "operation": 6,
+      "total_seconds": 0.10033493200171506,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00011269999959040433
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00011269999959040433
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.007903781995992176
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.007903781995992176
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00014956600352888927
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00014956600352888927
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03757327800121857
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03757327800121857
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.05825919099879684
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.02068591299757827
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0012739950034301728
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0012739950034301728
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.040531127000576816
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0020195220058667473
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06548465800005943
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.024273943992739078
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.021335814999474678
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.000993820998701267
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.6085003153420985e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 1.6085003153420985e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0951717819989426
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.0001691759971436113
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09523334400000749
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 6.156200106488541e-05
+        }
+      }
+    },
+    {
+      "operation": 7,
+      "total_seconds": 0.10249777999706566,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 4.2343999666627496e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 4.2343999666627496e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.008621565997600555
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.008621565997600555
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0002466429941705428
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0002466429941705428
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03798951600037981
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03798951600037981
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.059134093004104216
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.021144577003724407
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.001189116999739781
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.001189116999739781
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.04041134499857435
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0020842779922531918
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.067257085996971
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.025185361999319866
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.021195804001763463
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0008600400033174083
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.7064994608517736e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 1.7064994608517736e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09752420599397738
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00014369800919666886
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09758452700043563
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 6.032100645825267e-05
+        }
+      }
+    }
+  ],
+  "undo": [
+    {
+      "operation": 0,
+      "total_seconds": 0.10276443199836649,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 8.221399912144989e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 8.221399912144989e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.008286149000923615
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.008286149000923615
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00013992199819767848
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00013992199819767848
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.039340176997939125
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.039340176997939125
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.06068969400803326
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.021349517010094132
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0010905380040640011
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0010905380040640011
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.040916600002674386
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0018460299979778938
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06687429700104985
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.02421442299237242
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.021819156005221885
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.000852768003824167
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00012278500071261078
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00012278500071261078
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09749480100435903
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.0001702779991319403
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09756661900610197
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 7.18180017429404e-05
+        }
+      }
+    },
+    {
+      "operation": 1,
+      "total_seconds": 0.10297981400071876,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 4.270500357961282e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 4.270500357961282e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.007961198993143626
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.007961198993143626
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00014270599785959348
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00014270599785959348
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03825739199965028
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03825739199965028
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.05980811200424796
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.02155072000459768
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.001028793994919397
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.001028793994919397
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.04177507600252284
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.001953209997736849
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06770209899696056
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.02472283400129527
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.020500083002843894
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.000689232001604978
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.7295998986810446e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 1.7295998986810446e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09651612200104864
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00015003400767454877
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09657664300175384
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 6.052100070519373e-05
+        }
+      }
+    },
+    {
+      "operation": 2,
+      "total_seconds": 0.1224716719952994,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 4.063199594384059e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 4.063199594384059e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.008349815005203709
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.008349815005203709
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00014205500337993726
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00014205500337993726
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.046532488988304976
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.046532488988304976
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.07210214198858012
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.02556965300027514
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0014842219970887527
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0014842219970887527
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.05247927799791796
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0026730170066002756
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0806335909946938
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.030684381003084127
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.027212494998821057
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0009023239981615916
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 2.0211002265568823e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 2.0211002265568823e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.11656213300011586
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00016333399980794638
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.11662484900443815
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 6.271600432228297e-05
+        }
+      }
+    },
+    {
+      "operation": 3,
+      "total_seconds": 0.10946036899986211,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 5.064599827164784e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 5.064599827164784e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.010846186996786855
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.010846186996786855
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.000245210001594387
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.000245210001594387
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03986326699669007
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03986326699669007
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.06212729500111891
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.022264028004428837
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0014588439953513443
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0014588439953513443
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.04092664500058163
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0018372269987594336
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.07178866199683398
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.026164540002355352
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.02053767000325024
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007384260024991818
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.615499786566943e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 1.615499786566943e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.10369193399674259
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00020740400213981047
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.10376427300070645
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 7.233900396386161e-05
+        }
+      }
+    },
+    {
+      "operation": 4,
+      "total_seconds": 0.09897604899742873,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 5.081699782749638e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 5.081699782749638e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.007337326002016198
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.007337326002016198
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00014441800158238038
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00014441800158238038
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.037325371988117695
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.037325371988117695
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.05758102700201562
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.020255655013897922
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0011765780000132509
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0011765780000132509
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.04040059999533696
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0019231659898650832
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0646388199966168
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.02443914300238248
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.021185388002777472
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007042940051178448
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.650500053074211e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 1.650500053074211e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09353951500088442
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00016624099953332916
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09360908099915832
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 6.956599827390164e-05
+        }
+      }
+    },
+    {
+      "operation": 5,
+      "total_seconds": 0.10095904499758035,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 4.190400068182498e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 4.190400068182498e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.008088961003522854
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.008088961003522854
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00013190000026952475
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00013190000026952475
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03794939701037947
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03794939701037947
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.05883409100351855
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.02088469399313908
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0011972590000368655
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0011972590000368655
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.041227670008083805
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0019223250055802055
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06475497599603841
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.023725634993752465
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.021779685994260944
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0008553519874112681
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 2.0681000023614615e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 2.0681000023614615e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09501926100347191
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00020115300867473707
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09511258199927397
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 9.332099580205977e-05
+        }
+      }
+    },
+    {
+      "operation": 6,
+      "total_seconds": 0.10087473800376756,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 4.199400427751243e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 4.199400427751243e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.007338397001149133
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.007338397001149133
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0002408239961368963
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.0002408239961368963
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03896690400870284
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03896690400870284
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.05983582400222076
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.02086891999351792
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0010518290000618435
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0010518290000618435
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.042275621999579016
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0018763139960356057
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0662240949968691
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.024092129999189638
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.02143179099948611
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.0007997889988473617
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.9849998352583498e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 1.9849998352583498e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09545432800223352
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.0001573770059621893
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09554411400313256
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 8.978600089903921e-05
+        }
+      }
+    },
+    {
+      "operation": 7,
+      "total_seconds": 0.10260126600041986,
+      "components": {
+        "MainWindow._present_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 8.756299939705059e-05
+        },
+        "MainWindow._present_document.self": {
+          "calls": 1,
+          "sum_seconds": 8.756299939705059e-05
+        },
+        "MainWindow._refresh_tree.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.007506822003051639
+        },
+        "MainWindow._refresh_tree.self": {
+          "calls": 1,
+          "sum_seconds": 0.007506822003051639
+        },
+        "MainWindow._restore_approved_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.00015872999938437715
+        },
+        "MainWindow._restore_approved_selection.self": {
+          "calls": 1,
+          "sum_seconds": 0.00015872999938437715
+        },
+        "RadProvider._assignment_fields.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.03949792699859245
+        },
+        "RadProvider._assignment_fields.self": {
+          "calls": 3,
+          "sum_seconds": 0.03949792699859245
+        },
+        "RadProvider.properties.inclusive": {
+          "calls": 3,
+          "sum_seconds": 0.060058240000216756
+        },
+        "RadProvider.properties.self": {
+          "calls": 3,
+          "sum_seconds": 0.02056031300162431
+        },
+        "MainWindow._refresh_target_roles.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.0011034370036213659
+        },
+        "MainWindow._refresh_target_roles.self": {
+          "calls": 1,
+          "sum_seconds": 0.0011034370036213659
+        },
+        "RadProvider.available_operations.inclusive": {
+          "calls": 2,
+          "sum_seconds": 0.043092466999951284
+        },
+        "RadProvider.available_operations.self": {
+          "calls": 2,
+          "sum_seconds": 0.0023118030003388412
+        },
+        "MainWindow._refresh_fields.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.06457288099772995
+        },
+        "MainWindow._refresh_fields.self": {
+          "calls": 1,
+          "sum_seconds": 0.024642931995913386
+        },
+        "MainWindow._refresh_actions.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.024594128000899218
+        },
+        "MainWindow._refresh_actions.self": {
+          "calls": 1,
+          "sum_seconds": 0.001050596998538822
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 1,
+          "sum_seconds": 1.723600144032389e-05
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 1,
+          "sum_seconds": 1.723600144032389e-05
+        },
+        "MainWindow.refresh_document.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09707983399857767
+        },
+        "MainWindow.refresh_document.self": {
+          "calls": 1,
+          "sum_seconds": 0.00014247399667510763
+        },
+        "MainWindow._session_changed.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.09713821199693484
+        },
+        "MainWindow._session_changed.self": {
+          "calls": 1,
+          "sum_seconds": 5.8377998357173055e-05
+        }
+      }
+    }
+  ],
+  "hide_show": [
+    {
+      "operation": 0,
+      "total_seconds": 1.3131660310027655,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 2,
+          "sum_seconds": 2.6101006369572133e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 2,
+          "sum_seconds": 2.6101006369572133e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 2,
+          "sum_seconds": 1.3022269729917753
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.3022966879943851
+        },
+        "MeshViewport.render.self": {
+          "calls": 2,
+          "sum_seconds": 1.3022966879943851
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.3036908240028424
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 2,
+          "sum_seconds": 0.0013680350020877086
+        },
+        "MeshViewport._apply_visibility.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.3040975889962283
+        },
+        "MeshViewport._apply_visibility.self": {
+          "calls": 2,
+          "sum_seconds": 0.00040676499338587746
+        }
+      }
+    },
+    {
+      "operation": 1,
+      "total_seconds": 1.3166796380028245,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 2,
+          "sum_seconds": 2.8923001082148403e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 2,
+          "sum_seconds": 2.8923001082148403e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 2,
+          "sum_seconds": 1.3108862649969524
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.3109522850063513
+        },
+        "MeshViewport.render.self": {
+          "calls": 2,
+          "sum_seconds": 1.3109522850063513
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.3123903079977026
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 2,
+          "sum_seconds": 0.0014090999902691692
+        },
+        "MeshViewport._apply_visibility.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.315869615005795
+        },
+        "MeshViewport._apply_visibility.self": {
+          "calls": 2,
+          "sum_seconds": 0.0034793070080922917
+        }
+      }
+    },
+    {
+      "operation": 2,
+      "total_seconds": 1.221374371998536,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 2,
+          "sum_seconds": 2.955499803647399e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 2,
+          "sum_seconds": 2.955499803647399e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 2,
+          "sum_seconds": 1.2186841669899877
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.2187520090010366
+        },
+        "MeshViewport.render.self": {
+          "calls": 2,
+          "sum_seconds": 1.2187520090010366
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.2201193250002689
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 2,
+          "sum_seconds": 0.0013377610011957586
+        },
+        "MeshViewport._apply_visibility.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.2204747319992748
+        },
+        "MeshViewport._apply_visibility.self": {
+          "calls": 2,
+          "sum_seconds": 0.0003554069990059361
+        }
+      }
+    },
+    {
+      "operation": 3,
+      "total_seconds": 1.2096983649971662,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 2,
+          "sum_seconds": 2.989500353578478e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 2,
+          "sum_seconds": 2.989500353578478e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 2,
+          "sum_seconds": 1.207139157995698
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.2071987579984125
+        },
+        "MeshViewport.render.self": {
+          "calls": 2,
+          "sum_seconds": 1.2071987579984125
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.2085982130083721
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 2,
+          "sum_seconds": 0.0013695600064238533
+        },
+        "MeshViewport._apply_visibility.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.2089336099961656
+        },
+        "MeshViewport._apply_visibility.self": {
+          "calls": 2,
+          "sum_seconds": 0.00033539698779350147
+        }
+      }
+    },
+    {
+      "operation": 4,
+      "total_seconds": 1.1441383420024067,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 2,
+          "sum_seconds": 2.8051996196154505e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 2,
+          "sum_seconds": 2.8051996196154505e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 2,
+          "sum_seconds": 1.140657623000152
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.1407220410037553
+        },
+        "MeshViewport.render.self": {
+          "calls": 2,
+          "sum_seconds": 1.1407220410037553
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.1419866919895867
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 2,
+          "sum_seconds": 0.0012365989896352403
+        },
+        "MeshViewport._apply_visibility.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.1422766510004294
+        },
+        "MeshViewport._apply_visibility.self": {
+          "calls": 2,
+          "sum_seconds": 0.0002899590108427219
+        }
+      }
+    },
+    {
+      "operation": 5,
+      "total_seconds": 1.2164535010015243,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 2,
+          "sum_seconds": 2.846199640771374e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 2,
+          "sum_seconds": 2.846199640771374e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 2,
+          "sum_seconds": 1.2140847320042667
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.2141496899930644
+        },
+        "MeshViewport.render.self": {
+          "calls": 2,
+          "sum_seconds": 1.2141496899930644
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.2158324830015772
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 2,
+          "sum_seconds": 0.0016543310121051036
+        },
+        "MeshViewport._apply_visibility.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.2161548999938532
+        },
+        "MeshViewport._apply_visibility.self": {
+          "calls": 2,
+          "sum_seconds": 0.00032241699227597564
+        }
+      }
+    },
+    {
+      "operation": 6,
+      "total_seconds": 1.1757697869979893,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 2,
+          "sum_seconds": 2.8985006792936474e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 2,
+          "sum_seconds": 2.8985006792936474e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 2,
+          "sum_seconds": 1.1733854260019143
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.1734622709991527
+        },
+        "MeshViewport.render.self": {
+          "calls": 2,
+          "sum_seconds": 1.1734622709991527
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.1748562559951097
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 2,
+          "sum_seconds": 0.0013649999891640618
+        },
+        "MeshViewport._apply_visibility.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.1751974130020244
+        },
+        "MeshViewport._apply_visibility.self": {
+          "calls": 2,
+          "sum_seconds": 0.0003411570069147274
+        }
+      }
+    },
+    {
+      "operation": 7,
+      "total_seconds": 1.2708944690020871,
+      "components": {
+        "MeshViewport._selection_cell_indices.inclusive": {
+          "calls": 2,
+          "sum_seconds": 2.6208996132481843e-05
+        },
+        "MeshViewport._selection_cell_indices.self": {
+          "calls": 2,
+          "sum_seconds": 2.6208996132481843e-05
+        },
+        "vtkRenderWindow.frame": {
+          "calls": 2,
+          "sum_seconds": 1.268969010001456
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.2691167339944514
+        },
+        "MeshViewport.render.self": {
+          "calls": 2,
+          "sum_seconds": 1.2691167339944514
+        },
+        "MeshViewport.set_selection.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.270008040999528
+        },
+        "MeshViewport.set_selection.self": {
+          "calls": 2,
+          "sum_seconds": 0.0008650980089441873
+        },
+        "MeshViewport._apply_visibility.inclusive": {
+          "calls": 2,
+          "sum_seconds": 1.2703772870081593
+        },
+        "MeshViewport._apply_visibility.self": {
+          "calls": 2,
+          "sum_seconds": 0.00036924600863130763
+        }
+      }
+    }
+  ],
+  "render": [
+    {
+      "operation": 0,
+      "total_seconds": 0.5822450060004485,
+      "components": {
+        "vtkRenderWindow.frame": {
+          "calls": 1,
+          "sum_seconds": 0.5821117750019766
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.5821485100022983
+        },
+        "MeshViewport.render.self": {
+          "calls": 1,
+          "sum_seconds": 0.5821485100022983
+        }
+      }
+    },
+    {
+      "operation": 1,
+      "total_seconds": 0.5352247490009177,
+      "components": {
+        "vtkRenderWindow.frame": {
+          "calls": 1,
+          "sum_seconds": 0.5350998010035255
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.5351346339957672
+        },
+        "MeshViewport.render.self": {
+          "calls": 1,
+          "sum_seconds": 0.5351346339957672
+        }
+      }
+    },
+    {
+      "operation": 2,
+      "total_seconds": 0.49293560999649344,
+      "components": {
+        "vtkRenderWindow.frame": {
+          "calls": 1,
+          "sum_seconds": 0.4928112420020625
+        },
+        "MeshViewport.render.inclusive": {
+          "calls": 1,
+          "sum_seconds": 0.4928491790051339
+        },
+        "MeshViewport.render.self": {
+          "calls": 1,
+          "sum_seconds": 0.4928491790051339
+        }
+      }
+    }
+  ]
+}

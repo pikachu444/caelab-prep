@@ -175,12 +175,13 @@ class DockArrangement:
     output_below_viewport: bool = False
     outline_fraction: float | None = None
     property_fraction: float = .27
+    property_minimum: int = 250
 
     def install(self, b: ReferenceBindings):
         b.model_dock.setWindowTitle(self.model_title)
         b.properties_dock.setWindowTitle(self.property_title)
         b.model_dock.setMinimumWidth(170)
-        b.properties_dock.setMinimumWidth(250)
+        b.properties_dock.setMinimumWidth(self.property_minimum)
         b.tree.setRootIsDecorated(True)
         b.tree.setIndentation(16)
         b.tree.setColumnHidden(1, True)
@@ -316,6 +317,8 @@ class ReferenceAdapter:
 
     def install(self, b: ReferenceBindings, *, commands=True):
         b.window.setStyleSheet(b.window.styleSheet() + reference_style(self.key))
+        if self.key == "beidprep":
+            b.window.setStyleSheet(b.window.styleSheet() + "QMainWindow::separator { width: 2px; height: 2px; }")
         b.editor.set_presentation(profile(self.key).property_mode)
         if commands:
             self.commands.install(b)
@@ -367,8 +370,8 @@ class ReferenceAdapter:
             width = max(800, b.window.width())
             tree_width = round(width * .17)
             if self.key == "beidprep":
-                tree_width = min(420, tree_width)
-            property_minimum = 250 if self.key == "beidprep" else 320
+                tree_width = max(175, min(210, round(width * .13)))
+            property_minimum = self.docks.property_minimum if self.key == "beidprep" else 320
             b.window.resizeDocks([b.model_dock, b.properties_dock],
                 [tree_width, max(property_minimum, round(width * self.docks.property_fraction))], Qt.Orientation.Horizontal)
         else:
@@ -398,5 +401,5 @@ ADAPTERS = {
     "nfx": ReferenceAdapter("nfx", CommandSurface("ribbon", (("파일", ("Document", "History")), ("모델", ("Material", "Section", "Assignment", "Object")), ("선택", ("Selection",)), ("조건", ("Curve", "Conditions")))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "재료"), CurveArrangement("stacked")),
     "meshfree": ReferenceAdapter("meshfree", CommandSurface("ribbon", (("Home", ("Document", "History")), ("Material", ("Material", "Section", "Assignment", "Object")), ("Selection", ("Selection",)), ("Analysis", ("Curve", "Conditions")))), DockArrangement("Model", "Properties"), EditorInteraction("dialog", "Material"), CurveArrangement("pages", ("Spreadsheet", "Graph"))),
     "naksha": ReferenceAdapter("naksha", CommandSurface("ribbon", (("Materials", ("Material", "Section", "Assignment", "Object")), ("Selections", ("Selection",)), ("Conditions", ("Curve", "Conditions"))), quick_groups=("Document", "History")), DockArrangement("Outline", "Details", outline_fraction=.57), EditorInteraction("details"), CurveArrangement("side"), "global"),
-    "beidprep": ReferenceAdapter("beidprep", CommandSurface("compact", (("MODEL", ("Document", "History", "Material", "Section", "Assignment", "Object")), ("SET", ("Selection",)), ("CONDITION", ("Curve", "Conditions")))), DockArrangement("MODEL", "FORM", adjacent=True, source_title="TEXT", property_fraction=1/6), EditorInteraction("adjacent"), CurveArrangement("stacked"), "bottom"),
+    "beidprep": ReferenceAdapter("beidprep", CommandSurface("compact", (("MODEL", ("Document", "History", "Material", "Section", "Assignment", "Object")), ("SET", ("Selection",)), ("CONDITION", ("Curve", "Conditions")))), DockArrangement("MODEL", "FORM", adjacent=True, source_title="TEXT", property_fraction=.16, property_minimum=240), EditorInteraction("adjacent"), CurveArrangement("stacked"), "bottom"),
 }

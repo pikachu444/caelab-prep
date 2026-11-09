@@ -452,8 +452,8 @@ class RadProvider:
                     fields += (PropertySpec("thickness", "Shell thickness", 0.0, unit="input deck", minimum=0),)
                 elif key == "solid_section.create":
                     fields += (PropertySpec("element_family", "Element formulation", "tetra4", kind="choice",
-                                            choices=("tetra4", "tetra10"),
-                                            choice_labels=("Linear Tet4", "Straight Tet10 (LAW1)")),)
+                                            choices=("tetra4", "tetra10", "hexa8"),
+                                            choice_labels=("Linear Tet4", "Straight Tet10 (LAW1)", "Linear Hex8")),)
                     description += " Choose Tet10 for a prepared straight-edge quadratic tetrahedral mesh. Use a separate part for each element family."
                 elif key == "coordinate_system.create":
                     fields += self._coordinate_fields()

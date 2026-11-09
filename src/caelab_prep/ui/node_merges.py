@@ -26,8 +26,7 @@ class NodeMergeDialog(QDialog):
         area = self.screen().availableGeometry()
         self.resize(min(960, area.width() - 40), min(760, area.height() - 60))
         column = QVBoxLayout(self)
-        introduction = QLabel("Choose each removed node and its keeper. Keeper coordinates stay fixed. "
-            "Beam directions, connections and condition targets can change.")
+        introduction = QLabel("Merge explicit node pairs; keeper coordinates stay fixed.")
         introduction.setWordWrap(True); column.addWidget(introduction)
         self.tabs = QTabWidget(); column.addWidget(self.tabs, 1)
         page = QWidget(); body = QVBoxLayout(page)
@@ -261,6 +260,7 @@ class NodeMergeDialog(QDialog):
                 "The target changes below are projections only. Apply merge keeps the original target declarations stale.", "", target_review_text(self.session, plan, group_heading=False)))
             self.preview.setPlainText("\n".join(lines)); self.tabs.setCurrentIndex(1)
             self.status.setText("Review the complete merge before Apply." if plan["admissible"] else "Unsupported projected condition targets block Apply. Revise the node pairs.")
+            self.reviewed.setChecked(plan["admissible"])
             self._sync()
         except (PrepError, ValueError) as exc: self.status.setText(str(getattr(exc, "message", exc)))
 

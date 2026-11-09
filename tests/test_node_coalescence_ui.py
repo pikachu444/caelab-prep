@@ -57,7 +57,7 @@ def test_all_presentations_review_merge_then_explicit_coalescence_one_undo_and_r
     assert "[6.0, 0.0, 0.0] → [3.0, 0.0, 0.0]" in text
     assert "historical node ownership" in text and "empty overlap list" in text
     assert "Declared initial velocity" in text and dialog.tabs.currentIndex() == 3
-    dialog.reconnect_reviewed.setChecked(True)
+    assert dialog.reconnect_reviewed.isChecked()
     assert dialog.reconnect_button.isEnabled() and state(session) == before
     dialog.reconnect_button.click(); pump()
     assert session.document.revision == before[0] + 1 and session.group_members(group)["member_ids"] == [4]

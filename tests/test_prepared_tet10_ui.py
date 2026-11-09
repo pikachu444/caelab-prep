@@ -175,7 +175,7 @@ def test_common_solid_section_form_creates_explicit_tet10_in_one_undo(presentati
     combo = panel.editor.editors["element_family"]
     assert combo.currentData() == "tetra4"
     assert [(combo.itemText(i), combo.itemData(i)) for i in range(combo.count())] == [
-        ("Linear Tet4", "tetra4"), ("Straight Tet10 (LAW1)", "tetra10")]
+        ("Linear Tet4", "tetra4"), ("Straight Tet10 (LAW1)", "tetra10"), ("Linear Hex8", "hexa8")]
     name = panel.editor.editors["name"]
     name.setFocus(); name.selectAll(); QTest.keyClicks(name, "UI prepared Tet10 section")
     combo.setCurrentIndex(combo.findData("tetra10")); pump()

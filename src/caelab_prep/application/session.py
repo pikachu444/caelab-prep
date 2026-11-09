@@ -435,6 +435,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                                            element_family=element_family),
                                            f"Create {element_family} property", expected_revision)
 
+    create_solid_section = create_solid_property
+
     def _mesh_replacement_state(self, part_ids, *, allow_stale=False):
         """Remove only proven adoption-owned geometry; protect external node use."""
         from ..radioss.assembly import REFERENCE_FREE_PAIRS, element_node_references, element_part_reference, inspect

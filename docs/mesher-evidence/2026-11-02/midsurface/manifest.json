@@ -1,0 +1,74 @@
+{
+  "paired_offset.py": {
+    "bytes": 9254,
+    "sha256": "7b0db8883165495187dec350d4b67d2cb9483c2bcad5770514b2991e9fd2e9b5"
+  },
+  "run_f1.py": {
+    "bytes": 10473,
+    "sha256": "b77f7960c7b7a335ac0ca39d8699d487e833fa0f46a6ef6e39c5fbfab2da35b1"
+  },
+  "render_geometry.py": {
+    "bytes": 1721,
+    "sha256": "d2ea6b052862b8908fb459321b5cd95a3fd1e6556f9d4ac1cdc4601fdc24623e"
+  },
+  "HANDOFF.md": {
+    "bytes": 8085,
+    "sha256": "b32e845f082ca091c69f331156400c0c98b4d62e97c982c46eb10c8626ff547e"
+  },
+  "execution.json": {
+    "bytes": 102,
+    "sha256": "a7d3fe0c47133bd80e185495da66e7d9b360538142f6f41282cf8cdd618c0457"
+  },
+  "results/result.json": {
+    "bytes": 12128,
+    "sha256": "e39d171279fe4b09dd3f463c91fbd2a6c0fff9e87136f8219596a524ec2760fb"
+  },
+  "results/plate/source.brep": {
+    "bytes": 2717,
+    "sha256": "fcd5c3b19cc01fe19bd4387debe66b4ebddfa9c67b3ba6e8994b6dc9150c8499"
+  },
+  "results/plate/candidate.brep": {
+    "bytes": 941,
+    "sha256": "ab52d09810c0c40c795128ed92e9f6c227641fc4994d0f451550993ad3592dda"
+  },
+  "results/rounded_L/source.brep": {
+    "bytes": 6020,
+    "sha256": "48d59575dd900a7c6a4f175c8eb53c7fe899b0d2ffbe3d366c4fcd4cc7941bfe"
+  },
+  "results/rounded_L/candidate.brep": {
+    "bytes": 2744,
+    "sha256": "a10a49181632a895f67d4266632d7cedb4c0d9dcfc62868c797dd7904e3699ed"
+  },
+  "results/plate/quarter-reference.brep": {
+    "bytes": 959,
+    "sha256": "6f1eb22182d707d8e1f5df352aeb9c44a8a17649da8bb259de50d32be2384c8d"
+  },
+  "results/plate/explicit-face-selection.json": {
+    "bytes": 1534,
+    "sha256": "c646daa781efe89823860eb58d043044d968972f1ffe7d6b5a4f9739c3368b7d"
+  },
+  "results/rounded_L/explicit-face-selection.json": {
+    "bytes": 2972,
+    "sha256": "295db1a15682d4963e19cc8b39cc43adbd7fb7c10b6316c78e4543ce631fdb02"
+  },
+  "results/geometry-preview.png": {
+    "bytes": 447280,
+    "sha256": "2421b301d2f572759de98d389cff28b2419e01e178285ce6d103cedc489036ce"
+  },
+  "probe_offsets.py": {
+    "bytes": 1496,
+    "sha256": "52f82b712b081493cce4329f9627dc918bee9b6bb1787215fc487246ec5a08f0"
+  },
+  "probe-offsets.log": {
+    "bytes": 821,
+    "sha256": "902a67dc839ffadd3b12aa037918467516e622005f36df7c0dc959514f8da3b8"
+  },
+  "probe_bend.py": {
+    "bytes": 1260,
+    "sha256": "ad97f655717f8ba5212aa67609df97b32f8435eb46260e4908c608724077554d"
+  },
+  "probe-bend.log": {
+    "bytes": 1313,
+    "sha256": "fa65b568172e48ceb392141ab21143159fc301cc4263d2aaf0ca734bf456a917"
+  }
+}

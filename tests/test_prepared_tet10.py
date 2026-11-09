@@ -64,7 +64,7 @@ def test_shared_section_operation_offers_and_commits_explicit_tet10():
     provider = RadProvider(session)
     spec = provider.operation_spec('solid_section.create')
     field = next(field for field in spec.fields if field.name == 'element_family')
-    assert field.value == 'tetra4' and field.choices == ('tetra4', 'tetra10')
+    assert field.value == 'tetra4' and field.choices == ('tetra4', 'tetra10', 'hexa8')
     provider.execute_operation(OperationRequest(spec.key, {'name': 'Quadratic', 'native_id': 0,
         'element_family': 'tetra10'}, spec.document_id, spec.expected_revision))
     card = next(card for card in session.list_cards() if card['keyword'].startswith('/PROP/SOLID/'))

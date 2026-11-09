@@ -60,9 +60,11 @@ Qt XCB와 OpenGL 런타임, 한글 글꼴이 필요합니다. Ubuntu 의존성�
 
 ### MODEL·FORM·TEXT 작업 공간
 
-기본 CourantPrep 창과 `compare --rad`의 BeidPrep 표현은 MODEL 옆에 FORM/TEXT를 배치합니다. **File / Edit / Model / Mesh / Conditions / View** 메뉴와 상단 기능 아이콘은 같은 명령을 사용합니다. 재료·shell/solid 단면 생성, 복사·삭제·할당은 **Model**에서 선택합니다. 아이콘이 좁은 창에서 접혀도 메뉴로 접근할 수 있습니다. 첫 실행은 최대화하며 이후에는 저장된 창 크기와 도킹 배치를 복원합니다.
+기본 CourantPrep 창과 `compare --rad`의 BeidPrep 표현은 MODEL 옆에 FORM/TEXT를 배치합니다. **File / Edit / Model / Mesh / Conditions / View** 메뉴와 상단 기능 아이콘은 같은 명령을 사용합니다. 재료·shell/solid 단면 생성, 복사·삭제·할당은 **Model**에서 선택합니다. 아이콘이 좁은 창에서 접혀도 메뉴로 접근할 수 있습니다. 첫 실행은 최대화하며 이후에는 저장된 창 크기와 도킹 배치를 복원합니다. 새 배치는 1440px 창에서 MODEL/FORM을 약 187/240px로 시작합니다. 처음 구분선을 직접 조절하기 전에는 창 크기에 맞춰 비율을 유지하며, 직접 조절한 폭은 유지합니다. 이전 버전의 도킹 배치는 한 번 초기화합니다.
 
 MODEL은 실제 카드 분류와 native header를 표시합니다. 생성된 CAD part 이름의 내부 UUID 접미사는 화면에서만 숨기며 원문 이름과 객체 참조는 유지합니다. 3D에 실제 표시되는 PART에는 가시성 체크와 읽기 전용 색 칩이 나타납니다. 이 표시는 현재 viewport 상태이며 문서의 물성색이나 영구 설정이 아닙니다. `--no-3d`에서는 이 표시가 없습니다.
+
+절점 이동·merge·요소 삭제/셸 반전/PART 이동·소스 import·준비 메시/CAD 교체·재연결은 유효한 **Preview** 또는 **Review replacement**가 끝나면 해당 검토 체크가 자동으로 켜져 Apply를 바로 누를 수 있습니다. 입력이나 문서가 바뀌면 계획과 체크가 해제됩니다. 체크를 직접 끄면 Apply와 직접 적용 호출도 차단되며, 실패하거나 이전 입력에 대한 비동기 결과에는 자동 체크하지 않습니다.
 
 FORM은 기존 지원 속성을 편집합니다. TEXT에서 **Edit supported values**를 누르면 같은 카드 전체의 native 원문을 열고, 지원되는 고정 폭 값만 수정할 수 있습니다. 숫자는 입력 덱 단위이며 FORM에서 선택한 표시 단위로 해석하지 않습니다. **Apply TEXT** 한 번은 한 Undo이고, **Cancel TEXT**는 원래 문서 값을 유지합니다. TEXT 편집 중에는 FORM을 잠그며 선택 변경·저장·내보내기 전에 Apply 또는 Cancel을 요구합니다. 모델이 외부에서 변경되면 오래된 TEXT 적용을 거부하고 초안을 유지합니다.
 
@@ -70,7 +72,7 @@ TEXT 지원 범위는 읽을 수 있는 MAT LAW1/ELAST/LAW36/PLAS_TAB의 밀도�
 
 ## 새 모델에 CAD·메시와 조건 연결하기
 
-명시한 planar quad/sweep hex8 recipe는 **Mesh → CAD / mesh candidate… → Source type: Structured quad / sweep hex recipe**에서 생성합니다. recipe JSON과 후보 폴더를 선택하고 **Generate candidate**로 준비합니다. 원본 파일과 문서는 바꾸지 않으며 실행 중 **Cancel generation**으로 중지할 수 있습니다. 전체 후보의 scaled Jacobian·edge aspect·면적/체적과 단위를 검토하고 재료·quad의 shell 또는 hex의 solid 단면을 고른 뒤 **Adopt candidate**로 한 번에 채택합니다. 길이 단위는 recipe에서 읽으며 문서 단위와 같아야 합니다.
+명시한 planar quad/sweep hex8 recipe는 **Mesh → CAD / mesh candidate… → Source type: Structured quad / sweep hex recipe**에서 생성합니다. recipe JSON을 선택하고 **Generate candidate**로 준비합니다. 원본 파일과 문서는 바꾸지 않으며 실행 중 **Cancel generation**으로 중지할 수 있습니다. 전체 후보의 scaled Jacobian·edge aspect·면적/체적과 단위를 검토하고 재료·quad의 shell 또는 hex의 solid 단면을 고른 뒤 **Adopt candidate**로 한 번에 채택합니다. 길이 단위는 recipe에서 읽으며 문서 단위와 같아야 합니다.
 
 quad와 hex 밑면의 분할 수는 JSON을 선택한 뒤 **Load recipe divisions**로 읽어 각 patch의 **Edge 1–2 / Edge 2–3**에서 편집할 수 있습니다. hex의 **Sweep layers**는 recipe의 sweep vector를 따라 나눈 공통 분할 수입니다. 값은 전역 X/Y가 아닌 recipe의 순서 있는 모서리 방향에 대한 분할 수이며 정수 1..10000과 전체 생성 예산을 적용합니다. 두 patch의 공유 변 분할 수는 같아야 합니다. 입력을 바꾸면 이전 품질 결과와 Adopt가 무효화되므로 **Generate candidate**로 새 결과를 검사합니다. 수정한 recipe는 새 후보 폴더에 보관하고 원본 JSON은 수정하지 않습니다. 원본이 외부에서 바뀌면 다시 불러와야 합니다.
 
@@ -98,7 +100,7 @@ quad와 hex 밑면의 분할 수는 JSON을 선택한 뒤 **Load recipe division
 
 개발 API의 `structured_mesh_recipes()`는 archive UUID·채택 mesh UUID·mode/단위·원문 역할과 조회 시 문서 ID/epoch/revision을 반환합니다. `export_structured_recipe(archive_id, new_directory, expected_document_id=..., expected_document_epoch=..., expected_revision=...)`로 그 조회에 묶어 추출할 수 있습니다. 반환된 `recipe_path`를 기존 `read_recipe_input`·`generate_structured_mesh(..., recipe_path=...)`에 전달합니다. 실제 확인과 남은 플랫폼·좌표/patch 편집 범위는 [현재 상태](../CURRENT_STATE.md#recipe-archive-progress)를 따릅니다.
 
-같은 GUI/API에서 `mode: "hex"`인 명시 planar source의 직선/경사 sweep hex8도 채택할 수 있습니다. 예를 들어 위 quad JSON의 `"mode"`를 `"hex"`로 바꾸고 `"vector":[0,0,10],"layers":4`를 추가합니다. GUI의 solid 단면 또는 `session.create_solid_property()`가 만든 명시 `Isolid=1` 속성과 재료 ID로 채택하면 BRICK/GRBRIC을 작성하고 한 번의 Undo와 기존 작업문서 저장·재열기를 사용합니다. 상속/기타 Isolid 값을 자동 치환하지 않습니다. `describe()["capabilities"]["mesh_adoption_sources"]`가 출처별 family를 구분합니다. 27점 Jacobian 검사는 기하 품질 검사이며 solver 적분점 수를 뜻하지 않습니다. Starter 읽기는 기존 PR34의 225/525요소 입력에서 확인한 범위이며, 이번 divisions/layers 편집 출력(360/720요소)의 Starter는 실행하지 않았습니다. Engine·해석 응답·물성의 타당성·Windows/frozen GUI도 미확인입니다. 비틀림·곡면·일반 CAD 분할·임의 외부 hex는 지원하지 않습니다.
+같은 GUI/API에서 `mode: "hex"`인 명시 planar source의 직선/경사 sweep hex8도 채택할 수 있습니다. 예를 들어 위 quad JSON의 `"mode"`를 `"hex"`로 바꾸고 `"vector":[0,0,10],"layers":4`를 추가합니다. GUI의 **New solid section → Linear Hex8** 또는 `session.create_solid_section("Hex8 Section", element_family="hexa8")`가 만든 명시 `Isolid=1, Ismstr=4` 속성과 재료 ID로 채택하면 BRICK/GRBRIC을 작성하고 한 번의 Undo와 기존 작업문서 저장·재열기를 사용합니다. 상속/기타 Isolid 값을 자동 치환하지 않습니다. `describe()["capabilities"]["mesh_adoption_sources"]`가 출처별 family를 구분합니다. 27점 Jacobian 검사는 기하 품질 검사이며 solver 적분점 수를 뜻하지 않습니다. Starter 읽기는 기존 PR34의 225/525요소 입력에서 확인한 범위이며, 이번 divisions/layers 편집 출력(360/720요소)의 Starter는 실행하지 않았습니다. Engine·해석 응답·물성의 타당성·Windows/frozen GUI도 미확인입니다. 비틀림·곡면·일반 CAD 분할·임의 외부 hex는 지원하지 않습니다.
 
 1. **File → New model…**에서 이름과 질량·길이·시간 단위를 명시합니다. 단위 없는 입력에 임의 단위를 추정하지 않습니다.
 2. 재료와 요소 family에 맞는 shell 또는 solid 단면을 만듭니다.
@@ -115,7 +117,7 @@ MSH는 2.2/4.1 ASCII에 한정합니다. binary·partition·periodic·data·para
 
 ### 참조된 CAD 메시 교체
 
-기존 CAD에서 채택한 PART를 크기 변경 후보로 교체하려면 같은 창에서 새 후보를 생성하거나 엽니다. 재료·단면을 선택하고 **Replace parts**에서 교체할 기존 PART를 고른 뒤 **Review replacement**를 누릅니다. 이 단계에서는 모델이 바뀌지 않습니다. 전후 절점·요소 수, stale이 될 그룹·표면과 영향 조건을 읽고 검토 체크를 한 뒤 **Apply replacement**로 확정합니다. 후보·크기·입력 경로·단위·재료·단면·PART 또는 문서가 바뀌면 검토를 다시 해야 합니다. 취소와 닫기는 검토 상태를 폐기합니다.
+기존 CAD에서 채택한 PART를 크기 변경 후보로 교체하려면 같은 창에서 새 후보를 생성하거나 엽니다. 재료·단면을 선택하고 **Replace parts**에서 교체할 기존 PART를 고른 뒤 **Review replacement**를 누릅니다. 이 단계에서는 모델이 바뀌지 않습니다. 유효한 검토 결과가 준비되면 체크가 자동으로 켜지고 **Apply replacement**를 바로 사용할 수 있습니다. 전후 절점·요소 수와 stale 대상은 같은 검토 창에서 확인합니다. 후보·크기·입력 경로·단위·재료·단면·PART 또는 문서가 바뀌면 검토를 다시 해야 합니다. 취소와 닫기는 검토 상태를 폐기합니다.
 
 교체는 기존 root에 CAD 후보 채택으로 만든 PART와 소유가 확인되는 요소에 한정합니다. 알려진 native 참조 범위·같은 길이 단위·후보 전체 품질을 요구하며, 외부 INCLUDE의 요소 소유나 미확인 참조·변환 범위를 추정하지 않습니다. 다른 요소의 BEAM 방향점으로 쓰는 절점과 잔존 절점의 이동 좌표는 보존합니다. 새 후보의 PART·절점 번호를 기존 번호로 자동 대응하지 않습니다.
 
@@ -189,13 +191,49 @@ print(candidates["features"], candidates["unclassified"])
 
 이는 검토할 후보입니다. 전체 공극의 외부 연결·CAD 설계 이력·임의 축/일반 polygon/복잡 trim·fillet 인식은 보장하지 않습니다. Washer ring·fillet 억제·mesh 생성/채택은 연결하지 않았으며 후보 판독은 B-Rep·mesh·활성 문서를 변경하지 않습니다. 자산이 바뀌면 다시 검사해야 합니다.
 
+검사·후보 생성·MSH 가져오기 창은 고유한 시스템 임시 폴더 경로를 미리 채웁니다. Browse로 다른 폴더를 지정할 수 있고 경로를 비우면 실행 전에 오류를 표시합니다. 실제 자산은 실행할 때 생성되며, 저장한 `.caeprep`에는 채택에 필요한 자산이 동봉됩니다.
+
+### 제한된 원통 blend 후보 (Python API)
+
+```python
+from caelab_prep.application.geometry_features import recognize_cylindrical_blends
+
+result = GmshBackend().inspect_geometry("part.step", "blend-evidence",
+    expected_coordinate_length_unit="mm", probe_cylindrical_blends=True)
+inspection = read_geometry_inspection(result)
+blends = recognize_cylindrical_blends(inspection, length_tolerance=1e-6,
+    angular_tolerance=1e-6, radius_threshold=1.)
+```
+
+첫 범위는 mm 단위의 축 정렬된 1/4 원통과 같은 volume의 직사각형 평면 지지면 두 개입니다. 실제 shared-vertex cycle·generatrix·끝 호·지지면과 샘플의 유한 패치 내부를 검사합니다. 원통과 지지면 각각의 안전한 두 offset에서 얻은 원시 volume membership으로 재료 외향 법선을 정합니다. Reader는 동일 계획·실제 저장 좌표의 signed residual·계산된 수치 여유와 membership-derived sign을 다시 검사합니다. 공유 직선의 중점에서 **부호 있는** 두 법선의 내적이 `cos(angular_tolerance)` 이상인지를 판정하므로 기하학적으로 접하지만 재료 방향이 반대인 cusp를 제외합니다. Raw face normal과 volume sign의 곱은 사용하지 않습니다.
+
+`radius_threshold`는 mm이며 계산된 반경과의 등호를 포함합니다. `None`은 반경 필터를 사용하지 않습니다. 길이·각도 허용오차의 첫 지원 하한은 각각 `1e-6 mm`·`1e-6 rad`이고 각도는 `pi/2` 미만이어야 합니다. 더 작은 길이 허용오차·다른 단위·불명확한 여유·재료 관측 누락은 후보를 만들지 않습니다. 결과는 `cylindrical_blend_candidate`와 두 접선 edge의 근거이며 CAD 설계 이력이나 자동 억제 완료를 뜻하지 않습니다. B-Rep·volume·문서·mesh 변경은 0입니다.
+
+### 제한된 원뿔 blend 후보 (Python API)
+
+```python
+from caelab_prep.application.geometry_features import recognize_conical_blends
+
+result = GmshBackend().inspect_geometry("part.step", "cone-evidence",
+    expected_coordinate_length_unit="mm", probe_conical_blends=True)
+inspection = read_geometry_inspection(result)
+blends = recognize_conical_blends(inspection, length_tolerance=1e-6,
+    angular_tolerance=1e-6, radius_threshold=8.)
+```
+
+지원 범위는 mm 축 정렬 유한 1/4 원뿔의 apex 밖 양의 nappe, 두 모선·두 끝 호와 같은 volume의 사다리꼴 평면 지지면입니다. 원통과 같은 안전한 offset·저장 관측 검증·재료 방향의 signed G1 절차를 재사용합니다. 지지면이 서로 직교한다고 가정하지 않으며, 원시 법선이나 volume sign만으로 재료 방향을 추정하지 않습니다.
+
+원뿔은 일정 반경이 아니므로 판정 반경은 trim 전체의 **최대 유한 주곡률 반경 `r / |cos(alpha)|`**입니다. 결과의 `radius`·`finite_principal_radius_range`와 실제 단면의 `cross_section_radius_range`·끝 호 `radius`를 구분합니다. `radius_threshold`는 이 계산된 최대값에 정확한 `<=`를 적용하며 숨은 허용오차나 반올림은 없습니다. `None`이면 필터를 사용하지 않습니다. 결과는 `conical_blend_candidate`이며 CAD fillet 이력·억제·메시 변경을 뜻하지 않습니다. 일반 축·apex를 지나는 trim·일반 원뿔/토러스 fillet은 미지원입니다.
+
+STEP/XAO 검사 체적을 비교할 때는 `python scripts/evaluation/geometry_volume.py step-metadata.json xao-metadata.json`을 사용합니다. mm³ 절대 차이 `<= 1e-9`를 적용하며 반경 필터의 정확한 등호 판정과는 별개입니다. 저장된 관측을 평가하며 SDK를 실행하지 않습니다.
+
 ### 공용 창에서 후보 검토하기
 
-8개 표현의 **Mesh → Inspect geometry features…**에서 CAD와 evidence 폴더를 선택한 뒤 **Inspect geometry**를 실행합니다. 활성 모델 없이도 열 수 있습니다. **Open inspection…**은 기존 geometry metadata를 읽으며 SDK를 다시 실행하지 않습니다. STEP/IGES는 mm 정규화 좌표를 사용하고, 저장된 XAO에는 알려진 mm 단위가 필요합니다.
+8개 표현의 **Mesh → Inspect geometry features…**에서 CAD를 선택한 뒤 **Inspect geometry**를 실행합니다. 활성 모델 없이도 열 수 있습니다. **Open inspection…**은 기존 geometry metadata를 읽으며 SDK를 다시 실행하지 않습니다. STEP/IGES는 mm 정규화 좌표를 사용하고, 저장된 XAO에는 알려진 mm 단위가 필요합니다.
 
-행을 선택하거나 wireframe의 홀 표식을 클릭하면 같은 후보의 반경·깊이·축·끝 cap을 확인합니다. 표시용 선분의 선택은 활성 모델 선택과 분리됩니다. View에는 지원 직선 CAD edge, 인식한 원형 경계의 polyline과 축을 표시합니다. 허용오차를 바꾸면 후보를 다시 판독하며, Escape는 마지막 성공 값과 표시로 복귀합니다. 입력 변경·실패·잘못된 허용오차는 이전 후보와 표식을 지웁니다. **Cancel inspection**과 창 닫기는 진행 중 worker를 중지한 뒤 결과를 폐기합니다.
+행을 선택하거나 wireframe의 표식을 클릭하면 같은 후보의 반경·길이·축·끝 cap 또는 재료 방향의 접선 증거를 확인합니다. 표시용 선분의 선택은 활성 모델 선택과 분리됩니다. View에는 지원 직선 CAD edge, hole의 완전 원형 경계 또는 blend의 부분 호와 축을 표시합니다. 원뿔의 두 끝 호는 각 단면 반경으로 그리며 상세 값에서 최대 정상곡률 반경과 구분합니다. **Maximum blend radius**는 선택적 반경 필터입니다. 허용오차·반경을 바꾸면 저장된 자료를 재판독하며 SDK를 다시 조회하지 않습니다. Escape는 마지막 성공 값과 표시로 복귀합니다. 입력 변경·실패·잘못된 값은 이전 후보와 표식을 지웁니다. **Cancel inspection**과 창 닫기는 진행 중 worker를 중지한 뒤 결과를 폐기합니다. 이 창은 mm 전용이며 저장 자료의 unknown 단위를 자동 환산하지 않습니다.
 
-검사 evidence와 이 창의 후보 표시는 작업문서의 메시·조건을 편집하거나 채택하지 않습니다. 현재 인식 지원 형상군은 위 Python API와 같으며, Fillet/Flange/washer ring·일반 batch/cleanup은 후속입니다. Windows OS·VTK 실제 확인은 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
+검사 evidence와 이 창의 후보 표시는 작업문서의 메시·조건을 편집하거나 채택하지 않습니다. 현재 인식 지원 형상군은 위 Python API와 같으며, 일반 fillet·Flange·washer ring 생성·접선 edge 억제·일반 batch/cleanup은 후속입니다. Hole의 64분할 원과 blend의 16분할 부분 호는 표시 선분이며 Washer Quad/Tria 요소가 아닙니다. Windows OS·VTK 실제 확인은 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
 
 <a id="prepared-tet10"></a>
 
@@ -209,7 +247,7 @@ print(candidates["features"], candidates["unclassified"])
 
 고정 L의 87절점/36 Tet10은 한 Undo·v6·새 Python 재열기·RAD 재해석과 첫 Windows Starter에서 총질량 `2.34e-8 Mg`를 확인했습니다. 첫 reader 확인은 Engine 파일 부재 경고1을 남겼습니다. 후속 케이스 내보내기 누락을 `04d9233`에서 수정한 뒤, 같은 메시의 명시 all87 집합·YZ 구속·초기 Vx2.5를 저장·새 프로세스 재열기·선택 케이스의 Starter/Engine 출력으로 확인했습니다. 각 한 번의 실제 실행은 오류0·경고0, Engine 44 cycles 정상 종료이며 초기 KE `7.3125e-8 N·mm`가 기준과 일치했습니다. 제품 Engine 원문과 관측용 `/TFILE/4` 추가본은 구분합니다. T01은 생성됐지만 Windows에 기존 converter/reader가 없어 시간별 운동량·에너지 유지·최종 표본시간의 전체 응답 판정은 미확인입니다. 실제 VTK 렌더/픽·OS 입력·frozen 확인도 남습니다. Qt offscreen 조작·미리보기 10슬롯 데이터와 VTK cell의 edge 순서 검사는 이 실제 화면 확인을 대신하지 않습니다. 폐표면 자동생성의 [F1 품질 미달](mesher-feasibility-roadmap.md#2026-11-03-폐삼각표면-auto-tet-f1)도 별도로 유지합니다.
 
-main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 절점 ID를 선택하고 입력 덱 길이 단위의 절대좌표를 입력합니다. **Preview move**에서 품질과 영향 대상을 확인하고 검토 체크 후 **Apply move**로 확정합니다. ID·연결·집합 멤버를 보존해도 하중 작용점과 접촉 간격은 달라질 수 있습니다. 영향 집합은 **Replace prepared mesh / reconnect targets…**에서 명시적으로 검토하기 전까지 native 출력을 막습니다. 다중 자원에서는 집합별 실제 변경 자원에 검토 상태를 연결합니다. API의 하중 진단은 시간함수 평가 전 계수이며 실제 시각의 힘·모멘트나 작용점 모멘트를 계산한 결과가 아닙니다. 일반 메시 편집 전체의 완료본은 아닙니다.
+main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 절점 ID를 선택하고 입력 덱 길이 단위의 절대좌표를 입력합니다. **Preview move**에서 품질과 영향 대상을 확인하고 **Apply move**로 확정합니다. ID·연결·집합 멤버를 보존해도 하중 작용점과 접촉 간격은 달라질 수 있습니다. 영향 집합은 **Replace prepared mesh / reconnect targets…**에서 명시적으로 검토하기 전까지 native 출력을 막습니다. 다중 자원에서는 집합별 실제 변경 자원에 검토 상태를 연결합니다. API의 하중 진단은 시간함수 평가 전 계수이며 실제 시각의 힘·모멘트나 작용점 모멘트를 계산한 결과가 아닙니다. 일반 메시 편집 전체의 완료본은 아닙니다.
 
 <a id="group-member-review"></a>
 
@@ -221,11 +259,11 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 **Mesh → Merge nodes with tolerance…**에서 **Remove node**와 **Keep node**의 출처·native ID를 지정하거나 각각 **Use selected**로 현재 절점 하나를 가져온 뒤 **Add pair**를 누릅니다. 여러 pair를 추가할 수 있으며 선택 순서나 최근접 위치로 대응을 추정하지 않습니다. keeper 좌표는 바꾸지 않습니다. **Tolerance**는 빈칸에서 입력 덱 길이 단위로 직접 지정합니다. 예제의 거리나 다른 프로그램의 기본값을 권장 공차로 사용하지 않습니다.
 
-표의 각 행을 선택해 실제 PART 사용과 source/contact 경계 허용을 검토합니다. BEAM 방향점으로 사용하는 절점은 기계적 끝점과 구분합니다. **Preview merge**는 연결·방향절점·품질과 조건의 변경 전후 대상을 표시하며 문서를 바꾸지 않습니다. 검토 체크 후 **Apply merge** 한 번이 한 Undo입니다. pair·공차·허용을 바꾸면 검토를 다시 해야 합니다. 모델이 바뀌면 창을 닫고 현재 절점을 다시 선택하세요. **Close/Escape**는 미적용 초안만 버립니다.
+표의 각 행을 선택해 실제 PART 사용과 source/contact 경계 허용을 검토합니다. BEAM 방향점으로 사용하는 절점은 기계적 끝점과 구분합니다. **Preview merge**는 연결·방향절점·품질과 조건의 변경 전후 대상을 표시하며 문서를 바꾸지 않습니다. **Apply merge** 한 번이 한 Undo입니다. pair·공차·허용을 바꾸면 검토를 다시 해야 합니다. 모델이 바뀌면 창을 닫고 현재 절점을 다시 선택하세요. **Close/Escape**는 미적용 초안만 버립니다.
 
 조건의 제안 대응은 미리보기이며 실제 Apply에서 원 집합·조건을 자동 변경하지 않습니다. 영향 그룹이 있으면 native 출력을 막으므로 기존 **Replace prepared mesh / reconnect targets…**에서 각 원 멤버를 현재 대상으로 명시 연결하세요. 최종 재연결은 BCS·CLOAD·INIVEL의 기계 필드와 TYPE7의 역할·secondary 기계적 연결을 검사합니다. BCS의 비활성 회전 경고와 무지지 절점은 구분하며, 실제 구속 충분성·접촉력은 별도로 확인합니다. 기존 native replacement가 보존할 수 없는 카드 layout(예: 변경 카드 안의 file directive)은 현재 merge plan에서 거부합니다. 닫힌 참조 범위·알려진 단위·품질·기계 필드의 기존 제한도 유지합니다. BEAM 기본 frame으로 조용히 전환되는 병합은 거부하지만, 다른 방향점 재배선이나 TRUSS 연결의 물리적 동등성을 보장하지 않습니다. Windows/frozen·solver와 전체 P7b의 확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
 
-같은 절점으로 모이는 node-group 링크를 집합 하나로 줄이려면 모든 old ID의 링크를 추가한 뒤 **Allow repeated node targets to form one set**을 직접 체크하고 **Preview final mapping**을 누르세요. **Reconnection review**는 보존된 옛 링크 수·현재 카드 선언·최종 집합, 하중의 미평가 곡선 배수 합과 속도 벡터/좌표계·교집합을 보여 줍니다. 예를 들어 옛 링크 2개가 현재 절점 1개로 모이고 절점별 배수가 3이면 합은 6→3이며 힘의 보존을 뜻하지 않습니다. 현재 mapping은 merge 투영과 달라도 최종 mapping으로 다시 계산합니다. 검토 체크 후 같은 **Apply reconnection**으로 한 번 적용하고 Undo/Redo·저장·재열기는 기존 문서를 사용합니다.
+같은 절점으로 모이는 node-group 링크를 집합 하나로 줄이려면 모든 old ID의 링크를 추가한 뒤 **Allow repeated node targets to form one set**을 직접 체크하고 **Preview final mapping**을 누르세요. **Reconnection review**는 보존된 옛 링크 수·현재 카드 선언·최종 집합, 하중의 미평가 곡선 배수 합과 속도 벡터/좌표계·교집합을 보여 줍니다. 예를 들어 옛 링크 2개가 현재 절점 1개로 모이고 절점별 배수가 3이면 합은 6→3이며 힘의 보존을 뜻하지 않습니다. 현재 mapping은 merge 투영과 달라도 최종 mapping으로 다시 계산합니다. 같은 **Apply reconnection**으로 한 번 적용하고 Undo/Redo·저장·재열기는 기존 문서를 사용합니다.
 
 반복 대상의 집합 축약은 절점 그룹만 지원합니다. 중복이 없는 기존 절점/요소/표면·PART 재연결의 직접 Apply는 유지합니다. 새 링크·입력·허용·그룹·문서 변경과 Close는 이전 preview를 무효화합니다. 남은 stale 속도 그룹은 최종 대상이 알려지지 않았으므로 교집합 목록이 비어도 겹침이 없다고 판단하지 마세요. 곡선/시간 스케일·작용점 모멘트·INCLUDE 실행 순서·유효 초기상태·운동량은 평가하지 않으며 조건값을 자동 합산/평균/분배하지 않습니다.
 
@@ -241,7 +279,7 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 ### 선택 셸의 법선 반전
 
-8개 표현의 **Mesh → Reverse shell normals…**에서 현재 요소를 **Add selected elements**로 목록에 추가합니다. 모델에서 다른 요소를 선택해 계속 추가할 수 있고, 같은 source·native ID의 중복은 한 행으로 유지합니다. **Remove selected rows**는 선택한 행을 제거하고 이전 검토를 무효화합니다. Source file·Element ID·Type을 확인한 뒤 **Preview reversal**에서 현재/제안 연결 순서·품질·영향 집합과 조건을 읽고, 검토 체크 후 **Apply reversal**로 한 번 적용합니다. **Close/Escape**는 미적용 목록을 취소합니다. 문서·초안·활성 작업이 바뀌면 오래된 검토를 적용할 수 없습니다.
+8개 표현의 **Mesh → Reverse shell normals…**에서 현재 요소를 **Add selected elements**로 목록에 추가합니다. 모델에서 다른 요소를 선택해 계속 추가할 수 있고, 같은 source·native ID의 중복은 한 행으로 유지합니다. **Remove selected rows**는 선택한 행을 제거하고 이전 검토를 무효화합니다. Source file·Element ID·Type을 확인한 뒤 **Preview reversal**에서 현재/제안 연결 순서·품질·영향 집합과 조건을 읽고, **Apply reversal**로 한 번 적용합니다. **Close/Escape**는 미적용 목록을 취소합니다. 문서·초안·활성 작업이 바뀌면 오래된 검토를 적용할 수 없습니다.
 
 현재 지원은 닫힌 native 참조 범위의 SH3N과 평면 SHELL입니다. 실제 PART·SHELL/TYPE1 속성·기존 정식화와 품질 검사를 재사용하며, 압력·초기 shell 상태·적층 등 미지원 raw 카드는 preview 전에 거부합니다. 비셸 요소가 섞인 목록을 조용히 걸러 적용하지 않습니다. 좌표·ID·PART·두께와 저장된 각도 값은 보존하고 연결 순서를 반전합니다. 법선과 면내 로컬 축이 함께 바뀌므로 물리 응답은 별도로 검토해야 합니다. 지원 TYPE7은 양면 접촉이며 main/secondary 역할·gap·마찰 값을 유지합니다.
 
@@ -257,7 +295,7 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 **Preview deletion**은 삭제할 요소/연결·새 고립 절점과 삭제 여부·삭제 요소의 기존 품질·집합과 조건의 생존 대상 제안을 보여 줍니다. 살아남은 요소의 연결을 바꾸거나 품질 개선을 주장하지 않습니다. 조건의 기계 성분을 지지하지 못하거나 TYPE7 secondary가 무지지이면 Apply를 막습니다. 빈 최종 집합이나 마지막 main shell을 제거하는 제안은 현재 거부하며, 조건·집합을 함께 삭제하거나 전체 고립 절점을 자동 정리하지 않습니다. 지원 밖 raw 카드와 보존할 수 없는 file directive/layout도 거부합니다.
 
-검토 체크 후 **Apply deletion** 한 번은 한 Undo입니다. 정책·목록·문서 변경은 이전 preview를 무효화하며 **Close/Escape**는 미적용 목록을 취소합니다. 실제 삭제는 요소와 명시 정책의 새 고립 절점에만 적용합니다. 기존 PART 카드·집합 멤버·조건 선언은 보존하고 영향 집합은 stale로 남깁니다. 저장·재열기 뒤에도 native 출력 차단은 유지됩니다. **Replace prepared mesh / reconnect targets…**에서 생존 대상의 명시 mapping과 삭제된 멤버의 [Drop](#mesh-target-drop)을 검토해야 복구됩니다. 삭제 후에도 존재하는 절점이 DOF 지지를 잃을 수 있으므로 최종 재연결에서 기존 성분 검사를 다시 수행합니다.
+**Apply deletion** 한 번은 한 Undo입니다. 정책·목록·문서 변경은 이전 preview를 무효화하며 **Close/Escape**는 미적용 목록을 취소합니다. 실제 삭제는 요소와 명시 정책의 새 고립 절점에만 적용합니다. 기존 PART 카드·집합 멤버·조건 선언은 보존하고 영향 집합은 stale로 남깁니다. 저장·재열기 뒤에도 native 출력 차단은 유지됩니다. **Replace prepared mesh / reconnect targets…**에서 생존 대상의 명시 mapping과 삭제된 멤버의 [Drop](#mesh-target-drop)을 검토해야 복구됩니다. 삭제 후에도 존재하는 절점이 DOF 지지를 잃을 수 있으므로 최종 재연결에서 기존 성분 검사를 다시 수행합니다.
 
 질량·운동량·운동에너지와 TYPE7 main segment·면적·gap/stiffness의 계산 근거가 달라질 수 있습니다. 표시한 CLOAD 합계는 미평가 곡선 배수이며 실제 힘·모멘트나 응답 보존이 아닙니다. API의 `plan_element_deletion(references, orphan_policy="keep" | "delete_new")`·`apply_element_deletion`·`cancel_element_deletion`도 기존 sealed candidate/CAS·v6·Undo 경로를 사용합니다. 실제 OS/VTK·frozen·solver와 전체 P7b의 미확인 범위는 [현재 상태](../CURRENT_STATE.md#remaining-work)를 따릅니다.
 
@@ -269,7 +307,7 @@ main에 병합된 **Mesh → Move nodes to coordinates…**에서는 소스와 �
 
 **Preview ownership**은 각 변경 요소의 기존/제안 PART·MAT·PROP native ID와 이름·source, 조건과 접촉 대상의 변화를 보여 줍니다. 현재 요소가 있는 PART와 비어 있던 기존 PART 모두 참조 유일성·선언된 속성 family를 확인한 뒤, 실제 native trial의 이동 요소에서 기존 기계 프로필 검사로 정식화를 검증합니다. PROP 이름이나 기존 요소의 존재만으로 승인하지 않습니다. 모든 MAT 수치값·PROP 필드와 solver 수용을 인증한 결과는 아닙니다. 중복 PART ID·잘못된 assignment 원문도 목록을 읽을 수 있고, Preview에서 진단과 함께 Apply를 차단합니다.
 
-검토 체크 후 **Apply ownership** 한 번이 한 Undo입니다. native 요소 ID와 source resource, 좌표·연결·BEAM orientation·원문 행 suffix를 유지하며 source resource의 요소 행을 새 PART 헤더 블록으로 옮깁니다. 블록을 다시 구성하면 그 native 카드 블록 UUID는 바뀔 수 있습니다. 저장된 셸 각도·요소별 두께 override를 보존하므로 대상 PROP 두께를 무조건 덮어썼다고 표시하지 않습니다. PART의 MAT/PROP를 편집하는 기존 **Assign material / section…**과 다른 명령이며, 이 소유 이동은 두 PART의 MAT/PROP 선언 자체를 바꾸지 않습니다.
+**Apply ownership** 한 번이 한 Undo입니다. native 요소 ID와 source resource, 좌표·연결·BEAM orientation·원문 행 suffix를 유지하며 source resource의 요소 행을 새 PART 헤더 블록으로 옮깁니다. 블록을 다시 구성하면 그 native 카드 블록 UUID는 바뀔 수 있습니다. 저장된 셸 각도·요소별 두께 override를 보존하므로 대상 PROP 두께를 무조건 덮어썼다고 표시하지 않습니다. PART의 MAT/PROP를 편집하는 기존 **Assign material / section…**과 다른 명령이며, 이 소유 이동은 두 PART의 MAT/PROP 선언 자체를 바꾸지 않습니다.
 
 원 집합·조건 선언은 보존하고 old/new PART의 실제 요소와 유입 source를 포함해 영향 집합을 stale로 남깁니다. PART ID가 같아도 main surface의 segment가 늘거나 줄 수 있습니다. 기존 **Replace prepared mesh / reconnect targets…**에서 현재 대상의 명시 mapping/필요한 [Drop](#mesh-target-drop)을 검토하기 전까지 native 출력을 막습니다. 빈 최종 집합·마지막 main support 제거, 보존할 수 없는 directive/layout와 지원 밖 native profile은 거부합니다. 대상 선택·목록·문서 변경은 preview를 무효화하며 **Close/Escape**는 미적용 초안만 취소합니다. 저장·재열기·한 Undo는 기존 v6 경로를 사용합니다.
 

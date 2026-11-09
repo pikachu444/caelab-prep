@@ -27,8 +27,7 @@ class NodeMoveDialog(QDialog):
         self.resize(900, 680)
         self.setMinimumSize(640, 480)
         column = QVBoxLayout(self)
-        explanation = QLabel("Enter absolute coordinates in the input deck's length unit. Preview does not change the model. "
-                             "Affected groups and conditions require review before native export.")
+        explanation = QLabel("Move nodes by absolute coordinates in the input deck's length unit.")
         explanation.setWordWrap(True)
         column.addWidget(explanation)
         row = QHBoxLayout()
@@ -188,6 +187,7 @@ class NodeMoveDialog(QDialog):
             lines.append("Moved load/constraint points and contact gaps require engineering review; this preview does not qualify their physical response.")
             self.preview.setPlainText("\n".join(lines))
             self.status.setText("Preview ready. Review every coordinate and affected target before applying.")
+            self.reviewed.setChecked(True)
             self._sync()
         except (PrepError, ValueError) as exc:
             self.status.setText(str(exc))

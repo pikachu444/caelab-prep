@@ -130,6 +130,7 @@ class NativeElementDialog(QDialog):
             plan = self._plan
             self.preview.setPlainText(self._review_text(plan))
             self.status.setText("Review the proposed changes before Apply." if plan["admissible"] else "Unsupported condition targets block Apply.")
+            self.reviewed.setChecked(plan["admissible"])
             self._sync()
         except (PrepError, ValueError) as exc: self.status.setText(str(getattr(exc, "message", exc)))
 
@@ -236,8 +237,7 @@ def ownership_review_text(session, plan):
 class ShellNormalDialog(NativeElementDialog):
     object_name = "shellNormalDialog"
     window_title = "Reverse shell normals"
-    introduction = ("Reverse the winding of selected SH3N or planar SHELL elements. "
-                    "Element local axes also change; thickness and stored angle values stay unchanged.")
+    introduction = "Reverse selected shell winding and local axes."
     review_caption = "I reviewed the orientation and affected target changes"
     preview_caption, apply_caption, result_caption = "Preview reversal", "Apply reversal", "Reversal"
     selection_hint = "Preview checks shell type, quality and affected targets."
@@ -261,8 +261,7 @@ class ShellNormalDialog(NativeElementDialog):
 class ElementDeletionDialog(NativeElementDialog):
     object_name = "elementDeletionDialog"
     window_title = "Delete elements"
-    introduction = ("Delete only the listed elements. Choose whether to keep or delete newly orphaned nodes; "
-                    "pre-existing orphans are kept. Original target declarations remain pending explicit review.")
+    introduction = "Delete selected elements and review newly orphaned nodes."
     review_caption = "I reviewed the deletions and affected targets"
     preview_caption, apply_caption, result_caption = "Preview deletion", "Apply deletion", "Deletion"
     selection_hint = "Preview checks deletion, new orphans and affected targets."
@@ -293,8 +292,7 @@ class ElementDeletionDialog(NativeElementDialog):
 class PartReassignmentDialog(NativeElementDialog):
     object_name = "partReassignmentDialog"
     window_title = "Move elements to PART"
-    introduction = ("Move all listed elements to one explicitly chosen existing PART. Native element IDs, source files and row values stay unchanged. "
-                    "The target material/property and contact segments can change; affected targets require explicit review.")
+    introduction = "Move selected elements to an existing PART and review affected targets."
     review_caption = "I reviewed the ownership and affected targets"
     preview_caption, apply_caption, result_caption = "Preview ownership", "Apply ownership", "Ownership transfer"
     selection_hint = "Choose the target for every listed element, then preview native ownership and affected targets."

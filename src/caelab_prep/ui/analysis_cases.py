@@ -20,8 +20,7 @@ class AnalysisCasesDialog(QDialog):
         self._case_id = None
         self._epoch = None
         layout = QVBoxLayout(self)
-        scope = QLabel("Each case stores its active conditions and run times. Conditions and their target groups remain shared by the model.\n"
-                       "Supported activation: boundary constraints, nodal loads, initial translation velocity and TYPE7 contact.")
+        scope = QLabel("Set active conditions and run times for each analysis case.")
         scope.setWordWrap(True)
         layout.addWidget(scope)
         split = QSplitter()

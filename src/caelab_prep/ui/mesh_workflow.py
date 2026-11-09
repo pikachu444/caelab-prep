@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
     QPushButton, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem,
     QTextBrowser, QVBoxLayout, QWidget)
 
-from .shell import FileTask
+from .shell import FileTask, default_asset_directory
 from .widgets.numeric import NumericEdit, VectorEdit
 
 
@@ -193,7 +193,7 @@ class MeshCandidateDialog(QDialog):
         self.source_kind.addItem("CAD / XAO", "cad_gmsh")
         self.source_kind.addItem("Structured quad / sweep hex recipe", "structured_recipe")
         form.addRow("Source type", self.source_kind)
-        self.source = QLineEdit(); self.output = QLineEdit()
+        self.source = QLineEdit(); self.output = QLineEdit(default_asset_directory())
         self._browse_buttons = []
         for label, field, callback in (("CAD / XAO", self.source, self.browse_source), ("Candidate folder", self.output, self.browse_output)):
             row = QHBoxLayout(); row.addWidget(field)
@@ -236,7 +236,8 @@ class MeshCandidateDialog(QDialog):
         self.geometry_panel = QWidget()
         geometry_layout = QVBoxLayout(self.geometry_panel)
         geometry_layout.setContentsMargins(0,0,0,0)
-        self.geometry_hint = QLabel("Corner order follows the input. Save changed geometry as a new recipe before generation.")
+        self.geometry_hint = QLabel("Save geometry changes as a new recipe.")
+        self.geometry_hint.setToolTip("Corner order follows the input. Save changed geometry as a new recipe before generation.")
         self.geometry_hint.setWordWrap(True); geometry_layout.addWidget(self.geometry_hint)
         self.geometry_form = QFormLayout()
         self.geometry_form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
@@ -658,6 +659,7 @@ class MeshCandidateDialog(QDialog):
             if not candidate["affected_conditions"]: lines.append("None")
             lines += ["", "Old groups and conditions remain unchanged. Analysis export stays blocked until every stale target is explicitly reconnected. New boundary nodes are not added automatically; review the physical region and load distribution after reconnection."]
             self.replacement_details.setPlainText("\n".join(lines))
+            self.replacement_reviewed.setChecked(True)
             self._running(False); return
         if self._closing: super().reject(); return
         if self._cancel.is_set(): self._running(False); self.summary.setText("Generation cancelled. The model is unchanged."); return

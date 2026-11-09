@@ -603,6 +603,7 @@ class SourceModelsDialog(QDialog):
             f"{len(plan['collisions'])} native ID collisions will be renumbered; "
             f"{len(plan['source']['shared_nodes'])} nodes explicitly shared. Original bytes are archived unchanged.")
         self.status.setText("Preview ready. Review all ID changes and shared-node links before Apply.")
+        self.reviewed.setChecked(True)
         self._sync_apply()
 
     def _planning_failed(self, error):
@@ -994,6 +995,7 @@ class PreparedMeshDialog(QDialog):
             f"{plan['element_count']} elements · mesh revision {plan['mesh_revision']}\n"
             f"{len(plan['stale_targets'])} target groups will become stale. Replacement and stale markers form one Undo.")
         self.status.setText("Preview ready. Review the replacement and affected target groups before Apply.")
+        self.replacement_reviewed.setChecked(True)
         self._sync_actions()
 
     def _planning_failed(self, error):
@@ -1132,6 +1134,7 @@ class PreparedMeshDialog(QDialog):
             self.reconnect_details.setPlainText(reconnection_review_text(self.session, self._reconnect_plan))
             self.tabs.setCurrentIndex(3)
             self.status.setText("Review the final mapping, condition multipliers and unresolved targets before Apply.")
+            self.reconnect_reviewed.setChecked(True)
             self._sync_actions()
             return True
         except Exception as exc:
