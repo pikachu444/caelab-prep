@@ -2,6 +2,8 @@
 
 ## 사용자 기능 점검 — 2026-11-12
 
+**범위 정정:** DP/Xia는 예시이며 범용 재료 모델링·동정·최적화의 모델별 adapter로 다룬다. 공통 계약과 바로 구현할 첫 단위는 [WB 통합 구현 명세](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/spec-cae-research-implementation.md)를 따르고, Prep은 native 카드/문서·명령·Undo·export를 계속 소유한다.
+
 점검 기준은 원격 main `f40bfea307e4c2134cb8c4ae61864b629fda5c60`, 연결 Workbench는
 `1c1cacb85018fd080c42f4d475812669b71cae90`이다. 아래 과거 진행 기록의 SHA는 해당
 구현·실행 당시 기준이며 최신 main과 구분한다. [최신 main CI](https://github.com/pikachu444/caelab-prep/actions/runs/42559182326)는
