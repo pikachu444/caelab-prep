@@ -146,6 +146,41 @@ R0–R5는 책임 배치이며 별도의 잔여 개수가 아니다. R1–R3의 
 
 공통 계약 담당은 Prep 통합자 1명, WB adapter/서비스 담당 1명으로 정한다. 제품별 모델·작업 history는 각 repo가 책임지고 변경 계획/PR도 분리한다. 공용 package extraction을 위해 현재 두 repo를 합치거나 별도 신설 repo부터 만들지 않는다. 현재 `caelab-prep[widgets]`가 Qt-only 부품 설치 경로이며 기존 `[gui]`/`[cad]`와 구분한다. 실제 공용 모듈을 양쪽 저장소에 복사하지 않고 고정한 package/commit을 소비한다. Windows 설치형/portable 전달은 N13/N14에서 실제 조합을 확인한다.
 
+<a id="material-expert-rp-followup"></a>
+
+## 재료 보정·전문가·RP 후처리 연결 — 2026-11-12 후속
+
+Prep `f40bfea`와 Workbench `1c1cacb`를 기준으로 한 사용자 기능 조사다.
+현재 N01–N26/G1–G4의 완료 기준을 줄이거나 아래 후속을 구현 완료로 선언하지 않는다.
+세부 실행 순서·수락조건은 [WB 기존 개선 계획](https://github.com/pikachu444/caelab-workbench/blob/main/docs/review/2026-10-23-codex-improvement-plan.md#material-expert-rp-followup)에서 WB가 소유한다.
+
+| 기능 | Prep 소유·재사용 | Workbench 소유·미구현 후속 |
+|---|---|---|
+| DP/Xia 재료 모델링 | 선택 solver/version의 typed 카드·파라미터/곡선·단위 검증·native export·Undo·저장. 현재 LAW1/LAW36 기존 필드 외의 DP/LAW112 typed 편집은 없음 | 원문/카탈로그 보존과 실제 모델링 지원을 분리. solver source에 법칙이 있어도 선택 binary의 실제 실행과 물리 확인 필요 |
+| 시험곡선 보정 | 공용 숫자/단위·표/곡선/CSV 부품을 WB host-binding으로 재사용. 위젯이 별도 study/history를 소유하지 않음 | 원시험/변환·다시험 가중 잔차·계수 bounds·재료점/실제 native evaluator·optimizer·시험별 fit plot·보류시험·이력. 현재 CalculiX INP 스칼라 MDO를 DP/Xia 동정 완료로 표시하지 않음 |
+| 전문가 자문·도구 | 기존 문서/revision/지원 명령을 CLI/live IPC/MCP로 노출. 읽기/편집 capability를 구별 | RAG/LLM 공급자·이론 질문 모드·읽기 전용 tool-call dispatcher·독립 검토. Prep MCP 작동이 WB LLM 연결 완료를 뜻하지 않음 |
+| OpenCourantRP 후처리 | 원 `.caeprep`와 export Starter/Engine·INCLUDE의 소유 유지. 새 후처리/solver queue를 만들지 않음 | RP 별도 프로세스 연결·post 전용 staging·실제 converter/VTK 판독·결과 참조. 현재 RP 전용 연결 없음 |
+
+재료법의 첫 gate는 정확한 식·solver/version·부호·단위·경화·흐름법칙과 실제 binary 지원 확인이다.
+DP라는 이름만으로 여러 LAW나 Abaqus/LS-DYNA 계수를 동일하게 바꾸지 않는다. Xia는 우선 종이·판지
+직교이방 탄소성 LAW112를 조사했으며 다른 Xia 식은 식별 후 별도 지원하고 원지/상세 적층과 균질화 골판지 중 적용 수준을 명시한다. 시험자료의 공칭/진응력·
+전체/소성변형률·압축 부호·측정법·재료축과 다시험 식별성을 정한 뒤 재료점 oracle→native FE
+재평가→보류시험 순으로 닫는다. RAD 고정폭 카드에 INP의 가변길이 토큰 치환기를 그대로 쓰지 않는다.
+공용 optimizer/evaluator·실행 이력을 재사용하고 typed 고정폭 편집/renderer를 별도 검증한다.
+
+전문가의 첫 연결은 문헌·선택 run/frame·지원 카드의 **읽기 조회**다. 오래된 문서/revision·자료 부족·
+미선언 단위·partial 결과·취소/timeout을 보존한다. 제안 후 모델 변경은 기존 Prep 명령의 명시 Apply와
+revision 검사로 수행하며 LLM의 모델 변경·덱 덮어쓰기·solver 실행 도구를 노출하지 않는다.
+일반 CAE 이론 질문은 계산 자료 없이 시작할 수 있어야 하며 실제 결과를 만들어 채우지 않는다.
+
+[OpenCourantRP](https://github.com/CAMLAB-UChile/OpenCourantRP) `cec23cb`는 실제 별도 후처리 앱이나
+현재 `--project/--post-only` 인터페이스가 없다. RP는 프로젝트 하위 `rp_run`을 재작성할 수 있으므로
+WB 불변 run 폴더를 직접 수정 대상으로 넘기지 않는다. post staging·동일 run 선택/자동 열기·실제
+animation→VTK 변환·원 ID/시간/단위/응력·shell layer/좌표계 수치 검증 뒤에 연결을 완료한다.
+RP batch exit 0은 solver 정상종료 증거가 아니며 WB JobManager의 실행 판정을 유지한다.
+RP 표시 단위를 수치 환산으로 해석하지 않는다. 별도 설치를 먼저 참조하고 AGPLv3 및 동봉 의존성
+조건을 확인한다. RP의 Run 기능과 WB solver를 중복 실행하지 않는다.
+
 ## 8. 2026-10-29 공개 GUI 자산 조사 기록
 
 GitHub accessible owner 목록과 gui 이름/설명 검색에서는 별도 전용 공용 GUI 저장소를 특정하지 못했다. 그러므로 존재하지 않는다고 결론 내리지 않는다. `autonomous-cae-lab@46a5cf57803b35549aab4261e309bb6ee0390e32`에서 `docs/design/20261012-desktop-planning/pro-authored/prototype/README.md`를 실제 읽었다. PySide6 6.9.1 기반 gallery/material harness가 있으나 스스로 **planning-only/simulated UI**, 별도 prototype·비제품 import·실Qt 미검증이라고 명시한다. 이를 Prep 실행형 공용 library로 바로 연결하지 않는다. `cae-material-platform` 검색 결과의 ux-reference-gallery는 reference screenshots 영역이며 공용 Qt 위젯 증거가 아니다.

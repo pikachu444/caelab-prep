@@ -1,5 +1,25 @@
 # 현재 구현과 남은 작업
 
+## 사용자 기능 점검 — 2026-11-12
+
+점검 기준은 원격 main `f40bfea307e4c2134cb8c4ae61864b629fda5c60`, 연결 Workbench는
+`1c1cacb85018fd080c42f4d475812669b71cae90`이다. 아래 과거 진행 기록의 SHA는 해당
+구현·실행 당시 기준이며 최신 main과 구분한다. [최신 main CI](https://github.com/pikachu444/caelab-prep/actions/runs/42559182326)는
+문서 Ubuntu/Windows·Qt·실제 렌더·CAD worker·구조화 recipe·solver 등 10작업 성공이다.
+Windows document 작업의 성공이 OS 실조작·새 설치·원제품 T1–T6 비교의 완료는 아니다.
+
+| 사용자 작업 | 현재 구현 | 남은 범위 |
+|---|---|---|
+| 모델 작성·저장·출력 | 지원 RAD 재료/단면·집합·조건·케이스, 메시 채택/제한 수정, Undo·저장/재열기·Starter/Engine export | 모든 재료법·모든 키워드·일반 CAD 조건 자동 복원은 미완료 |
+| DP·Xia 재료 정의 | 지원 카드의 원문 보존. 구조화 편집은 LAW1/LAW36의 기존 지원 필드, 새 재료 생성은 LAW1 | DP 및 Xia/LAW112 전용 파라미터·검증·곡선 연결은 없음. 목록에 있다는 사실을 모델링 지원으로 표시하지 않음 |
+| 시험곡선·계수 최적화 | 공용 표·곡선/단위 위젯과 CSV 입력을 재사용할 수 있음 | 시험값 의미 변환·다시험 잔차·보정 실행은 Workbench 후속 소유. Prep 곡선 편집을 재료 보정 완료로 세지 않음 |
+| 자동화·전문가 연결 | 독립 CLI·live IPC·선택 MCP adapter | Workbench 전문가의 RAG/tool-call 연결과 독립 공학 심의는 별도 미구현 |
+| Hex8·형상 검사 | PR70의 Hex8 단면 선택/지원 recipe, 창 배치·Preview 후 Apply 활성화·제한 blend 후보 검토 | 범용 all-hex·washer 요소 생성·일반 형상 정리·N25 전체 완료 아님 |
+
+재료 보정·자문·RP 후처리의 공동 경계와 다음 작업은 [Workbench 재사용 계획](docs/workbench-reuse-plan.md#material-expert-rp-followup)에 추가했다.
+기존 7/16/3행 분류와 N01–N26 종료 판정은 이 조사로 변경하지 않는다. 열린 PR은 점검 시점 0건이며,
+#26/#28/#43/#47/#48/#50의 미병합 종료는 해당 전체 기능의 완료 근거가 아니다.
+
 이 문서는 N01–N26의 상태·완료 기준·다음 작업의 정본이다. 요구는 [DESIGN](DESIGN.md#delivery-goals), 현재 코드 계약은 [ARCHITECTURE](ARCHITECTURE.md), 단계별 입력·산출물은 [실행 계획](docs/execution-stages.md)을 따른다.
 
 기존 기능의 통합 이력 기준은 Prep main `d5aaa76b49dcbfaf41dc4a9720958ce1f0e7ea62`다. PR37 최종 검토 `3ff6eda709da0405411965cb452b2091c1f15755`의 Git 부모·동일 tree·PR merged 상태를 확인했다. PR29의 첫 절대좌표 이동, PR32의 설정 격리·빌드 도구, PR27/34의 제한 quad/sweep hex 연결, PR35의 명시 집합 검토와 PR36의 BEAM merge guard를 포함한다. 이후 명시 native merge의 제품 기준은 API `e32b62d538c83de600aa9a679447875cabbd64f6`·GUI `b7c5446a656c58f9f68d2ba5884f722a1cee3792`이며 아래 N18에서 별도 기록한다. PR32 당시 N13 로컬 후보는 `b3a1c6a058a79fbe4af40dd2781f23d1f3c71ce4`, N18 집합 검토는 API `64cdcc102e993777229e8ef78472d8f221354f9f`·GUI `22284aa2989a632be295cd86b43a6c056a6dea9e`·복구 안내 `6791da9e0fe50166702a87d503af1436b2ffc234`를 구분한다. Workbench는 이 문서에서 대신 판정하지 않으며 [소유 경계](docs/workbench-reuse-plan.md)를 따른다.
