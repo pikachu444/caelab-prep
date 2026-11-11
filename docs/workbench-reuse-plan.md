@@ -148,15 +148,15 @@ R0–R5는 책임 배치이며 별도의 잔여 개수가 아니다. R1–R3의 
 
 <a id="material-expert-rp-followup"></a>
 
-## 재료 보정·전문가·RP 후처리 연결 — 2026-11-12 후속
+## 범용 재료 연구·전문가·프로그램 후처리 연결 — 2026-11-12 후속
 
-Prep `f40bfea`와 Workbench `1c1cacb`를 기준으로 한 사용자 기능 조사다.
+Prep `f40bfea`와 Workbench `1c1cacb`를 기준으로 한 사용자 기능 조사다. **DP/Xia는 예시이며 목표 범위는 여러 재료 모델과 solver에 확장하는 공통 재료 모델링·동정·최적화다.** 모델별 descriptor/evaluator/native adapter와 capability를 등록하며 공통 코드에 특정 모델명을 고정하지 않는다. 구현 계약은 [WB 통합 명세](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/spec-cae-research-implementation.md)에 정의한다.
 현재 N01–N26/G1–G4의 완료 기준을 줄이거나 아래 후속을 구현 완료로 선언하지 않는다.
 세부 실행 순서·수락조건은 [WB 기존 개선 계획](https://github.com/pikachu444/caelab-workbench/blob/main/docs/review/2026-10-23-codex-improvement-plan.md#material-expert-rp-followup)에서 WB가 소유한다.
 
 | 기능 | Prep 소유·재사용 | Workbench 소유·미구현 후속 |
 |---|---|---|
-| DP/Xia 재료 모델링 | 선택 solver/version의 typed 카드·파라미터/곡선·단위 검증·native export·Undo·저장. 현재 LAW1/LAW36 기존 필드 외의 DP/LAW112 typed 편집은 없음 | 원문/카탈로그 보존과 실제 모델링 지원을 분리. solver source에 법칙이 있어도 선택 binary의 실제 실행과 물리 확인 필요 |
+| 여러 재료법의 모델링(DP/Xia는 예시) | 선택 solver/version의 typed 카드·파라미터/곡선·단위 검증·native export·Undo·저장. 현재 LAW1/LAW36 기존 필드 외의 DP/LAW112 typed 편집은 없음 | 원문/카탈로그 보존과 실제 모델링 지원을 분리. solver source에 법칙이 있어도 선택 binary의 실제 실행과 물리 확인 필요 |
 | 시험곡선 보정 | 공용 숫자/단위·표/곡선/CSV 부품을 WB host-binding으로 재사용. 위젯이 별도 study/history를 소유하지 않음 | 원시험/변환·다시험 가중 잔차·계수 bounds·재료점/실제 native evaluator·optimizer·시험별 fit plot·보류시험·이력. 현재 CalculiX INP 스칼라 MDO를 DP/Xia 동정 완료로 표시하지 않음 |
 | 전문가 자문·도구 | 기존 문서/revision/지원 명령을 CLI/live IPC/MCP로 노출. 읽기/편집 capability를 구별 | RAG/LLM 공급자·이론 질문 모드·읽기 전용 tool-call dispatcher·독립 검토. Prep MCP 작동이 WB LLM 연결 완료를 뜻하지 않음 |
 | OpenCourantRP 후처리 | 원 `.caeprep`와 export Starter/Engine·INCLUDE의 소유 유지. 새 후처리/solver queue를 만들지 않음 | RP 별도 프로세스 연결·post 전용 staging·실제 converter/VTK 판독·결과 참조. 현재 RP 전용 연결 없음 |
@@ -164,8 +164,8 @@ Prep `f40bfea`와 Workbench `1c1cacb`를 기준으로 한 사용자 기능 조�
 재료법의 첫 gate는 정확한 식·solver/version·부호·단위·경화·흐름법칙과 실제 binary 지원 확인이다.
 DP라는 이름만으로 여러 LAW나 Abaqus/LS-DYNA 계수를 동일하게 바꾸지 않는다. Xia는 우선 종이·판지
 직교이방 탄소성 LAW112를 조사했으며 다른 Xia 식은 식별 후 별도 지원하고 원지/상세 적층과 균질화 골판지 중 적용 수준을 명시한다. 시험자료의 공칭/진응력·
-전체/소성변형률·압축 부호·측정법·재료축과 다시험 식별성을 정한 뒤 재료점 oracle→native FE
-재평가→보류시험 순으로 닫는다. RAD 고정폭 카드에 INP의 가변길이 토큰 치환기를 그대로 쓰지 않는다.
+전체/소성변형률·압축 부호·측정법·재료축과 다시험 식별성을 정한 뒤 모델별 재료점 또는 실제 solver 1요소/쿠폰을 선택하고 독립 oracle·native FE
+재평가·보류시험을 확인한다. 새 자체 재료점 적분기를 모든 모델의 필수 선행 조건으로 두지 않는다. RAD 고정폭 카드에 INP의 가변길이 토큰 치환기를 그대로 쓰지 않는다.
 공용 optimizer/evaluator·실행 이력을 재사용하고 typed 고정폭 편집/renderer를 별도 검증한다.
 
 전문가의 첫 연결은 문헌·선택 run/frame·지원 카드의 **읽기 조회**다. 오래된 문서/revision·자료 부족·
