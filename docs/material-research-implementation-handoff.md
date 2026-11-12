@@ -1,6 +1,6 @@
 # 재료 연구·전문가 자문·native 후처리의 Prep 구현 인계
 
-기준 Prep555af5b3ab2c6e7dc276111609302ef565bb4fc8,Workbench104cdd6888a5554eecc8cf965c60ff1bd980b6da. 전체 정본은 [WB 통합명세](https://github.com/pikachu444/caelab-workbench/blob/98be90bfe1d8d02ae099bc0aecf84d1d11110218/docs/specs/spec-cae-research-implementation.md),[core C7–C11](https://github.com/pikachu444/caelab-workbench/blob/98be90bfe1d8d02ae099bc0aecf84d1d11110218/docs/specs/cae-research/core-implementation.md),[실제토의·검토·자료색인](https://github.com/pikachu444/caelab-workbench/blob/98be90bfe1d8d02ae099bc0aecf84d1d11110218/docs/specs/cae-research/README.md)입니다. 명세 갱신이며 새 제품 기능 구현 완료가 아닙니다. DP/Xia는 예시입니다.
+기준 Prep555af5b3ab2c6e7dc276111609302ef565bb4fc8,Workbench104cdd6888a5554eecc8cf965c60ff1bd980b6da. 전체 정본은 [WB 통합명세](https://github.com/pikachu444/caelab-workbench/blob/65a1a10c028425450914b1fe253c372e23ffd9e5/docs/specs/spec-cae-research-implementation.md),[core C7–C11](https://github.com/pikachu444/caelab-workbench/blob/65a1a10c028425450914b1fe253c372e23ffd9e5/docs/specs/cae-research/core-implementation.md),[실제토의·검토·자료색인](https://github.com/pikachu444/caelab-workbench/blob/65a1a10c028425450914b1fe253c372e23ffd9e5/docs/specs/cae-research/README.md)입니다. 명세 갱신이며 새 제품 기능 구현 완료가 아닙니다. DP/Xia는 예시입니다.
 
 ## Prep 담당과 기존 실제 코드
 
