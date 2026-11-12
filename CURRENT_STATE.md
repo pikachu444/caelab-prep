@@ -2,14 +2,13 @@
 
 ## 2026-11-12 전체 재료 연구·자문·후처리 연결 명세 갱신
 
-Workbench의 전체 구현 명세와 Prep 담당 구현 단위를 [연결 작업서](docs/material-research-implementation-handoff.md)에 고정한다. Prep은 기존 열린 문서/typed card/command/Undo/native export와 공용 Qt 숫자·곡선·속성 위젯을 소유한다. Workbench는 공용 optimizer·시험/평가/service·전문가·외부 후처리 연결을 맡는다.
+Workbench의 전체 구현 명세와 Prep가 담당할 작업을 [연결 작업서](docs/material-research-implementation-handoff.md)에 정리했습니다. Prep는 이미 열린 문서, 형식이 지정된 솔버 카드 편집, 명령·실행 취소(Undo)·솔버 입력 덱 내보내기, 공용 Qt 숫자·곡선·속성 위젯을 계속 소유합니다. Workbench는 공용 최적화 도구, 시험·평가 서비스, 전문가 자문, 외부 후처리 프로그램 연결을 맡습니다.
 
-이번에 새 제품 코드를 구현한 것은 아니다. 기존 LAW1/LAW36 typed 편집이나 IPC/MCP의 존재를 모든 재료 카드 지원/LLM 자문 통합 완료로 확대하지 않는다. DP와 Xia는 예시이고 여러 재료군의 정확한 adapter/backend/출력·검증·export 지원을 개별 관리한다. Xia2002 원모델과 LAW112 또는 이번 GMN2012-derived XBP를 동일시하지 않는다.
-
+이번 변경은 명세 갱신이며 새 제품 코드의 구현이 아닙니다. 기존 LAW1·LAW36 편집이나 프로세스 간 통신(IPC)·모델 문맥 프로토콜(MCP)이 있다는 사실만으로 모든 재료 카드 또는 대규모 언어 모델(LLM) 자문 연결이 완료됐다고 판단하지 않습니다. Drucker–Prager(DP)와 Xia는 여러 재료군 중 예시입니다. 각 모델의 정확한 연결 모듈·계산 구현·출력·검증·내보내기 지원 여부를 따로 관리합니다. 원래 Xia2002 모델, LAW112, 이번 GMN2012 기반 파생 XBP는 서로 구분합니다.
 
 ## 사용자 기능 점검 — 2026-11-12
 
-**범위 정정:** DP/Xia는 예시이며 범용 재료 모델링·동정·최적화의 모델별 adapter로 다룬다. 공통 계약과 바로 구현할 첫 단위는 [WB 통합 구현 명세](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/spec-cae-research-implementation.md)를 따르고, Prep은 native 카드/문서·명령·Undo·export를 계속 소유한다.
+**범위 정정:** DP와 Xia는 여러 재료 모델 중 예시입니다. 여러 재료를 모델링하고 시험자료로 계수를 찾는 동정·최적화를 위해 모델별 연결 모듈을 둡니다. 공통 구현 규칙과 처음 구현할 작업은 [WB 통합 구현 명세](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/spec-cae-research-implementation.md)를 따릅니다. Prep는 솔버 카드·문서·명령·실행 취소(Undo)·내보내기를 계속 소유합니다.
 
 점검 기준은 원격 main `f40bfea307e4c2134cb8c4ae61864b629fda5c60`, 연결 Workbench는
 `1c1cacb85018fd080c42f4d475812669b71cae90`이다. 아래 과거 진행 기록의 SHA는 해당
@@ -19,13 +18,13 @@ Windows document 작업의 성공이 OS 실조작·새 설치·원제품 T1–T6
 
 | 사용자 작업 | 현재 구현 | 남은 범위 |
 |---|---|---|
-| 모델 작성·저장·출력 | 지원 RAD 재료/단면·집합·조건·케이스, 메시 채택/제한 수정, Undo·저장/재열기·Starter/Engine export | 모든 재료법·모든 키워드·일반 CAD 조건 자동 복원은 미완료 |
-| DP·Xia 재료 정의 | 지원 카드의 원문 보존. 구조화 편집은 LAW1/LAW36의 기존 지원 필드, 새 재료 생성은 LAW1 | DP 및 Xia/LAW112 전용 파라미터·검증·곡선 연결은 없음. 목록에 있다는 사실을 모델링 지원으로 표시하지 않음 |
-| 시험곡선·계수 최적화 | 공용 표·곡선/단위 위젯과 CSV 입력을 재사용할 수 있음 | 시험값 의미 변환·다시험 잔차·보정 실행은 Workbench 후속 소유. Prep 곡선 편집을 재료 보정 완료로 세지 않음 |
-| 자동화·전문가 연결 | 독립 CLI·live IPC·선택 MCP adapter | Workbench 전문가의 RAG/tool-call 연결과 독립 공학 심의는 별도 미구현 |
+| 모델 작성·저장·출력 | 지원하는 RAD 재료·단면·집합·조건·케이스를 편집합니다. 메시 채택·제한 수정, Undo, 저장·재열기, Starter/Engine 내보내기를 지원합니다. | 모든 재료법·모든 키워드의 지원과 일반 CAD 조건의 자동 복원은 미완료입니다. |
+| DP·Xia 재료 정의 | 지원 카드의 원문을 보존합니다. 구조화 편집은 LAW1·LAW36의 기존 지원 필드에 한정되며, 새 재료 생성은 LAW1입니다. | DP 및 Xia/LAW112 전용 계수·검증·곡선 연결은 없습니다. 목록에 있다는 이유만으로 모델링을 지원한다고 표시하지 않습니다. |
+| 시험곡선·계수 최적화 | 공용 표·곡선·단위 위젯과 CSV 입력을 재사용할 수 있습니다. | 시험값의 의미 변환, 여러 시험의 잔차, 계수 보정 실행은 Workbench가 후속 구현합니다. Prep에서 곡선을 편집할 수 있다는 사실만으로 재료 보정이 완료됐다고 판단하지 않습니다. |
+| 자동화·전문가 연결 | 독립 명령줄(CLI), 열린 프로세스와의 통신(IPC), 선택적 MCP 연결 모듈이 있습니다. | Workbench 전문가의 검색 증강 생성(RAG)·도구 호출 연결과 독립 공학 검토는 별도로 아직 구현하지 않았습니다. |
 | Hex8·형상 검사 | PR70의 Hex8 단면 선택/지원 recipe, 창 배치·Preview 후 Apply 활성화·제한 blend 후보 검토 | 범용 all-hex·washer 요소 생성·일반 형상 정리·N25 전체 완료 아님 |
 
-재료 보정·자문·RP 후처리의 공동 경계와 다음 작업은 [Workbench 재사용 계획](docs/workbench-reuse-plan.md#material-expert-rp-followup)에 추가했다.
+재료 보정·자문·RP 후처리에서 각 프로그램이 맡을 일과 다음 작업은 [Workbench 재사용 계획](docs/workbench-reuse-plan.md#material-expert-rp-followup)에 추가했습니다.
 기존 7/16/3행 분류와 N01–N26 종료 판정은 이 조사로 변경하지 않는다. 열린 PR은 점검 시점 0건이며,
 #26/#28/#43/#47/#48/#50의 미병합 종료는 해당 전체 기능의 완료 근거가 아니다.
 
@@ -304,3 +303,4 @@ README → DESIGN의 R/T/G → 이 표 → 해당 기술 절과 코드를 읽는
 출처 버전도 구분한다. Naksha 전체 이미지는 `products/naksha.json`의 **0.5.07**, library는 build 미표시다. BeidPrep은 [1.0.1 별도 실행](docs/beidprep-evaluation.md)과 `products/beidprep.json`의 **2.0 공개 페이지/build 미표시 이미지**가 다르며 2.0 실행·편집을 확인한 것으로 쓰지 않는다. 첫 제한 GUI 후보의 같은 입력/전후 그림·글꼴·실패/수정·미해결 지적은 로컬 `C:/Users/pikac/.codex/visualizations/2026/11/03/prep-reference-gui-cd2cd24/manifest.json`에 보존한다. source/offscreen·설치 글꼴 QA process-only·3D 비활성 장면이며 기본 native/G1 생성·할당 전체 또는 사용자 Windows 품질을 종결하지 않는다. 현재 사용자 창의 build/픽셀/DPI는 이 root가 아직 확인하지 않았다. 13pt 원인·70% 빈 영역·2배 밀도 같은 미측정 수치나 context menu 전면 부재를 수정 근거로 채택하지 않는다.
 
 기능 작성자는 같은 N 행의 지원 범위와 사용법을 갱신한다. 통합 담당은 코드 SHA·입출력·실제 확인/미확인·검토/PR 근거와 그룹별 잔여 수를 대조한다. 개발검증자료의 작성·실행 주체를 밝히고 사용자 직접 시험으로 바꾸어 쓰지 않는다. 자료를 통합·삭제할 때는 고유 정보·재현 입력·필수 저작권 고지·기존 링크를 확인한다.
+

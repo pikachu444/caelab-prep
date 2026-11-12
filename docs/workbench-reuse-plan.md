@@ -148,38 +148,28 @@ R0–R5는 책임 배치이며 별도의 잔여 개수가 아니다. R1–R3의 
 
 <a id="material-expert-rp-followup"></a>
 
-## 범용 재료 연구·전문가·프로그램 후처리 연결 — 2026-11-12 후속
+## 여러 재료의 연구·전문가 자문·후처리 프로그램 연결 — 2026-11-12 후속
 
-Prep `f40bfea`와 Workbench `1c1cacb`를 기준으로 한 사용자 기능 조사다. **DP/Xia는 예시이며 목표 범위는 여러 재료 모델과 solver에 확장하는 공통 재료 모델링·동정·최적화다.** 모델별 descriptor/evaluator/native adapter와 capability를 등록하며 공통 코드에 특정 모델명을 고정하지 않는다. 구현 계약은 [WB 통합 명세](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/spec-cae-research-implementation.md)에 정의한다.
-현재 N01–N26/G1–G4의 완료 기준을 줄이거나 아래 후속을 구현 완료로 선언하지 않는다. Prep의 실제 구현 인수는 [전체 연결 작업서](material-research-implementation-handoff.md)의 열린 owner IPC·typed native binding·multi-resource atomic Apply·UndoRedo·공용 Qt host·export 규칙을 따른다.
-세부 실행 순서·수락조건은 [WB 기존 개선 계획](https://github.com/pikachu444/caelab-workbench/blob/main/docs/review/2026-10-23-codex-improvement-plan.md#material-expert-rp-followup)에서 WB가 소유한다.
+Prep `f40bfea`와 Workbench `1c1cacb`를 기준으로 사용자 기능을 조사했습니다. **Drucker–Prager(DP)와 Xia는 예시입니다. 목표는 여러 재료 모델과 솔버로 확장할 수 있는 공통 재료 모델링·동정·최적화 기능입니다.** 모델마다 설명자, 계산기, 솔버 연결 모듈과 지원 기능을 등록하며, 공통 코드에 특정 모델명을 고정하지 않습니다. 구현 규칙은 [WB 통합 명세](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/spec-cae-research-implementation.md)를 따릅니다.
 
-| 기능 | Prep 소유·재사용 | Workbench 소유·미구현 후속 |
+기존 N01–N26/G1–G4의 완료 기준은 유지하며, 아래 후속 작업은 구현 완료가 아닙니다. Prep의 완료 검사는 [전체 연결 작업서](material-research-implementation-handoff.md)의 규칙을 따릅니다. 이미 열린 소유 프로세스와 통신하고, 형식이 지정된 솔버 카드에 연결하며, 여러 자원을 한 번에 적용(Apply)하고 실행 취소·다시 실행(Undo/Redo)할 수 있어야 합니다. 공용 Qt 부품을 사용하는 호스트와 내보내기도 같은 작업서를 따릅니다. 세부 작업 순서와 완료 조건은 Workbench가 [기존 개선 계획](https://github.com/pikachu444/caelab-workbench/blob/main/docs/review/2026-10-23-codex-improvement-plan.md#material-expert-rp-followup)에서 관리합니다.
+
+| 기능 | Prep의 책임과 재사용 범위 | Workbench의 책임과 아직 구현할 일 |
 |---|---|---|
-| 여러 재료법의 모델링(DP/Xia는 예시) | 선택 solver/version의 typed 카드·파라미터/곡선·단위 검증·native export·Undo·저장. 현재 LAW1/LAW36 기존 필드 외의 DP/LAW112 typed 편집은 없음 | 원문/카탈로그 보존과 실제 모델링 지원을 분리. solver source에 법칙이 있어도 선택 binary의 실제 실행과 물리 확인 필요 |
-| 시험곡선 보정 | 공용 숫자/단위·표/곡선/CSV 부품을 WB host-binding으로 재사용. 위젯이 별도 study/history를 소유하지 않음 | 원시험/변환·다시험 가중 잔차·계수 bounds·재료점/실제 native evaluator·optimizer·시험별 fit plot·보류시험·이력. 현재 CalculiX INP 스칼라 MDO를 DP/Xia 동정 완료로 표시하지 않음 |
-| 전문가 자문·도구 | 기존 문서/revision/지원 명령을 CLI/live IPC/MCP로 노출. 읽기/편집 capability를 구별 | RAG/LLM 공급자·이론 질문 모드·읽기 전용 tool-call dispatcher·독립 검토. Prep MCP 작동이 WB LLM 연결 완료를 뜻하지 않음 |
-| OpenCourantRP 후처리 | 원 `.caeprep`와 export Starter/Engine·INCLUDE의 소유 유지. 새 후처리/solver queue를 만들지 않음 | RP 별도 프로세스 연결·post 전용 staging·실제 converter/VTK 판독·결과 참조. 현재 RP 전용 연결 없음 |
+| 여러 재료법의 모델링 — DP·Xia는 예시 | 선택한 솔버·판본의 형식 지정 카드, 계수·곡선·단위 검증, 솔버 덱 내보내기, Undo, 저장을 맡습니다. 현재 LAW1·LAW36의 기존 필드 외에 DP·LAW112 전용 구조화 편집은 없습니다. | 원문·목록 보존과 실제 모델링 지원을 구분합니다. 솔버 소스에 법칙이 있어도 선택한 실행 파일의 실제 실행과 물리 확인이 필요합니다. |
+| 시험곡선으로 계수 보정 | 공용 숫자·단위·표·곡선·CSV 부품을 Workbench 호스트에 연결해 재사용합니다. 위젯은 별도 연구 문서나 이력을 소유하지 않습니다. | 원시험과 변환 자료, 여러 시험의 가중 잔차, 계수 상·하한, 재료점 또는 실제 솔버 계산기, 최적화 도구, 시험별 적합 그래프, 적합에 쓰지 않은 검증 시험, 이력을 맡습니다. 현재 CalculiX INP의 단일 값 MDO를 DP·Xia 동정 완료로 표시하지 않습니다. |
+| 전문가 자문·도구 | 기존 문서·개정·지원 명령을 명령줄(CLI), 열린 프로세스 통신(IPC), 모델 문맥 프로토콜(MCP)로 제공합니다. 읽기 권한과 편집 권한을 구분합니다. | 검색 증강 생성(RAG), 대규모 언어 모델(LLM) 제공자, 이론 질문 모드, 읽기 전용 도구 호출 분배기, 독립 검토를 구현합니다. Prep MCP 작동은 Workbench LLM 연결 완료를 뜻하지 않습니다. |
+| OpenCourantRP 후처리 | 원 `.caeprep`와 내보낸 Starter/Engine·`INCLUDE`를 계속 소유합니다. 새 후처리·솔버 작업 대기열은 만들지 않습니다. | 별도 RP 프로세스 연결, 후처리 전용 준비 폴더, 실제 변환기·VTK 판독, 결과 참조를 맡습니다. 현재 RP 전용 연결은 없습니다. |
 
-재료법의 첫 gate는 정확한 식·solver/version·부호·단위·경화·흐름법칙과 실제 binary 지원 확인이다.
-DP라는 이름만으로 여러 LAW나 Abaqus/LS-DYNA 계수를 동일하게 바꾸지 않는다. Xia2002와 LAW112를 동일시한 이전 문장을 정정한다.
-선택 후보 GMN2012-derived power XBP는 원 Xia와 별개의 식·상태·지원 한계로 Workbench 명세에 고정했다. 시험자료의 공칭/진응력·
-전체/소성변형률·압축 부호·측정법·재료축과 다시험 식별성을 정한 뒤 모델별 재료점 또는 실제 solver 1요소/쿠폰을 선택하고 독립 oracle·native FE
-재평가·보류시험을 확인한다. 새 자체 재료점 적분기를 모든 모델의 필수 선행 조건으로 두지 않는다. RAD 고정폭 카드에 INP의 가변길이 토큰 치환기를 그대로 쓰지 않는다.
-공용 optimizer/evaluator·실행 이력을 재사용하고 typed 고정폭 편집/renderer를 별도 검증한다.
+재료법을 지원하기 위한 첫 조건은 정확한 식·솔버·판본·부호·단위·경화·흐름법칙과 실제 실행 파일의 지원 여부를 확인하는 것입니다. DP라는 이름만으로 여러 LAW 또는 Abaqus·LS-DYNA의 계수를 같은 것으로 변환하지 않습니다. Xia2002와 LAW112를 동일시했던 이전 문장은 정정합니다. 선택 후보인 GMN2012 기반 멱법칙 XBP는 원래 Xia와 별개의 식·상태·지원 한계를 가진 모델로 Workbench 명세에 고정했습니다.
 
-전문가의 첫 연결은 문헌·선택 run/frame·지원 카드의 **읽기 조회**다. 오래된 문서/revision·자료 부족·
-미선언 단위·partial 결과·취소/timeout을 보존한다. 제안 후 모델 변경은 기존 Prep 명령의 명시 Apply와
-revision 검사로 수행하며 LLM의 모델 변경·덱 덮어쓰기·solver 실행 도구를 노출하지 않는다.
-일반 CAE 이론 질문은 계산 자료 없이 시작할 수 있어야 하며 실제 결과를 만들어 채우지 않는다.
+시험자료의 공칭응력·진응력, 전체변형률·소성변형률, 압축 부호, 측정법, 재료축과 여러 시험을 통한 계수 식별성을 먼저 정합니다. 그 뒤 모델별 재료점 계산 또는 실제 솔버의 1요소·시험편 계산을 선택합니다. 독립 기준 계산, 실제 유한요소(FE) 재평가, 적합에 쓰지 않은 시험을 확인합니다. 모든 모델에 새 자체 재료점 적분기를 먼저 만들도록 요구하지 않습니다. RAD 고정폭 카드에는 INP의 가변 길이 토큰 치환기를 그대로 쓰지 않습니다. 공용 최적화 도구·계산기·실행 이력을 재사용하고, 형식이 지정된 고정폭 편집과 출력을 별도로 검증합니다.
 
-[OpenCourantRP](https://github.com/CAMLAB-UChile/OpenCourantRP) `cec23cb`는 실제 별도 후처리 앱이나
-현재 자동 post-only handoff 인터페이스가 없다. optional fork의 선택 계약은 `--post-only --handoff <json> --receipt <json>`이며 upstream의 현존 기능으로 표시하지 않는다. RP는 프로젝트 하위 `rp_run`을 재작성할 수 있으므로
-WB 불변 run 폴더를 직접 수정 대상으로 넘기지 않는다. post staging·동일 run 선택/자동 열기·실제
-animation→VTK 변환·원 ID/시간/단위/응력·shell layer/좌표계 수치 검증 뒤에 연결을 완료한다.
-RP batch exit 0은 solver 정상종료 증거가 아니며 WB JobManager의 실행 판정을 유지한다.
-RP 표시 단위를 수치 환산으로 해석하지 않는다. 별도 설치를 먼저 참조하고 AGPLv3 및 동봉 의존성
-조건을 확인한다. RP의 Run 기능과 WB solver를 중복 실행하지 않는다.
+전문가의 첫 연결은 문헌·선택 실행·프레임·지원 카드의 **읽기 조회**입니다. 오래된 문서·개정, 자료 부족, 미선언 단위, 부분 결과, 취소·시간 초과 상태를 그대로 전달합니다. 제안 후 모델 변경은 기존 Prep 명령의 명시적 Apply와 개정 검사로 수행합니다. LLM에 모델 변경·덱 덮어쓰기·솔버 실행 도구를 제공하지 않습니다. 일반 CAE 이론 질문은 계산 자료 없이 시작할 수 있어야 하며, 없는 실제 결과를 만들어 채우지 않습니다.
+
+[OpenCourantRP](https://github.com/CAMLAB-UChile/OpenCourantRP) `cec23cb`는 실제 별도 후처리 앱이지만, 현재 후처리 전용 자동 전달 인터페이스는 없습니다. 선택 파생판의 구현 규칙은 `--post-only --handoff <json> --receipt <json>`이며, 이를 원본 앱의 현재 기능으로 표시하지 않습니다. RP는 프로젝트 하위 `rp_run`을 다시 쓸 수 있으므로 Workbench의 불변 실행 폴더를 직접 수정 대상으로 넘기지 않습니다. 후처리용 준비 폴더, 같은 실행의 선택·자동 열기, 실제 animation→VTK 변환, 원 ID·시간·단위·응력·셸 층·좌표계의 수치 검증을 마친 뒤 연결을 완료 처리합니다.
+
+RP 일괄 처리의 종료 코드 0은 솔버 정상 종료의 증거가 아닙니다. 실행 판정은 Workbench의 `JobManager`가 계속 맡습니다. RP의 표시 단위를 수치 환산으로 해석하지 않습니다. 별도 설치를 먼저 참조하고 AGPLv3와 함께 포함된 의존성의 조건을 확인합니다. RP의 Run 기능으로 Workbench 솔버를 중복 실행하지 않습니다.
 
 ## 8. 2026-10-29 공개 GUI 자산 조사 기록
 
@@ -208,3 +198,4 @@ GitHub accessible owner 목록과 gui 이름/설명 검색에서는 별도 전�
 <a id="w3-rad-실행-경계-n21"></a>
 
 이전 절 **W3 RAD 실행 경계 (N21)** → [옮긴 내용](#w3--rad-실행-입력-묶음과-실제-계산-연결).
+
