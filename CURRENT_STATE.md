@@ -1,5 +1,14 @@
 # 현재 구현과 남은 작업
 
+## 기존 계획과 재료 연구 후속의 연결 — 2026-11-12
+
+이번 변경은 [기존 실행 단계](docs/execution-stages.md#research-integration)·[WB 재사용 계획](docs/workbench-reuse-plan.md#material-expert-rp-followup)·[적용 인계](docs/material-research-implementation-handoff.md)를 WB의 새 12개 세부 작업에 연결한 문서 갱신입니다. 새 제품 기능은 구현 예정이며 문서 병합으로 구현 진도를 올리지 않습니다. 구현 담당·독립 QA·달력 날짜는 아직 미정입니다.
+
+기존 N01–N26와 7/16/3 분류는 유지합니다. N16의 원자 명령, N19의 owner IPC, N20의 실제 MCP client, N21/W3 실행은 확인한 범위를 재사용하고 새 모델 Apply·AI·수치 판독·RP 완료로 전용하지 않습니다. N03–N10의 8제품 비교, N11 연속 과업, N12–N14 Windows/새 설치/두 앱 조합, N17 대용량, N18 나머지 메시 수정, N22–N26 조건부 메시 실증의 잔여는 보존합니다. 새 12개를 기존 26행에 더해 진행률을 계산하지 않습니다.
+
+PREP01의 첫 LAW1 E 연결과 여러 시험에서 얻은 전체 계수·곡선·축 적용을 구별합니다. 계산·동정·FE 재평가·native 내보내기·Apply는 모델/솔버/판본별로 따로 지원을 판정합니다. 원자 Apply 미지원 시 native exporter가 별도로 검증된 경우에만 덱 내보내기를 허용합니다. 일반 보고서를 솔버 덱으로 표시하지 않습니다. Windows는 기존 일괄 후속으로 유지하고 독립 가능한 개발을 진행합니다.
+
+
 ## 2026-11-12 전체 재료 연구·자문·후처리 연결 명세 갱신
 
 Workbench의 전체 구현 명세와 Prep가 담당할 작업을 [연결 작업서](docs/material-research-implementation-handoff.md)에 정리했습니다. Prep는 이미 열린 문서, 형식이 지정된 솔버 카드 편집, 명령·실행 취소(Undo)·솔버 입력 덱 내보내기, 공용 Qt 숫자·곡선·속성 위젯을 계속 소유합니다. Workbench는 공용 최적화 도구, 시험·평가 서비스, 전문가 자문, 외부 후처리 프로그램 연결을 맡습니다.
