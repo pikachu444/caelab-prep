@@ -1,5 +1,12 @@
 # 현재 구현과 남은 작업
 
+## 2026-11-12 전체 재료 연구·자문·후처리 연결 명세 갱신
+
+Workbench의 전체 구현 명세와 Prep 담당 구현 단위를 [연결 작업서](docs/material-research-implementation-handoff.md)에 고정한다. Prep은 기존 열린 문서/typed card/command/Undo/native export와 공용 Qt 숫자·곡선·속성 위젯을 소유한다. Workbench는 공용 optimizer·시험/평가/service·전문가·외부 후처리 연결을 맡는다.
+
+이번에 새 제품 코드를 구현한 것은 아니다. 기존 LAW1/LAW36 typed 편집이나 IPC/MCP의 존재를 모든 재료 카드 지원/LLM 자문 통합 완료로 확대하지 않는다. DP와 Xia는 예시이고 여러 재료군의 정확한 adapter/backend/출력·검증·export 지원을 개별 관리한다. Xia2002 원모델과 LAW112 또는 이번 GMN2012-derived XBP를 동일시하지 않는다.
+
+
 ## 사용자 기능 점검 — 2026-11-12
 
 **범위 정정:** DP/Xia는 예시이며 범용 재료 모델링·동정·최적화의 모델별 adapter로 다룬다. 공통 계약과 바로 구현할 첫 단위는 [WB 통합 구현 명세](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/spec-cae-research-implementation.md)를 따르고, Prep은 native 카드/문서·명령·Undo·export를 계속 소유한다.
