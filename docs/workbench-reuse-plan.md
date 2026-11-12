@@ -154,6 +154,10 @@ Prep `f40bfea`와 Workbench `1c1cacb`를 기준으로 사용자 기능을 조사
 
 기존 N01–N26/G1–G4의 완료 기준은 유지하며, 아래 후속 작업은 구현 완료가 아닙니다. Prep의 완료 검사는 [전체 연결 작업서](material-research-implementation-handoff.md)의 규칙을 따릅니다. 이미 열린 소유 프로세스와 통신하고, 형식이 지정된 솔버 카드에 연결하며, 여러 자원을 한 번에 적용(Apply)하고 실행 취소·다시 실행(Undo/Redo)할 수 있어야 합니다. 공용 Qt 부품을 사용하는 호스트와 내보내기도 같은 작업서를 따릅니다. 세부 작업 순서와 완료 조건은 Workbench가 [기존 개선 계획](https://github.com/pikachu444/caelab-workbench/blob/main/docs/review/2026-10-23-codex-improvement-plan.md#material-expert-rp-followup)에서 관리합니다.
 
+[기존 실행 단계의 연결 절](execution-stages.md#research-integration)과 [Prep 적용 인계](material-research-implementation-handoff.md)가 이 후속을 G/P/N/W1/W2의 재사용·추가 개발에 연결합니다. 항목별 12작업 대응과 설계/코드/최종 인수의 구분은 위 WB 기존 계획과 자동 작업 목록 v2를 사용합니다. 새 작업은 전부 구현 예정이며 실제 구현자·독립 QA·달력은 미배정입니다. N16/19/20/21의 기존 완료 범위는 재사용하고 새 카드 Apply·실제 AI·수치 판독·RP 표시까지 이미 구현됐다고 쓰지 않습니다. 기존 7/16/3 진도와 새 12개를 합산하지 않습니다.
+
+PREP01의 STORE01 선행은 우선 저장 평가·정체성·적용 응답의 계약 합의입니다. 기존 owner 단일값 IPC는 병렬 개발할 수 있고, 최종 Apply는 저장·화면·프로젝트와 실제 지원 모델로 함께 확인합니다. native exporter가 별도로 검증되지 않은 모델에는 계수/평가 보고서만 허용하며 이를 솔버 덱 출력으로 표시하지 않습니다. 일반 이론/문헌 자문은 POST나 메셔를 기다리지 않고, 원실행/동정 결과 질문에서만 필요한 고정 자료를 조건부로 요구합니다.
+
 | 기능 | Prep의 책임과 재사용 범위 | Workbench의 책임과 아직 구현할 일 |
 |---|---|---|
 | 여러 재료법의 모델링 — DP·Xia는 예시 | 선택한 솔버·판본의 형식 지정 카드, 계수·곡선·단위 검증, 솔버 덱 내보내기, Undo, 저장을 맡습니다. 현재 LAW1·LAW36의 기존 필드 외에 DP·LAW112 전용 구조화 편집은 없습니다. | 원문·목록 보존과 실제 모델링 지원을 구분합니다. 솔버 소스에 법칙이 있어도 선택한 실행 파일의 실제 실행과 물리 확인이 필요합니다. |
