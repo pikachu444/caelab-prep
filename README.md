@@ -1,5 +1,7 @@
 # CAELab Prep
 
+**지금부터 개발할 일은 [Prep 실행 순서](docs/execution-stages.md#execution-order)를 먼저 읽으세요.** 첫 표시 갱신부터 기존 메시 작업·성능·8방식 비교·메셔·재료 적용·Windows·전체 인수까지 순서를 정했습니다. [두 제품의 전체 작업표](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/cae-research/IMPLEMENTATION_TASKS_ko.md#whole-backlog)에는 첫 파일·선행·완료 후 다음 작업이 있습니다.
+
 여러 CAE 프로그램에서 재사용할 **공용 개발 자산과 기반**을 개발합니다. 문서·명령·선택·Undo·저장, 단위 입력과 공학 위젯, 디자인 자산·앱 셸·실행형 갤러리를 함께 관리합니다.
 
 첫 적용 앱은 **OpenRadioss / OpenCourant용 독립 데스크톱 전처리기**입니다. RAD를 열어 모델과 조건을 편집하고 `.caeprep` 작업문서를 저장하거나 Starter/Engine 입력을 내보냅니다. CAD 원본은 FreeCAD 같은 CAD 도구가 소유하며, Workbench에서 시작한 솔버 실행과 결과 관리는 [CAELab Workbench](https://github.com/pikachu444/caelab-workbench)가 담당합니다.

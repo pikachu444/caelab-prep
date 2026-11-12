@@ -1,5 +1,24 @@
 # Prep 단계별 개발 작업·종료 조건
 
+<a id="execution-order"></a>
+
+## 지금부터 수행할 Prep 개발 순서 — 2026-11-12
+
+**첫 코드는 D03: 최종 숨김 집합을 한 번에 적용하는 표시 갱신입니다.** `ui/prep_controller.py`의 `_apply_display_state`와 `ui/viewport.py`의 `_apply_visibility`를 연결해 중간 전체 표시·중복 렌더를 제거합니다. 실제 VTK 최종 프레임·선택 보존과 고정한 100회 숨김·표시 동작의 p95를 확인합니다. 이것으로 N17 전체를 닫지 않습니다.
+
+| 순서 | Prep에서 수행할 일 | 완료 후 이어갈 일 |
+|---|---|---|
+| 0 | D03 표시 갱신, D37 실제 환경·원제품 접근 준비 | 독립 구현은 Windows 후속 대기 중에도 진행합니다. |
+| 1 | D23 이미 구현한 메시 6연산의 두 입력 종단 확인, D38 대표 C1/C2 CAD·메시→조건→저장→native 확인 | 발견 결함을 고치고 기존 N01/N02/N15/N16/N19/N20/N21은 재사용합니다. |
+| 2 | D31 8제품별 T1–T6 실제 비교·차이 수정, D18 WB 공용 위젯·독립 문서 소비 | 접근 가능한 원제품부터 비교하며 미확인 제품은 별도로 남깁니다. |
+| 3 | D24 전체 대용량 예산, D25 edge split/swap→quad/tri 변환→고차 승격 | 기존 6연산과 새 연산, 일부 성능 개선과 전체 목표를 구분합니다. |
+| 3 병렬 | D26 선/준비면→D27 제한 중립면→D28 quad→D29 sweep hex→D30 혼합전이, D39 조건부 형상/Auto-Tet 후속 | SDK·형상군 실증 후 제품 채택·native·실제 솔버로 확인합니다. no-go를 기능 완료로 세지 않습니다. |
+| 4 | D19 기존 LAW1 E 편집 재사용→신규 prepare/commit→지원 모델의 전체 계수·곡선·축 적용 | WB 실제 동정·저장·UI·프로젝트와 합동 확인합니다. 단일값 연결만으로 전체 Apply를 닫지 않습니다. |
+| 5 | D33 실제 Windows·VTK·두 앱, D34 새 설치·배포 | 기존 일괄 후속 방침과 각 환경의 미확인을 유지합니다. |
+| 6 | D36 같은 프로젝트로 전처리·해석·자문·심의·적용·별도 재해석·후처리·저장·재개 | R1–R4/G0–G4/N별 미해결이 있으면 전체 완료가 아닙니다. |
+
+각 작업의 파일·직접 선행·산출물·인수·그다음은 [공동 실행 작업표](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/cae-research/IMPLEMENTATION_TASKS_ko.md#whole-backlog), 두 제품의 순서는 [전체 개발 계획](https://github.com/pikachu444/caelab-workbench/blob/main/docs/review/2026-10-23-codex-improvement-plan.md#execution-order)을 따릅니다. WB 재료점 계산·이론 질문은 Prep 고급 메셔나 N17 전체 완료를 기다리지 않습니다. 현재 상태·근거는 [N01–N26](../CURRENT_STATE.md#remaining-work)에서 계속 관리하며 7/16/3 분류는 문서 수정으로 바꾸지 않습니다.
+
 이 문서는 P0–P9와 B1–B6의 입력·산출물·완료 조건을 연결한다. 제품 요구의 정본은 [DESIGN의 R/T/G](../DESIGN.md#delivery-goals), 반영 코드·지원 범위·잔여 수·다음 작업은 [CURRENT_STATE](../CURRENT_STATE.md#remaining-work)다. 단계의 기술 계약과 현재 구현 상태를 분리하며, 일부 체크포인트의 통과를 전체 제품 완료로 계산하지 않는다.
 
 초기 작업서 기준은 `5d16e81c7ec7c92499401d63208039424bf73cc9`, 2026-10-29였다. 아래 날짜가 붙은 선택·결과·승인 설명은 해당 시점의 저장소 기록으로 보존하며 새 작업의 승인이나 독립 검증으로 전용하지 않는다. [공용 기반 설계](shared-cae-foundation-plan.md), [모델·데이터 설계](cae-model-data-design.md), [Workbench 재사용 계획](workbench-reuse-plan.md)의 기술 경계를 함께 따른다.
@@ -31,7 +50,7 @@ G1-a–e는 PR #15 착수 당시의 구현 순서로 [19절](#current-progress)�
 
 ## 1.1 재료 연구·자문·후처리를 기존 단계에 연결 — 2026-11-12
 
-새 12개 작업은 [기존 WB 전체 계획](https://github.com/pikachu444/caelab-workbench/blob/main/docs/review/2026-10-23-codex-improvement-plan.md#plan-integration)의 세부 항목입니다. 이 문서의 G/P 단계와 N01–N26를 대체하지 않습니다. WB P1–P7과 Prep P0–P9, DESIGN R1–R4와 재사용 R0–R5는 각각 구별합니다. 항목별 WB 부모·Prep 접점·추가 인수는 [작업 목록 v2](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/cae-research/implementation-map.json), Prep 실제 적용은 [구현 인계](material-research-implementation-handoff.md)를 따릅니다.
+새 12개 작업은 [기존 WB 전체 계획](https://github.com/pikachu444/caelab-workbench/blob/main/docs/review/2026-10-23-codex-improvement-plan.md#plan-integration)의 세부 항목입니다. 이 문서의 G/P 단계와 N01–N26를 대체하지 않습니다. WB P1–P7과 Prep P0–P9, DESIGN R1–R4와 재사용 R0–R5는 각각 구별합니다. 항목별 WB 부모·Prep 접점·추가 인수는 [작업 목록 v3](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/cae-research/implementation-map.json), Prep 실제 적용은 [구현 인계](material-research-implementation-handoff.md)를 따릅니다.
 
 | 새 기능 | 기존 단계·완료 기반 | 추가로 확인할 일 |
 |---|---|---|
@@ -80,7 +99,7 @@ G1-a–e는 PR #15 착수 당시의 구현 순서로 [19절](#current-progress)�
 |---|---|---|
 | 완료 | 고정 범위의 지정 검사·사용 작업·독립 품질 검토가 통과했고 알려진 계약 위반이 없음 | 구현·검증을 멈추고 다음 작업으로 이동 |
 | 구현 완료 / Windows 일괄 후속 검증 | 현재 범위의 구현·Linux 동작/렌더 가능 범위·독립 리뷰·해당 CI가 통과했고 Windows 검증만 사용자 지시에 따라 연기함 | 통합 담당이 중간 PR을 병합하고 다음 구현 진행. Windows 실행/품질 통과로 쓰지 않으며 후속 동작·환경 목록 유지 |
-| 구현 완료 / 기타 환경 확인 보류 | 가능한 관련 검사는 통과했으나 원제품·실제 solver·외부 host 등 해당 검증 환경이 없음 | 부족한 환경과 정확한 미확인 동작을 남기고 독립 구현 진행. 해당 동등성·실사용 합격으로 쓰지 않음 |
+| 구현 완료 / 기타 환경 확인 보류 | 가능한 관련 검사는 통과했으나 원제품·실제 솔버·외부 host 등 해당 검증 환경이 없음 | 부족한 환경과 정확한 미확인 동작을 남기고 독립 구현 진행. 해당 동등성·실사용 합격으로 쓰지 않음 |
 | 실패 또는 차단 | 지정 조건을 실제 실행했으나 실패하거나 필수 입력·계약이 아직 없음 | 같은 범위의 원인을 수정. 무관한 기능 추가로 우회하지 않음 |
 
 검사를 무조건 한 번만 실행하라는 뜻이 아니다. **최종 후보에 지정 검사를 한 차례 수행 → 실패 수정 → 영향받은 검사만 재수행**한다. 저장 계약·공용 명령처럼 넓은 경계를 바꾸면 그 경계의 기존 회귀 묶음도 재수행한다. 통과 후 코드·입력·환경이 바뀌지 않았으면 반복 실행하거나 새 검사 목록을 늘리지 않는다. 품질 검토가 새 결함을 찾으면 수정·관련 재검사로 닫는다. 새 기능 취향이나 더 큰 모델은 다음 작업으로 보내되 기존 요구 누락·잘못된 합격·관련 변경 회귀를 새 요구로 돌리지 않는다. 원 지적자의 재확인까지 기록한다. 검증 횟수 제한을 이유로 실패를 무시하지 않는다.

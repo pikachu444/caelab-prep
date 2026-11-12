@@ -189,8 +189,8 @@ G1의 재료·shell/solid 단면 생성·복제·안전 삭제·할당, G2의 �
 | 이미 만든 공용 GUI 저장소의 정확한 위치·소유 자산 | P0에서 확인. 이 계획은 해당 저장소나 진행 중 갤러리의 실물을 확인했다고 주장하지 않음. 원본을 이 저장소에 축적하는 방향으로 중복·의존 관계 정리 |
 | 도킹 backend·리본 부품 | QDockWidget와 공용 QAction을 사용한다. 교체가 필요한 구체 문제 없이 backend 재선정부터 시작하지 않으며 Windows 동작은 N12/N13 |
 | pyqtgraph/Pint 등의 채택 릴리스 | 현재 QPainter와 provider의 명시 변환을 사용한다. N15 등 실제 부족한 기능에 도입이 필요할 때만 호환 조합·배포 조건 확인 |
-| 다중 자원 명령·생성/삭제 ID | 한 RAD 자원의 원자 생성/할당·구조 변경과 stable UUID/native ID는 구현됐다. N16 복합 명령은 PR20, 첫 N18 절대좌표 이동의 sparse native 행 codec은 PR29에 병합했다. 나머지 다섯 메시 연산은 기존 codec·원자 명령을 재사용해 연결하며 N17 전체 예산은 미완료다 |
-| CAD 교체·재메시 후 조건 연결 | CAD 후보의 소유 메시 교체는 참조가 없을 때만 허용하며 공유 절점을 보존한다. N16의 준비된 mesh INCLUDE 교체는 참조를 stale로 보존하고 명시 source/revision 대응으로 재연결하며 미해결이면 출력을 차단한다. 일반 메시 수정·CAD 재메시는 N18 |
+| 다중 자원 명령·생성/삭제 ID | 한 RAD 자원의 원자 생성/할당·구조 변경과 stable UUID/native ID는 구현됐다. N16 복합 명령은 PR20, 첫 N18 절대좌표 이동의 sparse native 행 codec은 PR29에 병합했다. 이동·병합·반전·삭제·PART 이동·CAD 후보 교체의 제한 구현은 현재 N18의 코드·범위로 재사용하며, 기존 6종의 남은 인수와 명시 후속 연산은 구분하며 N17 전체 예산은 미완료다 |
+| CAD 교체·재메시 후 조건 연결 | CAD 후보의 직접 adopt 교체는 참조가 없을 때만 허용하며 공유 절점을 보존한다. N16의 준비된 mesh INCLUDE 교체는 참조를 stale로 보존하고 명시 source/revision 대응으로 재연결하며 미해결이면 출력을 차단한다. 참조가 있는 CAD 후보는 plan/apply 검토 교체에서 stale을 보존하고 명시 재연결 전 export를 차단한다. 일반 메시 수정 후속과 실제 환경 인수는 N18 |
 | MCP 서버·열린 GUI 연결 | N19 IPC와 N20 MCP는 PR #21의 실제 Linux GUI·공개 client 검사 범위로 구현·병합했다. 독립 CLI와 구분하고 Windows·자연어 LLM 사용은 미확인으로 유지하며 기존 Workbench JobManager 책임 유지 |
 
 ## 13. 근거와 참고할 자산

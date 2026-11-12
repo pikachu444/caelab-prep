@@ -50,7 +50,7 @@ OpenCourantRP는 별도로 설치하는 앱이며, Workbench의 기존 `JobManag
 
 ## 기존 계획에 연결하는 방법
 
-새 12개는 기존 전체 계획 아래의 세부 작업입니다. [WB 통합 계획](https://github.com/pikachu444/caelab-workbench/blob/main/docs/review/2026-10-23-codex-improvement-plan.md#plan-integration)과 [작업 목록 v2](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/cae-research/implementation-map.json)가 WB P1–P7/WBS/AC와 Prep G/P/N의 접점·재사용분·추가 구현을 연결합니다. WB P와 Prep P는 다른 번호이며, Prep DESIGN R1–R4와 재사용 R0–R5도 다릅니다. 현재 진도는 기존 N01–N26에서 관리하고 새 12개를 더해 진행률을 계산하지 않습니다.
+새 12개는 기존 전체 계획 아래의 세부 작업입니다. [WB 통합 계획](https://github.com/pikachu444/caelab-workbench/blob/main/docs/review/2026-10-23-codex-improvement-plan.md#plan-integration)과 [작업 목록 v3](https://github.com/pikachu444/caelab-workbench/blob/main/docs/specs/cae-research/implementation-map.json)가 WB P1–P7/WBS/AC와 Prep G/P/N의 접점·재사용분·추가 구현을 연결합니다. WB P와 Prep P는 다른 번호이며, Prep DESIGN R1–R4와 재사용 R0–R5도 다릅니다. 현재 진도는 기존 N01–N26에서 관리하고 새 12개를 더해 진행률을 계산하지 않습니다.
 
 PREP01은 CORE01/02·STORE01의 문서·계산 내용·평가 식별, 저장한 평가 선택, 적용 결과와 응답 유실 계약을 먼저 합의합니다. LAW1 E 단일값의 기존 IPC 연결 개발은 STORE01 전체 완료를 기다리지 않습니다. 저장한 동정값을 열린 문서에 적용하는 최종 확인에는 STORE01/UI01/PREP01/LINK01과 실제 Apply 지원 모델·솔버·판본을 함께 사용합니다. 편집 전 합의, 실제 코드 연결 선행, 최종 합동 확인은 서로 다릅니다.
 
