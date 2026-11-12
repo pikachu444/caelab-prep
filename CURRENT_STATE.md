@@ -1,5 +1,7 @@
 # 현재 구현과 남은 작업
 
+실행 순서는 [단계 계획 앞부분](docs/execution-stages.md#execution-order)을 따릅니다. 첫 코드는 D03 표시 갱신이며 D23/D38의 기존 과업 확인, D24/D25 성능·편집 확대, D26–D31 메시·8제품 후속, D19 재료 적용, D33/D34/D36 실제 환경·전체 인수까지 이어갑니다. 이 문서의 N01–N26 상태와 7/16/3 분류는 유지합니다.
+
 ## 기존 계획과 재료 연구 후속의 연결 — 2026-11-12
 
 이번 변경은 [기존 실행 단계](docs/execution-stages.md#research-integration)·[WB 재사용 계획](docs/workbench-reuse-plan.md#material-expert-rp-followup)·[적용 인계](docs/material-research-implementation-handoff.md)를 WB의 새 12개 세부 작업에 연결한 문서 갱신입니다. 새 제품 기능은 구현 예정이며 문서 병합으로 구현 진도를 올리지 않습니다. 구현 담당·독립 QA·달력 날짜는 아직 미정입니다.
