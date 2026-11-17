@@ -422,9 +422,14 @@ class PrepController:
     def _apply_display_state(self):
         if self._closed or self.viewport is None or not self._summary().get("document_id"):
             return
-        self.viewport.show_all_parts()
-        if self._display_state.hidden:
-            self.viewport.hide_parts(tuple(self._display_state.hidden))
+        hidden = tuple(self._display_state.hidden)
+        set_hidden = getattr(self.viewport, "set_hidden_parts", None)
+        if set_hidden is not None:
+            set_hidden(hidden)
+        else:
+            self.viewport.show_all_parts()
+            if hidden:
+                self.viewport.hide_parts(hidden)
         self._refresh_tree_appearances()
         self._refresh_actions()
 

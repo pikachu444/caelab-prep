@@ -76,6 +76,7 @@ class MeshViewport(QWidget):
         self._element_index = {}
         self._node_index = {}
         self._applied_hidden = set()
+        self._visibility_applied = False
         self._visible_cell_count = 0
         self._visible_grid = vtk.vtkMultiBlockDataSet()
         self._render_failed = False
@@ -274,6 +275,7 @@ class MeshViewport(QWidget):
         self._visible_cell_count = len(original_indices)
         self._hidden_parts.intersection_update(part_slots)
         self._applied_hidden = set()
+        self._visibility_applied = False
         self._geometry_stamp = stamp
         self._apply_visibility()
         if omitted:
@@ -294,6 +296,11 @@ class MeshViewport(QWidget):
     def part_colors(self):
         """Read-only presentation colours from the same slots as VTK scalars."""
         return dict(self._part_colors)
+
+    def set_hidden_parts(self, part_refs):
+        """Atomically apply the target hidden part set in a single delta pass."""
+        self._hidden_parts = self._part_keys(part_refs)
+        self._apply_visibility()
 
     def hide_parts(self, part_refs):
         """Hide qualified parts without changing document selection or history."""
@@ -317,22 +324,29 @@ class MeshViewport(QWidget):
 
     def _apply_visibility(self):
         changed = self._hidden_parts ^ self._applied_hidden
-        if changed:
-            self._selection_visual_key = None
+        if not changed and self._visibility_applied and (not self._selection or self._selection_visual_key is not None):
+            return
+        blocks_changed = False
         for part in changed:
             if part not in self._part_slots:
                 continue
+            blocks_changed = True
             hidden = part in self._hidden_parts
             self._visible_grid.SetBlock(self._part_slots[part], None if hidden else self._part_data[part])
             direction = -1 if hidden else 1
             self._visible_node_counts[self._part_nodes[part]] += direction
             self._visible_cell_count += direction * len(self._part_cells[part])
         self._applied_hidden = set(self._hidden_parts)
-        if not self._render_failed:
+        first_apply = not self._visibility_applied
+        self._visibility_applied = True
+        if blocks_changed:
+            self._selection_visual_key = None
+        if (first_apply or blocks_changed) and not self._render_failed:
             self._hint.setVisible(not self._visible_cell_count)
             self._hint.setText("All elements hidden" if self._grid.GetNumberOfCells() else
                                ("No displayable elements" if self._node_ids else "No model"))
-        self.set_selection(self._selection)
+        if first_apply or blocks_changed or (self._selection and self._selection_visual_key is None):
+            self.set_selection(self._selection)
 
     def visible_cell_indices(self):
         """Explicit diagnostic snapshot; normal display/selection never expands it."""
