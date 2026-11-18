@@ -538,28 +538,40 @@ def _native_real_value(value):
     return float(text)
 
 
-def _triangle_quality(coords):
-    s=tuple(sub(p,coords[0]) for p in coords)
-    area=norm(cross(s[1],s[2]))/2
-    den=sum(dot(sub(a,b),sub(a,b)) for i,a in enumerate(s) for b in s[i+1:])
-    return (0.0 if den<=0 else 4*math.sqrt(3)*area/den), area
+_NATIVE_ID_MAX = 2**31 - 1
+_QUAD_EDGES = ((0, 1), (1, 2), (2, 3), (3, 0))
+_HEX_EDGES = _QUAD_EDGES + ((4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7))
+_WEDGE_EDGES = ((0, 1), (1, 2), (2, 0), (3, 4), (4, 5), (5, 3), (0, 3), (1, 4), (2, 5))
+
+
+def _shares_split_edge(cell, edge_a, edge_b):
+    if edge_a not in cell.nodes or edge_b not in cell.nodes:
+        return False
+    # For simplex and line families every pair of corner nodes defines an edge.
+    # For unlisted families, conservatively block when both endpoints occur.
+    edges = {"SHELL": _QUAD_EDGES, "BRICK": _HEX_EDGES, "HEX8": _HEX_EDGES,
+             "PENTA6": _WEDGE_EDGES}.get(cell.family)
+    return edges is None or any({cell.nodes[i], cell.nodes[j]} == {edge_a, edge_b} for i, j in edges)
+
+
+def _validate_split_id(value):
+    if type(value) is not int or value < 1:
+        fail('invalid_native_id', 'New node and element IDs must be positive integers.')
+    if value > _NATIVE_ID_MAX:
+        fail('native_id_overflow', 'New node and element IDs must fit a signed 32-bit Radioss integer.')
 
 
 def _allocate_native_ids(used_ids, count):
-    result=[]
-    taken=set(used_ids)
-    candidate=max(taken,default=0)+1
-    while len(result)<count:
-        if candidate<=9999999999 and candidate not in taken:
-            result.append(candidate);taken.add(candidate);candidate+=1
-            continue
-        candidate=1
-        while candidate in taken and candidate<=9999999999:
-            candidate+=1
-        if candidate>9999999999:
-            fail('native_id_exhausted','No collision-free native identifier remains in the 10-column Radioss range.')
-        result.append(candidate);taken.add(candidate);candidate+=1
-    return tuple(result)
+    largest = max((value for value in used_ids if value <= _NATIVE_ID_MAX), default=0)
+    if largest + count <= _NATIVE_ID_MAX:
+        return tuple(range(largest + 1, largest + count + 1))
+    result = []
+    for candidate in range(1, _NATIVE_ID_MAX + 1):
+        if candidate not in used_ids:
+            result.append(candidate)
+            if len(result) == count:
+                return tuple(result)
+    fail('native_id_overflow', 'No collision-free signed 32-bit Radioss identifiers remain for the split.')
 
 
 def split_triangle_edge(snapshot: MeshSnapshot, elements: Sequence[Ref], edge_nodes: tuple[Ref, Ref], *,
@@ -579,7 +591,7 @@ def split_triangle_edge(snapshot: MeshSnapshot, elements: Sequence[Ref], edge_no
     if edge_a==edge_b:
         fail('duplicate_edge_nodes','Edge endpoints must be distinct nodes.',(edge_a,))
     pa=snapshot._nodes[edge_a].xyz;pb=snapshot._nodes[edge_b].xyz
-    if norm(sub(pb,pa))<=1e-12:
+    if pa == pb:
         fail('degenerate_edge','Edge endpoints are geometrically coincident.',(edge_a,edge_b))
     for ref in selected:
         cell=snapshot._cells[ref]
@@ -589,13 +601,17 @@ def split_triangle_edge(snapshot: MeshSnapshot, elements: Sequence[Ref], edge_no
             fail('degenerate_triangle','Selected SH3N element contains duplicate node references.',(ref,))
         if edge_a not in cell.nodes or edge_b not in cell.nodes:
             fail('non_incident_edge','Every selected SH3N element must contain both split edge nodes.',(ref,))
-        parent_q,parent_area=_triangle_quality(tuple(snapshot._nodes[n].xyz for n in cell.nodes))
-        if parent_area<=1e-12 or parent_q<=0:
+        quality = _quality(cell, snapshot._nodes.__getitem__)
+        if quality.value <= 0 or 'degenerate' in quality.problems:
             fail('degenerate_triangle','Cannot split a degenerate or zero-area triangle.',(ref,))
+    neighbors = tuple(cell.ref for cell in snapshot.cells
+                      if cell.ref not in selected and _shares_split_edge(cell, edge_a, edge_b))
+    if neighbors:
+        fail('hanging_node_unselected_neighbor',
+             'The split would leave a hanging node on an unselected element sharing this edge.', neighbors)
     used_node_ids={n.ref.local_id for n in snapshot.nodes}
     if new_node_id is not None:
-        if type(new_node_id) is not int or not 1<=new_node_id<=9999999999:
-            fail('invalid_native_id','New node ID must be a positive 10-column integer.')
+        _validate_split_id(new_node_id)
         if new_node_id in used_node_ids:
             fail('node_id_collision','Requested new node ID already exists in the mesh.',(new_node_id,))
         midpoint_id=new_node_id
@@ -607,8 +623,7 @@ def split_triangle_edge(snapshot: MeshSnapshot, elements: Sequence[Ref], edge_no
         if isinstance(new_element_ids,(str,bytes)) or not isinstance(new_element_ids,Sequence) or len(new_element_ids)!=needed_eids:
             fail('invalid_element_ids',f'Provide exactly {needed_eids} distinct new SH3N element IDs.')
         for eid in new_element_ids:
-            if type(eid) is not int or not 1<=eid<=9999999999:
-                fail('invalid_native_id','New element IDs must be positive 10-column integers.')
+            _validate_split_id(eid)
             if eid in used_cell_ids:
                 fail('element_id_collision','Requested new element ID already exists in the mesh.',(eid,))
         if len(set(new_element_ids))!=needed_eids:
@@ -621,7 +636,7 @@ def split_triangle_edge(snapshot: MeshSnapshot, elements: Sequence[Ref], edge_no
     else:
         cell_res=snapshot._cells[selected[0]].ref.resource_id
         node_resource_id=cell_res if any(n.ref.resource_id==cell_res for n in snapshot.nodes) else edge_a.resource_id
-    midpoint_xyz=point(tuple(_native_real_value((a+b)/2.0) for a,b in zip(pa,pb)))
+    midpoint_xyz=point(tuple(_native_real_value(a/2.0+b/2.0) for a,b in zip(pa,pb)))
     midpoint_node=Node(Ref(node_resource_id,'node',midpoint_id),midpoint_xyz)
     added_cells=[];split_entries=[]
     eid_cursor=0

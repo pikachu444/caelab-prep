@@ -347,6 +347,16 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             if self._active_object is not None and self._active_target_role is not None:
                 self.document.selection, self._active_target_role = self._condition_selection(
                     self._active_object.object_id, self._active_target_role)
+            elif self.document.selection.refs:
+                selection = self.document.selection
+                view = self.mesh_view()
+                refs = tuple(ref for ref in selection.refs if (
+                    ref.resource_id in view["node_resources"].get(ref.local_id, ()) if ref.entity_kind == "node"
+                    else any(cell["resource_id"] == ref.resource_id
+                             for cell in self._projection_index["cells_by_id"].get(ref.local_id, ()))))
+                if refs != selection.refs:
+                    self.document.selection = Selection(selection.kind if refs else None,
+                                                        tuple(ref.local_id for ref in refs), refs)
         self._notify(change.kind, change=change.to_dict())
 
     def _check_model_edit(self, expected_revision, expected_document_id):

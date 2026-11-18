@@ -13,6 +13,8 @@ from .widgets._editing import ReferenceComboBox
 class NativeElementDialog(QDialog):
     changed = Signal(object)
     sessionEvent = Signal(dict)
+    initial_size = (780, 600)
+    initial_split_sizes = (150, 300)
 
     def __init__(self, session, parent=None, *, has_draft=None, is_busy=None):
         super().__init__(parent)
@@ -21,7 +23,7 @@ class NativeElementDialog(QDialog):
         self._stamp = self._current_stamp()
         self._plan, self._references, self._closed = None, [], False
         self.setObjectName(self.object_name); self.setWindowTitle(self.window_title)
-        self.resize(780, 600); self.setMinimumSize(540, 420)
+        self.resize(*self.initial_size); self.setMinimumSize(540, 420)
         body = QVBoxLayout(self)
         intro = QLabel(self.introduction)
         intro.setWordWrap(True); body.addWidget(intro)
@@ -42,7 +44,7 @@ class NativeElementDialog(QDialog):
         for column in (1, 2): self.table.horizontalHeader().setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
         self.table.verticalHeader().hide(); split.addWidget(self.table)
         self.preview = QTextBrowser(); self.preview.setAccessibleName(self.window_title + " and target review")
-        split.addWidget(self.preview); split.setSizes([150, 300])
+        split.addWidget(self.preview); split.setSizes(self.initial_split_sizes)
         self.status = QLabel("Select elements in the model, add them, review the options and preview.")
         self.status.setTextFormat(Qt.TextFormat.PlainText); self.status.setWordWrap(True); body.addWidget(self.status)
         self.reviewed = QCheckBox(self.review_caption)
@@ -113,6 +115,7 @@ class NativeElementDialog(QDialog):
                 for column, text in enumerate((source, str(ref["local_id"]), family)):
                     item = QTableWidgetItem(text); item.setToolTip(text); self.table.setItem(row, column, item)
             self.status.setText(f"{len(self._references)} explicit elements. " + self.selection_hint)
+            return True
         except PrepError as exc: self.status.setText(exc.message)
 
     def remove_selection(self):
@@ -121,6 +124,7 @@ class NativeElementDialog(QDialog):
             for row in sorted((item.row() for item in self.table.selectionModel().selectedRows()), reverse=True):
                 self._references.pop(row); self.table.removeRow(row)
             self.status.setText("Selection changed. Preview the remaining elements before Apply.")
+            return True
         except PrepError as exc: self.status.setText(exc.message)
 
     def prepare_preview(self):
@@ -332,11 +336,12 @@ class PartReassignmentDialog(NativeElementDialog):
 def edge_split_review_text(session, plan):
     names = plan["resource_names"]
     edge = plan["edge_nodes"]
+    length = session._model_resource(None).unit_context()["global"]["length"]
+    count = len(plan["parent_elements"])
     lines = [
-        f"Split edge {edge[0]['local_id']} – {edge[1]['local_id']} across {len(plan['parent_elements'])} SH3N element(s).",
-        f"Split 1 edge into 2 triangles per parent while preserving winding orientation and PART.",
+        f"Split edge {edge[0]['local_id']} – {edge[1]['local_id']} across {count} SH3N " + ("element." if count == 1 else "elements."),
         "",
-        "New midpoint node",
+        f"New midpoint node ({length})",
     ]
     for node in plan["added_nodes"]:
         ref = node["ref"]
@@ -349,19 +354,22 @@ def edge_split_review_text(session, plan):
         children = [cells_by_key[(c["resource_id"], c["local_id"])] for c in pair["children"]]
         children_text = ", ".join(f"SH3N {c['ref']['local_id']} {[n['local_id'] for n in c['nodes']]}" for c in children)
         lines.append(f"SH3N {parent['local_id']} in {names.get(parent['resource_id'], parent['resource_id'])} → {children_text}")
-    lines.extend(("", "Quality (parent before → children after)"))
-    for row in plan["quality_before"]:
-        lines.append(f"Before SH3N {row['element']['local_id']}: {row['metric']} {row['value']:.6g} (area {row['signed_measure']:.6g})")
-    for row in plan["quality_after"]:
-        lines.append(f"After  SH3N {row['element']['local_id']}: {row['metric']} {row['value']:.6g} (area {row['signed_measure']:.6g})")
-    lines.extend((
-        "",
-        f"{len(plan['stale_targets'])} original target groups stay stale until explicit mapping/Drop in the reconnection editor.",
-        "",
-        target_review_text(session, plan, group_heading=False),
-        "",
-        plan["scope"],
-    ))
+    lines.append("Children retain parent PART and winding. Stored thickness, shell angle and trailing fields are copied.")
+    lines.extend(("", f"Triangle mean ratio and area ({length}^2)"))
+    quality = {row["element"]["local_id"]: f"{row['value']:.6g} ({row['signed_measure']:.6g})"
+               for row in (*plan["quality_before"], *plan["quality_after"])}
+    for pair in plan["split_cells"]:
+        parent = pair["parent"]["local_id"]
+        children = [child["local_id"] for child in pair["children"]]
+        after = ", ".join(f"SH3N {child}: {quality[child]}" for child in children)
+        lines.append(f"SH3N {parent}: {quality[parent]} → {after}")
+    labels = {card["id"]: f"{card['title'] or card['keyword']} [{card['keyword']}]" for card in session.list_cards()}
+    lines.extend(("", "Target groups requiring explicit reconnection"))
+    lines.extend(labels[card_id] for card_id in plan["stale_targets"])
+    if not plan["stale_targets"]:
+        lines.append("None")
+    introduction, _, conditions = target_review_text(session, plan, group_heading=False).partition("\n")
+    lines.extend(("", introduction, "", conditions))
     return "\n".join(lines)
 
 
@@ -373,6 +381,10 @@ class TriangleEdgeSplitDialog(NativeElementDialog):
     preview_caption, apply_caption, result_caption = "Preview edge split", "Apply edge split", "Triangle edge split"
     selection_hint = "Choose the shared edge, then preview new node, child SH3N elements and affected targets."
     options_caption = "Target edge"
+    initial_size = (780, 640)
+    initial_split_sizes = (95, 390)
+    selection_required = "Select 1 or 2 linear SH3N elements sharing one edge."
+    no_common_edge = "No common SH3N edge across selected elements."
 
     def _build_options(self, body):
         form = QFormLayout()
@@ -380,7 +392,7 @@ class TriangleEdgeSplitDialog(NativeElementDialog):
         self.edge_selector = QComboBox()
         self.edge_selector.setObjectName("splitEdgeSelector")
         self.edge_selector.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
-        self.edge_selector.addItem("Select 1 or 2 SH3N elements with a shared edge…", None)
+        self.edge_selector.addItem(self.selection_required, None)
         form.addRow("Target edge", self.edge_selector)
         return [self.edge_selector]
 
@@ -416,16 +428,16 @@ class TriangleEdgeSplitDialog(NativeElementDialog):
             return []
         return [common[k] for k in sorted(common, key=lambda pair: (pair[0][1], pair[1][1], pair[0][0], pair[1][0]))]
 
-    def _refresh_edges(self):
+    def _refresh_edges(self, *, update_status=False):
         previous = self.edge_selector.currentData()
         candidates = self._edge_candidates() if not self._closed else []
         blocked = self.edge_selector.blockSignals(True)
         try:
             self.edge_selector.clear()
             if len(self._references) not in (1, 2):
-                self.edge_selector.addItem("Select 1 or 2 SH3N elements with a shared edge…", None)
+                self.edge_selector.addItem(self.selection_required, None)
             elif not candidates:
-                self.edge_selector.addItem("No common SH3N edge across selected elements", None)
+                self.edge_selector.addItem(self.no_common_edge, None)
             else:
                 for edge_a, edge_b in candidates:
                     label = f"Edge {edge_a['local_id']} – {edge_b['local_id']}"
@@ -438,14 +450,14 @@ class TriangleEdgeSplitDialog(NativeElementDialog):
                             break
         finally:
             self.edge_selector.blockSignals(blocked)
+        if update_status and not candidates:
+            self.status.setText(self.edge_selector.currentText())
 
     def use_selection(self):
-        super().use_selection()
-        self._refresh_edges()
+        self._refresh_edges(update_status=super().use_selection())
 
     def remove_selection(self):
-        super().remove_selection()
-        self._refresh_edges()
+        self._refresh_edges(update_status=super().remove_selection())
 
     def apply_change(self):
         super().apply_change()

@@ -130,6 +130,10 @@ class DeckResource:
             if card.id not in self._deleted:
                 chunks.append(self._replaced.get(card.id, "".join(self._source_lines[card.start:card.stop])))
                 identities.append(card.id)
+            elif self.is_include and card.category in ("Nodes", "Elements"):
+                chunks.extend(line if line.endswith(("\r", "\n")) else line + self.newline
+                              for line in self._source_lines[card.start + 1:card.stop]
+                              if line.lstrip().startswith("#"))
         if not inserted: insert()
         chunks.append("".join(self._source_lines[self._source_active_stop:]))
         self._parse_layout("".join(chunks).splitlines(keepends=True), identities)

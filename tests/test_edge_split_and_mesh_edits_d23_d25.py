@@ -1,20 +1,19 @@
 """Comprehensive D23 (6 existing mesh edits x 2 multi-resource #include decks) and D25 (split_triangle_edge) tests."""
 from __future__ import annotations
 
-import math
+from dataclasses import replace
 from pathlib import Path
 import shutil
-from uuid import uuid4
 
 import pytest
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QComboBox
 
-from caelab_prep.application import mesh_candidates as mc
 from caelab_prep.application import mesh_edit_candidates as edits
 from caelab_prep.application.session import PrepSession
 from caelab_prep.cae_core import PrepError
-from caelab_prep.ui.main_window import MainWindow
+
+
+_SH3N_TAILS = {101: f"{'':10}{17.5:>10g}{2.75:>20g}  ",
+               102: f"{'':10}{-32.5:>10g}{4.25:>20g}{0:>10d}   "}
 
 
 def _write(path: Path, text: str) -> Path:
@@ -72,12 +71,12 @@ def _build_deck_multi_include(root_dir: Path) -> Path:
         "\n".join(
             [
                 "/SH3N/1",
-                _tri_line(101, 1, 2, 3),
-                _tri_line(102, 1, 3, 4),
+                _tri_line(101, 1, 2, 3) + _SH3N_TAILS[101] + "\r",
+                _tri_line(102, 1, 3, 4) + _SH3N_TAILS[102],
                 _tri_line(103, 2, 5, 6),
                 _tri_line(104, 2, 6, 3),
                 "/TETRA4/3",
-                _tet_line(301, 1, 2, 3, 7),
+                _tet_line(301, 1, 2, 4, 7),
                 "",
             ]
         ),
@@ -284,7 +283,7 @@ def _node_ref(session: PrepSession, nid: int, resource_id: str | None = None) ->
     return {"resource_id": rid, "entity_kind": "node", "local_id": nid}
 
 
-def _reconnect_all_stale_auto(session: PrepSession, *, split_first_child_by_old_id: dict[int, int] | None = None,
+def _reconnect_all_stale_auto(session: PrepSession, *, split_children_by_old_id: dict[int, list[dict]] | None = None,
                               node_remap: dict[int, int] | None = None, elem_remap: dict[int, int] | None = None):
     """Build explicit target reconnection mapping for any stale targets cleanly."""
     rel = session.mesh_relationships()
@@ -297,7 +296,7 @@ def _reconnect_all_stale_auto(session: PrepSession, *, split_first_child_by_old_
     part_cards = {int(c["keyword"].split("/")[2]): c["id"] for c in session.list_cards() if c["keyword"].upper().startswith("/PART/")}
     node_remap = node_remap or {}
     elem_remap = elem_remap or {}
-    split_map = split_first_child_by_old_id or {}
+    split_map = split_children_by_old_id or {}
 
     review_targets = {}
     direct_targets = {}
@@ -343,7 +342,10 @@ def _reconnect_all_stale_auto(session: PrepSession, *, split_first_child_by_old_
             mapping = {}
             dropped = []
             for eid in old_members:
-                target_eid = elem_remap.get(eid, split_map.get(eid, eid))
+                if eid in split_map:
+                    mapping[eid] = split_map[eid]
+                    continue
+                target_eid = elem_remap.get(eid, eid)
                 if target_eid in live_cells:
                     cell = live_cells[target_eid]
                     mapping[eid] = {"resource_id": cell["resource_id"], "entity_kind": "element", "local_id": target_eid}
@@ -366,6 +368,57 @@ def _reconnect_all_stale_auto(session: PrepSession, *, split_first_child_by_old_
     if review_targets:
         plan = session.plan_mesh_reconnection(review_targets, expected_revision=session.document.revision, expected_document_id=session.document.id)
         session.apply_mesh_reconnection(plan["plan_id"], expected_revision=session.document.revision, expected_document_id=session.document.id)
+    native_part_by_card = {card_id: native_id for native_id, card_id in part_cards.items()}
+    for group_id, target in (direct_targets | review_targets).items():
+        expected = []
+        for old_id in stale[group_id]["members"]:
+            if old_id in target.get("drop_members", ()):
+                continue
+            mapped = target["mapping"][old_id]
+            if isinstance(mapped, list):
+                expected.extend(child["local_id"] for child in mapped)
+            else:
+                expected.append(mapped["local_id"] if isinstance(mapped, dict) else native_part_by_card[mapped])
+        if target.get("coalesce_duplicates"):
+            expected = list(dict.fromkeys(expected))
+        resource = session._find_card(group_id)
+        assert session._integer_members(resource, resource.card(group_id)) == expected
+
+
+def _mesh_facts(session):
+    view = session.mesh_view()
+    sources = {rid: (None if rid == session._root_id else path) for rid, path in session._paths.items()}
+    nodes = {nid: (tuple(xyz), tuple(sources[rid] for rid in view["node_resources"][nid]))
+             for nid, xyz in zip(view["node_ids"], view["points"])}
+    beam_orientations = {}
+    for resource in session._deck_resources():
+        lines = resource.render().decode("latin1").splitlines()
+        for card in resource.cards:
+            if card.keyword.startswith("/BEAM/"):
+                for line in (lines[row] for row in card.data):
+                    beam_orientations[resource.id, int(line[:10])] = int(line[30:40].strip() or 0)
+    cells = {(sources[c["resource_id"]], c["formulation"], c["id"]):
+             (tuple(c["nodes"]), beam_orientations.get((c["resource_id"], c["id"])),
+              c["part_id"], sources[c["part_ref"]["resource_id"]])
+             for c in view["cells"]}
+    return nodes, cells
+
+
+def _target_facts(session):
+    groups, conditions = {}, {}
+    cards = session.list_cards()
+    keywords = {card["id"]: card["keyword"] for card in cards}
+    for row in cards:
+        keyword = row["keyword"]
+        if keyword.startswith(("/GR", "/SURF/PART/")):
+            resource = session._find_card(row["id"])
+            groups[keyword] = session._integer_members(resource, resource.card(row["id"]))
+        elif keyword.startswith(("/BCS/", "/CLOAD/", "/INIVEL/TRA/", "/INTER/TYPE7/")):
+            values = session.condition_values(row["id"])
+            assert values["diagnostics"] == []
+            conditions[keyword] = {key: keywords.get(value, value) if isinstance(value, str) else value
+                                   for key, value in values.items() if key not in ("card_id", "resource_id")}
+    return groups, conditions
 
 
 def _roundtrip_save_reconnect_and_export(session: PrepSession, tmp_path: Path, tag: str, **reconnect_kwargs):
@@ -377,12 +430,16 @@ def _roundtrip_save_reconnect_and_export(session: PrepSession, tmp_path: Path, t
     reopened = PrepSession()
     reopened.open_project(str(proj_path))
     assert reopened.mesh_relationships()["stale_targets"] == session.mesh_relationships()["stale_targets"]
+    assert _mesh_facts(reopened) == _mesh_facts(session)
+    assert _target_facts(reopened) == _target_facts(session)
     with pytest.raises(PrepError) as export_block:
         reopened.export_rad(str(tmp_path / f"blocked_{tag}_0000.rad"))
     assert export_block.value.code == "stale_mesh_targets"
 
     _reconnect_all_stale_auto(reopened, **reconnect_kwargs)
     assert reopened.mesh_relationships()["stale_targets"] == {}
+    assert _mesh_facts(reopened) == _mesh_facts(session)
+    assert _target_facts(reopened)[1] == _target_facts(session)[1]
 
     out_dir = tmp_path / f"export_{tag}"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -392,9 +449,9 @@ def _roundtrip_save_reconnect_and_export(session: PrepSession, tmp_path: Path, t
     # Fresh PrepSession must cleanly re-open exported Starter deck
     verify = PrepSession()
     verify.open_rad(out["starter_path"])
-    assert len(verify.mesh_view()["node_ids"]) == len(reopened.mesh_view()["node_ids"])
-    assert len(verify.mesh_view()["cells"]) == len(reopened.mesh_view()["cells"])
-    return reopened
+    assert _mesh_facts(verify) == _mesh_facts(reopened)
+    assert _target_facts(verify) == _target_facts(reopened)
+    return verify
 
 
 @pytest.mark.parametrize("deck_kind", ("deck_a", "deck_b"))
@@ -425,7 +482,7 @@ def test_d23_all_six_existing_mesh_edits_end_to_end_across_two_multiresource_dec
     assert s1.document.revision == rev0 + 2
     assert dict(zip(s1.mesh_view()["node_ids"], s1.mesh_view()["points"]))[tip_node] == orig_xyz
     s1.redo()
-    assert math.isclose(dict(zip(s1.mesh_view()["node_ids"], s1.mesh_view()["points"]))[tip_node][0], moved_xyz[0])
+    assert _mesh_facts(s1)[0][tip_node][0] == tuple(moved_xyz)
     _roundtrip_save_reconnect_and_export(s1, tmp_path, f"{deck_kind}_move")
 
     # 2. node_merge: preview -> approvals -> cancel -> apply -> 1 undo/redo -> save/reopen -> reconnect -> export
@@ -448,6 +505,7 @@ def test_d23_all_six_existing_mesh_edits_end_to_end_across_two_multiresource_dec
         [{"source": _node_ref(s2, src_nid), "keeper": _node_ref(s2, keep_nid)}],
         tolerance=tol, length_unit="mm", approvals=approvals,
     )
+    original_nodes, original_cells = _mesh_facts(s2)
     assert merge_plan["admissible"]
     assert s2.document.revision == rev0
     s2.cancel_node_merge(merge_plan["plan_id"])
@@ -461,11 +519,16 @@ def test_d23_all_six_existing_mesh_edits_end_to_end_across_two_multiresource_dec
     assert src_nid in s2.mesh_view()["node_ids"]
     s2.redo()
     assert src_nid not in s2.mesh_view()["node_ids"]
+    expected_cells = {ref: (tuple(keep_nid if node == src_nid else node for node in nodes),
+                             keep_nid if orientation == src_nid else orientation, part_id, part_src)
+                      for ref, (nodes, orientation, part_id, part_src) in original_cells.items()}
+    assert _mesh_facts(s2) == ({nid: xyz for nid, xyz in original_nodes.items() if nid != src_nid}, expected_cells)
     _roundtrip_save_reconnect_and_export(s2, tmp_path, f"{deck_kind}_merge", node_remap={src_nid: keep_nid})
 
     # 3. element_deletion: preview -> cancel -> apply -> 1 undo/redo -> save/reopen -> reconnect -> export
     s3 = PrepSession()
     s3.open_rad(str(starter))
+    original_nodes, original_cells = _mesh_facts(s3)
     rev0 = s3.document.revision
     del_eid = 104 if deck_kind == "deck_a" else 82
     del_plan = s3.plan_element_deletion([_cell_ref(s3, del_eid)], orphan_policy="keep")
@@ -478,7 +541,7 @@ def test_d23_all_six_existing_mesh_edits_end_to_end_across_two_multiresource_dec
     s3.undo()
     assert any(c["id"] == del_eid for c in s3.mesh_view()["cells"])
     s3.redo()
-    assert all(c["id"] != del_eid for c in s3.mesh_view()["cells"])
+    assert _mesh_facts(s3) == (original_nodes, {ref: cell for ref, cell in original_cells.items() if ref[2] != del_eid})
     _roundtrip_save_reconnect_and_export(s3, tmp_path, f"{deck_kind}_delete")
 
     # 4. shell_normal_flip: preview -> cancel -> apply -> 1 undo/redo -> save/reopen -> reconnect -> export
@@ -502,6 +565,7 @@ def test_d23_all_six_existing_mesh_edits_end_to_end_across_two_multiresource_dec
     # 5. part_reassignment: preview -> cancel -> apply -> 1 undo/redo -> save/reopen -> reconnect -> export
     s5 = PrepSession()
     s5.open_rad(str(starter))
+    original_nodes, original_cells = _mesh_facts(s5)
     reassign_eid = 103 if deck_kind == "deck_a" else 82
     target_part_card = _card_by_prefix(s5, "/PART/4" if deck_kind == "deck_a" else "/PART/12")
     part_ref = {"resource_id": target_part_card["resource_id"], "entity_kind": "part", "local_id": target_part_card["id"]}
@@ -514,6 +578,10 @@ def test_d23_all_six_existing_mesh_edits_end_to_end_across_two_multiresource_dec
     s5.undo()
     assert next(c["part_id"] for c in s5.mesh_view()["cells"] if c["id"] == reassign_eid) != (4 if deck_kind == "deck_a" else 12)
     s5.redo()
+    target_part = 4 if deck_kind == "deck_a" else 12
+    expected_cells = {ref: (*cell[:2], target_part, None) if ref[2] == reassign_eid else cell
+                      for ref, cell in original_cells.items()}
+    assert _mesh_facts(s5) == (original_nodes, expected_cells)
     _roundtrip_save_reconnect_and_export(s5, tmp_path, f"{deck_kind}_part")
 
     # 6. size_remesh / replacement + CAD candidate adoption on multi-resource include deck:
@@ -625,8 +693,8 @@ def test_d23_edge_case_include_without_trailing_newline_and_emptied_block_commen
     _write(
         tmp_path / "elems_eof.inc",
         "/SH3N/1\n"
-        + "# trailing comment before EOF row without newline\n"
-        + _tri_line(50, 1, 2, 3)  # Emptied on reassign & lacks trailing EOF newline!
+        + _tri_line(50, 1, 2, 3) + "\n"
+        + "# trailing comment at EOF without newline"
     )
     starter = _write(
         tmp_path / "eof_0000.rad",
@@ -662,12 +730,20 @@ def test_d23_edge_case_include_without_trailing_newline_and_emptied_block_commen
     )
     s = PrepSession()
     s.open_rad(str(starter))
+    elem_resource = s.document.resources[_cell_ref(s, 50)["resource_id"]]
+    delete = s.plan_element_deletion([_cell_ref(s, 50)], orphan_policy="keep")
+    s.apply_element_deletion(delete["plan_id"])
+    assert elem_resource.render() == b"# trailing comment at EOF without newline\n"
+    s.undo()
+    assert elem_resource.render() == (tmp_path / "elems_eof.inc").read_bytes()
     p2 = _card_by_prefix(s, "/PART/2")
     plan = s.plan_part_reassignment([{"element": _cell_ref(s, 50), "part": {"resource_id": s._root_id, "entity_kind": "part", "local_id": p2["id"]}}])
     s.apply_part_reassignment(plan["plan_id"], expected_revision=s.document.revision, expected_document_id=s.document.id)
     assert next(c["part_id"] for c in s.mesh_view()["cells"] if c["id"] == 50) == 2
+    assert elem_resource.render().count(b"# trailing comment at EOF without newline\n") == 1
+    assert b"/SH3N/1" not in elem_resource.render()
 
-    # Also split edge on EOF without trailing newline in both nodes and elems!
+    # Appending the midpoint also normalizes the unterminated NODE row.
     sp = s.plan_triangle_edge_split([_cell_ref(s, 50)], (_node_ref(s, 1), _node_ref(s, 2)))
     s.apply_triangle_edge_split(sp["plan_id"], expected_revision=s.document.revision, expected_document_id=s.document.id)
     assert len(s.mesh_view()["node_ids"]) == 5
@@ -709,11 +785,11 @@ def test_d25_pure_split_triangle_edge_candidate_unit_and_rejections(tmp_path: Pa
         assert area_vec[2] > 0.0
         assert c.part == snapshot._cells[e101].part
 
-    # 2. Split 1 boundary SH3N triangle edge (n1, n2) with caller-supplied explicit IDs
-    cand1 = edits.split_triangle_edge(snapshot, (e101,), (n1, n2), new_node_id=990, new_element_ids=(9001, 9002))
+    # 2. Split a boundary edge with caller-supplied IDs.
+    cand1 = edits.split_triangle_edge(snapshot, (e102,), (n3, n4), new_node_id=990, new_element_ids=(9001, 9002))
     assert cand1.added_nodes[0].ref.local_id == 990
     assert tuple(c.ref.local_id for c in cand1.added_cells) == (9001, 9002)
-    assert cand1.added_nodes[0].xyz == (5.0, 0.0, 0.0)
+    assert cand1.added_nodes[0].xyz == (5.0, 10.0, 0.0)
 
     # 3. Structured MeshEditError rejections
     with pytest.raises(edits.MeshEditError) as err:
@@ -729,12 +805,26 @@ def test_d25_pure_split_triangle_edge_candidate_unit_and_rejections(tmp_path: Pa
     assert err.value.code == "duplicate_edge_nodes"
 
     with pytest.raises(edits.MeshEditError) as err:
-        edits.split_triangle_edge(snapshot, (e101,), (n1, n2), new_node_id=1)  # collision
+        edits.split_triangle_edge(snapshot, (e102,), (n3, n4), new_node_id=1)
     assert err.value.code == "node_id_collision"
 
     with pytest.raises(edits.MeshEditError) as err:
-        edits.split_triangle_edge(snapshot, (e101,), (n1, n2), new_element_ids=(101, 999))  # collision
+        edits.split_triangle_edge(snapshot, (e102,), (n3, n4), new_element_ids=(101, 999))
     assert err.value.code == "element_id_collision"
+
+    for edge, neighbor in (((n1, n3), e102), ((n1, n2), edits.Ref(**_cell_ref(s, 301)))):
+        with pytest.raises(edits.MeshEditError) as err:
+            edits.split_triangle_edge(snapshot, (e101,), edge)
+        assert err.value.code == "hanging_node_unselected_neighbor"
+        assert err.value.details == (neighbor,)
+
+    for identifiers in ({"new_node_id": 2**31}, {"new_element_ids": (9001, 2**31)}):
+        with pytest.raises(edits.MeshEditError) as err:
+            edits.split_triangle_edge(snapshot, (e102,), (n3, n4), **identifiers)
+        assert err.value.code == "native_id_overflow"
+    max_id = 2**31 - 1
+    boundary = edits.split_triangle_edge(snapshot, (e102,), (n3, n4), new_node_id=max_id, new_element_ids=(max_id - 1, max_id))
+    assert boundary.added_nodes[0].ref.local_id == boundary.added_cells[-1].ref.local_id == max_id
 
     with pytest.raises(edits.MeshEditError) as err:
         edits.split_triangle_edge(snapshot, (e101, e102, edits.Ref(**_cell_ref(s, 103))), (n1, n3))
@@ -783,6 +873,26 @@ def test_d25_pure_split_triangle_edge_candidate_unit_and_rejections(tmp_path: Pa
     assert err.value.code == "degenerate_triangle"
 
 
+@pytest.mark.parametrize(("unit", "side"), [("mm", 1e-3), ("m", 1e-6)])
+def test_d25_micrometre_triangle_and_automatic_id_bounds(tmp_path, unit, side):
+    s = PrepSession()
+    s.open_rad(_build_deck_multi_include(tmp_path))
+    snapshot = s._mesh_edit_snapshot()
+    parent = snapshot._cells[edits.Ref(**_cell_ref(s, 101))]
+    largest_id = 2**31 - 1
+    nodes = tuple(edits.Node(ref, xyz) for ref, xyz in zip(parent.nodes, ((0, 0, 0), (side, 0, 0), (0, side, 0))))
+    last_node = edits.Node(replace(parent.nodes[0], local_id=largest_id), (0, 0, side))
+    parent = replace(parent, ref=replace(parent.ref, local_id=largest_id))
+    snapshot = replace(snapshot, length_unit=unit, nodes=(*nodes, last_node), cells=(parent,), sets=(), uses=())
+
+    candidate = edits.split_triangle_edge(snapshot, (parent.ref,), parent.nodes[:2])
+    assert candidate.added_nodes[0].xyz == (side / 2, 0, 0)
+    assert candidate.added_nodes[0].ref.local_id == 4
+    assert tuple(cell.ref.local_id for cell in candidate.added_cells) == (1, 2)
+    assert candidate.quality_before[0].value == pytest.approx(3**0.5 / 2)
+    assert sum(row.signed_measure for row in candidate.quality_after) / side**2 == pytest.approx(0.5)
+
+
 def test_d25_session_multiresource_edge_split_undo_save_reconnect_export(tmp_path: Path):
     """End-to-end session test for EdgeSplitCommands on multi-include deck."""
     starter = _build_deck_multi_include(tmp_path)
@@ -807,9 +917,15 @@ def test_d25_session_multiresource_edge_split_undo_save_reconnect_export(tmp_pat
     # Re-plan and apply in 1 atomic transaction
     plan = s.plan_triangle_edge_split([_cell_ref(s, 101), _cell_ref(s, 102)], (_node_ref(s, 1), _node_ref(s, 3)))
     new_node_id = plan["added_nodes"][0]["ref"]["local_id"]
-    first_child_101 = plan["split_cells"][0]["children"][0]["local_id"]
-    first_child_102 = plan["split_cells"][1]["children"][0]["local_id"]
+    child_mapping = {pair["parent"]["local_id"]: pair["children"] for pair in plan["split_cells"]}
+    child_ids = [ref["local_id"] for refs in child_mapping.values() for ref in refs]
+    s.select_entity("element", 101)
+    selection_events = []
+    unsubscribe = s.subscribe(lambda _: selection_events.append(s.selection()["ids"]))
     res = s.apply_triangle_edge_split(plan["plan_id"], expected_revision=rev0, expected_document_id=s.document.id)
+    unsubscribe()
+    assert s.selection()["refs"] == child_mapping[101]
+    assert all(101 not in ids for ids in selection_events)
     assert res["revision"] == rev0 + 1
     assert len(s.mesh_view()["node_ids"]) == n_before + 1
     assert new_node_id in s.mesh_view()["node_ids"]
@@ -819,21 +935,38 @@ def test_d25_session_multiresource_edge_split_undo_save_reconnect_export(tmp_pat
     nodes_inc_id = next(rid for rid, p in s._paths.items() if p.endswith("nodes.inc"))
     shells_a_id = next(rid for rid, p in s._paths.items() if p.endswith("shells_a.inc"))
     assert str(new_node_id) in s.document.resources[nodes_inc_id].render().decode("latin1")
-    shells_a_text = s.document.resources[shells_a_id].render().decode("latin1")
-    assert str(first_child_101) in shells_a_text and str(first_child_102) in shells_a_text
+    shells_a_lines = s.document.resources[shells_a_id].render().decode("latin1").splitlines(keepends=True)
+    for parent, ending in ((101, "\r\n"), (102, "\n")):
+        for child in child_mapping[parent]:
+            row = next(line for line in shells_a_lines if line[:10].strip() == str(child["local_id"]))
+            assert row[40:] == _SH3N_TAILS[parent] + ending
 
     # 1 Undo restores both includes + relations atomically; 1 Redo restores split
     s.undo()
+    assert not s.selection()["refs"]
     assert len(s.mesh_view()["node_ids"]) == n_before
     assert len(s.mesh_view()["cells"]) == c_before
     s.redo()
     assert len(s.mesh_view()["node_ids"]) == n_before + 1
     assert len(s.mesh_view()["cells"]) == c_before + 2
 
-    reopened = _roundtrip_save_reconnect_and_export(
-        s, tmp_path, "d25_split", split_first_child_by_old_id={101: first_child_101, 102: first_child_102}
-    )
-    assert new_node_id in reopened.mesh_view()["node_ids"]
+    group_id = _find_card_id(s, "/GRSH3N/SH3N/13")
+    generation = s.mesh_relationships()["stale_targets"][group_id]["mesh_revision"]
+    for invalid in ([], [child_mapping[101][0]] * 2, [child_mapping[101][0], _cell_ref(s, 201)]):
+        with pytest.raises(PrepError):
+            s.reconnect_mesh_targets({group_id: {"mesh_revision": generation, "mapping": {**child_mapping, 101: invalid}}})
+        assert group_id in s.mesh_relationships()["stale_targets"]
+    link = s._prepare_mesh_reconnection({group_id: {"mesh_revision": generation, "mapping": child_mapping}})[-1][0]
+    assert link["mapping"] == [{"old_native_id": eid, "target": children} for eid, children in child_mapping.items()]
+
+    exported = _roundtrip_save_reconnect_and_export(s, tmp_path, "d25_split", split_children_by_old_id=child_mapping)
+    assert _target_facts(exported)[0]["/GRSH3N/SH3N/13"] == child_ids
+    exported_snapshot = exported._mesh_edit_snapshot()
+    areas = [edits._quality(cell, exported_snapshot._nodes.__getitem__).signed_measure
+             for cell in exported_snapshot.cells if cell.ref.local_id in child_ids]
+    assert areas == pytest.approx([25, 25, 25, 25])
+    assert sum(areas) == pytest.approx(sum(row["signed_measure"] for row in plan["quality_before"]))
+    assert _mesh_facts(exported)[0][new_node_id] == ((5, 5, 0), ("nodes.inc",))
 
     # Reject /TRANSFORM deck
     tr_dir = tmp_path / "tr_deck"
@@ -851,9 +984,11 @@ def test_d25_session_multiresource_edge_split_undo_save_reconnect_export(tmp_pat
 
 
 @pytest.mark.parametrize("presentation", ("beidprep", "prepomax"))
-def test_d25_triangle_edge_split_dialog_ui_and_screenshot(tmp_path: Path, presentation: str):
-    """Exercise TriangleEdgeSplitDialog across presentations and capture 1440x900 screenshot on beidprep."""
-    from PySide6.QtGui import QFont, QFontDatabase
+def test_d25_triangle_edge_split_dialog_ui_and_screenshot(tmp_path: Path, presentation: str, request):
+    pytest.importorskip("PySide6")
+    request.getfixturevalue("qt_settings")
+    from PySide6.QtWidgets import QApplication, QComboBox
+    from caelab_prep.ui.main_window import MainWindow
     from caelab_prep.ui.element_edits import TriangleEdgeSplitDialog
 
     app = QApplication.instance() or QApplication([])
@@ -869,7 +1004,8 @@ def test_d25_triangle_edge_split_dialog_ui_and_screenshot(tmp_path: Path, presen
         app.processEvents()
 
         assert hasattr(win, "edge_split_action") and win.edge_split_action.isEnabled()
-        assert hasattr(win, "open_edge_split")
+        assert win.edge_split_action.statusTip()
+        assert not win.edge_split_action.icon().isNull()
         win.edge_split_action.trigger()
         dialog = win.edge_split_dialog
         assert isinstance(dialog, TriangleEdgeSplitDialog)
@@ -891,35 +1027,26 @@ def test_d25_triangle_edge_split_dialog_ui_and_screenshot(tmp_path: Path, presen
         assert dialog._plan["admissible"] is True
         assert dialog.reviewed.isChecked() is True
         assert dialog.apply_button.isEnabled() is True
-        assert "Split edge 1 – 3" in dialog.preview.toPlainText()
+        review = dialog.preview.toPlainText()
+        assert "Split edge 1 – 3" in review
+        assert "New midpoint node (mm)" in review
+        assert "Stored thickness, shell angle and trailing fields are copied." in review
+        assert "Triangle mean ratio and area (mm^2)" in review
+        assert "Split Target Group [/GRSH3N/SH3N/13]" in review
+        assert "triangle_mean_ratio" not in review
+        child_ids = [[child["local_id"] for child in pair["children"]] for pair in dialog._plan["split_cells"]]
 
         if presentation == "beidprep":
-            from PySide6.QtGui import QColor, QFont, QFontDatabase, QPainter
-
-            font_path = Path("C:/Windows/Fonts/malgun.ttf")
-            if font_path.is_file():
-                font_id = QFontDatabase.addApplicationFont(str(font_path))
-                if font_id >= 0:
-                    family = QFontDatabase.applicationFontFamilies(font_id)[0]
-                    app.setFont(QFont(family, 9))
-            win.setWindowState(Qt.WindowState.WindowNoState)
-            win.resize(1440, 900)
             win.show()
-            dialog.show()
-            dialog.adjustSize()
-            dialog.resize(max(dialog.width(), 820), max(dialog.height(), 640))
             app.processEvents()
-            screenshot_dir = Path(r"C:\Users\pikac\.gemini\antigravity\brain\9beddcd8-3baf-44f6-9560-2c07a847da3f")
-            if screenshot_dir.is_dir():
-                canvas = win.grab()
-                dialog_pix = dialog.grab()
-                painter = QPainter(canvas)
-                x = max(0, (canvas.width() - dialog_pix.width()) // 2)
-                y = max(0, (canvas.height() - dialog_pix.height()) // 2)
-                painter.fillRect(x - 2, y - 2, dialog_pix.width() + 4, dialog_pix.height() + 4, QColor("#2a3242"))
-                painter.drawPixmap(x, y, dialog_pix)
-                painter.end()
-                canvas.save(str(screenshot_dir / "d25_prep_edge_split_dialog.png"))
+            for card_id in dialog._plan["stale_targets"]:
+                keyword = win.session._find_card(card_id).card(card_id).keyword
+                cursor = dialog.preview.document().find(keyword)
+                assert not cursor.isNull()
+                assert dialog.preview.viewport().rect().contains(dialog.preview.cursorRect(cursor))
+            pixmap = dialog.grab()
+            assert not pixmap.isNull()
+            assert pixmap.save(str(tmp_path / "d25_prep_edge_split_dialog.png"))
 
         before_nodes = len(win.session.mesh_view()["node_ids"])
         dialog.apply_change()
@@ -928,7 +1055,88 @@ def test_d25_triangle_edge_split_dialog_ui_and_screenshot(tmp_path: Path, presen
         win.session.undo()
         app.processEvents()
         assert len(win.session.mesh_view()["node_ids"]) == before_nodes
+        dialog.reject()
+        win.session.redo()
+        app.processEvents()
+
+        reconnect = win.open_prepared_mesh()
+        group_id = _find_card_id(win.session, "/GRSH3N/SH3N/13")
+        reconnect.target_group.setCurrentIndex(reconnect.target_group.findData(group_id))
+        for row, ids in enumerate(child_ids):
+            reconnect.reconnect_table.selectRow(row)
+            reconnect.current_target.setText(", ".join(map(str, ids)))
+            reconnect.find_current_target()
+            reconnect.add_link()
+        assert not reconnect.reconnect_button.isEnabled()
+        assert reconnect.prepare_reconnection()
+        assert "2 old links → 4 unique current targets" in reconnect.reconnect_details.toPlainText()
+        assert reconnect.apply_reconnection()
+        assert _target_facts(win.session)[0]["/GRSH3N/SH3N/13"] == [child for ids in child_ids for child in ids]
     finally:
         win._allow_close = True
         win.close()
         app.processEvents()
+
+
+def test_d25_dirty_close_cancel_keeps_dialog_and_preview(tmp_path, request):
+    pytest.importorskip("PySide6")
+    request.getfixturevalue("qt_settings")
+    from PySide6.QtCore import QTimer
+    from PySide6.QtWidgets import QApplication, QMessageBox
+    from caelab_prep.ui.main_window import MainWindow
+
+    app = QApplication.instance() or QApplication([])
+    win = MainWindow(enable_viewport=False)
+    timer = QTimer()
+    try:
+        win.session.open_rad(_build_deck_multi_include(tmp_path))
+        win.session.set_field(_find_card_id(win.session, "/MAT/LAW1/1"), "young_modulus", 220000)
+        assert win.session.document.dirty
+        win.refresh_document()
+        win.show()
+        app.processEvents()
+
+        win.session.select_entity("element", 102)
+        dialog = win.open_edge_split()
+        win.session.select_entity("element", 201)
+        dialog.use_selection()
+        assert dialog.status.text() == dialog.edge_selector.currentText() == dialog.no_common_edge
+        dialog.table.selectRow(1)
+        dialog.remove_selection()
+        dialog.table.selectRow(0)
+        dialog.remove_selection()
+        assert dialog.status.text() == dialog.edge_selector.currentText() == dialog.selection_required
+
+        win.session.select_entity("element", 101)
+        dialog.use_selection()
+        win.session.select_entity("element", 102)
+        dialog.use_selection()
+        dialog.prepare_preview()
+        plan = dialog._plan
+        review = dialog.preview.toPlainText()
+        assert plan and dialog.apply_button.isEnabled()
+
+        prompts = []
+
+        def cancel():
+            prompt = QApplication.activeModalWidget()
+            if isinstance(prompt, QMessageBox):
+                prompts.append((prompt.windowTitle(), prompt.text()))
+                prompt.done(int(QMessageBox.StandardButton.Cancel))
+                timer.stop()
+
+        timer.timeout.connect(cancel)
+        timer.start(10)
+        assert not win.close()
+        app.processEvents()
+        assert prompts == [("Unsaved changes", "Save changes before continuing?")]
+        assert win.isVisible()
+        assert win.edge_split_dialog is dialog and dialog.isVisible()
+        assert dialog._plan is plan and dialog.preview.toPlainText() == review
+        assert dialog.apply_button.isEnabled() and not dialog._closed
+    finally:
+        timer.stop()
+        win._allow_close = True
+        win.close()
+        app.processEvents()
+    assert win.edge_split_dialog is None

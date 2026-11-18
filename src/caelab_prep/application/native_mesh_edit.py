@@ -18,11 +18,11 @@ def _format_node_row(node, newline):
     return integer(node.ref.local_id) + "".join(real(value) for value in node.xyz) + newline
 
 
-def _format_cell_row(cell, newline):
+def _format_cell_row(cell, newline, suffix=""):
     parts = [integer(cell.ref.local_id), *(integer(node.local_id) for node in cell.nodes)]
     if cell.family == "BEAM" and cell.orientation_node is not None:
         parts.append(integer(cell.orientation_node.local_id))
-    return "".join(parts) + newline
+    return "".join(parts) + suffix + newline
 
 
 def native_mesh_edit_states(session, candidate, *, layout_error_code):
@@ -74,7 +74,11 @@ def native_mesh_edit_states(session, candidate, *, layout_error_code):
                                 and added_cells_by_ref[cref].part == previous.part)
                         ]
                         if len(inline_children) == len(child_refs):
-                            changed[row] = "".join(_format_cell_row(child, owner.newline) for child in inline_children)
+                            body = lines[row].rstrip("\r\n")
+                            ending = lines[row][len(body):]
+                            changed[row] = "".join(
+                                _format_cell_row(child, ending or owner.newline, body[40:])
+                                for child in inline_children)
                             emitted_added_cells.update(child_refs)
                             replaced_in_place = True
                         else:
@@ -119,12 +123,12 @@ def native_mesh_edit_states(session, candidate, *, layout_error_code):
                 text = "".join(body_parts)
                 empty = (not append_nodes and not replaced_in_place
                          and all(row in changed and changed[row] is None for row in card.data))
-                if not empty:
+                if text:
                     text = _ensure_newline(text, owner.newline)
                 # Full-card replacement already rejects file directives. Do not
                 # bypass that source boundary or silently discard a directive.
                 replacements[card.id] = (text, empty)
-                if empty and moved_targets:
+                if empty and moved_targets and not (owner.is_include and any(c.id == card.id for c in owner._source_cards)):
                     # Keep non-data source comments once when the old block
                     # becomes empty; directives still fail replacement below.
                     comments = [_ensure_newline(lines[index], owner.newline)

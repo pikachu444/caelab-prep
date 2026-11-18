@@ -3,7 +3,7 @@ from copy import deepcopy
 from dataclasses import asdict
 from uuid import uuid4
 
-from ..cae_core import PrepError
+from ..cae_core import PrepError, Selection, SelectionRef
 from ..radioss.relations import node_support
 from . import mesh_edit_candidates as edits
 from .native_mesh_edit import native_mesh_edit_states, project_native_mesh_edit
@@ -133,12 +133,20 @@ class EdgeSplitCommands:
                 raise PrepError(exc.code, str(exc)) from exc
             if not admissible:
                 raise PrepError("unsupported_edge_split_targets", "Resolve the affected condition targets before splitting triangle edges.")
+            selection = self.document.selection
+            remap_selection = self._active_target_role is None
             change = self.dispatcher.execute_many(
                 native_mesh_edit_states(self, candidate, layout_error_code="unsupported_edge_split_layout"),
                 "Split selected triangle edge",
                 expected_revision=self.document.revision,
                 kind="structure",
             )
+            split_refs = {SelectionRef(**asdict(parent)): tuple(SelectionRef(**asdict(child)) for child in children)
+                          for parent, children in candidate.split_cells}
+            if remap_selection and any(ref in split_refs for ref in selection.refs):
+                refs = tuple(ref for previous in selection.refs for ref in split_refs.get(previous, (previous,)))
+                self.document.selection = Selection(selection.kind, tuple(ref.local_id for ref in refs), refs)
+                self._notify("selection")
             if getattr(self, "_edge_split_plan", None) is plan:
                 self._edge_split_plan = None
             return {**self.describe(), "change": change.to_dict(), "mesh_relationships": self.mesh_relationships()}

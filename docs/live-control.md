@@ -1,6 +1,6 @@
 # 열린 GUI 문서 제어
 
-이 연결은 실행 중인 Prep 창의 **같은 `PrepSession`**을 제어한다. 독립 CLI의 파일 열기와 다르며, 연결에 실패하면 문서 사본을 만들지 않는다. 현재 범위는 문서 조회·선택, 제공자가 지원하는 숫자/boolean scalar 편집, Undo/Redo, 작업문서 저장, 세션 이벤트 조회, CAD 메시 후보의 생성·상태·취소다. 케이스·집합 등 모든 모델 명령을 원격 노출하는 범위는 아니다. 선택적인 MCP 어댑터와 실제 목표 클라이언트 사용법은 [MCP 연결](mcp-client.md)에 별도로 설명한다.
+이 연결은 실행 중인 Prep 창의 **같은 `PrepSession`**을 제어한다. 현재 범위는 문서 조회·선택, 제공자가 지원하는 숫자/boolean scalar 편집, LAW1/ELAST 계수 적용, Undo/Redo, 작업문서 저장, 세션 이벤트 조회, CAD 메시 후보의 생성·상태·취소다. 선택적인 MCP 어댑터와 사용법은 [MCP 연결](mcp-client.md)에 있다.
 
 
 Windows에서는 [설치 가이드](usage.md#install-windows)의 GUI 환경을 먼저 준비한다. 아래 `caelab-prep` 명령은 가상환경 활성화 없이 `.\.venv\Scripts\caelab-prep.exe`로 실행한다. 다른 Python으로 설치한 환경의 PATH 명령과 혼용하지 않는다.
@@ -53,6 +53,8 @@ client.request("document.save", {
 | `document.selection` | `{}` → 현재 정규 선택 |
 | `document.select` | `handle`, `target` → 같은 GUI의 선택·속성 표시 |
 | `document.edit` | `handle`, `target`, `values`, 선택적 `units` → 같은 `SetProperties` 검증과 한 Undo 명령 |
+| `material.prepare_apply` | `handle`, `target`, `profile_id`, `profile_revision`, `parameters`, `curves`, `evaluation_digest` → `plan_id`, `handle`, `baseline_hashes`, `candidate_hashes`, `changes_preview`, `expires_at`, `supported`, `reason_codes`, `work_units`, `expires_in_seconds` |
+| `material.commit_apply` | `plan_id`, `handle`, `candidate_hashes` → `status`, `handle_after`, `command_id`, `applied_hashes`, `reason_codes` |
 | `document.undo`, `document.redo` | `handle` → 공용 문서 이력 |
 | `document.save` | `handle`, `path` → 원문 보존 `.caeprep` 저장. 솔버 출력/실행 아님 |
 | `events.since` | `after` → 후속 세션/작업 이벤트와 새 번호. 버퍼가 만료되면 `event_gap`이며 문서를 다시 조회 |
@@ -61,7 +63,17 @@ client.request("document.save", {
 | `jobs.cancel` | `job_id`, `cancel_token` → 생성자가 받은 capability로 해당 worker 취소 요청 |
 | `jobs.close` | `job_id`, `cancel_token` → 종료된 후보 창 닫기. 실행 중이면 먼저 취소/종료 확인 |
 
-처음 메시 생성의 국부 크기는 이 좁은 endpoint가 설정하지 않는다. 후보 GUI에서 해당 형상을 선택해 기존 국부 크기 작업을 수행한다. 성공한 메시 작업은 품질과 원자산을 가진 **후보**이며 문서 채택과 다르다. `quality_passed`와 `adopted=false`를 별도로 반환하고, 채택은 기존 GUI의 재료/단면·단위 검증을 따른다.
+### 열린 문서의 탄성 계수 적용
+
+`hello.limits.material`은 적용 가능한 프로필을 표시한다. `radioss_law1_elastic_v1`의 `profile_revision`은 정수 `1`이다. `document.cards`가 반환한 `/MAT/LAW1` 또는 `/MAT/ELAST` 참조를 `target`으로 보낸다. 카드가 루트나 INCLUDE에 있어도 같은 요청을 쓴다. `parameters`는 각 계수의 값과 단위를 함께 담는다. 예를 들어 `{"E":{"value":205,"unit":"GPa"},"nu":{"value":0.29,"unit":"1"},"rho":{"value":7855,"unit":"kg/m^3"}}`이다. 정식 필드명 `young_modulus`, `poisson_ratio`, `density`도 쓸 수 있다. `/BEGIN`은 지원되는 입력·작업 단위 두 행을 같은 값으로 선언해야 하며 재료 카드별 단위 재정의는 거부한다. `evaluation_digest`는 클라이언트가 선택한 평가의 SHA-256(16진수 64자리)이다.
+
+탄성 프로필에서 `curves`는 빈 배열 `[]`이다. Prony 프로필·항, LAW36/PLAS_TAB 적용, 동반 곡선은 `UNSUPPORTED_ATOMIC_APPLY`로 거부한다. 기존 재료·`/FUNCT` 카드는 그대로 보존한다.
+
+준비는 문서를 바꾸지 않고 대상 카드별 SHA-256과 변경 전후 diff를 반환한다. `expires_at`은 Unix 초이며 계획은 발급 뒤 60초간 유효하다. 검토한 응답의 `plan_id`, `handle`, `candidate_hashes`를 확정 요청에 그대로 보낸다. 기준 리소스와 카드 해시, 개정, 후보 해시를 다시 확인하고 값 변경을 한 Undo 명령으로 확정한다. 이미 같은 값이면 `command_id`는 `null`이다. 만료된 계획은 `plan_expired`, 후보 해시가 다르면 `hash_mismatch`를 반환한다. 이 경우 현재 문서에서 새로 준비한다.
+
+### 메시 후보와 작업 수명
+
+국부 크기는 후보 GUI에서 형상을 선택해 설정한다. 성공한 메시 작업은 품질과 원자산을 가진 **후보**다. `quality_passed`와 `adopted=false`를 반환하며, 채택은 GUI에서 재료·단면과 단위를 검증한 뒤 수행한다.
 
 작업 ID는 한 후보 창의 workflow를 가리킨다. GUI에서 다시 Generate/Open/Adopt를 누르면 `generation`이 증가하고 `operation`과 상태가 새 실제 task를 따른다. 기존 종료 결과를 다음 실행의 상태로 재사용하지 않는다. 생성자가 받은 capability는 이 workflow에 속한다.
 

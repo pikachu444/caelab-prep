@@ -166,7 +166,9 @@ class LiveControl(QObject):
             return {"protocol_version": 1, "server_id": self.server.descriptor()["server_id"],
                     "methods": METHODS, "handle": self._handle(), "document": self.session.describe(),
                     "owner": self._owner_state(), "event_sequence": self._sequence,
-                    "limits": {"edit": "provider scalar number/bool fields only", "mesh": "candidate generation, query and creator-capability cancellation; adoption remains in GUI"}}
+                    "limits": {"edit": "provider scalar number/bool fields only",
+                               "mesh": "candidate generation, query and creator-capability cancellation; adoption remains in GUI",
+                               "material": "radioss_law1_elastic_v1 revision 1: scalar LAW1/ELAST prepare and commit"}}
         if method == "document.cards":
             self._keys(params)
             return {"handle": self._handle(), "cards": self.host.provider.tree_nodes()}
@@ -187,20 +189,15 @@ class LiveControl(QObject):
                     "handle": self._handle()}
         if method.startswith("jobs."): return self._job_request(method, params)
         if method == "material.prepare_apply":
-            self._keys(params, ("handle", "target", "exporter_id", "parameters", "units"), ("cards",))
+            self._keys(params, ("handle", "target", "profile_id", "profile_revision", "parameters", "curves", "evaluation_digest"))
             with self.session._lock:
                 self._guard(params["handle"])
-                return self._material_binding.prepare_apply(
-                    params["handle"], params["target"], params["exporter_id"],
-                    params["parameters"], params["units"], cards=params.get("cards"))
+                return self._material_binding.prepare_apply(**params)
         if method == "material.commit_apply":
-            self._keys(params, ("handle", "plan_id", "expected_revision"))
+            self._keys(params, ("plan_id", "handle", "candidate_hashes"))
             with self.session._lock:
                 self._guard(params["handle"])
-                result = self._material_binding.commit_apply(
-                    params["handle"], params["plan_id"], params["expected_revision"])
-                self.host.refresh_document()
-                return {**result, "handle": self._handle()}
+                return self._material_binding.commit_apply(**params)
         if method == "mesh.start":
             self._keys(params, ("handle", "source", "output", "size", "dimension"), ("interface_policy", "local_sizes"))
             with self.session._lock:

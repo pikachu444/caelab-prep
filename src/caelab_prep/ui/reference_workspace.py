@@ -1,5 +1,4 @@
 """Concrete host assembly over the independent reference presentation seam."""
-from PySide6.QtCore import QEvent, QObject
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QToolBar
 
@@ -50,25 +49,13 @@ def configure_native(h, key, *, native_commands=False):
     _register_edge_split_action(h)
 
 
-class _EdgeSplitCloseFilter(QObject):
-    def __init__(self, host):
-        super().__init__(host)
-        self.host = host
-
-    def eventFilter(self, watched, event):
-        if watched is self.host and event.type() == QEvent.Type.Close:
-            dialog = getattr(self.host, "edge_split_dialog", None)
-            if dialog is not None:
-                dialog.reject()
-        return False
-
-
 def _register_edge_split_action(h):
     if getattr(h, "edge_split_action", None) is not None:
         return
     h.edge_split_dialog = None
-    action = QAction("Split triangle edge…", h)
+    action = QAction(icon("mesh"), "Split triangle edge…", h)
     action.setObjectName("mesh.split_triangle_edge")
+    action.setStatusTip("Preview and split an edge of selected SH3N triangles.")
 
     def open_edge_split():
         from .element_edits import TriangleEdgeSplitDialog
@@ -89,6 +76,3 @@ def _register_edge_split_action(h):
             mesh_menu.insertAction(anchor, action)
         else:
             mesh_menu.addAction(action)
-    if isinstance(h, QObject):
-        h._edge_split_close_filter = _EdgeSplitCloseFilter(h)
-        h.installEventFilter(h._edge_split_close_filter)

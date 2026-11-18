@@ -88,7 +88,7 @@ def reconnection_review_text(session, plan):
     labels = {card["id"]: f"{card['title'] or card['keyword']} [{card['keyword']}]" for card in session.list_cards()}
     drops = any(row.get("dropped_old_native_ids") for row in plan["links"])
     ownership = "ownership" if drops else "node ownership"
-    lines = ["Final explicit targets and member removals" if drops else "Final explicit node targets", f"Old entries below are stored native IDs; historical {ownership} and geometry are not reconstructed.",
+    lines = ["Final explicit targets and member removals" if drops else "Final explicit targets", f"Old entries below are stored native IDs; historical {ownership} and geometry are not reconstructed.",
              "Repeated targets form one member only with your explicit permission. Native condition values stay unchanged.", plan["before_basis"]]
     for row in plan["links"]:
         counts = (f"{row['dropped_count']} explicitly removed; {row['coalesced_count']} repeated links coalesced."
@@ -102,9 +102,13 @@ def reconnection_review_text(session, plan):
             lines.append(f"Current card declaration differs from saved old links: {row['old_native_ids']}")
         for link in row["mapping"]:
             target = link["target"]
-            if isinstance(target, dict):
-                resource = session.document.resources[target["resource_id"]]
-                lines.append(f"Old ID {link['old_native_id']} → {target['entity_kind']} {target['local_id']} in {resource.name} ({resource.id})")
+            if isinstance(target, (dict, list, tuple)):
+                targets = (target,) if isinstance(target, dict) else target
+                labels_by_target = []
+                for ref in targets:
+                    resource = session.document.resources[ref["resource_id"]]
+                    labels_by_target.append(f"{ref['entity_kind']} {ref['local_id']} in {resource.name} ({resource.id})")
+                lines.append(f"Old ID {link['old_native_id']} → {', '.join(labels_by_target)}")
             else:
                 resource = session._find_card(target)
                 lines.append(f"Old ID {link['old_native_id']} → {labels.get(target, target)} in {resource.name} ({resource.id})")

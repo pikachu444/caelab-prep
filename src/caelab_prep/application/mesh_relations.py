@@ -293,8 +293,8 @@ class MeshRelationCommands:
         """Explicit new member references; same numeric IDs still need this command.
 
         Map each stale group UUID to {mesh_revision, mapping:{old_id: target}}.
-        Targets are typed node/element SelectionRefs; a SURF/PART target is a
-        PART card UUID. Every old member must have an explicit correspondence.
+        Use a typed node reference, one or more typed element references, or a
+        PART card UUID for SURF/PART. Every old member needs a correspondence.
         The mesh generation and document revision must match current state.
         The whole requested batch and target-marker removal form one Undo.
         """
@@ -363,14 +363,24 @@ class MeshRelationCommands:
                     self._member_sequence(list(stale["members"]))
                     identifiers = list(dict.fromkeys(identifiers))
                 identifiers = self._node_members(identifiers)
-            else: identifiers, _, _ = self._element_members(members, family)
+            else:
+                element_members = []
+                for member in members:
+                    if isinstance(member, (list, tuple)):
+                        if not member or any(not isinstance(child, dict) for child in member):
+                            raise PrepError("invalid_reference", "Provide a nonempty sequence of typed element references.")
+                        element_members.extend(member)
+                    else:
+                        element_members.append(member)
+                members = element_members
+                identifiers, _, _ = self._element_members(members, family)
             link = {"group_id": card_id, "family": family,
                 "old_native_ids": list(stale["members"]),
                 "current_declared_native_ids": self._integer_members(resource, card),
                 "proposed_native_ids": list(identifiers),
                 "mapping": [{"old_native_id": value, "target": deepcopy(mapping[value])} for value in stale["members"] if value not in dropped],
                 "old_link_count": len(stale["members"]), "unique_target_count": len(identifiers),
-                "collapsed_count": len(stale["members"]) - len(identifiers), "coalescence_requested": coalesce}
+                "collapsed_count": len(members) - len(identifiers), "coalescence_requested": coalesce}
             if dropped:
                 link.update(dropped_old_native_ids=[value for value in stale["members"] if value in dropped],
                             dropped_count=len(dropped), coalesced_count=len(members) - len(identifiers))
@@ -404,8 +414,10 @@ class MeshRelationCommands:
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             states, objects, trial, links = self._prepare_mesh_reconnection(targets, allow_coalescence=True, allow_drop=True)
-            if any(row["family"] != "GRNOD/NODE" for row in links) and not any(row.get("dropped_old_native_ids") for row in links):
-                raise PrepError("unsupported_reconnection_review", "This reviewed path supports explicit node groups; use the existing direct path for other families.")
+            if any(row["family"] != "GRNOD/NODE" for row in links) and not any(
+                    row.get("dropped_old_native_ids") or row["unique_target_count"] > row["old_link_count"]
+                    for row in links):
+                raise PrepError("unsupported_reconnection_review", "Use this review for node groups, member removals or element expansions.")
             report = reconnection_review(self, trial, links)
             plan_id = str(uuid4())
             self._mesh_reconnection_plan = (plan_id, self._mesh_edit_stamp(), deepcopy(states), objects)

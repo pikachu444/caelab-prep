@@ -1133,7 +1133,9 @@ class PrepController:
                 return
         self._settings.setValue("windowGeometry", self.saveGeometry())
         self._settings.setValue("windowState", self.saveState(self.LAYOUT_VERSION))
-        for dialog in (self.source_models_dialog, self.prepared_mesh_dialog, self.node_move_dialog, self.node_merge_dialog, self.shell_normal_dialog, self.element_deletion_dialog, self.part_reassignment_dialog):
+        for dialog in (self.source_models_dialog, self.prepared_mesh_dialog, self.node_move_dialog,
+                       self.node_merge_dialog, self.shell_normal_dialog, self.element_deletion_dialog,
+                       self.part_reassignment_dialog, self.edge_split_dialog):
             if dialog is not None:
                 dialog.reject()
         if self.viewport:

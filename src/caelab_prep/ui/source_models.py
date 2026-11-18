@@ -1070,6 +1070,8 @@ class PreparedMeshDialog(QDialog):
         self._invalidate_reconnection(reset_permission=True)
         self._clear_entry()
         group = self._group()
+        self.current_target.setPlaceholderText("Element IDs separated by commas" if group and group["family"] not in ("GRNOD/NODE", "SURF/PART")
+                                               else "Exact current node or PART ID")
         self.reconnect_model.show_members(group["members"] if group else [], self._mapping, self._labels, dropped=self._dropped)
         if self.reconnect_model.rowCount():
             self.reconnect_table.selectRow(0)
@@ -1115,6 +1117,9 @@ class PreparedMeshDialog(QDialog):
         return bool(group and self._mapping and not (set(self._mapping) & self._dropped)
                     and (set(self._mapping) | self._dropped) == set(group["members"]))
 
+    def _expands_element_group(self):
+        return any(isinstance(value, list) for value in self._mapping.values())
+
     def _selected_old_member(self):
         selected = self.reconnect_table.selectionModel().selectedRows()
         if len(selected) != 1:
@@ -1147,14 +1152,21 @@ class PreparedMeshDialog(QDialog):
             group = self._group()
             if not group or not self.reconnect_table.currentIndex().isValid():
                 raise PrepError("invalid_reference", "Select an old member in a stale target group first.")
-            identifier = SourceModelsDialog._node_id(self.current_target.text())
-            if group["family"] == "SURF/PART":
+            text = self.current_target.text()
+            family = group["family"]
+            if family == "SURF/PART":
+                identifier = SourceModelsDialog._node_id(text)
                 reference = self.session.resolve_part_reference(identifier)["card_id"]
                 label = self._card_label(reference)
             else:
-                kind = "node" if group["family"] == "GRNOD/NODE" else "element"
-                reference = self.session.resolve_entity_reference(kind, identifier)["reference"]
-                label = f"{kind.title()} {identifier} — {self._resource_label(reference['resource_id'])}"
+                kind = "node" if family == "GRNOD/NODE" else "element"
+                values = text.split(",") if kind == "element" else [text]
+                ids = [SourceModelsDialog._node_id(value) for value in values]
+                if len(set(ids)) != len(ids):
+                    raise PrepError("invalid_reference", "Choose distinct current element IDs for this old member.")
+                refs = [self.session.resolve_entity_reference(kind, identifier)["reference"] for identifier in ids]
+                reference = refs if len(refs) > 1 else refs[0]
+                label = ", ".join(f"{kind.title()} {ref['local_id']} — {self._resource_label(ref['resource_id'])}" for ref in refs)
             self.target_choice.clear()
             self.target_choice.addItem(label, reference)
             self.status.setText("Review the typed current target, then add this explicit link.")
@@ -1171,7 +1183,7 @@ class PreparedMeshDialog(QDialog):
             if reference is None:
                 raise PrepError("invalid_reference", "Select an old member and find its current target first.")
             self._dropped.discard(identifier)
-            self._mapping[identifier] = dict(reference) if isinstance(reference, dict) else reference
+            self._mapping[identifier] = reference
             self._labels[identifier] = self.target_choice.currentText()
             self.reconnect_model.show_members(self._group()["members"], self._mapping, self._labels, dropped=self._dropped)
             self._invalidate_reconnection(reset_permission=True)
@@ -1215,10 +1227,11 @@ class PreparedMeshDialog(QDialog):
         complete = self._complete_reconnection(group)
         node_group = bool(group and group["family"] == "GRNOD/NODE")
         self.coalesce_targets.setEnabled(node_group)
-        unique = len({(value["resource_id"], value["entity_kind"], value["local_id"]) if isinstance(value, dict) else value
-                      for value in self._mapping.values()})
-        repeated = unique < len(self._mapping)
-        required = repeated or self.coalesce_targets.isChecked() or bool(self._dropped)
+        targets = [target for value in self._mapping.values() for target in (value if isinstance(value, list) else [value])]
+        unique = len({(ref["resource_id"], ref["entity_kind"], ref["local_id"]) if isinstance(ref, dict) else ref for ref in targets})
+        repeated = unique < len(targets)
+        expanded = self._expands_element_group()
+        required = repeated or expanded or self.coalesce_targets.isChecked() or bool(self._dropped)
         if self._dropped:
             pending = len(group["members"]) - len(self._mapping) - len(self._dropped) if group else 0
             counts = f"{len(self._mapping)} mapped + {len(self._dropped)} dropped; {pending} pending → {unique} unique current targets. "
@@ -1230,7 +1243,8 @@ class PreparedMeshDialog(QDialog):
         selected = len(self.reconnect_table.selectionModel().selectedRows()) == 1
         self.drop_member_button.setEnabled(bool(idle and group and selected))
         self.remove_link_button.setEnabled(bool(idle and group and selected))
-        self.reconnect_preview_button.setEnabled(bool(idle and complete and (node_group or self._dropped) and not self.current_target.text().strip()))
+        self.reconnect_preview_button.setEnabled(bool(idle and complete and (node_group or expanded or self._dropped)
+                                                      and not self.current_target.text().strip()))
         self.reconnect_button.setEnabled(bool(idle and complete and (not required or self._reconnect_plan)
                                              and self.reconnect_reviewed.isChecked()
                                              and not self.current_target.text().strip()))
@@ -1244,8 +1258,8 @@ class PreparedMeshDialog(QDialog):
                     or self.current_target.text().strip() or not self.reconnect_reviewed.isChecked()):
                 raise PrepError("review_required", "Explicitly decide every old member, retain a current target and review the group before applying.")
             request = self._reconnection_request()
-            if (self.coalesce_targets.isChecked() or self._dropped) and self._reconnect_plan is None:
-                raise PrepError("review_required", "Preview and review this final coalescence or member removal before applying.")
+            if (self.coalesce_targets.isChecked() or self._dropped or self._expands_element_group()) and self._reconnect_plan is None:
+                raise PrepError("review_required", "Preview and review the final mapping before applying.")
             self._committing = True
             try:
                 if self._reconnect_plan is not None:
