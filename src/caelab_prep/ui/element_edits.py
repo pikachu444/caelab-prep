@@ -327,3 +327,141 @@ class PartReassignmentDialog(NativeElementDialog):
 
     def _review_text(self, plan):
         return ownership_review_text(self.session, plan)
+
+
+def edge_split_review_text(session, plan):
+    names = plan["resource_names"]
+    edge = plan["edge_nodes"]
+    lines = [
+        f"Split edge {edge[0]['local_id']} – {edge[1]['local_id']} across {len(plan['parent_elements'])} SH3N element(s).",
+        f"Split 1 edge into 2 triangles per parent while preserving winding orientation and PART.",
+        "",
+        "New midpoint node",
+    ]
+    for node in plan["added_nodes"]:
+        ref = node["ref"]
+        xyz = ", ".join(f"{value:.6g}" for value in node["xyz"])
+        lines.append(f"Node {ref['local_id']} in {names.get(ref['resource_id'], ref['resource_id'])}: ({xyz})")
+    lines.extend(("", "Replaced parent → child SH3N elements"))
+    cells_by_key = {(c["ref"]["resource_id"], c["ref"]["local_id"]): c for c in plan["added_cells"]}
+    for pair in plan["split_cells"]:
+        parent = pair["parent"]
+        children = [cells_by_key[(c["resource_id"], c["local_id"])] for c in pair["children"]]
+        children_text = ", ".join(f"SH3N {c['ref']['local_id']} {[n['local_id'] for n in c['nodes']]}" for c in children)
+        lines.append(f"SH3N {parent['local_id']} in {names.get(parent['resource_id'], parent['resource_id'])} → {children_text}")
+    lines.extend(("", "Quality (parent before → children after)"))
+    for row in plan["quality_before"]:
+        lines.append(f"Before SH3N {row['element']['local_id']}: {row['metric']} {row['value']:.6g} (area {row['signed_measure']:.6g})")
+    for row in plan["quality_after"]:
+        lines.append(f"After  SH3N {row['element']['local_id']}: {row['metric']} {row['value']:.6g} (area {row['signed_measure']:.6g})")
+    lines.extend((
+        "",
+        f"{len(plan['stale_targets'])} original target groups stay stale until explicit mapping/Drop in the reconnection editor.",
+        "",
+        target_review_text(session, plan, group_heading=False),
+        "",
+        plan["scope"],
+    ))
+    return "\n".join(lines)
+
+
+class TriangleEdgeSplitDialog(NativeElementDialog):
+    object_name = "triangleEdgeSplitDialog"
+    window_title = "Split triangle edge"
+    introduction = "Split one edge across 1 or 2 selected linear SH3N elements."
+    review_caption = "I reviewed the edge midpoint, child SH3N connectivity and affected targets"
+    preview_caption, apply_caption, result_caption = "Preview edge split", "Apply edge split", "Triangle edge split"
+    selection_hint = "Choose the shared edge, then preview new node, child SH3N elements and affected targets."
+    options_caption = "Target edge"
+
+    def _build_options(self, body):
+        form = QFormLayout()
+        body.addLayout(form)
+        self.edge_selector = QComboBox()
+        self.edge_selector.setObjectName("splitEdgeSelector")
+        self.edge_selector.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.edge_selector.addItem("Select 1 or 2 SH3N elements with a shared edge…", None)
+        form.addRow("Target edge", self.edge_selector)
+        return [self.edge_selector]
+
+    def _edge_candidates(self):
+        if len(self._references) not in (1, 2):
+            return []
+        view = self.session.mesh_view()
+        node_resources = view.get("node_resources", {})
+        common = None
+        for ref in self._references:
+            cells = [cell for cell in self.session._projection_index["cells_by_id"].get(ref["local_id"], ())
+                     if cell["resource_id"] == ref["resource_id"]]
+            if len(cells) != 1:
+                return []
+            cell = cells[0]
+            if cell.get("formulation") != "SH3N" or len(cell["nodes"]) != 3:
+                return []
+            resolved_nodes = []
+            for nid in cell["nodes"]:
+                rids = node_resources.get(nid, ())
+                if len(rids) != 1:
+                    return []
+                resolved_nodes.append({"resource_id": rids[0], "entity_kind": "node", "local_id": nid})
+            cell_edges = {}
+            for i in range(3):
+                n_a, n_b = resolved_nodes[i], resolved_nodes[(i + 1) % 3]
+                if (n_a["local_id"], n_a["resource_id"]) > (n_b["local_id"], n_b["resource_id"]):
+                    n_a, n_b = n_b, n_a
+                key = ((n_a["resource_id"], n_a["local_id"]), (n_b["resource_id"], n_b["local_id"]))
+                cell_edges[key] = (n_a, n_b)
+            common = dict(cell_edges) if common is None else {k: v for k, v in common.items() if k in cell_edges}
+        if not common:
+            return []
+        return [common[k] for k in sorted(common, key=lambda pair: (pair[0][1], pair[1][1], pair[0][0], pair[1][0]))]
+
+    def _refresh_edges(self):
+        previous = self.edge_selector.currentData()
+        candidates = self._edge_candidates() if not self._closed else []
+        blocked = self.edge_selector.blockSignals(True)
+        try:
+            self.edge_selector.clear()
+            if len(self._references) not in (1, 2):
+                self.edge_selector.addItem("Select 1 or 2 SH3N elements with a shared edge…", None)
+            elif not candidates:
+                self.edge_selector.addItem("No common SH3N edge across selected elements", None)
+            else:
+                for edge_a, edge_b in candidates:
+                    label = f"Edge {edge_a['local_id']} – {edge_b['local_id']}"
+                    self.edge_selector.addItem(label, (edge_a, edge_b))
+                    self.edge_selector.setItemData(self.edge_selector.count() - 1, label, Qt.ItemDataRole.ToolTipRole)
+                if previous is not None:
+                    for idx in range(self.edge_selector.count()):
+                        if self.edge_selector.itemData(idx) == previous:
+                            self.edge_selector.setCurrentIndex(idx)
+                            break
+        finally:
+            self.edge_selector.blockSignals(blocked)
+
+    def use_selection(self):
+        super().use_selection()
+        self._refresh_edges()
+
+    def remove_selection(self):
+        super().remove_selection()
+        self._refresh_edges()
+
+    def apply_change(self):
+        super().apply_change()
+        self._refresh_edges()
+
+    def _plan_request(self):
+        edge = self.edge_selector.currentData()
+        if edge is None:
+            raise PrepError("invalid_edge", "Choose a valid shared edge from 1 or 2 SH3N elements.")
+        return self.session.plan_triangle_edge_split(self._references, edge, **self._expected())
+
+    def _apply_request(self):
+        return self.session.apply_triangle_edge_split(self._plan["plan_id"], **self._expected())
+
+    def _cancel_plan(self, identifier):
+        self.session.cancel_triangle_edge_split(identifier)
+
+    def _review_text(self, plan):
+        return edge_split_review_text(self.session, plan)

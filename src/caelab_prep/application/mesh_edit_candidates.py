@@ -7,7 +7,7 @@ Hex mathematics is adapted from the internally authored independent F2 oracle;
 """
 from __future__ import annotations
 from dataclasses import dataclass, field, fields, replace
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from hashlib import sha256
 from itertools import product
 import json
@@ -230,16 +230,21 @@ class MeshEditCandidate:
     quality_before: tuple[Quality,...] = ()
     quality_after: tuple[Quality,...] = ()
     impacts: tuple[Impact,...] = ()
+    added_nodes: tuple[Node,...] = ()
+    added_cells: tuple[Cell,...] = ()
+    split_cells: tuple[tuple[Ref,tuple[Ref,...]],...] = ()
     @property
     def source_stamp(self): return self.base.stamp
     def iter_nodes(self):
         changed={x.ref:x for x in self.node_updates};removed=set(self.removed_nodes)
         for item in self.base.nodes:
             if item.ref not in removed: yield changed.get(item.ref,item)
+        yield from self.added_nodes
     def iter_cells(self):
         changed={x.ref:x for x in self.cell_updates};removed=set(self.removed_cells)
         for item in self.base.cells:
             if item.ref not in removed: yield changed.get(item.ref,item)
+        yield from self.added_cells
     def iter_sets(self):
         changed={x.ref:x for x in self.set_updates}
         for item in self.base.sets: yield changed.get(item.ref,item)
@@ -333,12 +338,15 @@ def _members_as_nodes(snapshot,group):
 
 def _finish(candidate,affected_cells,*,normal_flip=False,contact_dependencies=()):
     base=candidate.base;node_updates={n.ref:n for n in candidate.node_updates};cell_updates={c.ref:c for c in candidate.cell_updates}
+    added_nodes={n.ref:n for n in candidate.added_nodes};added_cells={c.ref:c for c in candidate.added_cells}
+    split_map=dict(candidate.split_cells)
     deleted_nodes=set(candidate.removed_nodes);deleted_cells=set(candidate.removed_cells)
     def node(r):
         if r in deleted_nodes: raise KeyError(r)
-        return node_updates.get(r) or base._nodes[r]
+        return node_updates.get(r) or added_nodes.get(r) or base._nodes[r]
+    def cell_after(r): return added_cells.get(r) or cell_updates.get(r) or base._cells[r]
     before=tuple(_quality(base._cells[r],base._nodes.__getitem__) for r in sorted(affected_cells))
-    after=tuple(_quality(cell_updates.get(r) or base._cells[r],node) for r in sorted(affected_cells-deleted_cells))
+    after=tuple(_quality(cell_after(r),node) for r in sorted((affected_cells-deleted_cells)|set(added_cells)))
     if not normal_flip:
         for ref in affected_cells-deleted_cells:
             previous=base._cells[ref];current=cell_updates.get(ref) or previous
@@ -347,26 +355,44 @@ def _finish(candidate,affected_cells,*,normal_flip=False,contact_dependencies=()
                 a=cross(sub(old[1],old[0]),sub(old[2],old[0]));b=cross(sub(new[1],new[0]),sub(new[2],new[0]))
                 if norm(a)>0 and norm(b)>0 and dot(scale(a,1/norm(a)),scale(b,1/norm(b)))<=1e-12:
                     fail('implicit_normal_reversal','Use explicit shell-normal reversal; this edit reverses or passes through the previous normal.',(ref,))
+        for parent_ref,child_refs in candidate.split_cells:
+            previous=base._cells[parent_ref]
+            if previous.family in ('SH3N','SHELL'):
+                old=[base._nodes[r].xyz for r in previous.nodes[:3]]
+                a=cross(sub(old[1],old[0]),sub(old[2],old[0]))
+                for cref in child_refs:
+                    current=added_cells[cref];new=[node(r).xyz for r in current.nodes[:3]]
+                    b=cross(sub(new[1],new[0]),sub(new[2],new[0]))
+                    if norm(a)>0 and norm(b)>0 and dot(scale(a,1/norm(a)),scale(b,1/norm(b)))<=1e-12:
+                        fail('implicit_normal_reversal','Edge split reversed the triangle winding orientation.',(cref,))
     problems=[q for q in after if q.problems]
     if problems: fail('mesh_quality','Edit creates unsupported, inverted, degenerate or poor geometry.',tuple(problems))
-    signatures={}
+    signatures={};checked_refs=affected_cells|set(added_cells)
     for c in candidate.iter_cells():
         signature=(c.family,frozenset(c.nodes))
-        if signature in signatures and (c.ref in affected_cells or signatures[signature] in affected_cells):
+        if signature in signatures and (c.ref in checked_refs or signatures[signature] in checked_refs):
             fail('duplicate_elements','Edit creates coincident duplicate element connectivity.',(signatures[signature],c.ref))
         signatures[signature]=c.ref
-    changed_nodes=set(node_updates)|deleted_nodes
+    changed_nodes=set(node_updates)|deleted_nodes|set(added_nodes)
     affected_node_support=set()
     for ref in affected_cells:
         affected_node_support.update(base._cells[ref].nodes)
         if ref not in deleted_cells:
             affected_node_support.update((cell_updates.get(ref) or base._cells[ref]).nodes)
-    resources={r.resource_id for r in changed_nodes|affected_cells|deleted_cells}
-    affected_parts={base._cells[r].part for r in affected_cells}|{c.part for c in candidate.cell_updates}
+    for c in candidate.added_cells:
+        affected_node_support.update(c.nodes)
+    resources={r.resource_id for r in changed_nodes|affected_cells|deleted_cells|set(added_cells)}
+    affected_parts={base._cells[r].part for r in affected_cells}|{c.part for c in candidate.cell_updates}|{c.part for c in candidate.added_cells}
     updated_sets={s.ref:s for s in candidate.set_updates};mapping=dict(candidate.merge_map);impacts=[];set_impacts={}
     live_parts={cell.part for cell in candidate.iter_cells()}
     def projected_members(group):
         if group.ref in updated_sets: return updated_sets[group.ref].members
+        if group.member_kind=='element' and split_map:
+            items=[]
+            for r in group.members:
+                if r in split_map: items.extend(split_map[r])
+                elif r not in deleted_cells: items.append(mapping.get(r,r))
+            return tuple(items)
         return tuple(mapping.get(r,r) for r in group.members if r not in deleted_cells
                      and (r not in deleted_nodes or r in mapping)
                      and (group.member_kind!='part' or r in live_parts))
@@ -387,7 +413,7 @@ def _finish(candidate,affected_cells,*,normal_flip=False,contact_dependencies=()
         impacts.append(impact);set_impacts[group.ref]=impact
     live_cells={r:c for r,c in cell_updates.items()}
     def live_cell(ref):
-        return None if ref in deleted_cells else live_cells.get(ref) or base._cells.get(ref)
+        return None if ref in deleted_cells else added_cells.get(ref) or live_cells.get(ref) or base._cells.get(ref)
     def expanded(group,members):
         if group.member_kind=='node': return set(members)-deleted_nodes
         cells=[live_cell(r) for r in members] if group.member_kind=='element' else [c for c in candidate.iter_cells() if c.part in members]
@@ -503,3 +529,112 @@ def reassign_set(snapshot,set_ref,members):
     if set(values)==set(group.members): fail('no_change','Explicit set membership is unchanged.')
     candidate=MeshEditCandidate('reassign_set',snapshot,snapshot.digest,set_updates=(replace(group,members=values),))
     return _finish(candidate,set())
+
+
+def _native_real_value(value):
+    text=repr(float(value))
+    if len(text)>20:
+        text=format(float(value),'.12E')
+    return float(text)
+
+
+def _triangle_quality(coords):
+    s=tuple(sub(p,coords[0]) for p in coords)
+    area=norm(cross(s[1],s[2]))/2
+    den=sum(dot(sub(a,b),sub(a,b)) for i,a in enumerate(s) for b in s[i+1:])
+    return (0.0 if den<=0 else 4*math.sqrt(3)*area/den), area
+
+
+def _allocate_native_ids(used_ids, count):
+    result=[]
+    taken=set(used_ids)
+    candidate=max(taken,default=0)+1
+    while len(result)<count:
+        if candidate<=9999999999 and candidate not in taken:
+            result.append(candidate);taken.add(candidate);candidate+=1
+            continue
+        candidate=1
+        while candidate in taken and candidate<=9999999999:
+            candidate+=1
+        if candidate>9999999999:
+            fail('native_id_exhausted','No collision-free native identifier remains in the 10-column Radioss range.')
+        result.append(candidate);taken.add(candidate);candidate+=1
+    return tuple(result)
+
+
+def split_triangle_edge(snapshot: MeshSnapshot, elements: Sequence[Ref], edge_nodes: tuple[Ref, Ref], *,
+                        new_node_id: int | None = None, new_element_ids: Sequence[int] | None = None) -> MeshEditCandidate:
+    if isinstance(elements,(str,bytes)) or not isinstance(elements,Sequence):
+        fail('invalid_selection','Nonempty distinct exact scoped references required.')
+    selected=_selection(snapshot,elements,snapshot._cells,'element')
+    if len(selected)>2:
+        fail('invalid_edge_split_selection','Select 1 or 2 linear SH3N elements incident to the split edge.',selected)
+    if isinstance(edge_nodes,(str,bytes)) or not isinstance(edge_nodes,Sequence) or len(edge_nodes)!=2:
+        fail('invalid_edge','Provide exact two distinct node references identifying the split edge.')
+    edge_a,edge_b=edge_nodes
+    if (not isinstance(edge_a,Ref) or not isinstance(edge_b,Ref)
+            or edge_a.entity_kind!='node' or edge_b.entity_kind!='node'
+            or edge_a not in snapshot._nodes or edge_b not in snapshot._nodes):
+        fail('invalid_edge','Edge endpoints must resolve to existing mesh nodes.')
+    if edge_a==edge_b:
+        fail('duplicate_edge_nodes','Edge endpoints must be distinct nodes.',(edge_a,))
+    pa=snapshot._nodes[edge_a].xyz;pb=snapshot._nodes[edge_b].xyz
+    if norm(sub(pb,pa))<=1e-12:
+        fail('degenerate_edge','Edge endpoints are geometrically coincident.',(edge_a,edge_b))
+    for ref in selected:
+        cell=snapshot._cells[ref]
+        if cell.family!='SH3N':
+            fail('not_sh3n','Edge splitting is only supported for explicit linear SH3N elements.',(ref,))
+        if len(set(cell.nodes))!=3:
+            fail('degenerate_triangle','Selected SH3N element contains duplicate node references.',(ref,))
+        if edge_a not in cell.nodes or edge_b not in cell.nodes:
+            fail('non_incident_edge','Every selected SH3N element must contain both split edge nodes.',(ref,))
+        parent_q,parent_area=_triangle_quality(tuple(snapshot._nodes[n].xyz for n in cell.nodes))
+        if parent_area<=1e-12 or parent_q<=0:
+            fail('degenerate_triangle','Cannot split a degenerate or zero-area triangle.',(ref,))
+    used_node_ids={n.ref.local_id for n in snapshot.nodes}
+    if new_node_id is not None:
+        if type(new_node_id) is not int or not 1<=new_node_id<=9999999999:
+            fail('invalid_native_id','New node ID must be a positive 10-column integer.')
+        if new_node_id in used_node_ids:
+            fail('node_id_collision','Requested new node ID already exists in the mesh.',(new_node_id,))
+        midpoint_id=new_node_id
+    else:
+        midpoint_id=_allocate_native_ids(used_node_ids,1)[0]
+    used_cell_ids={c.ref.local_id for c in snapshot.cells}
+    needed_eids=2*len(selected)
+    if new_element_ids is not None:
+        if isinstance(new_element_ids,(str,bytes)) or not isinstance(new_element_ids,Sequence) or len(new_element_ids)!=needed_eids:
+            fail('invalid_element_ids',f'Provide exactly {needed_eids} distinct new SH3N element IDs.')
+        for eid in new_element_ids:
+            if type(eid) is not int or not 1<=eid<=9999999999:
+                fail('invalid_native_id','New element IDs must be positive 10-column integers.')
+            if eid in used_cell_ids:
+                fail('element_id_collision','Requested new element ID already exists in the mesh.',(eid,))
+        if len(set(new_element_ids))!=needed_eids:
+            fail('duplicate_element_ids','New element IDs must be distinct.')
+        allocated_eids=tuple(new_element_ids)
+    else:
+        allocated_eids=_allocate_native_ids(used_cell_ids,needed_eids)
+    if edge_a.resource_id==edge_b.resource_id:
+        node_resource_id=edge_a.resource_id
+    else:
+        cell_res=snapshot._cells[selected[0]].ref.resource_id
+        node_resource_id=cell_res if any(n.ref.resource_id==cell_res for n in snapshot.nodes) else edge_a.resource_id
+    midpoint_xyz=point(tuple(_native_real_value((a+b)/2.0) for a,b in zip(pa,pb)))
+    midpoint_node=Node(Ref(node_resource_id,'node',midpoint_id),midpoint_xyz)
+    added_cells=[];split_entries=[]
+    eid_cursor=0
+    for ref in selected:
+        cell=snapshot._cells[ref]
+        nodes_a=tuple(midpoint_node.ref if n==edge_b else n for n in cell.nodes)
+        nodes_b=tuple(midpoint_node.ref if n==edge_a else n for n in cell.nodes)
+        c1=Cell(Ref(cell.ref.resource_id,'element',allocated_eids[eid_cursor]),'SH3N',nodes_a,cell.part,cell.source_scope)
+        c2=Cell(Ref(cell.ref.resource_id,'element',allocated_eids[eid_cursor+1]),'SH3N',nodes_b,cell.part,cell.source_scope)
+        eid_cursor+=2
+        added_cells.extend((c1,c2))
+        split_entries.append((cell.ref,(c1.ref,c2.ref)))
+    candidate=MeshEditCandidate('split_triangle_edge',snapshot,snapshot.digest,
+                                removed_cells=selected,added_nodes=(midpoint_node,),
+                                added_cells=tuple(added_cells),split_cells=tuple(split_entries))
+    return _finish(candidate,set(selected))

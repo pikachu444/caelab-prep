@@ -15,13 +15,15 @@ from PySide6.QtWidgets import QApplication, QLineEdit
 
 from ..application.contracts import ObjectRef, SetProperties
 from ..application.live_transport import LiveServer
+from ..application.material_binding import MaterialBindingManager
 from ..cae_core import PrepError
 from .mesh_workflow import MeshCandidateDialog
 
 
 METHODS = ("hello", "document.describe", "document.cards", "document.properties", "document.selection",
            "document.select", "document.edit", "document.undo", "document.redo", "document.save",
-           "events.since", "mesh.start", "jobs.get", "jobs.cancel", "jobs.close")
+           "events.since", "mesh.start", "jobs.get", "jobs.cancel", "jobs.close",
+           "material.prepare_apply", "material.commit_apply")
 _QUEUE_TIMEOUT_SECONDS = 30.0
 
 
@@ -72,6 +74,7 @@ class LiveControl(QObject):
         self._sequence = 0
         self._events = deque(maxlen=512)
         self._jobs = {}
+        self._material_binding = MaterialBindingManager(self.session)
         self.requested.connect(self._execute_queued, Qt.ConnectionType.QueuedConnection)
         self.sessionEvent.connect(self._session_event, Qt.ConnectionType.QueuedConnection)
         self._unsubscribe = self.session.subscribe(self.sessionEvent.emit)
@@ -183,6 +186,21 @@ class LiveControl(QObject):
             return {"events": [event for event in self._events if event["sequence"] > after], "event_sequence": self._sequence,
                     "handle": self._handle()}
         if method.startswith("jobs."): return self._job_request(method, params)
+        if method == "material.prepare_apply":
+            self._keys(params, ("handle", "target", "exporter_id", "parameters", "units"), ("cards",))
+            with self.session._lock:
+                self._guard(params["handle"])
+                return self._material_binding.prepare_apply(
+                    params["handle"], params["target"], params["exporter_id"],
+                    params["parameters"], params["units"], cards=params.get("cards"))
+        if method == "material.commit_apply":
+            self._keys(params, ("handle", "plan_id", "expected_revision"))
+            with self.session._lock:
+                self._guard(params["handle"])
+                result = self._material_binding.commit_apply(
+                    params["handle"], params["plan_id"], params["expected_revision"])
+                self.host.refresh_document()
+                return {**result, "handle": self._handle()}
         if method == "mesh.start":
             self._keys(params, ("handle", "source", "output", "size", "dimension"), ("interface_policy", "local_sizes"))
             with self.session._lock:

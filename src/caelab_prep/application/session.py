@@ -33,6 +33,7 @@ from .node_merges import NodeMergeCommands
 from .shell_normals import ShellNormalCommands
 from .element_deletion import ElementDeletionCommands
 from .part_reassignment import PartReassignmentCommands
+from .edge_splits import EdgeSplitCommands
 from .recipe_archives import StructuredRecipeArchive, RecipeArchiveCommands, MAX_RECIPE_BYTES
 
 
@@ -52,7 +53,7 @@ def _file_boundary(function):
     return wrapped
 
 
-class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationCommands, MeshRelationCommands, NodeMoveCommands, GroupMemberCommands, NodeMergeCommands, ShellNormalCommands, ElementDeletionCommands, PartReassignmentCommands, RecipeArchiveCommands):
+class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationCommands, MeshRelationCommands, NodeMoveCommands, GroupMemberCommands, NodeMergeCommands, ShellNormalCommands, ElementDeletionCommands, PartReassignmentCommands, EdgeSplitCommands, RecipeArchiveCommands):
     def __init__(self):
         self._lock = RLock()
         self.document: Document | None = None
@@ -142,6 +143,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._import_plan = None
         self._mesh_replacement_plan = None
         self._cad_mesh_replacement_plan = None
+        self._edge_split_plan = None
 
     @staticmethod
     def _path_collisions(paths: dict[str, str]) -> list[list[str]]:

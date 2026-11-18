@@ -1,0 +1,150 @@
+"""Explicit linear SH3N triangle edge split commands using native mesh contracts."""
+from copy import deepcopy
+from dataclasses import asdict
+from uuid import uuid4
+
+from ..cae_core import PrepError
+from ..radioss.relations import node_support
+from . import mesh_edit_candidates as edits
+from .native_mesh_edit import native_mesh_edit_states, project_native_mesh_edit
+
+
+def _coerce_ref(value, *, expected_kind=None, code="invalid_reference", message="Invalid scoped reference."):
+    if isinstance(value, edits.Ref):
+        ref = value
+    elif isinstance(value, dict) and set(value) == {"resource_id", "entity_kind", "local_id"}:
+        ref = edits.Ref(**value)
+    else:
+        raise PrepError(code, message)
+    if expected_kind is not None and ref.entity_kind != expected_kind:
+        raise PrepError(code, message)
+    return ref
+
+
+class EdgeSplitCommands:
+    def plan_triangle_edge_split(
+        self,
+        references,
+        edge_nodes,
+        *,
+        new_node_id=None,
+        new_element_ids=None,
+        expected_revision=None,
+        expected_document_id=None,
+    ):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            try:
+                if not isinstance(references, (list, tuple)) or not references:
+                    raise PrepError("invalid_shell_selection", "Choose 1 or 2 explicit source-qualified SH3N elements.")
+                elem_refs = tuple(
+                    _coerce_ref(
+                        ref,
+                        expected_kind="element",
+                        code="invalid_shell_selection",
+                        message="Each selected element needs its source, element kind and native ID.",
+                    )
+                    for ref in references
+                )
+                if not isinstance(edge_nodes, (list, tuple)) or len(edge_nodes) != 2:
+                    raise PrepError("invalid_edge", "Choose two explicit node references for the edge to split.")
+                edge_refs = (
+                    _coerce_ref(edge_nodes[0], expected_kind="node", code="invalid_edge", message="Invalid split edge node reference."),
+                    _coerce_ref(edge_nodes[1], expected_kind="node", code="invalid_edge", message="Invalid split edge node reference."),
+                )
+                if any(card.keyword.upper().startswith("/TRANSFORM") for resource in self._deck_resources() for card in resource.cards):
+                    raise PrepError("unsupported_transform", "Edge splitting is not supported when active /TRANSFORM cards exist.")
+                snapshot = self._mesh_edit_snapshot()
+                candidate = edits.split_triangle_edge(
+                    snapshot,
+                    elem_refs,
+                    edge_refs,
+                    new_node_id=new_node_id,
+                    new_element_ids=new_element_ids,
+                )
+                selected = set(candidate.removed_cells)
+                view = self.mesh_view()
+                projection = {
+                    **view,
+                    "cells": [
+                        cell
+                        for cell in view["cells"]
+                        if edits.Ref(cell["resource_id"], "element", cell["id"]) in selected
+                    ],
+                }
+                nodes = sorted({node.local_id for ref in selected for node in snapshot._cells[ref].nodes})
+                support = node_support(self._deck_resources(), projection, nodes)
+                if len(projection["cells"]) != len(selected) or any(row["status"] != "supported" for row in support):
+                    raise PrepError(
+                        "unsupported_shell_profile",
+                        "Resolve the selected SH3N property/formulation before splitting a triangle edge.",
+                        {"node_support": support},
+                    )
+                states = native_mesh_edit_states(self, candidate, layout_error_code="unsupported_edge_split_layout")
+                conditions, overlaps, blocked, correspondences, _ = project_native_mesh_edit(self, candidate, states)
+            except PrepError:
+                raise
+            except edits.MeshEditError as exc:
+                raise PrepError(exc.code, str(exc), {"details": exc.details}) from exc
+            except (KeyError, TypeError, ValueError, IndexError) as exc:
+                raise PrepError(
+                    "invalid_edge_split",
+                    "The selected native SH3N elements or edge could not be resolved.",
+                    {"reason": str(exc)},
+                ) from exc
+            plan_id = str(uuid4())
+            self._edge_split_plan = (plan_id, candidate, not blocked)
+            return {
+                "plan_id": plan_id,
+                "document_id": self.document.id,
+                "revision": self.document.revision,
+                "document_epoch": self._document_epoch,
+                "parent_elements": [asdict(ref) for ref in candidate.removed_cells],
+                "edge_nodes": [asdict(ref) for ref in edge_refs],
+                "added_nodes": [asdict(node) for node in candidate.added_nodes],
+                "added_cells": [asdict(cell) for cell in candidate.added_cells],
+                "split_cells": [
+                    {"parent": asdict(parent), "children": [asdict(child) for child in children]}
+                    for parent, children in candidate.split_cells
+                ],
+                "quality_before": [asdict(value) for value in candidate.quality_before],
+                "quality_after": [asdict(value) for value in candidate.quality_after],
+                "impacts": [asdict(value) for value in candidate.impacts],
+                "conditions": conditions,
+                "initial_velocity_overlaps": overlaps,
+                "projected_memberships": correspondences,
+                "stale_targets": deepcopy(states[self._relations_resource().id]["stale_targets"]),
+                "admissible": not blocked,
+                "blocked": blocked,
+                "resource_names": {resource.id: self._paths.get(resource.id, resource.id) for resource in self._deck_resources()},
+                "scope": "Explicit linear SH3N triangle edge split creating one midpoint node and two winding-preserving SH3N child elements per selected parent triangle.",
+            }
+
+    def apply_triangle_edge_split(self, plan_id, *, expected_revision=None, expected_document_id=None):
+        with self._lock:
+            self._check_model_edit(expected_revision, expected_document_id)
+            plan = getattr(self, "_edge_split_plan", None)
+            if plan is None or plan[0] != plan_id:
+                raise PrepError("stale_mesh_candidate", "Prepare a fresh triangle edge split preview.")
+            _, candidate, admissible = plan
+            try:
+                candidate.assert_current(self._mesh_edit_stamp(), self._mesh_edit_snapshot().digest)
+            except edits.MeshEditError as exc:
+                raise PrepError(exc.code, str(exc)) from exc
+            if not admissible:
+                raise PrepError("unsupported_edge_split_targets", "Resolve the affected condition targets before splitting triangle edges.")
+            change = self.dispatcher.execute_many(
+                native_mesh_edit_states(self, candidate, layout_error_code="unsupported_edge_split_layout"),
+                "Split selected triangle edge",
+                expected_revision=self.document.revision,
+                kind="structure",
+            )
+            if getattr(self, "_edge_split_plan", None) is plan:
+                self._edge_split_plan = None
+            return {**self.describe(), "change": change.to_dict(), "mesh_relationships": self.mesh_relationships()}
+
+    def cancel_triangle_edge_split(self, plan_id):
+        with self._lock:
+            plan = getattr(self, "_edge_split_plan", None)
+            if plan is not None and plan[0] == plan_id:
+                self._edge_split_plan = None
