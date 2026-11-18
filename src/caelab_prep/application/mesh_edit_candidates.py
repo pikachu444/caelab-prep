@@ -539,19 +539,6 @@ def _native_real_value(value):
 
 
 _NATIVE_ID_MAX = 2**31 - 1
-_QUAD_EDGES = ((0, 1), (1, 2), (2, 3), (3, 0))
-_HEX_EDGES = _QUAD_EDGES + ((4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7))
-_WEDGE_EDGES = ((0, 1), (1, 2), (2, 0), (3, 4), (4, 5), (5, 3), (0, 3), (1, 4), (2, 5))
-
-
-def _shares_split_edge(cell, edge_a, edge_b):
-    if edge_a not in cell.nodes or edge_b not in cell.nodes:
-        return False
-    # For simplex and line families every pair of corner nodes defines an edge.
-    # For unlisted families, conservatively block when both endpoints occur.
-    edges = {"SHELL": _QUAD_EDGES, "BRICK": _HEX_EDGES, "HEX8": _HEX_EDGES,
-             "PENTA6": _WEDGE_EDGES}.get(cell.family)
-    return edges is None or any({cell.nodes[i], cell.nodes[j]} == {edge_a, edge_b} for i, j in edges)
 
 
 def _validate_split_id(value):
@@ -605,10 +592,10 @@ def split_triangle_edge(snapshot: MeshSnapshot, elements: Sequence[Ref], edge_no
         if quality.value <= 0 or 'degenerate' in quality.problems:
             fail('degenerate_triangle','Cannot split a degenerate or zero-area triangle.',(ref,))
     neighbors = tuple(cell.ref for cell in snapshot.cells
-                      if cell.ref not in selected and _shares_split_edge(cell, edge_a, edge_b))
+                      if cell.ref not in selected and edge_a in cell.nodes and edge_b in cell.nodes)
     if neighbors:
-        fail('hanging_node_unselected_neighbor',
-             'The split would leave a hanging node on an unselected element sharing this edge.', neighbors)
+        fail('EDGE_HAS_UNSELECTED_NEIGHBORS',
+             'An unselected element contains both endpoints of this split, possibly along a face diagonal.', neighbors)
     used_node_ids={n.ref.local_id for n in snapshot.nodes}
     if new_node_id is not None:
         _validate_split_id(new_node_id)

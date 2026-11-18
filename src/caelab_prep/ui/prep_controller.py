@@ -126,6 +126,7 @@ class PrepController:
         self.node_move_dialog = None
         self.node_merge_dialog = None
         self.shell_normal_dialog = None
+        self.edge_split_dialog = None
         self.element_deletion_dialog = None
         self.part_reassignment_dialog = None
         self.source_models_action = self._action(
@@ -140,6 +141,9 @@ class PrepController:
                                               action_id="mesh.merge_nodes")
         self.shell_normal_action = self._action("mesh", "Reverse shell normals…", self.open_shell_normals,
                                                 action_id="mesh.flip_shell_normals")
+        self.edge_split_action = self._action("mesh", "Split triangle edge…", self.open_edge_split,
+                                              action_id="mesh.split_triangle_edge")
+        self.edge_split_action.setStatusTip("Preview and split an edge of selected SH3N triangles.")
         self.element_deletion_action = self._action("mesh", "Delete elements…", self.open_element_deletion,
                                                    action_id="mesh.delete_elements")
         self.part_reassignment_action = self._action("mesh", "Move elements to PART…", self.open_part_reassignment,
@@ -156,6 +160,10 @@ class PrepController:
     def open_shell_normals(self):
         from .element_edits import ShellNormalDialog
         return self._open_model_relation_dialog("shell_normal_dialog", ShellNormalDialog, "changed")
+
+    def open_edge_split(self):
+        from .element_edits import TriangleEdgeSplitDialog
+        return self._open_model_relation_dialog("edge_split_dialog", TriangleEdgeSplitDialog, "changed")
 
     def open_node_merge(self):
         from .node_merges import NodeMergeDialog
@@ -291,7 +299,8 @@ class PrepController:
                              context="mesh" if loaded and self.viewport is not None else "",
                              enabled={"file.save": loaded and editable, "file.save_as": loaded and editable,
                                       "file.export": loaded and editable, "edit.undo": editable,
-                                      "edit.redo": editable, "edit.reload": loaded})
+                                      "edit.redo": editable, "edit.reload": loaded,
+                                      "mesh.split_triangle_edge": loaded and editable})
         form_enabled = loaded and not self._busy and self._card_text_draft is None
         self._form_host.setEnabled(form_enabled)
         self.apply_vector_button.setEnabled(form_enabled)

@@ -5,6 +5,7 @@ headers. It does not remesh CAD, infer nearest nodes, or reuse same-number
 members as proof that their physical meaning survived a replacement.
 """
 from copy import copy, deepcopy
+from dataclasses import asdict
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -46,8 +47,9 @@ class ModelRelationsResource:
     def snapshot(self):
         # Large explicit memberships are immutable tuples shared by history.
         return {**self._state, "mesh_revisions": dict(self._state["mesh_revisions"]),
-                "stale_targets": {key: {**value, **({"mesh_dependencies": dict(value["mesh_dependencies"])} if "mesh_dependencies" in value else {})}
-                                  for key,value in self._state["stale_targets"].items()},
+                "stale_targets": {key: {**value, **{field: deepcopy(value[field])
+                    for field in ("mesh_dependencies", "parent_to_children") if field in value}}
+                    for key, value in self._state["stale_targets"].items()},
                 "replacement_sources": {key: dict(value) for key,value in self._state["replacement_sources"].items()},
                 "instances": {key: dict(value) for key,value in self._state["instances"].items()}}
     def state_token(self):
@@ -65,10 +67,12 @@ class ModelRelationsResource:
         for rid, revision in state["mesh_revisions"].items():
             UUID(rid)
             if type(revision) is not int or revision < 1: raise PrepError("invalid_project", "Invalid mesh generation.")
+        stale_targets = {}
         for card_id, item in state["stale_targets"].items():
             UUID(card_id)
             keys = {"resource_id", "mesh_resource_id", "mesh_revision", "family", "members"}
-            if not isinstance(item, dict) or set(item) not in (keys, keys | {"reason", "mesh_dependencies"}):
+            geometry_keys = keys | {"reason", "mesh_dependencies"}
+            if not isinstance(item, dict) or set(item) not in (keys, geometry_keys, geometry_keys | {"parent_to_children"}):
                 raise PrepError("invalid_project", "Invalid stale target record.")
             UUID(item["resource_id"]); UUID(item["mesh_resource_id"])
             if item["family"] not in GROUPS or type(item["mesh_revision"]) is not int or item["mesh_revision"] < 1 or not isinstance(item["members"], (list,tuple)) or any(type(value) is not int or value < 1 for value in item["members"]):
@@ -82,6 +86,27 @@ class ModelRelationsResource:
                     UUID(rid)
                     if type(generation) is not int or generation < 1 or state["mesh_revisions"].get(rid) != generation:
                         raise PrepError("invalid_project", "Invalid dependent mesh generation.")
+            record = {**item, "members": tuple(item["members"])}
+            if "parent_to_children" in item:
+                replacements = item["parent_to_children"]
+                if item["family"] != "GRSH3N/SH3N" or not isinstance(replacements, dict) or not replacements:
+                    raise PrepError("invalid_project", "Invalid stored SH3N split mapping.")
+                mapping = {}
+                for parent in item["members"]:
+                    key = parent if parent in replacements else str(parent)
+                    if key not in replacements:
+                        continue
+                    children = replacements[key]
+                    if (not isinstance(children, (list, tuple)) or len(children) != 2
+                            or any(type(child) is not int or not 1 <= child <= 2**31 - 1 for child in children)
+                            or children[0] == children[1] or parent in children):
+                        raise PrepError("invalid_project", "Invalid stored SH3N split children.")
+                    mapping[parent] = list(children)
+                all_children = [child for children in mapping.values() for child in children]
+                if len(mapping) != len(replacements) or len(all_children) != len(set(all_children)):
+                    raise PrepError("invalid_project", "Invalid stored SH3N split parents or duplicate children.")
+                record["parent_to_children"] = mapping
+            stale_targets[card_id] = record
         for rid, record in state["replacement_sources"].items():
             UUID(rid)
             if not isinstance(record, dict) or set(record) != {"sha256", "name"} or not isinstance(record["name"], str) or not isinstance(record["sha256"], str) or len(record["sha256"]) != 64:
@@ -98,7 +123,7 @@ class ModelRelationsResource:
                 raise PrepError("invalid_project", "An instance reference must identify distinct source resources.")
             for rid in record["resource_ids"]: UUID(rid)
         return {**state, "mesh_revisions": dict(state["mesh_revisions"]),
-                "stale_targets": {key: {**value, "members": tuple(value["members"])} for key,value in state["stale_targets"].items()},
+                "stale_targets": stale_targets,
                 "replacement_sources": {key: dict(value) for key,value in state["replacement_sources"].items()},
                 "instances": {key: {**value, "resource_ids": tuple(value["resource_ids"])} for key,value in state["instances"].items()}}
     def restore(self, state):
@@ -366,14 +391,15 @@ class MeshRelationCommands:
             else:
                 element_members = []
                 for member in members:
-                    if isinstance(member, (list, tuple)):
-                        if not member or any(not isinstance(child, dict) for child in member):
-                            raise PrepError("invalid_reference", "Provide a nonempty sequence of typed element references.")
-                        element_members.extend(member)
-                    else:
-                        element_members.append(member)
+                    entries = member if isinstance(member, (list, tuple)) else (member,)
+                    if not entries:
+                        raise PrepError("invalid_reference", "Provide at least one current element per mapped member.")
+                    element_members.extend(entries)
                 members = element_members
-                identifiers, _, _ = self._element_members(members, family)
+                identifiers, refs, _ = self._element_members(members, family, allow_native_ids=True)
+                verified = iter(asdict(ref) for ref in refs)
+                mapping = {key: [next(verified) for _ in mapping[key]] if isinstance(mapping[key], (list, tuple)) else next(verified)
+                           for key in stale["members"] if key not in dropped}
             link = {"group_id": card_id, "family": family,
                 "old_native_ids": list(stale["members"]),
                 "current_declared_native_ids": self._integer_members(resource, card),

@@ -67,9 +67,11 @@ client.request("document.save", {
 
 `hello.limits.material`은 적용 가능한 프로필을 표시한다. `radioss_law1_elastic_v1`의 `profile_revision`은 정수 `1`이다. `document.cards`가 반환한 `/MAT/LAW1` 또는 `/MAT/ELAST` 참조를 `target`으로 보낸다. 카드가 루트나 INCLUDE에 있어도 같은 요청을 쓴다. `parameters`는 각 계수의 값과 단위를 함께 담는다. 예를 들어 `{"E":{"value":205,"unit":"GPa"},"nu":{"value":0.29,"unit":"1"},"rho":{"value":7855,"unit":"kg/m^3"}}`이다. 정식 필드명 `young_modulus`, `poisson_ratio`, `density`도 쓸 수 있다. `/BEGIN`은 지원되는 입력·작업 단위 두 행을 같은 값으로 선언해야 하며 재료 카드별 단위 재정의는 거부한다. `evaluation_digest`는 클라이언트가 선택한 평가의 SHA-256(16진수 64자리)이다.
 
-탄성 프로필에서 `curves`는 빈 배열 `[]`이다. Prony 프로필·항, LAW36/PLAS_TAB 적용, 동반 곡선은 `UNSUPPORTED_ATOMIC_APPLY`로 거부한다. 기존 재료·`/FUNCT` 카드는 그대로 보존한다.
+탄성 프로필에서 `curves`는 빈 배열 `[]`이다. Prep는 요청한 계수에 관계없이 대상 카드의 기존 밀도, 탄성계수, 포아송비를 모두 확인한다. 읽을 수 없거나 범위를 벗어난 값은 `invalid_target_card`다. 지원하지 않는 계수, Prony, LAW36/PLAS_TAB, 동반 곡선 및 대상 재료에 붙은 native 옵션은 `UNSUPPORTED_ATOMIC_APPLY`로 거부한다. 이 검사는 INCLUDE를 포함한다.
 
-준비는 문서를 바꾸지 않고 대상 카드별 SHA-256과 변경 전후 diff를 반환한다. `expires_at`은 Unix 초이며 계획은 발급 뒤 60초간 유효하다. 검토한 응답의 `plan_id`, `handle`, `candidate_hashes`를 확정 요청에 그대로 보낸다. 기준 리소스와 카드 해시, 개정, 후보 해시를 다시 확인하고 값 변경을 한 Undo 명령으로 확정한다. 이미 같은 값이면 `command_id`는 `null`이다. 만료된 계획은 `plan_expired`, 후보 해시가 다르면 `hash_mismatch`를 반환한다. 이 경우 현재 문서에서 새로 준비한다.
+선택한 연구의 출처도 고정하려면 준비 요청의 `provenance`에 `study_id`, `evaluation_id`, `selection_id`, `content_revision`, `parameter_set_sha256`, `holdout_status`, `source_fingerprint`를 담는다. Prep는 보낸 필드를 `candidate_hashes.provenance`로 반환한다. 확정 요청에는 이를 그대로 보내거나 같은 필드를 `candidate_hashes`와 나란히 보낼 수 있다. 누락하거나 바꾼 값은 `hash_mismatch`를 반환한다. `applied_hashes`에는 카드 해시가, `provenance`에는 확인한 출처가 담긴다.
+
+준비는 문서를 바꾸지 않고 대상 카드별 SHA-256과 변경 전후 diff를 반환한다. `expires_at`은 Unix 초이며 계획은 발급 뒤 60초간 유효하다. 검토한 응답의 `plan_id`, `handle`, `candidate_hashes`를 확정 요청에 그대로 보낸다. 기준 리소스와 카드 해시, 개정, 후보 해시를 다시 확인하고 값 변경을 한 Undo 명령으로 확정한다. 이미 같은 값이면 `command_id`는 `null`이다. 최근 만료된 계획 256개는 `plan_expired`를 반환하고, 보관 범위를 지난 계획은 `stale_material_plan`을 반환한다. 이 경우 현재 문서에서 새로 준비한다.
 
 ### 메시 후보와 작업 수명
 

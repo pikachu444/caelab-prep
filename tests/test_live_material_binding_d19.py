@@ -214,8 +214,9 @@ def test_d19_law1_prepare_commit_units_undo_save_export(tmp_path: Path, single_f
     ({"profile_revision": 2}, "UNSUPPORTED_ATOMIC_APPLY"),
     ({"parameters": {"prony_terms": []}}, "UNSUPPORTED_ATOMIC_APPLY"),
     ({"parameters": {"terms": []}}, "UNSUPPORTED_ATOMIC_APPLY"),
-    ({"parameters": {"points": []}}, "invalid_request"),
-    ({"parameters": {"E": {"value": 200, "unit": "GPa"}, "ignored": 1}}, "invalid_request"),
+    ({"parameters": {"points": []}}, "UNSUPPORTED_ATOMIC_APPLY"),
+    *[({"parameters": {"E": {"value": 200, "unit": "GPa"}, key: 1}}, "UNSUPPORTED_ATOMIC_APPLY")
+      for key in ("ignored", "sigma_y", "g1", "tau1", "C1")],
     ({"parameters": {"E": {"value": 200, "unit": "GPa", "points": []}}}, "invalid_request"),
     ({"parameters": {"E": {"value": 200, "unit": "GPa"}, "young_modulus": {"value": 200, "unit": "GPa"}}}, "invalid_request"),
     ({"parameters": {"E": {"value": 200, "unit": ""}}}, "invalid_unit"),
@@ -314,6 +315,99 @@ def test_d19_typed_target_and_expired_or_stale_plan(tmp_path):
     assert _fields_dict(session, target["object_id"])["young_modulus"] == 200000
 
 
+@pytest.mark.parametrize("keyword", ["/VISC/PRONY/1", "/FAIL/JOHNSON/1", "/HEAT/MAT/1",
+                                      "/EOS/LINEAR/1", "/MAT/ORTHO/1", "/THERM_STRESS/MAT/1",
+                                      "/TABLE/MAT/1", "/FUNCT/MAT/1"])
+def test_d19_attached_card_blocks_scalar_only_apply(tmp_path, keyword):
+    starter = _build_material_deck(tmp_path)
+    curves = tmp_path / "curves.inc"
+    curves.write_bytes(curves.read_bytes() + f"{keyword}\nAttachment\n       999\n/FUNCT/999\nCurve\n".encode())
+    session = PrepSession()
+    session.open_rad(starter)
+    manager = MaterialBindingManager(session)
+    with pytest.raises(PrepError) as error:
+        manager.prepare_apply(**_request(_handle(session), _object_ref(session, "/MAT/LAW1/1")))
+    assert error.value.code == "UNSUPPORTED_ATOMIC_APPLY"
+    assert error.value.details["dependency"] == keyword
+    assert not manager._plans and not session.document.dirty
+
+
+@pytest.mark.parametrize(("rho", "modulus", "nu", "extra", "code"), [
+    ("NOT-A-NUM", 210000, 0.3, "", "invalid_target_card"),
+    (7.85e-9, 210000, "NOT-A-NUM", "", "invalid_target_card"),
+    (0, 210000, 0.3, "", "invalid_target_card"),
+    (7.85e-9, -1, 0.3, "", "invalid_target_card"),
+    (7.85e-9, 210000, 0.5, "", "invalid_target_card"),
+    (7.85e-9, 210000, 0.3, f"{10:10d}", "UNSUPPORTED_ATOMIC_APPLY"),
+    (7.85e-9, 210000, 0.3, "\n        10", "UNSUPPORTED_ATOMIC_APPLY"),
+])
+def test_d19_validate_all_existing_slots_and_unverified_function_fields(tmp_path, rho, modulus, nu, extra, code):
+    starter = _build_material_deck(tmp_path)
+    cards = tmp_path / "materials.inc"
+    text = cards.read_text(encoding="ascii")
+    start = text.index("            7.85e-09")
+    stop = text.index("/MAT/LAW36/2")
+    cards.write_text(text[:start] + f"{str(rho):>20}\n{str(modulus):>20}{str(nu):>20}{extra}\n" + text[stop:], encoding="ascii")
+    session = PrepSession()
+    session.open_rad(starter)
+    with pytest.raises(PrepError) as error:
+        MaterialBindingManager(session).prepare_apply(**_request(_handle(session), _object_ref(session, "/MAT/LAW1/1"),
+                                                                 parameters={"E": {"value": 205, "unit": "GPa"}}))
+    assert error.value.code == code
+    assert not session.document.dirty
+
+
+_PROVENANCE = {"study_id": "study-A", "evaluation_id": "evaluation-A", "selection_id": "selection-A",
+               "content_revision": 7, "parameter_set_sha256": "c" * 64, "holdout_status": "pass",
+               "source_fingerprint": "f" * 64}
+
+
+@pytest.mark.parametrize("form", ["nested", "flat", "alongside"])
+def test_d19_commit_binds_each_prepared_provenance_field(tmp_path, form):
+    session = PrepSession()
+    session.open_rad(_build_material_deck(tmp_path))
+    target = _object_ref(session, "/MAT/LAW1/1")
+    request = _request(_handle(session), target, **_PROVENANCE)
+    manager = MaterialBindingManager(session)
+    prepared = manager.prepare_apply(**request)
+    assert prepared["candidate_hashes"]["provenance"] == _PROVENANCE
+    base = _commit(request, prepared)
+    card_id = target["object_id"]
+    hashes = {card_id: prepared["candidate_hashes"][card_id]}
+    for key in _PROVENANCE:
+        bad = hashes | {"provenance": {**_PROVENANCE, key: "altered"}}
+        with pytest.raises(PrepError) as error:
+            manager.commit_apply(**{**base, "candidate_hashes": bad})
+        assert error.value.code == "hash_mismatch"
+    with pytest.raises(PrepError) as missing:
+        manager.commit_apply(**{**base, "candidate_hashes": hashes})
+    assert missing.value.code == "hash_mismatch"
+    assert not session.document.dirty
+
+    if form == "flat":
+        base["candidate_hashes"] = hashes | _PROVENANCE
+    elif form == "alongside":
+        base.update(candidate_hashes=hashes, **_PROVENANCE)
+    receipt = manager.commit_apply(**base)
+    assert receipt["applied_hashes"] == hashes and receipt["provenance"] == _PROVENANCE
+
+
+def test_d19_expired_plan_markers_are_bounded(tmp_path):
+    session = PrepSession()
+    session.open_rad(_build_material_deck(tmp_path))
+    req = _request(_handle(session), _object_ref(session, "/MAT/LAW1/1"))
+    now = 10
+    manager = MaterialBindingManager(session, clock=lambda: now)
+    plans = [manager.prepare_apply(**req) for _ in range(257)]
+    now += 60
+    manager.prepare_apply(**req)
+    assert len(manager._expired_plan_ids) == 256
+    for plan, code in ((plans[0], "stale_material_plan"), (plans[-1], "plan_expired")):
+        with pytest.raises(PrepError) as error:
+            manager.commit_apply(**_commit(req, plan))
+        assert error.value.code == code
+
+
 def test_d19_live_rpc_guards_refresh_and_idempotent_replay(tmp_path: Path, request):
     pytest.importorskip("PySide6")
     request.getfixturevalue("qt_settings")
@@ -345,7 +439,7 @@ def test_d19_live_rpc_guards_refresh_and_idempotent_replay(tmp_path: Path, reque
             handle = hello["handle"]
             target = next(card["ref"] for card in call("document.cards")["cards"]
                           if card["ref"]["native_scope"] == "/MAT/LAW1/1")
-            request = _request(handle, target)
+            request = _request(handle, target, provenance=_PROVENANCE)
 
             win._busy = True
             try:
@@ -392,7 +486,8 @@ def test_d19_live_rpc_guards_refresh_and_idempotent_replay(tmp_path: Path, reque
             request_id = str(uuid4())
             receipt = call("material.commit_apply", commit, request_id)
             assert call("material.commit_apply", commit, request_id) == receipt
-            assert receipt["applied_hashes"] == prepared["candidate_hashes"]
+            assert receipt["applied_hashes"] == {target["object_id"]: prepared["candidate_hashes"][target["object_id"]]}
+            assert receipt["provenance"] == _PROVENANCE
             assert receipt["handle_after"]["revision"] == handle["revision"] + 1
             assert receipt["change"]["kind"] == "values"
             app.processEvents()

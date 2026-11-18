@@ -15,6 +15,7 @@ class NativeElementDialog(QDialog):
     sessionEvent = Signal(dict)
     initial_size = (780, 600)
     initial_split_sizes = (150, 300)
+    auto_check_preview = True
 
     def __init__(self, session, parent=None, *, has_draft=None, is_busy=None):
         super().__init__(parent)
@@ -134,7 +135,7 @@ class NativeElementDialog(QDialog):
             plan = self._plan
             self.preview.setPlainText(self._review_text(plan))
             self.status.setText("Review the proposed changes before Apply." if plan["admissible"] else "Unsupported condition targets block Apply.")
-            self.reviewed.setChecked(plan["admissible"])
+            self.reviewed.setChecked(self.auto_check_preview and plan["admissible"])
             self._sync()
         except (PrepError, ValueError) as exc: self.status.setText(str(getattr(exc, "message", exc)))
 
@@ -383,6 +384,7 @@ class TriangleEdgeSplitDialog(NativeElementDialog):
     options_caption = "Target edge"
     initial_size = (780, 640)
     initial_split_sizes = (95, 390)
+    auto_check_preview = False
     selection_required = "Select 1 or 2 linear SH3N elements sharing one edge."
     no_common_edge = "No common SH3N edge across selected elements."
 

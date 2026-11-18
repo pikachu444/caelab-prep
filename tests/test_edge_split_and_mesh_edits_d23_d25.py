@@ -9,11 +9,14 @@ import pytest
 
 from caelab_prep.application import mesh_edit_candidates as edits
 from caelab_prep.application.session import PrepSession
-from caelab_prep.cae_core import PrepError
+from caelab_prep.cae_core import PrepError, SelectionRef
+from caelab_prep.radioss import DeckResource
 
 
-_SH3N_TAILS = {101: f"{'':10}{17.5:>10g}{2.75:>20g}  ",
-               102: f"{'':10}{-32.5:>10g}{4.25:>20g}{0:>10d}   "}
+_SH3N_ANGLE_THICKNESS = {101: (17.5, 2.75), 102: (-32.5, 4.25)}
+_SH3N_TRAILING = {101: "  ", 102: f"{0:>10d}   "}
+_SH3N_TAILS = {parent: f"{'':20}{angle:>20g}{thickness:>20g}" + _SH3N_TRAILING[parent]
+               for parent, (angle, thickness) in _SH3N_ANGLE_THICKNESS.items()}
 
 
 def _write(path: Path, text: str) -> Path:
@@ -283,106 +286,45 @@ def _node_ref(session: PrepSession, nid: int, resource_id: str | None = None) ->
     return {"resource_id": rid, "entity_kind": "node", "local_id": nid}
 
 
-def _reconnect_all_stale_auto(session: PrepSession, *, split_children_by_old_id: dict[int, list[dict]] | None = None,
-                              node_remap: dict[int, int] | None = None, elem_remap: dict[int, int] | None = None):
-    """Build explicit target reconnection mapping for any stale targets cleanly."""
-    rel = session.mesh_relationships()
-    stale = rel["stale_targets"]
-    if not stale:
-        return
-    view = session.mesh_view()
-    live_nodes = set(view["node_ids"])
-    live_cells = {c["id"]: c for c in view["cells"]}
-    part_cards = {int(c["keyword"].split("/")[2]): c["id"] for c in session.list_cards() if c["keyword"].upper().startswith("/PART/")}
-    node_remap = node_remap or {}
-    elem_remap = elem_remap or {}
-    split_map = split_children_by_old_id or {}
+def _reconnect_stale(session, replacements):
+    """Use fixture-specified changes and resolve retained members by exact ID."""
+    stale = session.mesh_relationships()["stale_targets"]
+    keywords = {row["id"]: row["keyword"] for row in session.list_cards()}
+    assert set(replacements) <= {keywords[group_id] for group_id in stale}
+    direct, review = {}, {}
+    for group_id, record in stale.items():
+        keyword = keywords[group_id]
+        overrides = replacements.get(keyword, {})
+        assert set(overrides) <= set(record["members"])
+        family = record["family"]
+        mapping, dropped, node_ids = {}, [], []
+        for old in record["members"]:
+            target = overrides.get(old, record.get("parent_to_children", {}).get(old, old))
+            if target is None:
+                dropped.append(old)
+            elif family == "SURF/PART":
+                mapping[old] = session.resolve_part_reference(target)["card_id"]
+            elif family == "GRNOD/NODE":
+                mapping[old] = session.resolve_entity_reference("node", target)["reference"]
+                node_ids.append(target)
+            elif isinstance(target, list):
+                mapping[old] = [SelectionRef(**session.resolve_entity_reference("element", child)["reference"])
+                                for child in target]
+            else:
+                mapping[old] = session.resolve_entity_reference("element", target)["reference"]
+        assert mapping, f"{keyword} lost all members"
+        entry = {"mesh_revision": record["mesh_revision"], "mapping": mapping}
+        if dropped:
+            entry["drop_members"] = dropped
+        if len(node_ids) != len(set(node_ids)):
+            entry["coalesce_duplicates"] = True
+        (review if set(entry) - {"mesh_revision", "mapping"} else direct)[group_id] = entry
 
-    review_targets = {}
-    direct_targets = {}
-    for gid, info in stale.items():
-        fam = info["family"]
-        rev = info["mesh_revision"]
-        old_members = list(info["members"])
-        if fam == "SURF/PART":
-            mapping = {}
-            for pid in old_members:
-                if any(c.get("part_id") == pid for c in view["cells"]):
-                    mapping[pid] = part_cards[pid]
-                elif part_cards:
-                    live_pid = next(c["part_id"] for c in view["cells"] if c.get("part_id") in part_cards)
-                    mapping[pid] = part_cards[live_pid]
-            direct_targets[gid] = {"mesh_revision": rev, "mapping": mapping}
-        elif fam == "GRNOD/NODE":
-            mapping = {}
-            dropped = []
-            seen_targets = set()
-            has_dup = False
-            for nid in old_members:
-                target_nid = node_remap.get(nid, nid)
-                if target_nid in live_nodes:
-                    ref = {"resource_id": view["node_resources"][target_nid][0], "entity_kind": "node", "local_id": target_nid}
-                    mapping[nid] = ref
-                    if target_nid in seen_targets:
-                        has_dup = True
-                    seen_targets.add(target_nid)
-                else:
-                    dropped.append(nid)
-            assert mapping, f"Group {gid} lost all members unexpectedly"
-            entry = {"mesh_revision": rev, "mapping": mapping}
-            if dropped:
-                entry["drop_members"] = dropped
-            if has_dup:
-                entry["coalesce_duplicates"] = True
-            if dropped or has_dup:
-                review_targets[gid] = entry
-            else:
-                direct_targets[gid] = {"mesh_revision": rev, "mapping": mapping}
-        else:
-            mapping = {}
-            dropped = []
-            for eid in old_members:
-                if eid in split_map:
-                    mapping[eid] = split_map[eid]
-                    continue
-                target_eid = elem_remap.get(eid, eid)
-                if target_eid in live_cells:
-                    cell = live_cells[target_eid]
-                    mapping[eid] = {"resource_id": cell["resource_id"], "entity_kind": "element", "local_id": target_eid}
-                else:
-                    dropped.append(eid)
-            if not mapping:
-                form = fam.split("/")[1]
-                compat = next(c for c in view["cells"] if c["formulation"] == form)
-                for idx, eid in enumerate(old_members):
-                    if idx == 0:
-                        mapping[eid] = {"resource_id": compat["resource_id"], "entity_kind": "element", "local_id": compat["id"]}
-                        dropped = [e for e in old_members if e != eid]
-            if dropped:
-                review_targets[gid] = {"mesh_revision": rev, "mapping": mapping, "drop_members": dropped}
-            else:
-                direct_targets[gid] = {"mesh_revision": rev, "mapping": mapping}
-
-    if direct_targets:
-        session.reconnect_mesh_targets(direct_targets, expected_revision=session.document.revision, expected_document_id=session.document.id)
-    if review_targets:
-        plan = session.plan_mesh_reconnection(review_targets, expected_revision=session.document.revision, expected_document_id=session.document.id)
-        session.apply_mesh_reconnection(plan["plan_id"], expected_revision=session.document.revision, expected_document_id=session.document.id)
-    native_part_by_card = {card_id: native_id for native_id, card_id in part_cards.items()}
-    for group_id, target in (direct_targets | review_targets).items():
-        expected = []
-        for old_id in stale[group_id]["members"]:
-            if old_id in target.get("drop_members", ()):
-                continue
-            mapped = target["mapping"][old_id]
-            if isinstance(mapped, list):
-                expected.extend(child["local_id"] for child in mapped)
-            else:
-                expected.append(mapped["local_id"] if isinstance(mapped, dict) else native_part_by_card[mapped])
-        if target.get("coalesce_duplicates"):
-            expected = list(dict.fromkeys(expected))
-        resource = session._find_card(group_id)
-        assert session._integer_members(resource, resource.card(group_id)) == expected
+    if direct:
+        session.reconnect_mesh_targets(direct)
+    if review:
+        plan = session.plan_mesh_reconnection(review)
+        session.apply_mesh_reconnection(plan["plan_id"])
 
 
 def _mesh_facts(session):
@@ -421,7 +363,9 @@ def _target_facts(session):
     return groups, conditions
 
 
-def _roundtrip_save_reconnect_and_export(session: PrepSession, tmp_path: Path, tag: str, **reconnect_kwargs):
+def _roundtrip_save_reconnect_and_export(session, tmp_path, tag, *, replacements=None, expected_groups=None):
+    original_groups, original_conditions = _target_facts(session)
+    groups_after = {**original_groups, **(expected_groups or {})}
     assert session.mesh_relationships()["stale_targets"], f"{tag}: expected stale targets before save"
     proj_path = tmp_path / f"{tag}.caeprep"
     session.save_project(str(proj_path))
@@ -436,10 +380,10 @@ def _roundtrip_save_reconnect_and_export(session: PrepSession, tmp_path: Path, t
         reopened.export_rad(str(tmp_path / f"blocked_{tag}_0000.rad"))
     assert export_block.value.code == "stale_mesh_targets"
 
-    _reconnect_all_stale_auto(reopened, **reconnect_kwargs)
+    _reconnect_stale(reopened, replacements or {})
     assert reopened.mesh_relationships()["stale_targets"] == {}
     assert _mesh_facts(reopened) == _mesh_facts(session)
-    assert _target_facts(reopened)[1] == _target_facts(session)[1]
+    assert _target_facts(reopened) == (groups_after, original_conditions)
 
     out_dir = tmp_path / f"export_{tag}"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -450,12 +394,12 @@ def _roundtrip_save_reconnect_and_export(session: PrepSession, tmp_path: Path, t
     verify = PrepSession()
     verify.open_rad(out["starter_path"])
     assert _mesh_facts(verify) == _mesh_facts(reopened)
-    assert _target_facts(verify) == _target_facts(reopened)
+    assert _target_facts(verify) == (groups_after, original_conditions)
     return verify
 
 
 @pytest.mark.parametrize("deck_kind", ("deck_a", "deck_b"))
-def test_d23_all_six_existing_mesh_edits_end_to_end_across_two_multiresource_decks(tmp_path: Path, deck_kind: str):
+def test_d23_six_existing_mesh_edits_end_to_end_across_two_multiresource_decks(tmp_path: Path, deck_kind: str):
     """Exercise all 6 existing mesh edits across two multi-resource #include decks end-to-end."""
     deck_dir = tmp_path / deck_kind
     starter = _build_deck_multi_include(deck_dir) if deck_kind == "deck_a" else _build_deck_mixed_assembly(deck_dir)
@@ -523,7 +467,9 @@ def test_d23_all_six_existing_mesh_edits_end_to_end_across_two_multiresource_dec
                              keep_nid if orientation == src_nid else orientation, part_id, part_src)
                       for ref, (nodes, orientation, part_id, part_src) in original_cells.items()}
     assert _mesh_facts(s2) == ({nid: xyz for nid, xyz in original_nodes.items() if nid != src_nid}, expected_cells)
-    _roundtrip_save_reconnect_and_export(s2, tmp_path, f"{deck_kind}_merge", node_remap={src_nid: keep_nid})
+    _roundtrip_save_reconnect_and_export(s2, tmp_path, f"{deck_kind}_merge",
+        replacements={"/GRNOD/NODE/12": {11: 2}} if deck_kind == "deck_a" else {},
+        expected_groups={"/GRNOD/NODE/12": [2]} if deck_kind == "deck_a" else {})
 
     # 3. element_deletion: preview -> cancel -> apply -> 1 undo/redo -> save/reopen -> reconnect -> export
     s3 = PrepSession()
@@ -542,7 +488,9 @@ def test_d23_all_six_existing_mesh_edits_end_to_end_across_two_multiresource_dec
     assert any(c["id"] == del_eid for c in s3.mesh_view()["cells"])
     s3.redo()
     assert _mesh_facts(s3) == (original_nodes, {ref: cell for ref, cell in original_cells.items() if ref[2] != del_eid})
-    _roundtrip_save_reconnect_and_export(s3, tmp_path, f"{deck_kind}_delete")
+    _roundtrip_save_reconnect_and_export(s3, tmp_path, f"{deck_kind}_delete",
+        replacements={"/GRSH3N/SH3N/32": {82: None}} if deck_kind == "deck_b" else {},
+        expected_groups={"/GRSH3N/SH3N/32": [81]} if deck_kind == "deck_b" else {})
 
     # 4. shell_normal_flip: preview -> cancel -> apply -> 1 undo/redo -> save/reopen -> reconnect -> export
     s4 = PrepSession()
@@ -610,7 +558,7 @@ def test_d23_all_six_existing_mesh_edits_end_to_end_across_two_multiresource_dec
         assert all(c["id"] != 503 for c in s6.mesh_view()["cells"])
         s6.redo()
         assert any(c["id"] == 503 for c in s6.mesh_view()["cells"])
-        _roundtrip_save_reconnect_and_export(s6, tmp_path, f"{deck_kind}_remesh", elem_remap={201: 501, 202: 502})
+        _roundtrip_save_reconnect_and_export(s6, tmp_path, f"{deck_kind}_remesh")
     else:
         # Exercise real Gmsh structured remesh adoption AND include mesh replacement on Deck B
         from caelab_prep.application.structured_mesh import generate_structured_mesh
@@ -677,7 +625,143 @@ def test_d23_all_six_existing_mesh_edits_end_to_end_across_two_multiresource_dec
         assert all(c["id"] != 584 for c in s6.mesh_view()["cells"])
         s6.redo()
         assert any(c["id"] == 584 for c in s6.mesh_view()["cells"])
-        _roundtrip_save_reconnect_and_export(s6, tmp_path, f"{deck_kind}_remesh", elem_remap={81: 581, 82: 582})
+        _roundtrip_save_reconnect_and_export(s6, tmp_path, f"{deck_kind}_remesh",
+            replacements={"/GRSH3N/SH3N/32": {81: 581, 82: 582}},
+            expected_groups={"/GRSH3N/SH3N/32": [581, 582]})
+
+
+@pytest.mark.parametrize("operation", ("element_create", "quad_split", "tri_combine"))
+def test_d23_prepared_topology_edit_roundtrip(tmp_path, operation):
+    starter = _build_deck_multi_include(tmp_path)
+    nodes = tmp_path / "nodes.inc"
+    coords = {41: (30, 0, 10), 42: (40, 0, 10), 43: (40, 10, 10), 44: (30, 10, 10),
+              45: (50, 0, 10), 46: (60, 0, 10), 47: (50, 10, 10)}
+    with nodes.open("ab") as stream:
+        stream.write("".join(_node_line(nid, *xyz) + "\n" for nid, xyz in coords.items()).encode("ascii"))
+    starter.write_bytes(starter.read_bytes().replace(b"/BCS/20", b"/GRSHEL/SHEL/15\nRetained quad\n       203\n"
+        b"/GRSH3N/SH3N/16\nRetained triangle\n       202\n/BCS/20"))
+
+    quad = {("shells_b.inc", "SHELL", 201): ((15, 16, 17, 18), None, 2, None)}
+    split = {("shells_b.inc", "SH3N", 204): ((15, 16, 17), None, 2, None),
+             ("shells_b.inc", "SH3N", 205): ((15, 17, 18), None, 2, None)}
+    created = {("shells_b.inc", "SH3N", 206): ((45, 46, 47), None, 2, None)}
+    before, after = {"element_create": (quad, quad | created), "quad_split": (quad, split),
+                     "tri_combine": (split, quad)}[operation]
+
+    def write_geometry(path, edited):
+        quads = [key for key in edited if key[1] == "SHELL"]
+        triangles = [key for key in edited if key[1] == "SH3N"]
+        return _write(path, "\n".join([
+            "/SHELL/2", _quad_line(203, 41, 42, 43, 44), *(_quad_line(key[2], *edited[key][0]) for key in quads),
+            "/SH3N/2", _tri_line(202, 11, 12, 14), *(_tri_line(key[2], *edited[key][0]) for key in triangles), ""]))
+
+    original = write_geometry(tmp_path / "shells_b.inc", before)
+    prepared = write_geometry(tmp_path / "prepared.inc", after)
+    session = PrepSession()
+    session.open_rad(starter)
+    points, old_cells = _mesh_facts(session)
+    assert {key: old_cells[key] for key in before} == before
+    expected = {key: cell for key, cell in old_cells.items() if key not in before} | after
+    plan = session.plan_mesh_replacement(_cell_ref(session, 203)["resource_id"], prepared)
+    session.replace_prepared_mesh(plan["plan_id"])
+    assert _mesh_facts(session) == (points, expected)
+    session.undo()
+    assert _mesh_facts(session) == (points, old_cells)
+    session.redo()
+    exported = _roundtrip_save_reconnect_and_export(session, tmp_path, operation)
+    assert _mesh_facts(exported) == (points, expected)
+    groups, conditions = _target_facts(exported)
+    assert (groups["/GRSHEL/SHEL/15"], groups["/GRSH3N/SH3N/16"], groups["/SURF/PART/14"]) == ([203], [202], [2])
+    assert conditions["/INTER/TYPE7/23"]["main_surface_id"] == "/SURF/PART/14"
+    assert conditions["/CLOAD/21"]["group_id"] == "/GRNOD/NODE/11"
+    assert groups["/GRNOD/NODE/11"] == [5, 6, 7]
+    assert original.read_bytes() != prepared.read_bytes()
+
+
+@pytest.mark.parametrize("operation", ("split", "flip", "delete"))
+def test_d23_root_mesh_cards_preserve_trailing_include_and_comments(tmp_path, operation):
+    starter = _build_deck_multi_include(tmp_path)
+    nodes = tmp_path / "nodes.inc"
+    shells = tmp_path / "shells_a.inc"
+    node_block = nodes.read_bytes()
+    shell_block, tet = shells.read_bytes().split(b"/TETRA4/3", 1)
+    if operation == "delete":
+        header, *rows = shell_block.splitlines(keepends=True)
+        shell_block = header + rows[-1]
+        tet = b"".join([header, *rows[:-1], b"/TETRA4/3", tet])
+    else:
+        tet = b"/TETRA4/3" + tet
+    nodes.write_bytes(b"# Included node notes\n")
+    shells.write_bytes(tet)
+    directive = b"# trailing root shell comment\n#include shells_a.inc\n"
+    base = starter.read_bytes().replace(b"#include nodes.inc\n#include shells_a.inc\n",
+        node_block + b"#include nodes.inc\n" + shell_block + directive)
+    starter.write_bytes(base)
+    session = PrepSession()
+    session.open_rad(starter)
+    if operation == "split":
+        plan = session.plan_triangle_edge_split([_cell_ref(session, 101), _cell_ref(session, 102)],
+                                               (_node_ref(session, 1), _node_ref(session, 3)))
+        session.apply_triangle_edge_split(plan["plan_id"])
+        assert _node_ref(session, plan["added_nodes"][0]["ref"]["local_id"])["resource_id"] == session._root_id
+    elif operation == "flip":
+        plan = session.plan_shell_normal_flip([_cell_ref(session, 101)])
+        session.apply_shell_normal_flip(plan["plan_id"])
+        assert next(cell["nodes"] for cell in session.mesh_view()["cells"] if cell["id"] == 101) == (1, 3, 2)
+    else:
+        plan = session.plan_element_deletion([_cell_ref(session, 104)], orphan_policy="keep")
+        session.apply_element_deletion(plan["plan_id"])
+        assert not any(cell["id"] == 104 for cell in session.mesh_view()["cells"])
+        assert not any(card.keyword == "/SH3N/1" for card in session._model_resource(None).cards)
+    rendered = session._model_resource(None).render()
+    assert rendered.count(directive) == 1
+    assert rendered.count(b"#include nodes.inc\n") == 1
+    session.undo()
+    assert session._model_resource(None).render() == base
+    session.redo()
+    expected = {"/GRSH3N/SH3N/13": [302, 303, 304, 305]} if operation == "split" else {}
+    _roundtrip_save_reconnect_and_export(session, tmp_path, f"root_{operation}", expected_groups=expected)
+    exported = tmp_path / f"export_root_{operation}" / f"root_{operation}_0000.rad"
+    assert exported.read_bytes().count(directive) == 1
+    assert starter.read_bytes() == base
+
+
+@pytest.mark.parametrize("family", ("SHELL", "BRICK"))
+def test_d25_unselected_quad_or_solid_face_diagonal_blocks_split(tmp_path, family):
+    starter = _build_deck_multi_include(tmp_path)
+    if family == "SHELL":
+        neighbor = "/SHELL/2\n" + _quad_line(302, 1, 4, 3, 2) + "\n"
+    else:
+        with (tmp_path / "nodes.inc").open("ab") as stream:
+            stream.write("".join(_node_line(nid, x, y, 5) + "\n" for nid, (x, y) in
+                enumerate(((0, 0), (10, 0), (10, 10), (0, 10)), start=30)).encode("ascii"))
+        neighbor = "/BRICK/3\n" + "".join(f"{i:10d}" for i in (302, 1, 2, 3, 4, 30, 31, 32, 33)) + "\n"
+    with (tmp_path / "shells_a.inc").open("ab") as stream:
+        stream.write(neighbor.encode("ascii"))
+    session = PrepSession()
+    session.open_rad(starter)
+    with pytest.raises(PrepError) as error:
+        session.plan_triangle_edge_split([_cell_ref(session, 101), _cell_ref(session, 102)],
+                                         (_node_ref(session, 1), _node_ref(session, 3)))
+    assert error.value.code == "EDGE_HAS_UNSELECTED_NEIGHBORS" and not session.document.dirty
+
+
+def test_d23_detached_root_comment_stays_out_of_later_neighbor_edit():
+    first = "/SH3N/1\n" + _tri_line(1, 1, 2, 3) + "\n"
+    second = "/SH3N/2\n" + _tri_line(2, 1, 2, 3) + "\n"
+    comment = "# Retain this source comment\n"
+    raw = (first + second + comment + "/END\n").encode("ascii")
+    resource = DeckResource(raw)
+    neighbor, removed = resource.cards[:2]
+    resource.restore(resource.deleted_state(removed.id))
+    neighbor = resource.card(neighbor.id)
+    text = "".join(resource.lines[neighbor.start:neighbor.stop])
+    assert text == first
+    changed = text.replace(_tri_line(1, 1, 2, 3), _tri_line(1, 1, 3, 2))
+    resource.restore(resource.replaced_state(neighbor.id, changed))
+    reopened = DeckResource(raw, resource_id=resource.id)
+    reopened.restore(resource.snapshot())
+    assert reopened.render() == (changed + comment + "/END\n").encode("ascii")
 
 
 def test_d23_edge_case_include_without_trailing_newline_and_emptied_block_comment(tmp_path: Path):
@@ -815,7 +899,7 @@ def test_d25_pure_split_triangle_edge_candidate_unit_and_rejections(tmp_path: Pa
     for edge, neighbor in (((n1, n3), e102), ((n1, n2), edits.Ref(**_cell_ref(s, 301)))):
         with pytest.raises(edits.MeshEditError) as err:
             edits.split_triangle_edge(snapshot, (e101,), edge)
-        assert err.value.code == "hanging_node_unselected_neighbor"
+        assert err.value.code == "EDGE_HAS_UNSELECTED_NEIGHBORS"
         assert err.value.details == (neighbor,)
 
     for identifiers in ({"new_node_id": 2**31}, {"new_element_ids": (9001, 2**31)}):
@@ -939,7 +1023,11 @@ def test_d25_session_multiresource_edge_split_undo_save_reconnect_export(tmp_pat
     for parent, ending in ((101, "\r\n"), (102, "\n")):
         for child in child_mapping[parent]:
             row = next(line for line in shells_a_lines if line[:10].strip() == str(child["local_id"]))
-            assert row[40:] == _SH3N_TAILS[parent] + ending
+            angle, thickness = _SH3N_ANGLE_THICKNESS[parent]
+            assert row[40:60] == " " * 20
+            assert row[60:80] == f"{angle:>20g}"
+            assert row[80:100] == f"{thickness:>20g}"
+            assert row[100:] == _SH3N_TRAILING[parent] + ending
 
     # 1 Undo restores both includes + relations atomically; 1 Redo restores split
     s.undo()
@@ -956,10 +1044,13 @@ def test_d25_session_multiresource_edge_split_undo_save_reconnect_export(tmp_pat
         with pytest.raises(PrepError):
             s.reconnect_mesh_targets({group_id: {"mesh_revision": generation, "mapping": {**child_mapping, 101: invalid}}})
         assert group_id in s.mesh_relationships()["stale_targets"]
-    link = s._prepare_mesh_reconnection({group_id: {"mesh_revision": generation, "mapping": child_mapping}})[-1][0]
+    stored = s.mesh_relationships()["stale_targets"][group_id]["parent_to_children"]
+    assert stored == {101: [302, 303], 102: [304, 305]}
+    mixed_refs = {101: [SelectionRef(**child_mapping[101][0]), 303], 102: tuple(child_mapping[102])}
+    link = s._prepare_mesh_reconnection({group_id: {"mesh_revision": generation, "mapping": mixed_refs}})[-1][0]
     assert link["mapping"] == [{"old_native_id": eid, "target": children} for eid, children in child_mapping.items()]
 
-    exported = _roundtrip_save_reconnect_and_export(s, tmp_path, "d25_split", split_children_by_old_id=child_mapping)
+    exported = _roundtrip_save_reconnect_and_export(s, tmp_path, "d25_split", expected_groups={"/GRSH3N/SH3N/13": [302, 303, 304, 305]})
     assert _target_facts(exported)[0]["/GRSH3N/SH3N/13"] == child_ids
     exported_snapshot = exported._mesh_edit_snapshot()
     areas = [edits._quality(cell, exported_snapshot._nodes.__getitem__).signed_measure
@@ -1004,6 +1095,8 @@ def test_d25_triangle_edge_split_dialog_ui_and_screenshot(tmp_path: Path, presen
         app.processEvents()
 
         assert hasattr(win, "edge_split_action") and win.edge_split_action.isEnabled()
+        assert win.actions.action("mesh.split_triangle_edge") is win.edge_split_action
+        assert win.edge_split_action in win.command_menus["Mesh"].actions()
         assert win.edge_split_action.statusTip()
         assert not win.edge_split_action.icon().isNull()
         win.edge_split_action.trigger()
@@ -1025,8 +1118,15 @@ def test_d25_triangle_edge_split_dialog_ui_and_screenshot(tmp_path: Path, presen
         dialog.prepare_preview()
         assert dialog._plan is not None
         assert dialog._plan["admissible"] is True
-        assert dialog.reviewed.isChecked() is True
-        assert dialog.apply_button.isEnabled() is True
+        assert not dialog.reviewed.isChecked()
+        assert not dialog.apply_button.isEnabled()
+        dialog.reviewed.click()
+        assert dialog.apply_button.isEnabled()
+        dialog.prepare_preview()
+        assert not dialog.reviewed.isChecked()
+        assert not dialog.apply_button.isEnabled()
+        dialog.reviewed.setChecked(True)
+        assert dialog.apply_button.isEnabled()
         review = dialog.preview.toPlainText()
         assert "Split edge 1 – 3" in review
         assert "New midpoint node (mm)" in review
@@ -1114,7 +1214,9 @@ def test_d25_dirty_close_cancel_keeps_dialog_and_preview(tmp_path, request):
         dialog.prepare_preview()
         plan = dialog._plan
         review = dialog.preview.toPlainText()
-        assert plan and dialog.apply_button.isEnabled()
+        assert plan and not dialog.apply_button.isEnabled()
+        dialog.reviewed.click()
+        assert dialog.apply_button.isEnabled()
 
         prompts = []
 

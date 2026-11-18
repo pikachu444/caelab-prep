@@ -16,6 +16,14 @@
 
 Windows Python 3.13에서 집중 pytest 43건을 확인했다. `prep-tests.yml`에 나열된 검사의 로컬 결과는 `document` 1,239 통과·11 건너뜀·11 제외, `qt-document` 508 통과·2 건너뜀, `live-automation` 86 통과·7 건너뜀이다. BeidPrep 표현의 Qt offscreen 검토 화면(780×640)은 로컬 `C:/Users/pikac/.gemini/antigravity/brain/9beddcd8-3baf-44f6-9560-2c07a847da3f/d25_prep_edge_split_dialog.png`에 있다. 원 검토자의 수정본 재검토는 통합 인계에 남긴다.
 
+### 두 번째 검토 수정
+
+`16a387046e7429b9d8358f776edacb6313add9c3` 재검토에서 찾은 문제를 수정했다. D23은 루트 메시 카드 뒤의 INCLUDE 지시문과 삭제한 행 뒤 주석을 보존한다. 요소 생성·quad 분할·tri 결합 결과는 준비한 INCLUDE를 교체하는 경로로 저장·재열기·Starter 내보내기를 확인했다. 선택한 요소를 직접 생성하거나 변환하는 명령은 후속이다.
+
+D25는 분할 변의 양 끝점을 포함한 미선택 요소를 차단한다. 저장한 프로젝트에서 SH3N 부모별 자식 ID를 읽어 명시 재연결할 수 있다. 사용자가 버튼을 활성화하려면 새 미리보기를 확인한 뒤 검토 상자를 체크해야 한다.
+
+D19는 대상 탄성 카드의 기존 세 계수와 다중 INCLUDE의 재료 옵션을 검사한다. 확정은 준비한 카드 해시와 평가 출처를 함께 검증한다. 최근 만료된 계획은 최대 256개까지 추적한다. Windows Python 3.13에서 `document` 1,270 통과·11 건너뜀·11 제외, `qt-document` 516 통과·2 건너뜀, `live-automation` 109 통과·7 건너뜀을 확인했다. Qt 형상 검사는 첫 teardown 중단 뒤 별도 프로세스에서 25건을 통과했다. 마지막 주석 보존 교정 후 집중 75건과 영향 회귀 207건을 통과했다(1건 건너뜀). 같은 위치에 BeidPrep Qt offscreen 화면(780×640)을 다시 저장했다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

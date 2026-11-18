@@ -942,25 +942,30 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         return {"triangle": "GRSH3N/SH3N", "quad": "GRSHEL/SHEL", "tetra": "GRBRIC/BRIC", "tetra10": "GRBRIC/BRIC",
                 "hexahedron": "GRBRIC/BRIC", "wedge": "GRBRIC/BRIC", "pyramid": "GRBRIC/BRIC"}.get(kind)
 
-    def _element_members(self, members, family=None):
+    def _element_members(self, members, family=None, *, allow_native_ids=False):
         if not isinstance(members, (tuple, list)) or not members:
             raise PrepError("invalid_reference", "Choose at least one typed element reference.")
         if self._projection_cache is None: self.mesh_view()
         references, identifiers, families, seen = [], [], set(), set()
         cells_by_id = self._projection_index["cells_by_id"]
         for value in members:
-            if isinstance(value, SelectionRef): ref = value
+            if allow_native_ids and type(value) is int:
+                ref = None
+            elif isinstance(value, SelectionRef): ref = value
             elif isinstance(value, dict) and set(value) == {"resource_id", "entity_kind", "local_id"}:
                 ref = SelectionRef(**value)
             else:
                 raise PrepError("invalid_reference", "Element members require resource_id, entity_kind and local_id.")
-            if ref.entity_kind != "element" or not isinstance(ref.resource_id, str):
+            if ref is not None and (ref.entity_kind != "element" or not isinstance(ref.resource_id, str)):
                 raise PrepError("invalid_reference", "A typed element reference is required.")
-            integer(ref.local_id)
-            matches = cells_by_id.get(ref.local_id, [])
+            native_id = ref.local_id if ref is not None else value
+            integer(native_id)
+            matches = cells_by_id.get(native_id, [])
             if len(matches) != 1:
-                raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "Element IDs in a native group must resolve uniquely across resources.", {"element_id": ref.local_id})
+                raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "Element IDs in a native group must resolve uniquely across resources.", {"element_id": native_id})
             cell = matches[0]
+            if ref is None:
+                ref = SelectionRef(cell["resource_id"], "element", native_id)
             if cell["resource_id"] != ref.resource_id:
                 raise PrepError("invalid_reference", "The element does not belong to the stated resource.")
             kind = self._element_group_family(cell["type"], cell.get("formulation"))

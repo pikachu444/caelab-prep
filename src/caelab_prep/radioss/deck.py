@@ -5,9 +5,11 @@ line endings, ordering, and unedited fields are never reformatted.
 """
 from __future__ import annotations
 
+from bisect import bisect_right
 from dataclasses import dataclass
 from copy import copy
 import hashlib
+from itertools import accumulate
 import json
 import math
 import re
@@ -72,7 +74,7 @@ class DeckResource:
         if not self.cards and not is_include:
             raise PrepError("invalid_deck", "Radioss 블록 카드가 없는 파일입니다.", {"name": name})
 
-    def _parse_layout(self, lines, card_ids=None):
+    def _parse_layout(self, lines, card_ids=None, *, comment_boundaries=()):
         """Build the editing projection; explicit identities survive structural edits."""
         self.lines = list(lines)
         self.active_stop = next((i for i, line in enumerate(self.lines)
@@ -83,10 +85,18 @@ class DeckResource:
         self.cards, self.diagnostics = [], []
         for ordinal, start in enumerate(starts):
             stop = starts[ordinal + 1] if ordinal + 1 < len(starts) else self.active_stop
+            if comment_boundaries:
+                boundary = bisect_right(comment_boundaries, start)
+                if boundary < len(comment_boundaries):
+                    stop = min(stop, comment_boundaries[boundary])
             keyword = self.lines[start].strip()
             data = tuple(i for i in range(start + 1, stop)
                          if self.lines[i].strip() and not self.lines[i].lstrip().startswith("#"))
             category = self._category(keyword)
+            if not self.is_include and category in ("Nodes", "Elements"):
+                # Root mesh cards can be followed by INCLUDE directives owned by the file.
+                stop = next((i for i in range((data[-1] if data else start) + 1, stop)
+                             if re.match(r"^\s*#include\b", self.lines[i], re.I)), stop)
             title = self.lines[data[0]].strip() if data and category not in ("Nodes", "Elements") else ""
             try:
                 title = title.encode("latin1").decode("utf-8")
@@ -115,6 +125,7 @@ class DeckResource:
         """Retain original spans, inserting new blocks before /END or #enddata."""
         first = self._source_cards[0].start if self._source_cards else self._source_active_stop
         chunks = ["".join(self._source_lines[:first])]
+        detached_comments = []
         identities, inserted = [], False
         def insert():
             nonlocal inserted
@@ -124,19 +135,32 @@ class DeckResource:
                 chunks.append(item["text"])
                 identities.append(item["id"])
             inserted = True
-        for card in self._source_cards:
+        for ordinal, card in enumerate(self._source_cards):
             if card.keyword.upper() == "/END" and not inserted:
                 insert()
             if card.id not in self._deleted:
                 chunks.append(self._replaced.get(card.id, "".join(self._source_lines[card.start:card.stop])))
                 identities.append(card.id)
-            elif self.is_include and card.category in ("Nodes", "Elements"):
-                chunks.extend(line if line.endswith(("\r", "\n")) else line + self.newline
-                              for line in self._source_lines[card.start + 1:card.stop]
-                              if line.lstrip().startswith("#"))
+            elif not self.is_include or card.category in ("Nodes", "Elements"):
+                comments = [line for line in self._source_lines[card.start + 1:card.stop] if line.lstrip().startswith("#")]
+                if comments:
+                    detached_comments.append(len(chunks))
+                    chunks.append("".join(line if line.endswith(("\r", "\n")) else line + self.newline
+                                          for line in comments))
+            next_start = self._source_cards[ordinal + 1].start if ordinal + 1 < len(self._source_cards) else self._source_active_stop
+            if card.stop < next_start:
+                chunks.append("".join(self._source_lines[card.stop:next_start]))
         if not inserted: insert()
         chunks.append("".join(self._source_lines[self._source_active_stop:]))
-        self._parse_layout("".join(chunks).splitlines(keepends=True), identities)
+        lines = "".join(chunks).splitlines(keepends=True)
+        boundaries = ()
+        if detached_comments:
+            offsets = list(accumulate(map(len, chunks), initial=0))
+            comment_offsets = {offsets[index] for index in detached_comments}
+            # Retained comments belong to the file and must not enter adjacent card edits.
+            boundaries = tuple(row for row, offset in enumerate(accumulate(map(len, lines), initial=0))
+                               if offset in comment_offsets)
+        self._parse_layout(lines, identities, comment_boundaries=boundaries)
 
     @staticmethod
     def _category(keyword: str) -> str:
@@ -154,7 +178,7 @@ class DeckResource:
         except KeyError:
             raise PrepError("card_not_found", "카드를 찾을 수 없습니다.", {"card_id": card_id}) from None
 
-    def _schema(self, card: Card) -> list[Field]:
+    def _schema(self, card: Card, *, strict=False) -> list[Field]:
         key = card.keyword.upper().split("/")
         data = card.data
         fields: list[Field] = []
@@ -208,6 +232,8 @@ class DeckResource:
         elif len(key) > 2 and key[1] == "PROP" and key[2] in ("TRUSS", "TYPE2") and len(data) >= 2:
             fields = [Field("area", "Truss area", "float", data[1], 0, 20, 0, strict_minimum=True),
                       Field("initial_gap", "Initial truss gap", "float", data[1], 20, 40, 0, blank_default=0.)]
+        if strict:
+            return fields
         valid = []
         for field in fields:
             try:
@@ -216,6 +242,23 @@ class DeckResource:
             except (ValueError, IndexError):
                 continue
         return valid
+
+    def validate_elastic_slots(self, card_id):
+        """Require valid stored and effective values for every elastic slot."""
+        card = self.card(card_id)
+        fields = self._schema(card, strict=True)
+        if len(fields) != 3:
+            raise PrepError("invalid_target_card", "The material card needs complete density, modulus and Poisson ratio rows.")
+        patches = self._patches.get(card_id, {})
+        for field in fields:
+            try:
+                stored = self._read_field(field)
+                self._validated_value(field, stored)
+                if field.name in patches:
+                    self._validated_value(field, patches[field.name])
+            except (ValueError, IndexError, PrepError):
+                raise PrepError("invalid_target_card", "An existing elastic material slot is invalid.",
+                                {"card_id": card_id, "field": field.name}) from None
 
     def _read_field(self, field: Field) -> object:
         text = self.lines[field.line].rstrip("\r\n")[field.start:field.stop].strip()

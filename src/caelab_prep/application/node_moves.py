@@ -199,6 +199,7 @@ class NodeMoveCommands:
         relations = self._relations_resource().snapshot()
         generations = {rid: relations["mesh_revisions"].get(rid, 0) + 1 for rid in candidate.mesh_revision_resources}
         relations["mesh_revisions"].update(generations)
+        split_map = dict(candidate.split_cells)
         for impact in candidate.impacts:
             if impact.target.entity_kind != "set":
                 continue
@@ -224,6 +225,10 @@ class NodeMoveCommands:
             relations["stale_targets"][card.id] = {"resource_id": resource.id, "mesh_resource_id": primary,
                 "mesh_revision": generations[primary], "family": family, "members": self._integer_members(resource, card),
                 "reason": "geometry_review_required", "mesh_dependencies": dependencies}
+            replacements = {parent.local_id: [child.local_id for child in split_map[parent]]
+                            for parent in candidate.base._sets[impact.target].members if parent in split_map}
+            if replacements:
+                relations["stale_targets"][card.id]["parent_to_children"] = replacements
         return relations
 
     def apply_node_move(self, plan_id, *, expected_revision=None, expected_document_id=None):

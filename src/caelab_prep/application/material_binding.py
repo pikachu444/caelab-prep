@@ -1,11 +1,13 @@
 """Prepare and commit calibrated elastic values in the live document owner."""
 from __future__ import annotations
 
+from collections import deque
 from copy import copy
 from dataclasses import dataclass
 from decimal import Decimal
 from difflib import unified_diff
 from hashlib import sha256
+import json
 import math
 import re
 import sys
@@ -19,6 +21,8 @@ from .contracts import ObjectRef
 _PROFILE_ID = "radioss_law1_elastic_v1"
 _PROFILE_REVISION = 1
 DEFAULT_PLAN_TTL_SECONDS = 60.0
+PROVENANCE_FIELDS = ("study_id", "evaluation_id", "selection_id", "content_revision",
+                     "parameter_set_sha256", "holdout_status", "source_fingerprint")
 
 _MASS_SI = {"kg": Decimal("1"), "g": Decimal("0.001"), "Mg": Decimal("1000"), "t": Decimal("1000")}
 _LENGTH_SI = {"m": Decimal("1"), "cm": Decimal("0.01"), "mm": Decimal("0.001")}
@@ -42,6 +46,7 @@ class _PreparedMaterialPlan:
     baseline_hash: str
     candidate_hash: str
     evaluation_digest: str
+    provenance_json: str
     deadline: float
 
 
@@ -79,11 +84,11 @@ def _material_fields(parameters, deck_scales):
         raise PrepError("invalid_request", "Provide calibrated elastic parameters with values and units.")
     fields = {}
     for key, entry in parameters.items():
-        if key in ("prony_terms", "terms"):
-            raise PrepError("UNSUPPORTED_ATOMIC_APPLY", "Prony terms have no registered live material binding.")
         field = _ALIASES.get(key)
-        if field is None or field in fields:
-            raise PrepError("invalid_request", "Invalid or duplicate elastic parameter.", {"parameter": key})
+        if field is None:
+            raise PrepError("UNSUPPORTED_ATOMIC_APPLY", "This parameter has no registered elastic binding.", {"parameter": key})
+        if field in fields:
+            raise PrepError("invalid_request", "Duplicate elastic parameter.", {"parameter": key})
         if not isinstance(entry, dict) or set(entry) != {"value", "unit"}:
             raise PrepError("invalid_request", "Each elastic parameter requires exactly a value and unit.", {"parameter": key})
         unit = entry["unit"]
@@ -112,13 +117,26 @@ def _card_hash(text):
     return sha256(text.encode("latin1")).hexdigest()
 
 
+def _provenance_json(provenance, fields, *, error_code):
+    if provenance is None:
+        provenance = {}
+    allowed = set(PROVENANCE_FIELDS)
+    if (not isinstance(provenance, dict) or set(provenance) - allowed or set(fields) - allowed
+            or set(provenance) & set(fields)):
+        raise PrepError(error_code, "Provide each study provenance field once.")
+    try:
+        return json.dumps({**provenance, **fields}, sort_keys=True, allow_nan=False)
+    except (TypeError, ValueError, OverflowError, RecursionError):
+        raise PrepError(error_code, "Study provenance must contain valid JSON values.") from None
+
+
 class MaterialBindingManager:
     def __init__(self, session, *, clock=time.monotonic, ttl_seconds=DEFAULT_PLAN_TTL_SECONDS):
         self.session = session
         self._clock = clock
         self._ttl_seconds = ttl_seconds
         self._plans: dict[str, _PreparedMaterialPlan] = {}
-        self._expired_plan_ids: set[str] = set()
+        self._expired_plan_ids: deque[str] = deque(maxlen=256)
 
     def _current_handle(self):
         desc = self.session.describe()
@@ -153,17 +171,41 @@ class MaterialBindingManager:
             raise PrepError("UNSUPPORTED_ATOMIC_APPLY", "This profile requires a /MAT/LAW1 or /MAT/ELAST card.")
         if len(words) != 4:
             raise PrepError("invalid_unit", "Per-card material unit overrides are outside the live binding profile.")
-        if identity[1] < 1 or len(self.session._native_matches(*identity)) != 1:
+        if identity[1] < 1:
             raise PrepError("invalid_reference", "The target needs a unique positive native material ID.")
         return resource, card
+
+    def _reject_native_dependencies(self, resource, card):
+        material_id = native_identity(card.keyword)[1]
+        for deck in self.session._deck_resources():
+            for companion in deck.cards:
+                if companion.id == card.id:
+                    continue
+                words = companion.keyword.strip("/").upper().split("/")
+                family = words[0]
+                if family in {"MAT", "VISC", "FAIL", "HEAT", "EOS"}:
+                    id_index = 2 if len(words) >= 3 else 1
+                elif family in {"ALE", "EULER", "LEAK", "NONLOCAL", "THERM_STRESS", "FUNCT", "TABLE"} and words[1:2] == ["MAT"]:
+                    id_index = 2
+                else:
+                    continue
+                if len(words) > id_index and words[id_index].removeprefix("+").lstrip("0") == str(material_id):
+                    raise PrepError("UNSUPPORTED_ATOMIC_APPLY", "The elastic material has an attached native card.",
+                                    {"dependency": companion.keyword, "resource_id": deck.id})
+        # LAW1 has no registered function slot. Any populated extension is unverified.
+        if (len(card.data) > 3 or resource.lines[card.data[1]][20:].strip()
+                or resource.lines[card.data[2]][40:].strip()):
+            raise PrepError("UNSUPPORTED_ATOMIC_APPLY", "The elastic card has additional native fields or dependencies.",
+                            {"card_id": card.id})
 
     def _expire_plans(self, now):
         for plan_id, plan in list(self._plans.items()):
             if now >= plan.deadline:
-                self._expired_plan_ids.add(plan_id)
+                self._expired_plan_ids.append(plan_id)
                 del self._plans[plan_id]
 
-    def prepare_apply(self, handle, target, profile_id, profile_revision, parameters, curves, evaluation_digest):
+    def prepare_apply(self, handle, target, profile_id, profile_revision, parameters, curves, evaluation_digest,
+                      provenance=None, **provenance_fields):
         with self.session._lock:
             current = self._validate_handle(handle)
             if profile_id != _PROFILE_ID or type(profile_revision) is not int or profile_revision != _PROFILE_REVISION:
@@ -176,6 +218,9 @@ class MaterialBindingManager:
                 raise PrepError("invalid_request", "Supply the evaluation SHA-256 as 64 hexadecimal digits.")
             self.session._check_model_edit(current["revision"], current["document_id"])
             resource, card = self._resolve_target(target, current["document_id"])
+            resource.validate_elastic_slots(card.id)
+            self._reject_native_dependencies(resource, card)
+            provenance_json = _provenance_json(provenance, provenance_fields, error_code="invalid_request")
             input_units = self.session._model_resource(None).unit_context()["global"]
             work_units = self.session._solver_work_units()
             deck_scales = _deck_scales(input_units)
@@ -195,18 +240,19 @@ class MaterialBindingManager:
             plan_id = str(uuid4())
             self._plans[plan_id] = _PreparedMaterialPlan(current.copy(), resource.id, card.id, candidate.snapshot(),
                                                         resource.state_token(), baseline_hash, candidate_hash,
-                                                        evaluation_digest, now + self._ttl_seconds)
+                                                        evaluation_digest, provenance_json, now + self._ttl_seconds)
             diff = "".join(unified_diff(before.splitlines(keepends=True), after.splitlines(keepends=True),
                                         fromfile=f"{card.keyword} (before)", tofile=f"{card.keyword} (after)"))
             return {"plan_id": plan_id, "handle": current, "baseline_hashes": {card.id: baseline_hash},
-                    "candidate_hashes": {card.id: candidate_hash},
+                    "candidate_hashes": {card.id: candidate_hash, **({"provenance": json.loads(provenance_json)}
+                                                                    if provenance_json != "{}" else {})},
                     "changes_preview": [{"card_id": card.id, "keyword": card.keyword,
                                          "resource_name": self.session._paths[resource.id], "diff": diff}],
                     "expires_at": expires_at, "supported": True, "reason_codes": [],
                     "work_units": work_units, "expires_in_seconds": self._ttl_seconds,
                     "evaluation_digest": evaluation_digest}
 
-    def commit_apply(self, plan_id, handle, candidate_hashes):
+    def commit_apply(self, plan_id, handle, candidate_hashes, provenance=None, **provenance_fields):
         with self.session._lock:
             current = self._validate_handle(handle)
             if not isinstance(plan_id, str) or not plan_id:
@@ -219,8 +265,13 @@ class MaterialBindingManager:
                 raise PrepError("stale_material_plan", "Material plan was not found or was already committed.")
             if plan.handle != current:
                 raise PrepError("revision_conflict", "The document changed after material preparation.", {"actual": current})
-            if candidate_hashes != {plan.card_id: plan.candidate_hash}:
+            if not isinstance(candidate_hashes, dict) or candidate_hashes.get(plan.card_id) != plan.candidate_hash:
                 raise PrepError("hash_mismatch", "Candidate hashes differ from the prepared material plan.")
+            sent_fields = {key: value for key, value in candidate_hashes.items() if key not in (plan.card_id, "provenance")}
+            if (("provenance" in candidate_hashes and provenance is not None) or sent_fields.keys() & provenance_fields.keys()
+                    or _provenance_json(candidate_hashes.get("provenance", provenance), sent_fields | provenance_fields,
+                                        error_code="hash_mismatch") != plan.provenance_json):
+                raise PrepError("hash_mismatch", "Study provenance differs from the prepared material plan.")
             resource = self.session._model_resource(plan.resource_id)
             if resource.state_token() != plan.baseline_token or _card_hash(self.session.card_text(plan.card_id)) != plan.baseline_hash:
                 raise PrepError("revision_conflict", "The target resource changed after material preparation.")
@@ -233,4 +284,5 @@ class MaterialBindingManager:
                     "command_id": f"{current['document_epoch']}:{change.revision}" if change else None,
                     "applied_hashes": {plan.card_id: _card_hash(self.session.card_text(plan.card_id))},
                     "evaluation_digest": plan.evaluation_digest, "reason_codes": [],
+                    **({"provenance": json.loads(plan.provenance_json)} if plan.provenance_json != "{}" else {}),
                     "change": change.to_dict() if change else None}

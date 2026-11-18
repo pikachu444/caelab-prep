@@ -128,9 +128,8 @@ def native_mesh_edit_states(session, candidate, *, layout_error_code):
                 # Full-card replacement already rejects file directives. Do not
                 # bypass that source boundary or silently discard a directive.
                 replacements[card.id] = (text, empty)
-                if empty and moved_targets and not (owner.is_include and any(c.id == card.id for c in owner._source_cards)):
-                    # Keep non-data source comments once when the old block
-                    # becomes empty; directives still fail replacement below.
+                if empty and moved_targets and not any(c.id == card.id for c in owner._source_cards):
+                    # Original blocks retain their comments in the source layout.
                     comments = [_ensure_newline(lines[index], owner.newline)
                                 for index in range(card.start + 1, card.stop) if index not in card.data]
                     transfers[moved_targets[0]][0:0] = comments
