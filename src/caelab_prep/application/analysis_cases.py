@@ -204,12 +204,17 @@ class AnalysisCaseCommands:
             neutral_roots = {"BEGIN", "END", "NODE", "BEAM", "TRUSS", "SHELL", "QUAD", "SH3N", "TETRA4", "TETRA10", "BRICK", "PART", "FUNCT", "UNIT"}
             neutral_pairs = {("MAT", "LAW1"), ("MAT", "ELAST"), ("MAT", "LAW36"), ("MAT", "PLAS_TAB"),
                 ("PROP", "BEAM"), ("PROP", "TYPE3"), ("PROP", "TRUSS"), ("PROP", "TYPE2"), ("SKEW", "FIX"), ("PROP", "SHELL"), ("PROP", "TYPE1"), ("PROP", "SOLID"), ("PROP", "TYPE14"),
-                ("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS, ("SURF", "PART")}
+                ("PROP", "QUAD"), ("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS, ("SURF", "PART")}
             unsupported = []
             conditions = []
             for item in self.list_cards():
                 words = item["keyword"].upper().strip("/").split("/")
                 if condition_kind(item["keyword"]): conditions.append(item["id"])
+                elif tuple(words[:2]) == ("GRQUAD", "QUAD"):
+                    diagnostics = self.group_members(item["id"])["diagnostics"]
+                    if diagnostics:
+                        raise PrepError("invalid_reference", "A quad group has unresolved native targets.",
+                                        {"card_id": item["id"], "diagnostics": diagnostics})
                 elif words[0] not in neutral_roots and tuple(words[:2]) not in neutral_pairs:
                     unsupported.append(item)
             if unsupported:

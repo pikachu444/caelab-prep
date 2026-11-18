@@ -349,6 +349,52 @@ def test_native_quad_uses_its_own_element_group_through_export(tmp_path):
         assert group["member_ids"] == [member] and group["diagnostics"] == []
 
 
+def test_native_quad_property_assignment_checks_solid_compatibility(tmp_path):
+    source = tmp_path / "quad_0000.rad"
+    original = SOURCE.read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0]
+    source.write_bytes(original.replace(b"\n/SHELL/1", b"\n/QUAD/1", 1) + b"/PROP/QUAD/99\n2D solid section\n/END\n")
+    session = opened(source)
+    part = lookup(session, "/PART/1")["id"]
+    shell = lookup(session, "/PROP/SHELL/1")["id"]
+    solid = session.create_solid_property("Solid section")["card_id"]
+    session.assign_part(part, property_id=solid)
+    assert session.part_assignments(part)["property_id"] == solid
+    quad = lookup(session, "/PROP/QUAD/99")["id"]
+    session.assign_part(part, property_id=quad)
+    with pytest.raises(PrepError) as error:
+        session.assign_part(part, property_id=shell)
+    assert error.value.code == "incompatible_property"
+    assert session.part_assignments(part)["property_id"] == quad
+
+
+@pytest.mark.parametrize("valid", (True, False))
+def test_signed_quad_group_is_scoped_and_checked_by_case_export(tmp_path, valid):
+    source = tmp_path / "quad_0000.rad"
+    original = SOURCE.read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0]
+    original = original.replace(b"\n/SHELL/1", b"\n/QUAD/1", 1).replace(b"\n         5        10", b"\n         1        10", 1)
+    units = original.splitlines(keepends=True)[4]
+    original = original.replace(units, units * 2, 1)
+    positive = (1, 2) if valid else (1, 9999)
+    members = "".join(f"{value:10d}" for value in (*positive, -2, -500))
+    source.write_bytes(original + f"/GRQUAD/QUAD/987\nSigned quad group\n{members}\n/END\n".encode("ascii"))
+    session = opened(source)
+    group = lookup(session, "/GRQUAD/QUAD/987")["id"]
+    record = session.group_members(group)
+    case = session.create_analysis_case("Quad group", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "export/case_0000.rad"
+    if valid:
+        assert record["diagnostics"] == [] and record["member_ids"] == [1]
+        session.export_analysis_case(output, case)
+        assert members.encode("ascii") in output.read_bytes()
+    else:
+        assert record["diagnostics"][0]["code"] == "dangling_reference"
+        with pytest.raises(PrepError) as error:
+            session.export_analysis_case(output, case)
+        assert error.value.code == "invalid_reference"
+        assert error.value.details["diagnostics"] == record["diagnostics"]
+        assert not output.exists()
+
+
 def test_node_group_rows_can_be_edited_without_changing_group_identity(tmp_path):
     session = known_only(tmp_path)
     group = lookup(session, "/GRNOD/NODE/1")

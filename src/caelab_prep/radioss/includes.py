@@ -54,8 +54,20 @@ def disk_include_lookup(base, *, canonical=True):
     return lookup
 
 
-def resolve_includes(root, lookup, load, *, scope=""):
-    """Return reachable files, directive bindings, and unresolved references."""
+def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, selected=None, recovered=None):
+    """Resolve live paths or replay validated bindings against an archive inventory."""
+    selected, recovered = selected or {}, recovered or {}
+    result = _walk_includes(root, lookup, load, scope, selected, recovered, legacy_pending=False)
+    if archive_inventory is not None and not result[2] and archive_inventory - result[0]:
+        # ac0a255d let an earlier ambiguous directive claim the root for the
+        # next directive. Use that policy only if it explains the entire ZIP.
+        historical = _walk_includes(root, lookup, load, scope, selected, recovered, legacy_pending=True)
+        if not historical[2] and historical[0] == archive_inventory:
+            return historical
+    return result
+
+
+def _walk_includes(root, lookup, load, scope, selected, recovered, *, legacy_pending):
     reached, explicit = set(), set()
     bindings, problems = {}, []
     outgoing = defaultdict(set)
@@ -89,7 +101,7 @@ def resolve_includes(root, lookup, load, *, scope=""):
         reached.add(owner)
         chain = (*ancestors, owner)
         directory = PurePosixPath(owner).parent
-        for directive in directives:
+        for ordinal, directive in enumerate(directives):
             try:
                 relative = include_relative(directive.path)
                 logical = relative.as_posix()
@@ -100,10 +112,19 @@ def resolve_includes(root, lookup, load, *, scope=""):
                 sibling_path = (directory / relative).as_posix()
                 root_file = lookup(root_path)
                 sibling = lookup(sibling_path) if sibling_path != root_path else root_file
+                key = owner, ordinal
+                if key in recovered:
+                    follow(owner, directive, recovered[key], chain)
+                    continue
+                if key in selected and selected[key] not in (root_file, sibling):
+                    raise PrepError("invalid_project", "A recorded INCLUDE binding does not match its native directive.",
+                                    {"path": logical, "target": selected[key]})
                 if not (root_file or sibling):
                     raise PrepError("include_missing", "INCLUDE 파일이 없습니다.", {"path": logical})
                 if root_file and sibling and root_file != sibling:
-                    if (root_file in chain) != (sibling in chain):
+                    if key in selected:
+                        follow(owner, directive, selected[key], chain)
+                    elif (root_file in chain) != (sibling in chain):
                         follow(owner, directive, sibling if root_file in chain else root_file, chain)
                     else:
                         pending.append((owner, directive, root_file, sibling, chain))
@@ -118,10 +139,11 @@ def resolve_includes(root, lookup, load, *, scope=""):
     visit(root, ())
     # Freeze the unambiguous claims so one ambiguous binding cannot change
     # the choice made for another directive.
-    unambiguous_reached = reached.copy()
-    unambiguous_explicit = explicit.copy()
     while pending:
-        owner, directive, root_file, sibling, chain = pending.popleft()
-        target = sibling if root_file in unambiguous_reached and sibling not in unambiguous_explicit else root_file
-        follow(owner, directive, target, chain)
+        unambiguous_reached = reached if legacy_pending else reached.copy()
+        unambiguous_explicit = explicit if legacy_pending else explicit.copy()
+        batch = [pending.popleft() for _ in range(1 if legacy_pending else len(pending))]
+        for owner, directive, root_file, sibling, chain in batch:
+            target = sibling if root_file in unambiguous_reached and sibling not in unambiguous_explicit else root_file
+            follow(owner, directive, target, chain)
     return reached, bindings, problems

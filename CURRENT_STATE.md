@@ -58,6 +58,16 @@ Windows Python 3.13.5에서 집중 pytest 134건을 통과했다. 로컬 `docume
 
 Windows Python 3.13.5에서 지정 pytest 177건을 통과했다. 로컬 `document`는 1,347 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 559 통과·2 건너뜀, `live-automation`은 141 통과·7 건너뜀이다.
 
+### 일곱 번째 검토 수정
+
+`bde82a5` 재검토를 반영했다. Starter를 작성하기 전에 내보낼 바이트와 대상 폴더를 합쳐 INCLUDE를 다시 해석한다. 파일 또는 지시문 바인딩이 달라지면 `include_output_collision`으로 중단한다. 활성 바인딩은 프로젝트에 보존하고, 다음 차수의 모호한 지시문을 처리할 때 앞서 확정된 참조를 반영한다.
+
+`8fe6609`에서 직접 생성한 한 줄 전용 및 혼합 독립 소스 아카이브를 열고 다시 저장한 뒤 Starter로 내보냈다. 두 입력에서 15절점·7셸과 INCLUDE 소유권을 확인했다. `ac0a255`의 2절점 아카이브도 같은 경로를 통과했다. 독립 소스의 바이트는 실제 과거 작성 방식으로 검증한다.
+
+`/QUAD` 파트는 2D 솔리드 속성을 받는다. `/GRQUAD/QUAD`는 해당 요소군에서 ID를 찾고 음수 항목을 제외 목록으로 적용한다. 해석 케이스 출력은 그룹 검사와 같은 진단을 사용한다. OpenRadioss ALE2D 입력에서 `/PROP/TYPE14` 할당, 셸 속성 거부 및 `/GRQUAD/QUAD` 출력 재열기를 확인했다.
+
+Windows Python 3.13.5에서 지정 pytest 187건을 통과했다. 로컬 `document`는 1,357 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 566 통과·2 건너뜀, `live-automation`은 141 통과·7 건너뜀이다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

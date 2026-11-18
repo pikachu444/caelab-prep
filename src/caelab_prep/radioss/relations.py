@@ -18,6 +18,12 @@ from .modeling import ELEMENT_ALIASES, native_identity, real, title, integer
 AXES = ((1., 0., 0.), (0., 1., 0.), (0., 0., 1.))
 
 
+def element_group_members(entries):
+    """Resolve an explicit native element list with signed exclusions."""
+    excluded = {-identifier for identifier in entries if identifier < 0}
+    return [identifier for identifier in entries if identifier >= 0 and identifier not in excluded]
+
+
 def dot(a, b): return sum(x * y for x, y in zip(a, b))
 def subtract(a, b): return tuple(x - y for x, y in zip(a, b))
 def cross(a, b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])

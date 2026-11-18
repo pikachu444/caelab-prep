@@ -19,6 +19,7 @@ from ..cae_core import CommandDispatcher, Document, PrepError, Selection, Select
 from ..radioss import DeckResource
 from ..radioss.deck import number
 from ..radioss.includes import disk_include_lookup, include_lookup, include_relative, resolve_includes
+from ..radioss.relations import element_group_members
 from ..radioss.modeling import (ELEMENT_GROUP_FAMILIES, ELEMENT_GROUP_PAIRS, native_identity, integer, material_block, shell_block, copy_block,
     curve_points, curve_block, member_block, boundary_block, load_block, velocity_block, contact_block, title, real, solid_block, engine_input, condition_scalar_default, reject_default_zero)
 from .storage import write_container
@@ -105,7 +106,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         return [r for r in (document or self._require()).resources.values() if isinstance(r, DeckResource)]
 
     def _install(self, document: Document, root_id: str, paths: dict[str, str],
-                 source_paths: set[str], diagnostics: list[dict], source_path: str | None = None) -> None:
+                 source_paths: set[str], diagnostics: list[dict], source_path: str | None = None, *, include_bindings=None) -> None:
         if self.document is not None and self.document.id == document.id:
             document.revision = max(self.document.revision + 1, document.revision)
         if not any(isinstance(r, AnalysisCasesResource) for r in document.resources.values()):
@@ -121,6 +122,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self.dispatcher.subscribe(self._command_changed)
         self._root_id = root_id
         self._paths = paths
+        self._include_bindings = include_bindings or {}
         self._source_paths = source_paths
         self._diagnostics = diagnostics
         self._projection_cache = None
@@ -184,7 +186,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 document.resources[resource.id] = resource
                 return resource
 
-            _, _, problems = resolve_includes(source.name, disk_include_lookup(base), load)
+            _, edges, problems = resolve_includes(source.name, disk_include_lookup(base), load)
+            bindings = {(resource.id, ordinal): by_path[edges[logical, directive.header_row]].id
+                        for logical, resource in by_path.items()
+                        for ordinal, directive in enumerate(resource.include_directives)
+                        if (logical, directive.header_row) in edges}
             for owner, directive, exc in problems:
                 diagnostics.append({"severity": "warning", "code": getattr(exc, "code", "include_read_error"),
                     "message": str(exc), "unresolved_include": True, "resource_id": by_path[owner].id,
@@ -195,7 +201,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     "message": "대소문자만 다른 경로는 이식 가능한 작업 문서에 함께 저장할 수 없습니다.", "paths": collisions})
             document.mark_saved()
             self._install(document, by_path[source.name].id, paths, {str(base / path) for path in by_path},
-                          diagnostics, str(source))
+                          diagnostics, str(source), include_bindings=bindings)
             result = self.describe()
             self._notify("document")
             return result
@@ -889,6 +895,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                       for offset in range(0, len(lines[index].rstrip()), 10) if lines[index][offset:offset + 10].strip()]
         except ValueError:
             raise PrepError("invalid_reference", "The member list is not a supported fixed-width integer list.") from None
+        if tuple(card.keyword.upper().strip("/").split("/")[:2]) in ELEMENT_GROUP_PAIRS:
+            return element_group_members(values)
         return values
 
     def create_node_group(self, name, node_ids, *, resource_id=None, native_id=None,
@@ -942,6 +950,15 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             native_id = ref.local_id
             integer(native_id)
             matches = cells_by_id.get(native_id, [])
+            owned = [cell for cell in matches if cell["resource_id"] == ref.resource_id]
+            if family is not None:
+                scoped = [cell for cell in matches if self._element_group_family(cell["type"], cell.get("formulation")) == family]
+                if owned and not any(cell["resource_id"] == ref.resource_id for cell in scoped):
+                    raise PrepError("incompatible_group", "The element is outside this native group family.")
+                matches = scoped
+            elif len(owned) == 1:
+                kind = self._element_group_family(owned[0]["type"], owned[0].get("formulation"))
+                matches = [cell for cell in matches if self._element_group_family(cell["type"], cell.get("formulation")) == kind]
             if len(matches) != 1:
                 raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "Element IDs in a native group must resolve uniquely across resources.", {"element_id": native_id})
             cell = matches[0]
@@ -997,15 +1014,15 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         refs.append(SelectionRef(owners[0], "node", identifier))
                 else:
                     if self._projection_cache is None: self.mesh_view()
-                    refs, cells_by_id = [], {}
-                    for cell in self._projection_cache["cells"]:
-                        cells_by_id.setdefault(cell["id"], []).append(cell)
+                    refs = []
                     for identifier in identifiers:
-                        matches = cells_by_id.get(identifier, [])
+                        matches = [cell for cell in self._projection_index["cells_by_id"].get(identifier, ())
+                                   if self._element_group_family(cell["type"], cell.get("formulation")) == family]
                         if len(matches) != 1:
                             raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "A group element cannot be resolved uniquely.", {"element_id": identifier})
                         refs.append(SelectionRef(matches[0]["resource_id"], "element", identifier))
-                    _, refs, _ = self._element_members(refs, family)
+                    if refs:
+                        _, refs, _ = self._element_members(refs, family)
                 result["members"] = [asdict(ref) for ref in refs]
             except PrepError as exc:
                 result["diagnostics"].append({"code": exc.code, "message": exc.message, **exc.details})
@@ -1403,7 +1420,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             self._check_model_edit(expected_revision, expected_document_id)
             resource, card, refs = self._part_native_references(card_id)
             if self._projection_cache is None: self.mesh_view()
-            part_kinds = {cell["type"] for cell in self._projection_cache["cells"] if cell.get("part_id") == refs["native_part_id"]}
+            part_cells = self._projection_index["cells_by_part"].get(refs["native_part_id"], ())
+            part_kinds = {"QUAD" if cell.get("formulation") == "QUAD" else cell["type"] for cell in part_cells}
             if "tetra10" in part_kinds and part_kinds != {"tetra10"}:
                 raise PrepError("incompatible_property", "Tet10 requires a separate PART from other solid families.")
             if material_id is None and property_id is None:
@@ -1425,15 +1443,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 if key == "property_id":
                     family = target_card.keyword.upper().split("/")[2]
                     compatible = ({"quad", "triangle"} if family in ("SHELL", "TYPE1") else
-                                  {"tetra", "tetra10", "hexahedron", "wedge", "pyramid"} if family in ("SOLID", "TYPE14") else
+                                  {"QUAD", "tetra", "tetra10", "hexahedron", "wedge", "pyramid"} if family in ("SOLID", "TYPE14") else
+                                  {"QUAD"} if family == "QUAD" else
                                   {"line"} if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2") else None)
                     if compatible is None and identity[1] != refs["native_property_id"]:
                         raise PrepError("unsupported_operation", "Assignment supports SHELL and SOLID property families only.")
-                    if self._projection_cache is None: self.mesh_view()
-                    kinds = {cell["type"] for cell in self._projection_cache["cells"] if cell.get("part_id") == refs["native_part_id"]}
-                    if compatible is not None and kinds - compatible:
+                    if compatible is not None and part_kinds - compatible:
                         raise PrepError("incompatible_property", "The property family does not match the part's element types.")
-                    if "tetra10" in kinds:
+                    if "tetra10" in part_kinds:
                         try:
                             row = target_owner.render().decode("latin1").splitlines()[target_card.data[1]]
                             profile = tuple(int(row[start:start + 10].strip() or "0") for start in (10, 20, 40))
@@ -1805,6 +1822,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             manifest = {"format": PROJECT_FORMAT, "version": PROJECT_VERSION, "document_id": document.id,
                         "name": document.name, "revision": document.revision, "root_id": self._root_id,
                         "source_paths": sorted(self._source_paths), "diagnostics": self._diagnostics,
+                        "include_bindings": [[owner, order, included] for (owner, order), included in self._include_bindings.items()
+                                             if owner in self._paths and included in self._paths],
                         "resources": [{"id": r.id, "kind": r.kind, "name": r.name,
                             "logical_path": self._paths[r.id], "raw_member": f"raw/{r.id}.rad",
                             "state": r.snapshot()} for r in self._deck_resources(document)],
@@ -1926,7 +1945,21 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         document.resources[recipe.id] = recipe
                     if not isinstance(manifest.get("source_paths", []), list) or not all(isinstance(p, str) for p in manifest.get("source_paths", [])):
                         raise ValueError("invalid source path metadata")
-                    _, diagnostics = self._project_include_graph(document, paths, manifest["root_id"])
+                    selected = {}
+                    records = manifest.get("include_bindings", [])
+                    if not isinstance(records, list):
+                        raise ValueError("invalid INCLUDE bindings")
+                    for record in records:
+                        if not isinstance(record, list) or len(record) != 3:
+                            raise ValueError("invalid INCLUDE binding")
+                        owner, ordinal, included = record
+                        if (not isinstance(owner, str) or owner not in paths or not isinstance(included, str)
+                                or included not in paths or type(ordinal) is not int
+                                or not 0 <= ordinal < len(document.resources[owner].include_directives)
+                                or (owner, ordinal) in selected):
+                            raise ValueError("invalid INCLUDE binding")
+                        selected[owner, ordinal] = included
+                    bindings, diagnostics = self._project_include_graph(document, paths, manifest["root_id"], selected=selected)
                     if manifest["version"] >= 3:
                         cases = AnalysisCasesResource(document.id, manifest["analysis_cases"])
                         if cases.id in document.resources:
@@ -1938,7 +1971,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                                     raise PrepError("invalid_project", "An analysis case references a missing or unsupported condition.", {"case_id": case["id"], "card_id": identity})
                         document.resources[cases.id] = cases
                     document.mark_saved(str(source))
-                    self._install(document, manifest["root_id"], paths, set(manifest.get("source_paths", [])), diagnostics)
+                    self._install(document, manifest["root_id"], paths, set(manifest.get("source_paths", [])), diagnostics,
+                                  include_bindings=bindings)
             except PrepError:
                 raise
             except (OSError, zipfile.BadZipFile, KeyError, TypeError, ValueError, UnicodeError) as exc:
@@ -1947,22 +1981,38 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             self._notify("document")
             return result
 
-    def _project_include_graph(self, document: Document, paths: dict[str, str], root_id: str):
+    def _project_include_graph(self, document: Document, paths: dict[str, str], root_id: str, *, selected=None):
         """Rebuild bindings from native directives and the archived file inventory."""
         by_path = {value: key for key, value in paths.items()}
-        lookup = include_lookup(by_path)
         reached, bindings = set(), {}
         diagnostics = []
-
-        scopes = [(root_id, "")]
-        scopes.extend((source.metadata["root_resource_id"], f"sources/{source.id}")
-                      for source in document.resources.values() if isinstance(source, SourceArchiveResource))
-        for entry, scope in scopes:
-            files, edges, problems = resolve_includes(paths[entry], lookup,
-                                                     lambda path: document.resources[by_path[path]], scope=scope)
+        selected = selected or {}
+        imported = set()
+        scopes = []
+        for source in document.resources.values():
+            if isinstance(source, SourceArchiveResource):
+                owners = {item["resource_id"] for item in source.metadata["files"]}
+                imported.update(owners)
+                scopes.append((source.metadata["root_resource_id"], f"sources/{source.id}", owners,
+                               source.recovered_include_bindings))
+        scopes.insert(0, (root_id, "", paths.keys() - imported, {}))
+        for entry, scope, owners, recovered in scopes:
+            inventory = {paths[owner] for owner in owners}
+            preferred = {(paths[owner], ordinal): paths[included] for (owner, ordinal), included in selected.items()
+                         if owner in owners and included in paths}
+            repairs = {(paths[owner], ordinal): paths[included] for (owner, ordinal), included in recovered.items()}
+            if any(key in preferred and preferred[key] != value for key, value in repairs.items()):
+                raise PrepError("invalid_project", "A recorded INCLUDE binding disagrees with the validated source archive.")
+            files, edges, problems = resolve_includes(
+                paths[entry], include_lookup(inventory), lambda path: document.resources[by_path[path]],
+                scope=scope, archive_inventory=inventory, selected=preferred, recovered=repairs)
             reached.update(files)
-            bindings.update({(by_path[owner], row): by_path[target] for (owner, row), target in edges.items()})
+            bindings.update({(owner, ordinal): by_path[edges[paths[owner], directive.header_row]]
+                             for owner in owners for ordinal, directive in enumerate(document.resources[owner].include_directives)
+                             if (paths[owner], directive.header_row) in edges})
             for owner, directive, exc in problems:
+                if exc.code == "invalid_project":
+                    raise exc
                 diagnostics.append({"severity": "warning", "code": exc.code, "message": exc.message,
                     "unresolved_include": True, "resource_id": by_path[owner], "path": directive.path,
                     "line": directive.header_row + 1})
@@ -1981,7 +2031,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                             {"diagnostics": self._diagnostics})
         if document.save_state.path and target == Path(document.save_state.path):
             raise PrepError("project_overwrite", "작업 문서를 솔버 입력으로 덮어쓸 수 없습니다.")
-        bindings, problems = self._project_include_graph(document, self._paths, self._root_id)
+        bindings, problems = self._project_include_graph(document, self._paths, self._root_id, selected=self._include_bindings)
         if problems:
             raise PrepError("unresolved_include", "미해결 INCLUDE가 있어 독립 입력 파일을 내보낼 수 없습니다.",
                             {"diagnostics": problems})
@@ -1992,6 +2042,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         planned_lookup = include_lookup(planned)
         disk_lookup = disk_include_lookup(target.parent, canonical=False)
         outputs = []
+        payloads, expected = {}, {}
         targets = set()
         for resource in self._deck_resources(document):
             destination = target if resource.id == self._root_id else target.parent / self._paths[resource.id]
@@ -2001,42 +2052,57 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             key = str(destination).casefold()
             if key in targets: raise PrepError("export_path_collision", "출력 파일 경로가 충돌합니다.")
             targets.add(key)
-            excluded = [identity for identity in inactive_condition_ids if identity in resource._by_id]
-            payload = resource.render()
-            if resource.include_directives:
-                lines = payload.decode("latin1").splitlines(keepends=True)
-                for directive in resource.include_directives:
-                    resolved = logical_outputs[bindings[resource.id, directive.header_row]]
-                    relative = include_relative(directive.path)
-                    root_path = relative.as_posix()
-                    sibling_path = (PurePosixPath(logical_outputs[resource.id]).parent / relative).as_posix()
-                    if planned_lookup(root_path) == resolved:
-                        if (sibling_path != root_path and not planned_lookup(sibling_path)
-                                and disk_lookup(sibling_path)):
-                            raise PrepError("include_output_collision", "An existing sibling INCLUDE could change the exported model.",
-                                            {"path": str(target.parent / sibling_path), "directive": directive.path})
-                        if resolved != root_path:
-                            directive.replace_path(lines, resolved)
-                        continue
-                    if resolved != sibling_path or planned_lookup(root_path) or disk_lookup(root_path):
-                        directive.replace_path(lines, resolved)
-                payload = "".join(lines).encode("latin1")
+            logical = logical_outputs[resource.id]
+            if destination != target.parent / logical:
+                raise PrepError("include_output_collision", "An INCLUDE output path resolves through an existing alias.",
+                                {"path": logical})
+            lines = resource.render().decode("latin1").splitlines(keepends=True)
+            intended = {}
+            for ordinal, directive in enumerate(resource.include_directives):
+                resolved = logical_outputs[bindings[resource.id, ordinal]]
+                intended[directive.header_row] = resolved
+                relative = include_relative(directive.path)
+                root_path = relative.as_posix()
+                sibling_path = (PurePosixPath(logical).parent / relative).as_posix()
+                if resolved != root_path and (resolved != sibling_path or planned_lookup(root_path) or disk_lookup(root_path)):
+                    directive.replace_path(lines, resolved)
+            omitted = {index for identity in inactive_condition_ids if identity in resource._by_id for index in
+                       (resource.card(identity).start, *resource.card(identity).data)}
+            rows = [(line, intended.get(index)) for index, line in enumerate(lines) if index not in omitted]
             if resource.id == self._root_id and self._source_roots():
-                text = payload.decode("latin1").splitlines(keepends=True)
-                end = next((index for index, line in enumerate(text) if line.strip().upper() == "/END"), None)
+                end = next((index for index, (line, _) in enumerate(rows) if line.strip().upper() == "/END"), None)
                 if end is None: raise PrepError("invalid_deck", "Assembly export requires an explicit root /END.")
-                text[end:end] = [f"#include {self._paths[rid]}{resource.newline}" for rid in self._source_roots()]
-                payload = "".join(text).encode("latin1")
-            if excluded:
-                # INCLUDE directives are comments in the block layout. Retain
-                # them and all comments, even when they follow an omitted card.
-                omitted = {index for identity in excluded for index in
-                           (resource.card(identity).start, *resource.card(identity).data)}
-                payload = "".join(line for index, line in enumerate(payload.decode("latin1").splitlines(keepends=True))
-                                  if index not in omitted).encode("latin1")
+                rows[end:end] = [(f"#include {logical_outputs[rid]}{resource.newline}", logical_outputs[rid])
+                                 for rid in self._source_roots()]
+            payload = "".join(line for line, _ in rows).encode("latin1")
+            expected[logical] = tuple(included for _, included in rows if included is not None)
+            payloads[logical] = payload
             if resource.id != self._root_id and destination.exists() and destination.read_bytes() != payload:
                 raise PrepError("include_output_collision", "기존 INCLUDE 출력과 내용이 다릅니다. 빈 출력 폴더를 선택해 주세요.", {"path": str(destination)})
             outputs.append((destination, payload))
+        decks = {}
+
+        def load_output(path):
+            if path not in payloads:
+                raise PrepError("include_output_collision", "The exported deck would include a file outside the planned resources.",
+                                {"path": path})
+            deck = DeckResource(payloads[path], name=path, is_include=path != target.name)
+            decks[path] = deck
+            return deck
+
+        reached, edges, issues = resolve_includes(target.name, lambda path: planned_lookup(path) or disk_lookup(path), load_output)
+        if issues:
+            path, directive, cause = issues[0]
+            raise PrepError("include_output_collision", "The exported INCLUDE graph could not be reproduced in this destination.",
+                            {"path": path, "directive": directive.path, "cause": str(cause),
+                             **({"target": cause.details["path"]} if isinstance(cause, PrepError) and "path" in cause.details else {})})
+        for path, deck in decks.items():
+            actual = tuple(edges.get((path, directive.header_row)) for directive in deck.include_directives)
+            if actual != expected[path]:
+                raise PrepError("include_output_collision", "The exported INCLUDE bindings would change in this destination.",
+                                {"path": path, "expected": expected[path], "actual": actual})
+        if reached != set(payloads):
+            raise PrepError("include_output_collision", "The exported INCLUDE graph does not match the document.")
         return outputs
 
     @staticmethod

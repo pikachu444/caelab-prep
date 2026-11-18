@@ -8,6 +8,7 @@ are rejected before any document mutation.
 from ..cae_core import PrepError
 from .includes import include_lookup, resolve_includes
 from .modeling import ELEMENT_ALIASES, native_identity
+from .relations import element_group_members
 
 
 ELEMENTS = {"BEAM": 3, "TRUSS": 2, "SHELL": 4, "QUAD": 4, "SH3N": 3, "TETRA4": 4, "BRICK": 8}
@@ -98,10 +99,20 @@ def _inspect(resources):
                 if _int(lines[row][20:30], zero=True):
                     raise PrepError("unsupported_source_profile", "SUBSET references require a separate mapping profile.")
             elif pair in GROUPS:
+                namespace = GROUPS[pair]
+                entries = []
                 for row in card.data[1:]:
                     for start in range(0, len(lines[row].rstrip("\r\n")), 10):
                         token = lines[row][start:start + 10].strip()
-                        if token: reference(GROUPS[pair], _int(token), rid, row, start)
+                        if token:
+                            value = -_int(token[1:]) if namespace.startswith("E:") and token.startswith("-") else _int(token)
+                            entries.append((row, start, value))
+                effective = set(element_group_members([value for _, _, value in entries]))
+                for row, start, value in entries:
+                    if value in effective:
+                        reference(namespace, value, rid, row, start)
+                    else:
+                        edits.setdefault(rid, []).append((row, start, namespace, value))
             elif root == "BCS":
                 row = card.data[1]
                 reference("SKEW", _int(lines[row][10:20], zero=True), rid, row, 10, True)
@@ -142,12 +153,16 @@ def inspect(resources):
         raise PrepError("unsupported_source_profile", "A supported source card has malformed fixed-width data.", {"reason": str(exc)}) from exc
 
 
-def remap(resources, mappings, paths, *, two_line="quoted", legacy_direct_inline: bool = False):
-    definitions, edits, omitted = inspect(resources)
+def source_include_graph(resources, paths):
     by_path = {resource.name: resource for resource in resources}
     root = next(resource.name for resource in resources if not resource.is_include)
-    reached, bindings, problems = resolve_includes(root, include_lookup(paths), by_path.__getitem__)
-    if problems or reached != set(paths):
+    return resolve_includes(root, include_lookup(paths), by_path.__getitem__, archive_inventory=set(paths))
+
+
+def remap(resources, mappings, paths, *, two_line="quoted", legacy_direct_inline: bool = False):
+    definitions, edits, omitted = inspect(resources)
+    reached, bindings, problems = source_include_graph(resources, paths)
+    if problems or (not legacy_direct_inline and reached != set(paths)):
         raise PrepError("include_missing", "The imported INCLUDE graph could not be resolved.")
     result = {}
     for resource in resources:
@@ -159,22 +174,27 @@ def remap(resources, mappings, paths, *, two_line="quoted", legacy_direct_inline
                 words[index] = str(mappings[original]); ending = lines[card.start][len(lines[card.start].rstrip("\r\n")):]
                 lines[card.start] = "/".join(words) + ending
         for line, start, namespace, value in edits.get(resource.id, []):
-            mapped = mappings[(namespace, value)]
+            mapped = mappings.get((namespace, abs(value)))
+            if value < 0 and mapped is not None:
+                mapped = -mapped
             if start == -1:
                 ending = lines[line][len(lines[line].rstrip("\r\n")):]
                 words = lines[line].strip().split("/"); words[2] = str(mapped); lines[line] = "/".join(words) + ending
             else:
                 body = lines[line].rstrip("\r\n"); ending = lines[line][len(body):]
-                lines[line] = body.ljust(start + 10)[:start] + f"{mapped:10d}" + body[start + 10:] + ending
+                field = f"{mapped:10d}" if mapped is not None else " " * 10
+                lines[line] = body.ljust(start + 10)[:start] + field + body[start + 10:] + ending
         for directive in resource.include_directives:
             multiline = directive.filename_row != directive.header_row
             if multiline and two_line == "unchanged":
                 continue
-            original = bindings[resource.name, directive.header_row]
+            original = bindings.get((resource.name, directive.header_row))
             if legacy_direct_inline and not multiline:
                 direct = directive.path.replace("\\", "/")
                 if direct in paths:
                     original = direct
+            if original is None:
+                raise PrepError("include_missing", "The imported INCLUDE directive could not be resolved.")
             directive.replace_path(lines, paths[original], preserve_quotes=multiline and two_line == "quoted")
         # Explicitly shared nodes live in the destination resource only.
         shared = {line for (namespace, identifier), (rid, line) in definitions.items()

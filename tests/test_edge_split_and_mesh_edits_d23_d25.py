@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import json
 from math import dist
 from pathlib import Path
 import shutil
@@ -912,6 +913,28 @@ def test_d23_export_rejects_unrelated_sibling_of_root_bound_include(tmp_path, so
     assert unrelated.read_bytes() == original
 
 
+@pytest.mark.parametrize("solver_inputs", (False, True), ids=("starter", "solver-inputs"))
+def test_d23_export_checks_sibling_of_rewritten_include(tmp_path, solver_inputs):
+    filename = "assembly_0000.rad"
+    starter, _, _, expected = _nested_include_deck(
+        tmp_path / "source", "sibling-only", "\r\n", filename=filename)
+    starter.write_bytes(starter.read_bytes().replace(b"/END", f"#include mesh/{filename}\n/END".encode("ascii")))
+    session = PrepSession()
+    session.open_rad(starter)
+    assert _mesh_facts(session) == expected
+    output = tmp_path / "out" / filename
+    unrelated = _write(output.parent / "mesh/mesh" / filename, f"/NODE\n{_node_line(88, 83, 0, 0)}\n")
+    original = unrelated.read_bytes()
+    with pytest.raises(PrepError) as error:
+        if solver_inputs:
+            session.export_solver_inputs(output, end_time=.01, output_interval=.001)
+        else:
+            session.export_rad(output)
+    assert error.value.code == "include_output_collision"
+    assert set(path for path in output.parent.rglob("*") if path.is_file()) == {unrelated}
+    assert unrelated.read_bytes() == original
+
+
 @pytest.mark.parametrize("reverse", (False, True))
 def test_d23_ambiguous_directives_do_not_claim_root_for_each_other(tmp_path, reverse):
     paths = ("a/first.inc", "b/second.inc")
@@ -932,6 +955,86 @@ def test_d23_ambiguous_directives_do_not_claim_root_for_each_other(tmp_path, rev
     assert session.mesh_view()["node_ids"] == (1,)
 
 
+def test_d23_later_include_wave_sees_new_unambiguous_claims(tmp_path):
+    source = tmp_path / "source"
+    starter = _write(source / "starter_0000.rad", "/BEGIN\nWaves\n#include a/first.inc\n/END\n")
+    _write(source / "a/first.inc", "#include outer.inc\n")
+    _write(source / "a/outer.inc", "# unused alternate\n")
+    _write(source / "outer.inc", "#include nodes.inc\n#include mesh/first.inc\n")
+    _write(source / "mesh/first.inc", "#include nodes.inc\n")
+    _write(source / "nodes.inc", f"/NODE\n{_node_line(1, 1, 0, 0)}\n")
+    _write(source / "mesh/nodes.inc", f"/NODE\n{_node_line(100, 2, 0, 0)}\n")
+    session = PrepSession()
+    session.open_rad(starter)
+    expected = {1: ((1, 0, 0), ("nodes.inc",)), 100: ((2, 0, 0), ("mesh/nodes.inc",))}
+    assert _mesh_facts(session)[0] == expected
+    project = tmp_path / "waves.caeprep"
+    session.save_project(project)
+    session.open_project(project)
+    output = tmp_path / "out/export_0000.rad"
+    session.export_rad(output)
+    session.open_rad(output)
+    assert _mesh_facts(session)[0] == expected
+
+
+def test_d23_export_preserves_active_binding_when_inventory_loses_an_unselected_candidate(tmp_path):
+    source = tmp_path / "source"
+    starter = _write(source / "starter_0000.rad", "/BEGIN\nActive bindings\n#include a/first.inc\n#include b/second.inc\n/END\n")
+    _write(source / "a/first.inc", "#include nodes.inc\n")
+    _write(source / "a/nodes.inc", "# not loaded\n")
+    _write(source / "b/second.inc", "#include nodes.inc\n")
+    _write(source / "b/extra.inc", "#include nodes.inc\n")
+    _write(source / "nodes.inc", f"/NODE\n{_node_line(1, 1, 0, 0)}\n#include b/extra.inc\n")
+    _write(source / "b/nodes.inc", f"/NODE\n{_node_line(88, 2, 0, 0)}\n")
+    session = PrepSession()
+    session.open_rad(starter)
+    original = _mesh_facts(session)
+    assert set(original[0]) == {1, 88}
+    project = tmp_path / "active.caeprep"
+    session.save_project(project)
+    for label in ("active", "reopened"):
+        if label == "reopened":
+            session.open_project(project)
+        output = tmp_path / label / "export_0000.rad"
+        session.export_rad(output)
+        assert (output.parent / "b/second.inc").read_bytes() == b"#include nodes.inc\n"
+        assert (output.parent / "b/extra.inc").read_bytes() == b"#include b/nodes.inc\n"
+        reparsed = PrepSession()
+        reparsed.open_rad(output)
+        assert _mesh_facts(reparsed) == original
+
+
+def test_d23_reopens_archive_whose_older_resolver_claimed_second_sibling(tmp_path):
+    source = tmp_path / "source"
+    starter = _write(source / "starter_0000.rad", "/BEGIN\nArchived claims\n#include a/first.inc\n#include a/second.inc\n/END\n")
+    _write(source / "a/first.inc", "#include nodes.inc\n")
+    _write(source / "a/second.inc", "#include a/nodes.inc\n")
+    _write(source / "nodes.inc", f"/NODE\n{_node_line(1, 1, 0, 0)}\n")
+    _write(source / "a/nodes.inc", f"/NODE\n{_node_line(88, 2, 0, 0)}\n")
+    session = PrepSession()
+    session.open_rad(starter)
+    project = tmp_path / "prior.caeprep"
+    session.save_project(project)
+    with ZipFile(project) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    manifest.pop("include_bindings")
+    second = next(item["raw_member"] for item in manifest["resources"] if item["logical_path"] == "a/second.inc")
+    members[second] = b"#include nodes.inc\n"
+    members["manifest.json"] = json.dumps(manifest).encode()
+    legacy = tmp_path / "legacy.caeprep"
+    with ZipFile(legacy, "w") as archive:
+        for name, data in members.items():
+            archive.writestr(name, data)
+    session.open_project(legacy)
+    expected = {1: ((1, 0, 0), ("nodes.inc",)), 88: ((2, 0, 0), ("a/nodes.inc",))}
+    assert _mesh_facts(session)[0] == expected
+    output = tmp_path / "out/export_0000.rad"
+    session.export_rad(output)
+    session.open_rad(output)
+    assert _mesh_facts(session)[0] == expected
+
+
 def test_d23_nested_include_avoids_current_file_and_ancestor_shadows(tmp_path):
     starter = _write(tmp_path / "source_0000.rad", "/BEGIN\nAncestor test\n#include mesh/first.inc\n/END\n")
     _write(tmp_path / "mesh/first.inc", "#include first.inc\n#include source_0000.rad\n")
@@ -947,11 +1050,14 @@ def test_d23_nested_include_avoids_current_file_and_ancestor_shadows(tmp_path):
     assert not session.diagnostics()
 
 
-@pytest.mark.parametrize("legacy_format", ("unchanged", "unquoted", "mixed-direct-inline"))
+@pytest.mark.parametrize("legacy_format", ("unchanged", "unquoted", "mixed-direct-inline", "tampered-direct-inline", "direct-inline-only"))
 def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_format):
-    mixed = legacy_format == "mixed-direct-inline"
+    mixed = legacy_format in ("mixed-direct-inline", "tampered-direct-inline")
+    inline_only = legacy_format == "direct-inline-only"
+    separator = " " if inline_only else "\r\n"
     starter, begin, owner, _ = _nested_include_deck(
-        tmp_path / "source", "root-claimed" if mixed else "sibling-claimed", "\r\n")
+        tmp_path / "source", "root-claimed" if mixed or inline_only else "sibling-claimed",
+        separator, filename="sets/nodes.inc" if inline_only else "nodes.inc")
     if mixed:
         nested = starter.parent / "mesh/first.inc"
         with nested.open("ab") as stream:
@@ -973,10 +1079,11 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     mapped_member = f'raw/{source_files["mesh/first.inc"]["resource_id"]}.rad'
     replacement = '"nodes.inc"' if legacy_format != "unquoted" else mapped_path
     current = f'"{mapped_path}"\r\n'.encode("ascii")
-    assert members[mapped_member].count(current) == 1
-    members[mapped_member] = members[mapped_member].replace(current, f"{replacement}\r\n".encode("ascii"))
-    if mixed:
-        root_nodes = source_files["nodes.inc"]["logical_path"]
+    if not inline_only and legacy_format != "tampered-direct-inline":
+        assert members[mapped_member].count(current) == 1
+        members[mapped_member] = members[mapped_member].replace(current, f"{replacement}\r\n".encode("ascii"))
+    if mixed or inline_only:
+        root_nodes = source_files["sets/nodes.inc" if inline_only else "nodes.inc"]["logical_path"]
         inline = f"#include {mapped_path}\r\n".encode("ascii")
         assert members[mapped_member].count(inline) == 1
         members[mapped_member] = members[mapped_member].replace(inline, f"#include {root_nodes}\r\n".encode("ascii"))
@@ -984,6 +1091,11 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     with ZipFile(legacy, "w") as project:
         for name, contents in members.items():
             project.writestr(name, contents)
+    if legacy_format == "tampered-direct-inline":
+        with pytest.raises(PrepError) as error:
+            session.open_project(legacy)
+        assert error.value.code == "invalid_project"
+        return
     session.open_project(legacy)
     assert _mesh_facts(session) == expected
     assert not session.diagnostics()

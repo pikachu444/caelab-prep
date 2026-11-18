@@ -8,7 +8,8 @@ from uuid import UUID, uuid4
 
 from ..cae_core import CommandDispatcher, PrepError
 from ..radioss import DeckResource
-from ..radioss.assembly import inspect, remap, identity, NativeMap
+from ..radioss.assembly import inspect, remap, identity, NativeMap, source_include_graph
+from ..radioss.includes import include_lookup, resolve_includes
 from .projection import readonly, mutable
 
 
@@ -44,6 +45,7 @@ class SourceArchiveResource:
             raise PrepError("invalid_project", "Invalid explicit shared-node mapping.")
         self.metadata = readonly(metadata)
         self.files = readonly(files)
+        self.recovered_include_bindings = {}
         self._token = sha256(json.dumps(metadata, sort_keys=True).encode()).hexdigest()
 
     def snapshot(self): return {"state_version": 1}
@@ -80,12 +82,32 @@ class SourceArchiveResource:
         # Older imports addressed inline filenames from the root and either
         # preserved two-line paths or rewrote them without quotes. Compare
         # the entire mapped payload using one historical policy at a time.
-        has_two_line = any(d.header_row != d.filename_row for resource in originals for d in resource.include_directives)
-        styles = ("quoted", "unchanged", "unquoted") if has_two_line else ("quoted",)
-        for legacy_direct in (False, True):
-            for style in styles:
-                if actual == remap(originals, mapping, paths, two_line=style, legacy_direct_inline=legacy_direct):
-                    return
+        policies = ((False, "quoted"), (False, "unchanged"), (False, "unquoted"), (True, "unchanged"))
+        for legacy_direct, style in policies:
+            try:
+                expected = remap(originals, mapping, paths, two_line=style, legacy_direct_inline=legacy_direct)
+            except PrepError as exc:
+                if exc.code != "include_missing":
+                    raise
+                continue
+            if actual != expected:
+                continue
+            if legacy_direct:
+                _, original_bindings, _ = source_include_graph(originals, paths)
+                mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
+                mapped = {paths[name]: document.resources[rid] for name, rid in mapped_ids.items()}
+                mapped_root = next(paths[name] for name, rid in mapped_ids.items() if rid == self.metadata["root_resource_id"])
+                reached, _, _ = resolve_includes(mapped_root, include_lookup(mapped), mapped.__getitem__,
+                                                scope=f"sources/{self.id}", archive_inventory=set(mapped))
+                for resource in originals:
+                    for ordinal, directive in enumerate(resource.include_directives):
+                        intended = original_bindings.get((resource.name, directive.header_row))
+                        direct = directive.path.replace("\\", "/")
+                        if (directive.filename_row == directive.header_row and intended
+                                and direct in paths and paths[intended] not in reached):
+                            self.recovered_include_bindings[mapped_ids[resource.name], ordinal] = mapped_ids[intended]
+                            reached.add(paths[intended])
+            return
         raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
 
 
