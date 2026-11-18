@@ -10,7 +10,7 @@
 
 | 작업 | 구현 및 확인 | 후속 |
 |---|---|---|
-| D23 / N18 | 두 다중 INCLUDE 입력에서 `node_move`, `node_merge`, `element_delete`, `shell_flip`, `part_reassign`, 크기 변경 재메시(`remesh`)와 Undo/Redo를 확인했다. 준비한 INCLUDE 교체 명령 `replace_prepared_mesh`도 확인했다. `.caeprep` 및 Starter를 다시 열어 절점 좌표, 순서가 있는 연결, BEAM 방향, PART와 INCLUDE 소유권, 집합 멤버, 조건 참조를 비교했다. | 실제 Starter/Engine 실행과 물리 응답 확인 |
+| D23 / N18 | 두 다중 INCLUDE 입력에서 `node_move`, `node_merge`, `element_delete`, `shell_flip`, `part_reassign`, 준비한 INCLUDE 교체(`replace_prepared_mesh`)와 Undo/Redo를 확인했다. Deck B의 별도 검사는 평면 패치를 Gmsh 최대 크기 10 mm와 2.5 mm로 각각 생성해 절점 수, 삼각형 수, 최대 변 길이를 비교하고 더 조밀한 후보를 추가했다. `.caeprep` 및 Starter를 다시 열어 절점 좌표, 순서가 있는 연결, BEAM 방향, PART와 INCLUDE 소유권, 집합 멤버, 조건 참조를 비교했다. | 기존 CAD 영역을 다시 메시하는 일반 작업 흐름, 실제 Starter/Engine 실행 및 물리 응답 확인 |
 | D25 / N18 | `split_triangle_edge`로 선형 SH3N 한두 개의 공용 변을 분할한다. 다른 요소가 같은 변을 사용하면 차단한다. 두 자식에 부모 행의 두께·각도·후행 필드를 복사한다. GUI와 API에서 명시한 자식 전부를 집합에 재연결할 수 있다. 내보낸 `/GRSH3N` 재파싱에서 자식 4개와 합계 100 mm²를 확인했다. Qt 창에서 저장 확인을 취소해도 검토 창이 유지된다. | edge swap, quad/tri 변환, 고차 승격, 실제 Windows 데스크톱/VTK 및 원제품 비교 |
 | D19 / N19 | C10의 해시·만료 검사를 기존 소유 프로세스 IPC에 연결했다. `radioss_law1_elastic_v1`은 루트 또는 INCLUDE의 LAW1/ELAST에서 E·ν·ρ를 값 변경 한 건으로 적용한다. Prony, LAW36 및 동반 곡선 요청은 `UNSUPPORTED_ATOMIC_APPLY`를 반환한다. | Workbench 저장 평가와의 합동 확인 및 모델별 솔버 검증 |
 
@@ -31,6 +31,16 @@ D19는 대상 탄성 카드의 기존 세 계수와 다중 INCLUDE의 재료 옵
 D25 요소 재연결에는 자원 범위가 있는 요소 참조를 사용한다. 자식 목록의 정수 ID는 해당 부모의 저장된 자식 ID와 일치할 때 허용한다. D19는 공백이 채워진 재료 옵션 ID를 인식하고, LAW1의 비어 있거나 0인 `rho_0`를 보존한다. 평가 출처를 보내면 필수 7개 문자열과 해시 형식을 검증한 뒤 확정 요청에서 같은 값을 요구한다.
 
 Windows Python 3.13에서 집중 pytest 109건을 통과했다. 로컬 `document`는 1,305 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 527 통과·2 건너뜀, `live-automation`은 133 통과·7 건너뜀이다.
+
+### 네 번째 검토 수정
+
+`8fe6609b241f7440f39da4331d3cd57c72355204` 재검토를 반영했다. 중첩 INCLUDE는 Starter 루트에서 먼저 찾고 해당 경로가 없을 때 현재 INCLUDE 디렉터리에서 찾는다. 두 경로가 모두 존재하는 입력과 같은 디렉터리에서만 찾을 수 있는 입력을 한 줄·두 줄 지시문으로 구성해 네이티브 열기, 독립 소스 가져오기, 프로젝트 재열기, Starter 내보내기에서 확인했다. `24137d60`으로 저장한 충돌 재현용 프로젝트가 `8fe6609`에서 `invalid_project`를 반환했고, 수정 후에는 두 INCLUDE의 절점 소유권과 셸 연결을 유지한 채 다시 열렸다.
+
+D19 준비와 확정 요청은 모두 평가 출처 7개 필드를 요구한다. 출처가 빠진 준비 요청은 `invalid_request`, 준비 때의 출처와 일치하지 않거나 출처가 빠진 확정 요청은 `hash_mismatch`를 반환한다. LAW1의 `rho_0`는 비어 있거나 정확한 0일 때 허용한다. 밑줄 표기와 부동소수점에서 0으로 언더플로되는 0이 아닌 값은 거부한다.
+
+Gmsh 4.15.2에서 같은 평면 BREP에 최대 크기 10 mm와 2.5 mm를 적용했다. 절점은 24개에서 221개, 삼각형은 32개에서 388개로 늘었고 최대 변 길이는 12.479 mm에서 2.891 mm로 줄었다.
+
+Windows Python 3.13.5에서 집중 pytest 121건을 통과했다. 로컬 `document`는 1,317 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 531 통과·2 건너뜀, `live-automation`은 141 통과·7 건너뜀이다.
 
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 

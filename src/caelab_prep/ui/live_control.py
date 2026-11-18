@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QApplication, QLineEdit
 
 from ..application.contracts import ObjectRef, SetProperties
 from ..application.live_transport import LiveServer
-from ..application.material_binding import MaterialBindingManager, PROVENANCE_FIELDS
+from ..application.material_binding import MaterialBindingManager, PROVENANCE_KEYS
 from ..cae_core import PrepError
 from .mesh_workflow import MeshCandidateDialog
 
@@ -190,12 +190,12 @@ class LiveControl(QObject):
         if method.startswith("jobs."): return self._job_request(method, params)
         if method == "material.prepare_apply":
             self._keys(params, ("handle", "target", "profile_id", "profile_revision", "parameters", "curves", "evaluation_digest"),
-                       ("provenance", *PROVENANCE_FIELDS))
+                       ("candidate_hashes", *PROVENANCE_KEYS))
             with self.session._lock:
                 self._guard(params["handle"])
                 return self._material_binding.prepare_apply(**params)
         if method == "material.commit_apply":
-            self._keys(params, ("plan_id", "handle", "candidate_hashes"), ("provenance", *PROVENANCE_FIELDS))
+            self._keys(params, ("plan_id", "handle", "candidate_hashes"), PROVENANCE_KEYS)
             with self.session._lock:
                 self._guard(params["handle"])
                 return self._material_binding.commit_apply(**params)

@@ -6,7 +6,7 @@ import math
 import re
 from copy import deepcopy
 import os
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 import tempfile
 from threading import RLock
 from uuid import UUID, uuid4
@@ -17,7 +17,7 @@ from functools import wraps
 
 from ..cae_core import CommandDispatcher, Document, PrepError, Selection, SelectionRef
 from ..radioss import DeckResource
-from ..radioss.deck import number
+from ..radioss.deck import include_relative, include_target, number
 from ..radioss.modeling import (native_identity, integer, material_block, shell_block, copy_block,
     curve_points, curve_block, member_block, boundary_block, load_block, velocity_block, contact_block, title, real, solid_block, engine_input, condition_scalar_default, reject_default_zero)
 from .storage import write_container
@@ -103,16 +103,6 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
     def _deck_resources(self, document=None):
         return [r for r in (document or self._require()).resources.values() if isinstance(r, DeckResource)]
 
-    @staticmethod
-    def _include_relative(value: str) -> PurePosixPath:
-        if not isinstance(value, str):
-            raise PrepError("invalid_project", "INCLUDE 경로는 문자열이어야 합니다.")
-        portable = value.replace("\\", "/")
-        path = PurePosixPath(portable)
-        if not value or path.is_absolute() or ":" in portable or ".." in path.parts:
-            raise PrepError("include_path_unsupported", "이 INCLUDE 경로는 독립 문서로 묶을 수 없습니다.", {"path": value})
-        return path
-
     def _install(self, document: Document, root_id: str, paths: dict[str, str],
                  source_paths: set[str], diagnostics: list[dict], source_path: str | None = None) -> None:
         if self.document is not None and self.document.id == document.id:
@@ -196,12 +186,9 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 for reference in resource.includes():
                     details = {"resource_id": resource.id, **reference}
                     try:
-                        relative = self._include_relative(reference["path"])
-                        target = (filename.parent / relative).resolve()
+                        logical = include_target(reference["path"], resource.name, lambda path: (base / path).exists())
+                        target = (base / logical).resolve()
                         target.relative_to(base)
-                        if not target.is_file():
-                            target = (base / relative).resolve()
-                            target.relative_to(base)
                         if target in chain + (filename,):
                             raise PrepError("include_cycle", "순환 INCLUDE를 발견했습니다.", {"path": str(target)})
                         if not target.is_file():
@@ -1873,7 +1860,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                             raise ValueError("invalid resource metadata type")
                         if item["kind"] != "radioss-deck": raise ValueError("unknown resource kind")
                         UUID(item["id"])
-                        logical = self._include_relative(item["logical_path"]).as_posix()
+                        logical = include_relative(item["logical_path"]).as_posix()
                         if logical.casefold() in path_keys or item["id"] in document.resources: raise ValueError("duplicate resource")
                         path_keys.add(logical.casefold())
                         member = f"raw/{item['id']}.rad"
@@ -1914,7 +1901,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                                 rid = item["resource_id"]
                                 if rid == manifest["root_id"] or rid in owned or rid not in paths or paths[rid] != item["logical_path"]:
                                     raise ValueError("invalid mapped resource ownership")
-                                self._include_relative(item["original_path"])
+                                include_relative(item["original_path"])
                                 if not paths[rid].startswith(f"sources/{source_id}/"):
                                     raise ValueError("source path escapes its namespace")
                                 owned.add(rid)
@@ -1979,9 +1966,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             resource = document.resources[resource_id]
             for reference in resource.includes():
                 try:
-                    relative = self._include_relative(reference["path"])
-                    local = (PurePosixPath(paths[resource_id]).parent / relative).as_posix()
-                    logical = local if local in by_path else relative.as_posix()
+                    logical = include_target(reference["path"], paths[resource_id],
+                                             lambda path: path.as_posix() in by_path).as_posix()
                     if logical not in by_path:
                         raise PrepError("include_missing", "작업 문서에 INCLUDE 자원이 없습니다.", {"path": logical})
                     target = by_path[logical]

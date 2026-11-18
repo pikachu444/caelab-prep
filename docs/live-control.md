@@ -53,8 +53,8 @@ client.request("document.save", {
 | `document.selection` | `{}` → 현재 정규 선택 |
 | `document.select` | `handle`, `target` → 같은 GUI의 선택·속성 표시 |
 | `document.edit` | `handle`, `target`, `values`, 선택적 `units` → 같은 `SetProperties` 검증과 한 Undo 명령 |
-| `material.prepare_apply` | `handle`, `target`, `profile_id`, `profile_revision`, `parameters`, `curves`, `evaluation_digest` → `plan_id`, `handle`, `baseline_hashes`, `candidate_hashes`, `changes_preview`, `expires_at`, `supported`, `reason_codes`, `work_units`, `expires_in_seconds` |
-| `material.commit_apply` | `plan_id`, `handle`, `candidate_hashes` → `status`, `handle_after`, `command_id`, `applied_hashes`, `reason_codes` |
+| `material.prepare_apply` | `handle`, `target`, `profile_id`, `profile_revision`, `parameters`, `curves`, `evaluation_digest`, `provenance` → `plan_id`, `handle`, `baseline_hashes`, `candidate_hashes`, `changes_preview`, `expires_at`, `supported`, `reason_codes`, `work_units`, `expires_in_seconds` |
+| `material.commit_apply` | `plan_id`, `handle`, 출처를 포함한 `candidate_hashes` → `status`, `handle_after`, `command_id`, `applied_hashes`, `provenance`, `reason_codes` |
 | `document.undo`, `document.redo` | `handle` → 공용 문서 이력 |
 | `document.save` | `handle`, `path` → 원문 보존 `.caeprep` 저장. 솔버 출력/실행 아님 |
 | `events.since` | `after` → 후속 세션/작업 이벤트와 새 번호. 버퍼가 만료되면 `event_gap`이며 문서를 다시 조회 |
@@ -69,7 +69,7 @@ client.request("document.save", {
 
 탄성 프로필에서 `curves`는 빈 배열 `[]`이다. Prep는 요청한 계수에 관계없이 대상 카드의 기존 밀도, 탄성계수, 포아송비를 모두 확인한다. 읽을 수 없거나 범위를 벗어난 값은 `invalid_target_card`다. 지원하지 않는 계수, Prony, LAW36/PLAS_TAB, 동반 곡선 및 대상 재료에 붙은 native 옵션은 `UNSUPPORTED_ATOMIC_APPLY`로 거부한다. 이 검사는 INCLUDE를 포함한다.
 
-선택한 연구의 출처도 고정하려면 준비 요청의 `provenance`에 `study_id`, `evaluation_id`, `selection_id`, `content_revision`, `parameter_set_sha256`, `holdout_status`, `source_fingerprint`를 담는다. 일곱 필드는 모두 비어 있지 않은 문자열이어야 한다. `content_revision`, `parameter_set_sha256`, `source_fingerprint`에는 소문자 16진수 64자리 SHA-256을 사용한다. `holdout_status`는 `pass`, `fail`, `not_assessed` 중 하나다. Prep는 검증한 필드를 `candidate_hashes.provenance`로 반환한다. 확정 요청에는 이를 그대로 보내거나 같은 필드를 `candidate_hashes`와 나란히 보낸다. 누락하거나 바꾼 값은 `hash_mismatch`를 반환한다. `applied_hashes`에는 카드 해시가, `provenance`에는 확인한 출처가 담긴다.
+준비 요청의 `provenance`에는 `study_id`, `evaluation_id`, `selection_id`, `content_revision`, `parameter_set_sha256`, `holdout_status`, `source_fingerprint`가 모두 필요하다. 일곱 필드는 모두 비어 있지 않은 문자열이어야 한다. `content_revision`, `parameter_set_sha256`, `source_fingerprint`에는 소문자 16진수 64자리 SHA-256을 사용한다. `holdout_status`는 `pass`, `fail`, `not_assessed` 중 하나다. 출처가 빠지거나 유효하지 않으면 준비 단계에서 `invalid_request`를 반환한다. Prep는 검증한 필드를 `candidate_hashes.provenance`로 반환한다. 확정 요청에는 이를 그대로 보내거나 `candidate_hashes`와 나란히 같은 `provenance`를 보낸다. 확정 요청에서 출처를 누락하거나 바꾸면 `hash_mismatch`를 반환한다. `applied_hashes`에는 카드 해시가, `provenance`에는 확인한 출처가 담긴다.
 
 준비는 문서를 바꾸지 않고 대상 카드별 SHA-256과 변경 전후 diff를 반환한다. `expires_at`은 Unix 초이며 계획은 발급 뒤 60초간 유효하다. 검토한 응답의 `plan_id`, `handle`, `candidate_hashes`를 확정 요청에 그대로 보낸다. 기준 리소스와 카드 해시, 개정, 후보 해시를 다시 확인하고 값 변경을 한 Undo 명령으로 확정한다. 이미 같은 값이면 `command_id`는 `null`이다. 최근 만료된 계획 256개는 `plan_expired`를 반환하고, 보관 범위를 지난 계획은 `stale_material_plan`을 반환한다. 이 경우 현재 문서에서 새로 준비한다.
 

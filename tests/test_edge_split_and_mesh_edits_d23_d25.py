@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from math import dist
 from pathlib import Path
 import shutil
 
@@ -363,10 +364,10 @@ def _target_facts(session):
     return groups, conditions
 
 
-def _roundtrip_save_reconnect_and_export(session, tmp_path, tag, *, replacements=None, expected_groups=None):
+def _roundtrip_save_reconnect_and_export(session, tmp_path, tag, *, replacements=None, expected_groups=None, expect_stale=True):
     original_groups, original_conditions = _target_facts(session)
     groups_after = {**original_groups, **(expected_groups or {})}
-    assert session.mesh_relationships()["stale_targets"], f"{tag}: expected stale targets before save"
+    assert bool(session.mesh_relationships()["stale_targets"]) == expect_stale
     proj_path = tmp_path / f"{tag}.caeprep"
     session.save_project(str(proj_path))
 
@@ -376,11 +377,11 @@ def _roundtrip_save_reconnect_and_export(session, tmp_path, tag, *, replacements
     assert reopened.mesh_relationships()["stale_targets"] == session.mesh_relationships()["stale_targets"]
     assert _mesh_facts(reopened) == _mesh_facts(session)
     assert _target_facts(reopened) == _target_facts(session)
-    with pytest.raises(PrepError) as export_block:
-        reopened.export_rad(str(tmp_path / f"blocked_{tag}_0000.rad"))
-    assert export_block.value.code == "stale_mesh_targets"
-
-    _reconnect_stale(reopened, replacements or {})
+    if expect_stale:
+        with pytest.raises(PrepError) as export_block:
+            reopened.export_rad(str(tmp_path / f"blocked_{tag}_0000.rad"))
+        assert export_block.value.code == "stale_mesh_targets"
+        _reconnect_stale(reopened, replacements or {})
     assert reopened.mesh_relationships()["stale_targets"] == {}
     assert _mesh_facts(reopened) == _mesh_facts(session)
     assert _target_facts(reopened) == (groups_after, original_conditions)
@@ -532,7 +533,7 @@ def test_d23_six_existing_mesh_edits_end_to_end_across_two_multiresource_decks(t
     assert _mesh_facts(s5) == (original_nodes, expected_cells)
     _roundtrip_save_reconnect_and_export(s5, tmp_path, f"{deck_kind}_part")
 
-    # 6. size_remesh / replacement + CAD candidate adoption on multi-resource include deck:
+    # 6. Prepared INCLUDE replacement and size-controlled Gmsh patch adoption.
     s6 = PrepSession()
     s6.open_rad(str(starter))
     if deck_kind == "deck_a":
@@ -560,28 +561,48 @@ def test_d23_six_existing_mesh_edits_end_to_end_across_two_multiresource_decks(t
         assert any(c["id"] == 503 for c in s6.mesh_view()["cells"])
         _roundtrip_save_reconnect_and_export(s6, tmp_path, f"{deck_kind}_remesh")
     else:
-        # Exercise real Gmsh structured remesh adoption AND include mesh replacement on Deck B
-        from caelab_prep.application.structured_mesh import generate_structured_mesh
+        from caelab_prep.adapters.gmsh_backend import GmshBackend
+        from caelab_prep.application.mesh_candidates import read_mesh_candidate
 
         mat41 = _card_by_prefix(s6, "/MAT/LAW1/41")
         prop21 = _card_by_prefix(s6, "/PROP/SHELL/21")
-        spec = {
-            "mode": "quad",
-            "unit": "mm",
-            "corners": [[0.0, 0.0, 20.0], [10.0, 0.0, 20.0], [10.0, 10.0, 20.0], [0.0, 10.0, 20.0]],
-            "divisions": [4, 4],
-            "name": "Gmsh Structured Remesh",
-        }
-        cand = generate_structured_mesh(spec, tmp_path / "gmsh_structured_cand")
-        before_cells = len(s6.mesh_view()["cells"])
-        adopted = s6.adopt_mesh_candidate(cand.to_native_mesh(), material_id=mat41["id"], property_id=prop21["id"], name="Adopted Plate")
-        assert len(s6.mesh_view()["cells"]) == before_cells + 16
-        s6.undo()
-        assert len(s6.mesh_view()["cells"]) == before_cells
-        s6.redo()
-        assert len(s6.mesh_view()["cells"]) == before_cells + 16
+        plate = (Path(__file__).resolve().parents[1] /
+                 "docs/mesher-evidence/2026-11-02/midsurface/results/plate/candidate.brep")
+        backend = GmshBackend()
+        meshes, max_edges = [], []
+        for size in (10.0, 2.5):
+            generated = backend.generate(plate, tmp_path / "gmsh_plate", mesh_size=size, dimension=2)
+            assert generated["recipe"]["effective_maximum_mesh_size"] == pytest.approx(size)
+            mesh = read_mesh_candidate(generated).to_native_mesh(length_unit="mm")
+            coordinates = {node.id: node.xyz for node in mesh.nodes}
+            assert {cell.kind for cell in mesh.elements} == {"triangle3"}
+            max_edges.append(max(dist(coordinates[a], coordinates[b]) for cell in mesh.elements
+                                 for a, b in zip(cell.node_ids, cell.node_ids[1:] + cell.node_ids[:1])))
+            meshes.append(mesh)
+        coarse, fine = meshes
+        assert len(fine.nodes) > len(coarse.nodes)
+        assert len(fine.elements) > len(coarse.elements)
+        assert 0 < max_edges[1] < max_edges[0]
 
-        # Now replace mesh.inc with finer SH3N mesh via plan_mesh_replacement -> replace_prepared_mesh -> roundtrip
+        before_cells = {cell["id"]: cell for cell in s6.mesh_view()["cells"]}
+        before_targets = _target_facts(s6)
+        adopted = s6.adopt_mesh_candidate(fine, material_id=mat41["id"], property_id=prop21["id"], name="Adopted Plate")
+        after_cells = {cell["id"]: cell for cell in s6.mesh_view()["cells"]}
+        assert len(after_cells) == len(before_cells) + len(fine.elements)
+        assert {identifier: after_cells[identifier] for identifier in before_cells} == before_cells
+        for cell in fine.elements:
+            native = after_cells[adopted["element_id_map"][cell.id]]
+            assert tuple(native["nodes"]) == tuple(adopted["node_id_map"][node] for node in cell.node_ids)
+        s6.undo()
+        assert {cell["id"]: cell for cell in s6.mesh_view()["cells"]} == before_cells
+        s6.redo()
+        assert {cell["id"]: cell for cell in s6.mesh_view()["cells"]} == after_cells
+        assert _target_facts(s6) == before_targets
+        _roundtrip_save_reconnect_and_export(s6, tmp_path, "deck_b_gmsh_adoption", expect_stale=False)
+
+        # Start from the original ID namespace for the independently prepared INCLUDE.
+        s6 = PrepSession()
+        s6.open_rad(starter)
         mesh_inc_id = next(r_id for r_id, p in s6._paths.items() if p.endswith("mesh.inc"))
         fine_mesh_inc = _write(
             tmp_path / "fine_mesh_b.inc",
@@ -774,6 +795,59 @@ def test_d23_trailing_nested_includes_remain_file_owned_after_mesh_edit(tmp_path
     _roundtrip_save_reconnect_and_export(session, tmp_path, tag, expected_groups=expected)
     assert (tmp_path / f"export_{tag}" / "mesh" / nested.name).read_bytes() == rendered
     assert nested.read_bytes() == original
+
+
+@pytest.mark.parametrize("root_has_match", (True, False), ids=("root-first", "sibling-fallback"))
+@pytest.mark.parametrize("separator", (" ", "\r\n"), ids=("inline", "two-line"))
+def test_d23_nested_include_lookup_agrees_in_native_and_independent_source(tmp_path, root_has_match, separator):
+    from caelab_prep.radioss.modeling import material_block, shell_block
+
+    source = tmp_path / "source"
+    filename = "nodes.inc" if root_has_match else "nested-nodes.inc"
+    owner = filename if root_has_match else f"mesh/{filename}"
+    xyz = {1: (3, 1, 0), 2: (13, 1, 0), 3: (3, 11, 0)}
+    units = f"{'Mg':>20}{'mm':>20}{'s':>20}\n"
+    header = ("/BEGIN\nNested source\n      2024         0\n" + units * 2
+              + material_block(41, "Steel", 7.8e-9, 210000, .3) + shell_block(21, "Shell", 1)
+              + f"/PART/9\nPanel\n{21:10}{41:10}{0:10}\n")
+    explicit_sibling = "#include mesh/nodes.inc\n" if root_has_match else ""
+    starter = _write(source / "nested_0000.rad", header + "#include mesh/first.inc\n" + explicit_sibling + "/END\n")
+    _write(source / "mesh/first.inc", f"/SH3N/9\r\n{_tri_line(77, 1, 2, 3)}\r\n#include{separator}\"{filename}\"\r\n")
+    _write(source / owner, "/NODE\n" + "".join(_node_line(node, *point) + "\n" for node, point in xyz.items()))
+    if root_has_match:
+        _write(source / "mesh/nodes.inc", f"/NODE\n{_node_line(4, 83, 1, 0)}\n")
+
+    native = PrepSession()
+    native.open_rad(starter)
+    expected_points = {node: (point, (owner,)) for node, point in xyz.items()}
+    if root_has_match:
+        expected_points[4] = ((83, 1, 0), ("mesh/nodes.inc",))
+    expected_native = (expected_points, {("mesh/first.inc", "SH3N", 77): ((1, 2, 3), None, 9, None)})
+    assert _mesh_facts(native) == expected_native
+    native_project = tmp_path / "native.caeprep"
+    native.save_project(native_project)
+    native.open_project(native_project)
+    assert _mesh_facts(native) == expected_native
+
+    destination = PrepSession()
+    destination.open_rad(_write(tmp_path / "destination/base_0000.rad", header.split("/MAT", 1)[0] + "/END\n"))
+    plan = destination.plan_import_source(starter)
+    assert (plan["node_count"], plan["element_count"], plan["collisions"]) == (len(expected_points), 1, [])
+    destination.import_source(plan["plan_id"])
+    paths = {item["original_path"]: item["logical_path"] for item in plan["source"]["files"]}
+    expected_import = ({node: (point, (paths[path[0]],)) for node, (point, path) in expected_points.items()},
+                       {(paths["mesh/first.inc"], "SH3N", 77): ((1, 2, 3), None, 9, paths[starter.name])})
+    assert _mesh_facts(destination) == expected_import
+    project = tmp_path / "combined.caeprep"
+    destination.save_project(project)
+    destination.open_project(project)
+    output = tmp_path / "export/combined_0000.rad"
+    destination.export_rad(output)
+    assert (output.parent / paths["mesh/first.inc"]).read_bytes().endswith(
+        f"#include{separator}{paths[owner]}\r\n".encode("ascii"))
+    exported = PrepSession()
+    exported.open_rad(output)
+    assert _mesh_facts(exported) == expected_import
 
 
 @pytest.mark.parametrize("origin", ("source", "reassigned", "removed_comment"))

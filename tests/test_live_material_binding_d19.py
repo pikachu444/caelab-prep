@@ -15,6 +15,11 @@ from caelab_prep.application.session import PrepSession
 from caelab_prep.cae_core import PrepError
 
 
+_PROVENANCE = {"study_id": "study-A", "evaluation_id": "evaluation-A", "selection_id": "selection-A",
+               "content_revision": "a" * 64, "parameter_set_sha256": "c" * 64, "holdout_status": "pass",
+               "source_fingerprint": "f" * 64}
+
+
 def _write(path: Path, text: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(text.encode("latin1"))
@@ -125,7 +130,8 @@ def _request(handle, target, **overrides):
     return {"handle": handle, "target": target, "profile_id": "radioss_law1_elastic_v1", "profile_revision": 1,
             "parameters": {"E": {"value": 205, "unit": "GPa"}, "nu": {"value": 0.29, "unit": "1"},
                            "rho": {"value": 7855, "unit": "kg/m^3"}},
-            "curves": [], "evaluation_digest": sha256(b"fixture evaluation").hexdigest(), **overrides}
+            "curves": [], "evaluation_digest": sha256(b"fixture evaluation").hexdigest(),
+            "provenance": _PROVENANCE.copy(), **overrides}
 
 
 def _commit(request, prepared):
@@ -171,14 +177,15 @@ def test_d19_law1_prepare_commit_units_undo_save_export(tmp_path: Path, single_f
 
     commit = _commit(request, prepared)
     with pytest.raises(PrepError) as bad_hash:
-        manager.commit_apply(**{**commit, "candidate_hashes": {card_id: "0" * 64}})
+        manager.commit_apply(**{**commit, "candidate_hashes": {**commit["candidate_hashes"], card_id: "0" * 64}})
     assert bad_hash.value.code == "hash_mismatch" and not history
     reply = manager.commit_apply(**commit)
     assert reply["status"] == "committed" and reply["command_id"]
     assert reply["handle_after"]["revision"] == handle["revision"] + 1
     assert reply["reason_codes"] == []
     assert reply["evaluation_digest"] == request["evaluation_digest"]
-    assert reply["applied_hashes"] == prepared["candidate_hashes"]
+    assert reply["applied_hashes"] == {card_id: prepared["candidate_hashes"][card_id]}
+    assert reply["provenance"] == _PROVENANCE
     assert len(history) == 1 and history[0].kind == "values"
     assert history[0].resource_ids == (target["resource_id"],)
     assert session.mesh_view()["projection_revision"] == projection_revision
@@ -335,8 +342,10 @@ def test_d19_attached_card_blocks_scalar_only_apply(tmp_path, keyword):
 
 
 @pytest.mark.parametrize(("rho_0", "trailing", "supported"), [
-    ("", "", True), ("0", "", True), ("0.0", "", True), ("0D0", "", True),
-    ("1e-9", "", False), ("NOT-A-NUM", "", False), ("0", "        99", False),
+    ("", "", True), ("0", "", True), ("0.0", "", True), (".0", "", True),
+    ("0.000", "", True), ("0E0", "", True), ("0D0", "", True),
+    ("1e-9", "", False), ("1E-999", "", False), ("0_0", "", False),
+    ("NOT-A-NUM", "", False), ("0", "        99", False),
 ])
 def test_d19_reference_density_default_remains_unchanged(tmp_path, rho_0, trailing, supported):
     starter = _build_material_deck(tmp_path)
@@ -388,13 +397,8 @@ def test_d19_validate_all_existing_slots_and_unverified_function_fields(tmp_path
     assert not session.document.dirty
 
 
-_PROVENANCE = {"study_id": "study-A", "evaluation_id": "evaluation-A", "selection_id": "selection-A",
-               "content_revision": "a" * 64, "parameter_set_sha256": "c" * 64, "holdout_status": "pass",
-               "source_fingerprint": "f" * 64}
-
-
 @pytest.mark.parametrize("fields", [
-    {"study_id": "study-A"}, {"provenance": {"study_id": "study-A"}}, {"provenance": {}}, {"provenance": None},
+    {}, {"study_id": "study-A"}, {"provenance": {"study_id": "study-A"}}, {"provenance": {}}, {"provenance": None},
     {"provenance": dict.fromkeys(_PROVENANCE)}, {"provenance": dict.fromkeys(_PROVENANCE, "")},
     {"provenance": {**_PROVENANCE, "selection_id": "   "}},
     {"provenance": {**_PROVENANCE, "content_revision": 7}},
@@ -407,18 +411,26 @@ def test_d19_rejects_incomplete_or_malformed_provenance(tmp_path, fields):
     session = PrepSession()
     session.open_rad(_build_material_deck(tmp_path))
     manager = MaterialBindingManager(session)
+    request = _request(_handle(session), _object_ref(session, "/MAT/LAW1/1"))
+    del request["provenance"]
     with pytest.raises(PrepError) as error:
-        manager.prepare_apply(**_request(_handle(session), _object_ref(session, "/MAT/LAW1/1"), **fields))
+        manager.prepare_apply(**(request | fields))
     assert error.value.code == "invalid_request"
     assert not manager._plans and not session.document.dirty
 
 
-@pytest.mark.parametrize("form", ["nested", "flat", "alongside"])
+@pytest.mark.parametrize("form", ["nested", "flat", "alongside", "selection_alias", "hash_container"])
 def test_d19_commit_binds_each_prepared_provenance_field(tmp_path, form):
     session = PrepSession()
     session.open_rad(_build_material_deck(tmp_path))
     target = _object_ref(session, "/MAT/LAW1/1")
-    request = _request(_handle(session), target, **_PROVENANCE)
+    request = _request(_handle(session), target)
+    if form == "flat":
+        request.update(request.pop("provenance"))
+    elif form == "selection_alias":
+        request["selection_provenance"] = request.pop("provenance")
+    elif form == "hash_container":
+        request["candidate_hashes"] = {"provenance": request.pop("provenance")}
     manager = MaterialBindingManager(session)
     prepared = manager.prepare_apply(**request)
     assert prepared["candidate_hashes"]["provenance"] == _PROVENANCE
@@ -440,7 +452,9 @@ def test_d19_commit_binds_each_prepared_provenance_field(tmp_path, form):
     if form == "flat":
         base["candidate_hashes"] = hashes | _PROVENANCE
     elif form == "alongside":
-        base.update(candidate_hashes=hashes, **_PROVENANCE)
+        base.update(candidate_hashes=hashes, provenance=_PROVENANCE)
+    elif form == "selection_alias":
+        base.update(candidate_hashes=hashes, selection_provenance=_PROVENANCE)
     receipt = manager.commit_apply(**base)
     assert receipt["applied_hashes"] == hashes and receipt["provenance"] == _PROVENANCE
 

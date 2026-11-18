@@ -8,6 +8,7 @@ are rejected before any document mutation.
 import re
 
 from ..cae_core import PrepError
+from .deck import include_target
 from .modeling import native_identity
 
 
@@ -159,12 +160,21 @@ def remap(resources, mappings, paths):
             else:
                 body = lines[line].rstrip("\r\n"); ending = lines[line][len(body):]
                 lines[line] = body.ljust(start + 10)[:start] + f"{mapped:10d}" + body[start + 10:] + ending
-        for index, line in enumerate(lines):
-            match = re.match(r"^(\s*#include\s+)(.+?)(\r?\n|\r)?$", line, re.I)
-            if match:
-                original = match[2].strip().strip('"').replace("\\", "/")
-                if original not in paths: raise PrepError("include_missing", "Missing imported INCLUDE path.")
-                lines[index] = match[1] + paths[original] + (match[3] or "")
+        for directive in resource.include_directives:
+            original = include_target(directive.path, resource.name, lambda path: path.as_posix() in paths).as_posix()
+            if original not in paths:
+                raise PrepError("include_missing", "Missing imported INCLUDE path.")
+            index = directive.filename_row
+            line = lines[index]
+            body = line.rstrip("\r\n")
+            ending = line[len(body):]
+            if index == directive.header_row:
+                prefix = re.match(r"^\s*#include\b", body, re.I)[0]
+                remainder = body[len(prefix):]
+                prefix += remainder[:len(remainder) - len(remainder.lstrip())] or " "
+            else:
+                prefix = body[:len(body) - len(body.lstrip())]
+            lines[index] = prefix + paths[original] + ending
         # Explicitly shared nodes live in the destination resource only.
         shared = {line for (namespace, identifier), (rid, line) in definitions.items()
                   if rid == resource.id and namespace == "NODE" and (namespace, identifier) in mappings.shared}

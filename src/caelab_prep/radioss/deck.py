@@ -12,6 +12,7 @@ import hashlib
 from itertools import accumulate
 import json
 import math
+from pathlib import PurePosixPath
 import re
 from uuid import UUID, uuid4, uuid5
 
@@ -27,13 +28,39 @@ _INCLUDE = re.compile(r"^\s*#include\b(.*)$", re.I)
 _FILE_DIRECTIVE = re.compile(r"^\s*#(?:include|enddata)\b", re.I)
 
 
+def include_relative(value: str) -> PurePosixPath:
+    if not isinstance(value, str):
+        raise PrepError("invalid_project", "INCLUDE 경로는 문자열이어야 합니다.")
+    portable = value.replace("\\", "/")
+    path = PurePosixPath(portable)
+    if not value or path.is_absolute() or ":" in portable or ".." in path.parts:
+        raise PrepError("include_path_unsupported", "이 INCLUDE 경로는 독립 문서로 묶을 수 없습니다.", {"path": value})
+    return path
+
+
+def include_target(value, including_path, exists) -> PurePosixPath:
+    """Resolve an INCLUDE against the Starter root before its own directory."""
+    relative = include_relative(value)
+    if exists(relative):
+        return relative
+    return PurePosixPath(including_path).parent / relative
+
+
+@dataclass(frozen=True)
+class IncludeDirective:
+    path: str
+    header_row: int
+    filename_row: int
+
+
 def _include_layout(lines, stop):
-    references, filename_rows = [], set()
+    references = []
     for index in range(stop):
         line = lines[index]
         if not line.lstrip().startswith("#") or not (match := _INCLUDE.match(line)):
             continue
         path = match[1].strip()
+        filename_row = index
         if not path:
             for cursor in range(index + 1, stop):
                 candidate = lines[cursor].strip()
@@ -41,10 +68,10 @@ def _include_layout(lines, stop):
                     break
                 if candidate and not candidate.startswith("#"):
                     path = candidate
-                    filename_rows.add(cursor)
+                    filename_row = cursor
                     break
-        references.append({"path": path.strip('"\''), "line": index + 1})
-    return references, filename_rows
+        references.append(IncludeDirective(path.strip('"\''), index, filename_row))
+    return tuple(references)
 
 
 def _is_comment(line):
@@ -118,8 +145,9 @@ class DeckResource:
         self.lines = list(lines)
         self.active_stop = next((i for i, line in enumerate(self.lines)
                                  if self.is_include and re.match(r"^\s*#enddata\b", line, re.I)), len(self.lines))
-        self._include_references, filename_rows = _include_layout(self.lines, self.active_stop)
-        include_starts = [item["line"] - 1 for item in self._include_references]
+        self.include_directives = _include_layout(self.lines, self.active_stop)
+        include_starts = [item.header_row for item in self.include_directives]
+        filename_rows = {item.filename_row for item in self.include_directives}
         starts = [i for i, line in enumerate(self.lines[:self.active_stop]) if line.startswith("/")]
         if card_ids is not None and len(card_ids) != len(starts):
             raise PrepError("invalid_project", "Card identity count does not match the deck layout.")
@@ -634,7 +662,7 @@ class DeckResource:
                  "writable": bool(self._schema(c)), "units": self.unit_context(c)} for c in self.cards]
 
     def includes(self) -> list[dict]:
-        return [dict(item) for item in self._include_references]
+        return [{"path": item.path, "line": item.header_row + 1} for item in self.include_directives]
 
     def mesh_projection(self) -> dict:
         # Sparse coordinate edits retain native node IDs and original raw bytes.
