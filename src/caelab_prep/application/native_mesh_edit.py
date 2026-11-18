@@ -54,7 +54,6 @@ def native_mesh_edit_states(session, candidate, *, layout_error_code):
             if family != "NODE" and family not in ELEMENTS:
                 continue
             changed = {}
-            moved_targets = []
             replaced_in_place = False
             for row in card.data:
                 identifier = int(lines[row][:10])
@@ -104,7 +103,6 @@ def native_mesh_edit_states(session, candidate, *, layout_error_code):
                         target = session._part_native_references(cell.part.local_id)[2]["native_part_id"]
                         key = family, target
                         transfers.setdefault(key, []).append(body + (ending or owner.newline))
-                        moved_targets.append(key)
                         changed[row] = None
                     else:
                         changed[row] = body + ending
@@ -128,11 +126,6 @@ def native_mesh_edit_states(session, candidate, *, layout_error_code):
                 # Full-card replacement already rejects file directives. Do not
                 # bypass that source boundary or silently discard a directive.
                 replacements[card.id] = (text, empty)
-                if empty and moved_targets and not any(c.id == card.id for c in owner._source_cards):
-                    # Original blocks retain their comments in the source layout.
-                    comments = [_ensure_newline(lines[index], owner.newline)
-                                for index in range(card.start + 1, card.stop) if index not in card.data]
-                    transfers[moved_targets[0]][0:0] = comments
         for card_id, (text, empty) in replacements.items():
             try:
                 state = resource.replaced_state(card_id, text)

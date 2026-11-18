@@ -390,13 +390,26 @@ class MeshRelationCommands:
                 identifiers = self._node_members(identifiers)
             else:
                 element_members = []
-                for member in members:
-                    entries = member if isinstance(member, (list, tuple)) else (member,)
+                for old in stale["members"]:
+                    if old in dropped:
+                        continue
+                    member = mapping[old]
+                    expanded = isinstance(member, (list, tuple))
+                    entries = member if expanded else (member,)
                     if not entries:
                         raise PrepError("invalid_reference", "Provide at least one current element per mapped member.")
-                    element_members.extend(entries)
+                    recorded = stale.get("parent_to_children", {}).get(old, ())
+                    for entry in entries:
+                        if type(entry) is int:
+                            if not expanded or entry not in recorded:
+                                raise PrepError("invalid_reference", "Use a scoped element reference or a recorded child ID for this parent.",
+                                                {"old_native_id": old, "child_id": entry})
+                            entry = self.resolve_entity_reference("element", entry)["reference"]
+                        elif isinstance(entry, dict) and entry.keys() == {"resource_id", "object_type", "id"}:
+                            entry = {"resource_id": entry["resource_id"], "entity_kind": entry["object_type"], "local_id": entry["id"]}
+                        element_members.append(entry)
                 members = element_members
-                identifiers, refs, _ = self._element_members(members, family, allow_native_ids=True)
+                identifiers, refs, _ = self._element_members(members, family)
                 verified = iter(asdict(ref) for ref in refs)
                 mapping = {key: [next(verified) for _ in mapping[key]] if isinstance(mapping[key], (list, tuple)) else next(verified)
                            for key in stale["members"] if key not in dropped}

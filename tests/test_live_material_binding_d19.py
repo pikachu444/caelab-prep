@@ -317,7 +317,9 @@ def test_d19_typed_target_and_expired_or_stale_plan(tmp_path):
 
 @pytest.mark.parametrize("keyword", ["/VISC/PRONY/1", "/FAIL/JOHNSON/1", "/HEAT/MAT/1",
                                       "/EOS/LINEAR/1", "/MAT/ORTHO/1", "/THERM_STRESS/MAT/1",
-                                      "/TABLE/MAT/1", "/FUNCT/MAT/1"])
+                                      "/TABLE/MAT/1", "/FUNCT/MAT/1", "/VISC/PRONY/         1",
+                                      "/FAIL/JOHNSON/ +0001", "/HEAT/ MAT / 01", "/EOS/LINEAR/ 1 /42",
+                                      "/MAT/ORTHO/   001"])
 def test_d19_attached_card_blocks_scalar_only_apply(tmp_path, keyword):
     starter = _build_material_deck(tmp_path)
     curves = tmp_path / "curves.inc"
@@ -330,6 +332,35 @@ def test_d19_attached_card_blocks_scalar_only_apply(tmp_path, keyword):
     assert error.value.code == "UNSUPPORTED_ATOMIC_APPLY"
     assert error.value.details["dependency"] == keyword
     assert not manager._plans and not session.document.dirty
+
+
+@pytest.mark.parametrize(("rho_0", "trailing", "supported"), [
+    ("", "", True), ("0", "", True), ("0.0", "", True), ("0D0", "", True),
+    ("1e-9", "", False), ("NOT-A-NUM", "", False), ("0", "        99", False),
+])
+def test_d19_reference_density_default_remains_unchanged(tmp_path, rho_0, trailing, supported):
+    starter = _build_material_deck(tmp_path)
+    material_file = tmp_path / "materials.inc"
+    density = f"{'7.85e-09':>20}{rho_0:>20}{trailing}".encode("ascii")
+    material_file.write_bytes(material_file.read_bytes().replace(b"            7.85e-09\n", density + b"\n", 1))
+    # A padded unit ID equal to the target material ID does not make this an attachment.
+    curves = tmp_path / "curves.inc"
+    curves.write_bytes(curves.read_bytes() + b"/VISC/PRONY/   2/   1\nOther material\n")
+    session = PrepSession()
+    session.open_rad(starter)
+    target = _object_ref(session, "/MAT/LAW1/1")
+    manager = MaterialBindingManager(session)
+    request = _request(_handle(session), target, parameters={"E": {"value": 205, "unit": "GPa"}})
+    if supported:
+        plan = manager.prepare_apply(**request)
+        manager.commit_apply(**_commit(request, plan))
+        assert session.card_text(target["object_id"]).splitlines()[2].encode("ascii") == density
+        assert _fields_dict(session, target["object_id"])["young_modulus"] == 205000
+    else:
+        with pytest.raises(PrepError) as error:
+            manager.prepare_apply(**request)
+        assert error.value.code == "UNSUPPORTED_ATOMIC_APPLY"
+        assert not session.document.dirty
 
 
 @pytest.mark.parametrize(("rho", "modulus", "nu", "extra", "code"), [
@@ -358,8 +389,28 @@ def test_d19_validate_all_existing_slots_and_unverified_function_fields(tmp_path
 
 
 _PROVENANCE = {"study_id": "study-A", "evaluation_id": "evaluation-A", "selection_id": "selection-A",
-               "content_revision": 7, "parameter_set_sha256": "c" * 64, "holdout_status": "pass",
+               "content_revision": "a" * 64, "parameter_set_sha256": "c" * 64, "holdout_status": "pass",
                "source_fingerprint": "f" * 64}
+
+
+@pytest.mark.parametrize("fields", [
+    {"study_id": "study-A"}, {"provenance": {"study_id": "study-A"}}, {"provenance": {}}, {"provenance": None},
+    {"provenance": dict.fromkeys(_PROVENANCE)}, {"provenance": dict.fromkeys(_PROVENANCE, "")},
+    {"provenance": {**_PROVENANCE, "selection_id": "   "}},
+    {"provenance": {**_PROVENANCE, "content_revision": 7}},
+    {"provenance": {**_PROVENANCE, "content_revision": "A" * 64}},
+    {"provenance": {**_PROVENANCE, "parameter_set_sha256": "g" * 64}},
+    {"provenance": {**_PROVENANCE, "source_fingerprint": "f" * 63}},
+    {"provenance": {**_PROVENANCE, "holdout_status": "unknown"}},
+])
+def test_d19_rejects_incomplete_or_malformed_provenance(tmp_path, fields):
+    session = PrepSession()
+    session.open_rad(_build_material_deck(tmp_path))
+    manager = MaterialBindingManager(session)
+    with pytest.raises(PrepError) as error:
+        manager.prepare_apply(**_request(_handle(session), _object_ref(session, "/MAT/LAW1/1"), **fields))
+    assert error.value.code == "invalid_request"
+    assert not manager._plans and not session.document.dirty
 
 
 @pytest.mark.parametrize("form", ["nested", "flat", "alongside"])
@@ -375,7 +426,9 @@ def test_d19_commit_binds_each_prepared_provenance_field(tmp_path, form):
     card_id = target["object_id"]
     hashes = {card_id: prepared["candidate_hashes"][card_id]}
     for key in _PROVENANCE:
-        bad = hashes | {"provenance": {**_PROVENANCE, key: "altered"}}
+        changed = ("b" * 64 if key in ("content_revision", "parameter_set_sha256", "source_fingerprint")
+                   else "fail" if key == "holdout_status" else "altered")
+        bad = hashes | {"provenance": {**_PROVENANCE, key: changed}}
         with pytest.raises(PrepError) as error:
             manager.commit_apply(**{**base, "candidate_hashes": bad})
         assert error.value.code == "hash_mismatch"

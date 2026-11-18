@@ -189,11 +189,11 @@ def test_partial_element_card_preserves_other_rows_comments_and_existing_orphans
     assert owner.raw == raw and mesh.read_bytes() == raw
 
 
-def test_deleting_last_card_row_still_rejects_a_nested_file_directive(tmp_path):
+def test_deleting_last_card_row_still_rejects_an_interleaved_file_directive(tmp_path):
     base = MODELS / "beam_shell_tet"
     for name in ("model_0000.rad", "mesh.inc"): shutil.copyfile(base / name, tmp_path / name)
     mesh = tmp_path / "mesh.inc"
-    mesh.write_bytes(mesh.read_bytes().replace(b"/TETRA4/11", b'#include "extra.inc"\n/TETRA4/11', 1))
+    mesh.write_bytes(mesh.read_bytes().replace(b"/BEAM/10", b'/BEAM/10\n#include\n"extra.inc"', 1))
     (tmp_path / "extra.inc").write_text("# Keep this include\n", encoding="ascii")
     session = PrepSession(); session.open_rad(tmp_path / "model_0000.rad"); before = state(session)
     with pytest.raises(PrepError) as error: session.plan_element_deletion([element(session)], orphan_policy="keep")

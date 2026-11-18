@@ -184,12 +184,17 @@ def test_replacement_overlay_is_compatible_with_v2_and_invalidates_cached_state_
     session = known_only(tmp_path)
     curve = session.create_curve("Measured curve", [(0, 0), (1, 1)])
     resource = session.document.resources[curve["resource_id"]]
-    v2 = resource.snapshot()
+    v4 = resource.snapshot()
+    v4.pop("retained_comments")
+    v4["state_version"] = 4
+    restored = DeckResource(resource.raw, resource_id=resource.id)
+    restored.restore(v4)
+    assert restored.render() == resource.render()
+    v2 = dict(v4)
     v2.pop("replaced")
     v2.pop("node_positions")
     v2["state_version"] = 2
     assert set(v2) == {"state_version", "patches", "created", "deleted"}
-    restored = DeckResource(resource.raw, resource_id=resource.id)
     restored.restore(v2)
     assert restored.render() == resource.render()
     saved = resource.state_token()

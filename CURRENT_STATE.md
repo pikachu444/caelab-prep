@@ -10,8 +10,8 @@
 
 | 작업 | 구현 및 확인 | 후속 |
 |---|---|---|
-| D23 / N18 | 두 다중 INCLUDE 입력에서 메시 편집 6종과 Undo/Redo를 확인했다. `.caeprep` 및 Starter를 다시 열어 절점 좌표, 순서가 있는 연결, BEAM 방향, PART와 INCLUDE 소유권, 집합 멤버, 조건 참조를 비교했다. 빈 요소 블록의 줄바꿈 없는 끝 주석도 보존한다. | 실제 Starter/Engine 실행과 물리 응답 확인 |
-| D25 / N18 | 선형 SH3N 한두 개의 공용 변을 분할한다. 다른 요소가 같은 변을 사용하면 차단한다. 두 자식에 부모 행의 두께·각도·후행 필드를 복사한다. GUI와 API에서 명시한 자식 전부를 집합에 재연결할 수 있다. 내보낸 `/GRSH3N` 재파싱에서 자식 4개와 합계 100 mm²를 확인했다. Qt 창에서 저장 확인을 취소해도 검토 창이 유지된다. | edge swap, quad/tri 변환, 고차 승격, 실제 Windows 데스크톱/VTK 및 원제품 비교 |
+| D23 / N18 | 두 다중 INCLUDE 입력에서 `node_move`, `node_merge`, `element_delete`, `shell_flip`, `part_reassign`, 크기 변경 재메시(`remesh`)와 Undo/Redo를 확인했다. 준비한 INCLUDE 교체 명령 `replace_prepared_mesh`도 확인했다. `.caeprep` 및 Starter를 다시 열어 절점 좌표, 순서가 있는 연결, BEAM 방향, PART와 INCLUDE 소유권, 집합 멤버, 조건 참조를 비교했다. | 실제 Starter/Engine 실행과 물리 응답 확인 |
+| D25 / N18 | `split_triangle_edge`로 선형 SH3N 한두 개의 공용 변을 분할한다. 다른 요소가 같은 변을 사용하면 차단한다. 두 자식에 부모 행의 두께·각도·후행 필드를 복사한다. GUI와 API에서 명시한 자식 전부를 집합에 재연결할 수 있다. 내보낸 `/GRSH3N` 재파싱에서 자식 4개와 합계 100 mm²를 확인했다. Qt 창에서 저장 확인을 취소해도 검토 창이 유지된다. | edge swap, quad/tri 변환, 고차 승격, 실제 Windows 데스크톱/VTK 및 원제품 비교 |
 | D19 / N19 | C10의 해시·만료 검사를 기존 소유 프로세스 IPC에 연결했다. `radioss_law1_elastic_v1`은 루트 또는 INCLUDE의 LAW1/ELAST에서 E·ν·ρ를 값 변경 한 건으로 적용한다. Prony, LAW36 및 동반 곡선 요청은 `UNSUPPORTED_ATOMIC_APPLY`를 반환한다. | Workbench 저장 평가와의 합동 확인 및 모델별 솔버 검증 |
 
 Windows Python 3.13에서 집중 pytest 43건을 확인했다. `prep-tests.yml`에 나열된 검사의 로컬 결과는 `document` 1,239 통과·11 건너뜀·11 제외, `qt-document` 508 통과·2 건너뜀, `live-automation` 86 통과·7 건너뜀이다. BeidPrep 표현의 Qt offscreen 검토 화면(780×640)은 로컬 `C:/Users/pikac/.gemini/antigravity/brain/9beddcd8-3baf-44f6-9560-2c07a847da3f/d25_prep_edge_split_dialog.png`에 있다. 원 검토자의 수정본 재검토는 통합 인계에 남긴다.
@@ -23,6 +23,14 @@ Windows Python 3.13에서 집중 pytest 43건을 확인했다. `prep-tests.yml`�
 D25는 분할 변의 양 끝점을 포함한 미선택 요소를 차단한다. 저장한 프로젝트에서 SH3N 부모별 자식 ID를 읽어 명시 재연결할 수 있다. 사용자가 버튼을 활성화하려면 새 미리보기를 확인한 뒤 검토 상자를 체크해야 한다.
 
 D19는 대상 탄성 카드의 기존 세 계수와 다중 INCLUDE의 재료 옵션을 검사한다. 확정은 준비한 카드 해시와 평가 출처를 함께 검증한다. 최근 만료된 계획은 최대 256개까지 추적한다. Windows Python 3.13에서 `document` 1,270 통과·11 건너뜀·11 제외, `qt-document` 516 통과·2 건너뜀, `live-automation` 109 통과·7 건너뜀을 확인했다. Qt 형상 검사는 첫 teardown 중단 뒤 별도 프로세스에서 25건을 통과했다. 마지막 주석 보존 교정 후 집중 75건과 영향 회귀 207건을 통과했다(1건 건너뜀). 같은 위치에 BeidPrep Qt offscreen 화면(780×640)을 다시 저장했다.
+
+### 세 번째 검토 수정
+
+`24137d60e24759708fe5b78148c3233ce49984ee` 재검토에서 찾은 문제를 수정했다. 루트와 중첩 INCLUDE에서 한 줄 또는 두 줄 지시문 뒤의 파일 관계를 유지한다. 카드 행을 모두 삭제할 때 현재 블록의 주석을 보존한다. Deck B의 `/GRSH3N/SH3N/32`는 `81 → 581, 582`, `82 → 583, 584`를 명시 재연결한다. Starter를 다시 열어 각 요소의 면적 25 mm²와 집합의 합계 100 mm²를 확인했다.
+
+D25 요소 재연결에는 자원 범위가 있는 요소 참조를 사용한다. 자식 목록의 정수 ID는 해당 부모의 저장된 자식 ID와 일치할 때 허용한다. D19는 공백이 채워진 재료 옵션 ID를 인식하고, LAW1의 비어 있거나 0인 `rho_0`를 보존한다. 평가 출처를 보내면 필수 7개 문자열과 해시 형식을 검증한 뒤 확정 요청에서 같은 값을 요구한다.
+
+Windows Python 3.13에서 집중 pytest 109건을 통과했다. 로컬 `document`는 1,305 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 527 통과·2 건너뜀, `live-automation`은 133 통과·7 건너뜀이다.
 
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 

@@ -137,11 +137,11 @@ def test_merge_cas_rejects_a_changed_owner_without_publishing(change):
     assert state(session) == before
 
 
-def test_merge_does_not_drop_file_directives_from_an_affected_card(tmp_path):
+def test_merge_does_not_drop_interleaved_file_directives_from_an_affected_card(tmp_path):
     folder = MODELS / "beam_shell_tet"
     for name in ("model_0000.rad", "mesh.inc"): shutil.copyfile(folder / name, tmp_path / name)
     mesh = tmp_path / "mesh.inc"
-    mesh.write_bytes(mesh.read_bytes().replace(b"/SHELL/9", b'#include "extra.inc"\n/SHELL/9', 1))
+    mesh.write_bytes(mesh.read_bytes().replace(b"/NODE", b'/NODE\n#include "extra.inc"', 1))
     (tmp_path / "extra.inc").write_text("# Untouched empty include\n", encoding="ascii")
     session = PrepSession(); session.open_rad(tmp_path / "model_0000.rad")
     before = state(session)

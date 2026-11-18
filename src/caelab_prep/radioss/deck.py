@@ -23,6 +23,44 @@ def number(value: str) -> float:
     return float(value.replace("D", "E").replace("d", "e"))
 
 
+_INCLUDE = re.compile(r"^\s*#include\b(.*)$", re.I)
+_FILE_DIRECTIVE = re.compile(r"^\s*#(?:include|enddata)\b", re.I)
+
+
+def _include_layout(lines, stop):
+    references, filename_rows = [], set()
+    for index in range(stop):
+        line = lines[index]
+        if not line.lstrip().startswith("#") or not (match := _INCLUDE.match(line)):
+            continue
+        path = match[1].strip()
+        if not path:
+            for cursor in range(index + 1, stop):
+                candidate = lines[cursor].strip()
+                if candidate.startswith("/") or _FILE_DIRECTIVE.match(candidate):
+                    break
+                if candidate and not candidate.startswith("#"):
+                    path = candidate
+                    filename_rows.add(cursor)
+                    break
+        references.append({"path": path.strip('"\''), "line": index + 1})
+    return references, filename_rows
+
+
+def _is_comment(line):
+    return line.lstrip().startswith("#") and not _FILE_DIRECTIVE.match(line)
+
+
+def _valid_retained_comments(text):
+    if not isinstance(text, str):
+        return False
+    try:
+        text.encode("latin1")
+    except UnicodeError:
+        return False
+    return not text or (text.endswith(("\r", "\n")) and all(_is_comment(line) for line in text.splitlines()))
+
+
 @dataclass(frozen=True)
 class Card:
     id: str
@@ -65,6 +103,7 @@ class DeckResource:
         self._created: list[dict[str, str]] = []
         self._deleted: set[str] = set()
         self._replaced: dict[str, str] = {}
+        self._retained_comments: dict[str, str] = {}
         self._node_positions: dict[str, list[float]] = {}
         self._state_token_cache = None
         self._source_lines = self.raw.decode("latin1").splitlines(keepends=True)
@@ -79,6 +118,8 @@ class DeckResource:
         self.lines = list(lines)
         self.active_stop = next((i for i, line in enumerate(self.lines)
                                  if self.is_include and re.match(r"^\s*#enddata\b", line, re.I)), len(self.lines))
+        self._include_references, filename_rows = _include_layout(self.lines, self.active_stop)
+        include_starts = [item["line"] - 1 for item in self._include_references]
         starts = [i for i, line in enumerate(self.lines[:self.active_stop]) if line.startswith("/")]
         if card_ids is not None and len(card_ids) != len(starts):
             raise PrepError("invalid_project", "Card identity count does not match the deck layout.")
@@ -91,12 +132,13 @@ class DeckResource:
                     stop = min(stop, comment_boundaries[boundary])
             keyword = self.lines[start].strip()
             data = tuple(i for i in range(start + 1, stop)
-                         if self.lines[i].strip() and not self.lines[i].lstrip().startswith("#"))
+                         if i not in filename_rows and self.lines[i].strip() and not self.lines[i].lstrip().startswith("#"))
             category = self._category(keyword)
-            if not self.is_include and category in ("Nodes", "Elements"):
-                # Root mesh cards can be followed by INCLUDE directives owned by the file.
-                stop = next((i for i in range((data[-1] if data else start) + 1, stop)
-                             if re.match(r"^\s*#include\b", self.lines[i], re.I)), stop)
+            if include_starts and category in ("Nodes", "Elements"):
+                # A directive following the last mesh row belongs to the file.
+                boundary = bisect_right(include_starts, data[-1] if data else start)
+                if boundary < len(include_starts):
+                    stop = min(stop, include_starts[boundary])
             title = self.lines[data[0]].strip() if data and category not in ("Nodes", "Elements") else ""
             try:
                 title = title.encode("latin1").decode("utf-8")
@@ -127,13 +169,21 @@ class DeckResource:
         chunks = ["".join(self._source_lines[:first])]
         detached_comments = []
         identities, inserted = [], False
+        def retain(text):
+            if text:
+                detached_comments.append(len(chunks))
+                chunks.append(text)
+
         def insert():
             nonlocal inserted
             if self._created and chunks and chunks[-1] and not chunks[-1].endswith(("\n", "\r")):
                 chunks.append(self.newline)
             for item in self._created:
-                chunks.append(item["text"])
-                identities.append(item["id"])
+                if "comments" in item:
+                    retain(item["comments"])
+                else:
+                    chunks.append(item["text"])
+                    identities.append(item["id"])
             inserted = True
         for ordinal, card in enumerate(self._source_cards):
             if card.keyword.upper() == "/END" and not inserted:
@@ -141,12 +191,10 @@ class DeckResource:
             if card.id not in self._deleted:
                 chunks.append(self._replaced.get(card.id, "".join(self._source_lines[card.start:card.stop])))
                 identities.append(card.id)
+            elif card.id in self._retained_comments:
+                retain(self._retained_comments[card.id])
             elif not self.is_include or card.category in ("Nodes", "Elements"):
-                comments = [line for line in self._source_lines[card.start + 1:card.stop] if line.lstrip().startswith("#")]
-                if comments:
-                    detached_comments.append(len(chunks))
-                    chunks.append("".join(line if line.endswith(("\r", "\n")) else line + self.newline
-                                          for line in comments))
+                retain(self._comment_text(self._source_lines[card.start + 1:card.stop]))
             next_start = self._source_cards[ordinal + 1].start if ordinal + 1 < len(self._source_cards) else self._source_active_stop
             if card.stop < next_start:
                 chunks.append("".join(self._source_lines[card.stop:next_start]))
@@ -161,6 +209,10 @@ class DeckResource:
             boundaries = tuple(row for row, offset in enumerate(accumulate(map(len, lines), initial=0))
                                if offset in comment_offsets)
         self._parse_layout(lines, identities, comment_boundaries=boundaries)
+
+    def _comment_text(self, lines):
+        return "".join(line if line.endswith(("\r", "\n")) else line + self.newline
+                       for line in lines if _is_comment(line))
 
     @staticmethod
     def _category(keyword: str) -> str:
@@ -350,9 +402,9 @@ class DeckResource:
         return result
 
     def snapshot(self) -> dict:
-        return {"state_version": 4, "patches": {key: dict(value) for key, value in self._patches.items()},
+        return {"state_version": 5, "patches": {key: dict(value) for key, value in self._patches.items()},
                 "created": [dict(item) for item in self._created], "deleted": sorted(self._deleted),
-                "replaced": dict(self._replaced),
+                "replaced": dict(self._replaced), "retained_comments": dict(self._retained_comments),
                 "node_positions": {key: list(value) for key, value in self._node_positions.items()}}
 
     def _position_rows(self, positions):
@@ -411,24 +463,37 @@ class DeckResource:
             state = {**state, "state_version": 3, "replaced": {}}
         if state.get("state_version") == 3 and set(state) == {"state_version", "patches", "created", "deleted", "replaced"}:
             state = {**state, "state_version": 4, "node_positions": {}}
-        if (type(state.get("state_version")) is not int or state["state_version"] != 4
-                or set(state) != {"state_version", "patches", "created", "deleted", "replaced", "node_positions"}
+        fields_v4 = {"state_version", "patches", "created", "deleted", "replaced", "node_positions"}
+        if state.get("state_version") == 4 and set(state) == fields_v4:
+            state = {**state, "state_version": 5, "retained_comments": {}}
+        if (type(state.get("state_version")) is not int or state["state_version"] != 5
+                or set(state) != fields_v4 | {"retained_comments"}
                 or not isinstance(state["patches"], dict) or not isinstance(state["created"], list)
                 or not isinstance(state["deleted"], list) or not isinstance(state["replaced"], dict)
-                or not isinstance(state["node_positions"], dict)):
+                or not isinstance(state["node_positions"], dict) or not isinstance(state["retained_comments"], dict)):
             raise PrepError("invalid_project", "Unsupported structural deck state.")
         source_ids = {card.id for card in self._source_cards}
         created, used = [], set(source_ids)
         for item in state["created"]:
-            if not isinstance(item, dict) or set(item) != {"id", "text"} or not all(isinstance(value, str) for value in item.values()):
+            if (not isinstance(item, dict) or set(item) not in ({"id", "text"}, {"id", "comments"})
+                    or not all(isinstance(value, str) for value in item.values())):
                 raise PrepError("invalid_project", "Invalid created card block.")
             try:
                 UUID(item["id"])
-                item["text"].encode("latin1")
+                if "text" in item:
+                    item["text"].encode("latin1")
             except (ValueError, UnicodeError):
                 raise PrepError("invalid_project", "Invalid created card identity or encoding.") from None
+            if item["id"] in used:
+                raise PrepError("invalid_project", "Duplicate created card identity.")
+            if "comments" in item:
+                if not item["comments"] or not _valid_retained_comments(item["comments"]):
+                    raise PrepError("invalid_project", "Invalid retained comments for a deleted created card.")
+                created.append(dict(item))
+                used.add(item["id"])
+                continue
             lines = item["text"].splitlines()
-            if (item["id"] in used or not lines or not lines[0].startswith("/")
+            if (not lines or not lines[0].startswith("/")
                     or len([line for line in lines if line.startswith("/")]) != 1
                     or lines[0].upper().strip() in ("/BEGIN", "/END")
                     or any(re.match(r"^\s*#(?:include|enddata)\b", line, re.I) for line in lines)
@@ -440,6 +505,9 @@ class DeckResource:
                 or len(state["deleted"]) != len(set(state["deleted"]))):
             raise PrepError("invalid_project", "Invalid deleted card identities.")
         deleted = set(state["deleted"])
+        retained_comments = state["retained_comments"]
+        if any(card_id not in deleted or not _valid_retained_comments(text) for card_id, text in retained_comments.items()):
+            raise PrepError("invalid_project", "Invalid retained comments for a deleted source card.")
         for card in self._source_cards:
             if card.id in deleted:
                 text = "".join(self._source_lines[card.start:card.stop])
@@ -454,9 +522,10 @@ class DeckResource:
             replaced[card_id] = text
         candidate = copy(self)
         candidate._created, candidate._deleted, candidate._patches, candidate._replaced = created, deleted, {}, replaced
+        candidate._retained_comments = dict(retained_comments)
         candidate._state_token_cache = None
         if (created != self._created or deleted != self._deleted or replaced != self._replaced
-                or state["node_positions"] != self._node_positions):
+                or retained_comments != self._retained_comments or state["node_positions"] != self._node_positions):
             candidate._rebuild_layout()
         positions = candidate._position_rows(state["node_positions"])
         candidate.lines = list(candidate.lines)
@@ -487,13 +556,19 @@ class DeckResource:
     def deleted_state(self, card_id):
         card = self.card(card_id)
         state = self.snapshot()
+        comments = self._comment_text(self.lines[card.start + 1:card.stop])
         if card.keyword.upper() == "/NODE":
             identifiers = {str(int(self.lines[row][:10])) for row in card.data}
             state["node_positions"] = {key: value for key, value in state["node_positions"].items() if key not in identifiers}
-        if any(item["id"] == card_id for item in state["created"]):
-            state["created"] = [item for item in state["created"] if item["id"] != card_id]
+        created_index = next((index for index, item in enumerate(state["created"]) if item["id"] == card_id), None)
+        if created_index is not None:
+            if comments:
+                state["created"][created_index] = {"id": card_id, "comments": comments}
+            else:
+                del state["created"][created_index]
         else:
             state["deleted"].append(card_id)
+            state["retained_comments"][card_id] = comments
         state["patches"].pop(card_id, None)
         state["replaced"].pop(card_id, None)
         candidate = copy(self)
@@ -559,19 +634,7 @@ class DeckResource:
                  "writable": bool(self._schema(c)), "units": self.unit_context(c)} for c in self.cards]
 
     def includes(self) -> list[dict]:
-        references = []
-        for index, line in enumerate(self.lines[:self.active_stop]):
-            match = re.match(r"^\s*#include\b(.*)$", line, re.I)
-            if not match:
-                continue
-            value = match.group(1).strip()
-            if not value:
-                cursor = index + 1
-                while cursor < self.active_stop and (not self.lines[cursor].strip() or self.lines[cursor].lstrip().startswith("#")):
-                    cursor += 1
-                value = self.lines[cursor].strip() if cursor < self.active_stop else ""
-            references.append({"path": value.strip('"\''), "line": index + 1})
-        return references
+        return [dict(item) for item in self._include_references]
 
     def mesh_projection(self) -> dict:
         # Sparse coordinate edits retain native node IDs and original raw bytes.

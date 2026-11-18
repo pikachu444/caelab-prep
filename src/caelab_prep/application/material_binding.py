@@ -15,6 +15,7 @@ import time
 from uuid import uuid4
 
 from ..cae_core import PrepError
+from ..radioss.deck import number
 from ..radioss.modeling import native_identity
 from .contracts import ObjectRef
 
@@ -23,6 +24,9 @@ _PROFILE_REVISION = 1
 DEFAULT_PLAN_TTL_SECONDS = 60.0
 PROVENANCE_FIELDS = ("study_id", "evaluation_id", "selection_id", "content_revision",
                      "parameter_set_sha256", "holdout_status", "source_fingerprint")
+_PROVENANCE_HASHES = ("content_revision", "parameter_set_sha256", "source_fingerprint")
+_HOLDOUT_STATUSES = {"pass", "fail", "not_assessed"}
+_UNSET = object()
 
 _MASS_SI = {"kg": Decimal("1"), "g": Decimal("0.001"), "Mg": Decimal("1000"), "t": Decimal("1000")}
 _LENGTH_SI = {"m": Decimal("1"), "cm": Decimal("0.01"), "mm": Decimal("0.001")}
@@ -118,16 +122,20 @@ def _card_hash(text):
 
 
 def _provenance_json(provenance, fields, *, error_code):
-    if provenance is None:
+    if provenance is _UNSET and not fields:
+        return "{}"
+    if provenance is _UNSET:
         provenance = {}
-    allowed = set(PROVENANCE_FIELDS)
-    if (not isinstance(provenance, dict) or set(provenance) - allowed or set(fields) - allowed
-            or set(provenance) & set(fields)):
+    if not isinstance(provenance, dict) or provenance.keys() & fields.keys():
         raise PrepError(error_code, "Provide each study provenance field once.")
-    try:
-        return json.dumps({**provenance, **fields}, sort_keys=True, allow_nan=False)
-    except (TypeError, ValueError, OverflowError, RecursionError):
-        raise PrepError(error_code, "Study provenance must contain valid JSON values.") from None
+    record = provenance | fields
+    if record.keys() != set(PROVENANCE_FIELDS) or any(not isinstance(value, str) or not value.strip() for value in record.values()):
+        raise PrepError(error_code, "Study provenance requires all seven fields as nonempty strings.")
+    if any(not re.fullmatch(r"[0-9a-f]{64}", record[field]) for field in _PROVENANCE_HASHES):
+        raise PrepError(error_code, "Study provenance hashes must contain 64 lowercase hexadecimal digits.")
+    if record["holdout_status"] not in _HOLDOUT_STATUSES:
+        raise PrepError(error_code, "The study holdout status is invalid.")
+    return json.dumps(record, sort_keys=True)
 
 
 class MaterialBindingManager:
@@ -181,7 +189,7 @@ class MaterialBindingManager:
             for companion in deck.cards:
                 if companion.id == card.id:
                     continue
-                words = companion.keyword.strip("/").upper().split("/")
+                words = [segment.strip() for segment in companion.keyword.strip("/").upper().split("/")]
                 family = words[0]
                 if family in {"MAT", "VISC", "FAIL", "HEAT", "EOS"}:
                     id_index = 2 if len(words) >= 3 else 1
@@ -192,8 +200,13 @@ class MaterialBindingManager:
                 if len(words) > id_index and words[id_index].removeprefix("+").lstrip("0") == str(material_id):
                     raise PrepError("UNSUPPORTED_ATOMIC_APPLY", "The elastic material has an attached native card.",
                                     {"dependency": companion.keyword, "resource_id": deck.id})
-        # LAW1 has no registered function slot. Any populated extension is unverified.
-        if (len(card.data) > 3 or resource.lines[card.data[1]][20:].strip()
+        density_row = resource.lines[card.data[1]].rstrip("\r\n")
+        reference_density = density_row[20:40].strip()
+        try:
+            unused_reference_density = not reference_density or number(reference_density) == 0.0
+        except ValueError:
+            unused_reference_density = False
+        if (len(card.data) > 3 or not unused_reference_density or density_row[40:].strip()
                 or resource.lines[card.data[2]][40:].strip()):
             raise PrepError("UNSUPPORTED_ATOMIC_APPLY", "The elastic card has additional native fields or dependencies.",
                             {"card_id": card.id})
@@ -205,7 +218,7 @@ class MaterialBindingManager:
                 del self._plans[plan_id]
 
     def prepare_apply(self, handle, target, profile_id, profile_revision, parameters, curves, evaluation_digest,
-                      provenance=None, **provenance_fields):
+                      provenance=_UNSET, **provenance_fields):
         with self.session._lock:
             current = self._validate_handle(handle)
             if profile_id != _PROFILE_ID or type(profile_revision) is not int or profile_revision != _PROFILE_REVISION:
@@ -252,7 +265,7 @@ class MaterialBindingManager:
                     "work_units": work_units, "expires_in_seconds": self._ttl_seconds,
                     "evaluation_digest": evaluation_digest}
 
-    def commit_apply(self, plan_id, handle, candidate_hashes, provenance=None, **provenance_fields):
+    def commit_apply(self, plan_id, handle, candidate_hashes, provenance=_UNSET, **provenance_fields):
         with self.session._lock:
             current = self._validate_handle(handle)
             if not isinstance(plan_id, str) or not plan_id:
@@ -268,7 +281,7 @@ class MaterialBindingManager:
             if not isinstance(candidate_hashes, dict) or candidate_hashes.get(plan.card_id) != plan.candidate_hash:
                 raise PrepError("hash_mismatch", "Candidate hashes differ from the prepared material plan.")
             sent_fields = {key: value for key, value in candidate_hashes.items() if key not in (plan.card_id, "provenance")}
-            if (("provenance" in candidate_hashes and provenance is not None) or sent_fields.keys() & provenance_fields.keys()
+            if (("provenance" in candidate_hashes and provenance is not _UNSET) or sent_fields.keys() & provenance_fields.keys()
                     or _provenance_json(candidate_hashes.get("provenance", provenance), sent_fields | provenance_fields,
                                         error_code="hash_mismatch") != plan.provenance_json):
                 raise PrepError("hash_mismatch", "Study provenance differs from the prepared material plan.")

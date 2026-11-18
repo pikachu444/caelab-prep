@@ -625,9 +625,18 @@ def test_d23_six_existing_mesh_edits_end_to_end_across_two_multiresource_decks(t
         assert all(c["id"] != 584 for c in s6.mesh_view()["cells"])
         s6.redo()
         assert any(c["id"] == 584 for c in s6.mesh_view()["cells"])
-        _roundtrip_save_reconnect_and_export(s6, tmp_path, f"{deck_kind}_remesh",
-            replacements={"/GRSH3N/SH3N/32": {81: 581, 82: 582}},
-            expected_groups={"/GRSH3N/SH3N/32": [581, 582]})
+        exported = _roundtrip_save_reconnect_and_export(s6, tmp_path, f"{deck_kind}_remesh",
+            replacements={"/GRSH3N/SH3N/32": {81: [581, 582], 82: [583, 584]}},
+            expected_groups={"/GRSH3N/SH3N/32": [581, 582, 583, 584]})
+        group = _target_facts(exported)[0]["/GRSH3N/SH3N/32"]
+        snapshot = exported._mesh_edit_snapshot()
+        by_id = {cell.ref.local_id: cell for cell in snapshot.cells}
+        areas = []
+        for native_id in group:
+            a, b, c = (snapshot._nodes[node].xyz for node in by_id[native_id].nodes)
+            areas.append(edits.cross(edits.sub(b, a), edits.sub(c, a))[2] / 2)
+        assert areas == [25.0] * 4
+        assert sum(areas) == 100.0
 
 
 @pytest.mark.parametrize("operation", ("element_create", "quad_split", "tri_combine"))
@@ -679,7 +688,8 @@ def test_d23_prepared_topology_edit_roundtrip(tmp_path, operation):
 
 
 @pytest.mark.parametrize("operation", ("split", "flip", "delete"))
-def test_d23_root_mesh_cards_preserve_trailing_include_and_comments(tmp_path, operation):
+@pytest.mark.parametrize("two_line", (False, True))
+def test_d23_root_mesh_cards_preserve_trailing_include_and_comments(tmp_path, operation, two_line):
     starter = _build_deck_multi_include(tmp_path)
     nodes = tmp_path / "nodes.inc"
     shells = tmp_path / "shells_a.inc"
@@ -693,9 +703,11 @@ def test_d23_root_mesh_cards_preserve_trailing_include_and_comments(tmp_path, op
         tet = b"/TETRA4/3" + tet
     nodes.write_bytes(b"# Included node notes\n")
     shells.write_bytes(tet)
-    directive = b"# trailing root shell comment\n#include shells_a.inc\n"
+    nodes_include = b'#include\n"nodes.inc"\n' if two_line else b"#include nodes.inc\n"
+    shells_include = b"#include\n\n# shell filename\nshells_a.inc\n" if two_line else b"#include shells_a.inc\n"
+    directive = b"# trailing root shell comment\n" + shells_include
     base = starter.read_bytes().replace(b"#include nodes.inc\n#include shells_a.inc\n",
-        node_block + b"#include nodes.inc\n" + shell_block + directive)
+        node_block + nodes_include + shell_block + directive)
     starter.write_bytes(base)
     session = PrepSession()
     session.open_rad(starter)
@@ -715,7 +727,7 @@ def test_d23_root_mesh_cards_preserve_trailing_include_and_comments(tmp_path, op
         assert not any(card.keyword == "/SH3N/1" for card in session._model_resource(None).cards)
     rendered = session._model_resource(None).render()
     assert rendered.count(directive) == 1
-    assert rendered.count(b"#include nodes.inc\n") == 1
+    assert rendered.count(nodes_include) == 1
     session.undo()
     assert session._model_resource(None).render() == base
     session.redo()
@@ -724,6 +736,96 @@ def test_d23_root_mesh_cards_preserve_trailing_include_and_comments(tmp_path, op
     exported = tmp_path / f"export_root_{operation}" / f"root_{operation}_0000.rad"
     assert exported.read_bytes().count(directive) == 1
     assert starter.read_bytes() == base
+
+
+@pytest.mark.parametrize("operation", ("split", "flip"))
+@pytest.mark.parametrize("two_line", (False, True))
+def test_d23_trailing_nested_includes_remain_file_owned_after_mesh_edit(tmp_path, operation, two_line):
+    starter = _build_deck_multi_include(tmp_path)
+    nodes = tmp_path / "nodes.inc"
+    shells = tmp_path / "shells_a.inc"
+    shell_block, tet = shells.read_bytes().split(b"/TETRA4/3", 1)
+    node_directive = b'#include\n"node-notes.inc"\n' if two_line else b"#include node-notes.inc\n"
+    tet_directive = b"#include\ntets.inc\n" if two_line else b"#include tets.inc\n"
+    nested = tmp_path / "mesh" / "shells_a.inc"
+    original = nodes.read_bytes() + node_directive + shell_block + tet_directive
+    _write(nested, original.decode("ascii"))
+    _write(nested.with_name("node-notes.inc"), "# Nested nodes source\n")
+    _write(nested.with_name("tets.inc"), (b"/TETRA4/3" + tet).decode("ascii"))
+    starter.write_bytes(starter.read_bytes().replace(b"#include nodes.inc\n#include shells_a.inc\n", b"#include mesh/shells_a.inc\n"))
+    session = PrepSession()
+    session.open_rad(starter)
+    assert not session.mesh_view()["diagnostics"]
+    owner = session._model_resource(_cell_ref(session, 101)["resource_id"])
+    if operation == "split":
+        plan = session.plan_triangle_edge_split([_cell_ref(session, 101), _cell_ref(session, 102)],
+                                               (_node_ref(session, 1), _node_ref(session, 3)))
+        session.apply_triangle_edge_split(plan["plan_id"])
+        expected = {"/GRSH3N/SH3N/13": [302, 303, 304, 305]}
+        assert _node_ref(session, plan["added_nodes"][0]["ref"]["local_id"])["resource_id"] == owner.id
+    else:
+        plan = session.plan_shell_normal_flip([_cell_ref(session, 101)])
+        session.apply_shell_normal_flip(plan["plan_id"])
+        expected = {}
+    rendered = owner.render()
+    assert rendered.count(node_directive) == rendered.count(tet_directive) == 1
+    assert rendered.index(node_directive) < rendered.index(b"/SH3N/1") < rendered.index(tet_directive)
+    tag = f"nested_{operation}"
+    _roundtrip_save_reconnect_and_export(session, tmp_path, tag, expected_groups=expected)
+    assert (tmp_path / f"export_{tag}" / "mesh" / nested.name).read_bytes() == rendered
+    assert nested.read_bytes() == original
+
+
+@pytest.mark.parametrize("origin", ("source", "reassigned", "removed_comment"))
+def test_d23_delete_preserves_current_comments_after_replacement_and_reopen(tmp_path, origin):
+    starter = _build_deck_multi_include(tmp_path)
+    raw = starter.read_bytes()
+    # This fixture deletes the only element supporting the secondary contact node.
+    start = raw.index(b"/INTER/TYPE7/23\n")
+    stop = raw.index(b"#include nodes.inc\n", start)
+    starter.write_bytes(raw[:start] + raw[stop:])
+    source_path = tmp_path / "shells_b.inc"
+    original = source_path.read_bytes()
+    if origin != "reassigned":
+        original += b"# original flag\n"
+        source_path.write_bytes(original)
+    session = PrepSession()
+    session.open_rad(starter)
+    owner_id = _cell_ref(session, 202)["resource_id"]
+    if origin == "reassigned":
+        part = _card_by_prefix(session, "/PART/4")
+        target = {"resource_id": part["resource_id"], "entity_kind": "part", "local_id": part["id"]}
+        plan = session.plan_part_reassignment([{"element": _cell_ref(session, 202),
+                                               "part": target}])
+        session.apply_part_reassignment(plan["plan_id"])
+        _reconnect_stale(session, {})
+    owner = session._model_resource(owner_id)
+    updated = b"" if origin == "removed_comment" else b"# updated flag\n"
+    replacement = (owner.render() + updated if origin == "reassigned"
+                   else owner.render().replace(b"# original flag\n", updated))
+    prepared = tmp_path / "prepared.inc"
+    prepared.write_bytes(replacement)
+    plan = session.plan_mesh_replacement(owner_id, prepared)
+    session.replace_prepared_mesh(plan["plan_id"])
+    _reconnect_stale(session, {})
+    assert session._model_resource(owner_id).render() == replacement
+    plan = session.plan_element_deletion([_cell_ref(session, 202)], orphan_policy="keep")
+    session.apply_element_deletion(plan["plan_id"])
+    session.undo()
+    assert session._model_resource(owner_id).render() == replacement
+    session.redo()
+    project = tmp_path / "deleted.caeprep"
+    session.save_project(project)
+    reopened = PrepSession()
+    reopened.open_project(project)
+    _reconnect_stale(reopened, {})
+    out = tmp_path / "export" / "model_0000.rad"
+    reopened.export_rad(out)
+    rendered = out.with_name(source_path.name).read_bytes()
+    assert b"# original flag" not in rendered
+    assert rendered.count(b"# updated flag\n") == bool(updated)
+    assert rendered == reopened._model_resource(owner_id).render()
+    assert source_path.read_bytes() == original
 
 
 @pytest.mark.parametrize("family", ("SHELL", "BRICK"))
@@ -1046,7 +1148,14 @@ def test_d25_session_multiresource_edge_split_undo_save_reconnect_export(tmp_pat
         assert group_id in s.mesh_relationships()["stale_targets"]
     stored = s.mesh_relationships()["stale_targets"][group_id]["parent_to_children"]
     assert stored == {101: [302, 303], 102: [304, 305]}
-    mixed_refs = {101: [SelectionRef(**child_mapping[101][0]), 303], 102: tuple(child_mapping[102])}
+    for mapping in ({101: 103, 102: 104}, {101: [103], 102: [104]}, {101: [304], 102: [302]},
+                    {101: 302, 102: child_mapping[102]}):
+        with pytest.raises(PrepError) as invalid_integer:
+            s.reconnect_mesh_targets({group_id: {"mesh_revision": generation, "mapping": mapping}})
+        assert invalid_integer.value.code == "invalid_reference"
+    ref = child_mapping[102][0]
+    alternate = {"resource_id": ref["resource_id"], "object_type": "element", "id": ref["local_id"]}
+    mixed_refs = {101: [SelectionRef(**child_mapping[101][0]), 303], 102: (alternate, child_mapping[102][1])}
     link = s._prepare_mesh_reconnection({group_id: {"mesh_revision": generation, "mapping": mixed_refs}})[-1][0]
     assert link["mapping"] == [{"old_native_id": eid, "target": children} for eid, children in child_mapping.items()]
 

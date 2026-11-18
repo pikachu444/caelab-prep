@@ -197,8 +197,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     details = {"resource_id": resource.id, **reference}
                     try:
                         relative = self._include_relative(reference["path"])
-                        target = (base / relative).resolve()
+                        target = (filename.parent / relative).resolve()
                         target.relative_to(base)
+                        if not target.is_file():
+                            target = (base / relative).resolve()
+                            target.relative_to(base)
                         if target in chain + (filename,):
                             raise PrepError("include_cycle", "순환 INCLUDE를 발견했습니다.", {"path": str(target)})
                         if not target.is_file():
@@ -942,30 +945,26 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         return {"triangle": "GRSH3N/SH3N", "quad": "GRSHEL/SHEL", "tetra": "GRBRIC/BRIC", "tetra10": "GRBRIC/BRIC",
                 "hexahedron": "GRBRIC/BRIC", "wedge": "GRBRIC/BRIC", "pyramid": "GRBRIC/BRIC"}.get(kind)
 
-    def _element_members(self, members, family=None, *, allow_native_ids=False):
+    def _element_members(self, members, family=None):
         if not isinstance(members, (tuple, list)) or not members:
             raise PrepError("invalid_reference", "Choose at least one typed element reference.")
         if self._projection_cache is None: self.mesh_view()
         references, identifiers, families, seen = [], [], set(), set()
         cells_by_id = self._projection_index["cells_by_id"]
         for value in members:
-            if allow_native_ids and type(value) is int:
-                ref = None
-            elif isinstance(value, SelectionRef): ref = value
+            if isinstance(value, SelectionRef): ref = value
             elif isinstance(value, dict) and set(value) == {"resource_id", "entity_kind", "local_id"}:
                 ref = SelectionRef(**value)
             else:
                 raise PrepError("invalid_reference", "Element members require resource_id, entity_kind and local_id.")
-            if ref is not None and (ref.entity_kind != "element" or not isinstance(ref.resource_id, str)):
+            if ref.entity_kind != "element" or not isinstance(ref.resource_id, str):
                 raise PrepError("invalid_reference", "A typed element reference is required.")
-            native_id = ref.local_id if ref is not None else value
+            native_id = ref.local_id
             integer(native_id)
             matches = cells_by_id.get(native_id, [])
             if len(matches) != 1:
                 raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "Element IDs in a native group must resolve uniquely across resources.", {"element_id": native_id})
             cell = matches[0]
-            if ref is None:
-                ref = SelectionRef(cell["resource_id"], "element", native_id)
             if cell["resource_id"] != ref.resource_id:
                 raise PrepError("invalid_reference", "The element does not belong to the stated resource.")
             kind = self._element_group_family(cell["type"], cell.get("formulation"))
@@ -1980,7 +1979,9 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             resource = document.resources[resource_id]
             for reference in resource.includes():
                 try:
-                    logical = self._include_relative(reference["path"]).as_posix()
+                    relative = self._include_relative(reference["path"])
+                    local = (PurePosixPath(paths[resource_id]).parent / relative).as_posix()
+                    logical = local if local in by_path else relative.as_posix()
                     if logical not in by_path:
                         raise PrepError("include_missing", "작업 문서에 INCLUDE 자원이 없습니다.", {"path": logical})
                     target = by_path[logical]
