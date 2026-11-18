@@ -10,12 +10,13 @@ from .includes import include_lookup, resolve_includes
 from .modeling import ELEMENT_ALIASES, native_identity
 
 
-ELEMENTS = {"BEAM": 3, "TRUSS": 2, "SHELL": 4, "SH3N": 3, "TETRA4": 4, "BRICK": 8}
-ELEMENT_NAMESPACE = {"BEAM": "BEAM", "TRUSS": "TRUSS", "SHELL": "SHELL", "SH3N": "SH3N", "TETRA4": "SOLID", "BRICK": "SOLID"}
+ELEMENTS = {"BEAM": 3, "TRUSS": 2, "SHELL": 4, "QUAD": 4, "SH3N": 3, "TETRA4": 4, "BRICK": 8}
+ELEMENT_NAMESPACE = {"BEAM": "BEAM", "TRUSS": "TRUSS", "SHELL": "SHELL", "QUAD": "QUAD",
+                     "SH3N": "SH3N", "TETRA4": "SOLID", "BRICK": "SOLID"}
 ELEMENTS.update({alias: ELEMENTS[family] for alias, family in ELEMENT_ALIASES.items()})
 ELEMENT_NAMESPACE.update({alias: ELEMENT_NAMESPACE[family] for alias, family in ELEMENT_ALIASES.items()})
 GROUPS = {"GRNOD/NODE": "NODE", "GRBEAM/BEAM": "E:BEAM", "GRTRUS/TRUS": "E:TRUSS",
-          "GRSHEL/SHEL": "E:SHELL", "GRSH3N/SH3N": "E:SH3N", "GRBRIC/BRIC": "E:SOLID", "SURF/PART": "PART"}
+          "GRSHEL/SHEL": "E:SHELL", "GRQUAD/QUAD": "E:QUAD", "GRSH3N/SH3N": "E:SH3N", "GRBRIC/BRIC": "E:SOLID", "SURF/PART": "PART"}
 REFERENCE_FREE_PAIRS = {"MAT/LAW1", "MAT/ELAST", "PROP/BEAM", "PROP/TYPE3", "PROP/TRUSS", "PROP/TYPE2",
                         "PROP/SHELL", "PROP/TYPE1", "PROP/SOLID", "PROP/TYPE14", "SKEW/FIX"}
 PAIRS = REFERENCE_FREE_PAIRS | {"INIVEL/TRA", "INTER/TYPE7"} | set(GROUPS)
@@ -141,7 +142,7 @@ def inspect(resources):
         raise PrepError("unsupported_source_profile", "A supported source card has malformed fixed-width data.", {"reason": str(exc)}) from exc
 
 
-def remap(resources, mappings, paths, *, two_line="quoted"):
+def remap(resources, mappings, paths, *, two_line="quoted", legacy_direct_inline: bool = False):
     definitions, edits, omitted = inspect(resources)
     by_path = {resource.name: resource for resource in resources}
     root = next(resource.name for resource in resources if not resource.is_include)
@@ -170,6 +171,10 @@ def remap(resources, mappings, paths, *, two_line="quoted"):
             if multiline and two_line == "unchanged":
                 continue
             original = bindings[resource.name, directive.header_row]
+            if legacy_direct_inline and not multiline:
+                direct = directive.path.replace("\\", "/")
+                if direct in paths:
+                    original = direct
             directive.replace_path(lines, paths[original], preserve_quotes=multiline and two_line == "quoted")
         # Explicitly shared nodes live in the destination resource only.
         shared = {line for (namespace, identifier), (rid, line) in definitions.items()

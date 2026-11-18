@@ -320,6 +320,35 @@ def test_element_group_membership_is_typed_atomic_and_selected_after_edit(tmp_pa
         assert (session.describe()["revision"], session.card_text(card["id"])) == old
 
 
+def test_native_quad_uses_its_own_element_group_through_export(tmp_path):
+    source = tmp_path / "mixed_0000.rad"
+    original = SOURCE.read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0] + b"/END\n"
+    source.write_bytes(original.replace(b"\n/SHELL/1", b"\n/QUAD/1", 1))
+    session = opened(source)
+    refs = {cell["id"]: dict(resource_id=cell["resource_id"], entity_kind="element", local_id=cell["id"])
+            for cell in session.mesh_view()["cells"]}
+    solid = session.create_element_group("2D solid", [refs[1]], native_id=987)["card_id"]
+    shell = session.create_element_group("Shell", [refs[5]], native_id=987)["card_id"]
+    assert lookup(session, "/GRQUAD/QUAD/987")["id"] == solid
+    assert lookup(session, "/GRSHEL/SHEL/987")["id"] == shell
+    with pytest.raises(PrepError) as error:
+        session.set_group_members(solid, [refs[1], refs[5]])
+    assert error.value.code == "incompatible_group"
+    assert session.group_members(solid)["member_ids"] == [1]
+    session.set_group_members(solid, [refs[2]])
+
+    project = tmp_path / "mixed.caeprep"
+    session.save_project(project)
+    session.open_project(project)
+    assert session.group_members(solid)["members"] == [refs[2]]
+    exported = tmp_path / "export/mixed_0000.rad"
+    session.export_rad(exported)
+    reopened = opened(exported)
+    for keyword, member in (("/GRQUAD/QUAD/987", 2), ("/GRSHEL/SHEL/987", 5)):
+        group = reopened.group_members(lookup(reopened, keyword)["id"])
+        assert group["member_ids"] == [member] and group["diagnostics"] == []
+
+
 def test_node_group_rows_can_be_edited_without_changing_group_identity(tmp_path):
     session = known_only(tmp_path)
     group = lookup(session, "/GRNOD/NODE/1")

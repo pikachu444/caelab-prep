@@ -73,6 +73,35 @@ def test_explicit_shared_node_is_single_entity_and_unmapped_nodes_stay_distinct(
     assert session.describe()["node_count"] == 4
 
 
+def test_legacy_quad_source_archive_recovers_the_native_solid_group(tmp_path):
+    starter, source = model(tmp_path / "base"), model(tmp_path / "source", offset=20)
+    mesh = source.with_name("mesh.inc")
+    mesh.write_bytes(mesh.read_bytes().replace(b"/SHELL/9", b"/QUAD/9"))
+    session = PrepSession()
+    session.open_rad(starter)
+    plan = session.plan_import_source(source)
+    session.import_source(plan["plan_id"])
+    identifier = next(mapped for ns, original, mapped in plan["source"]["id_map"] if (ns, original) == ("E:QUAD", 77))
+    project = tmp_path / "modern.caeprep"
+    session.save_project(project)
+    with zipfile.ZipFile(project) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    entries = manifest["source_models"][0]["id_map"]
+    entries[entries.index(["E:QUAD", 77, identifier])][0] = "E:SHELL"
+    members["manifest.json"] = json.dumps(manifest).encode()
+    legacy = tmp_path / "legacy.caeprep"
+    with zipfile.ZipFile(legacy, "w") as archive:
+        for name, data in members.items():
+            archive.writestr(name, data)
+
+    session.open_project(legacy)
+    ref = session.resolve_entity_reference("element", identifier)["reference"]
+    group = session.create_element_group("Imported 2D solid", [ref])["card_id"]
+    assert session.group_members(group)["members"] == [ref]
+    assert session.card_text(group).startswith("/GRQUAD/QUAD/")
+
+
 def test_stale_or_unsupported_import_has_no_partial_commit(tmp_path):
     first, second = model(tmp_path / "first"), model(tmp_path / "second")
     session = PrepSession(); session.open_rad(first)

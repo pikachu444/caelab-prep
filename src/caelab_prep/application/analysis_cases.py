@@ -10,6 +10,7 @@ import math
 from uuid import UUID, uuid4, uuid5
 
 from ..cae_core import PrepError
+from ..radioss.modeling import ELEMENT_GROUP_PAIRS
 
 
 TIME_SECONDS = {"s": 1.0, "ms": .001, "mus": .000001}
@@ -200,10 +201,10 @@ class AnalysisCaseCommands:
             self._validate_case_refs(case)
             # The activation scope is deliberately closed. Unknown physics or
             # sensor/activation cards must never silently survive as active.
-            neutral_roots = {"BEGIN", "END", "NODE", "BEAM", "TRUSS", "SHELL", "SH3N", "TETRA4", "TETRA10", "BRICK", "PART", "FUNCT", "UNIT"}
+            neutral_roots = {"BEGIN", "END", "NODE", "BEAM", "TRUSS", "SHELL", "QUAD", "SH3N", "TETRA4", "TETRA10", "BRICK", "PART", "FUNCT", "UNIT"}
             neutral_pairs = {("MAT", "LAW1"), ("MAT", "ELAST"), ("MAT", "LAW36"), ("MAT", "PLAS_TAB"),
                 ("PROP", "BEAM"), ("PROP", "TYPE3"), ("PROP", "TRUSS"), ("PROP", "TYPE2"), ("SKEW", "FIX"), ("PROP", "SHELL"), ("PROP", "TYPE1"), ("PROP", "SOLID"), ("PROP", "TYPE14"),
-                ("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS"), ("SURF", "PART")}
+                ("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS, ("SURF", "PART")}
             unsupported = []
             conditions = []
             for item in self.list_cards():

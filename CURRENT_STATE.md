@@ -50,6 +50,14 @@ Windows Python 3.13.5에서 집중 pytest 121건을 통과했다. 로컬 `docume
 
 Windows Python 3.13.5에서 집중 pytest 134건을 통과했다. 로컬 `document`는 1,330 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 544 통과·2 건너뜀, `live-automation`은 141 통과·7 건너뜀이다.
 
+### 여섯 번째 검토 수정
+
+`ac0a255` 재검토를 반영했다. 중첩 INCLUDE는 `sets/nodes.inc`처럼 디렉터리를 포함한 경로에도 루트·형제 후보를 비교한다. 모호한 지시문은 해석 전에 확정된 참조를 기준으로 각각 처리한다. 대상 폴더의 기존 형제 파일이 루트에 바인딩된 지시문을 가릴 수 있으면 Starter 및 Starter/Engine 내보내기가 `include_output_collision`으로 중단된다.
+
+`8fe6609`에서 저장한 두 종류의 디렉터리 경로 프로젝트와 한 줄·두 줄 지시문이 섞인 독립 소스 프로젝트를 다시 열고 내보내 15절점과 셸 연결을 확인했다. `/QUAD`는 2D 솔리드로서 `/GRQUAD/QUAD` 집합을 사용한다. 이전 독립 소스 아카이브의 절점·요소 대응은 원본으로 검증한다. OpenRadioss ALE2D 덱에서 `/QUAD` 요소 1의 집합을 내보내고 다시 열어 확인했다. D25 분할 미리보기는 양 끝점에 닿는 미선택 `/QUAD`, `/SH4N`, `/TETRA`를 여전히 거부한다.
+
+Windows Python 3.13.5에서 지정 pytest 177건을 통과했다. 로컬 `document`는 1,347 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 559 통과·2 건너뜀, `live-automation`은 141 통과·7 건너뜀이다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

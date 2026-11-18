@@ -62,6 +62,12 @@ class SourceArchiveResource:
         definitions, _, _ = inspect(originals)
         mapping = NativeMap({(ns, original): mapped for ns, original, mapped in self.metadata["id_map"]},
                             shared={("NODE", value) for value in self.metadata["shared_nodes"]})
+        # Prep previously labeled imported native QUAD IDs as shell IDs.
+        # Reinterpret a key only when the archived native definitions prove it.
+        for namespace, original in definitions.keys() - mapping.keys():
+            old_key = ("E:SHELL", original)
+            if namespace == "E:QUAD" and old_key in mapping and old_key not in definitions:
+                mapping[namespace, original] = mapping.pop(old_key)
         if set(definitions) != set(mapping):
             raise PrepError("invalid_project", "Source mapping does not cover the original native definitions exactly.")
         paths = {item["original_path"]: item["logical_path"] for item in self.metadata["files"]}
@@ -71,13 +77,15 @@ class SourceArchiveResource:
             if not isinstance(resource, DeckResource):
                 raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
             actual[item["original_resource_id"]] = resource.raw
-        if actual == remap(originals, mapping, paths):
-            return
-        # Earlier imports either left the second line untouched or rewrote
-        # it without quotes. Verify the entire archived payload in each format.
-        if any(d.header_row != d.filename_row for resource in originals for d in resource.include_directives):
-            if any(actual == remap(originals, mapping, paths, two_line=style) for style in ("unchanged", "unquoted")):
-                return
+        # Older imports addressed inline filenames from the root and either
+        # preserved two-line paths or rewrote them without quotes. Compare
+        # the entire mapped payload using one historical policy at a time.
+        has_two_line = any(d.header_row != d.filename_row for resource in originals for d in resource.include_directives)
+        styles = ("quoted", "unchanged", "unquoted") if has_two_line else ("quoted",)
+        for legacy_direct in (False, True):
+            for style in styles:
+                if actual == remap(originals, mapping, paths, two_line=style, legacy_direct_inline=legacy_direct):
+                    return
         raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
 
 

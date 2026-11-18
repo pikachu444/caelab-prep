@@ -14,6 +14,7 @@ import re
 
 from .contracts import ObjectRef, OperationRequest, OperationSpec, PropertySpec, SetProperties, TreeNode
 from ..cae_core.errors import PrepError
+from ..radioss.modeling import ELEMENT_GROUP_PAIRS
 
 
 _LABELS = {
@@ -313,7 +314,7 @@ class RadProvider:
         return (len(words) >= 4 and
                 ((words[1] == "MAT" and words[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB")) or
                  (words[1] == "PROP" and words[2] in ("SHELL", "TYPE1", "SOLID", "TYPE14")) or
-                 tuple(words[1:3]) in (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS"),
+                 tuple(words[1:3]) in (("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS,
                                       ("SURF", "PART"), ("INIVEL", "TRA"), ("INTER", "TYPE7")))) or (
                     len(words) >= 3 and words[1] in ("FUNCT", "BCS", "CLOAD") and words[2].isdigit())
 
@@ -321,8 +322,7 @@ class RadProvider:
     def _group_kind(card):
         words = card["keyword"].upper().split("/")
         family = tuple(words[1:3])
-        return "node" if family == ("GRNOD", "NODE") else "element" if family in (
-            ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS")) else None
+        return "node" if family == ("GRNOD", "NODE") else "element" if family in ELEMENT_GROUP_PAIRS else None
 
     def _element_members_field(self, value=None):
         cells = self.session.mesh_view()["cells"]

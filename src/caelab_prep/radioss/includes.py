@@ -31,12 +31,15 @@ def include_lookup(paths):
     return lookup
 
 
-def disk_include_lookup(base):
+def disk_include_lookup(base, *, canonical=True):
+    def relative_path(candidate):
+        return (candidate.resolve() if canonical else candidate).relative_to(base).as_posix()
+
     @cache
     def lookup(path):
         candidate = base / path
         if candidate.is_file():
-            return candidate.resolve().relative_to(base).as_posix()
+            return relative_path(candidate)
         matches = [base]
         for part in PurePosixPath(path).parts:
             matches = [child for parent in matches if parent.is_dir() for child in parent.iterdir()
@@ -45,7 +48,7 @@ def disk_include_lookup(base):
                 break
         files = [candidate for candidate in matches if candidate.is_file()]
         if len(files) == 1:
-            return files[0].resolve().relative_to(base).as_posix()
+            return relative_path(files[0])
         return None
 
     return lookup
@@ -99,7 +102,7 @@ def resolve_includes(root, lookup, load, *, scope=""):
                 sibling = lookup(sibling_path) if sibling_path != root_path else root_file
                 if not (root_file or sibling):
                     raise PrepError("include_missing", "INCLUDE 파일이 없습니다.", {"path": logical})
-                if len(relative.parts) == 1 and root_file and sibling and root_file != sibling:
+                if root_file and sibling and root_file != sibling:
                     if (root_file in chain) != (sibling in chain):
                         follow(owner, directive, sibling if root_file in chain else root_file, chain)
                     else:
@@ -113,10 +116,12 @@ def resolve_includes(root, lookup, load, *, scope=""):
                 problems.append((owner, directive, exc))
 
     visit(root, ())
-    # Resolve all direct and qualified claims before ambiguous bare names,
-    # regardless of their order in the Starter or intermediate includes.
+    # Freeze the unambiguous claims so one ambiguous binding cannot change
+    # the choice made for another directive.
+    unambiguous_reached = reached.copy()
+    unambiguous_explicit = explicit.copy()
     while pending:
         owner, directive, root_file, sibling, chain = pending.popleft()
-        target = sibling if root_file in reached and sibling not in explicit else root_file
+        target = sibling if root_file in unambiguous_reached and sibling not in unambiguous_explicit else root_file
         follow(owner, directive, target, chain)
     return reached, bindings, problems

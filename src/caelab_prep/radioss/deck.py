@@ -246,7 +246,7 @@ class DeckResource:
                 "TETRA4": "Elements", "TETRA": "Elements", "TETRA10": "Elements", "BEAM": "Elements", "TRUSS": "Elements",
                 "MAT": "Materials", "PROP": "Properties", "PART": "Parts", "BCS": "Constraints",
                 "INTER": "Contacts", "FUNCT": "Curves", "GRNOD": "Groups", "SURF": "Groups",
-                "GRSH3N": "Groups", "GRSHEL": "Groups", "GRBRIC": "Groups", "GRBEAM": "Groups", "GRTRUS": "Groups", "SKEW": "Coordinate systems",
+                "GRSH3N": "Groups", "GRSHEL": "Groups", "GRQUAD": "Groups", "GRBRIC": "Groups", "GRBEAM": "Groups", "GRTRUS": "Groups", "SKEW": "Coordinate systems",
                 "PLOAD": "Loads", "CLOAD": "Loads", "INIVEL": "Initial conditions"}.get(root, "Other cards")
 
     def card(self, card_id: str) -> Card:
@@ -694,8 +694,8 @@ class DeckResource:
                               "nodes": list(connectivity), "part_id": part,
                               "card_id": card.id, "resource_id": self.id}
                              for identifier, connectivity, _, _ in parsed)
-            elif key[1] in ("SHELL", "SH3N", "BRICK", "TETRA4", "BEAM", "TRUSS", *ELEMENT_ALIASES):
-                kind, count = {"SHELL": ("quad", 4), "SH3N": ("triangle", 3), "BRICK": ("hexahedron", 8),
+            elif key[1] in ("SHELL", "QUAD", "SH3N", "BRICK", "TETRA4", "BEAM", "TRUSS", *ELEMENT_ALIASES):
+                kind, count = {"SHELL": ("quad", 4), "QUAD": ("quad", 4), "SH3N": ("triangle", 3), "BRICK": ("hexahedron", 8),
                                "TETRA4": ("tetra", 4), "BEAM": ("line", 2), "TRUSS": ("line", 2)}[
                                    ELEMENT_ALIASES.get(key[1], key[1])]
                 part = int(key[2]) if len(key) > 2 and key[2].isdigit() else None

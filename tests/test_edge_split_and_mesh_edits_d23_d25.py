@@ -802,7 +802,7 @@ def _nested_include_deck(source, layout, separator, *, filename="nodes.inc", upp
     from caelab_prep.radioss.modeling import material_block, shell_block
 
     sibling = f"mesh/{filename}"
-    owner = filename if layout == "sibling-claimed" else sibling
+    owner = filename if layout in ("sibling-claimed", "root-shared") else sibling
     xyz = {1: (3, 1, 0), 2: (13, 1, 0), 3: (3, 11, 0)}
     units = f"{'Mg':>20}{'mm':>20}{'s':>20}\n"
     begin = "/BEGIN\nNested source\n      2024         0\n" + units * 2
@@ -812,6 +812,8 @@ def _nested_include_deck(source, layout, separator, *, filename="nodes.inc", upp
     root_refs = ["mesh/first.inc"]
     if picked:
         root_refs.append(picked)
+    elif layout == "root-shared":
+        root_refs.append(filename)
     spell = str.upper if uppercase else str
     starter = _write(source / "nested_0000.rad",
                      header + "".join(f"#include {spell(path)}\n" for path in root_refs) + "/END\n")
@@ -823,21 +825,27 @@ def _nested_include_deck(source, layout, separator, *, filename="nodes.inc", upp
         _write(source / picked, f"/NODE\n{_node_line(4, 83, 1, 0)}\n")
         expected_points[4] = ((83, 1, 0), (picked,))
     if layout == "root-directory":
-        (source / filename).mkdir()
+        (source / filename).mkdir(parents=True)
     expected = (expected_points, {("mesh/first.inc", "SH3N", 77): ((1, 2, 3), None, 9, None)})
     return starter, begin, owner, expected
 
 
 @pytest.mark.parametrize("layout", ("sibling-claimed", "root-claimed", "sibling-only", "root-directory"))
 @pytest.mark.parametrize("separator,uppercase", ((" ", False), ("\r\n", True)), ids=("inline", "quoted-two-line-uppercase"))
-def test_d23_nested_include_lookup_agrees_in_native_and_independent_source(tmp_path, layout, separator, uppercase):
-    starter, begin, owner, expected_native = _nested_include_deck(tmp_path / "source", layout, separator, uppercase=uppercase)
+@pytest.mark.parametrize("filename", ("nodes.inc", "sets/nodes.inc"))
+def test_d23_nested_include_lookup_agrees_in_native_and_independent_source(tmp_path, layout, separator, uppercase, filename):
+    starter, begin, owner, expected_native = _nested_include_deck(
+        tmp_path / "source", layout, separator, filename=filename, uppercase=uppercase)
     native = PrepSession()
     native.open_rad(starter)
     assert _mesh_facts(native) == expected_native
     native_project = tmp_path / "native.caeprep"
     native.save_project(native_project)
     native.open_project(native_project)
+    assert _mesh_facts(native) == expected_native
+    native_output = tmp_path / "native-export/native_0000.rad"
+    native.export_rad(native_output)
+    native.open_rad(native_output)
     assert _mesh_facts(native) == expected_native
 
     destination = PrepSession()
@@ -883,6 +891,47 @@ def test_d23_export_preserves_sibling_binding_when_destination_shadows_it(tmp_pa
     assert not reopened.diagnostics()
 
 
+@pytest.mark.parametrize("solver_inputs", (False, True), ids=("starter", "solver-inputs"))
+@pytest.mark.parametrize("filename", ("nodes.inc", "sets/nodes.inc"))
+def test_d23_export_rejects_unrelated_sibling_of_root_bound_include(tmp_path, solver_inputs, filename):
+    starter, _, _, expected = _nested_include_deck(tmp_path / "source", "root-shared", "\r\n",
+                                                   filename=filename, uppercase=True)
+    session = PrepSession()
+    session.open_rad(starter)
+    assert _mesh_facts(session) == expected
+    output = tmp_path / "out/export_0000.rad"
+    unrelated = _write(output.parent / "mesh" / filename, f"/NODE\n{_node_line(88, 83, 0, 0)}\n")
+    original = unrelated.read_bytes()
+    with pytest.raises(PrepError) as error:
+        if solver_inputs:
+            session.export_solver_inputs(output, end_time=.01, output_interval=.001)
+        else:
+            session.export_rad(output)
+    assert error.value.code == "include_output_collision"
+    assert set(path for path in output.parent.rglob("*") if path.is_file()) == {unrelated}
+    assert unrelated.read_bytes() == original
+
+
+@pytest.mark.parametrize("reverse", (False, True))
+def test_d23_ambiguous_directives_do_not_claim_root_for_each_other(tmp_path, reverse):
+    paths = ("a/first.inc", "b/second.inc")
+    directives = "".join(f"#include {path}\n" for path in (reversed(paths) if reverse else paths))
+    starter = _write(tmp_path / "source/model_0000.rad", f"/BEGIN\nDeck\n{directives}/END\n")
+    source = starter.parent
+    _write(source / "nodes.inc", f"/NODE\n{_node_line(1, 1, 0, 0)}\n")
+    for index, path in enumerate(paths, 81):
+        _write(source / path, '#include\n"nodes.inc"\n')
+        _write((source / path).with_name("nodes.inc"), f"/NODE\n{_node_line(index, index, 0, 0)}\n")
+    session = PrepSession()
+    session.open_rad(starter)
+    assert _mesh_facts(session)[0] == {1: ((1, 0, 0), ("nodes.inc",))}
+    assert not session.diagnostics()
+    project = tmp_path / "ambiguous.caeprep"
+    session.save_project(project)
+    session.open_project(project)
+    assert session.mesh_view()["node_ids"] == (1,)
+
+
 def test_d23_nested_include_avoids_current_file_and_ancestor_shadows(tmp_path):
     starter = _write(tmp_path / "source_0000.rad", "/BEGIN\nAncestor test\n#include mesh/first.inc\n/END\n")
     _write(tmp_path / "mesh/first.inc", "#include first.inc\n#include source_0000.rad\n")
@@ -898,9 +947,15 @@ def test_d23_nested_include_avoids_current_file_and_ancestor_shadows(tmp_path):
     assert not session.diagnostics()
 
 
-@pytest.mark.parametrize("legacy_format", ("unchanged", "unquoted"))
+@pytest.mark.parametrize("legacy_format", ("unchanged", "unquoted", "mixed-direct-inline"))
 def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_format):
-    starter, begin, owner, _ = _nested_include_deck(tmp_path / "source", "sibling-claimed", "\r\n")
+    mixed = legacy_format == "mixed-direct-inline"
+    starter, begin, owner, _ = _nested_include_deck(
+        tmp_path / "source", "root-claimed" if mixed else "sibling-claimed", "\r\n")
+    if mixed:
+        nested = starter.parent / "mesh/first.inc"
+        with nested.open("ab") as stream:
+            stream.write(b"#include nodes.inc\r\n")
     session = PrepSession()
     # An unrelated destination file with the same name must not acquire the old source INCLUDE.
     base = _write(tmp_path / "base/base_0000.rad", begin + "#include nodes.inc\n/END\n")
@@ -916,10 +971,15 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     source_files = {item["original_path"]: item for item in plan["source"]["files"]}
     mapped_path = source_files[owner]["logical_path"]
     mapped_member = f'raw/{source_files["mesh/first.inc"]["resource_id"]}.rad'
-    replacement = f'"{owner}"' if legacy_format == "unchanged" else mapped_path
+    replacement = '"nodes.inc"' if legacy_format != "unquoted" else mapped_path
     current = f'"{mapped_path}"\r\n'.encode("ascii")
     assert members[mapped_member].count(current) == 1
     members[mapped_member] = members[mapped_member].replace(current, f"{replacement}\r\n".encode("ascii"))
+    if mixed:
+        root_nodes = source_files["nodes.inc"]["logical_path"]
+        inline = f"#include {mapped_path}\r\n".encode("ascii")
+        assert members[mapped_member].count(inline) == 1
+        members[mapped_member] = members[mapped_member].replace(inline, f"#include {root_nodes}\r\n".encode("ascii"))
     legacy = tmp_path / "legacy.caeprep"
     with ZipFile(legacy, "w") as project:
         for name, contents in members.items():

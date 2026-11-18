@@ -19,7 +19,7 @@ from ..cae_core import CommandDispatcher, Document, PrepError, Selection, Select
 from ..radioss import DeckResource
 from ..radioss.deck import number
 from ..radioss.includes import disk_include_lookup, include_lookup, include_relative, resolve_includes
-from ..radioss.modeling import (native_identity, integer, material_block, shell_block, copy_block,
+from ..radioss.modeling import (ELEMENT_GROUP_FAMILIES, ELEMENT_GROUP_PAIRS, native_identity, integer, material_block, shell_block, copy_block,
     curve_points, curve_block, member_block, boundary_block, load_block, velocity_block, contact_block, title, real, solid_block, engine_input, condition_scalar_default, reject_default_zero)
 from .storage import write_container
 from .contracts import ObjectRef
@@ -233,8 +233,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 "constraint_edit": ["BCS"], "contact_edit": ["INTER/TYPE7 targets and friction", "INTER/TYPE24 friction"],
                 "curve_edit": ["FUNCT point values and row count"], "initial_velocity_edit": ["INIVEL/TRA"],
                 "shell_edit": ["PROP/SHELL thickness"],
-                "create_cards": ["MAT/LAW1", "PROP/SHELL", "PROP/SOLID", "SKEW/FIX", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
-                "copy_delete_cards": ["MAT/LAW1", "MAT/LAW36", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS", "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
+                "create_cards": ["MAT/LAW1", "PROP/SHELL", "PROP/SOLID", "SKEW/FIX", "FUNCT", "GRNOD/NODE", *ELEMENT_GROUP_FAMILIES, "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
+                "copy_delete_cards": ["MAT/LAW1", "MAT/LAW36", "PROP/SHELL", "PROP/SOLID", "FUNCT", "GRNOD/NODE", *ELEMENT_GROUP_FAMILIES, "SURF/PART", "BCS", "CLOAD", "INIVEL/TRA", "INTER/TYPE7"],
                 "part_assignment": True, "new_document": True, "mesh_adoption": ["triangle3", "tetra4", "tetra10"],
                 "mesh_adoption_sources": {"cad_gmsh": ["triangle3", "tetra4"],
                     "standalone_msh": ["triangle3", "tetra4", "tetra10"], "structured_recipe": ["quad4", "hex8"]},
@@ -481,7 +481,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     unknown.append(item)
                     continue
                 if potentially_removed.intersection(nodes): blockers.append(item)
-            elif tuple(item["keyword"].upper().split("/")[1:3]) in (("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS")):
+            elif tuple(item["keyword"].upper().split("/")[1:3]) in ELEMENT_GROUP_PAIRS:
                 owner = self._find_card(item["id"])
                 try: identifiers = self._integer_members(owner, owner.card(item["id"]))
                 except PrepError:
@@ -907,11 +907,13 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         # Read all cells, even those the display omitted for missing nodes.
         cells = [cell for resource in self._deck_resources() for cell in resource.mesh_projection()["cells"]]
         kinds_by_part = {}
-        for cell in cells: kinds_by_part.setdefault(cell.get("part_id"), set()).add(cell["type"])
+        for cell in cells:
+            family = self._element_group_family(cell["type"], cell.get("formulation"))
+            kinds_by_part.setdefault(cell.get("part_id"), set()).add(family)
         for part_id in part_ids:
             _, _, identity = self._unique_card(part_id, "PART")
             kinds = kinds_by_part.get(identity[1], set())
-            if not kinds or kinds - {"quad", "triangle"}:
+            if not kinds or kinds - {"GRSHEL/SHEL", "GRSH3N/SH3N"}:
                 raise PrepError("incompatible_surface", "SURF/PART supports nonempty shell/triangle parts; solid faces need a different surface definition.")
             identifiers.append(identity[1])
         return identifiers
@@ -919,6 +921,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
     @staticmethod
     def _element_group_family(kind, formulation=None):
         if kind == "line": return {"BEAM": "GRBEAM/BEAM", "TRUSS": "GRTRUS/TRUS"}.get(formulation)
+        if kind == "quad" and formulation == "QUAD": return "GRQUAD/QUAD"
         return {"triangle": "GRSH3N/SH3N", "quad": "GRSHEL/SHEL", "tetra": "GRBRIC/BRIC", "tetra10": "GRBRIC/BRIC",
                 "hexahedron": "GRBRIC/BRIC", "wedge": "GRBRIC/BRIC", "pyramid": "GRBRIC/BRIC"}.get(kind)
 
@@ -972,7 +975,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             resource = self._find_card(card_id)
             card = resource.card(card_id)
             family = "/".join(card.keyword.upper().split("/")[1:3])
-            if family not in ("GRNOD/NODE", "GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS"):
+            if family not in ("GRNOD/NODE", *ELEMENT_GROUP_FAMILIES):
                 raise PrepError("unsupported_operation", "Group membership editing supports explicit node, triangle, quad and solid ID lists.")
             result = {"card_id": card_id, "resource_id": resource.id, "kind": "node" if family == "GRNOD/NODE" else "element",
                       "members": [], "member_ids": [], "diagnostics": []}
@@ -1027,7 +1030,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         raise PrepError("invalid_reference", "A uniquely owned node reference is required.")
                     identifiers.append(ref.local_id)
                 identifiers = self._node_members(identifiers)
-        elif family in ("GRSH3N/SH3N", "GRSHEL/SHEL", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS"):
+        elif family in ELEMENT_GROUP_FAMILIES:
             identifiers, _, _ = self._element_members(members, family)
         else:
             raise PrepError("unsupported_operation", "This native group does not have an editable explicit member list.")
@@ -1263,7 +1266,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         return len(words) >= 4 and ((words[1] == "MAT" and words[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB"))
                                   or (words[1] == "PROP" and words[2] in ("SHELL", "TYPE1", "SOLID", "TYPE14"))) or (
                 words[1] in ("FUNCT", "BCS", "CLOAD") or tuple(words[1:3]) in
-                (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS"),
+                (("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS,
                  ("SURF", "PART"), ("INIVEL", "TRA"), ("INTER", "TYPE7")))
 
     def copy_card(self, card_id, *, name=None, resource_id=None, native_id=None,
@@ -1314,7 +1317,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
     def _dependency_inventory(self, card_id):
         _, _, identity = self._unique_card(card_id)
         dependents, unverified = [], []
-        independent = {"BEGIN", "END", "NODE", "SHELL", "SH3N", "BRICK", "TETRA4", "TETRA",
+        independent = {"BEGIN", "END", "NODE", "SHELL", "QUAD", "SH3N", "BRICK", "TETRA4", "TETRA",
                        "BEAM", "TRUSS", "FUNCT", "UNIT"}
         independent_pairs = {("MAT", "LAW1"), ("MAT", "ELAST"), ("PROP", "SHELL"), ("PROP", "TYPE1"), ("PROP", "SOLID"), ("PROP", "TYPE14")}
         rendered_by_resource = {}
@@ -1353,7 +1356,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         unverified.append(item)
                 elif pair in (("SURF", "PART"), ("GRNOD", "PART")):
                     references = [("PART", value) for value in self._integer_members(resource, card)]
-                elif pair in (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS")):
+                elif pair in (("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS):
                     pass  # Node/element identities are not card-level deletable objects.
                 elif pair in (("MAT", "LAW36"), ("MAT", "PLAS_TAB")):
                     if identity[0] == "FUNCT": unverified.append(item)
@@ -1604,7 +1607,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     specs = [("nodes", "Group nodes", "node", nodes, card_id)]
                 elif pair == ("SURF", "PART"):
                     specs = [("elements", "Surface elements", "element", elements, card_id)]
-                elif pair in (("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS")):
+                elif pair in ELEMENT_GROUP_PAIRS:
                     def group_elements(group_id):
                         group = self.group_members(group_id)
                         if group["diagnostics"]:
@@ -1987,7 +1990,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         if companion is not None:
             planned.add(companion.name)
         planned_lookup = include_lookup(planned)
-        disk_lookup = disk_include_lookup(target.parent)
+        disk_lookup = disk_include_lookup(target.parent, canonical=False)
         outputs = []
         targets = set()
         for resource in self._deck_resources(document):
@@ -2007,7 +2010,13 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     relative = include_relative(directive.path)
                     root_path = relative.as_posix()
                     sibling_path = (PurePosixPath(logical_outputs[resource.id]).parent / relative).as_posix()
-                    if resolved == root_path:
+                    if planned_lookup(root_path) == resolved:
+                        if (sibling_path != root_path and not planned_lookup(sibling_path)
+                                and disk_lookup(sibling_path)):
+                            raise PrepError("include_output_collision", "An existing sibling INCLUDE could change the exported model.",
+                                            {"path": str(target.parent / sibling_path), "directive": directive.path})
+                        if resolved != root_path:
+                            directive.replace_path(lines, resolved)
                         continue
                     if resolved != sibling_path or planned_lookup(root_path) or disk_lookup(root_path):
                         directive.replace_path(lines, resolved)
