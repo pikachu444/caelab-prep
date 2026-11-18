@@ -977,6 +977,85 @@ def test_d23_later_include_wave_sees_new_unambiguous_claims(tmp_path):
     assert _mesh_facts(session)[0] == expected
 
 
+@pytest.mark.parametrize("historical", (False, True), ids=("active-native", "ac0-import"))
+def test_d23_import_preserves_writer_bindings_when_inventory_loses_a_candidate(tmp_path, historical):
+    source = tmp_path / "source"
+    units = f"{'Mg':>20}{'mm':>20}{'s':>20}\n"
+    begin = "/BEGIN\nActive bindings\n      2025         0\n" + units * 2
+    starter = _write(source / "starter_0000.rad", begin + "#include a/first.inc\n#include b/second.inc\n/END\n")
+    _write(source / "a/first.inc", "#include nodes.inc\n")
+    _write(source / "a/nodes.inc", "# not loaded\n")
+    _write(source / "b/second.inc", "#include nodes.inc\n")
+    _write(source / "b/extra.inc", "#include nodes.inc\n")
+    _write(source / "nodes.inc", f"/NODE\n{_node_line(1, 1, 0, 0)}\n#include b/extra.inc\n")
+    _write(source / "b/nodes.inc", f"/NODE\n{_node_line(88, 2, 0, 0)}\n")
+    session = PrepSession()
+    session.open_rad(_write(tmp_path / "base_0000.rad", begin + "/END\n"))
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    files = {item["original_path"]: item for item in plan["source"]["files"]}
+    second = files["b/second.inc"]
+    root_nodes, sibling_nodes = (files[path]["logical_path"] for path in ("nodes.inc", "b/nodes.inc"))
+    include = f"#include {root_nodes}\n"
+    assert session.document.resources[second["resource_id"]].raw == include.encode()
+    archive = tmp_path / "import.caeprep"
+    session.save_project(archive)
+    if historical:
+        with ZipFile(archive) as project:
+            members = {name: project.read(name) for name in project.namelist()}
+        manifest = json.loads(members["manifest.json"])
+        manifest["source_models"][0].pop("include_bindings")
+        members["manifest.json"] = json.dumps(manifest).encode()
+        include = f"#include {sibling_nodes}\n"
+        members[f'raw/{second["resource_id"]}.rad'] = include.encode()
+        archive = tmp_path / "ac0.caeprep"
+        with ZipFile(archive, "w") as project:
+            for name, data in members.items():
+                project.writestr(name, data)
+    session.open_project(archive)
+    output = tmp_path / "out/model_0000.rad"
+    session.export_rad(output)
+    assert (output.parent / second["logical_path"]).read_text() == include
+    session.open_rad(output)
+    assert session.mesh_view()["node_ids"] == (1, 88)
+
+
+def test_d23_exports_valid_nine_file_deck_without_early_qualification(tmp_path):
+    directory = tmp_path / "source"
+    units = f"{'Mg':>20}{'mm':>20}{'s':>20}\n"
+    begin = "/BEGIN\nNine files\n      2025         0\n" + units * 2
+    files = {
+        "start_0000.rad": begin + "#include pick.inc\n#include mesh/choose.inc\n#include b/second.inc\n#include a/first.inc\n/END\n",
+        "pick.inc": "# root candidate\n",
+        "mesh/choose.inc": "#include pick.inc\n",
+        "mesh/pick.inc": "#include nodes.inc\n",
+        "b/second.inc": "#include nodes.inc\n",
+        "a/first.inc": "# ninth file\n",
+        "nodes.inc": f"/NODE\n{_node_line(1, 1, 0, 0)}\n#include b/extra.inc\n",
+        "b/extra.inc": "#include nodes.inc\n",
+        "b/nodes.inc": f"/NODE\n{_node_line(88, 2, 0, 0)}\n",
+    }
+    for path, contents in files.items():
+        _write(directory / path, contents)
+    session = PrepSession()
+    session.open_rad(directory / "start_0000.rad")
+    case = session.create_analysis_case("Round trip", [], .01, .001, "s")["case_id"]
+    project = tmp_path / "nine.caeprep"
+    session.save_project(project)
+    for reopened in (False, True):
+        if reopened:
+            session.open_project(project)
+        for kind, method in (("starter", session.export_rad), ("case", lambda path: session.export_analysis_case(path, case))):
+            output = tmp_path / f"{reopened}-{kind}" / "renamed_0000.rad"
+            method(output)
+            for path, contents in files.items():
+                if path != "start_0000.rad":
+                    assert (output.parent / path).read_bytes() == contents.encode()
+            loaded = PrepSession()
+            loaded.open_rad(output)
+            assert loaded.mesh_view()["node_ids"] == (1, 88)
+
+
 def test_d23_export_preserves_active_binding_when_inventory_loses_an_unselected_candidate(tmp_path):
     source = tmp_path / "source"
     starter = _write(source / "starter_0000.rad", "/BEGIN\nActive bindings\n#include a/first.inc\n#include b/second.inc\n/END\n")
@@ -1050,18 +1129,20 @@ def test_d23_nested_include_avoids_current_file_and_ancestor_shadows(tmp_path):
     assert not session.diagnostics()
 
 
-@pytest.mark.parametrize("legacy_format", ("unchanged", "unquoted", "mixed-direct-inline", "tampered-direct-inline", "direct-inline-only"))
+@pytest.mark.parametrize("legacy_format", ("unchanged", "unquoted", "mixed-direct-inline", "tampered-direct-inline",
+                                             "tampered-two-line", "direct-inline-only", "direct-inline-bare"))
 def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_format):
-    mixed = legacy_format in ("mixed-direct-inline", "tampered-direct-inline")
-    inline_only = legacy_format == "direct-inline-only"
+    mixed = legacy_format in ("mixed-direct-inline", "tampered-direct-inline", "tampered-two-line")
+    inline_only = legacy_format in ("direct-inline-only", "direct-inline-bare")
+    name = "sets/nodes.inc" if legacy_format == "direct-inline-only" else "nodes.inc"
     separator = " " if inline_only else "\r\n"
     starter, begin, owner, _ = _nested_include_deck(
-        tmp_path / "source", "root-claimed" if mixed or inline_only else "sibling-claimed",
-        separator, filename="sets/nodes.inc" if inline_only else "nodes.inc")
-    if mixed:
+        tmp_path / "source", "root-claimed" if mixed or inline_only or legacy_format == "unchanged" else "sibling-claimed",
+        separator, filename=name)
+    if mixed or inline_only:
         nested = starter.parent / "mesh/first.inc"
         with nested.open("ab") as stream:
-            stream.write(b"#include nodes.inc\r\n")
+            stream.write(f"#include {name}\r\n".encode())
     session = PrepSession()
     # An unrelated destination file with the same name must not acquire the old source INCLUDE.
     base = _write(tmp_path / "base/base_0000.rad", begin + "#include nodes.inc\n/END\n")
@@ -1074,6 +1155,9 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     session.save_project(archive)
     with ZipFile(archive) as project:
         members = {name: project.read(name) for name in project.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    manifest["source_models"][0].pop("include_bindings")
+    members["manifest.json"] = json.dumps(manifest).encode()
     source_files = {item["original_path"]: item for item in plan["source"]["files"]}
     mapped_path = source_files[owner]["logical_path"]
     mapped_member = f'raw/{source_files["mesh/first.inc"]["resource_id"]}.rad'
@@ -1082,16 +1166,16 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     if not inline_only and legacy_format != "tampered-direct-inline":
         assert members[mapped_member].count(current) == 1
         members[mapped_member] = members[mapped_member].replace(current, f"{replacement}\r\n".encode("ascii"))
-    if mixed or inline_only:
-        root_nodes = source_files["sets/nodes.inc" if inline_only else "nodes.inc"]["logical_path"]
+    if (mixed and legacy_format != "tampered-two-line") or inline_only:
+        root_nodes = source_files[name]["logical_path"]
         inline = f"#include {mapped_path}\r\n".encode("ascii")
-        assert members[mapped_member].count(inline) == 1
+        assert members[mapped_member].count(inline) == (2 if inline_only else 1)
         members[mapped_member] = members[mapped_member].replace(inline, f"#include {root_nodes}\r\n".encode("ascii"))
     legacy = tmp_path / "legacy.caeprep"
     with ZipFile(legacy, "w") as project:
         for name, contents in members.items():
             project.writestr(name, contents)
-    if legacy_format == "tampered-direct-inline":
+    if legacy_format.startswith("tampered-"):
         with pytest.raises(PrepError) as error:
             session.open_project(legacy)
         assert error.value.code == "invalid_project"
@@ -1101,6 +1185,9 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     assert not session.diagnostics()
     output = tmp_path / "out/export_0000.rad"
     session.export_rad(output)
+    if inline_only:
+        exported_include = output.parent / source_files["mesh/first.inc"]["logical_path"]
+        assert exported_include.read_bytes().count(f"#include {mapped_path}\r\n".encode()) == 2
     reopened = PrepSession()
     reopened.open_rad(output)
     assert _mesh_facts(reopened) == expected

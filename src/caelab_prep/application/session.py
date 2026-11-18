@@ -20,7 +20,7 @@ from ..radioss import DeckResource
 from ..radioss.deck import number
 from ..radioss.includes import disk_include_lookup, include_lookup, include_relative, resolve_includes
 from ..radioss.relations import element_group_members
-from ..radioss.modeling import (ELEMENT_GROUP_FAMILIES, ELEMENT_GROUP_PAIRS, native_identity, integer, material_block, shell_block, copy_block,
+from ..radioss.modeling import (ELEMENT_GROUP_FAMILIES, ELEMENT_GROUP_PAIRS, TYPE14_PROPERTIES, native_identity, integer, material_block, shell_block, copy_block,
     curve_points, curve_block, member_block, boundary_block, load_block, velocity_block, contact_block, title, real, solid_block, engine_input, condition_scalar_default, reject_default_zero)
 from .storage import write_container
 from .contracts import ObjectRef
@@ -933,6 +933,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         return {"triangle": "GRSH3N/SH3N", "quad": "GRSHEL/SHEL", "tetra": "GRBRIC/BRIC", "tetra10": "GRBRIC/BRIC",
                 "hexahedron": "GRBRIC/BRIC", "wedge": "GRBRIC/BRIC", "pyramid": "GRBRIC/BRIC"}.get(kind)
 
+    def _element_selection_ref(self, cell):
+        matches = self._projection_index["cells_by_id"][cell["id"]]
+        shared = sum(candidate["resource_id"] == cell["resource_id"] for candidate in matches) > 1
+        return SelectionRef(cell["resource_id"], "element", cell["id"], cell.get("formulation") if shared else None)
+
     def _element_members(self, members, family=None):
         if not isinstance(members, (tuple, list)) or not members:
             raise PrepError("invalid_reference", "Choose at least one typed element reference.")
@@ -941,7 +946,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         cells_by_id = self._projection_index["cells_by_id"]
         for value in members:
             if isinstance(value, SelectionRef): ref = value
-            elif isinstance(value, dict) and set(value) == {"resource_id", "entity_kind", "local_id"}:
+            elif isinstance(value, dict) and set(value) - {"formulation"} == {"resource_id", "entity_kind", "local_id"}:
                 ref = SelectionRef(**value)
             else:
                 raise PrepError("invalid_reference", "Element members require resource_id, entity_kind and local_id.")
@@ -951,6 +956,10 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             integer(native_id)
             matches = cells_by_id.get(native_id, [])
             owned = [cell for cell in matches if cell["resource_id"] == ref.resource_id]
+            if ref.formulation is not None:
+                owned = [cell for cell in owned if cell.get("formulation") == ref.formulation]
+                if not owned:
+                    raise PrepError("invalid_reference", "The native element formulation does not match the reference.")
             if family is not None:
                 scoped = [cell for cell in matches if self._element_group_family(cell["type"], cell.get("formulation")) == family]
                 if owned and not any(cell["resource_id"] == ref.resource_id for cell in scoped):
@@ -964,9 +973,12 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             cell = matches[0]
             if cell["resource_id"] != ref.resource_id:
                 raise PrepError("invalid_reference", "The element does not belong to the stated resource.")
+            if ref.formulation is not None and cell.get("formulation") != ref.formulation:
+                raise PrepError("incompatible_group", "The element is outside this native group family.")
             kind = self._element_group_family(cell["type"], cell.get("formulation"))
             if kind is None:
                 raise PrepError("unsupported_operation", "Element groups support triangle3, quad4 and supported solid cells.")
+            ref = self._element_selection_ref(cell)
             if ref in seen:
                 raise PrepError("invalid_reference", "Group members must be distinct.")
             seen.add(ref)
@@ -1020,10 +1032,10 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                                    if self._element_group_family(cell["type"], cell.get("formulation")) == family]
                         if len(matches) != 1:
                             raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "A group element cannot be resolved uniquely.", {"element_id": identifier})
-                        refs.append(SelectionRef(matches[0]["resource_id"], "element", identifier))
+                        refs.append(self._element_selection_ref(matches[0]))
                     if refs:
                         _, refs, _ = self._element_members(refs, family)
-                result["members"] = [asdict(ref) for ref in refs]
+                result["members"] = [ref.to_dict() for ref in refs]
             except PrepError as exc:
                 result["diagnostics"].append({"code": exc.code, "message": exc.message, **exc.details})
             return result
@@ -1436,17 +1448,17 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     continue
                 target_owner, target_card, identity = self._unique_card(target, namespace)
                 values[key] = identity[1]
-                if key == "material_id" and target_card.keyword.upper().split("/")[2] not in ("LAW1", "ELAST", "LAW36", "PLAS_TAB"):
+                if (key == "material_id" and identity[1] != refs["native_material_id"]
+                        and target_card.keyword.upper().split("/")[2] not in ("LAW1", "ELAST", "LAW36", "PLAS_TAB")):
                     raise PrepError("unsupported_operation", "Assignment supports LAW1/LAW36 material families only.")
                 if key == "material_id" and "tetra10" in part_kinds and target_card.keyword.upper().split("/")[2] not in ("LAW1", "ELAST"):
                     raise PrepError("unsupported_operation", "The prepared Tet10 profile supports LAW1 material only.")
                 if key == "property_id":
                     family = target_card.keyword.upper().split("/")[2]
                     compatible = ({"quad", "triangle"} if family in ("SHELL", "TYPE1") else
-                                  {"QUAD", "tetra", "tetra10", "hexahedron", "wedge", "pyramid"} if family in ("SOLID", "TYPE14") else
-                                  {"QUAD"} if family == "QUAD" else
+                                  {"QUAD", "tetra", "tetra10", "hexahedron", "wedge", "pyramid"} if family in TYPE14_PROPERTIES else
                                   {"line"} if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2") else None)
-                    if compatible is None and identity[1] != refs["native_property_id"]:
+                    if compatible is None and (family == "QUAD" or identity[1] != refs["native_property_id"]):
                         raise PrepError("unsupported_operation", "Assignment supports SHELL and SOLID property families only.")
                     if compatible is not None and part_kinds - compatible:
                         raise PrepError("incompatible_property", "The property family does not match the part's element types.")
@@ -1616,7 +1628,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 for identifier in self._integer_members(owner, owner.card(surface_id)):
                     part = self._native_matches("PART", identifier)[0]
                     target = ObjectRef(self.document.id, part["resource_id"], part["id"], "rad-card", part["keyword"])
-                    refs.extend(SelectionRef(cell["resource_id"], "element", cell["id"]) for cell in self._part_cells(target))
+                    refs.extend(self._element_selection_ref(cell) for cell in self._part_cells(target))
                 return list(dict.fromkeys(refs))
             specs = []
             try:
@@ -1648,7 +1660,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     refs = []
                     result["diagnostics"].append({"code": exc.code, "message": exc.message, "role": key, **exc.details})
                 result["roles"].append({"key": key, "label": label, "kind": kind,
-                    "ids": [ref.local_id for ref in refs], "refs": [asdict(ref) for ref in refs]})
+                    "ids": [ref.local_id for ref in refs], "refs": [ref.to_dict() for ref in refs]})
             return result
 
     def _condition_selection(self, card_id, role=None):
@@ -1683,7 +1695,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 self._object_card(target)
                 cells = self._part_cells(target)
             selection = Selection("element", tuple(cell["id"] for cell in cells),
-                tuple(SelectionRef(cell["resource_id"], "element", cell["id"]) for cell in cells)) if cells else Selection()
+                tuple(self._element_selection_ref(cell) for cell in cells)) if cells else Selection()
             active_role = None
             if target is not None and not cells:
                 selection, active_role = self._condition_selection(target.object_id)
@@ -1718,7 +1730,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     cells.extend(self._part_cells(ref))
             if active is not None and active not in normalized:
                 raise PrepError("invalid_selection", "The active PART must belong to the selected objects.")
-            entity_refs = tuple(dict.fromkeys(SelectionRef(cell["resource_id"], "element", cell["id"]) for cell in cells))
+            entity_refs = tuple(dict.fromkeys(self._element_selection_ref(cell) for cell in cells))
             selection = Selection("element", tuple(ref.local_id for ref in entity_refs), entity_refs) if entity_refs else Selection()
             self._selected_objects = tuple(normalized)
             self._active_target_role = None
@@ -1753,24 +1765,32 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 cell["resource_id"] for cell in self._projection_index["cells_by_id"].get(entity_id, ())]
             if resource_id not in resources:
                 raise PrepError("invalid_selection", "The entity does not belong to the displayed resource.")
-            return self.select_entity(kind, entity_id)
+            return self.select_entity(kind, entity_id, resource_id=resource_id, formulation=candidate.get("formulation"))
 
-    def select_entity(self, kind: str, entity_id: int) -> dict:
+    def select_entity(self, kind: str, entity_id: int, *, resource_id=None, formulation=None) -> dict:
         with self._lock:
             document = self._require()
             if kind not in ("node", "element") or type(entity_id) is not int:
                 raise PrepError("invalid_selection", "선택에는 node/element와 정수 원본 ID가 필요합니다.")
             if self._projection_cache is None: self.mesh_view()
-            resources = self._projection_cache["node_resources"].get(entity_id, ()) if kind == "node" else [c["resource_id"] for c in self._projection_index["cells_by_id"].get(entity_id, ())]
+            cells = ()
+            if kind == "node":
+                resources = self._projection_cache["node_resources"].get(entity_id, ())
+            else:
+                cells = [cell for cell in self._projection_index["cells_by_id"].get(entity_id, ())
+                         if (resource_id is None or cell["resource_id"] == resource_id)
+                         and (formulation is None or cell.get("formulation") == formulation)]
+                resources = [cell["resource_id"] for cell in cells]
             if isinstance(entity_id, bool) or not resources:
                 raise PrepError("invalid_selection", "선택한 모델 객체를 찾을 수 없습니다.", {"kind": kind, "id": entity_id})
             if len(resources) != 1:
                 raise PrepError("ambiguous_selection", "여러 자원에 같은 ID가 있어 선택 대상을 확정할 수 없습니다.", {"kind": kind, "id": entity_id})
-            document.selection = Selection(kind, (int(entity_id),), (SelectionRef(resources[0], kind, int(entity_id)),))
+            reference = self._element_selection_ref(cells[0]) if cells else SelectionRef(resources[0], kind, entity_id)
+            document.selection = Selection(kind, (entity_id,), (reference,))
             self._active_object = None
             self._active_target_role = None
             if kind == "element":
-                cell = self._projection_index["cells_by_id"][entity_id][0]
+                cell = cells[0]
                 parts = [item for item in self.list_cards() if self._native_part_id(item["keyword"]) == cell.get("part_id")]
                 if len(parts) == 1:
                     card = parts[0]
@@ -1798,8 +1818,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     "active_object": asdict(self._active_object) if self._active_object else None,
                     "active_target_role": self._active_target_role,
                     "selected_objects": [asdict(ref) for ref in self._selected_objects],
-                    "refs": [{"resource_id": r.resource_id, "entity_kind": r.entity_kind, "local_id": r.local_id}
-                             for r in document.selection.refs]}
+                    "refs": [ref.to_dict() for ref in document.selection.refs]}
 
     def _protected(self, target: Path) -> bool:
         return str(target.resolve()) in self._source_paths or any(
@@ -2021,6 +2040,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         return bindings, diagnostics
 
     def _rad_outputs(self, target, inactive_condition_ids=(), *, companion=None):
+        try:
+            return self._rad_output_plan(target, inactive_condition_ids, companion=companion, qualify=False)
+        except PrepError as exc:
+            if exc.code != "include_output_collision":
+                raise
+        return self._rad_output_plan(target, inactive_condition_ids, companion=companion, qualify=True)
+
+    def _rad_output_plan(self, target, inactive_condition_ids, *, companion, qualify):
         document = self._require()
         self._require_expanded_instances()
         stale = self._relations_resource().snapshot()["stale_targets"]
@@ -2064,7 +2091,10 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 relative = include_relative(directive.path)
                 root_path = relative.as_posix()
                 sibling_path = (PurePosixPath(logical).parent / relative).as_posix()
-                if resolved != root_path and (resolved != sibling_path or planned_lookup(root_path) or disk_lookup(root_path)):
+                root_match = planned_lookup(root_path)
+                shadow = (root_match == target.name or (companion is not None and root_match == companion.name)
+                          or (root_match is None and disk_lookup(root_path)))
+                if resolved != root_path and (resolved != sibling_path or shadow or (qualify and root_match)):
                     directive.replace_path(lines, resolved)
             omitted = {index for identity in inactive_condition_ids if identity in resource._by_id for index in
                        (resource.card(identity).start, *resource.card(identity).data)}

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from caelab_prep.application.contracts import DocumentSession, SetProperties
+from caelab_prep.application.contracts import DocumentSession, OperationRequest, SetProperties
 from caelab_prep.application.rad_provider import RadProvider
 from caelab_prep.application.session import PrepSession
 from caelab_prep.cae_core import PrepError
@@ -20,6 +20,31 @@ def opened(name="shell_panels_0000.rad"):
 
 def node(provider, keyword):
     return next(item for item in provider.tree_nodes() if item.ref.native_scope == keyword)
+
+
+def test_quad_property_only_provider_edits_preserve_existing_law3(tmp_path):
+    source = tmp_path / "ale_0000.rad"
+    raw = (INPUTS / "shell_panels_0000.rad").read_bytes()
+    raw = raw.split(b"/PRESERVED/EDITOR/91", 1)[0]
+    source.write_bytes(raw.replace(b"\n/SHELL/1", b"\n/QUAD/1", 1).replace(b"/MAT/LAW1/1", b"/MAT/LAW3/1", 1) + b"/END\n")
+    session = PrepSession()
+    session.open_rad(source)
+    provider = RadProvider(session)
+    part = node(provider, "/PART/1").ref
+    material = node(provider, "/MAT/LAW3/1").ref
+    for action in ("inspector", "operation", "full-operation"):
+        card = session.create_solid_property(f"Solid {action}")["card_id"]
+        prop = next(item.ref for item in provider.tree_nodes() if item.ref.object_id == card)
+        revision = session.document.revision
+        if action == "inspector":
+            provider.submit(SetProperties(part, {"property": prop}, revision))
+        else:
+            values = {"property": prop}
+            if action == "full-operation":
+                values["material"] = material
+            provider.execute_operation(OperationRequest("part.assign", values, part.document_id, revision, part))
+        assignments = session.part_assignments(part.object_id)
+        assert (assignments["material_id"], assignments["property_id"]) == (material.object_id, card)
 
 
 def test_rad_provider_scalar_contract_and_native_unit_context():

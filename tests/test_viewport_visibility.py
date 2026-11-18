@@ -15,7 +15,7 @@ import pytest
 vtk = pytest.importorskip("vtk")
 
 from caelab_prep.application.contracts import ObjectRef
-from caelab_prep.ui.viewport import MeshViewport, cell_part_key, part_key
+from caelab_prep.ui.viewport import MeshViewport, cell_part_key, part_key, pick_candidate
 
 pytestmark = pytest.mark.usefixtures("qt_widgets")
 
@@ -61,6 +61,34 @@ def selection(view, *, kind="element", ids=(11, 12)):
     return {**view._projection_stamp, "kind": kind, "ids": list(ids), "refs": [
         {"resource_id": "elements" if kind == "element" else "nodes",
          "entity_kind": kind, "local_id": identifier} for identifier in ids]}
+
+
+def test_same_file_quad_group_and_viewport_pick_highlight_only_the_native_family(tmp_path):
+    from caelab_prep.application.session import PrepSession
+
+    path = tmp_path / "quad_0000.rad"
+    nodes = "".join(f"{i:10d}{x:20g}{y:20g}{0:20g}\n" for i, (x, y) in enumerate(
+        [(0, 0), (1, 0), (1, 1), (0, 1), (100, 0), (101, 0), (101, 1), (100, 1)], 1))
+    path.write_text("/BEGIN\nFamily selection\n/NODE\n" + nodes
+                    + "/SHELL/1\n" + "".join(f"{i:10d}" for i in (201, 1, 2, 3, 4))
+                    + "\n/QUAD/2\n" + "".join(f"{i:10d}" for i in (201, 5, 6, 7, 8))
+                    + "\n/GRQUAD/QUAD/987\nQuads\n       201\n/END\n")
+    session = PrepSession()
+    session.open_rad(path)
+    group = next(item for item in session.list_cards() if item["keyword"] == "/GRQUAD/QUAD/987")
+    active = ObjectRef(session.document.id, group["resource_id"], group["id"], "rad-card", group["keyword"])
+    view = viewport(session.mesh_view())
+    for family, row in (("QUAD", 1), ("SHELL", 0), ("QUAD", 1)):
+        if family == "QUAD" and row == 1 and not session.selection()["refs"]:
+            chosen = session.activate_object(active)
+        else:
+            picked = pick_candidate(view._projection_stamp, "element", 201, group["resource_id"])
+            chosen = session.select_pick({**picked, "formulation": family})
+        assert chosen["refs"][0]["formulation"] == family
+        view.set_selection(chosen)
+        assert view._highlight.GetVisibility()
+        assert view._selection_cell_indices(chosen) == [row]
+        assert view.fit_selection()
 
 
 def test_part_identity_requires_resource_and_resolved_owner():

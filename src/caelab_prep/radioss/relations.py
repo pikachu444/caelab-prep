@@ -21,7 +21,7 @@ AXES = ((1., 0., 0.), (0., 1., 0.), (0., 0., 1.))
 def element_group_members(entries):
     """Resolve an explicit native element list with signed exclusions."""
     excluded = {-identifier for identifier in entries if identifier < 0}
-    return [identifier for identifier in entries if identifier >= 0 and identifier not in excluded]
+    return list(dict.fromkeys(identifier for identifier in entries if identifier >= 0 and identifier not in excluded))
 
 
 def dot(a, b): return sum(x * y for x, y in zip(a, b))

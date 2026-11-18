@@ -17,7 +17,8 @@ class SourceArchiveResource:
     kind = "radioss-source-archive"
 
     def __init__(self, metadata, files):
-        if not isinstance(metadata, dict) or set(metadata) != {"id", "name", "root_resource_id", "files", "id_map", "shared_nodes"}:
+        if not isinstance(metadata, dict) or set(metadata) - {"include_bindings"} != {
+                "id", "name", "root_resource_id", "files", "id_map", "shared_nodes"}:
             raise PrepError("invalid_project", "Invalid source archive metadata.")
         self.id = metadata["id"]; UUID(self.id)
         if not isinstance(metadata["name"], str) or not isinstance(metadata["files"], list) or not metadata["files"]:
@@ -82,18 +83,42 @@ class SourceArchiveResource:
         # Older imports addressed inline filenames from the root and either
         # preserved two-line paths or rewrote them without quotes. Compare
         # the entire mapped payload using one historical policy at a time.
-        policies = ((False, "quoted"), (False, "unchanged"), (False, "unquoted"), (True, "unchanged"))
-        for legacy_direct, style in policies:
+        originals_by_id = {resource.id: resource for resource in originals}
+        records = self.metadata.get("include_bindings")
+        selected = {}
+        if "include_bindings" in self.metadata:
+            if not isinstance(records, tuple):
+                raise PrepError("invalid_project", "Invalid original source INCLUDE bindings.")
+            for record in records:
+                if not isinstance(record, tuple) or len(record) != 3:
+                    raise PrepError("invalid_project", "Invalid original source INCLUDE binding.")
+                owner, ordinal, target = record
+                if (not isinstance(owner, str) or owner not in originals_by_id or not isinstance(target, str)
+                        or target not in originals_by_id or type(ordinal) is not int
+                        or not 0 <= ordinal < len(originals_by_id[owner].include_directives)):
+                    raise PrepError("invalid_project", "Invalid original source INCLUDE binding.")
+                key = originals_by_id[owner].name, ordinal
+                if key in selected:
+                    raise PrepError("invalid_project", "Duplicate original source INCLUDE binding.")
+                selected[key] = originals_by_id[target].name
+            if len(selected) != sum(len(resource.include_directives) for resource in originals):
+                raise PrepError("invalid_project", "Original source INCLUDE bindings are incomplete.")
+        policies = ((None, "quoted"),) if records is not None else (
+            (None, "quoted"), ("bde", "quoted"), ("ac0", "quoted"),
+            ("987", "unquoted"), ("8fe", "unchanged"))
+        for historical, style in policies:
+            graph = source_include_graph(originals, paths, selected=selected, historical=historical)
             try:
-                expected = remap(originals, mapping, paths, two_line=style, legacy_direct_inline=legacy_direct)
+                expected = remap(originals, mapping, paths, include_graph=graph, two_line=style,
+                                 legacy_direct_inline=historical == "8fe")
             except PrepError as exc:
                 if exc.code != "include_missing":
                     raise
                 continue
             if actual != expected:
                 continue
-            if legacy_direct:
-                _, original_bindings, _ = source_include_graph(originals, paths)
+            if historical == "8fe":
+                _, original_bindings, _ = graph
                 mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
                 mapped = {paths[name]: document.resources[rid] for name, rid in mapped_ids.items()}
                 mapped_root = next(paths[name] for name, rid in mapped_ids.items() if rid == self.metadata["root_resource_id"])
@@ -106,7 +131,6 @@ class SourceArchiveResource:
                         if (directive.filename_row == directive.header_row and intended
                                 and direct in paths and paths[intended] not in reached):
                             self.recovered_include_bindings[mapped_ids[resource.name], ordinal] = mapped_ids[intended]
-                            reached.add(paths[intended])
             return
         raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
 
@@ -277,7 +301,11 @@ class SourceModelCommands:
                 used.add(identifier)
             source_id = str(uuid4()); prefix = f"sources/{source_id}/"
             translated_paths = {logical: prefix + logical for logical in source._paths.values()}
-            payloads = remap(original_resources, mapping, translated_paths)
+            active_edges = {(source._paths[resource.id], directive.header_row):
+                            source._paths[source._include_bindings[resource.id, ordinal]]
+                            for resource in original_resources for ordinal, directive in enumerate(resource.include_directives)}
+            payloads = remap(original_resources, mapping, translated_paths,
+                             include_graph=(set(translated_paths), active_edges, []))
             resources, files, records = [], {}, []
             root_id = None
             for original in original_resources:
@@ -289,7 +317,8 @@ class SourceModelCommands:
                     original_path=source._paths[original.id], logical_path=logical, sha256=sha256(original.raw).hexdigest()))
             archive = SourceArchiveResource(dict(id=source_id, name=Path(path).name, root_resource_id=root_id,
                 files=records, id_map=[[ns, original, mapped] for (ns, original), mapped in sorted(mapping.items())],
-                shared_nodes=sorted(shared)), files)
+                shared_nodes=sorted(shared), include_bindings=[[owner, ordinal, target]
+                    for (owner, ordinal), target in source._include_bindings.items()]), files)
             plan_id = str(uuid4())
             self._import_plan = (plan_id, document.id, document.revision, self._document_epoch, archive, tuple(resources), source._source_paths)
             return {"plan_id": plan_id, "document_id": document.id, "revision": document.revision,

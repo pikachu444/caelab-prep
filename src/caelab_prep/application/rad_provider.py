@@ -14,7 +14,7 @@ import re
 
 from .contracts import ObjectRef, OperationRequest, OperationSpec, PropertySpec, SetProperties, TreeNode
 from ..cae_core.errors import PrepError
-from ..radioss.modeling import ELEMENT_GROUP_PAIRS
+from ..radioss.modeling import ELEMENT_GROUP_PAIRS, TYPE14_PROPERTIES
 
 
 _LABELS = {
@@ -239,10 +239,8 @@ class RadProvider:
             for name, unit in command.units.items():
                 if unit != specs[name].unit:
                     raise PrepError("invalid_unit", "Object references do not have display units.")
-            values = {name: command.values.get(name, specs[name].value)
-                      for name in ("material", "property")}
             return self.execute_operation(OperationRequest(
-                "part.assign", values, command.target.document_id,
+                "part.assign", command.values, command.target.document_id,
                 command.expected_revision, command.target))
         for name in command.values:
             if not specs[name].editable:
@@ -420,7 +418,7 @@ class RadProvider:
                 candidates = [card for card in candidates
                               if card["id"] == current_id or
                               (len(card["keyword"].split("/")) > 2 and
-                               card["keyword"].upper().split("/")[2] in ("SHELL", "TYPE1", "SOLID", "TYPE14", "BEAM", "TYPE3", "TRUSS", "TYPE2"))]
+                               card["keyword"].upper().split("/")[2] in ("SHELL", "TYPE1", *TYPE14_PROPERTIES, "BEAM", "TYPE3", "TRUSS", "TYPE2"))]
             else:
                 candidates = [card for card in candidates if card["id"] == current_id or
                               card["keyword"].upper().split("/")[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB")]
@@ -519,7 +517,9 @@ class RadProvider:
             if type(request.expected_revision) is not int or request.expected_revision != state["revision"]:
                 raise PrepError("revision_conflict", "The model changed. Cancel this draft and read the current values.")
             spec = self.operation_spec(request.key, request.target, request.values)
-            if set(request.values) != {field.name for field in spec.fields}:
+            fields = {field.name for field in spec.fields}
+            partial_assignment = request.key == "part.assign" and 0 < len(request.values) and request.values.keys() <= fields
+            if not partial_assignment and request.values.keys() != fields:
                 raise PrepError("invalid_value", "Supply exactly the fields in the operation form.")
             values = dict(request.values)
             if not isinstance(request.units, dict):
@@ -551,13 +551,15 @@ class RadProvider:
                 result = self.session.delete_card(request.target.object_id, **expected)
             elif request.key == "part.assign":
                 self._native_values({field.name: field for field in spec.fields}, values, request.units)
+                assignments = {}
                 for name, category in (("material", "Materials"), ("property", "Properties")):
+                    if name not in values:
+                        continue
                     card = self._card(values[name])
                     if card["category"] != category:
                         raise PrepError("invalid_reference", f"Choose a {name} object.", {"field": name})
-                result = self.session.assign_part(request.target.object_id,
-                    material_id=values["material"].object_id,
-                    property_id=values["property"].object_id, **expected)
+                    assignments[f"{name}_id"] = card["id"]
+                result = self.session.assign_part(request.target.object_id, **assignments, **expected)
             object_id = result.get("card_id")
             if object_id is None and request.key in ("part.assign", "object.edit"):
                 object_id = request.target.object_id

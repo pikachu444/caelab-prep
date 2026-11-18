@@ -54,20 +54,20 @@ def disk_include_lookup(base, *, canonical=True):
     return lookup
 
 
-def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, selected=None, recovered=None):
+def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, selected=None, recovered=None, historical=None):
     """Resolve live paths or replay validated bindings against an archive inventory."""
     selected, recovered = selected or {}, recovered or {}
-    result = _walk_includes(root, lookup, load, scope, selected, recovered, legacy_pending=False)
-    if archive_inventory is not None and not result[2] and archive_inventory - result[0]:
+    result = _walk_includes(root, lookup, load, scope, selected, recovered, historical)
+    if historical is None and archive_inventory is not None and not result[2] and archive_inventory - result[0]:
         # ac0a255d let an earlier ambiguous directive claim the root for the
         # next directive. Use that policy only if it explains the entire ZIP.
-        historical = _walk_includes(root, lookup, load, scope, selected, recovered, legacy_pending=True)
-        if not historical[2] and historical[0] == archive_inventory:
-            return historical
+        legacy = _walk_includes(root, lookup, load, scope, selected, recovered, "ac0")
+        if not legacy[2] and legacy[0] == archive_inventory:
+            return legacy
     return result
 
 
-def _walk_includes(root, lookup, load, scope, selected, recovered, *, legacy_pending):
+def _walk_includes(root, lookup, load, scope, selected, recovered, historical):
     reached, explicit = set(), set()
     bindings, problems = {}, []
     outgoing = defaultdict(set)
@@ -124,6 +124,13 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, *, legacy_pen
                 if root_file and sibling and root_file != sibling:
                     if key in selected:
                         follow(owner, directive, selected[key], chain)
+                    elif historical == "8fe":
+                        follow(owner, directive, sibling, chain)
+                    elif historical == "987":
+                        follow(owner, directive, root_file, chain)
+                    elif historical == "ac0" and len(relative.parts) > 1:
+                        explicit.add(root_file)
+                        follow(owner, directive, root_file, chain)
                     elif (root_file in chain) != (sibling in chain):
                         follow(owner, directive, sibling if root_file in chain else root_file, chain)
                     else:
@@ -139,10 +146,15 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, *, legacy_pen
     visit(root, ())
     # Freeze the unambiguous claims so one ambiguous binding cannot change
     # the choice made for another directive.
+    snapshot_reached, snapshot_explicit = reached.copy(), explicit.copy()
     while pending:
-        unambiguous_reached = reached if legacy_pending else reached.copy()
-        unambiguous_explicit = explicit if legacy_pending else explicit.copy()
-        batch = [pending.popleft() for _ in range(1 if legacy_pending else len(pending))]
+        if historical == "ac0":
+            unambiguous_reached, unambiguous_explicit = reached, explicit
+        elif historical == "bde":
+            unambiguous_reached, unambiguous_explicit = snapshot_reached, snapshot_explicit
+        else:
+            unambiguous_reached, unambiguous_explicit = reached.copy(), explicit.copy()
+        batch = [pending.popleft() for _ in range(1 if historical == "ac0" else len(pending))]
         for owner, directive, root_file, sibling, chain in batch:
             target = sibling if root_file in unambiguous_reached and sibling not in unambiguous_explicit else root_file
             follow(owner, directive, target, chain)

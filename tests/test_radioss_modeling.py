@@ -352,19 +352,34 @@ def test_native_quad_uses_its_own_element_group_through_export(tmp_path):
 def test_native_quad_property_assignment_checks_solid_compatibility(tmp_path):
     source = tmp_path / "quad_0000.rad"
     original = SOURCE.read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0]
-    source.write_bytes(original.replace(b"\n/SHELL/1", b"\n/QUAD/1", 1) + b"/PROP/QUAD/99\n2D solid section\n/END\n")
+    units = original.splitlines(keepends=True)[4]
+    original = original.replace(units, units * 2, 1).replace(b"\n/SHELL/1", b"\n/QUAD/1", 1)
+    source.write_bytes(original + b"/PROP/QUAD/99\nOpaque section\n/PROP/FLUID/98\nFluid section\n"
+                                  b"/PROP/P14_SOLID/97\nType 14 section\n/END\n")
     session = opened(source)
     part = lookup(session, "/PART/1")["id"]
     shell = lookup(session, "/PROP/SHELL/1")["id"]
     solid = session.create_solid_property("Solid section")["card_id"]
     session.assign_part(part, property_id=solid)
     assert session.part_assignments(part)["property_id"] == solid
+    for keyword in ("/PROP/FLUID/98", "/PROP/P14_SOLID/97"):
+        valid = lookup(session, keyword)["id"]
+        session.assign_part(part, property_id=valid)
+        assert session.part_assignments(part)["property_id"] == valid
     quad = lookup(session, "/PROP/QUAD/99")["id"]
-    session.assign_part(part, property_id=quad)
+    with pytest.raises(PrepError) as invalid:
+        session.assign_part(part, property_id=quad)
+    assert invalid.value.code == "unsupported_operation"
     with pytest.raises(PrepError) as error:
         session.assign_part(part, property_id=shell)
     assert error.value.code == "incompatible_property"
-    assert session.part_assignments(part)["property_id"] == quad
+    assert session.part_assignments(part)["property_id"] == valid
+    case = session.create_analysis_case("Reject opaque property", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "case_0000.rad"
+    with pytest.raises(PrepError) as invalid:
+        session.export_analysis_case(output, case)
+    assert invalid.value.code == "case_activation_scope_unknown"
+    assert not output.exists()
 
 
 @pytest.mark.parametrize("valid", (True, False))
@@ -374,7 +389,7 @@ def test_signed_quad_group_is_scoped_and_checked_by_case_export(tmp_path, valid)
     original = original.replace(b"\n/SHELL/1", b"\n/QUAD/1", 1).replace(b"\n         5        10", b"\n         1        10", 1)
     units = original.splitlines(keepends=True)[4]
     original = original.replace(units, units * 2, 1)
-    positive = (1, 2) if valid else (1, 9999)
+    positive = (1, 1, 2, 2) if valid else (1, 9999)
     members = "".join(f"{value:10d}" for value in (*positive, -2, -500))
     source.write_bytes(original + f"/GRQUAD/QUAD/987\nSigned quad group\n{members}\n/END\n".encode("ascii"))
     session = opened(source)

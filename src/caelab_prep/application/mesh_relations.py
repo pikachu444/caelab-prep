@@ -5,7 +5,6 @@ headers. It does not remesh CAD, infer nearest nodes, or reuse same-number
 members as proof that their physical meaning survived a replacement.
 """
 from copy import copy, deepcopy
-from dataclasses import asdict
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -410,7 +409,7 @@ class MeshRelationCommands:
                         element_members.append(entry)
                 members = element_members
                 identifiers, refs, _ = self._element_members(members, family)
-                verified = iter(asdict(ref) for ref in refs)
+                verified = iter(ref.to_dict() for ref in refs)
                 mapping = {key: [next(verified) for _ in mapping[key]] if isinstance(mapping[key], (list, tuple)) else next(verified)
                            for key in stale["members"] if key not in dropped}
             link = {"group_id": card_id, "family": family,

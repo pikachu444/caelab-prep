@@ -153,15 +153,16 @@ def inspect(resources):
         raise PrepError("unsupported_source_profile", "A supported source card has malformed fixed-width data.", {"reason": str(exc)}) from exc
 
 
-def source_include_graph(resources, paths):
+def source_include_graph(resources, paths, *, selected=None, historical=None):
     by_path = {resource.name: resource for resource in resources}
     root = next(resource.name for resource in resources if not resource.is_include)
-    return resolve_includes(root, include_lookup(paths), by_path.__getitem__, archive_inventory=set(paths))
+    return resolve_includes(root, include_lookup(paths), by_path.__getitem__,
+                            selected=selected, historical=historical)
 
 
-def remap(resources, mappings, paths, *, two_line="quoted", legacy_direct_inline: bool = False):
+def remap(resources, mappings, paths, *, include_graph=None, two_line="quoted", legacy_direct_inline: bool = False):
     definitions, edits, omitted = inspect(resources)
-    reached, bindings, problems = source_include_graph(resources, paths)
+    reached, bindings, problems = include_graph if include_graph is not None else source_include_graph(resources, paths)
     if problems or (not legacy_direct_inline and reached != set(paths)):
         raise PrepError("include_missing", "The imported INCLUDE graph could not be resolved.")
     result = {}
@@ -190,10 +191,8 @@ def remap(resources, mappings, paths, *, two_line="quoted", legacy_direct_inline
                 continue
             original = bindings.get((resource.name, directive.header_row))
             if legacy_direct_inline and not multiline:
-                direct = directive.path.replace("\\", "/")
-                if direct in paths:
-                    original = direct
-            if original is None:
+                original = directive.path.replace("\\", "/")
+            if original not in paths:
                 raise PrepError("include_missing", "The imported INCLUDE directive could not be resolved.")
             directive.replace_path(lines, paths[original], preserve_quotes=multiline and two_line == "quoted")
         # Explicitly shared nodes live in the destination resource only.
