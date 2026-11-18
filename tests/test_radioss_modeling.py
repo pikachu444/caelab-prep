@@ -382,6 +382,29 @@ def test_native_quad_property_assignment_checks_solid_compatibility(tmp_path):
     assert not output.exists()
 
 
+def test_case_export_checks_property_already_referenced_by_quad_part(tmp_path):
+    source = tmp_path / "quad_0000.rad"
+    raw = SOURCE.read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0]
+    units = raw.splitlines(keepends=True)[4]
+    source.write_bytes(raw.replace(units, units * 2, 1).replace(b"\n/SHELL/1", b"\n/QUAD/1", 1) + b"/END\n")
+    session = opened(source)
+    case = session.create_analysis_case("Quad property", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "output/case_0000.rad"
+    for validate in (lambda: session.validate_analysis_case(case), lambda: session.export_analysis_case(output, case)):
+        with pytest.raises(PrepError) as error:
+            validate()
+        assert error.value.code == "incompatible_property"
+    assert not output.parent.exists()
+    part = lookup(session, "/PART/1")["id"]
+    solid = session.create_solid_property("Solid section")["card_id"]
+    session.assign_part(part, property_id=solid)
+    native_property = session.part_assignments(part)["native_property_id"]
+    session.export_analysis_case(output, case)
+    reopened = opened(output)
+    props = reopened.part_assignments(lookup(reopened, "/PART/1")["id"])
+    assert props["property_id"] == lookup(reopened, f"/PROP/SOLID/{native_property}")["id"]
+
+
 @pytest.mark.parametrize("valid", (True, False))
 def test_signed_quad_group_is_scoped_and_checked_by_case_export(tmp_path, valid):
     source = tmp_path / "quad_0000.rad"
@@ -393,6 +416,8 @@ def test_signed_quad_group_is_scoped_and_checked_by_case_export(tmp_path, valid)
     members = "".join(f"{value:10d}" for value in (*positive, -2, -500))
     source.write_bytes(original + f"/GRQUAD/QUAD/987\nSigned quad group\n{members}\n/END\n".encode("ascii"))
     session = opened(source)
+    solid = session.create_solid_property("Quad solid section")["card_id"]
+    session.assign_part(lookup(session, "/PART/1")["id"], property_id=solid)
     group = lookup(session, "/GRQUAD/QUAD/987")["id"]
     record = session.group_members(group)
     case = session.create_analysis_case("Quad group", [], .01, .001, "s")["case_id"]

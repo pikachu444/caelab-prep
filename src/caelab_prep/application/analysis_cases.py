@@ -207,9 +207,14 @@ class AnalysisCaseCommands:
                 *(("PROP", family) for family in TYPE14_PROPERTIES), ("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS, ("SURF", "PART")}
             unsupported = []
             conditions = []
+            parts = []
+            self.mesh_view()
+            cells_by_part = self._projection_index["cells_by_part"]
             for item in self.list_cards():
                 words = item["keyword"].upper().strip("/").split("/")
                 if condition_kind(item["keyword"]): conditions.append(item["id"])
+                elif words[0] == "PART" and (native_part := self._native_part_id(item["keyword"])) in cells_by_part:
+                    parts.append((item["id"], cells_by_part[native_part]))
                 elif tuple(words[:2]) == ("GRQUAD", "QUAD"):
                     diagnostics = self.group_members(item["id"])["diagnostics"]
                     if diagnostics:
@@ -219,6 +224,16 @@ class AnalysisCaseCommands:
                     unsupported.append(item)
             if unsupported:
                 raise PrepError("case_activation_scope_unknown", "Case export cannot prove the activation semantics of these native cards; source text is retained.", {"cards": unsupported})
+            for part_id, cells in parts:
+                assignments = self.part_assignments(part_id)
+                if assignments["diagnostics"]:
+                    raise PrepError("invalid_reference", "A meshed part has unresolved native assignments.",
+                                    {"card_id": part_id, "diagnostics": assignments["diagnostics"]})
+                property_owner = self._find_card(assignments["property_id"])
+                material_owner = self._find_card(assignments["material_id"])
+                self._validate_part_compatibility(cells, material=material_owner.card(assignments["material_id"]),
+                                                  property_owner=property_owner,
+                                                  property_card=property_owner.card(assignments["property_id"]))
             for card_id in case["condition_ids"]:
                 self._unique_card(card_id)
                 values = self.condition_values(card_id)

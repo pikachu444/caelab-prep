@@ -76,6 +76,12 @@ Windows Python 3.13.5에서 지정 pytest 187건을 통과했다. 로컬 `docume
 
 Windows Python 3.13.5에서 영향 범위 pytest 334건을 통과했다. 별도 EGL 렌더링 검사 1건은 건너뛰었다.
 
+### 아홉 번째 검토 수정
+
+`eaeceb5` 재검토를 반영했다. 내보내기는 Starter의 INCLUDE 해석 순서와 대소문자를 무시한 파일 조회를 사용해 필요한 지시문만 바꾼다. `8fe6609`로 생성한 반복 지시문 아카이브 두 건(각 15절점·7요소)과 `#enddata` 뒤에 지시문이 있는 아카이브(14절점·7요소)를 재열기·다시 저장·Starter 내보내기로 확인했다.
+
+해석 케이스 내보내기는 요소가 있는 PART의 속성·재료를 할당 작업과 같은 검사로 확인한다. 요소 집합 편집기는 같은 파일에 같은 ID가 있는 SHELL과 QUAD를 native 요소군 이름으로 표시한다. Windows Python 3.13.5에서 관련 pytest 176건을 통과했다. 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

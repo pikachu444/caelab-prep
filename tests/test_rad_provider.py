@@ -22,6 +22,35 @@ def node(provider, keyword):
     return next(item for item in provider.tree_nodes() if item.ref.native_scope == keyword)
 
 
+def test_element_group_picker_qualifies_same_file_shell_and_quad_ids(tmp_path):
+    source = tmp_path / "shared_0000.rad"
+    raw = (INPUTS / "shell_panels_0000.rad").read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0]
+    raw = raw.replace(b"\n/SHELL/1", b"\n/QUAD/1", 1).replace(b"\n         5        10", b"\n         1        10", 1)
+    source.write_bytes(raw + b"/END\n")
+    session = PrepSession()
+    session.open_rad(source)
+    provider = RadProvider(session)
+    spec = provider.operation_spec("element_group.create")
+    field = next(field for field in spec.fields if field.name == "element_refs")
+    choices = {ref["formulation"]: (ref, label) for ref, label in zip(field.choices, field.choice_labels)
+               if ref["local_id"] == 1}
+    assert set(choices) == {"SHELL", "QUAD"}
+    for family, keyword in (("SHELL", "/GRSHEL/SHEL/987"), ("QUAD", "/GRQUAD/QUAD/987")):
+        ref, label = choices[family]
+        assert f"({family})" in label
+        result = provider.execute_operation(OperationRequest(
+            "element_group.create", {"name": family, "native_id": 987, "element_refs": [ref]},
+            session.document.id, session.document.revision))
+        group = node(provider, keyword).ref
+        assert group.object_id == result["card_id"]
+        assert session.group_members(group.object_id)["members"] == [ref]
+        other = choices["QUAD" if family == "SHELL" else "SHELL"][0]
+        with pytest.raises(PrepError) as error:
+            provider.submit(SetProperties(group, {"element_refs": [other]}, session.document.revision))
+        assert error.value.code == "incompatible_group"
+        provider.submit(SetProperties(group, {"element_refs": [ref]}, session.document.revision))
+
+
 def test_quad_property_only_provider_edits_preserve_existing_law3(tmp_path):
     source = tmp_path / "ale_0000.rad"
     raw = (INPUTS / "shell_panels_0000.rad").read_bytes()

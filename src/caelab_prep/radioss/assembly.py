@@ -6,6 +6,7 @@ DeckResource's source-header safeguards. Unsupported reference-bearing cards
 are rejected before any document mutation.
 """
 from ..cae_core import PrepError
+from .deck import _include_layout
 from .includes import include_lookup, resolve_includes
 from .modeling import ELEMENT_ALIASES, native_identity
 from .relations import element_group_members
@@ -195,6 +196,13 @@ def remap(resources, mappings, paths, *, include_graph=None, two_line="quoted", 
             if original not in paths:
                 raise PrepError("include_missing", "The imported INCLUDE directive could not be resolved.")
             directive.replace_path(lines, paths[original], preserve_quotes=multiline and two_line == "quoted")
+        if legacy_direct_inline and resource.active_stop < len(lines):
+            for directive in _include_layout(lines, len(lines)):
+                if directive.header_row < resource.active_stop or directive.filename_row != directive.header_row:
+                    continue
+                direct = directive.path.replace("\\", "/")
+                if direct in paths:
+                    directive.replace_path(lines, paths[direct], preserve_quotes=False)
         # Explicitly shared nodes live in the destination resource only.
         shared = {line for (namespace, identifier), (rid, line) in definitions.items()
                   if rid == resource.id and namespace == "NODE" and (namespace, identifier) in mappings.shared}

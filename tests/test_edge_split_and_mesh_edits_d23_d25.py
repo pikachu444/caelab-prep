@@ -1020,7 +1020,8 @@ def test_d23_import_preserves_writer_bindings_when_inventory_loses_a_candidate(t
     assert session.mesh_view()["node_ids"] == (1, 88)
 
 
-def test_d23_exports_valid_nine_file_deck_without_early_qualification(tmp_path):
+@pytest.mark.parametrize("variant", ("original", "mixed-case", "mixed-qualification"))
+def test_d23_exports_valid_nine_file_deck_without_early_qualification(tmp_path, variant):
     directory = tmp_path / "source"
     units = f"{'Mg':>20}{'mm':>20}{'s':>20}\n"
     begin = "/BEGIN\nNine files\n      2025         0\n" + units * 2
@@ -1035,6 +1036,24 @@ def test_d23_exports_valid_nine_file_deck_without_early_qualification(tmp_path):
         "b/extra.inc": "#include nodes.inc\n",
         "b/nodes.inc": f"/NODE\n{_node_line(88, 2, 0, 0)}\n",
     }
+    expected = dict(files)
+    node_ids = (1, 88)
+    if variant == "mixed-case":
+        files["mesh/choose.inc"] = expected["mesh/choose.inc"] = '#include "PiCk.InC"\n'
+    elif variant == "mixed-qualification":
+        files["start_0000.rad"] = files["start_0000.rad"].replace("/END", "#include c/first.inc\n#include d/second.inc\n/END")
+        files.update({
+            "c/first.inc": "#include claims.inc\n",
+            "c/claims.inc": "# Unselected sibling keeps root in the deferred wave\n",
+            "d/second.inc": "#include claims.inc\n",
+            "d/extra.inc": "#include claims.inc\n",
+            "claims.inc": f"/NODE\n{_node_line(101, 1, 1, 0)}\n#include d/extra.inc\n",
+            "d/claims.inc": f"/NODE\n{_node_line(188, 2, 1, 0)}\n",
+        })
+        expected.update(files)
+        del expected["c/claims.inc"]
+        expected["d/extra.inc"] = "#include d/claims.inc\n"
+        node_ids = (1, 88, 101, 188)
     for path, contents in files.items():
         _write(directory / path, contents)
     session = PrepSession()
@@ -1048,12 +1067,12 @@ def test_d23_exports_valid_nine_file_deck_without_early_qualification(tmp_path):
         for kind, method in (("starter", session.export_rad), ("case", lambda path: session.export_analysis_case(path, case))):
             output = tmp_path / f"{reopened}-{kind}" / "renamed_0000.rad"
             method(output)
-            for path, contents in files.items():
+            for path, contents in expected.items():
                 if path != "start_0000.rad":
                     assert (output.parent / path).read_bytes() == contents.encode()
             loaded = PrepSession()
             loaded.open_rad(output)
-            assert loaded.mesh_view()["node_ids"] == (1, 88)
+            assert loaded.mesh_view()["node_ids"] == node_ids
 
 
 def test_d23_export_preserves_active_binding_when_inventory_loses_an_unselected_candidate(tmp_path):
@@ -1130,19 +1149,27 @@ def test_d23_nested_include_avoids_current_file_and_ancestor_shadows(tmp_path):
 
 
 @pytest.mark.parametrize("legacy_format", ("unchanged", "unquoted", "mixed-direct-inline", "tampered-direct-inline",
-                                             "tampered-two-line", "direct-inline-only", "direct-inline-bare"))
+                                             "tampered-two-line", "direct-inline-only", "direct-inline-bare",
+                                             "direct-inline-qualified-reached", "direct-inline-bare-reached", "inactive-line"))
 def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_format):
     mixed = legacy_format in ("mixed-direct-inline", "tampered-direct-inline", "tampered-two-line")
-    inline_only = legacy_format in ("direct-inline-only", "direct-inline-bare")
-    name = "sets/nodes.inc" if legacy_format == "direct-inline-only" else "nodes.inc"
+    inline_only = legacy_format.startswith("direct-inline-")
+    already_reached = legacy_format.endswith("-reached")
+    inactive = legacy_format == "inactive-line"
+    name = "sets/nodes.inc" if legacy_format in ("direct-inline-only", "direct-inline-qualified-reached") else "nodes.inc"
     separator = " " if inline_only else "\r\n"
     starter, begin, owner, _ = _nested_include_deck(
-        tmp_path / "source", "root-claimed" if mixed or inline_only or legacy_format == "unchanged" else "sibling-claimed",
+        tmp_path / "source", "root-claimed" if mixed or inline_only or inactive or legacy_format == "unchanged" else "sibling-claimed",
         separator, filename=name)
+    if already_reached:
+        starter.write_bytes(starter.read_bytes().replace(b"/END", f"#include mesh/{name}\n/END".encode()))
     if mixed or inline_only:
         nested = starter.parent / "mesh/first.inc"
         with nested.open("ab") as stream:
             stream.write(f"#include {name}\r\n".encode())
+    if inactive:
+        with (starter.parent / "mesh/first.inc").open("ab") as stream:
+            stream.write(b'#enddata\r\n#include "nodes.inc"\r\n')
     session = PrepSession()
     # An unrelated destination file with the same name must not acquire the old source INCLUDE.
     base = _write(tmp_path / "base/base_0000.rad", begin + "#include nodes.inc\n/END\n")
@@ -1168,9 +1195,13 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
         members[mapped_member] = members[mapped_member].replace(current, f"{replacement}\r\n".encode("ascii"))
     if (mixed and legacy_format != "tampered-two-line") or inline_only:
         root_nodes = source_files[name]["logical_path"]
-        inline = f"#include {mapped_path}\r\n".encode("ascii")
+        inline = f"#include {root_nodes if already_reached else mapped_path}\r\n".encode("ascii")
         assert members[mapped_member].count(inline) == (2 if inline_only else 1)
         members[mapped_member] = members[mapped_member].replace(inline, f"#include {root_nodes}\r\n".encode("ascii"))
+    if inactive:
+        root_nodes = source_files["nodes.inc"]["logical_path"]
+        members[mapped_member] = members[mapped_member].replace(
+            b'#enddata\r\n#include "nodes.inc"\r\n', f"#enddata\r\n#include {root_nodes}\r\n".encode())
     legacy = tmp_path / "legacy.caeprep"
     with ZipFile(legacy, "w") as project:
         for name, contents in members.items():
@@ -1188,6 +1219,9 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     if inline_only:
         exported_include = output.parent / source_files["mesh/first.inc"]["logical_path"]
         assert exported_include.read_bytes().count(f"#include {mapped_path}\r\n".encode()) == 2
+    if inactive:
+        exported_include = output.parent / source_files["mesh/first.inc"]["logical_path"]
+        assert exported_include.read_bytes().endswith(f"#enddata\r\n#include {root_nodes}\r\n".encode())
     reopened = PrepSession()
     reopened.open_rad(output)
     assert _mesh_facts(reopened) == expected

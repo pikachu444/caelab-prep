@@ -955,11 +955,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             native_id = ref.local_id
             integer(native_id)
             matches = cells_by_id.get(native_id, [])
-            owned = [cell for cell in matches if cell["resource_id"] == ref.resource_id]
             if ref.formulation is not None:
-                owned = [cell for cell in owned if cell.get("formulation") == ref.formulation]
-                if not owned:
+                matches = [cell for cell in matches if cell.get("formulation") == ref.formulation]
+                if not any(cell["resource_id"] == ref.resource_id for cell in matches):
                     raise PrepError("invalid_reference", "The native element formulation does not match the reference.")
+            owned = [cell for cell in matches if cell["resource_id"] == ref.resource_id]
             if family is not None:
                 scoped = [cell for cell in matches if self._element_group_family(cell["type"], cell.get("formulation")) == family]
                 if owned and not any(cell["resource_id"] == ref.resource_id for cell in scoped):
@@ -973,8 +973,6 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             cell = matches[0]
             if cell["resource_id"] != ref.resource_id:
                 raise PrepError("invalid_reference", "The element does not belong to the stated resource.")
-            if ref.formulation is not None and cell.get("formulation") != ref.formulation:
-                raise PrepError("incompatible_group", "The element is outside this native group family.")
             kind = self._element_group_family(cell["type"], cell.get("formulation"))
             if kind is None:
                 raise PrepError("unsupported_operation", "Element groups support triangle3, quad4 and supported solid cells.")
@@ -1425,6 +1423,41 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 object_ids=(card_id,), expected_revision=expected_revision, kind="structure")
             return self._model_result(resource, None, change, deleted_card_id=card_id)
 
+    @staticmethod
+    def _validate_part_compatibility(part_cells, *, material=None, material_changed=False,
+                                     property_owner=None, property_card=None, property_changed=False):
+        part_kinds = {"QUAD" if cell.get("formulation") == "QUAD" else cell["type"] for cell in part_cells}
+        if "tetra10" in part_kinds and part_kinds != {"tetra10"}:
+            raise PrepError("incompatible_property", "Tet10 requires a separate PART from other solid families.")
+        if material is not None:
+            law = material.keyword.upper().split("/")[2]
+            if material_changed and law not in ("LAW1", "ELAST", "LAW36", "PLAS_TAB"):
+                raise PrepError("unsupported_operation", "Assignment supports LAW1/LAW36 material families only.")
+            if "tetra10" in part_kinds and law not in ("LAW1", "ELAST"):
+                raise PrepError("unsupported_operation", "The prepared Tet10 profile supports LAW1 material only.")
+        if property_card is None:
+            return
+        family = property_card.keyword.upper().split("/")[2]
+        compatible = ({"quad", "triangle"} if family in ("SHELL", "TYPE1") else
+                      {"QUAD", "tetra", "tetra10", "hexahedron", "wedge", "pyramid"} if family in TYPE14_PROPERTIES else
+                      {"line"} if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2") else None)
+        if compatible is None and (family == "QUAD" or property_changed):
+            raise PrepError("unsupported_operation", "Assignment supports SHELL and SOLID property families only.")
+        if compatible is not None and part_kinds - compatible:
+            raise PrepError("incompatible_property", "The property family does not match the part's element types.")
+        if "tetra10" in part_kinds:
+            try:
+                row = property_owner.lines[property_card.data[1]]
+                profile = tuple(int(row[start:start + 10].strip() or "0") for start in (10, 20, 40))
+            except (IndexError, ValueError):
+                profile = None
+            if profile != (4, 0, 1000):
+                raise PrepError("incompatible_property", "Tet10 requires explicit SOLID Ismstr=4, Iale=0 and Itetra10=1000.")
+        if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2"):
+            expected = "BEAM" if family in ("BEAM", "TYPE3") else "TRUSS"
+            if any(cell.get("formulation") != expected for cell in part_cells):
+                raise PrepError("incompatible_property", "Beam and truss sections have different native mechanical formulations.")
+
     def assign_part(self, card_id, *, material_id=None, property_id=None,
                     expected_revision=None, expected_document_id=None):
         """Assign UUID targets atomically; native IDs never masquerade as object IDs."""
@@ -1433,12 +1466,10 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             resource, card, refs = self._part_native_references(card_id)
             if self._projection_cache is None: self.mesh_view()
             part_cells = self._projection_index["cells_by_part"].get(refs["native_part_id"], ())
-            part_kinds = {"QUAD" if cell.get("formulation") == "QUAD" else cell["type"] for cell in part_cells}
-            if "tetra10" in part_kinds and part_kinds != {"tetra10"}:
-                raise PrepError("incompatible_property", "Tet10 requires a separate PART from other solid families.")
             if material_id is None and property_id is None:
                 raise PrepError("invalid_command", "Choose a material or property to assign.")
             values = {}
+            compatibility = {}
             for key, target, namespace in (("material_id", material_id, "MAT"), ("property_id", property_id, "PROP")):
                 if target is None:
                     matches = self._native_matches(namespace, refs["native_" + key])
@@ -1448,32 +1479,12 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     continue
                 target_owner, target_card, identity = self._unique_card(target, namespace)
                 values[key] = identity[1]
-                if (key == "material_id" and identity[1] != refs["native_material_id"]
-                        and target_card.keyword.upper().split("/")[2] not in ("LAW1", "ELAST", "LAW36", "PLAS_TAB")):
-                    raise PrepError("unsupported_operation", "Assignment supports LAW1/LAW36 material families only.")
-                if key == "material_id" and "tetra10" in part_kinds and target_card.keyword.upper().split("/")[2] not in ("LAW1", "ELAST"):
-                    raise PrepError("unsupported_operation", "The prepared Tet10 profile supports LAW1 material only.")
-                if key == "property_id":
-                    family = target_card.keyword.upper().split("/")[2]
-                    compatible = ({"quad", "triangle"} if family in ("SHELL", "TYPE1") else
-                                  {"QUAD", "tetra", "tetra10", "hexahedron", "wedge", "pyramid"} if family in TYPE14_PROPERTIES else
-                                  {"line"} if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2") else None)
-                    if compatible is None and (family == "QUAD" or identity[1] != refs["native_property_id"]):
-                        raise PrepError("unsupported_operation", "Assignment supports SHELL and SOLID property families only.")
-                    if compatible is not None and part_kinds - compatible:
-                        raise PrepError("incompatible_property", "The property family does not match the part's element types.")
-                    if "tetra10" in part_kinds:
-                        try:
-                            row = target_owner.render().decode("latin1").splitlines()[target_card.data[1]]
-                            profile = tuple(int(row[start:start + 10].strip() or "0") for start in (10, 20, 40))
-                        except (IndexError, ValueError):
-                            profile = None
-                        if profile != (4, 0, 1000):
-                            raise PrepError("incompatible_property", "Tet10 requires explicit SOLID Ismstr=4, Iale=0 and Itetra10=1000.")
-                    if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2"):
-                        expected = "BEAM" if family in ("BEAM", "TYPE3") else "TRUSS"
-                        if any(cell.get("formulation") != expected for cell in self._projection_index["cells_by_part"].get(refs["native_part_id"], ())):
-                            raise PrepError("incompatible_property", "Beam and truss sections have different native mechanical formulations.")
+                if key == "material_id":
+                    compatibility.update(material=target_card, material_changed=identity[1] != refs["native_material_id"])
+                else:
+                    compatibility.update(property_owner=target_owner, property_card=target_card,
+                                         property_changed=identity[1] != refs["native_property_id"])
+            self._validate_part_compatibility(part_cells, **compatibility)
             state = resource.fields_state(card_id, values)
             self._validate_dependent_condition_states({resource.id:state})
             change = self.dispatcher.execute(resource.id, state, "Assign material / property",
@@ -2040,14 +2051,6 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         return bindings, diagnostics
 
     def _rad_outputs(self, target, inactive_condition_ids=(), *, companion=None):
-        try:
-            return self._rad_output_plan(target, inactive_condition_ids, companion=companion, qualify=False)
-        except PrepError as exc:
-            if exc.code != "include_output_collision":
-                raise
-        return self._rad_output_plan(target, inactive_condition_ids, companion=companion, qualify=True)
-
-    def _rad_output_plan(self, target, inactive_condition_ids, *, companion, qualify):
         document = self._require()
         self._require_expanded_instances()
         stale = self._relations_resource().snapshot()["stale_targets"]
@@ -2068,7 +2071,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             planned.add(companion.name)
         planned_lookup = include_lookup(planned)
         disk_lookup = disk_include_lookup(target.parent, canonical=False)
-        outputs = []
+        destinations = {}
         payloads, expected = {}, {}
         targets = set()
         for resource in self._deck_resources(document):
@@ -2091,10 +2094,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 relative = include_relative(directive.path)
                 root_path = relative.as_posix()
                 sibling_path = (PurePosixPath(logical).parent / relative).as_posix()
-                root_match = planned_lookup(root_path)
+                root_match = planned_lookup(root_path) or disk_lookup(root_path)
+                sibling_match = planned_lookup(sibling_path) or disk_lookup(sibling_path)
                 shadow = (root_match == target.name or (companion is not None and root_match == companion.name)
-                          or (root_match is None and disk_lookup(root_path)))
-                if resolved != root_path and (resolved != sibling_path or shadow or (qualify and root_match)):
+                          or (root_match is not None and planned_lookup(root_path) is None))
+                if resolved != root_match and (resolved != sibling_match or shadow):
                     directive.replace_path(lines, resolved)
             omitted = {index for identity in inactive_condition_ids if identity in resource._by_id for index in
                        (resource.card(identity).start, *resource.card(identity).data)}
@@ -2107,33 +2111,90 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             payload = "".join(line for line, _ in rows).encode("latin1")
             expected[logical] = tuple(included for _, included in rows if included is not None)
             payloads[logical] = payload
-            if resource.id != self._root_id and destination.exists() and destination.read_bytes() != payload:
+            destinations[logical] = destination
+
+        self._qualify_export_includes(target.name, payloads, expected,
+                                      lambda path: planned_lookup(path) or disk_lookup(path))
+        outputs = []
+        for logical, destination in destinations.items():
+            payload = payloads[logical]
+            if logical != target.name and destination.exists() and destination.read_bytes() != payload:
                 raise PrepError("include_output_collision", "기존 INCLUDE 출력과 내용이 다릅니다. 빈 출력 폴더를 선택해 주세요.", {"path": str(destination)})
             outputs.append((destination, payload))
+        return outputs
+
+    @staticmethod
+    def _qualify_export_includes(root, payloads, expected, lookup):
         decks = {}
 
         def load_output(path):
             if path not in payloads:
                 raise PrepError("include_output_collision", "The exported deck would include a file outside the planned resources.",
                                 {"path": path})
-            deck = DeckResource(payloads[path], name=path, is_include=path != target.name)
-            decks[path] = deck
-            return deck
+            if path not in decks:
+                decks[path] = DeckResource(payloads[path], name=path, is_include=path != root)
+            return decks[path]
 
-        reached, edges, issues = resolve_includes(target.name, lambda path: planned_lookup(path) or disk_lookup(path), load_output)
+        # Use the same resolver as native open so that an optional rewrite
+        # cannot qualify every other edge in the same pending INCLUDE wave.
+        ordered, incoming, visited = [], {}, set()
+
+        def visit(path):
+            if path in visited:
+                return
+            visited.add(path)
+            for ordinal, included in enumerate(expected[path]):
+                entry = (path, ordinal, included)
+                ordered.append(entry)
+                incoming.setdefault(included, []).append(entry)
+                visit(included)
+
+        def qualify(entry):
+            path, ordinal, intended = entry
+            directives = load_output(path).include_directives
+            if ordinal >= len(directives):
+                return False
+            directive = directives[ordinal]
+            if include_relative(directive.path).as_posix().casefold() == intended.casefold():
+                return False
+            lines = list(decks[path].lines)
+            directive.replace_path(lines, intended)
+            payloads[path] = "".join(lines).encode("latin1")
+            del decks[path]
+            return True
+
+        visit(root)
+        while True:
+            reached, edges, issues = resolve_includes(root, lookup, load_output)
+            for entry in ordered:
+                path, ordinal, intended = entry
+                if path not in reached or ordinal >= len(decks[path].include_directives):
+                    continue
+                row = decks[path].include_directives[ordinal].header_row
+                actual = edges.get((path, row))
+                if actual == intended:
+                    continue
+                if qualify(entry):
+                    break
+                # A sibling chosen over an already-claimed canonical root can
+                # be marked explicit at the edge that actually intends it.
+                if any(qualify(other) for other in incoming.get(actual, ()) if other[0] in reached):
+                    break
+            else:
+                break
         if issues:
             path, directive, cause = issues[0]
             raise PrepError("include_output_collision", "The exported INCLUDE graph could not be reproduced in this destination.",
                             {"path": path, "directive": directive.path, "cause": str(cause),
                              **({"target": cause.details["path"]} if isinstance(cause, PrepError) and "path" in cause.details else {})})
-        for path, deck in decks.items():
+        for path in reached:
+            deck = decks[path]
             actual = tuple(edges.get((path, directive.header_row)) for directive in deck.include_directives)
             if actual != expected[path]:
                 raise PrepError("include_output_collision", "The exported INCLUDE bindings would change in this destination.",
                                 {"path": path, "expected": expected[path], "actual": actual})
         if reached != set(payloads):
             raise PrepError("include_output_collision", "The exported INCLUDE graph does not match the document.")
-        return outputs
 
     @staticmethod
     def _write_output_batch(outputs):

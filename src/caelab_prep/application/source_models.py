@@ -9,7 +9,6 @@ from uuid import UUID, uuid4
 from ..cae_core import CommandDispatcher, PrepError
 from ..radioss import DeckResource
 from ..radioss.assembly import inspect, remap, identity, NativeMap, source_include_graph
-from ..radioss.includes import include_lookup, resolve_includes
 from .projection import readonly, mutable
 
 
@@ -103,11 +102,16 @@ class SourceArchiveResource:
                 selected[key] = originals_by_id[target].name
             if len(selected) != sum(len(resource.include_directives) for resource in originals):
                 raise PrepError("invalid_project", "Original source INCLUDE bindings are incomplete.")
+        # Inline-only ZIPs can have identical mapped bytes under the direct
+        # writer and a later resolver. Replay the direct writer first when
+        # its native traversal accounts for every archived original.
         policies = ((None, "quoted"),) if records is not None else (
-            (None, "quoted"), ("bde", "quoted"), ("ac0", "quoted"),
-            ("987", "unquoted"), ("8fe", "unchanged"))
+            ("8fe", "unchanged"), (None, "quoted"), ("bde", "quoted"),
+            ("ac0", "quoted"), ("987", "unquoted"))
         for historical, style in policies:
             graph = source_include_graph(originals, paths, selected=selected, historical=historical)
+            if historical == "8fe" and graph[0] != set(paths):
+                continue
             try:
                 expected = remap(originals, mapping, paths, include_graph=graph, two_line=style,
                                  legacy_direct_inline=historical == "8fe")
@@ -120,16 +124,12 @@ class SourceArchiveResource:
             if historical == "8fe":
                 _, original_bindings, _ = graph
                 mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
-                mapped = {paths[name]: document.resources[rid] for name, rid in mapped_ids.items()}
-                mapped_root = next(paths[name] for name, rid in mapped_ids.items() if rid == self.metadata["root_resource_id"])
-                reached, _, _ = resolve_includes(mapped_root, include_lookup(mapped), mapped.__getitem__,
-                                                scope=f"sources/{self.id}", archive_inventory=set(mapped))
                 for resource in originals:
                     for ordinal, directive in enumerate(resource.include_directives):
                         intended = original_bindings.get((resource.name, directive.header_row))
                         direct = directive.path.replace("\\", "/")
                         if (directive.filename_row == directive.header_row and intended
-                                and direct in paths and paths[intended] not in reached):
+                                and direct in paths and intended != direct):
                             self.recovered_include_bindings[mapped_ids[resource.name], ordinal] = mapped_ids[intended]
             return
         raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")

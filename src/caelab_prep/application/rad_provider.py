@@ -324,15 +324,16 @@ class RadProvider:
 
     def _element_members_field(self, value=None):
         cells = self.session.mesh_view()["cells"]
-        refs = tuple({"resource_id": cell["resource_id"], "entity_kind": "element", "local_id": cell["id"]}
-                     for cell in cells)
+        refs = tuple(self.session._element_selection_ref(cell).to_dict() for cell in cells)
         if value is None:
             selection = self.session.selection()
             value = selection["refs"] if selection["kind"] == "element" else ()
         names = {card["resource_id"]: card["resource_name"] for card in self.session.list_cards()}
         return PropertySpec("element_refs", "Element members", tuple(value), kind="references", choices=refs,
-            choice_labels=tuple(f"Element {cell['id']} · {names.get(cell['resource_id'], cell['resource_id'])} · {cell['type']}"
-                                for cell in cells), unit_context={"reference_kind": "mesh-element"})
+            choice_labels=tuple(
+                f"Element {cell['id']} · {names.get(cell['resource_id'], cell['resource_id'])} · {cell['type']}"
+                + (f" ({ref['formulation']})" if "formulation" in ref else "")
+                for cell, ref in zip(cells, refs)), unit_context={"reference_kind": "mesh-element"})
 
     @staticmethod
     def _condition_kind(card):
