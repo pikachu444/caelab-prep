@@ -13,7 +13,7 @@ import math
 
 from ..cae_core import PrepError
 from .deck import number
-from .modeling import native_identity, real, title, integer
+from .modeling import ELEMENT_ALIASES, native_identity, real, title, integer
 
 AXES = ((1., 0., 0.), (0., 1., 0.), (0., 0., 1.))
 
@@ -93,6 +93,7 @@ def node_support(resources, projection, node_ids):
         targets = requested.intersection(cell["nodes"])
         if not targets: continue
         family = cell.get("formulation")
+        family = ELEMENT_ALIASES.get(family, family)
         rotations = {identifier: [] for identifier in targets}
         try:
             if len(parts.get(cell["part_id"], ())) != 1: raise ValueError("PART assignment is unresolved")

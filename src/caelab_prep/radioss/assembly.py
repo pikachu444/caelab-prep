@@ -5,15 +5,15 @@ creates new include payloads; it does not mutate the source deck or weaken
 DeckResource's source-header safeguards. Unsupported reference-bearing cards
 are rejected before any document mutation.
 """
-import re
-
 from ..cae_core import PrepError
-from .deck import include_target
-from .modeling import native_identity
+from .includes import include_lookup, resolve_includes
+from .modeling import ELEMENT_ALIASES, native_identity
 
 
 ELEMENTS = {"BEAM": 3, "TRUSS": 2, "SHELL": 4, "SH3N": 3, "TETRA4": 4, "BRICK": 8}
 ELEMENT_NAMESPACE = {"BEAM": "BEAM", "TRUSS": "TRUSS", "SHELL": "SHELL", "SH3N": "SH3N", "TETRA4": "SOLID", "BRICK": "SOLID"}
+ELEMENTS.update({alias: ELEMENTS[family] for alias, family in ELEMENT_ALIASES.items()})
+ELEMENT_NAMESPACE.update({alias: ELEMENT_NAMESPACE[family] for alias, family in ELEMENT_ALIASES.items()})
 GROUPS = {"GRNOD/NODE": "NODE", "GRBEAM/BEAM": "E:BEAM", "GRTRUS/TRUS": "E:TRUSS",
           "GRSHEL/SHEL": "E:SHELL", "GRSH3N/SH3N": "E:SH3N", "GRBRIC/BRIC": "E:SOLID", "SURF/PART": "PART"}
 REFERENCE_FREE_PAIRS = {"MAT/LAW1", "MAT/ELAST", "PROP/BEAM", "PROP/TYPE3", "PROP/TRUSS", "PROP/TYPE2",
@@ -141,8 +141,13 @@ def inspect(resources):
         raise PrepError("unsupported_source_profile", "A supported source card has malformed fixed-width data.", {"reason": str(exc)}) from exc
 
 
-def remap(resources, mappings, paths):
+def remap(resources, mappings, paths, *, two_line="quoted"):
     definitions, edits, omitted = inspect(resources)
+    by_path = {resource.name: resource for resource in resources}
+    root = next(resource.name for resource in resources if not resource.is_include)
+    reached, bindings, problems = resolve_includes(root, include_lookup(paths), by_path.__getitem__)
+    if problems or reached != set(paths):
+        raise PrepError("include_missing", "The imported INCLUDE graph could not be resolved.")
     result = {}
     for resource in resources:
         lines = resource.render().decode("latin1").splitlines(keepends=True)
@@ -161,20 +166,11 @@ def remap(resources, mappings, paths):
                 body = lines[line].rstrip("\r\n"); ending = lines[line][len(body):]
                 lines[line] = body.ljust(start + 10)[:start] + f"{mapped:10d}" + body[start + 10:] + ending
         for directive in resource.include_directives:
-            original = include_target(directive.path, resource.name, lambda path: path.as_posix() in paths).as_posix()
-            if original not in paths:
-                raise PrepError("include_missing", "Missing imported INCLUDE path.")
-            index = directive.filename_row
-            line = lines[index]
-            body = line.rstrip("\r\n")
-            ending = line[len(body):]
-            if index == directive.header_row:
-                prefix = re.match(r"^\s*#include\b", body, re.I)[0]
-                remainder = body[len(prefix):]
-                prefix += remainder[:len(remainder) - len(remainder.lstrip())] or " "
-            else:
-                prefix = body[:len(body) - len(body.lstrip())]
-            lines[index] = prefix + paths[original] + ending
+            multiline = directive.filename_row != directive.header_row
+            if multiline and two_line == "unchanged":
+                continue
+            original = bindings[resource.name, directive.header_row]
+            directive.replace_path(lines, paths[original], preserve_quotes=multiline and two_line == "quoted")
         # Explicitly shared nodes live in the destination resource only.
         shared = {line for (namespace, identifier), (rid, line) in definitions.items()
                   if rid == resource.id and namespace == "NODE" and (namespace, identifier) in mappings.shared}

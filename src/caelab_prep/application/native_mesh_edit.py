@@ -4,7 +4,7 @@ from dataclasses import asdict
 
 from ..cae_core import PrepError
 from ..radioss.assembly import ELEMENTS
-from ..radioss.modeling import integer, real
+from ..radioss.modeling import ELEMENT_ALIASES, integer, real
 from ..radioss.relations import node_support
 from . import mesh_edit_candidates as edits
 from .mesh_relations import explicit_member_state
@@ -50,7 +50,8 @@ def native_mesh_edit_states(session, candidate, *, layout_error_code):
         target_node_card_id = node_card_ids[-1] if node_card_ids else None
         lines = owner.render().decode("latin1").splitlines(keepends=True)
         for card in owner.cards:
-            family = card.keyword.upper().strip("/").split("/")[0]
+            native_family = card.keyword.upper().strip("/").split("/")[0]
+            family = ELEMENT_ALIASES.get(native_family, native_family)
             if family != "NODE" and family not in ELEMENTS:
                 continue
             changed = {}
@@ -101,7 +102,7 @@ def native_mesh_edit_states(session, candidate, *, layout_error_code):
                         body = body[:start].ljust(start) + integer(value) + body[start + 10:]
                     if cell.part != previous.part:
                         target = session._part_native_references(cell.part.local_id)[2]["native_part_id"]
-                        key = family, target
+                        key = native_family, target
                         transfers.setdefault(key, []).append(body + (ending or owner.newline))
                         changed[row] = None
                     else:

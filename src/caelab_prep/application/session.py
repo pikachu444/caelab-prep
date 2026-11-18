@@ -6,7 +6,7 @@ import math
 import re
 from copy import deepcopy
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import tempfile
 from threading import RLock
 from uuid import UUID, uuid4
@@ -17,7 +17,8 @@ from functools import wraps
 
 from ..cae_core import CommandDispatcher, Document, PrepError, Selection, SelectionRef
 from ..radioss import DeckResource
-from ..radioss.deck import include_relative, include_target, number
+from ..radioss.deck import number
+from ..radioss.includes import disk_include_lookup, include_lookup, include_relative, resolve_includes
 from ..radioss.modeling import (native_identity, integer, material_block, shell_block, copy_block,
     curve_points, curve_block, member_block, boundary_block, load_block, velocity_block, contact_block, title, real, solid_block, engine_input, condition_scalar_default, reject_default_zero)
 from .storage import write_container
@@ -169,43 +170,32 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             base = source.parent
             document = Document(source.name)
             paths: dict[str, str] = {}
-            seen: dict[Path, str] = {}
+            by_path: dict[str, DeckResource] = {}
             diagnostics: list[dict] = []
 
-            def visit(filename: Path, chain: tuple[Path, ...]) -> str:
-                if filename in seen:
-                    return seen[filename]
+            def load(logical):
+                filename = base / logical
                 try:
-                    resource = DeckResource(filename.read_bytes(), name=filename.relative_to(base).as_posix(),
-                                            is_include=filename != source)
+                    resource = DeckResource(filename.read_bytes(), name=logical, is_include=filename != source)
                 except OSError as exc:
                     raise PrepError("file_read_error", "파일을 읽지 못했습니다.", {"path": str(filename), "reason": str(exc)}) from exc
-                seen[filename] = resource.id
-                paths[resource.id] = filename.relative_to(base).as_posix()
+                by_path[logical] = resource
+                paths[resource.id] = logical
                 document.resources[resource.id] = resource
-                for reference in resource.includes():
-                    details = {"resource_id": resource.id, **reference}
-                    try:
-                        logical = include_target(reference["path"], resource.name, lambda path: (base / path).exists())
-                        target = (base / logical).resolve()
-                        target.relative_to(base)
-                        if target in chain + (filename,):
-                            raise PrepError("include_cycle", "순환 INCLUDE를 발견했습니다.", {"path": str(target)})
-                        if not target.is_file():
-                            raise PrepError("include_missing", "INCLUDE 파일이 없습니다.", {"path": str(target)})
-                        visit(target, chain + (filename,))
-                    except (PrepError, ValueError, OSError) as exc:
-                        diagnostics.append({"severity": "warning", "code": getattr(exc, "code", "include_read_error"),
-                            "message": str(exc), "unresolved_include": True, **details})
-                return resource.id
+                return resource
 
-            root = visit(source, ())
+            _, _, problems = resolve_includes(source.name, disk_include_lookup(base), load)
+            for owner, directive, exc in problems:
+                diagnostics.append({"severity": "warning", "code": getattr(exc, "code", "include_read_error"),
+                    "message": str(exc), "unresolved_include": True, "resource_id": by_path[owner].id,
+                    "path": directive.path, "line": directive.header_row + 1})
             collisions = self._path_collisions(paths)
             if collisions:
                 diagnostics.append({"severity": "warning", "code": "project_path_collision",
                     "message": "대소문자만 다른 경로는 이식 가능한 작업 문서에 함께 저장할 수 없습니다.", "paths": collisions})
             document.mark_saved()
-            self._install(document, root, paths, {str(p) for p in seen}, diagnostics, str(source))
+            self._install(document, by_path[source.name].id, paths, {str(base / path) for path in by_path},
+                          diagnostics, str(source))
             result = self.describe()
             self._notify("document")
             return result
@@ -1933,7 +1923,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         document.resources[recipe.id] = recipe
                     if not isinstance(manifest.get("source_paths", []), list) or not all(isinstance(p, str) for p in manifest.get("source_paths", [])):
                         raise ValueError("invalid source path metadata")
-                    diagnostics = self._project_include_diagnostics(document, paths, manifest["root_id"])
+                    _, diagnostics = self._project_include_graph(document, paths, manifest["root_id"])
                     if manifest["version"] >= 3:
                         cases = AnalysisCasesResource(document.id, manifest["analysis_cases"])
                         if cases.id in document.resources:
@@ -1954,38 +1944,30 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             self._notify("document")
             return result
 
-    def _project_include_diagnostics(self, document: Document, paths: dict[str, str], root_id: str) -> list[dict]:
-        """Rebuild the include graph; serialized diagnostics are not trusted state."""
+    def _project_include_graph(self, document: Document, paths: dict[str, str], root_id: str):
+        """Rebuild bindings from native directives and the archived file inventory."""
         by_path = {value: key for key, value in paths.items()}
-        reached = set()
+        lookup = include_lookup(by_path)
+        reached, bindings = set(), {}
         diagnostics = []
 
-        def visit(resource_id: str, chain: tuple[str, ...]):
-            if resource_id in reached: return
-            reached.add(resource_id)
-            resource = document.resources[resource_id]
-            for reference in resource.includes():
-                try:
-                    logical = include_target(reference["path"], paths[resource_id],
-                                             lambda path: path.as_posix() in by_path).as_posix()
-                    if logical not in by_path:
-                        raise PrepError("include_missing", "작업 문서에 INCLUDE 자원이 없습니다.", {"path": logical})
-                    target = by_path[logical]
-                    if target in chain + (resource_id,):
-                        raise PrepError("include_cycle", "순환 INCLUDE를 발견했습니다.")
-                    visit(target, chain + (resource_id,))
-                except PrepError as exc:
-                    diagnostics.append({"severity": "warning", "code": exc.code, "message": exc.message,
-                        "unresolved_include": True, "resource_id": resource_id, **reference})
-
-        visit(root_id, ())
-        for source_root in self._source_roots(document):
-            visit(source_root, (root_id,))
-        if reached != set(paths):
+        scopes = [(root_id, "")]
+        scopes.extend((source.metadata["root_resource_id"], f"sources/{source.id}")
+                      for source in document.resources.values() if isinstance(source, SourceArchiveResource))
+        for entry, scope in scopes:
+            files, edges, problems = resolve_includes(paths[entry], lookup,
+                                                     lambda path: document.resources[by_path[path]], scope=scope)
+            reached.update(files)
+            bindings.update({(by_path[owner], row): by_path[target] for (owner, row), target in edges.items()})
+            for owner, directive, exc in problems:
+                diagnostics.append({"severity": "warning", "code": exc.code, "message": exc.message,
+                    "unresolved_include": True, "resource_id": by_path[owner], "path": directive.path,
+                    "line": directive.header_row + 1})
+        if reached != set(by_path):
             raise PrepError("invalid_project", "루트 입력에서 참조하지 않는 자원이 작업 문서에 있습니다.")
-        return diagnostics
+        return bindings, diagnostics
 
-    def _rad_outputs(self, target, inactive_condition_ids=()):
+    def _rad_outputs(self, target, inactive_condition_ids=(), *, companion=None):
         document = self._require()
         self._require_expanded_instances()
         stale = self._relations_resource().snapshot()["stale_targets"]
@@ -1996,6 +1978,16 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                             {"diagnostics": self._diagnostics})
         if document.save_state.path and target == Path(document.save_state.path):
             raise PrepError("project_overwrite", "작업 문서를 솔버 입력으로 덮어쓸 수 없습니다.")
+        bindings, problems = self._project_include_graph(document, self._paths, self._root_id)
+        if problems:
+            raise PrepError("unresolved_include", "미해결 INCLUDE가 있어 독립 입력 파일을 내보낼 수 없습니다.",
+                            {"diagnostics": problems})
+        logical_outputs = {rid: (target.name if rid == self._root_id else path) for rid, path in self._paths.items()}
+        planned = set(logical_outputs.values())
+        if companion is not None:
+            planned.add(companion.name)
+        planned_lookup = include_lookup(planned)
+        disk_lookup = disk_include_lookup(target.parent)
         outputs = []
         targets = set()
         for resource in self._deck_resources(document):
@@ -2008,6 +2000,18 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             targets.add(key)
             excluded = [identity for identity in inactive_condition_ids if identity in resource._by_id]
             payload = resource.render()
+            if resource.include_directives:
+                lines = payload.decode("latin1").splitlines(keepends=True)
+                for directive in resource.include_directives:
+                    resolved = logical_outputs[bindings[resource.id, directive.header_row]]
+                    relative = include_relative(directive.path)
+                    root_path = relative.as_posix()
+                    sibling_path = (PurePosixPath(logical_outputs[resource.id]).parent / relative).as_posix()
+                    if resolved == root_path:
+                        continue
+                    if resolved != sibling_path or planned_lookup(root_path) or disk_lookup(root_path):
+                        directive.replace_path(lines, resolved)
+                payload = "".join(lines).encode("latin1")
             if resource.id == self._root_id and self._source_roots():
                 text = payload.decode("latin1").splitlines(keepends=True)
                 end = next((index for index, line in enumerate(text) if line.strip().upper() == "/END"), None)
@@ -2075,7 +2079,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             run_name = target.name[:-9]
             engine = target.with_name(run_name + "_0001.rad")
             engine_bytes = engine_input(run_name, end_time, output_interval)
-            outputs = self._rad_outputs(target, _inactive_condition_ids)
+            outputs = self._rad_outputs(target, _inactive_condition_ids, companion=engine)
             if self._protected(engine) or (document.save_state.path and engine == Path(document.save_state.path)):
                 raise PrepError("source_overwrite", "Choose a new directory for generated solver inputs.")
             if str(engine).casefold() in {str(destination).casefold() for destination, _ in outputs}:

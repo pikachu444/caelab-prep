@@ -5,9 +5,9 @@ from dataclasses import asdict
 from uuid import uuid4
 
 from ..cae_core import PrepError
-from ..radioss.assembly import ELEMENTS, GROUPS, inspect
+from ..radioss.assembly import ELEMENTS, ELEMENT_NAMESPACE, GROUPS, inspect
 from ..radioss.deck import number
-from ..radioss.modeling import native_identity, load_direction
+from ..radioss.modeling import ELEMENT_ALIASES, native_identity, load_direction
 from ..radioss.relations import coordinate_frame
 from . import mesh_edit_candidates as edits
 
@@ -47,7 +47,7 @@ class NodeMoveCommands:
             lines = resource.render().decode("latin1").splitlines()
             for card in resource.cards:
                 words = card.keyword.upper().strip("/").split("/")
-                family = words[0]
+                family = ELEMENT_ALIASES.get(words[0], words[0])
                 if family == "NODE":
                     for row in card.data:
                         identifier = int(lines[row][:10])
@@ -62,7 +62,7 @@ class NodeMoveCommands:
                         connectivity = values[1:3] if family == "BEAM" else values[1:]
                         cells.append(edits.Cell(ref, family, tuple(node_refs[value] for value in connectivity), part,
                                                 resource.id, orientation))
-                        namespace = "E:SOLID" if family in ("TETRA4", "BRICK") else "E:" + family
+                        namespace = "E:" + ELEMENT_NAMESPACE[family]
                         element_refs[(namespace, values[0])] = ref
         for resource in resources:
             for card in resource.cards:

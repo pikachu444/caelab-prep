@@ -5,6 +5,7 @@ from dataclasses import replace
 from math import dist
 from pathlib import Path
 import shutil
+from zipfile import ZipFile
 
 import pytest
 
@@ -797,32 +798,42 @@ def test_d23_trailing_nested_includes_remain_file_owned_after_mesh_edit(tmp_path
     assert nested.read_bytes() == original
 
 
-@pytest.mark.parametrize("root_has_match", (True, False), ids=("root-first", "sibling-fallback"))
-@pytest.mark.parametrize("separator", (" ", "\r\n"), ids=("inline", "two-line"))
-def test_d23_nested_include_lookup_agrees_in_native_and_independent_source(tmp_path, root_has_match, separator):
+def _nested_include_deck(source, layout, separator, *, filename="nodes.inc", uppercase=False):
     from caelab_prep.radioss.modeling import material_block, shell_block
 
-    source = tmp_path / "source"
-    filename = "nodes.inc" if root_has_match else "nested-nodes.inc"
-    owner = filename if root_has_match else f"mesh/{filename}"
+    sibling = f"mesh/{filename}"
+    owner = filename if layout == "sibling-claimed" else sibling
     xyz = {1: (3, 1, 0), 2: (13, 1, 0), 3: (3, 11, 0)}
     units = f"{'Mg':>20}{'mm':>20}{'s':>20}\n"
-    header = ("/BEGIN\nNested source\n      2024         0\n" + units * 2
-              + material_block(41, "Steel", 7.8e-9, 210000, .3) + shell_block(21, "Shell", 1)
+    begin = "/BEGIN\nNested source\n      2024         0\n" + units * 2
+    header = (begin + material_block(41, "Steel", 7.8e-9, 210000, .3) + shell_block(21, "Shell", 1)
               + f"/PART/9\nPanel\n{21:10}{41:10}{0:10}\n")
-    explicit_sibling = "#include mesh/nodes.inc\n" if root_has_match else ""
-    starter = _write(source / "nested_0000.rad", header + "#include mesh/first.inc\n" + explicit_sibling + "/END\n")
-    _write(source / "mesh/first.inc", f"/SH3N/9\r\n{_tri_line(77, 1, 2, 3)}\r\n#include{separator}\"{filename}\"\r\n")
+    picked = {"sibling-claimed": sibling, "root-claimed": filename}.get(layout)
+    root_refs = ["mesh/first.inc"]
+    if picked:
+        root_refs.append(picked)
+    spell = str.upper if uppercase else str
+    starter = _write(source / "nested_0000.rad",
+                     header + "".join(f"#include {spell(path)}\n" for path in root_refs) + "/END\n")
+    _write(source / "mesh/first.inc",
+           f"/SH3N/9\r\n{_tri_line(77, 1, 2, 3)}\r\n#include{separator}\"{spell(filename)}\"\r\n")
     _write(source / owner, "/NODE\n" + "".join(_node_line(node, *point) + "\n" for node, point in xyz.items()))
-    if root_has_match:
-        _write(source / "mesh/nodes.inc", f"/NODE\n{_node_line(4, 83, 1, 0)}\n")
+    expected_points = {node: (point, (owner,)) for node, point in xyz.items()}
+    if picked:
+        _write(source / picked, f"/NODE\n{_node_line(4, 83, 1, 0)}\n")
+        expected_points[4] = ((83, 1, 0), (picked,))
+    if layout == "root-directory":
+        (source / filename).mkdir()
+    expected = (expected_points, {("mesh/first.inc", "SH3N", 77): ((1, 2, 3), None, 9, None)})
+    return starter, begin, owner, expected
 
+
+@pytest.mark.parametrize("layout", ("sibling-claimed", "root-claimed", "sibling-only", "root-directory"))
+@pytest.mark.parametrize("separator,uppercase", ((" ", False), ("\r\n", True)), ids=("inline", "quoted-two-line-uppercase"))
+def test_d23_nested_include_lookup_agrees_in_native_and_independent_source(tmp_path, layout, separator, uppercase):
+    starter, begin, owner, expected_native = _nested_include_deck(tmp_path / "source", layout, separator, uppercase=uppercase)
     native = PrepSession()
     native.open_rad(starter)
-    expected_points = {node: (point, (owner,)) for node, point in xyz.items()}
-    if root_has_match:
-        expected_points[4] = ((83, 1, 0), ("mesh/nodes.inc",))
-    expected_native = (expected_points, {("mesh/first.inc", "SH3N", 77): ((1, 2, 3), None, 9, None)})
     assert _mesh_facts(native) == expected_native
     native_project = tmp_path / "native.caeprep"
     native.save_project(native_project)
@@ -830,8 +841,9 @@ def test_d23_nested_include_lookup_agrees_in_native_and_independent_source(tmp_p
     assert _mesh_facts(native) == expected_native
 
     destination = PrepSession()
-    destination.open_rad(_write(tmp_path / "destination/base_0000.rad", header.split("/MAT", 1)[0] + "/END\n"))
+    destination.open_rad(_write(tmp_path / "destination/base_0000.rad", begin + "/END\n"))
     plan = destination.plan_import_source(starter)
+    expected_points = expected_native[0]
     assert (plan["node_count"], plan["element_count"], plan["collisions"]) == (len(expected_points), 1, [])
     destination.import_source(plan["plan_id"])
     paths = {item["original_path"]: item["logical_path"] for item in plan["source"]["files"]}
@@ -843,11 +855,83 @@ def test_d23_nested_include_lookup_agrees_in_native_and_independent_source(tmp_p
     destination.open_project(project)
     output = tmp_path / "export/combined_0000.rad"
     destination.export_rad(output)
+    quote = '"' if separator != " " else ''
     assert (output.parent / paths["mesh/first.inc"]).read_bytes().endswith(
-        f"#include{separator}{paths[owner]}\r\n".encode("ascii"))
+        f"#include{separator}{quote}{paths[owner]}{quote}\r\n".encode("ascii"))
     exported = PrepSession()
     exported.open_rad(output)
     assert _mesh_facts(exported) == expected_import
+
+
+@pytest.mark.parametrize("shadow", ("starter", "engine", "existing-file"))
+def test_d23_export_preserves_sibling_binding_when_destination_shadows_it(tmp_path, shadow):
+    filename = {"starter": "export_0000.rad", "engine": "export_0001.rad", "existing-file": "nodes.inc"}[shadow]
+    starter, _, owner, expected = _nested_include_deck(tmp_path / "source", "sibling-only", "\r\n", filename=filename)
+    session = PrepSession()
+    session.open_rad(starter)
+    assert _mesh_facts(session) == expected
+    output = tmp_path / "out/export_0000.rad"
+    if shadow == "existing-file":
+        unrelated = _write(output.parent / filename, f"/NODE\n{_node_line(88, 83, 0, 0)}\n")
+    session.export_solver_inputs(output, end_time=.01, output_interval=.001)
+    if shadow == "existing-file":
+        assert unrelated.read_bytes() == f"/NODE\n{_node_line(88, 83, 0, 0)}\n".encode("ascii")
+    assert (output.parent / "mesh/first.inc").read_bytes().endswith(f'#include\r\n"{owner}"\r\n'.encode("ascii"))
+    reopened = PrepSession()
+    reopened.open_rad(output)
+    assert _mesh_facts(reopened) == expected
+    assert not reopened.diagnostics()
+
+
+def test_d23_nested_include_avoids_current_file_and_ancestor_shadows(tmp_path):
+    starter = _write(tmp_path / "source_0000.rad", "/BEGIN\nAncestor test\n#include mesh/first.inc\n/END\n")
+    _write(tmp_path / "mesh/first.inc", "#include first.inc\n#include source_0000.rad\n")
+    _write(tmp_path / "first.inc", f"/NODE\n{_node_line(1, 1, 0, 0)}\n")
+    _write(tmp_path / "mesh/source_0000.rad", f"/NODE\n{_node_line(2, 2, 0, 0)}\n")
+    session = PrepSession()
+    session.open_rad(starter)
+    assert _mesh_facts(session)[0] == {1: ((1, 0, 0), ("first.inc",)), 2: ((2, 0, 0), ("mesh/source_0000.rad",))}
+    assert not session.diagnostics()
+    project = tmp_path / "ancestor.caeprep"
+    session.save_project(project)
+    session.open_project(project)
+    assert not session.diagnostics()
+
+
+@pytest.mark.parametrize("legacy_format", ("unchanged", "unquoted"))
+def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_format):
+    starter, begin, owner, _ = _nested_include_deck(tmp_path / "source", "sibling-claimed", "\r\n")
+    session = PrepSession()
+    # An unrelated destination file with the same name must not acquire the old source INCLUDE.
+    base = _write(tmp_path / "base/base_0000.rad", begin + "#include nodes.inc\n/END\n")
+    _write(base.with_name("nodes.inc"), f"/NODE\n{_node_line(88, 83, 1, 0)}\n")
+    session.open_rad(base)
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    expected = _mesh_facts(session)
+    archive = tmp_path / "modern.caeprep"
+    session.save_project(archive)
+    with ZipFile(archive) as project:
+        members = {name: project.read(name) for name in project.namelist()}
+    source_files = {item["original_path"]: item for item in plan["source"]["files"]}
+    mapped_path = source_files[owner]["logical_path"]
+    mapped_member = f'raw/{source_files["mesh/first.inc"]["resource_id"]}.rad'
+    replacement = f'"{owner}"' if legacy_format == "unchanged" else mapped_path
+    current = f'"{mapped_path}"\r\n'.encode("ascii")
+    assert members[mapped_member].count(current) == 1
+    members[mapped_member] = members[mapped_member].replace(current, f"{replacement}\r\n".encode("ascii"))
+    legacy = tmp_path / "legacy.caeprep"
+    with ZipFile(legacy, "w") as project:
+        for name, contents in members.items():
+            project.writestr(name, contents)
+    session.open_project(legacy)
+    assert _mesh_facts(session) == expected
+    assert not session.diagnostics()
+    output = tmp_path / "out/export_0000.rad"
+    session.export_rad(output)
+    reopened = PrepSession()
+    reopened.open_rad(output)
+    assert _mesh_facts(reopened) == expected
 
 
 @pytest.mark.parametrize("origin", ("source", "reassigned", "removed_comment"))
@@ -902,11 +986,13 @@ def test_d23_delete_preserves_current_comments_after_replacement_and_reopen(tmp_
     assert source_path.read_bytes() == original
 
 
-@pytest.mark.parametrize("family", ("SHELL", "BRICK"))
+@pytest.mark.parametrize("family", ("SHELL", "BRICK", "QUAD", "SH4N", "TETRA"))
 def test_d25_unselected_quad_or_solid_face_diagonal_blocks_split(tmp_path, family):
     starter = _build_deck_multi_include(tmp_path)
-    if family == "SHELL":
-        neighbor = "/SHELL/2\n" + _quad_line(302, 1, 4, 3, 2) + "\n"
+    if family in ("SHELL", "QUAD", "SH4N"):
+        neighbor = f"/{family}/2\n" + _quad_line(302, 1, 4, 3, 2) + "\n"
+    elif family == "TETRA":
+        neighbor = "/TETRA/3\n" + _tet_line(302, 1, 3, 4, 7) + "\n"
     else:
         with (tmp_path / "nodes.inc").open("ab") as stream:
             stream.write("".join(_node_line(nid, x, y, 5) + "\n" for nid, (x, y) in
@@ -916,6 +1002,7 @@ def test_d25_unselected_quad_or_solid_face_diagonal_blocks_split(tmp_path, famil
         stream.write(neighbor.encode("ascii"))
     session = PrepSession()
     session.open_rad(starter)
+    assert next(cell["formulation"] for cell in session.mesh_view()["cells"] if cell["id"] == 302) == family
     with pytest.raises(PrepError) as error:
         session.plan_triangle_edge_split([_cell_ref(session, 101), _cell_ref(session, 102)],
                                          (_node_ref(session, 1), _node_ref(session, 3)))

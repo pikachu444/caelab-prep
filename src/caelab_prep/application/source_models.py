@@ -65,11 +65,20 @@ class SourceArchiveResource:
         if set(definitions) != set(mapping):
             raise PrepError("invalid_project", "Source mapping does not cover the original native definitions exactly.")
         paths = {item["original_path"]: item["logical_path"] for item in self.metadata["files"]}
-        expected = remap(originals, mapping, paths)
+        actual = {}
         for item in self.metadata["files"]:
             resource = document.resources.get(item["resource_id"])
-            if not isinstance(resource, DeckResource) or resource.raw != expected[item["original_resource_id"]]:
+            if not isinstance(resource, DeckResource):
                 raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
+            actual[item["original_resource_id"]] = resource.raw
+        if actual == remap(originals, mapping, paths):
+            return
+        # Earlier imports either left the second line untouched or rewrote
+        # it without quotes. Verify the entire archived payload in each format.
+        if any(d.header_row != d.filename_row for resource in originals for d in resource.include_directives):
+            if any(actual == remap(originals, mapping, paths, two_line=style) for style in ("unchanged", "unquoted")):
+                return
+        raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
 
 
 class SourceModelCommands:

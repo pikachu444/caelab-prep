@@ -42,6 +42,14 @@ Gmsh 4.15.2에서 같은 평면 BREP에 최대 크기 10 mm와 2.5 mm를 적용�
 
 Windows Python 3.13.5에서 집중 pytest 121건을 통과했다. 로컬 `document`는 1,317 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 531 통과·2 건너뜀, `live-automation`은 141 통과·7 건너뜀이다.
 
+### 다섯 번째 검토 수정
+
+`987c52b8` 재검토를 반영했다. 같은 이름의 루트·형제 INCLUDE 파일이 모두 있으면 먼저 Starter의 직접 참조와 디렉터리가 명시된 참조를 해석한다. 이 참조에서 루트 파일을 이미 사용했고 형제 파일을 명시하지 않았다면 중첩 지시문은 형제 파일에 바인딩한다. 루트의 디렉터리는 파일 후보에서 제외한다. 정확한 대소문자가 없으면 유일한 일치 경로를 사용한다. Starter나 Engine 출력 이름 또는 기존 출력 디렉터리의 파일이 중첩 INCLUDE를 가릴 때 내보낸 지시문에 루트 기준 경로를 쓴다.
+
+`24137d60`과 `8fe6609`에서 각각 저장한 충돌 프로젝트를 다시 열어 절점 소유권과 셸 연결을 확인했다. `8fe6609`에서 저장한 14절점 독립 소스 프로젝트도 따옴표가 있는 두 줄 INCLUDE를 유지한 채 열고 Starter로 내보냈다. 새 독립 소스 가져오기는 두 줄 지시문의 파일명을 매핑하고 따옴표를 보존한다. D25에서 같은 분할 변의 양 끝점을 포함한 `/QUAD`, `/SH4N`, `/TETRA` 이웃은 `EDGE_HAS_UNSELECTED_NEIGHBORS`로 거부한다.
+
+Windows Python 3.13.5에서 집중 pytest 134건을 통과했다. 로컬 `document`는 1,330 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 544 통과·2 건너뜀, `live-automation`은 141 통과·7 건너뜀이다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

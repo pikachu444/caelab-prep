@@ -11,6 +11,9 @@ import re
 from ..cae_core.errors import PrepError
 
 
+ELEMENT_ALIASES = {"QUAD": "SHELL", "SH4N": "SHELL", "TETRA": "TETRA4"}
+
+
 def native_identity(keyword):
     words = keyword.strip().upper().split("/")
     index = {"MAT": 3, "PROP": 3, "PART": 2, "FUNCT": 2, "GRNOD": 3,

@@ -12,12 +12,11 @@ import hashlib
 from itertools import accumulate
 import json
 import math
-from pathlib import PurePosixPath
 import re
 from uuid import UUID, uuid4, uuid5
 
 from ..cae_core.errors import PrepError
-from .modeling import condition_scalar_default, reject_default_zero
+from .modeling import ELEMENT_ALIASES, condition_scalar_default, reject_default_zero
 
 
 def number(value: str) -> float:
@@ -28,29 +27,26 @@ _INCLUDE = re.compile(r"^\s*#include\b(.*)$", re.I)
 _FILE_DIRECTIVE = re.compile(r"^\s*#(?:include|enddata)\b", re.I)
 
 
-def include_relative(value: str) -> PurePosixPath:
-    if not isinstance(value, str):
-        raise PrepError("invalid_project", "INCLUDE 경로는 문자열이어야 합니다.")
-    portable = value.replace("\\", "/")
-    path = PurePosixPath(portable)
-    if not value or path.is_absolute() or ":" in portable or ".." in path.parts:
-        raise PrepError("include_path_unsupported", "이 INCLUDE 경로는 독립 문서로 묶을 수 없습니다.", {"path": value})
-    return path
-
-
-def include_target(value, including_path, exists) -> PurePosixPath:
-    """Resolve an INCLUDE against the Starter root before its own directory."""
-    relative = include_relative(value)
-    if exists(relative):
-        return relative
-    return PurePosixPath(including_path).parent / relative
-
-
 @dataclass(frozen=True)
 class IncludeDirective:
     path: str
     header_row: int
     filename_row: int
+
+    def replace_path(self, lines, path, *, preserve_quotes=True):
+        row = self.filename_row
+        line = lines[row]
+        body = line.rstrip("\r\n")
+        ending = line[len(body):]
+        start = _INCLUDE.match(body).start(1) if row == self.header_row else 0
+        rest = body[start:]
+        prefix = rest[:len(rest) - len(rest.lstrip())]
+        token = rest.strip()
+        if preserve_quotes and len(token) >= 2 and token[0] in ('"', "'") and token[-1] == token[0]:
+            path = token[0] + path + token[0]
+        if row == self.header_row and not prefix:
+            prefix = " "
+        lines[row] = body[:start] + prefix + path + ending
 
 
 def _include_layout(lines, stop):
@@ -246,6 +242,7 @@ class DeckResource:
     def _category(keyword: str) -> str:
         root = keyword.upper().split("/")[1]
         return {"NODE": "Nodes", "SHELL": "Elements", "SH3N": "Elements", "BRICK": "Elements",
+                "QUAD": "Elements", "SH4N": "Elements",
                 "TETRA4": "Elements", "TETRA": "Elements", "TETRA10": "Elements", "BEAM": "Elements", "TRUSS": "Elements",
                 "MAT": "Materials", "PROP": "Properties", "PART": "Parts", "BCS": "Constraints",
                 "INTER": "Contacts", "FUNCT": "Curves", "GRNOD": "Groups", "SURF": "Groups",
@@ -697,9 +694,10 @@ class DeckResource:
                               "nodes": list(connectivity), "part_id": part,
                               "card_id": card.id, "resource_id": self.id}
                              for identifier, connectivity, _, _ in parsed)
-            elif key[1] in ("SHELL", "SH3N", "BRICK", "TETRA4", "TETRA", "BEAM", "TRUSS"):
+            elif key[1] in ("SHELL", "SH3N", "BRICK", "TETRA4", "BEAM", "TRUSS", *ELEMENT_ALIASES):
                 kind, count = {"SHELL": ("quad", 4), "SH3N": ("triangle", 3), "BRICK": ("hexahedron", 8),
-                               "TETRA4": ("tetra", 4), "TETRA": ("tetra", 4), "BEAM": ("line", 2), "TRUSS": ("line", 2)}[key[1]]
+                               "TETRA4": ("tetra", 4), "BEAM": ("line", 2), "TRUSS": ("line", 2)}[
+                                   ELEMENT_ALIASES.get(key[1], key[1])]
                 part = int(key[2]) if len(key) > 2 and key[2].isdigit() else None
                 for index in card.data:
                     line = self.lines[index].rstrip("\r\n")
