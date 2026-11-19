@@ -122,6 +122,7 @@ class DeckResource:
         self._raw_digest = hashlib.sha256(self.raw).digest()
         self.name = name
         self.is_include = is_include
+        self._restored_state_version = 5
         self._patches: dict[str, dict[str, object]] = {}
         self._created: list[dict[str, str]] = []
         self._deleted: set[str] = set()
@@ -482,6 +483,7 @@ class DeckResource:
         """Validate a candidate before replacing live state; legacy patch dictionaries still read."""
         if not isinstance(state, dict):
             raise PrepError("invalid_project", "편집 패치 형식이 잘못됐습니다.")
+        original_version = state.get("state_version", 1)
         if "state_version" not in state:
             state = {"state_version": 2, "patches": state, "created": [], "deleted": []}
         if state.get("state_version") == 2 and set(state) == {"state_version", "patches", "created", "deleted"}:
@@ -561,6 +563,7 @@ class DeckResource:
             if not isinstance(values, dict):
                 raise PrepError("invalid_project", "필드 패치 형식이 잘못됐습니다.")
             candidate._patches = candidate.fields_state(card_id, values, _restore_default_zero=True)["patches"]
+        candidate._restored_state_version = original_version
         self.__dict__.update(candidate.__dict__)
 
     def inserted_states(self, texts, *, card_ids=None):

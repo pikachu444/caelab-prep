@@ -161,6 +161,7 @@ def project_native_mesh_edit(session, candidate, states):
         if rid != session._relations_resource().id:
             planned.document.resources[rid].restore(state)
     planned._projection_cache = None
+    planned._raw_node_counts_cache = None
     planned._projection_index = {}
     mapping = dict(candidate.merge_map)
     split_map = dict(candidate.split_cells)
@@ -210,6 +211,7 @@ def project_native_mesh_edit(session, candidate, states):
             if state is not None:
                 owner.restore(state)
                 planned._projection_cache = None
+                planned._raw_node_counts_cache = None
                 planned._projection_index = {}
     after = planned._mesh_edit_snapshot()
     if ({node.ref: node.xyz for node in after.nodes} != {node.ref: node.xyz for node in candidate.iter_nodes()}

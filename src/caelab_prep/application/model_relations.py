@@ -65,6 +65,7 @@ class ModelRelationCommands:
         candidate = self._planning_snapshot()
         for rid, state in states.items(): candidate.document.resources[rid].restore(state)
         candidate._projection_cache = None
+        candidate._raw_node_counts_cache = None
         candidate._projection_index = {}
         for card in self.list_cards():
             words = card["keyword"].upper().split("/")

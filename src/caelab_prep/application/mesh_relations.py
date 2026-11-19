@@ -189,6 +189,7 @@ class MeshRelationCommands:
         trial = copy(self); trial.document = copy(document)
         trial.document.resources = {**document.resources, resource_id: resource}
         trial._projection_cache = None; trial._projection_index = {}
+        trial._raw_node_counts_cache = None
         view = trial.mesh_view()
         if view["diagnostics"]:
             raise PrepError("invalid_mesh", "Replacement introduces duplicate nodes or unresolved connectivity.",

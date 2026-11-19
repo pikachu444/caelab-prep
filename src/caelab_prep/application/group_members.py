@@ -34,6 +34,7 @@ class GroupMemberCommands:
                 planned = self._planning_snapshot()
                 planned.document.resources[owner.id].restore(state)
                 planned._projection_cache = None
+                planned._raw_node_counts_cache = None
                 planned._projection_index = {}
                 membership = planned.group_members(card_id)
                 if membership["diagnostics"]:

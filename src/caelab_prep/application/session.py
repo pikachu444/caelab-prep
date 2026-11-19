@@ -66,6 +66,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._source_paths: set[str] = set()
         self._diagnostics: list[dict] = []
         self._projection_cache: dict | None = None
+        self._raw_node_counts_cache: dict[int, int] | None = None
         self._projection_index = {}
         self._source_path: str | None = None
         self._listeners = []
@@ -127,6 +128,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._source_paths = source_paths
         self._diagnostics = diagnostics
         self._projection_cache = None
+        self._raw_node_counts_cache = None
         self._projection_index = {}
         self._source_path = source_path
         self._active_object = None
@@ -322,6 +324,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         if change.kind == "structure":
             self._sync_source_paths()
             self._projection_cache = None
+            self._raw_node_counts_cache = None
             self._projection_index = {}
             self._projection_revision += 1
             if self._active_object is not None:
@@ -854,19 +857,24 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             raise PrepError("invalid_reference", "Members must be distinct typed identities.")
         return values
 
+    def _raw_node_counts(self) -> dict[int, int]:
+        # The display projection omits duplicates within a NODE block.
+        if self._raw_node_counts_cache is None:
+            counts = {}
+            for resource in self._deck_resources():
+                for card in resource.cards:
+                    if card.keyword.upper().split("/")[1] != "NODE": continue
+                    for index in card.data:
+                        try: node = int(resource.lines[index][:10])
+                        except ValueError: continue
+                        counts[node] = counts.get(node, 0) + 1
+            self._raw_node_counts_cache = counts
+        return self._raw_node_counts_cache
+
     def _node_members(self, values):
         self._member_sequence(values)
         for value in values: integer(value)
-        # Inspect raw native IDs, including duplicates within one NODE block; the
-        # display projection intentionally removes these and cannot be an oracle.
-        counts = {}
-        for resource in self._deck_resources():
-            for card in resource.cards:
-                if card.keyword.upper().split("/")[1] != "NODE": continue
-                for index in card.data:
-                    try: node = int(resource.lines[index][:10])
-                    except ValueError: continue
-                    counts[node] = counts.get(node, 0) + 1
+        counts = self._raw_node_counts()
         for value in values:
             if counts.get(value, 0) != 1:
                 raise PrepError("dangling_reference" if not counts.get(value) else "ambiguous_reference",
@@ -890,14 +898,24 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
 
     @staticmethod
     def _integer_members(resource, card):
-        lines = resource.render().decode("latin1").splitlines()
+        # Structural edits already rebuild resource.lines and card.data.
+        # Only field patches are applied separately during rendering.
+        lines = resource.render().decode("latin1").splitlines() if card.id in resource._patches else resource.lines
+        values = []
         try:
-            values = [int(lines[index][offset:offset + 10]) for index in card.data[1:]
-                      for offset in range(0, len(lines[index].rstrip()), 10) if lines[index][offset:offset + 10].strip()]
+            for index in card.data[1:]:
+                line = lines[index].rstrip("\r\n")
+                for offset in range(0, len(line), 10):
+                    field = line[offset:offset + 10].strip()
+                    if field:
+                        values.append(int(field))
         except ValueError:
             raise PrepError("invalid_reference", "The member list is not a supported fixed-width integer list.") from None
-        if tuple(card.keyword.upper().strip("/").split("/")[:2]) in ELEMENT_GROUP_PAIRS:
+        pair = tuple(card.keyword.upper().strip("/").split("/")[:2])
+        if pair in ELEMENT_GROUP_PAIRS:
             return element_group_members(values)
+        if pair == ("GRNOD", "NODE"):
+            return list(dict.fromkeys(value for value in values if value != 0))
         return values
 
     def create_node_group(self, name, node_ids, *, resource_id=None, native_id=None,
@@ -1032,8 +1050,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         if len(matches) != 1:
                             raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "A group element cannot be resolved uniquely.", {"element_id": identifier})
                         refs.append(self._element_selection_ref(matches[0]))
-                    if refs:
-                        _, refs, _ = self._element_members(refs, family)
+                    _, refs, _ = self._element_members(refs, family)
                 result["members"] = [ref.to_dict() for ref in refs]
             except PrepError as exc:
                 result["diagnostics"].append({"code": exc.code, "message": exc.message, **exc.details})
@@ -2225,12 +2242,15 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         continue
                     # An explicit claim only affects later waves if its
                     # entire incoming chain is reached early enough.
-                    for other in incoming.get(resolved, ()):
-                        while other is not None and other not in walked:
-                            walked.add(other)
-                            if other in qualifiable:
-                                additions.add(other)
-                            other = parent_of.get(other[0])
+                    todo = list(incoming.get(resolved, ()))
+                    while todo:
+                        other = todo.pop()
+                        if other in walked:
+                            continue
+                        walked.add(other)
+                        if other in qualifiable:
+                            additions.add(other)
+                        todo.extend(incoming.get(other[0], ()))
                 additions.difference_update(qualifications)
                 if not additions:
                     break
@@ -2282,7 +2302,6 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         actual, issues, modified = simulate(qualifications)
         if issues or actual != expected:
             qualifiable = {entry for entry in ordered if can_qualify(entry)}
-            parent_of = {path: entries[0] for path, entries in incoming.items()}
             while issues or actual != expected:
                 step = advance(qualifications, actual, progress(actual, issues))
                 if step is None:

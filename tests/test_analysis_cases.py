@@ -10,7 +10,7 @@ import pytest
 
 from caelab_prep.application import PrepSession
 from caelab_prep.cae_core import PrepError
-from test_condition_workflow import _base_model, _create_conditions
+from test_condition_workflow import _base_model, _card, _create_conditions, _i, _r
 
 
 @pytest.fixture
@@ -130,6 +130,99 @@ def test_inactive_condition_before_include_keeps_directive(tmp_path):
     session.export_analysis_case(str(target), case)
     assert b"#include mesh.inc" in target.read_bytes() and b"/BCS/71" not in target.read_bytes()
     assert (target.parent / "mesh.inc").exists()
+
+
+@pytest.mark.parametrize(("rows", "diagnostic"), (
+    ((101, 101, 205), None), ((101, 0, 205), None), ((0, 0), "invalid_reference"),
+    ((101, -205), "invalid_native_id"), ((101, 99999), "dangling_reference"), ((101, 205), "ambiguous_reference"),
+))
+def test_imported_node_group_validation_preserves_native_rows(tmp_path, rows, diagnostic):
+    source = _base_model(tmp_path / "input", newline=b"\r\n")
+    block = f"/GRNOD/NODE/47\r\nUnreferenced nodes\r\n{_i(*rows)}\r\n".encode()
+    source.write_bytes(source.read_bytes().replace(b"/END", block + b"/END"))
+    if diagnostic == "ambiguous_reference":
+        mesh = source.with_name("mesh.inc")
+        mesh.write_bytes(mesh.read_bytes().replace(b"/NODE\r\n", f"/NODE\r\n{_i(205)}{_r(10, 0, 0)}\r\n".encode()))
+    session = PrepSession()
+    session.open_rad(source)
+    group = _card(session, "/GRNOD/NODE/47")["id"]
+    case = session.create_analysis_case("Imported group", [], 1, .5, "s")["case_id"]
+    target = tmp_path / "out/case_0000.rad"
+    if diagnostic:
+        assert session.group_members(group)["diagnostics"][0]["code"] == diagnostic
+        for validate in (lambda: session.validate_analysis_case(case), lambda: session.export_analysis_case(target, case)):
+            with pytest.raises(PrepError) as error:
+                validate()
+            assert error.value.code == "invalid_reference"
+            assert error.value.details["diagnostics"][0]["code"] == diagnostic
+        assert not target.parent.exists()
+        return
+    assert session.group_members(group)["member_ids"] == [101, 205]
+    session.validate_analysis_case(case)
+    session.export_analysis_case(target, case)
+    assert block in target.read_bytes()
+    before = snapshot(session)
+    for bad_ids, error_code in (([101, 101], "invalid_reference"), ([101, 0], "invalid_native_id")):
+        for edit in (lambda: session.create_node_group("Strict edit", bad_ids),
+                     lambda: session.set_group_members(group, bad_ids)):
+            with pytest.raises(PrepError) as error:
+                edit()
+            assert error.value.code == error_code
+    assert snapshot(session) == before
+
+
+def test_case_validation_scans_raw_node_ids_once_across_many_groups(tmp_path):
+    count, groups = 20_000, 96
+    units = f"{'Mg':>20}{'mm':>20}{'s':>20}\n"
+    starter = tmp_path / "many_0000.rad"
+    starter.write_text("/BEGIN\nMany groups\n      2025         0\n" + units * 2 + "#include nodes.inc\n"
+                       + "".join(f"/GRNOD/NODE/{i}\nNode {i}\n{i:10d}\n" for i in range(1, groups + 1)) + "/END\n")
+    (tmp_path / "nodes.inc").write_text("/NODE\n" + "".join(_i(i) + _r(i, 0, 0) + "\n" for i in range(1, count + 1)))
+    session = PrepSession()
+    session.open_rad(starter)
+    case = session.create_analysis_case("Warm validation", [], 1, .5, "s")["case_id"]
+    session.mesh_view()
+    owner = next(resource for resource in session._deck_resources() if resource.name == "nodes.inc")
+
+    class TrackedNodeRows(list):
+        reads = 0
+
+        def __getitem__(self, index):
+            if isinstance(index, int) and index > 0:
+                self.reads += 1
+            return super().__getitem__(index)
+
+    owner.lines = tracked = TrackedNodeRows(owner.lines)
+    session.validate_analysis_case(case)
+    assert tracked.reads == count
+    session.validate_analysis_case(case)
+    assert tracked.reads == count
+
+    node_card, = owner.cards
+    replacement = "/NODE\n" + _i(count + 1) + _r(1, 0, 0) + "\n" + "".join(owner.lines[2:])
+    session.dispatcher.execute(owner.id, owner.replaced_state(node_card.id, replacement), "Replace node IDs", kind="structure")
+    with pytest.raises(PrepError) as error:
+        session.validate_analysis_case(case)
+    assert error.value.details["diagnostics"][0]["code"] == "dangling_reference"
+    session.undo()
+    session.validate_analysis_case(case)
+
+
+@pytest.mark.parametrize(("member", "diagnostic"), ((0, "dangling_reference"), (-201, "invalid_reference"),
+                                                    (99999, "dangling_reference")))
+def test_case_rejects_empty_or_unresolved_solid_group(tmp_path, member, diagnostic):
+    source = _base_model(tmp_path / "input")
+    group = f"/GRBRIC/BRIC/47\nUnreferenced solids\n{_i(member)}\n".encode()
+    source.write_bytes(source.read_bytes().replace(b"/END", group + b"/END"))
+    session = PrepSession()
+    session.open_rad(source)
+    case = session.create_analysis_case("Imported solids", [], 1, .5, "s")["case_id"]
+    output = tmp_path / "out/case_0000.rad"
+    with pytest.raises(PrepError) as error:
+        session.export_analysis_case(output, case)
+    assert error.value.code == "invalid_reference"
+    assert error.value.details["diagnostics"][0]["code"] == diagnostic
+    assert not output.parent.exists()
 
 
 def test_opaque_physics_blocks_case_output_but_preserves_document(tmp_path):

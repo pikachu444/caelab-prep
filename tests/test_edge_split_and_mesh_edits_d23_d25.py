@@ -1163,7 +1163,8 @@ def test_d23_export_can_qualify_upstream_include_to_keep_all_nine_bindings(tmp_p
             assert reopened.mesh_view()["node_ids"] == tuple(node_ids)
 
 
-def test_d23_export_qualifies_coupled_include_waves(tmp_path):
+@pytest.mark.parametrize("diamond", (False, True), ids=("one-path", "two-paths"))
+def test_d23_export_qualifies_coupled_include_waves(tmp_path, diamond):
     def directives(*paths):
         return "".join(f"#include {path}\n" for path in paths)
 
@@ -1182,6 +1183,14 @@ def test_d23_export_qualifies_coupled_include_waves(tmp_path):
         payloads[mark] = "# Root marker\n"
         payloads[owner] = directives(mark)
         rewrites[owner] = directives(f"c/{mark}")
+    if diamond:
+        payloads["model_0000.rad"] = payloads["model_0000.rad"].replace("/END", directives("d/side.inc") + "/END")
+        payloads["d/side.inc"] = "# Sibling marker\n"
+        payloads["nodes.inc"] += directives("d/probe.inc")
+        payloads["d/probe.inc"] = directives("side.inc")
+        payloads["side.inc"] = directives("c/decoy.inc")
+        payloads["c/decoy.inc"] = directives("mark8.inc")
+        rewrites["c/decoy.inc"] = directives("c/mark8.inc")
     source = tmp_path / "source"
     for path, content in payloads.items():
         _write(source / path, content)
@@ -1194,17 +1203,22 @@ def test_d23_export_qualifies_coupled_include_waves(tmp_path):
     session.open_rad(source / "model_0000.rad")
     expected = bindings(session)
     assert expected["a/early.inc", 0] == "nodes.inc"
-    assert len(session._paths) == 25
+    if diamond:
+        assert {owner for (owner, _), path in expected.items() if path == "c/mark8.inc"} == {"c/mark7.inc", "c/decoy.inc"}
+    expected_file_count = 29 if diamond else 25
+    assert len(session._paths) == expected_file_count
     case = session.create_analysis_case("Coupled INCLUDE export", [], .01, .001, "s")["case_id"]
     project = tmp_path / "bound.caeprep"
     session.save_project(project)
     for label in ("active", "reopened"):
         if label == "reopened":
             session.open_project(project)
-        for mode in ("native", "case"):
+        for mode in ("native", "solver", "case"):
             output = tmp_path / label / mode / "renamed_0000.rad"
             if mode == "native":
                 session.export_rad(output)
+            elif mode == "solver":
+                session.export_solver_inputs(output, .01, .001)
             else:
                 session.export_analysis_case(output, case)
             for owner, text in rewrites.items():
@@ -1212,7 +1226,7 @@ def test_d23_export_qualifies_coupled_include_waves(tmp_path):
             reopened = PrepSession()
             reopened.open_rad(output)
             assert bindings(reopened) == expected
-            assert len(reopened._paths) == 25
+            assert len(reopened._paths) == expected_file_count
             assert reopened.mesh_view()["node_ids"] == (1, 88)
 
 
@@ -1410,8 +1424,8 @@ def test_d23_reopens_legacy_active_include_without_whitespace(tmp_path, name):
 
 
 @pytest.mark.parametrize("nodes_path", ("nodes.inc", "sets/nodes.inc"))
-@pytest.mark.parametrize("separator", ("", "\r\n"), ids=("tight", "two-line"))
-def test_d23_reopens_8fe_source_with_sibling_only_include(tmp_path, nodes_path, separator):
+@pytest.mark.parametrize("variant", ("tight", "two-line", "v4", "ambiguous-v5"))
+def test_d23_distinguishes_historical_include_writers(tmp_path, nodes_path, variant):
     source = tmp_path / "source"
     starter = _build_deck_multi_include(source)
     raw = starter.read_bytes()
@@ -1419,10 +1433,12 @@ def test_d23_reopens_8fe_source_with_sibling_only_include(tmp_path, nodes_path, 
     (source / nodes_path).write_bytes((source / "nodes.inc").read_bytes())
     starter.write_bytes(raw.replace(b"#include nodes.inc\n",
         f"#include {nodes_path}\n#include mesh/{nodes_path}\n#include mesh/first.inc\n".encode()))
-    old_extra = f'#include{separator}"extra.inc"\r\n'
+    with_extra = variant in ("tight", "two-line")
+    old_extra = '#include"extra.inc"\r\n' if variant == "tight" else '#include\r\n"extra.inc"\r\n' if with_extra else ""
     _write(source / "mesh/first.inc", f"#include {nodes_path}\n" * 2 + old_extra)
     _write(source / f"mesh/{nodes_path}", f"/NODE\n{_node_line(100, 83, 1, 0)}\n")
-    _write(source / "mesh/extra.inc", "# Only accessible relative to the including file\n")
+    if with_extra:
+        _write(source / "mesh/extra.inc", "# Only accessible relative to the including file\n")
     base = _write(tmp_path / "base_0000.rad", raw.split(b"/MAT", 1)[0].decode() + "/END\n")
     session = PrepSession()
     session.open_rad(base)
@@ -1436,6 +1452,10 @@ def test_d23_reopens_8fe_source_with_sibling_only_include(tmp_path, nodes_path, 
     manifest.pop("include_bindings")
     record = manifest["source_models"][0]
     record.pop("include_bindings")
+    if variant == "v4":
+        for resource in manifest["resources"]:
+            resource["state"]["state_version"] = 4
+            assert not resource["state"].pop("retained_comments")
     members["manifest.json"] = json.dumps(manifest).encode()
     by_path = {item["original_path"]: item for item in record["files"]}
     owner = by_path["mesh/first.inc"]
@@ -1449,17 +1469,44 @@ def test_d23_reopens_8fe_source_with_sibling_only_include(tmp_path, nodes_path, 
     with ZipFile(legacy, "w") as project:
         for member, payload in members.items():
             project.writestr(member, payload)
+    if variant == "ambiguous-v5":
+        with pytest.raises(PrepError, match="Archived INCLUDE bindings are ambiguous") as error:
+            session.open_project(legacy)
+        assert error.value.code == "invalid_project"
+        return
     session.open_project(legacy)
-    sib_id = by_path[f"mesh/{nodes_path}"]["resource_id"]
-    assert [session._include_bindings[owner["resource_id"], ordinal] for ordinal in range(3)] == [
-        sib_id, sib_id, by_path["mesh/extra.inc"]["resource_id"]]
+    intended = f"mesh/{nodes_path}" if with_extra else nodes_path
+    expected_paths = [intended, intended] + (["mesh/extra.inc"] if with_extra else [])
+    assert [session._include_bindings[owner["resource_id"], ordinal] for ordinal in range(len(expected_paths))] == [
+        by_path[path]["resource_id"] for path in expected_paths]
     assert len(session.mesh_view()["node_ids"]) == 15
     assert len(session.mesh_view()["cells"]) == 7
     facts = _mesh_facts(session)
     output = tmp_path / "out/export_0000.rad"
     session.export_rad(output)
     session.open_rad(output)
+    ids = {path: rid for rid, path in session._paths.items()}
+    assert [session._include_bindings[ids[owner["logical_path"]], ordinal] for ordinal in range(len(expected_paths))] == [
+        ids[by_path[path]["logical_path"]] for path in expected_paths]
     assert _mesh_facts(session) == facts
+
+
+def test_deck_preserves_validated_restore_version_until_next_restore():
+    deck = DeckResource(b"/BEGIN\nLegacy\n/END\n")
+    assert deck._restored_state_version == 5
+    deck.restore({})
+    assert deck._restored_state_version == 1
+    state = deck.snapshot()
+    assert state["state_version"] == 5
+    old_state = {key: value for key, value in state.items() if key != "retained_comments"}
+    old_state["state_version"] = 4
+    assert deck.prepare_state(old_state) == state
+    assert deck._restored_state_version == 1
+    deck.restore(old_state)
+    assert deck._restored_state_version == 4
+    with pytest.raises(PrepError):
+        deck.restore({**state, "patches": {"invalid": None}})
+    assert deck._restored_state_version == 4 and deck.snapshot() == state
 
 
 @pytest.mark.parametrize("origin", ("source", "reassigned", "removed_comment"))

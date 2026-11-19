@@ -102,12 +102,19 @@ class SourceArchiveResource:
                 selected[key] = originals_by_id[target].name
             if len(selected) != sum(len(resource.include_directives) for resource in originals):
                 raise PrepError("invalid_project", "Original source INCLUDE bindings are incomplete.")
-        # The writers all used the same versioned metadata. File order
-        # records native first visits even when their mapped bytes agree.
+        # The sibling-first reader first shipped with deck state v5. Later
+        # writers can share both mapped bytes and native first-visit order.
+        deck_versions = [resource._restored_state_version for resource in document.resources.values()
+                         if isinstance(resource, DeckResource)]
+        pre_v5 = bool(deck_versions) and all(isinstance(version, int) and version <= 4 for version in deck_versions)
         archived_order = [resource.name for resource in originals]
-        policies = ((None, "quoted", False),) if records is not None else (
-            (None, "quoted", False), ("bde", "quoted", False), ("ac0", "quoted", False),
-            ("987", "unquoted", False), ("241", "unchanged", True), ("8fe", "unchanged", True))
+        if records is not None:
+            policies = ((None, "quoted", False),)
+        elif pre_v5:
+            policies = (("241", "unchanged", True),)
+        else:
+            policies = ((None, "quoted", False), ("bde", "quoted", False), ("ac0", "quoted", False),
+                        ("987", "unquoted", False), ("241", "unchanged", True), ("8fe", "unchanged", True))
         matches_by_order = {True: {}, False: {}}
         mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
         mapped_keys = {(resource.name, directive.header_row): (mapped_ids[resource.name], ordinal)
