@@ -187,27 +187,23 @@ def inspect(resources, *, profile: str = "current"):
         raise PrepError("unsupported_source_profile", "A supported source card has malformed fixed-width data.", {"reason": str(exc)}) from exc
 
 
-def source_include_graph(resources, paths, *, selected=None, historical=None, load_order=None):
+def source_include_graph(resources, paths, *, selected=None, historical=None, archived_order=None, load_order=None):
     by_path = {resource.name: resource for resource in resources}
     root = next(resource.name for resource in resources if not resource.is_include)
-    def load(path):
-        if load_order is not None:
-            load_order.append(path)
-        return by_path[path]
-
+    load = by_path.__getitem__
     lookup = include_lookup(paths)
     if historical == "8e85":
         # This writer retried sequential traversal only when the normal waves
         # succeeded but left part of the immutable source inventory unreached.
-        normal = resolve_includes(root, lookup, load, selected=selected)
+        normal = resolve_includes(root, lookup, load, selected=selected, load_order=load_order)
         reached, _, problems = normal
         if problems or reached == set(paths):
             return normal
         if load_order is not None:
             load_order.clear()
         return resolve_includes(root, lookup, load, selected=selected, historical=historical,
-                                archive_inventory=set(paths))
-    return resolve_includes(root, lookup, load, selected=selected, historical=historical)
+                                archive_inventory=set(paths), archived_order=archived_order, load_order=load_order)
+    return resolve_includes(root, lookup, load, selected=selected, historical=historical, load_order=load_order)
 
 
 def remap(resources, mappings, paths, *, include_graph=None, two_line="quoted", legacy_direct_inline: bool = False,

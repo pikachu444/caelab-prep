@@ -62,6 +62,34 @@ def test_element_group_form_accepts_explicit_null_formulation():
         editor.close()
 
 
+def test_element_group_form_keeps_checked_triangle_when_returned_draft_is_edited(tmp_path):
+    from test_edge_split_and_mesh_edits_d23_d25 import _build_deck_multi_include
+
+    session = PrepSession()
+    session.open_rad(_build_deck_multi_include(tmp_path / "input"))
+    session.select_entity("element", 101)
+    window = MainWindow(session, enable_viewport=False)
+    window._allow_close = True
+    try:
+        window.show()
+        pump()
+        window.modeling.actions["element_group.create"].trigger()
+        pump()
+        panel = window.modeling.panel
+        enter(panel, "name", "Checked triangle")
+        enter(panel, "native_id", 1)
+        draft = panel.editor.values()
+        [ref] = draft["element_refs"]
+        assert ref["local_id"] == 101
+        ref["local_id"] = 102
+        click_apply(window)
+        assert not window.modeling.active, panel.error.text()
+        group = _card(session, "/GRSH3N/SH3N/1")["id"]
+        assert session.group_members(group)["member_ids"] == [101]
+    finally:
+        window.close()
+
+
 def test_create_element_group_uses_formulation_qualified_pick():
     session = PrepSession()
     session.open_rad(Path(__file__).resolve().parents[1] / "examples/rad/shell_panels_0000.rad")

@@ -144,7 +144,7 @@ class SourceArchiveResource:
             if len(selected) != sum(len(resource.include_directives) for resource in originals):
                 raise PrepError("invalid_project", "Original source INCLUDE bindings are incomplete.")
         # Later writers can share both mapped bytes and native first-visit order.
-        archived_order = [resource.name for resource in originals]
+        archived_order = [item["original_path"] for item in self.metadata["files"]]
         matches_by_order = {True: {}, False: {}}
         mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
         mapped_keys = {(resource.name, directive.header_row): (mapped_ids[resource.name], ordinal)
@@ -155,7 +155,7 @@ class SourceArchiveResource:
                 continue
             load_order = []
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
-                                         load_order=load_order)
+                                         archived_order=archived_order, load_order=load_order)
             reached, original_bindings, _ = graph
             if reached != set(paths):
                 continue

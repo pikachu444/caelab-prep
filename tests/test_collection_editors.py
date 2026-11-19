@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from fractions import Fraction
 import os
+from time import perf_counter
 from types import MappingProxyType
 from typing import NamedTuple
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -305,6 +306,39 @@ def test_reference_fallback_can_match_a_hashable_value(fallback_choice):
     assert editor.list.count() == 1
     result, = editor.value()
     assert type(result) is type(choice)
+
+
+def test_reference_editor_isolates_nested_mutable_choices_and_results():
+    reference = {"element": 101, "nested": (["picked"], {"selected"})}
+    expected = {"element": 101, "nested": (["picked"], {"selected"})}
+    editor = ReferenceListEdit((reference,), choices=(reference,))
+    reference["nested"][0].append("external")
+    raw, = editor.raw_value()
+    raw["nested"][1].add("external")
+    value, = editor.value()
+    value["element"] = 102
+    assert editor.value() == (expected,)
+
+
+def test_reference_editor_sort_keeps_unavailable_row_and_checked_references():
+    editor = ReferenceListEdit(("missing",), choices=("a", "z"), choice_labels=("Zulu", "Alpha"))
+    editor.list.sortItems()
+    assert editor.raw_value() == ("missing",)
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+    editor.set_raw_value(("a", "z"))
+    editor.list.sortItems()
+    assert editor.value() == ("z", "a")
+
+
+def test_reference_editor_validates_8000_standard_mapping_proxies():
+    choices = tuple(MappingProxyType({"local_id": index, "formulation": "SH3N"}) for index in range(8000))
+    start = perf_counter()
+    editor = ReferenceListEdit(choices, choices=choices)
+    selected = editor.value()
+    elapsed = perf_counter() - start
+    assert selected == choices
+    assert elapsed < 1.0, f"Opening and validating the proxy list took {elapsed:.3f} seconds"
 
 
 def test_numeric_table_csv_rows_and_failed_paste_are_uncommitted_drafts():

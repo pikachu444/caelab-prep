@@ -6,7 +6,11 @@ from pathlib import PurePosixPath
 from ..cae_core import PrepError
 
 
-_MAX_8E85_DISK_WALKS = 4096
+_MAX_8E85_ORDER_ALTERNATIVES = 64
+
+
+class _DiskOrderMismatch(Exception):
+    """A partial deduction cannot produce the recorded first-visit order."""
 
 
 def include_relative(value: str) -> PurePosixPath:
@@ -57,29 +61,43 @@ def disk_include_lookup(base, *, canonical=True):
     return lookup
 
 
-def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, selected=None, recovered=None, historical=None):
+def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, selected=None, recovered=None,
+                     historical=None, archived_order=None, load_order=None):
     """Resolve live paths or replay validated bindings against an archive inventory."""
     selected, recovered = selected or {}, recovered or {}
     if historical == "8e85":
         load = cache(load)
-    result = _walk_includes(root, lookup, load, scope, selected, recovered, historical)
-    if (historical == "8e85" and not result[2] and result[0] == archive_inventory
-            and not _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory)):
-        directive = next(iter(load(root).include_directives), None)
-        result[2].append((root, directive, PrepError(
-            "invalid_project", "The archived INCLUDE inventory could not have been collected by the writer's disk traversal.")))
+    result = _walk_includes(root, lookup, load, scope, selected, recovered, historical, load_order=load_order)
+    if historical == "8e85" and not result[2] and result[0] == archive_inventory:
+        if not _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory,
+                                          archived_order=archived_order, load_order=load_order):
+            directive = next(iter(load(root).include_directives), None)
+            result[2].append((root, directive, PrepError(
+                "invalid_project", "The writer's disk traversal could not verify the archived INCLUDE inventory and order.")))
     if historical is None and archive_inventory is not None and not result[2] and archive_inventory - result[0]:
         # ac0a255d let an earlier ambiguous directive claim the root for the
         # next directive. Use that policy only if it explains the entire ZIP.
-        legacy = _walk_includes(root, lookup, load, scope, selected, recovered, "ac0")
+        legacy_order = [] if load_order is not None else None
+        legacy = _walk_includes(root, lookup, load, scope, selected, recovered, "ac0", load_order=legacy_order)
         if not legacy[2] and legacy[0] == archive_inventory:
+            if load_order is not None:
+                load_order[:] = legacy_order
             return legacy
     return result
 
 
-def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory):
-    """Look for a wave traversal that collects exactly the archived paths."""
+def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *, archived_order=None, load_order=None):
+    """Deduce missing sibling paths from disk order and verify a fixed layout."""
     lookup = cache(lookup)
+    expected = list(archived_order) if archived_order is not None else None
+    archived_files = {path.casefold() for path in archive_inventory}
+    archived_dirs = {parent.as_posix().casefold() for path in archive_inventory
+                     for parent in PurePosixPath(path).parents if parent != PurePosixPath(".")}
+
+    @cache
+    def is_legal_phantom(path):
+        return (path not in archived_files and path not in archived_dirs
+                and not any(parent.as_posix() in archived_files for parent in PurePosixPath(path).parents))
 
     def load_archived(path):
         if path not in archive_inventory:
@@ -90,8 +108,10 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory):
     pending = deque([empty])
     seen = {empty}
     while pending:
-        phantoms = pending.popleft()
-        candidates = {}
+        alternatives = pending.popleft()
+        phantoms = set(alternatives)
+        fallback = {}
+        deduced_order = []
 
         def disk_lookup(path):
             archived = lookup(path)
@@ -99,25 +119,55 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory):
                 return path.casefold()
             return archived
 
-        def record_phantom(sibling_path, root_file):
-            if root_file in archive_inventory:
-                candidates.setdefault(sibling_path.casefold(), None)
+        def next_expected():
+            return expected[len(deduced_order)] if len(deduced_order) < len(expected) else None
 
-        reached, _, problems = _walk_includes(root, disk_lookup, load_archived, scope, {}, {}, None,
-                                              record_phantom=record_phantom)
-        if not problems and reached == archive_inventory:
-            return True
-        # Only a missing sibling seen in this traversal can change its next replay.
-        for path in candidates:
-            if len(seen) >= _MAX_8E85_DISK_WALKS:
+        def load_in_order(path):
+            if expected is not None and path != next_expected():
+                raise _DiskOrderMismatch()
+            return load_archived(path)
+
+        def deduce_sibling(sibling_path, root_file):
+            if root_file not in archive_inventory:
+                return None
+            path = sibling_path.casefold()
+            if expected is None or root_file == next_expected():
+                if is_legal_phantom(path):
+                    fallback.setdefault(path, None)
+                return None
+            if not is_legal_phantom(path):
+                raise _DiskOrderMismatch()
+            phantoms.add(path)
+            return path
+
+        try:
+            _walk_includes(root, disk_lookup, load_in_order, scope, {}, {}, None,
+                           load_order=deduced_order, deduce_sibling=deduce_sibling)
+        except _DiskOrderMismatch:
+            pass
+
+        # Verify from the Starter with every deduced file present from the start.
+        if not any(parent.as_posix() in phantoms for path in phantoms for parent in PurePosixPath(path).parents):
+            verified_order = []
+            reached, _, problems = _walk_includes(root, disk_lookup, load_archived, scope, {}, {}, None,
+                                                  load_order=verified_order)
+            if (not problems and reached == archive_inventory
+                    and (expected is None or verified_order == expected)):
+                if load_order is not None:
+                    load_order[:] = verified_order
+                return True
+        # Only edges that could have been immediate in the recorded order need alternatives.
+        for path in fallback:
+            if len(seen) >= _MAX_8E85_ORDER_ALTERNATIVES:
                 break
-            if path not in phantoms and (delayed := phantoms | {path}) not in seen:
+            delayed = alternatives | {path}
+            if delayed not in seen:
                 seen.add(delayed)
                 pending.append(delayed)
     return False
 
 
-def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *, record_phantom=None):
+def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *, load_order=None, deduce_sibling=None):
     reached, explicit = set(), set()
     bindings, problems = {}, []
     outgoing = defaultdict(set)
@@ -149,6 +199,8 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
             return
         directives = load(owner).include_directives
         reached.add(owner)
+        if load_order is not None:
+            load_order.append(owner)
         chain = (*ancestors, owner)
         directory = PurePosixPath(owner).parent
         for ordinal, directive in enumerate(directives):
@@ -172,9 +224,9 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
                                     {"path": logical, "target": selected[key]})
                 if not (root_file or sibling):
                     raise PrepError("include_missing", "INCLUDE 파일이 없습니다.", {"path": logical})
-                if (record_phantom is not None and owner != root and sibling_path != root_path
+                if (deduce_sibling is not None and owner != root and sibling_path != root_path
                         and root_file is not None and root_file not in reached and sibling is None):
-                    record_phantom(sibling_path, root_file)
+                    sibling = deduce_sibling(sibling_path, root_file)
                 if root_file and sibling and root_file != sibling:
                     if key in selected:
                         follow(owner, directive, selected[key], chain)

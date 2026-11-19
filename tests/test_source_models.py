@@ -540,6 +540,49 @@ def test_ac0_repeated_operand_archive_requires_its_shell_namespace(tmp_path, var
     assert error.value.code == "invalid_project"
 
 
+@pytest.mark.parametrize("leaf", (False, True), ids=("load-order", "directory"))
+def test_ac0_include_wave_archive_rejects_altered_quad_namespace(tmp_path, leaf):
+    suffix = "directory-include" if leaf else "include-order"
+    fixture = Path(__file__).with_name("fixtures") / f"ac0a255-quad-{suffix}.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    with zipfile.ZipFile(fixture) as archive:
+        manifest = json.loads(archive.read("manifest.json"))
+        source, = manifest["source_models"]
+        order = [record["original_path"] for record in source["files"]]
+        assert len(order) == (8 if leaf else 7)
+        assert order.index("trigger.inc") < order.index("mesh.inc")
+        assert ("b/trigger.inc/leaf.inc" in order) is leaf
+        entry = next(entry for entry in source["id_map"] if entry == ["E:SHELL", 9007, 9009])
+        entry[0] = "E:QUAD"
+        edited = tmp_path / "altered.caeprep"
+        with zipfile.ZipFile(edited, "w") as project:
+            for member in archive.namelist():
+                payload = json.dumps(manifest).encode() if member == "manifest.json" else archive.read(member)
+                project.writestr(member, payload)
+    with pytest.raises(PrepError) as error:
+        session.open_project(edited)
+    assert error.value.code == "invalid_project"
+
+
+def test_8e85_reopens_signed_archive_with_thirteen_include_layouts(tmp_path):
+    fixture = Path(__file__).with_name("fixtures") / "8e85a669-signed-79-includes.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    assert len(session.source_models()[0]["files"]) == 79
+    saved = tmp_path / "saved.caeprep"
+    session.save_project(saved)
+    session.open_project(saved)
+    target = tmp_path / "export/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+    group = _card(session, "/GRSHEL/SHEL/48")["id"]
+    assert session.group_members(group)["member_ids"] == [9008]
+    assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
+
+
 @pytest.mark.parametrize("tampered", (False, True))
 def test_bde_frozen_include_wave_preserves_quad_namespace(tmp_path, tampered):
     session = PrepSession()
