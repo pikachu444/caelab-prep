@@ -56,7 +56,7 @@ class SourceArchiveResource:
     def state_token(self): return self._token
     def manifest(self): return mutable(self.metadata)
 
-    def validate_mapped_payloads(self, document):
+    def validate_mapped_payloads(self, document, *, project_bindings=None):
         """The correspondence table is checked evidence, not an unchecked label."""
         originals = [DeckResource(self.files[item["original_resource_id"]], resource_id=item["original_resource_id"],
             name=item["original_path"], is_include=item["resource_id"] != self.metadata["root_resource_id"])
@@ -108,12 +108,16 @@ class SourceArchiveResource:
         policies = ((None, "quoted", False),) if records is not None else (
             (None, "quoted", False), ("bde", "quoted", False), ("ac0", "quoted", False),
             ("987", "unquoted", False), ("987", "unchanged", True), ("8fe", "unchanged", True))
-        exact_mapped_fallback = False
+        matches_by_order = {True: {}, False: {}}
+        mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
+        mapped_keys = {(resource.name, directive.header_row): (mapped_ids[resource.name], ordinal)
+                       for resource in originals for ordinal, directive in enumerate(resource.include_directives)}
         for historical, style, direct_writer in policies:
             load_order = []
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
                                          load_order=load_order)
-            if historical == "8fe" and load_order != archived_order:
+            reached, original_bindings, _ = graph
+            if reached != set(paths):
                 continue
             try:
                 expected = remap(originals, mapping, paths, include_graph=graph, two_line=style,
@@ -124,23 +128,26 @@ class SourceArchiveResource:
                 continue
             if actual != expected:
                 continue
-            if records is None and load_order != archived_order:
-                exact_mapped_fallback = True
-                continue
-            if historical == "8fe":
-                _, original_bindings, _ = graph
-                mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
-                for resource in originals:
-                    for ordinal, directive in enumerate(resource.include_directives):
-                        intended = original_bindings.get((resource.name, directive.header_row))
-                        direct = directive.path.replace("\\", "/")
-                        if (directive.filename_row == directive.header_row and intended
-                                and direct in paths and intended != direct):
-                            self.recovered_include_bindings[mapped_ids[resource.name], ordinal] = mapped_ids[intended]
-            return
-        if exact_mapped_fallback:
-            return
-        raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
+            effective = tuple(sorted((mapped_keys[key], mapped_ids[target]) for key, target in original_bindings.items()))
+            repairs = {}
+            if direct_writer:
+                for key, target in original_bindings.items():
+                    owner, ordinal = mapped_keys[key]
+                    directive = document.resources[owner].include_directives[ordinal]
+                    if directive.path != paths[target]:
+                        repairs[owner, ordinal] = mapped_ids[target]
+            matches_by_order[load_order == archived_order].setdefault(effective, repairs)
+        matches = matches_by_order[True] or matches_by_order[False]
+        if not matches:
+            raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
+        if len(matches) > 1 and project_bindings:
+            # An explicit binding in a resaved project can distinguish writers
+            # whose source archive bytes and traversal order are identical.
+            matches = {effective: repairs for effective, repairs in matches.items()
+                       if all(project_bindings.get(key, target) == target for key, target in effective)}
+        if len(matches) != 1:
+            raise PrepError("invalid_project", "Archived INCLUDE bindings are ambiguous across historical project writers; re-import or resave with explicit INCLUDE bindings.")
+        self.recovered_include_bindings = next(iter(matches.values()))
 
 
 class SourceModelCommands:

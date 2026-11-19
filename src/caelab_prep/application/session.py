@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import math
 import re
+from collections import deque
 from copy import deepcopy
 import os
 from pathlib import Path, PurePosixPath
@@ -934,7 +935,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 "hexahedron": "GRBRIC/BRIC", "wedge": "GRBRIC/BRIC", "pyramid": "GRBRIC/BRIC"}.get(kind)
 
     def _element_selection_ref(self, cell):
-        matches = self._projection_index["cells_by_id"][cell["id"]]
+        matches = self._projection_index["all_cells_by_id"][cell["id"]]
         shared = sum(candidate["resource_id"] == cell["resource_id"] for candidate in matches) > 1
         return SelectionRef(cell["resource_id"], "element", cell["id"], cell.get("formulation") if shared else None)
 
@@ -943,7 +944,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             raise PrepError("invalid_reference", "Choose at least one typed element reference.")
         if self._projection_cache is None: self.mesh_view()
         references, identifiers, families, seen = [], [], set(), set()
-        cells_by_id = self._projection_index["cells_by_id"]
+        cells_by_id = self._projection_index["all_cells_by_id"]
         for value in members:
             if isinstance(value, SelectionRef): ref = value
             elif isinstance(value, dict) and set(value) - {"formulation"} == {"resource_id", "entity_kind", "local_id"}:
@@ -1026,7 +1027,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     if self._projection_cache is None: self.mesh_view()
                     refs = []
                     for identifier in identifiers:
-                        matches = [cell for cell in self._projection_index["cells_by_id"].get(identifier, ())
+                        matches = [cell for cell in self._projection_index["all_cells_by_id"].get(identifier, ())
                                    if self._element_group_family(cell["type"], cell.get("formulation")) == family]
                         if len(matches) != 1:
                             raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "A group element cannot be resolved uniquely.", {"element_id": identifier})
@@ -1465,7 +1466,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             self._check_model_edit(expected_revision, expected_document_id)
             resource, card, refs = self._part_native_references(card_id)
             if self._projection_cache is None: self.mesh_view()
-            part_cells = self._projection_index["cells_by_part"].get(refs["native_part_id"], ())
+            part_cells = self._projection_index["all_cells_by_part"].get(refs["native_part_id"], ())
             if material_id is None and property_id is None:
                 raise PrepError("invalid_command", "Choose a material or property to assign.")
             values = {}
@@ -1527,8 +1528,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         else:
                             nodes[identifier] = point
                     cells.extend(projection["cells"]); diagnostics.extend(projection["diagnostics"])
+                all_by_id, all_by_part = {}, {}
                 valid = []
                 for cell in cells:
+                    all_by_id.setdefault(cell["id"], []).append(cell)
+                    all_by_part.setdefault(cell.get("part_id"), []).append(cell)
                     if all(node in nodes for node in cell["nodes"]):
                         valid.append(cell)
                     else:
@@ -1551,7 +1555,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     by_id[cell["id"]] = (*by_id.get(cell["id"], ()), cell)
                     by_part.setdefault(cell.get("part_id"), []).append(cell)
                 self._projection_cache = cache
-                self._projection_index = {"cells_by_id": by_id, "cells_by_part": by_part}
+                self._projection_index = {"cells_by_id": by_id, "cells_by_part": by_part,
+                                          "all_cells_by_id": all_by_id, "all_cells_by_part": all_by_part}
             result = {**self._projection_cache, "revision": document.revision,
                     "document_epoch": self._document_epoch, "projection_revision": self._projection_revision,
                     "resource_revisions": readonly({key: resource.state_token() for key, resource in document.resources.items()})}
@@ -1948,9 +1953,6 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                                     raise ValueError("source path escapes its namespace")
                                 owned.add(rid)
                             document.resources[source_resource.id] = source_resource
-                        for source_resource in document.resources.values():
-                            if isinstance(source_resource, SourceArchiveResource):
-                                source_resource.validate_mapped_payloads(document)
                         self._validate_instance_references(document, manifest["root_id"], relations.snapshot()["instances"])
                     recipes = manifest.get("structured_recipes", [])
                     if not isinstance(recipes, list): raise ValueError("invalid structured recipe registry")
@@ -1989,6 +1991,9 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                                 or (owner, ordinal) in selected):
                             raise ValueError("invalid INCLUDE binding")
                         selected[owner, ordinal] = included
+                    for source_resource in document.resources.values():
+                        if isinstance(source_resource, SourceArchiveResource):
+                            source_resource.validate_mapped_payloads(document, project_bindings=selected)
                     bindings, diagnostics = self._project_include_graph(document, paths, manifest["root_id"], selected=selected)
                     if manifest["version"] >= 3:
                         cases = AnalysisCasesResource(document.id, manifest["analysis_cases"])
@@ -2188,32 +2193,67 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     prioritized.extend(other for other in incoming.get(resolved, ()) if other[0] in actual)
             return dict.fromkeys((*prioritized, *reached))
 
-        visit(root)
-        start = frozenset()
-        actual, issues, _ = simulate(start)
-        if not issues and actual == expected:
-            return
-        baseline, baseline_issues = actual, issues
-        # Try all single changes before combinations. A failed trial never
-        # changes the next trial's original operands or writes a file.
-        seen = {start}
-        pending = [start]
-        for qualifications in pending:
-            if qualifications:
-                actual, issues, modified = simulate(qualifications)
-                if not issues and actual == expected:
-                    payloads.update(modified)
-                    return
+        def progress(actual, issues):
+            if not issues and actual == expected:
+                return len(ordered) + 1
+            # A failed directive has no resolved edge. Stop before the first
+            # missing or different binding in the intended traversal.
+            for index, (path, ordinal, intended) in enumerate(ordered):
+                if ordinal >= len(actual.get(path, ())) or actual[path][ordinal] != intended:
+                    return index
+            return len(ordered)
+
+        def trial_neighbors(qualifications, actual):
             for entry in candidates(actual):
-                if len(seen) >= 256:
+                if entry not in qualifications and entry in qualifiable:
+                    yield qualifications | {entry}
+
+        def advance(qualifications, actual, prefix):
+            best, best_score = None, prefix
+            pending, seen = deque(), {qualifications}
+            for trial in trial_neighbors(qualifications, actual):
+                result = simulate(trial)
+                score = progress(*result[:2])
+                if score == len(ordered) + 1:
+                    return trial, result
+                if score > best_score:
+                    best, best_score = (trial, result), score
+                pending.append((trial, result[0]))
+                seen.add(trial)
+            if best is not None:
+                return best
+
+            # Search combinations only when singles cannot preserve and
+            # extend the matched prefix. Reset the budget after each advance.
+            remaining = 256
+            while pending and remaining:
+                parent, parent_actual = pending.popleft()
+                for trial in trial_neighbors(parent, parent_actual):
+                    if trial in seen:
+                        continue
+                    seen.add(trial)
+                    result = simulate(trial)
+                    if progress(*result[:2]) > prefix:
+                        return trial, result
+                    pending.append((trial, result[0]))
+                    remaining -= 1
+                    if not remaining:
+                        break
+            return None
+
+        visit(root)
+        qualifications = frozenset()
+        actual, issues, modified = simulate(qualifications)
+        if issues or actual != expected:
+            qualifiable = {entry for entry in ordered if can_qualify(entry)}
+            while issues or actual != expected:
+                step = advance(qualifications, actual, progress(actual, issues))
+                if step is None:
                     break
-                if entry in qualifications or not can_qualify(entry):
-                    continue
-                next_trial = qualifications | {entry}
-                if next_trial not in seen:
-                    seen.add(next_trial)
-                    pending.append(next_trial)
-        actual, issues = baseline, baseline_issues
+                qualifications, (actual, issues, modified) = step
+        if not issues and actual == expected:
+            payloads.update(modified)
+            return
         if issues:
             path, directive, cause = issues[0]
             raise PrepError("include_output_collision", "The exported INCLUDE graph could not be reproduced in this destination.",

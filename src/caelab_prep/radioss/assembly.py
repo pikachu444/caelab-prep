@@ -192,23 +192,23 @@ def remap(resources, mappings, paths, *, include_graph=None, two_line="quoted", 
                 body = lines[line].rstrip("\r\n"); ending = lines[line][len(body):]
                 field = f"{mapped:10d}" if mapped is not None else " " * 10
                 lines[line] = body.ljust(start + 10)[:start] + field + body[start + 10:] + ending
-        for directive in resource.include_directives:
-            multiline = directive.filename_row != directive.header_row
-            if multiline and two_line == "unchanged":
-                continue
-            original = bindings.get((resource.name, directive.header_row))
-            if legacy_direct_inline and not multiline:
-                original = directive.path.replace("\\", "/")
-            if original not in paths:
-                raise PrepError("include_missing", "The imported INCLUDE directive could not be resolved.")
-            directive.replace_path(lines, paths[original], preserve_quotes=multiline and two_line == "quoted")
-        if legacy_direct_inline and resource.active_stop < len(lines):
-            for index in range(resource.active_stop, len(lines)):
-                match = re.match(r"^(\s*#include[ \t]+)(.+?)(\r?\n|\r)?$", lines[index], re.I)
+        if legacy_direct_inline:
+            # The direct-inline writers scanned all rows, including after
+            # #enddata, but required whitespace before the inline operand.
+            for index, line in enumerate(lines):
+                match = re.match(r"^(\s*#include\s+)(.+?)(\r?\n|\r)?$", line, re.I)
                 if match:
                     direct = match[2].strip().strip('"').replace("\\", "/")
-                    if direct in paths:
-                        lines[index] = match[1] + paths[direct] + (match[3] or "")
+                    if direct not in paths:
+                        raise PrepError("include_missing", "The imported INCLUDE directive could not be resolved.")
+                    lines[index] = match[1] + paths[direct] + (match[3] or "")
+        else:
+            for directive in resource.include_directives:
+                multiline = directive.filename_row != directive.header_row
+                original = bindings.get((resource.name, directive.header_row))
+                if original not in paths:
+                    raise PrepError("include_missing", "The imported INCLUDE directive could not be resolved.")
+                directive.replace_path(lines, paths[original], preserve_quotes=multiline and two_line == "quoted")
         # Explicitly shared nodes live in the destination resource only.
         shared = {line for (namespace, identifier), (rid, line) in definitions.items()
                   if rid == resource.id and namespace == "NODE" and (namespace, identifier) in mappings.shared}

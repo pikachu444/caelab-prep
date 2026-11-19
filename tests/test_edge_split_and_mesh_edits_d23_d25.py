@@ -1102,34 +1102,41 @@ def test_d23_export_preserves_active_binding_when_inventory_loses_an_unselected_
         assert _mesh_facts(reparsed) == original
 
 
-def test_d23_export_can_qualify_upstream_include_to_keep_all_nine_bindings(tmp_path):
+@pytest.mark.parametrize("copies", (1, 9))
+def test_d23_export_can_qualify_upstream_include_to_keep_all_nine_bindings(tmp_path, copies):
     units = f"{'Mg':>20}{'mm':>20}{'s':>20}\n"
     begin = "/BEGIN\nSelectively qualified\n      2025         0\n" + units * 2
-    payloads = {
-        "starter_0000.rad": begin + "#include mark.inc\n#include a/mark.inc\n#include b/branch.inc\n/END\n",
-        "mark.inc": "# Marker\n",
-        "a/mark.inc": "#include nodes.inc\n",
-        "b/branch.inc": "#include main.inc\n",
-        "b/main.inc": "# Unused alternative\n",
-        "main.inc": "#include c/gate.inc\n#include nodes.inc\n",
-        "c/gate.inc": "#include mark.inc\n",
-        "c/mark.inc": "#include a/nodes.inc\n",
-        "nodes.inc": f"/NODE\n{_node_line(1, 1, 0, 0)}\n",
-        "a/nodes.inc": f"/NODE\n{_node_line(88, 2, 0, 0)}\n",
-    }
+    payloads, root_refs, node_ids = {}, [], []
+    for i in range(copies):
+        first, second = 100 * i + 1, 100 * i + 88
+        node_ids.extend((first, second))
+        root_refs.extend((f"mark{i}.inc", f"a/mark{i}.inc", f"b/branch{i}.inc"))
+        payloads.update({
+            f"mark{i}.inc": "# Marker\n",
+            f"a/mark{i}.inc": f"#include nodes{i}.inc\n",
+            f"b/branch{i}.inc": f"#include main{i}.inc\n",
+            f"b/main{i}.inc": "# Unused alternative\n",
+            f"main{i}.inc": f"#include c/gate{i}.inc\n#include nodes{i}.inc\n",
+            f"c/gate{i}.inc": f"#include mark{i}.inc\n",
+            f"c/mark{i}.inc": f"#include a/nodes{i}.inc\n",
+            f"nodes{i}.inc": f"/NODE\n{_node_line(first, 1, 0, 0)}\n",
+            f"a/nodes{i}.inc": f"/NODE\n{_node_line(second, 2, 0, 0)}\n",
+        })
     source = tmp_path / "source"
     for relative, payload in payloads.items():
         _write(source / relative, payload)
+    starter = _write(source / "starter_0000.rad", begin + "".join(f"#include {path}\n" for path in root_refs) + "/END\n")
 
     def bindings(session):
         return {("Starter" if owner == session._root_id else session._paths[owner], ordinal): session._paths[target]
                 for (owner, ordinal), target in session._include_bindings.items()}
 
     session = PrepSession()
-    session.open_rad(source / "starter_0000.rad")
+    session.open_rad(starter)
     expected = bindings(session)
-    assert expected["a/mark.inc", 0] == "nodes.inc"
-    assert expected["c/gate.inc", 0] == "c/mark.inc"
+    for i in range(copies):
+        assert expected[f"a/mark{i}.inc", 0] == f"nodes{i}.inc"
+        assert expected[f"c/gate{i}.inc", 0] == f"c/mark{i}.inc"
     case = session.create_analysis_case("Nested INCLUDE export", [], .01, .001, "s")["case_id"]
     project = tmp_path / "bound.caeprep"
     session.save_project(project)
@@ -1142,15 +1149,18 @@ def test_d23_export_can_qualify_upstream_include_to_keep_all_nine_bindings(tmp_p
                 session.export_rad(output)
             else:
                 session.export_analysis_case(output, case)
-            assert not (output.parent / "b/main.inc").exists()
             for relative, payload in payloads.items():
-                if relative not in ("starter_0000.rad", "b/main.inc"):
-                    rendered = "#include c/mark.inc\n" if relative == "c/gate.inc" else payload
-                    assert (output.parent / relative).read_bytes() == rendered.encode()
+                path = output.parent / relative
+                if relative.startswith("b/main"):
+                    assert not path.exists()
+                else:
+                    rendered = payload.replace("#include mark", "#include c/mark") if relative.startswith("c/gate") else payload
+                    assert path.read_bytes() == rendered.encode()
             reopened = PrepSession()
             reopened.open_rad(output)
             assert bindings(reopened) == expected
-            assert reopened.mesh_view()["node_ids"] == (1, 88)
+            assert len(reopened._paths) == 1 + 8 * copies
+            assert reopened.mesh_view()["node_ids"] == tuple(node_ids)
 
 
 def test_d23_reopens_archive_whose_older_resolver_claimed_second_sibling(tmp_path):
@@ -1203,10 +1213,11 @@ def test_d23_nested_include_avoids_current_file_and_ancestor_shadows(tmp_path):
                                              "tampered-two-line", "direct-inline-only", "direct-inline-bare",
                                              "direct-inline-qualified-reached", "direct-inline-bare-reached",
                                              "inactive-line", "inactive-tight", "root-first", "root-first-resaved",
-                                             "root-first-recorded"))
+                                             "root-first-recorded", "ambiguous-inline", "ambiguous-resaved"))
 def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_format):
     mixed = legacy_format in ("mixed-direct-inline", "tampered-direct-inline", "tampered-two-line")
-    root_first = legacy_format.startswith("root-first")
+    ambiguous = legacy_format.startswith("ambiguous-")
+    root_first = ambiguous or legacy_format.startswith("root-first")
     inline_only = root_first or legacy_format.startswith("direct-inline-")
     already_reached = root_first or legacy_format.endswith("-reached")
     inactive = legacy_format.startswith("inactive-")
@@ -1216,7 +1227,10 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     starter, begin, owner, _ = _nested_include_deck(
         tmp_path / "source", "root-claimed" if mixed or inline_only or inactive or legacy_format == "unchanged" else "sibling-claimed",
         separator, filename=name)
-    if already_reached:
+    if ambiguous:
+        starter.write_bytes(starter.read_bytes().replace(b"#include mesh/first.inc\n#include nodes.inc\n",
+                            b"#include nodes.inc\n#include mesh/nodes.inc\n#include mesh/first.inc\n"))
+    elif already_reached:
         starter.write_bytes(starter.read_bytes().replace(b"/END", f"#include mesh/{name}\n/END".encode()))
     if mixed or inline_only:
         nested = starter.parent / "mesh/first.inc"
@@ -1241,7 +1255,7 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     source_record = manifest["source_models"][0]
     if legacy_format != "root-first-recorded":
         source_record.pop("include_bindings")
-    if not root_first or legacy_format == "root-first":
+    if not root_first or legacy_format in ("root-first", "ambiguous-inline"):
         manifest.pop("include_bindings")
     if legacy_format == "unchanged" or legacy_format == "mixed-direct-inline" or inactive or (inline_only and not root_first):
         # The sibling-first writer archived files in traversal order.
@@ -1251,7 +1265,7 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
         files.remove(sibling)
         files.insert(root_index, sibling)
     source_files = {item["original_path"]: item for item in plan["source"]["files"]}
-    if legacy_format == "root-first-resaved":
+    if legacy_format in ("root-first-resaved", "ambiguous-resaved"):
         nested_id = source_files["mesh/first.inc"]["resource_id"]
         root_nodes_id = source_files[name]["resource_id"]
         manifest["include_bindings"].extend([[nested_id, ordinal, root_nodes_id] for ordinal in range(2)])
@@ -1277,10 +1291,12 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     with ZipFile(legacy, "w") as project:
         for member, contents in members.items():
             project.writestr(member, contents)
-    if legacy_format.startswith("tampered-"):
+    if legacy_format.startswith("tampered-") or legacy_format == "ambiguous-inline":
         with pytest.raises(PrepError) as error:
             session.open_project(legacy)
         assert error.value.code == "invalid_project"
+        if ambiguous:
+            assert "Archived INCLUDE bindings are ambiguous" in error.value.message
         return
     session.open_project(legacy)
     assert _mesh_facts(session) == expected
@@ -1297,6 +1313,47 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     reopened = PrepSession()
     reopened.open_rad(output)
     assert _mesh_facts(reopened) == expected
+
+
+@pytest.mark.parametrize("name", ("nodes.inc", "sets/nodes.inc"))
+def test_d23_reopens_legacy_active_include_without_whitespace(tmp_path, name):
+    starter, begin, owner, _ = _nested_include_deck(tmp_path / "source", "root-claimed", "", filename=name)
+    session = PrepSession()
+    session.open_rad(_write(tmp_path / "base_0000.rad", begin + "/END\n"))
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    expected = _mesh_facts(session)
+    modern = tmp_path / "modern.caeprep"
+    session.save_project(modern)
+    with ZipFile(modern) as project:
+        members = {member: project.read(member) for member in project.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    manifest.pop("include_bindings")
+    record = manifest["source_models"][0]
+    record.pop("include_bindings")
+    files = record["files"]
+    by_path = {item["original_path"]: item for item in files}
+    files.remove(by_path[owner])
+    files.insert(files.index(by_path[name]), by_path[owner])
+    members["manifest.json"] = json.dumps(manifest).encode()
+    mapped = f'raw/{by_path["mesh/first.inc"]["resource_id"]}.rad'
+    # The direct-inline writer did not rewrite a directive without whitespace.
+    rewritten = f'#include {by_path[owner]["logical_path"]}\r\n'.encode()
+    assert members[mapped].count(rewritten) == 1
+    members[mapped] = members[mapped].replace(rewritten, f'#include"{name}"\r\n'.encode())
+    legacy = tmp_path / "legacy.caeprep"
+    with ZipFile(legacy, "w") as project:
+        for member, contents in members.items():
+            project.writestr(member, contents)
+    session.open_project(legacy)
+    nested_id, intended_id = (by_path[path]["resource_id"] for path in ("mesh/first.inc", owner))
+    assert session._include_bindings[nested_id, 0] == intended_id
+    output = tmp_path / "out/export_0000.rad"
+    session.export_rad(output)
+    session.open_rad(output)
+    ids = {path: rid for rid, path in session._paths.items()}
+    assert session._include_bindings[ids[by_path["mesh/first.inc"]["logical_path"]], 0] == ids[by_path[owner]["logical_path"]]
+    assert _mesh_facts(session) == expected
 
 
 @pytest.mark.parametrize("origin", ("source", "reassigned", "removed_comment"))

@@ -423,6 +423,13 @@ def test_case_checks_native_quad_part_including_elements_omitted_from_display(tm
     assert any(cell["formulation"] == "QUAD" for cell in session.mesh_view()["cells"]) != omit_from_display
     if omit_from_display:
         assert any(item["code"] == "missing_display_nodes" for item in session.mesh_view()["diagnostics"])
+        part = lookup(session, "/PART/1")["id"]
+        prop = lookup(session, "/PROP/SHELL/2")["id"]
+        before = session.part_assignments(part)
+        with pytest.raises(PrepError) as assignment:
+            session.assign_part(part, property_id=prop)
+        assert assignment.value.code == "incompatible_property"
+        assert session.part_assignments(part) == before
     case = session.create_analysis_case("Native quad part", [], .01, .001, "s")["case_id"]
     output = tmp_path / "output/case_0000.rad"
     for validate in (lambda: session.validate_analysis_case(case), lambda: session.export_analysis_case(output, case)):
@@ -432,6 +439,40 @@ def test_case_checks_native_quad_part_including_elements_omitted_from_display(tm
         if code == "dangling_reference":
             assert error.value.details["part_id"] == part_id
     assert not output.parent.exists()
+
+
+@pytest.mark.parametrize("malformed", (None, "element", "node"), ids=("padded-part", "blank-element", "blank-node"))
+def test_case_export_checks_padded_quad_part_and_malformed_native_rows(tmp_path, malformed):
+    source = tmp_path / "quad_0000.rad"
+    raw = SOURCE.read_bytes().replace(b"\r\n", b"\n").split(b"/PRESERVED/EDITOR/91", 1)[0]
+    units = raw.splitlines(keepends=True)[4]
+    quad_header = b"/QUAD/1\n" if malformed else b"/QUAD/         1\n"
+    raw = raw.replace(units, units * 2, 1).replace(b"\n/SHELL/1\n", b"\n" + quad_header, 1)
+    if malformed:
+        header = b"/NODE\n" if malformed == "node" else quad_header
+        end = raw.index(header) + len(header)
+        width = 20 if malformed == "node" else 10
+        raw = raw[:end + 10] + b" " * width + raw[end + 10 + width:]
+    source.write_bytes(raw + b"/END\n")
+    session = opened(source)
+    part = lookup(session, "/PART/1")["id"]
+    solid = session.create_solid_property("Solid section")["card_id"]
+    session.assign_part(part, property_id=solid)
+    case = session.create_analysis_case("Quad validation", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "output/case_0000.rad"
+    if malformed:
+        with pytest.raises(PrepError) as error:
+            session.export_analysis_case(output, case)
+        assert error.value.code == "invalid_deck"
+        diagnostic = error.value.details["diagnostics"][0]
+        assert diagnostic["code"] == f"{malformed}_display_parse"
+        if malformed == "element":
+            assert diagnostic["part_id"] == 1
+        assert not output.parent.exists()
+    else:
+        session.export_analysis_case(output, case)
+        reopened = opened(output)
+        assert {cell["part_id"] for cell in reopened.mesh_view()["cells"] if cell["formulation"] == "QUAD"} == {1}
 
 
 @pytest.mark.parametrize("valid", (True, False))

@@ -683,12 +683,13 @@ class DeckResource:
                         diagnostics.append({"severity": "warning", "code": "node_display_parse", "message": "일부 절점 행을 표시하지 못했습니다.", "line": index + 1})
             elif key[1] == "TETRA10":
                 from .tetra10 import records
-                part = int(key[2]) if len(key) > 2 and key[2].isdigit() else None
+                token = key[2].strip() if len(key) > 2 else ""
+                part = int(token) if token.isdecimal() else None
                 try:
                     parsed = records(self.lines, card.data)
                 except PrepError as exc:
                     diagnostics.append({"severity": "warning", "code": "element_display_parse",
-                                        "message": str(exc), "line": card.start + 1})
+                                        "message": str(exc), "line": card.start + 1, "part_id": part})
                     continue
                 cells.extend({"id": identifier, "type": "tetra10", "formulation": "TETRA10",
                               "nodes": list(connectivity), "part_id": part,
@@ -698,7 +699,8 @@ class DeckResource:
                 kind, count = {"SHELL": ("quad", 4), "QUAD": ("quad", 4), "SH3N": ("triangle", 3), "BRICK": ("hexahedron", 8),
                                "TETRA4": ("tetra", 4), "BEAM": ("line", 2), "TRUSS": ("line", 2)}[
                                    ELEMENT_ALIASES.get(key[1], key[1])]
-                part = int(key[2]) if len(key) > 2 and key[2].isdigit() else None
+                token = key[2].strip() if len(key) > 2 else ""
+                part = int(token) if token.isdecimal() else None
                 for index in card.data:
                     line = self.lines[index].rstrip("\r\n")
                     try:
@@ -706,7 +708,9 @@ class DeckResource:
                         cells.append({"id": values[0], "type": kind, "formulation": key[1], "nodes": values[1:], "part_id": part,
                                       "card_id": card.id, "resource_id": self.id})
                     except ValueError:
-                        diagnostics.append({"severity": "warning", "code": "element_display_parse", "message": "일부 요소 행을 표시하지 못했습니다.", "line": index + 1})
+                        diagnostics.append({"severity": "warning", "code": "element_display_parse",
+                                            "message": "일부 요소 행을 표시하지 못했습니다.",
+                                            "line": index + 1, "part_id": part})
         identifiers = sorted(nodes)
         # An element resource may refer to nodes in another INCLUDE resource.
         # Validate connectivity only after the document has assembled all resources.

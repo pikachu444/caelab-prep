@@ -51,19 +51,23 @@ def test_element_group_picker_qualifies_same_file_shell_and_quad_ids(tmp_path):
         provider.submit(SetProperties(group, {"element_refs": [ref]}, session.document.revision))
 
 
-def test_element_group_picker_rejects_shared_id_within_one_native_family(tmp_path):
+@pytest.mark.parametrize("tetra_node", (10, 99999), ids=("both-visible", "tetra-omitted"))
+def test_element_group_picker_rejects_shared_id_within_one_native_family(tmp_path, tetra_node):
     source = tmp_path / "shared_solids_0000.rad"
     raw = (INPUTS / "shell_panels_0000.rad").read_bytes().replace(b"\r\n", b"\n").split(b"\n/SHELL/1\n", 1)[0]
     brick = "".join(f"{value:10d}" for value in (201, 1, 2, 5, 4, 10, 11, 14, 13))
-    tetra = "".join(f"{value:10d}" for value in (201, 1, 2, 5, 10))
-    source.write_bytes(raw + f"\n/BRICK/1\n{brick}\n/TETRA4/2\n{tetra}\n/END\n".encode())
+    tetra = "".join(f"{value:10d}" for value in (201, 1, 2, 5, tetra_node))
+    group = f"/GRBRIC/BRIC/986\nExisting solids\n{201:10d}\n"
+    source.write_bytes(raw + f"\n/BRICK/1\n{brick}\n/TETRA4/2\n{tetra}\n{group}/END\n".encode())
     session = PrepSession()
     session.open_rad(source)
     provider = RadProvider(session)
     field = next(field for field in provider.operation_spec("element_group.create").fields
                  if field.name == "element_refs")
     choices = [ref for ref in field.choices if ref["local_id"] == 201]
-    assert {ref["formulation"] for ref in choices} == {"BRICK", "TETRA4"}
+    assert {cell["formulation"] for cell in session.mesh_view()["cells"]} == (
+        {"BRICK", "TETRA4"} if tetra_node == 10 else {"BRICK"})
+    assert len(choices) == (2 if tetra_node == 10 else 1)
     revision = session.document.revision
     for ref in choices:
         with pytest.raises(PrepError) as error:
@@ -73,6 +77,9 @@ def test_element_group_picker_rejects_shared_id_within_one_native_family(tmp_pat
         assert error.value.code == "ambiguous_reference"
     assert session.document.revision == revision
     assert all(item.ref.native_scope != "/GRBRIC/BRIC/987" for item in provider.tree_nodes())
+    existing = session.group_members(node(provider, "/GRBRIC/BRIC/986").ref.object_id)
+    assert existing["member_ids"] == [201] and existing["members"] == []
+    assert existing["diagnostics"][0]["code"] == "ambiguous_reference"
 
 
 def test_quad_property_only_provider_edits_preserve_existing_law3(tmp_path):

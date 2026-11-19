@@ -208,10 +208,13 @@ class AnalysisCaseCommands:
             unsupported = []
             conditions = []
             parts = {}
-            cells_by_part = {}
-            for resource in self._deck_resources():
-                for cell in resource.mesh_projection()["cells"]:
-                    cells_by_part.setdefault(cell.get("part_id"), []).append(cell)
+            projection = self.mesh_view()
+            malformed = [dict(item) for item in projection["diagnostics"]
+                         if item["code"] in ("element_display_parse", "node_display_parse")]
+            if malformed:
+                raise PrepError("invalid_deck", "Case export requires valid native node and element rows.",
+                                {"diagnostics": malformed})
+            cells_by_part = self._projection_index["all_cells_by_part"]
             for item in self.list_cards():
                 words = item["keyword"].upper().strip("/").split("/")
                 if condition_kind(item["keyword"]): conditions.append(item["id"])
