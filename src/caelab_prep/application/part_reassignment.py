@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from ..cae_core import PrepError
 from . import mesh_edit_candidates as edits
-from .native_mesh_edit import native_mesh_edit_states, project_native_mesh_edit
+from .native_mesh_edit import mesh_edit_reference, native_mesh_edit_states, project_native_mesh_edit
 
 
 class PartReassignmentCommands:
@@ -37,18 +37,22 @@ class PartReassignmentCommands:
             try:
                 if not isinstance(assignments, (list, tuple)) or not assignments:
                     raise PrepError("invalid_part_assignment", "Choose explicit element-to-PART assignments.")
-                mapping = {}
+                scoped_assignments = []
+                message = "Each reference requires resource, kind and local identity."
                 for row in assignments:
                     if not isinstance(row, dict) or set(row) != {"element", "part"}:
                         raise PrepError("invalid_part_assignment", "Each assignment requires a scoped element and PART reference.")
-                    if any(not isinstance(row[key], dict) or set(row[key]) != {"resource_id", "entity_kind", "local_id"} for key in row):
-                        raise PrepError("invalid_part_assignment", "Each reference requires resource, kind and local identity.")
-                    element, part = edits.Ref(**row["element"]), edits.Ref(**row["part"])
-                    if element in mapping or part.entity_kind != "part":
+                    part = mesh_edit_reference(row["part"], kind="part", code="invalid_part_assignment", message=message)
+                    scoped_assignments.append((row["element"], part))
+                targets = tuple(sorted({part for _, part in scoped_assignments}))
+                snapshot = self._part_reassignment_snapshot(targets)
+                mapping = {}
+                for ref, part in scoped_assignments:
+                    element = mesh_edit_reference(ref, kind="element", snapshot=snapshot,
+                                                  code="invalid_part_assignment", message=message)
+                    if element in mapping:
                         raise PrepError("invalid_part_assignment", "Use one exact PART decision per element.")
                     mapping[element] = part
-                targets = tuple(sorted(set(mapping.values())))
-                snapshot = self._part_reassignment_snapshot(targets)
                 candidate = edits.reassign_parts(snapshot, mapping)
                 states = native_mesh_edit_states(self, candidate, layout_error_code="unsupported_part_move_layout")
                 conditions, overlaps, blocked, correspondences, _ = project_native_mesh_edit(self, candidate, states)

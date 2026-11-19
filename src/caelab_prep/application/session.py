@@ -388,15 +388,17 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 if ref.entity_kind == "node":
                     unique = node_resources.get(ref.local_id, ()) == (ref.resource_id,)
                 else:
-                    unique = len(self._matching_selection_cells(ref.local_id, ref.resource_id, ref.formulation)) == 1
+                    native, displayed = self._matching_selection_cells(ref.local_id, ref.resource_id, ref.formulation)
+                    unique = len(native) == len(displayed) == 1
                 if unique:
                     refs.append(ref)
             refs = tuple(refs)
             if refs != selection.refs:
                 document.selection = Selection(selection.kind if refs else None, tuple(ref.local_id for ref in refs), refs)
-                if not refs and selection.kind == "element":
-                    self._active_object = None
-                    self._selected_objects = ()
+            if selection.kind == "element":
+                owner = self._element_selection_owner(document, refs)
+                self._active_object = owner
+                self._selected_objects = (owner,) if owner is not None else ()
         self._selection_structure_tokens = self._projection_tokens
 
     def _check_model_edit(self, expected_revision, expected_document_id):
@@ -1686,14 +1688,19 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         identity = native_identity(keyword)
         return identity[1] if identity and identity[0] == "PART" else None
 
-    def _owning_part_ref(self, cells):
-        part_ids = {cell.get("part_id") for cell in cells}
+    def _element_selection_owner(self, document, refs):
+        part_ids = set()
+        for ref in refs:
+            native, displayed = self._matching_selection_cells(ref.local_id, ref.resource_id, ref.formulation)
+            if len(native) != 1 or len(displayed) != 1:
+                return None
+            part_ids.add(displayed[0].get("part_id"))
         if len(part_ids) != 1 or None in part_ids:
             return None
         parts = [card for card in self.list_cards() if self._native_part_id(card["keyword"]) in part_ids]
         if len(parts) == 1:
             card = parts[0]
-            return ObjectRef(self.document.id, card["resource_id"], card["id"], "rad-card", card["keyword"])
+            return ObjectRef(document.id, card["resource_id"], card["id"], "rad-card", card["keyword"])
         return None
 
     def _part_cells(self, target: ObjectRef) -> list[dict]:
@@ -1893,16 +1900,16 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             if resource is None or candidate.get("resource_revision") != resource.state_token():
                 raise PrepError("stale_pick", "The displayed resource has changed. Pick again.")
             entity_id = candidate.get("id")
-            resources = self._projection_cache["node_resources"].get(entity_id, ()) if kind == "node" else [
-                cell["resource_id"] for cell in self._projection_index["cells_by_id"].get(entity_id, ())]
-            if resource_id not in resources:
+            if kind == "node" and resource_id not in self._projection_cache["node_resources"].get(entity_id, ()):
                 raise PrepError("invalid_selection", "The entity does not belong to the displayed resource.")
             return self.select_entity(kind, entity_id, resource_id=resource_id, formulation=candidate.get("formulation"))
 
     def _matching_selection_cells(self, entity_id, resource_id, formulation):
-        return [cell for cell in self._projection_index["cells_by_id"].get(entity_id, ())
-                if (resource_id is None or cell["resource_id"] == resource_id)
-                and (formulation is None or cell.get("formulation") == formulation)]
+        def matches(index):
+            return [cell for cell in self._projection_index[index].get(entity_id, ())
+                    if (resource_id is None or cell["resource_id"] == resource_id)
+                    and (formulation is None or cell.get("formulation") == formulation)]
+        return matches("all_cells_by_id"), matches("cells_by_id")
 
     def select_entity(self, kind: str, entity_id: int, *, resource_id=None, formulation=None) -> dict:
         with self._lock:
@@ -1913,17 +1920,19 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             cells = ()
             if kind == "node":
                 resources = self._projection_cache["node_resources"].get(entity_id, ())
+                native_count = len(resources)
             else:
-                cells = self._matching_selection_cells(entity_id, resource_id, formulation)
+                native, cells = self._matching_selection_cells(entity_id, resource_id, formulation)
                 resources = [cell["resource_id"] for cell in cells]
-            if isinstance(entity_id, bool) or not resources:
-                raise PrepError("invalid_selection", "선택한 모델 객체를 찾을 수 없습니다.", {"kind": kind, "id": entity_id})
-            if len(resources) != 1:
+                native_count = len(native)
+            if native_count > 1 or len(resources) > 1:
                 raise PrepError("ambiguous_selection", "여러 자원에 같은 ID가 있어 선택 대상을 확정할 수 없습니다.", {"kind": kind, "id": entity_id})
+            if not resources:
+                raise PrepError("invalid_selection", "선택한 모델 객체를 찾을 수 없습니다.", {"kind": kind, "id": entity_id})
             reference = (self._element_selection_ref(cells[0], formulation=formulation)
                          if cells else SelectionRef(resources[0], kind, entity_id))
             document.selection = Selection(kind, (entity_id,), (reference,))
-            self._active_object = self._owning_part_ref(cells)
+            self._active_object = self._element_selection_owner(document, (reference,)) if cells else None
             self._active_target_role = None
             self._part_selection_active = False
             self._selected_objects = (self._active_object,) if self._active_object is not None else ()

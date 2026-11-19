@@ -64,11 +64,11 @@ def element_part_reference(keyword, *, allow_underscore=False):
 
 def _inspect(resources, *, profile: str = "current"):
     """Collect definitions and fixed-width references, retaining file ownership."""
-    if profile not in ("current", "legacy_pass15", "legacy_pre15"):
+    if profile not in ("current", "legacy_pass15", "legacy_pass14", "legacy_pre14"):
         raise PrepError("unsupported_source_profile", "Unknown native source reader profile.")
-    allow_underscore = profile == "legacy_pre15"
-    allow_zero_padding = profile != "legacy_pre15"
-    allow_empty_node_group = profile != "current"
+    allow_underscore = profile in ("legacy_pass14", "legacy_pre14")
+    allow_zero_padding = profile != "legacy_pre14"
+    allow_empty_node_group = profile in ("legacy_pass15", "legacy_pre14")
     parse_id = partial(_int, allow_underscore=allow_underscore)
     definitions, refs, edits, omitted = {}, [], {}, {}
     def define(ns, value, rid, line, start=None):

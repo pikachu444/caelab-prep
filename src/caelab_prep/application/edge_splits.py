@@ -6,19 +6,7 @@ from uuid import uuid4
 from ..cae_core import PrepError, Selection, SelectionRef
 from ..radioss.relations import node_support
 from . import mesh_edit_candidates as edits
-from .native_mesh_edit import native_mesh_edit_states, project_native_mesh_edit
-
-
-def _coerce_ref(value, *, expected_kind=None, code="invalid_reference", message="Invalid scoped reference."):
-    if isinstance(value, edits.Ref):
-        ref = value
-    elif isinstance(value, dict) and set(value) == {"resource_id", "entity_kind", "local_id"}:
-        ref = edits.Ref(**value)
-    else:
-        raise PrepError(code, message)
-    if expected_kind is not None and ref.entity_kind != expected_kind:
-        raise PrepError(code, message)
-    return ref
+from .native_mesh_edit import mesh_edit_reference, native_mesh_edit_states, project_native_mesh_edit
 
 
 class EdgeSplitCommands:
@@ -37,24 +25,16 @@ class EdgeSplitCommands:
             try:
                 if not isinstance(references, (list, tuple)) or not references:
                     raise PrepError("invalid_shell_selection", "Choose 1 or 2 explicit source-qualified SH3N elements.")
-                elem_refs = tuple(
-                    _coerce_ref(
-                        ref,
-                        expected_kind="element",
-                        code="invalid_shell_selection",
-                        message="Each selected element needs its source, element kind and native ID.",
-                    )
-                    for ref in references
-                )
                 if not isinstance(edge_nodes, (list, tuple)) or len(edge_nodes) != 2:
                     raise PrepError("invalid_edge", "Choose two explicit node references for the edge to split.")
-                edge_refs = (
-                    _coerce_ref(edge_nodes[0], expected_kind="node", code="invalid_edge", message="Invalid split edge node reference."),
-                    _coerce_ref(edge_nodes[1], expected_kind="node", code="invalid_edge", message="Invalid split edge node reference."),
-                )
+                edge_refs = tuple(mesh_edit_reference(ref, kind="node", code="invalid_edge",
+                    message="Invalid split edge node reference.") for ref in edge_nodes)
                 if any(card.keyword.upper().startswith("/TRANSFORM") for resource in self._deck_resources() for card in resource.cards):
                     raise PrepError("unsupported_transform", "Edge splitting is not supported when active /TRANSFORM cards exist.")
                 snapshot = self._mesh_edit_snapshot()
+                elem_refs = tuple(mesh_edit_reference(ref, kind="element", snapshot=snapshot,
+                    code="invalid_shell_selection", message="Each selected element needs its source, element kind and native ID.")
+                    for ref in references)
                 candidate = edits.split_triangle_edge(
                     snapshot,
                     elem_refs,
@@ -147,17 +127,16 @@ class EdgeSplitCommands:
                 for parent, children in candidate.split_cells for formulation in (None, "SH3N")
             }
             if remap_selection and any(ref in split_refs for ref in selection.refs):
-                refs, cells = [], []
+                refs = []
                 for previous in selection.refs:
                     for ref in split_refs.get(previous, (previous,)):
-                        matches = self._matching_selection_cells(ref.local_id, ref.resource_id, ref.formulation)
-                        if len(matches) == 1:
-                            cell = matches[0]
-                            cells.append(cell)
-                            refs.append(self._element_selection_ref(cell, formulation=previous.formulation))
+                        native, displayed = self._matching_selection_cells(ref.local_id, ref.resource_id, ref.formulation)
+                        if len(native) == len(displayed) == 1:
+                            refs.append(self._element_selection_ref(displayed[0], formulation=previous.formulation))
+                refs = tuple(refs)
                 if refs:
-                    self.document.selection = Selection("element", tuple(ref.local_id for ref in refs), tuple(refs))
-                self._active_object = self._owning_part_ref(cells)
+                    self.document.selection = Selection("element", tuple(ref.local_id for ref in refs), refs)
+                self._active_object = self._element_selection_owner(self.document, refs)
                 self._selected_objects = (self._active_object,) if self._active_object is not None else ()
                 self._notify("selection")
             if getattr(self, "_edge_split_plan", None) is plan:

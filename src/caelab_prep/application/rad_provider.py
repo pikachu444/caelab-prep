@@ -328,8 +328,17 @@ class RadProvider:
         if value is None:
             selection = self.session.selection()
             value = selection["refs"] if selection["kind"] == "element" else ()
+        normalized = []
+        for ref in value:
+            if (isinstance(ref, dict) and ref not in refs and ref.get("entity_kind") == "element"
+                    and isinstance(ref.get("resource_id"), str) and type(ref.get("local_id")) is int):
+                native, displayed = self.session._matching_selection_cells(
+                    ref["local_id"], ref["resource_id"], ref.get("formulation"))
+                if len(native) == len(displayed) == 1:
+                    ref = self.session._element_selection_ref(displayed[0]).to_dict()
+            normalized.append(ref)
         names = {card["resource_id"]: card["resource_name"] for card in self.session.list_cards()}
-        return PropertySpec("element_refs", "Element members", tuple(value), kind="references", choices=refs,
+        return PropertySpec("element_refs", "Element members", tuple(normalized), kind="references", choices=refs,
             choice_labels=tuple(
                 f"Element {cell['id']} · {names.get(cell['resource_id'], cell['resource_id'])} · {cell['type']}"
                 + (f" ({ref['formulation']})" if "formulation" in ref else "")

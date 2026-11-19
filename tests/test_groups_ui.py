@@ -1,17 +1,44 @@
 """T4 group controls use qualified selected entities and one membership command."""
 import os
+from pathlib import Path
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
 from PySide6.QtCore import Qt
 
+from caelab_prep.application import PrepSession
 from caelab_prep.ui.main_window import MainWindow
 from caelab_prep.ui.reference_profiles import PROFILES
+from caelab_prep.ui.viewport import pick_candidate
 from test_condition_workflow import model, _block, _card
 from test_conditions_ui import apply_operation, fill_operation
 from test_modeling_ui import enter, click_apply, pump, wait_file
 
 pytestmark = pytest.mark.usefixtures("qt_widgets")
+
+
+def test_create_element_group_uses_formulation_qualified_pick():
+    session = PrepSession()
+    session.open_rad(Path(__file__).resolve().parents[1] / "examples/rad/shell_panels_0000.rad")
+    window = MainWindow(session, enable_viewport=False)
+    window._allow_close = True
+    try:
+        window.show()
+        pump()
+        projection = session.mesh_view()
+        shell = next(cell for cell in projection["cells"] if cell["id"] == 1 and cell["formulation"] == "SHELL")
+        pick = pick_candidate(projection, "element", 1, shell["resource_id"])
+        window._entity_picked({**pick, "formulation": "SHELL"})
+        assert session.selection()["refs"][0]["formulation"] == "SHELL"
+        window.modeling.actions["element_group.create"].trigger()
+        pump()
+        panel = window.modeling.panel
+        enter(panel, "name", "Picked shell"); enter(panel, "native_id", 1)
+        click_apply(window)
+        assert not window.modeling.active, panel.error.text()
+        assert session.group_members(_card(session, "/GRSHEL/SHEL/1")["id"])["member_ids"] == [1]
+    finally:
+        window.close()
 
 
 @pytest.mark.parametrize("profile", PROFILES)

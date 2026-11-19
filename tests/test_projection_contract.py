@@ -122,6 +122,40 @@ def test_selected_node_is_cleared_when_a_second_owner_appears(tmp_path):
     assert error.value.code == "ambiguous_selection"
 
 
+@pytest.mark.parametrize(("formulation", "duplicate_family", "survives"),
+                         (("SHELL", "SHELL", False), (None, "QUAD", False), ("SHELL", "QUAD", True)))
+def test_shell_selection_accounts_for_display_omitted_duplicates(tmp_path, formulation, duplicate_family, survives):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "input"))
+    mesh = session.document.resources[_card(session, "/SHELL/902")["resource_id"]]
+
+    def pick():
+        projection = session.mesh_view()
+        return {key: projection[key] for key in ("document_id", "document_epoch", "revision", "projection_revision")} | {
+            "kind": "element", "id": 7001, "resource_id": mesh.id,
+            "resource_revision": projection["resource_revisions"][mesh.id], "formulation": formulation,
+        }
+
+    picked = session.select_pick(pick())
+    assert picked["ids"] == [7001]
+    state, _ = mesh.inserted_state(f"/{duplicate_family}/903\n{_i(7001, 501, 605, 709, 999999)}\n")
+    session.dispatcher.execute(mesh.id, state, "Add element with missing node")
+    assert sum(cell["id"] == 7001 for cell in session.mesh_view()["cells"]) == 1
+    selected = session.selection()
+    if survives:
+        assert selected["ids"] == [7001]
+        assert session.select_pick(pick())["refs"][0]["formulation"] == "SHELL"
+    else:
+        assert selected["ids"] == [] and selected["active_object"] is None
+        with pytest.raises(PrepError) as error:
+            session.select_pick(pick())
+        assert error.value.code == "ambiguous_selection"
+        if formulation is None:
+            ref, = picked["refs"]
+            field = RadProvider(session)._element_members_field([ref])
+            assert field.value == (ref,) and ref not in field.choices
+
+
 def test_unqualified_shell_pick_is_cleared_when_quad_uses_same_id(tmp_path):
     session = PrepSession()
     session.open_rad(_base_model(tmp_path / "input"))

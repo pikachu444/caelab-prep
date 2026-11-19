@@ -77,17 +77,20 @@ def test_explicit_shared_node_is_single_entity_and_unmapped_nodes_stay_distinct(
 
 @pytest.mark.parametrize("variant", ("title-only-deleted", "all-zero-deleted", "underscore-retained", "underscore-corrected",
                                      "underscore-deleted", "underscore-node", "underscore-connectivity",
-                                     "padded-with-title-only", "hybrid"))
+                                     "padded-with-title-only", "hybrid", "pass14-padded", "older-unquoted-padded"))
 def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     source = _base_model(tmp_path / "source")
-    padded = variant in ("padded-with-title-only", "hybrid")
-    empty = padded or variant in ("title-only-deleted", "all-zero-deleted")
-    identifiers = (101, 205) if empty else (101, 101, 205)
+    padded = variant in ("padded-with-title-only", "hybrid", "pass14-padded", "older-unquoted-padded")
+    empty = variant in ("padded-with-title-only", "hybrid", "title-only-deleted", "all-zero-deleted")
+    identifiers = (101, 205) if empty or padded else (101, 101, 205)
     native_row = f"{_i(*identifiers)}\n".encode()
     groups = b"/GRNOD/NODE/47\nUnused target\n" + native_row
     if padded:
         groups += f"/GRNOD/NODE/48\nPadded target\n{_i(101, 0, 205)}\n".encode()
-    source.write_bytes(source.read_bytes().replace(b"/END", groups + b"/END"))
+    raw = source.read_bytes().replace(b"/END", groups + b"/END")
+    if padded:
+        raw = raw.replace(b"#include mesh.inc\n", b'#include\n"mesh.inc"\n')
+    source.write_bytes(raw)
     session = PrepSession()
     session.open_rad(_base_model(tmp_path / "base"))
     plan = session.plan_import_source(source)
@@ -96,7 +99,7 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     group_keyword = f'/GRNOD/NODE/{ids["GRNOD", 47]}'
     group = _card(session, group_keyword)["id"]
     expected = (ids["NODE", 101], ids["NODE", 205])
-    if padded or variant.endswith("deleted"):
+    if empty or variant.endswith("deleted"):
         session.delete_card(group)
     elif variant.endswith("corrected"):
         resource = session._find_card(group)
@@ -117,6 +120,8 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     assert payloads[original_member].count(native_row) == 1
     if empty:
         legacy_row = f"{_i(0, 0)}\n".encode() if variant == "all-zero-deleted" else b""
+    elif padded:
+        legacy_row = native_row
     else:
         legacy_row = f"{101:10d}{'1_01':>10}{205:10d}\n".encode()
     payloads[original_member] = payloads[original_member].replace(native_row, legacy_row)
@@ -125,7 +130,7 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
         translated_row = f'{_i(*expected)}\n'.encode()
         assert payloads[mapped_member].count(translated_row) == 1
         payloads[mapped_member] = payloads[mapped_member].replace(translated_row, legacy_row)
-    if variant in ("underscore-node", "underscore-connectivity", "hybrid"):
+    if variant in ("underscore-node", "underscore-connectivity", "hybrid", "pass14-padded"):
         mesh_file = next(item for item in source_model["files"] if item["original_path"] == "mesh.inc")
         mesh_member = f'sources/{source_model["id"]}/{mesh_file["original_resource_id"]}.rad'
         prefix = _i(7001).encode() if variant == "underscore-connectivity" else b""
@@ -138,6 +143,14 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
         with pytest.raises(PrepError) as error:
             session.plan_import_source(source)
         assert error.value.code == "unsupported_source_profile"
+    if variant == "older-unquoted-padded":
+        source_model.pop("include_bindings")
+        manifest.pop("include_bindings")
+        mapped_mesh = next(item["logical_path"].encode() for item in source_model["files"]
+                           if item["original_path"] == "mesh.inc")
+        quoted = b'"' + mapped_mesh + b'"'
+        assert payloads[mapped_member].count(quoted) == 1
+        payloads[mapped_member] = payloads[mapped_member].replace(quoted, mapped_mesh)
     payloads["manifest.json"] = json.dumps(manifest).encode()
     legacy = tmp_path / "pass13.caeprep"
     with zipfile.ZipFile(legacy, "w") as archive:
@@ -154,14 +167,19 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
             session.open_project(legacy)
         assert error.value.code == "unsupported_source_profile"
         return
+    if variant == "older-unquoted-padded":
+        with pytest.raises(PrepError) as error:
+            session.open_project(legacy)
+        assert error.value.code == "invalid_project"
+        return
     session.open_project(legacy)
     view = session.mesh_view()
     assert len(view["node_ids"]) == 16 and len(view["cells"]) == 4
-    if padded or variant.endswith("deleted"):
+    if empty or variant.endswith("deleted"):
         assert not any(card["keyword"] == group_keyword for card in session.list_cards())
     else:
         assert session.group_members(group)["member_ids"] == list(expected)
-        native_members = expected if variant.endswith("corrected") else (expected[0], *expected)
+        native_members = expected if padded or variant.endswith("corrected") else (expected[0], *expected)
         assert session.card_text(group).splitlines()[-1] == _i(*native_members)
     target = tmp_path / "export/case_0000.rad"
     session.export_analysis_case(target, case)

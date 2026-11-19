@@ -1852,6 +1852,78 @@ def test_d25_micrometre_triangle_and_automatic_id_bounds(tmp_path, unit, side):
     assert sum(row.signed_measure for row in candidate.quality_after) / side**2 == pytest.approx(0.5)
 
 
+def _pick_triangle(session, element_id):
+    parent = _cell_ref(session, element_id)
+    view = session.mesh_view()
+    return session.select_pick({
+        **{key: view[key] for key in ("document_id", "document_epoch", "revision", "projection_revision")},
+        "kind": "element", "id": element_id, "formulation": "SH3N",
+        "resource_id": parent["resource_id"],
+        "resource_revision": view["resource_revisions"][parent["resource_id"]],
+    })
+
+
+@pytest.mark.parametrize("operation", ("split", "delete", "flip", "reassign"))
+def test_mesh_planners_accept_formulation_qualified_picks(tmp_path, operation):
+    session = PrepSession()
+    session.open_rad(_build_deck_multi_include(tmp_path))
+    picked, = _pick_triangle(session, 101)["refs"]
+    part = _card_by_prefix(session, "/PART/4")
+    part_ref = {"resource_id": part["resource_id"], "entity_kind": "part", "local_id": part["id"]}
+    edge = (_node_ref(session, 1), _node_ref(session, 3))
+
+    def plan(ref):
+        if operation == "split":
+            return session.plan_triangle_edge_split([ref, _cell_ref(session, 102)], edge)
+        if operation == "delete":
+            return session.plan_element_deletion([ref], orphan_policy="keep")
+        if operation == "flip":
+            return session.plan_shell_normal_flip([ref])
+        return session.plan_part_reassignment([{"element": ref, "part": part_ref}])
+
+    assert picked["formulation"] == "SH3N"
+    assert plan(picked)["admissible"]
+    assert plan({**picked, "formulation": None})["admissible"]
+    for wrong in ("SHELL", 12):
+        with pytest.raises(PrepError):
+            plan({**picked, "formulation": wrong})
+    if operation == "split":
+        with pytest.raises(PrepError):
+            session.plan_triangle_edge_split([picked, _cell_ref(session, 102)],
+                                             ({**edge[0], "formulation": None}, edge[1]))
+    elif operation == "reassign":
+        with pytest.raises(PrepError):
+            session.plan_part_reassignment([{"element": picked, "part": {**part_ref, "formulation": None}}])
+
+
+def test_reassigning_picked_split_children_updates_selection_owner(tmp_path):
+    session = PrepSession()
+    session.open_rad(_build_deck_multi_include(tmp_path))
+    _pick_triangle(session, 101)
+    split = session.plan_triangle_edge_split([_cell_ref(session, 101), _cell_ref(session, 102)],
+                                             (_node_ref(session, 1), _node_ref(session, 3)))
+    session.apply_triangle_edge_split(split["plan_id"])
+    group_id = _find_card_id(session, "/GRSH3N/SH3N/13")
+    stale = session.mesh_relationships()["stale_targets"]
+    session.reconnect_mesh_targets({
+        target: {"mesh_revision": record["mesh_revision"], "mapping":
+                 {101: [302, 303], 102: [304, 305]} if target == group_id
+                 else {member: _node_ref(session, member) for member in record["members"]}}
+        for target, record in stale.items()
+    })
+    assert session.selection()["ids"] == [302, 303]
+    assert session.active_object().native_scope == "/PART/1"
+    part = _card_by_prefix(session, "/PART/4")
+    destination = {"resource_id": part["resource_id"], "entity_kind": "part", "local_id": part["id"]}
+    reassignment = session.plan_part_reassignment([
+        {"element": ref, "part": destination} for ref in session.selection()["refs"]
+    ])
+    session.apply_part_reassignment(reassignment["plan_id"])
+    assert session.selection()["ids"] == [302, 303]
+    assert session.active_object().native_scope == "/PART/4"
+    assert session.selected_objects() == (session.active_object(),)
+
+
 @pytest.mark.parametrize("selection_source", ("entity", "pick", "part"))
 def test_d25_edge_split_keeps_selected_triangles_part(tmp_path, selection_source):
     session = PrepSession()
@@ -1861,13 +1933,7 @@ def test_d25_edge_split_keeps_selected_triangles_part(tmp_path, selection_source
         from caelab_prep.application.rad_provider import RadProvider
         session.activate_object(RadProvider(session).ref_for_card(_card_by_prefix(session, "/PART/1")))
     elif selection_source == "pick":
-        view = session.mesh_view()
-        session.select_pick({
-            **{key: view[key] for key in ("document_id", "document_epoch", "revision", "projection_revision")},
-            "kind": "element", "id": 101, "formulation": "SH3N",
-            "resource_id": parent["resource_id"],
-            "resource_revision": view["resource_revisions"][parent["resource_id"]],
-        })
+        _pick_triangle(session, 101)
     else:
         session.select_entity("element", 101)
     owner = session.active_object()

@@ -15,6 +15,7 @@ import pytest
 vtk = pytest.importorskip("vtk")
 
 from caelab_prep.application.contracts import ObjectRef
+from caelab_prep.cae_core import PrepError
 from caelab_prep.ui.viewport import MeshViewport, cell_part_key, part_key, pick_candidate
 
 pytestmark = pytest.mark.usefixtures("qt_widgets")
@@ -146,7 +147,10 @@ def test_viewport_highlights_family_qualified_selection_with_hidden_same_id(tmp_
     assert cell["formulation"] == visible
     view = viewport(projection)
     pick = pick_candidate(view._projection_stamp, "element", 201, cell["resource_id"])
-    chosen = session.select_pick(pick)
+    with pytest.raises(PrepError) as error:
+        session.select_pick(pick)
+    assert error.value.code == "ambiguous_selection"
+    chosen = session.select_pick({**pick, "formulation": cell["formulation"]})
     assert chosen["refs"][0]["formulation"] == visible
     view.set_selection(chosen)
     assert view._highlight.GetVisibility()

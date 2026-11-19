@@ -10,6 +10,30 @@ from . import mesh_edit_candidates as edits
 from .mesh_relations import explicit_member_state
 
 
+def mesh_edit_reference(value, *, kind, code, message, snapshot=None):
+    formulation = None
+    if isinstance(value, edits.Ref):
+        ref = value
+    elif isinstance(value, dict):
+        required = {"resource_id", "entity_kind", "local_id"}
+        keys = set(value) - {"formulation"} if kind == "element" else set(value)
+        if keys != required:
+            raise PrepError(code, message)
+        formulation = value.get("formulation")
+        if formulation is not None and not isinstance(formulation, str):
+            raise PrepError(code, message)
+        ref = edits.Ref(value["resource_id"], value["entity_kind"], value["local_id"])
+    else:
+        raise PrepError(code, message)
+    if ref.entity_kind != kind:
+        raise PrepError(code, message)
+    if formulation is not None:
+        cell = snapshot._cells.get(ref)
+        if cell is None or cell.family != formulation:
+            raise PrepError(code, "The element formulation does not match its native mesh reference.")
+    return ref
+
+
 def _ensure_newline(text, newline):
     return text if text.endswith(("\r", "\n")) else text + newline
 

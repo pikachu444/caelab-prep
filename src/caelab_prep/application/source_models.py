@@ -12,6 +12,17 @@ from ..radioss.assembly import inspect, remap, identity, NativeMap, source_inclu
 from .projection import readonly, mutable
 
 
+_QUOTED_INCLUDE_POLICY = (None, "quoted", False)
+_WRITER_PROFILES = {
+    _QUOTED_INCLUDE_POLICY: ("current", "legacy_pass15", "legacy_pass14", "legacy_pre14"),
+    ("bde", "quoted", False): ("legacy_pre14",),
+    ("ac0", "quoted", False): ("legacy_pre14",),
+    ("987", "unquoted", False): ("legacy_pre14",),
+    ("241", "unchanged", True): ("legacy_pre14",),
+    ("8fe", "unchanged", True): ("legacy_pre14",),
+}
+
+
 class SourceArchiveResource:
     kind = "radioss-source-archive"
 
@@ -66,7 +77,7 @@ class SourceArchiveResource:
         reader_matches = []
         inspection_errors = []
         # The historical field rules must hold across all originals together.
-        profiles = ("current", "legacy_pass15", "legacy_pre15")
+        profiles = _WRITER_PROFILES[_QUOTED_INCLUDE_POLICY]
         for profile in profiles:
             try:
                 definitions, _, _ = inspect(originals, profile=profile)
@@ -123,17 +134,21 @@ class SourceArchiveResource:
         pre_v5 = bool(deck_versions) and all(isinstance(version, int) and version <= 4 for version in deck_versions)
         archived_order = [resource.name for resource in originals]
         if records is not None:
-            policies = ((None, "quoted", False),)
+            policies = (_QUOTED_INCLUDE_POLICY,)
         elif pre_v5:
             policies = (("241", "unchanged", True),)
         else:
-            policies = ((None, "quoted", False), ("bde", "quoted", False), ("ac0", "quoted", False),
-                        ("987", "unquoted", False), ("241", "unchanged", True), ("8fe", "unchanged", True))
+            policies = _WRITER_PROFILES
         matches_by_order = {True: {}, False: {}}
         mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
         mapped_keys = {(resource.name, directive.header_row): (mapped_ids[resource.name], ordinal)
                        for resource in originals for ordinal, directive in enumerate(resource.include_directives)}
-        for historical, style, direct_writer in policies:
+        for policy in policies:
+            historical, style, direct_writer = policy
+            compatible_readers = [(profile, mapping) for profile, mapping in reader_matches
+                                  if profile in _WRITER_PROFILES[policy]]
+            if not compatible_readers:
+                continue
             load_order = []
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
                                          load_order=load_order)
@@ -144,7 +159,7 @@ class SourceArchiveResource:
                 matches_payload = any(
                     actual == remap(originals, mapping, paths, include_graph=graph, two_line=style,
                                     legacy_direct_inline=direct_writer, profile=profile)
-                    for profile, mapping in reader_matches
+                    for profile, mapping in compatible_readers
                 )
             except PrepError as exc:
                 if exc.code != "include_missing":
