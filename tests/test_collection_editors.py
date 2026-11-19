@@ -89,6 +89,37 @@ def test_property_editor_round_trips_nested_references():
     assert control.value() == (second,)
 
 
+def test_reference_buckets_resolve_equality_with_colliding_unhashable_values():
+    class Reference:
+        def __init__(self, source):
+            self.source = source
+
+        def __repr__(self):
+            return "Reference"
+
+        def __eq__(self, other):
+            return isinstance(other, Reference) and self.source == other.source
+
+    first, second, missing = (Reference(source) for source in ("first", "second", "missing"))
+    editor = ReferenceListEdit((Reference("second"),), choices=(first, second))
+    assert editor.list.count() == 2
+    assert editor.value() == (second,)
+    editor.set_raw_value((Reference("second"), missing))
+    assert editor.raw_value() == (second, missing)
+    assert editor.list.item(2).text() == "Unavailable: Reference"
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+
+
+def test_reference_buckets_match_equal_numeric_values_in_nested_references():
+    first = {"id": 201, "path": ["shells", {"active": True}]}
+    draft = {"path": ["shells", {"active": 1}], "id": 201.0}
+    editor = ReferenceListEdit((draft,), choices=(first,))
+    assert editor.list.count() == 1
+    value, = editor.value()
+    assert value == first and type(value["id"]) is int
+
+
 def test_numeric_table_csv_rows_and_failed_paste_are_uncommitted_drafts():
     editor = NumericTableEdit(((0, 0), (1, 10)), components=("Time", "Force"),
                               minimum_rows=2, maximum_rows=3)

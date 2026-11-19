@@ -264,26 +264,50 @@ def test_tetra10_resynchronizes_after_missing_connectivity(tmp_path):
     assert error.value.code == "ambiguous_reference"
 
 
-def test_part_selection_checks_native_solid_namespace(tmp_path):
+@pytest.mark.parametrize("layout", ("same-part-brick", "same-part-tet10", "cross-part-brick"))
+def test_part_selection_checks_native_solid_namespace(tmp_path, layout):
     session = PrepSession()
     session.open_rad(_base_model(tmp_path / "input"))
-    part = _card(session, "/PART/902")
     mesh = session.document.resources[_card(session, "/SHELL/902")["resource_id"]]
-    state, _ = mesh.inserted_states((
-        f"/BRICK/902\n{_i(301, 101, 205, 309, 411, 501, 605, 709, 811)}\n",
-        f"/TETRA4/902\n{_i(301, 101, 205, 309, 501)}\n",
-    ))
+    nodes = (101, 205, 309, 411, 501, 605, 709, 811)
+    other_part = 903 if layout == "cross-part-brick" else 902
+    blocks = [f"/TETRA4/902\n{_i(301, 101, 205, 309, 501)}\n"]
+    if layout == "same-part-tet10":
+        blocks.append(f"/NODE\n{_i(812)}{_r(8, 1, 2)}\n{_i(813)}{_r(9, 1, 2)}\n")
+        blocks.append(f"/TETRA10/902\n{_i(301)}\n{_i(*nodes, 812, 813)}\n")
+    else:
+        blocks.append(f"/BRICK/{other_part}\n{_i(301, *nodes)}\n")
+    state, _ = mesh.inserted_states(blocks)
     session.dispatcher.execute(mesh.id, state, "Add two elements in one solid namespace")
     with pytest.raises(PrepError) as error:
         session.select_entity("element", 301, resource_id=mesh.id)
     assert error.value.code == "ambiguous_selection"
-    selected, = session.select_entity("element", 301, resource_id=mesh.id, formulation="BRICK")["refs"]
+    selected, = session.select_entity("element", 301, resource_id=mesh.id, formulation="TETRA4")["refs"]
     with pytest.raises(PrepError) as error:
         session.create_element_group("Ambiguous solids", [selected], native_id=990)
     assert error.value.code == "ambiguous_reference"
+    for part_number in sorted({902, other_part}):
+        part = _card(session, f"/PART/{part_number}")
+        with pytest.raises(PrepError) as error:
+            session.activate_object(RadProvider(session).ref_for_card(part))
+        assert error.value.code == "ambiguous_selection"
+
+
+@pytest.mark.parametrize("duplicate", (False, True))
+def test_surface_rejects_malformed_elements_across_parts(tmp_path, duplicate):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "input"))
+    part = _card(session, "/PART/903")
+    mesh = session.document.resources[_card(session, "/SHELL/902")["resource_id"]]
+    identifier = 7001 if duplicate else 7002
+    state, _ = mesh.inserted_states((
+        f"/SH4N/903\n{_i(identifier, 101, 205, 309)}{' ' * 10}\n",
+        f"/SH3N/903\n{_i(299, 101, 205, 309)}\n",
+    ))
+    session.dispatcher.execute(mesh.id, state, "Add a malformed shell and a valid triangle")
     with pytest.raises(PrepError) as error:
-        session.activate_object(RadProvider(session).ref_for_card(part))
-    assert error.value.code == "ambiguous_selection"
+        session.create_surface("Shell surface", [part["id"]], native_id=987)
+    assert error.value.code == ("ambiguous_selection" if duplicate else "incompatible_surface")
 
 
 @pytest.mark.parametrize(("keyword", "code"), (("SH4N", "ambiguous_selection"), ("QUAD", "incompatible_surface")))

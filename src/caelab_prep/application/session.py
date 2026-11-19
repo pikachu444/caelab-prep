@@ -45,6 +45,10 @@ PROJECT_FORMAT = "caelab-prep-project"
 PROJECT_VERSION = 6
 
 
+def _native_element_namespace(formulation):
+    return ELEMENT_NAMESPACE.get(formulation, formulation)
+
+
 def _file_boundary(function):
     @wraps(function)
     def wrapped(*args, **kwargs):
@@ -963,24 +967,23 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         # Only field patches are applied separately during rendering.
         lines = resource.render().decode("latin1").splitlines() if card.id in resource._patches else resource.lines
         pair = tuple(card.keyword.upper().strip("/").split("/")[:2])
-        legacy_rows = None
+        legacy_slots = None
         values = []
         try:
-            for index in card.data[1:]:
+            for row_offset, index in enumerate(card.data[1:]):
                 line = lines[index].rstrip("\r\n")
                 for offset in range(0, len(line), 10):
                     field = line[offset:offset + 10].strip()
                     if field:
                         if not re.fullmatch(r"[+-]?\d+", field):
                             if pair == ("GRNOD", "NODE") and is_legacy_zero_padding(field):
-                                if legacy_rows is None:
-                                    group = native_identity(card.keyword)
-                                    legacy_rows = {
-                                        row for archive in self.document.resources.values()
-                                        if group is not None and isinstance(archive, SourceArchiveResource)
-                                        for row in archive.legacy_zero_padding_rows.get((resource.id, group[1]), ())
+                                if legacy_slots is None:
+                                    legacy_slots = {
+                                        slot for archive in self.document.resources.values()
+                                        if isinstance(archive, SourceArchiveResource)
+                                        for slot in archive.legacy_zero_padding_slots.get((resource.id, card.id), ())
                                     }
-                                if line in legacy_rows:
+                                if (row_offset, offset, field) in legacy_slots:
                                     continue
                             raise ValueError()
                         values.append(int(field))
@@ -1013,6 +1016,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             if kinds - {"quad", "triangle"} or not any(not cell.get("parse_error") for cell in native):
                 raise PrepError("incompatible_surface", "SURF/PART supports nonempty shell/triangle parts; solid faces need a different surface definition.")
             self._part_cells(ObjectRef(self.document.id, resource.id, card.id, "rad-card", card.keyword))
+            if any(cell.get("parse_error") for cell in native):
+                raise PrepError("incompatible_surface", "SURF/PART requires readable connectivity for every element in the part.")
             identifiers.append(identity[1])
         return identifiers
 
@@ -1733,12 +1738,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._ensure_projection()
         cells = self._projection_index["cells_by_part"].get(part_id, [])
         all_cells = self._projection_index["all_cells_by_part"].get(part_id, ())
-        keys = {(cell["resource_id"], cell["id"], ELEMENT_NAMESPACE.get(cell["formulation"], cell["formulation"]))
-                for cell in all_cells}
-        if len(keys) != len(all_cells) or any(
-                len(self._matching_selection_cells(cell["id"], cell["resource_id"], cell["formulation"])[0]) != 1
-                for cell in cells):
-            raise PrepError("ambiguous_selection", "The part contains repeated element IDs.")
+        by_id = self._projection_index["all_cells_by_id"]
+        for cell in all_cells:
+            namespace = _native_element_namespace(cell.get("formulation"))
+            matches = sum(other["resource_id"] == cell["resource_id"]
+                          and _native_element_namespace(other.get("formulation")) == namespace
+                          for other in by_id[cell["id"]])
+            if matches != 1:
+                raise PrepError("ambiguous_selection", "The part contains repeated element IDs.")
         return cells
 
     def part_summary(self, target: ObjectRef) -> dict:
@@ -2240,8 +2247,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         legacy_padding = {}
         for archive in document.resources.values():
             if isinstance(archive, SourceArchiveResource):
-                for (resource_id, group_id), rows in archive.legacy_zero_padding_rows.items():
-                    legacy_padding.setdefault(resource_id, {}).setdefault(group_id, set()).update(rows)
+                for (resource_id, card_id), slots in archive.legacy_zero_padding_slots.items():
+                    legacy_padding.setdefault(resource_id, {}).setdefault(card_id, set()).update(slots)
         for resource in self._deck_resources(document):
             destination = target if resource.id == self._root_id else target.parent / self._paths[resource.id]
             destination = destination.resolve()
@@ -2259,15 +2266,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 for card in resource.cards:
                     if not card.keyword.upper().startswith("/GRNOD/NODE/"):
                         continue
-                    group = native_identity(card.keyword)
-                    if group is None or group[1] not in padding:
-                        continue
-                    for index in card.data[1:]:
-                        body = lines[index].rstrip("\r\n")
-                        if body in padding[group[1]]:
-                            fields = (body[offset:offset + 10] for offset in range(0, len(body), 10))
-                            lines[index] = "".join(f"{0:10d}" if is_legacy_zero_padding(field) else field
-                                                   for field in fields) + lines[index][len(body):]
+                    for row_offset, column, token in padding.get(card.id, ()):
+                        if row_offset + 1 >= len(card.data):
+                            continue
+                        index = card.data[row_offset + 1]
+                        line = lines[index]
+                        body = line.rstrip("\r\n")
+                        if body[column:column + 10].strip() == token:
+                            lines[index] = body[:column] + f"{0:10d}" + body[column + 10:] + line[len(body):]
             intended = {}
             for ordinal, directive in enumerate(resource.include_directives):
                 resolved = logical_outputs[bindings[resource.id, ordinal]]

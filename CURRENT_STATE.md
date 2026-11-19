@@ -182,6 +182,14 @@ TETRA10 연결 행이 누락돼도 다음 요소 ID부터 다시 읽고, 연결 
 
 Windows Python 3.13과 Qt offscreen에서 집중 검사 42건과 영향 범위 32개 모듈 783건을 통과했다. 선택 실행 EGL 검사 1건과 OCP 미설치 검사 3건은 건너뛰었다. Windows VTK offscreen에서 SHELL 1을 선택한 뒤 Qt Apply로 멤버가 1인 요소 그룹을 만들었다. 20,000절점 덱의 스칼라 편집 41회에서 표시 리비전은 유지됐고 구조 직렬화와 해시는 각각 0회였다.
 
+### 스물세 번째 검토 수정
+
+`57fe70e` 재검토를 반영했다. 실제 `bde82a5` 작성본의 13개 원본 파일과 `E:QUAD 9007 → 9008` 매핑을 복원해 16절점·4요소의 케이스를 내보냈다. 해당 매핑을 E:SHELL로 바꾸거나 `ac0a255` 작성본을 E:QUAD로 바꾼 변형은 거부했다. `24137d6`과 `987c52b` 작성본의 TETRA 별칭 변형도 거부했다. Pass 14의 `0_0` 허용 범위는 원본 카드 UUID, 데이터 행, 필드 위치, 토큰으로 고정했다. 실제 그룹 48의 멤버를 813에서 814로 바꾼 뒤 `[812, 0, 814]`를 출력했고, 같은 번호로 새로 만든 카드는 원본 패딩을 가져오지 못했다.
+
+PART와 SURF/PART는 표시되지 않는 요소까지 포함해 동일 자원의 원본 요소 번호 공간에서 중복을 확인한다. SURF/PART는 연결을 읽을 수 없는 요소가 포함된 PART도 거부한다. Qt 참조 목록은 해시로 후보를 찾고 값의 동등성을 확인한다. 셸 8,000개를 선택한 BeidPrep 그룹 폼을 열고 검증하는 데 다섯 번 측정한 중앙값은 303.2 ms였다(285.3–311.8 ms).
+
+Windows Python 3.13과 Qt offscreen에서 집중 검사 47건과 영향 범위 32개 모듈 794건을 통과했다. 선택 실행 EGL 검사 1건과 OCP 미설치 검사 3건은 건너뛰었다. Windows VTK offscreen에서 SHELL 1을 선택한 뒤 Qt Apply로 그룹을 만들었다. 20,000절점 덱의 스칼라 편집 41회 동안 표시 리비전은 유지됐고 구조 직렬화와 해시는 각각 0회였다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

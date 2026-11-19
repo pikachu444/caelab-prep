@@ -15,8 +15,10 @@ from .relations import element_group_members
 
 
 ELEMENTS = {"BEAM": 3, "TRUSS": 2, "SHELL": 4, "QUAD": 4, "SH3N": 3, "TETRA4": 4, "BRICK": 8}
+# The native ID namespace also covers projected solids outside this import profile.
 ELEMENT_NAMESPACE = {"BEAM": "BEAM", "TRUSS": "TRUSS", "SHELL": "SHELL", "QUAD": "QUAD",
-                     "SH3N": "SH3N", "TETRA4": "SOLID", "BRICK": "SOLID"}
+                     "SH3N": "SH3N", "TETRA4": "SOLID", "TETRA10": "SOLID",
+                     "BRICK": "SOLID", "PENTA6": "SOLID", "PYRA5": "SOLID"}
 ELEMENTS.update({alias: ELEMENTS[family] for alias, family in ELEMENT_ALIASES.items()})
 ELEMENT_NAMESPACE.update({alias: ELEMENT_NAMESPACE[family] for alias, family in ELEMENT_ALIASES.items()})
 GROUPS = {"GRNOD/NODE": "NODE", "GRBEAM/BEAM": "E:BEAM", "GRTRUS/TRUS": "E:TRUSS",
@@ -93,7 +95,7 @@ def _inspect(resources, *, profile: str = "current"):
             words = card.keyword.upper().strip("/").split("/"); root = words[0]; pair = "/".join(words[:2])
             if (root not in {"BEGIN", "END", "NODE", "PART", "FUNCT", "BCS", "CLOAD", *ELEMENTS} and pair not in PAIRS
                     or quad_as_shell and pair == "GRQUAD/QUAD"
-                    or profile == "legacy_pre_quad" and (root in ("QUAD", "SH4N") or pair == "GRQUAD/QUAD")):
+                    or profile == "legacy_pre_quad" and (root in ("QUAD", "SH4N", "TETRA") or pair == "GRQUAD/QUAD")):
                 raise PrepError("unsupported_source_profile", "This card's complete reference mapping is not supported.", {"keyword": card.keyword})
             header_id = identity(card.keyword)
             if root == "NODE" and len(words) != 1:

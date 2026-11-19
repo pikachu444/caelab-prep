@@ -211,20 +211,29 @@ class BooleanVectorEdit(QWidget):
         del blocked
 
 
-def _ref_key(value):
+def _bucket_key(value):
+    if isinstance(value, (int, float, complex)):
+        return ("num", hash(value))
     if isinstance(value, dict):
-        return ("dict", frozenset((_ref_key(key), _ref_key(item)) for key, item in value.items()))
+        return ("dict", hash(frozenset((_bucket_key(key), _bucket_key(item)) for key, item in value.items())))
     if isinstance(value, list):
-        return ("list", tuple(_ref_key(item) for item in value))
+        return ("list", tuple(_bucket_key(item) for item in value))
     if isinstance(value, tuple):
-        return ("tuple", tuple(_ref_key(item) for item in value))
+        return ("tuple", tuple(_bucket_key(item) for item in value))
     if isinstance(value, (set, frozenset)):
-        return ("set", frozenset(_ref_key(item) for item in value))
+        return ("set", hash(frozenset(_bucket_key(item) for item in value)))
     try:
-        hash(value)
+        return ("hash", hash(value))
     except TypeError:
-        return ("repr", type(value), repr(value))
-    return ("val", type(value), value)
+        return ("unhashable", type(value).__qualname__, repr(value))
+
+
+def _add_bucket(buckets, item):
+    buckets.setdefault(_bucket_key(item), []).append(item)
+
+
+def _contains(buckets, item):
+    return any(existing == item for existing in buckets.get(_bucket_key(item), ()))
 
 
 class ReferenceListEdit(QWidget):
@@ -236,7 +245,9 @@ class ReferenceListEdit(QWidget):
     def __init__(self, value=(), *, choices=(), choice_labels=(), parent=None):
         super().__init__(parent)
         self.choices = tuple(choices)
-        self._choice_keys = {_ref_key(ref) for ref in self.choices}
+        self._choice_buckets = {}
+        for ref in self.choices:
+            _add_bucket(self._choice_buckets, ref)
         self.choice_labels = tuple(choice_labels)
         self.list = QListWidget(self)
         self.list.setUniformItemSizes(True)
@@ -256,30 +267,32 @@ class ReferenceListEdit(QWidget):
 
     def value(self):
         selected = self.raw_value()
-        if any(_ref_key(ref) not in self._choice_keys for ref in selected):
+        if any(not _contains(self._choice_buckets, ref) for ref in selected):
             raise ValueError("A selected object is no longer available; uncheck it or choose an available object")
         return selected
 
     def set_raw_value(self, value):
         selected = tuple(value)
-        selected_keys = {_ref_key(ref) for ref in selected}
+        selected_buckets = {}
+        for ref in selected:
+            _add_bucket(selected_buckets, ref)
         blocked = QSignalBlocker(self.list)
         self.list.clear()
-        displayed_keys = set()
+        displayed_buckets = {}
         for index, ref in enumerate(self.choices):
-            key = _ref_key(ref)
-            if key in displayed_keys:
+            bucket = displayed_buckets.setdefault(_bucket_key(ref), [])
+            if any(existing == ref for existing in bucket):
                 continue
             label = (self.choice_labels[index] if index < len(self.choice_labels)
                      else str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref)))
-            self._add_item(ref, label, key in selected_keys)
-            displayed_keys.add(key)
+            self._add_item(ref, label, _contains(selected_buckets, ref))
+            bucket.append(ref)
         for ref in selected:
-            key = _ref_key(ref)
-            if key not in displayed_keys:
+            bucket = displayed_buckets.setdefault(_bucket_key(ref), [])
+            if not any(existing == ref for existing in bucket):
                 label = str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
                 self._add_item(ref, "Unavailable: " + label, True)
-                displayed_keys.add(key)
+                bucket.append(ref)
         del blocked
 
     def _add_item(self, ref, label, checked):
