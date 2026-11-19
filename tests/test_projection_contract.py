@@ -236,6 +236,56 @@ def test_malformed_tetra10_still_participates_in_native_id_resolution(tmp_path, 
     assert not any(card["keyword"] == "/GRBRIC/BRIC/990" for card in session.list_cards())
 
 
+def test_tetra10_resynchronizes_after_missing_connectivity(tmp_path):
+    source = tmp_path / "tetra10_0000.rad"
+    nodes = "".join(f"{_i(node)}{_r(node, 0, 0)}\n" for node in range(901, 911))
+    connectivity = _i(*range(901, 911))
+    source.write_text(f"/BEGIN\nTETRA10\n/NODE\n{nodes}/TETRA10/1\n{_i(401)}\n{connectivity}\n"
+                      f"{_i(901)}\n{connectivity}\n/END\n")
+    session = PrepSession()
+    session.open_rad(source)
+    owner = session.document.resources[_card(session, "/TETRA10/1")["resource_id"]]
+    selected, = session.select_entity("element", 401, resource_id=owner.id, formulation="TETRA10")["refs"]
+    state, _ = owner.inserted_state(f"/TETRA10/2\n{_i(777)}\n{_i(401)}\n{connectivity}\n")
+    session.dispatcher.execute(owner.id, state, "Add a TETRA10 with missing connectivity")
+    assert not session.selection()["refs"]
+    assert 777 in session._projection_index["all_cells_by_id"]
+    assert session.select_entity("element", 901, resource_id=owner.id, formulation="TETRA10")["ids"] == [901]
+    projection = session.mesh_view()
+    pick = {key: projection[key] for key in ("document_id", "document_epoch", "revision", "projection_revision")} | {
+        "kind": "element", "id": 401, "formulation": "TETRA10", "resource_id": owner.id,
+        "resource_revision": projection["resource_revisions"][owner.id],
+    }
+    with pytest.raises(PrepError) as error:
+        session.select_pick(pick)
+    assert error.value.code == "ambiguous_selection"
+    with pytest.raises(PrepError) as error:
+        session.create_element_group("Repeated TETRA10", [selected], native_id=990)
+    assert error.value.code == "ambiguous_reference"
+
+
+def test_part_selection_checks_native_solid_namespace(tmp_path):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "input"))
+    part = _card(session, "/PART/902")
+    mesh = session.document.resources[_card(session, "/SHELL/902")["resource_id"]]
+    state, _ = mesh.inserted_states((
+        f"/BRICK/902\n{_i(301, 101, 205, 309, 411, 501, 605, 709, 811)}\n",
+        f"/TETRA4/902\n{_i(301, 101, 205, 309, 501)}\n",
+    ))
+    session.dispatcher.execute(mesh.id, state, "Add two elements in one solid namespace")
+    with pytest.raises(PrepError) as error:
+        session.select_entity("element", 301, resource_id=mesh.id)
+    assert error.value.code == "ambiguous_selection"
+    selected, = session.select_entity("element", 301, resource_id=mesh.id, formulation="BRICK")["refs"]
+    with pytest.raises(PrepError) as error:
+        session.create_element_group("Ambiguous solids", [selected], native_id=990)
+    assert error.value.code == "ambiguous_reference"
+    with pytest.raises(PrepError) as error:
+        session.activate_object(RadProvider(session).ref_for_card(part))
+    assert error.value.code == "ambiguous_selection"
+
+
 @pytest.mark.parametrize(("keyword", "code"), (("SH4N", "ambiguous_selection"), ("QUAD", "incompatible_surface")))
 def test_part_commands_count_malformed_native_cells(tmp_path, keyword, code):
     session = PrepSession()
@@ -250,6 +300,10 @@ def test_part_commands_count_malformed_native_cells(tmp_path, keyword, code):
         else:
             session.create_surface("Shell surface", [part["id"]], native_id=987)
     assert error.value.code == code
+    if keyword == "SH4N":
+        with pytest.raises(PrepError) as error:
+            session.create_surface("Ambiguous shell surface", [part["id"]], native_id=987)
+        assert error.value.code == "ambiguous_selection"
 
 
 @pytest.mark.parametrize("write", ("restore", "field"))

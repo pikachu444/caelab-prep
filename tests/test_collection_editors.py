@@ -7,11 +7,12 @@ from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QLineEdit
 
-from caelab_prep.application.contracts import ObjectRef
+from caelab_prep.application.contracts import ObjectRef, PropertySpec
 from caelab_prep.ui.widgets.collections import (
     BooleanVectorEdit, IntegerListEdit, NumericTableEdit, ReferenceListEdit,
 )
 from caelab_prep.ui.widgets.curve import CurveTable
+from caelab_prep.ui.widgets.properties import PropertyEditor
 
 pytestmark = pytest.mark.usefixtures("qt_widgets")
 
@@ -72,6 +73,20 @@ def test_reference_checks_use_value_identity_and_retain_missing_reference():
         editor.value()
     editor.list.item(2).setCheckState(Qt.CheckState.Unchecked)
     assert editor.value() == (first,)
+
+
+def test_property_editor_round_trips_nested_references():
+    first = {"path": ["shells", 201], "identity": {"source": "deck", "element": 201}}
+    second = {"identity": {"element": 301, "source": "deck"}, "path": ["solids", 301]}
+    reordered = {"identity": {"element": 201, "source": "deck"}, "path": ["shells", 201]}
+    editor = PropertyEditor()
+    editor.set_fields((PropertySpec("members", "Members", (reordered,), kind="references",
+                                    choices=(first, second)),))
+    control = editor.editors["members"]
+    assert control.list.count() == 2
+    assert control.value() == (first,)
+    control.set_raw_value((second,))
+    assert control.value() == (second,)
 
 
 def test_numeric_table_csv_rows_and_failed_paste_are_uncommitted_drafts():

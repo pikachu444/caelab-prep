@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 
 from ..cae_core import CommandDispatcher, PrepError
 from ..radioss import DeckResource
-from ..radioss.assembly import inspect, remap, identity, NativeMap, source_include_graph
+from ..radioss.assembly import inspect, remap, identity, is_legacy_zero_padding, NativeMap, source_include_graph
 from .projection import readonly, mutable
 
 
@@ -17,8 +17,8 @@ _ROOT_FIRST_INCLUDE_POLICY = ("241", "unchanged", True)
 _LEGACY_QUAD_PROFILES = ("legacy_pre14", "legacy_quad_as_shell")
 _UNRECORDED_INCLUDE_PROFILES = {
     _QUOTED_INCLUDE_POLICY: _LEGACY_QUAD_PROFILES,
-    ("bde", "quoted", False): _LEGACY_QUAD_PROFILES,
-    ("ac0", "quoted", False): _LEGACY_QUAD_PROFILES,
+    ("bde", "quoted", False): ("legacy_quad_as_shell",),
+    ("ac0", "quoted", False): ("legacy_quad_as_shell",),
     ("987", "unquoted", False): ("legacy_pre_quad",),
     _ROOT_FIRST_INCLUDE_POLICY: ("legacy_pre_quad",),
     ("8fe", "unchanged", True): ("legacy_pre_quad",),
@@ -60,6 +60,7 @@ class SourceArchiveResource:
         self.files = readonly(files)
         self.recovered_include_bindings = {}
         self.validated_profile: str | None = None
+        self.legacy_zero_padding_rows: dict[tuple[str, int], frozenset[str]] = {}
         self._token = sha256(json.dumps(metadata, sort_keys=True).encode()).hexdigest()
 
     def snapshot(self): return {"state_version": 1}
@@ -73,6 +74,7 @@ class SourceArchiveResource:
     def validate_mapped_payloads(self, document, *, project_bindings=None):
         """The correspondence table is checked evidence, not an unchecked label."""
         self.validated_profile = None
+        self.legacy_zero_padding_rows = {}
         records = self.metadata.get("include_bindings")
         # The sibling-first reader first shipped with deck state v5.
         archive_versions = [resource._restored_state_version for item in self.metadata["files"]
@@ -186,6 +188,23 @@ class SourceArchiveResource:
         if len(matches) != 1:
             raise PrepError("invalid_project", "Archived INCLUDE bindings are ambiguous across historical project writers; re-import or resave with explicit INCLUDE bindings.")
         self.recovered_include_bindings, self.validated_profile = next(iter(matches.values()))
+        if self.validated_profile == "legacy_pass14":
+            for file in self.metadata["files"]:
+                # actual matched remap byte for byte. Read the immutable payload,
+                # since restored edits may have added or changed group rows.
+                deck = DeckResource(actual[file["original_resource_id"]], is_include=True)
+                for card in deck.cards:
+                    if not card.keyword.upper().startswith("/GRNOD/NODE/"):
+                        continue
+                    group = identity(card.keyword)
+                    if group is None:
+                        continue
+                    rows = (deck.lines[index].rstrip("\r\n") for index in card.data[1:])
+                    padded = frozenset(row for row in rows if any(
+                        is_legacy_zero_padding(row[offset:offset + 10]) for offset in range(0, len(row), 10)))
+                    if padded:
+                        key = (file["resource_id"], group[1])
+                        self.legacy_zero_padding_rows[key] = self.legacy_zero_padding_rows.get(key, frozenset()) | padded
 
 
 class SourceModelCommands:

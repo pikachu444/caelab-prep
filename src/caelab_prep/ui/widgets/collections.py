@@ -211,10 +211,20 @@ class BooleanVectorEdit(QWidget):
         del blocked
 
 
-def _ref_key(ref):
-    if isinstance(ref, dict):
-        return ("dict", tuple(sorted(ref.items())))
-    return ("val", ref)
+def _ref_key(value):
+    if isinstance(value, dict):
+        return ("dict", frozenset((_ref_key(key), _ref_key(item)) for key, item in value.items()))
+    if isinstance(value, list):
+        return ("list", tuple(_ref_key(item) for item in value))
+    if isinstance(value, tuple):
+        return ("tuple", tuple(_ref_key(item) for item in value))
+    if isinstance(value, (set, frozenset)):
+        return ("set", frozenset(_ref_key(item) for item in value))
+    try:
+        hash(value)
+    except TypeError:
+        return ("repr", type(value), repr(value))
+    return ("val", type(value), value)
 
 
 class ReferenceListEdit(QWidget):

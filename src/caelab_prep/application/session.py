@@ -18,6 +18,7 @@ from functools import wraps
 
 from ..cae_core import CommandDispatcher, Document, PrepError, Selection, SelectionRef
 from ..radioss import DeckResource
+from ..radioss.assembly import ELEMENT_NAMESPACE, is_legacy_zero_padding
 from ..radioss.deck import number
 from ..radioss.includes import disk_include_lookup, include_lookup, include_relative, resolve_includes
 from ..radioss.relations import element_group_members
@@ -962,7 +963,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         # Only field patches are applied separately during rendering.
         lines = resource.render().decode("latin1").splitlines() if card.id in resource._patches else resource.lines
         pair = tuple(card.keyword.upper().strip("/").split("/")[:2])
-        allows_legacy_zero = None
+        legacy_rows = None
         values = []
         try:
             for index in card.data[1:]:
@@ -971,14 +972,15 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     field = line[offset:offset + 10].strip()
                     if field:
                         if not re.fullmatch(r"[+-]?\d+", field):
-                            if pair == ("GRNOD", "NODE") and re.fullmatch(r"[+-]?0(?:_?0)*", field):
-                                if allows_legacy_zero is None:
-                                    allows_legacy_zero = any(
-                                        isinstance(archive, SourceArchiveResource) and archive.validated_profile == "legacy_pass14"
-                                        and any(item["resource_id"] == resource.id for item in archive.metadata["files"])
-                                        for archive in self.document.resources.values()
-                                    )
-                                if allows_legacy_zero:
+                            if pair == ("GRNOD", "NODE") and is_legacy_zero_padding(field):
+                                if legacy_rows is None:
+                                    group = native_identity(card.keyword)
+                                    legacy_rows = {
+                                        row for archive in self.document.resources.values()
+                                        if group is not None and isinstance(archive, SourceArchiveResource)
+                                        for row in archive.legacy_zero_padding_rows.get((resource.id, group[1]), ())
+                                    }
+                                if line in legacy_rows:
                                     continue
                             raise ValueError()
                         values.append(int(field))
@@ -1005,11 +1007,12 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._ensure_projection()
         identifiers = []
         for part_id in part_ids:
-            _, _, identity = self._unique_card(part_id, "PART")
+            resource, card, identity = self._unique_card(part_id, "PART")
             kinds = self._projection_index["part_element_kinds"].get(identity[1], set())
             native = self._projection_index["all_cells_by_part"].get(identity[1], ())
             if kinds - {"quad", "triangle"} or not any(not cell.get("parse_error") for cell in native):
                 raise PrepError("incompatible_surface", "SURF/PART supports nonempty shell/triangle parts; solid faces need a different surface definition.")
+            self._part_cells(ObjectRef(self.document.id, resource.id, card.id, "rad-card", card.keyword))
             identifiers.append(identity[1])
         return identifiers
 
@@ -1730,7 +1733,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._ensure_projection()
         cells = self._projection_index["cells_by_part"].get(part_id, [])
         all_cells = self._projection_index["all_cells_by_part"].get(part_id, ())
-        keys = {(cell["resource_id"], cell["id"], ELEMENT_ALIASES.get(cell["formulation"], cell["formulation"]))
+        keys = {(cell["resource_id"], cell["id"], ELEMENT_NAMESPACE.get(cell["formulation"], cell["formulation"]))
                 for cell in all_cells}
         if len(keys) != len(all_cells) or any(
                 len(self._matching_selection_cells(cell["id"], cell["resource_id"], cell["formulation"])[0]) != 1
@@ -2234,6 +2237,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         destinations = {}
         payloads, expected = {}, {}
         targets = set()
+        legacy_padding = {}
+        for archive in document.resources.values():
+            if isinstance(archive, SourceArchiveResource):
+                for (resource_id, group_id), rows in archive.legacy_zero_padding_rows.items():
+                    legacy_padding.setdefault(resource_id, {}).setdefault(group_id, set()).update(rows)
         for resource in self._deck_resources(document):
             destination = target if resource.id == self._root_id else target.parent / self._paths[resource.id]
             destination = destination.resolve()
@@ -2247,6 +2255,19 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 raise PrepError("include_output_collision", "An INCLUDE output path resolves through an existing alias.",
                                 {"path": logical})
             lines = resource.render().decode("latin1").splitlines(keepends=True)
+            if padding := legacy_padding.get(resource.id):
+                for card in resource.cards:
+                    if not card.keyword.upper().startswith("/GRNOD/NODE/"):
+                        continue
+                    group = native_identity(card.keyword)
+                    if group is None or group[1] not in padding:
+                        continue
+                    for index in card.data[1:]:
+                        body = lines[index].rstrip("\r\n")
+                        if body in padding[group[1]]:
+                            fields = (body[offset:offset + 10] for offset in range(0, len(body), 10))
+                            lines[index] = "".join(f"{0:10d}" if is_legacy_zero_padding(field) else field
+                                                   for field in fields) + lines[index][len(body):]
             intended = {}
             for ordinal, directive in enumerate(resource.include_directives):
                 resolved = logical_outputs[bindings[resource.id, ordinal]]

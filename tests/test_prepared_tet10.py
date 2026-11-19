@@ -244,7 +244,10 @@ def test_malformed_native_tetra10_keeps_raw_and_reports_projection_error(text):
     deck = DeckResource(raw)
     assert deck.render() == raw
     projection = deck.mesh_projection()
-    cell, = projection['cells']
-    assert cell['id'] == 1 and cell['formulation'] == 'TETRA10'
-    assert cell['parse_error'] and cell['nodes'] == []
+    if text.splitlines()[0][10:].strip():
+        assert not projection['cells']  # A multi-field orphan row is never an element ID.
+    else:
+        cell, = projection['cells']
+        assert cell['id'] == 1 and cell['formulation'] == 'TETRA10'
+        assert cell['parse_error'] and cell['nodes'] == []
     assert projection['diagnostics'][0]['code'] == 'element_display_parse'

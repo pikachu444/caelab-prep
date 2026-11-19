@@ -78,11 +78,12 @@ def test_explicit_shared_node_is_single_entity_and_unmapped_nodes_stay_distinct(
 @pytest.mark.parametrize("variant", ("title-only-deleted", "all-zero-deleted", "underscore-retained", "underscore-corrected",
                                      "underscore-deleted", "underscore-node", "underscore-connectivity",
                                      "padded-with-title-only", "hybrid", "pass14-padded", "pass14-underscore-zero",
+                                     "pass14-new-underscore-zero",
                                      "older-unquoted-padded", "older-quoted-padded", "pre-v5-explicit",
                                      "v5-host-v4-archive-explicit", "mixed-archive-unrecorded"))
 def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     source = _base_model(tmp_path / "source")
-    padded = variant in ("padded-with-title-only", "hybrid", "pass14-padded", "pass14-underscore-zero",
+    padded = variant in ("padded-with-title-only", "hybrid", "pass14-padded", "pass14-underscore-zero", "pass14-new-underscore-zero",
                          "older-unquoted-padded", "older-quoted-padded")
     empty = variant in ("padded-with-title-only", "hybrid", "title-only-deleted", "all-zero-deleted")
     identifiers = (101, 205) if empty or padded else (101, 101, 205)
@@ -90,6 +91,8 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     groups = b"/GRNOD/NODE/47\nUnused target\n" + native_row
     if padded:
         groups += f"/GRNOD/NODE/48\nPadded target\n{_i(101, 0, 205)}\n".encode()
+    if variant == "pass14-underscore-zero":
+        groups += f"/BCS/71\nArchived fixity\n   100 000{_i(0, 48)}\n".encode()
     raw = source.read_bytes().replace(b"/END", groups + b"/END")
     if padded:
         raw = raw.replace(b"#include mesh.inc\n", b'#include\n"mesh.inc"\n')
@@ -109,7 +112,8 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
         corrected = f"{group_keyword}\nUnused target\n{_i(*expected)}\n"
         state = resource.replaced_state(group, corrected)
         session.dispatcher.execute(resource.id, state, "Normalize mapped group row", kind="structure")
-    case = session.create_analysis_case("No conditions", [], .01, .001, "s")["case_id"]
+    active_conditions = [_card(session, f'/BCS/{ids["BCS", 71]}')["id"]] if variant == "pass14-underscore-zero" else []
+    case = session.create_analysis_case("Archive case", active_conditions, .01, .001, "s")["case_id"]
     saved = tmp_path / "saved.caeprep"
     session.save_project(saved)
     with zipfile.ZipFile(saved) as archive:
@@ -133,7 +137,7 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
         translated_row = f'{_i(*expected)}\n'.encode()
         assert payloads[mapped_member].count(translated_row) == 1
         payloads[mapped_member] = payloads[mapped_member].replace(translated_row, legacy_row)
-    if variant in ("underscore-node", "underscore-connectivity", "hybrid", "pass14-padded"):
+    if variant in ("underscore-node", "underscore-connectivity", "hybrid", "pass14-padded", "pass14-new-underscore-zero"):
         mesh_file = next(item for item in source_model["files"] if item["original_path"] == "mesh.inc")
         mesh_member = f'sources/{source_model["id"]}/{mesh_file["original_resource_id"]}.rad'
         prefix = _i(7001).encode() if variant == "underscore-connectivity" else b""
@@ -206,6 +210,22 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
         assert error.value.code == "invalid_project"
         return
     session.open_project(legacy)
+    if variant == "pass14-new-underscore-zero":
+        owner = session._find_card(group)
+        assert b"0_0" not in owner.render()
+        added = session.create_node_group("New padding", list(expected), native_id=50, resource_id=owner.id)["card_id"]
+        assert owner.card(added).keyword == "/GRNOD/NODE/50"
+        line = f"{expected[0]:10d}{'0_0':>10}{expected[1]:10d}"
+        state = owner.replaced_state(added, f"/GRNOD/NODE/50\nNew padding\n{line}\n")
+        session.dispatcher.execute(owner.id, state, "Insert unarchived zero padding", kind="structure")
+        changed = tmp_path / "new-padding.caeprep"
+        session.save_project(changed)
+        session.open_project(changed)
+        assert [item["code"] for item in session.group_members(added)["diagnostics"]] == ["invalid_reference"]
+        with pytest.raises(PrepError) as error:
+            session.export_analysis_case(tmp_path / "reject/case_0000.rad", case)
+        assert error.value.code == "invalid_reference"
+        return
     view = session.mesh_view()
     assert len(view["node_ids"]) == 16 and len(view["cells"]) == 4
     if empty or variant.endswith("deleted"):
@@ -217,10 +237,22 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     if variant == "pass14-underscore-zero":
         padded_group = _card(session, f'/GRNOD/NODE/{ids["GRNOD", 48]}')["id"]
         assert session.group_members(padded_group)["member_ids"] == list(expected)
+        original_group = session.card_text(padded_group)
     target = tmp_path / "export/case_0000.rad"
     session.export_analysis_case(target, case)
     assert all(b"1_01" not in path.read_bytes() for path in target.parent.rglob("*") if path.is_file())
     if variant == "pass14-underscore-zero":
+        assert session.card_text(padded_group) == original_group and "0_0" in original_group
+        session.export_rad(tmp_path / "starter/starter_0000.rad")
+        starter_check = PrepSession()
+        starter_check.open_rad(tmp_path / "starter/starter_0000.rad")
+        starter_group = _card(starter_check, f'/GRNOD/NODE/{ids["GRNOD", 48]}')["id"]
+        assert starter_check.group_members(starter_group)["member_ids"] == list(expected)
+        owner = session._find_card(padded_group)
+        flipped = f"{expected[1]:10d}{'0_0':>10}{expected[0]:10d}"
+        state = owner.replaced_state(padded_group, original_group.replace(original_group.splitlines()[-1], flipped))
+        session.dispatcher.execute(owner.id, state, "Change an archived padding row", kind="structure")
+        assert [item["code"] for item in session.group_members(padded_group)["diagnostics"]] == ["invalid_reference"]
         host = session._model_resource(None)
         text = f"/GRNOD/NODE/97\nUnrelated host padding\n{101:10d}{'0_0':>10}{205:10d}\n"
         state, card_id = host.inserted_state(text)
@@ -232,23 +264,24 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
         padded_keyword = f'/GRNOD/NODE/{ids["GRNOD", 48]}'
         padded_group = _card(session, padded_keyword)["id"]
         members = session.group_members(padded_group)
+        assert members["member_ids"] == list(expected) and not members["diagnostics"]
+        assert session.card_text(padded_group).splitlines()[-1] == _i(expected[0], 0, expected[1])
         if variant == "pass14-underscore-zero":
-            assert members["diagnostics"][0]["code"] == "invalid_reference"
-        else:
-            assert members["member_ids"] == list(expected)
-        padding = f"{'0_0':>10}" if variant == "pass14-underscore-zero" else _i(0)
-        assert session.card_text(padded_group).splitlines()[-1] == _i(expected[0]) + padding + _i(expected[1])
+            condition = _card(session, f'/BCS/{ids["BCS", 71]}')["id"]
+            reexport_case = session.create_analysis_case("Re-export", [condition], .01, .001, "s")["case_id"]
+            session.export_analysis_case(tmp_path / "reexport/case_0000.rad", reexport_case)
     elif not variant.endswith("deleted"):
         assert session.group_members(_card(session, group_keyword)["id"])["member_ids"] == list(expected)
 
 
 @pytest.mark.parametrize("variant", ("legacy-map", "legacy-shell-group", "tampered-with-bindings",
-                                    "forged-241-quad", "forged-987-quad"))
+                                    "forged-241-quad", "forged-987-quad", "forged-241-sh4n", "forged-987-sh4n"))
 def test_legacy_quad_source_archive_recovers_the_native_solid_group(tmp_path, variant):
     starter, source = model(tmp_path / "base"), model(tmp_path / "source", offset=20)
     mesh = source.with_name("mesh.inc")
-    mesh.write_bytes(mesh.read_bytes().replace(b"/SHELL/9", b"/QUAD/9"))
-    if variant == "forged-987-quad":
+    sh4n = variant.endswith("-sh4n")
+    mesh.write_bytes(mesh.read_bytes().replace(b"/SHELL/9", b"/SH4N/9" if sh4n else b"/QUAD/9"))
+    if variant.startswith("forged-987-"):
         source.write_bytes(source.read_bytes().replace(b"#include mesh.inc", b'#include\n"mesh.inc"'))
     if variant == "legacy-shell-group":
         source.write_bytes(source.read_bytes().replace(
@@ -257,7 +290,8 @@ def test_legacy_quad_source_archive_recovers_the_native_solid_group(tmp_path, va
     session.open_rad(starter)
     plan = session.plan_import_source(source)
     session.import_source(plan["plan_id"])
-    identifier = next(mapped for ns, original, mapped in plan["source"]["id_map"] if (ns, original) == ("E:QUAD", 77))
+    namespace = "E:SHELL" if sh4n else "E:QUAD"
+    identifier = next(mapped for ns, original, mapped in plan["source"]["id_map"] if (ns, original) == (namespace, 77))
     project = tmp_path / "modern.caeprep"
     session.save_project(project)
     with zipfile.ZipFile(project) as archive:
@@ -267,14 +301,14 @@ def test_legacy_quad_source_archive_recovers_the_native_solid_group(tmp_path, va
     if variant != "tampered-with-bindings":
         source_model.pop("include_bindings")
     entries = source_model["id_map"]
-    entries[entries.index(["E:QUAD", 77, identifier])][0] = "E:SHELL"
-    if variant == "forged-241-quad":
+    entries[entries.index([namespace, 77, identifier])][0] = "E:SHELL"
+    if variant.startswith("forged-241-"):
         archived_ids = {item["resource_id"] for item in source_model["files"]}
         for deck in manifest["resources"]:
             if deck["id"] in archived_ids:
                 deck["state"]["state_version"] = 4
                 assert not deck["state"].pop("retained_comments")
-    if variant == "forged-987-quad":
+    if variant.startswith("forged-987-"):
         mapped_mesh = next(item["logical_path"].encode() for item in source_model["files"]
                            if item["original_path"] == "mesh.inc")
         member = next(item["raw_member"] for item in manifest["resources"]
@@ -313,6 +347,57 @@ def test_legacy_quad_source_archive_recovers_the_native_solid_group(tmp_path, va
     group = session.create_element_group("Imported 2D solid", [ref])["card_id"]
     assert session.group_members(group)["members"] == [ref]
     assert session.card_text(group).startswith("/GRQUAD/QUAD/")
+
+
+@pytest.mark.parametrize("tampered", (False, True))
+def test_ac0_qualified_include_requires_its_shell_namespace_for_quad(tmp_path, tampered):
+    source = model(tmp_path / "source", offset=20)
+    root = source.parent
+    bank = root / "bank"
+    bank.mkdir()
+    original_mesh = root / "mesh.inc"
+    original_mesh.rename(bank / "mesh.inc")
+    mesh = bank / "mesh.inc"
+    mesh.write_bytes(mesh.read_bytes().replace(b"/SHELL/9", b"/QUAD/9"))
+    (root / "nested/bank").mkdir(parents=True)
+    (root / "nested/bank/mesh.inc").write_bytes(b"# Additional source\n")
+    (root / "nested/bank/entry.inc").write_bytes(b"#include mesh.inc\n")
+    (root / "nested/first.inc").write_bytes(b"#include bank/mesh.inc\n")
+    source.write_bytes(source.read_bytes().replace(b"#include mesh.inc", b"#include bank/mesh.inc\n"
+                                                    b"#include nested/first.inc\n#include nested/bank/entry.inc"))
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "base"))
+    session.import_source(session.plan_import_source(source)["plan_id"])
+    saved = tmp_path / "modern.caeprep"
+    session.save_project(saved)
+    with zipfile.ZipFile(saved) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source_model, = manifest["source_models"]
+    source_model.pop("include_bindings")
+    manifest.pop("include_bindings")
+    files = {file["original_path"]: file for file in source_model["files"]}
+    first = next(item["raw_member"] for item in manifest["resources"]
+                 if item["id"] == files["nested/first.inc"]["resource_id"])
+    # ac0a255 resolves the qualified operand to the import root. Later writers
+    # bind this particular operand to the sibling, which entry.inc also reaches.
+    assert files["nested/bank/mesh.inc"]["logical_path"].encode() in members[first]
+    members[first] = members[first].replace(files["nested/bank/mesh.inc"]["logical_path"].encode(),
+                                             files["bank/mesh.inc"]["logical_path"].encode())
+    if not tampered:
+        next(entry for entry in source_model["id_map"] if entry[:2] == ["E:QUAD", 77])[0] = "E:SHELL"
+    members["manifest.json"] = json.dumps(manifest).encode()
+    historical = tmp_path / "ac0.caeprep"
+    with zipfile.ZipFile(historical, "w") as archive:
+        for name, raw in members.items():
+            archive.writestr(name, raw)
+    if tampered:
+        with pytest.raises(PrepError) as error:
+            session.open_project(historical)
+        assert error.value.code == "invalid_project"
+    else:
+        session.open_project(historical)
+        assert session.describe()["element_count"] == 2
 
 
 def test_stale_or_unsupported_import_has_no_partial_commit(tmp_path):

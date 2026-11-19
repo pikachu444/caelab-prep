@@ -26,6 +26,10 @@ REFERENCE_FREE_PAIRS = {"MAT/LAW1", "MAT/ELAST", "PROP/BEAM", "PROP/TYPE3", "PRO
 PAIRS = REFERENCE_FREE_PAIRS | {"INIVEL/TRA", "INTER/TYPE7"} | set(GROUPS)
 
 
+def is_legacy_zero_padding(field: str) -> bool:
+    return "_" in field and re.fullmatch(r"[+-]?0(?:_?0)*", field.strip()) is not None
+
+
 def identity(keyword):
     words = keyword.strip().upper().split("/")
     if len(words) >= 4 and words[1] in ("SKEW", "FRAME", "GRBEAM", "GRTRUS") and words[3].isdigit():
@@ -89,7 +93,7 @@ def _inspect(resources, *, profile: str = "current"):
             words = card.keyword.upper().strip("/").split("/"); root = words[0]; pair = "/".join(words[:2])
             if (root not in {"BEGIN", "END", "NODE", "PART", "FUNCT", "BCS", "CLOAD", *ELEMENTS} and pair not in PAIRS
                     or quad_as_shell and pair == "GRQUAD/QUAD"
-                    or profile == "legacy_pre_quad" and (root == "QUAD" or pair == "GRQUAD/QUAD")):
+                    or profile == "legacy_pre_quad" and (root in ("QUAD", "SH4N") or pair == "GRQUAD/QUAD")):
                 raise PrepError("unsupported_source_profile", "This card's complete reference mapping is not supported.", {"keyword": card.keyword})
             header_id = identity(card.keyword)
             if root == "NODE" and len(words) != 1:
