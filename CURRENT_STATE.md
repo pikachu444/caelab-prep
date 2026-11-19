@@ -114,6 +114,14 @@ Windows Python 3.13.5에서 지정된 pytest 4개 모듈은 172건을 통과했�
 
 Windows Python 3.13.5에서 영향 범위 pytest 8개 모듈은 326건을 통과했고 별도 EGL 렌더링 검사 1건은 건너뛰었다.
 
+### 열네 번째 검토 수정
+
+`acd8a18` 재검토를 반영했다. 덱 상태 버전은 정수만 받고, v5에서 추가한 보존 주석 레코드는 이전 상태에서 거부한다. `24137d6` 작성본 두 개는 15절점·7요소와 루트 INCLUDE 바인딩을 유지했고, 모호한 v5 아카이브 여섯 개는 계속 거부했다.
+
+`/GRNOD/NODE`의 0 패딩을 보존하면서 독립 소스 가져오기·그룹 편집 미리보기·절점 이동 미리보기를 확인했다. 빈 노드 그룹을 참조하는 BCS는 검사기에 `unverified: empty_node_group`으로 표시한다. `24ff5f2` 작성본에 기록된 과거 중복 멤버는 실제 노드별로 정리하며, 서로 다른 두 절점의 동일 대상 매핑에는 명시 승인이 필요하다.
+
+덱 상태 토큰으로 원문 절점 ID 캐시를 확인한다. 자원 직접 복원과 필드 변경 이벤트 후 기존 ID가 거부됨을 검증했다. 20,000절점·96그룹 사례의 Windows 웜 검증 중앙값은 단일 파일 1.026 ms, 절점 INCLUDE 1.056 ms였다(각 55회, 전체 검증 성공). 집중 검사 29건과 전체 영향 범위 pytest 11개 모듈 389건을 통과했고, 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

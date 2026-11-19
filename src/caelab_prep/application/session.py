@@ -66,7 +66,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._source_paths: set[str] = set()
         self._diagnostics: list[dict] = []
         self._projection_cache: dict | None = None
-        self._raw_node_counts_cache: dict[int, int] | None = None
+        self._raw_node_counts_cache: tuple[tuple[tuple[str, str], ...], dict[int, int]] | None = None
         self._projection_index = {}
         self._source_path: str | None = None
         self._listeners = []
@@ -321,10 +321,10 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             return self.describe()
 
     def _command_changed(self, change):
+        self._raw_node_counts_cache = None
         if change.kind == "structure":
             self._sync_source_paths()
             self._projection_cache = None
-            self._raw_node_counts_cache = None
             self._projection_index = {}
             self._projection_revision += 1
             if self._active_object is not None:
@@ -858,18 +858,25 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         return values
 
     def _raw_node_counts(self) -> dict[int, int]:
+        resources = self._deck_resources()
+        tokens = tuple((resource.id, resource.state_token()) for resource in resources)
+        cached = self._raw_node_counts_cache
+        if cached is not None and cached[0] == tokens:
+            return cached[1]
         # The display projection omits duplicates within a NODE block.
-        if self._raw_node_counts_cache is None:
-            counts = {}
-            for resource in self._deck_resources():
-                for card in resource.cards:
-                    if card.keyword.upper().split("/")[1] != "NODE": continue
-                    for index in card.data:
-                        try: node = int(resource.lines[index][:10])
-                        except ValueError: continue
-                        counts[node] = counts.get(node, 0) + 1
-            self._raw_node_counts_cache = counts
-        return self._raw_node_counts_cache
+        counts = {}
+        for resource in resources:
+            for card in resource.cards:
+                if card.keyword.upper().split("/")[1] != "NODE":
+                    continue
+                for index in card.data:
+                    try:
+                        node = int(resource.lines[index][:10])
+                    except ValueError:
+                        continue
+                    counts[node] = counts.get(node, 0) + 1
+        self._raw_node_counts_cache = (tokens, counts)
+        return counts
 
     def _node_members(self, values):
         self._member_sequence(values)

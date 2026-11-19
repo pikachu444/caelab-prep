@@ -85,7 +85,10 @@ class ModelRelationsResource:
                     UUID(rid)
                     if type(generation) is not int or generation < 1 or state["mesh_revisions"].get(rid) != generation:
                         raise PrepError("invalid_project", "Invalid dependent mesh generation.")
-            record = {**item, "members": tuple(item["members"])}
+            members = item["members"]
+            if item["family"] == "GRNOD/NODE":
+                members = dict.fromkeys(members)
+            record = {**item, "members": tuple(members)}
             if "parent_to_children" in item:
                 replacements = item["parent_to_children"]
                 if item["family"] != "GRSH3N/SH3N" or not isinstance(replacements, dict) or not replacements:

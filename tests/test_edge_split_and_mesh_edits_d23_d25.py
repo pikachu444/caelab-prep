@@ -1424,7 +1424,7 @@ def test_d23_reopens_legacy_active_include_without_whitespace(tmp_path, name):
 
 
 @pytest.mark.parametrize("nodes_path", ("nodes.inc", "sets/nodes.inc"))
-@pytest.mark.parametrize("variant", ("tight", "two-line", "v4", "ambiguous-v5"))
+@pytest.mark.parametrize("variant", ("tight", "two-line", "v4", "ambiguous-v5", "forged-v4"))
 def test_d23_distinguishes_historical_include_writers(tmp_path, nodes_path, variant):
     source = tmp_path / "source"
     starter = _build_deck_multi_include(source)
@@ -1452,10 +1452,13 @@ def test_d23_distinguishes_historical_include_writers(tmp_path, nodes_path, vari
     manifest.pop("include_bindings")
     record = manifest["source_models"][0]
     record.pop("include_bindings")
-    if variant == "v4":
+    if variant in ("v4", "forged-v4"):
         for resource in manifest["resources"]:
             resource["state"]["state_version"] = 4
             assert not resource["state"].pop("retained_comments")
+        if variant == "forged-v4":
+            manifest["resources"][0]["state"]["created"].append({
+                "id": "00000000-0000-4000-8000-000000000123", "comments": "# v5 only\n"})
     members["manifest.json"] = json.dumps(manifest).encode()
     by_path = {item["original_path"]: item for item in record["files"]}
     owner = by_path["mesh/first.inc"]
@@ -1471,6 +1474,11 @@ def test_d23_distinguishes_historical_include_writers(tmp_path, nodes_path, vari
             project.writestr(member, payload)
     if variant == "ambiguous-v5":
         with pytest.raises(PrepError, match="Archived INCLUDE bindings are ambiguous") as error:
+            session.open_project(legacy)
+        assert error.value.code == "invalid_project"
+        return
+    if variant == "forged-v4":
+        with pytest.raises(PrepError, match="Invalid created card block") as error:
             session.open_project(legacy)
         assert error.value.code == "invalid_project"
         return
@@ -1507,6 +1515,35 @@ def test_deck_preserves_validated_restore_version_until_next_restore():
     with pytest.raises(PrepError):
         deck.restore({**state, "patches": {"invalid": None}})
     assert deck._restored_state_version == 4 and deck.snapshot() == state
+
+
+@pytest.mark.parametrize("invalid_version", (2.0, 3.0, 4.0, 5.0, True, False))
+def test_deck_rejects_noninteger_state_versions_before_migration(invalid_version):
+    deck = DeckResource(b"/BEGIN\nLegacy\n/END\n")
+    deck.restore({})
+    snapshot = deck.snapshot()
+    state = {**snapshot, "state_version": invalid_version}
+    for version, key in ((2, "replaced"), (3, "node_positions"), (4, "retained_comments")):
+        if invalid_version <= version:
+            state.pop(key)
+    for restore in (deck.prepare_state, deck.restore):
+        with pytest.raises(PrepError) as error:
+            restore(state)
+        assert error.value.code == "invalid_project"
+        assert deck._restored_state_version == 1 and deck.snapshot() == snapshot
+
+
+def test_deck_rejects_v5_comment_records_in_v4_state_atomically():
+    deck = DeckResource(b"/BEGIN\nLegacy\n/END\n")
+    deck.restore({})
+    snapshot = deck.snapshot()
+    forged = {key: value for key, value in snapshot.items() if key != "retained_comments"}
+    forged.update(state_version=4, created=[{"id": "00000000-0000-4000-8000-000000000123", "comments": "# v5 only\n"}])
+    for restore in (deck.prepare_state, deck.restore):
+        with pytest.raises(PrepError) as error:
+            restore(forged)
+        assert error.value.code == "invalid_project"
+        assert deck._restored_state_version == 1 and deck.snapshot() == snapshot
 
 
 @pytest.mark.parametrize("origin", ("source", "reassigned", "removed_comment"))

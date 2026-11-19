@@ -102,13 +102,18 @@ def _inspect(resources):
                     raise PrepError("unsupported_source_profile", "SUBSET references require a separate mapping profile.")
             elif pair in GROUPS:
                 namespace = GROUPS[pair]
+                node_group = pair == "GRNOD/NODE"
                 entries = []
                 for row in card.data[1:]:
                     for start in range(0, len(lines[row].rstrip("\r\n")), 10):
                         token = lines[row][start:start + 10].strip()
                         if token:
-                            value = -_int(token[1:]) if namespace.startswith("E:") and token.startswith("-") else _int(token)
-                            entries.append((row, start, value))
+                            value = (-_int(token[1:]) if namespace.startswith("E:") and token.startswith("-")
+                                     else _int(token, zero=node_group))
+                            if value:
+                                entries.append((row, start, value))
+                if node_group and not entries:
+                    raise PrepError("unsupported_source_profile", "Node group must reference at least one positive node ID.")
                 effective = set(element_group_members([value for _, _, value in entries]))
                 for row, start, value in entries:
                     if value in effective:

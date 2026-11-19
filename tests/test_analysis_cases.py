@@ -208,6 +208,30 @@ def test_case_validation_scans_raw_node_ids_once_across_many_groups(tmp_path):
     session.validate_analysis_case(case)
 
 
+@pytest.mark.parametrize("write", ("restore", "field"))
+def test_create_node_group_reads_current_raw_ids_after_nonstructural_change(tmp_path, write):
+    starter = tmp_path / "nodes_0000.rad"
+    starter.write_text(f"/BEGIN\nRaw IDs\n/NODE\n{_i(101)}{_r(0, 0, 0)}\n/END\n")
+    session = PrepSession()
+    session.open_rad(starter)
+    group = session.create_node_group("Original", [101])["card_id"]
+    assert session.group_members(group)["member_ids"] == [101]
+    owner = session._model_resource(None)
+    card = _card(session, "/NODE")
+    edit = owner.replaced_state(card["id"], f"/NODE\n{_i(9101)}{_r(0, 0, 0)}\n")
+    if write == "restore":
+        owner.restore(edit)
+    else:
+        session.dispatcher.execute(owner.id, edit, "Change native node ID")
+    before = snapshot(session)
+    with pytest.raises(PrepError) as error:
+        session.create_node_group("Missing old ID", [101])
+    assert error.value.code == "dangling_reference"
+    assert snapshot(session) == before
+    current = session.create_node_group("New ID", [9101])["card_id"]
+    assert session.group_members(current)["member_ids"] == [9101]
+
+
 @pytest.mark.parametrize(("member", "diagnostic"), ((0, "dangling_reference"), (-201, "invalid_reference"),
                                                     (99999, "dangling_reference")))
 def test_case_rejects_empty_or_unresolved_solid_group(tmp_path, member, diagnostic):

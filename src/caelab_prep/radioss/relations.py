@@ -166,6 +166,11 @@ def node_support(resources, projection, node_ids):
 
 def validate_components(resources, projection, node_ids, *, translations=(False,False,False), rotations=(False,False,False), native_skew_id=0, enforce=True):
     frame = coordinate_frame(resources, native_skew_id)
+    if not node_ids:
+        if enforce:
+            raise PrepError("invalid_reference", "Choose at least one member.")
+        return {"coordinate_system": frame, "nodes": [], "status": "unverified",
+                "diagnostics": [{"code": "empty_node_group", "message": "Target node group has no valid node members."}]}
     supports = node_support(resources, projection, node_ids)
     failures = []
     for support in supports:

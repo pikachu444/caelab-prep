@@ -483,6 +483,8 @@ class DeckResource:
         """Validate a candidate before replacing live state; legacy patch dictionaries still read."""
         if not isinstance(state, dict):
             raise PrepError("invalid_project", "편집 패치 형식이 잘못됐습니다.")
+        if "state_version" in state and type(state["state_version"]) is not int:
+            raise PrepError("invalid_project", "Unsupported structural deck state.")
         original_version = state.get("state_version", 1)
         if "state_version" not in state:
             state = {"state_version": 2, "patches": state, "created": [], "deleted": []}
@@ -501,8 +503,9 @@ class DeckResource:
             raise PrepError("invalid_project", "Unsupported structural deck state.")
         source_ids = {card.id for card in self._source_cards}
         created, used = [], set(source_ids)
+        allowed_created_keys = ({"id", "text"}, {"id", "comments"}) if original_version >= 5 else ({"id", "text"},)
         for item in state["created"]:
-            if (not isinstance(item, dict) or set(item) not in ({"id", "text"}, {"id", "comments"})
+            if (not isinstance(item, dict) or set(item) not in allowed_created_keys
                     or not all(isinstance(value, str) for value in item.values())):
                 raise PrepError("invalid_project", "Invalid created card block.")
             try:
