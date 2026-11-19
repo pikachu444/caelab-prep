@@ -72,6 +72,7 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical):
     bindings, problems = {}, []
     outgoing = defaultdict(set)
     pending = deque()
+    archive_claims = defaultdict(dict) if historical == "8e85" else None
 
     def leads_to(start, owner):
         todo, visited = [start], set()
@@ -113,6 +114,10 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical):
                 root_file = lookup(root_path)
                 # The 24137d60 reader resolved every operand from the Starter root.
                 sibling = lookup(sibling_path) if historical != "241" and sibling_path != root_path else root_file
+                if archive_claims is not None:
+                    for candidate in (root_file, sibling):
+                        if candidate is not None and candidate != owner:
+                            archive_claims[candidate][owner, relative] = directive
                 key = owner, ordinal
                 if key in recovered:
                     follow(owner, directive, recovered[key], chain)
@@ -160,4 +165,19 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical):
         for owner, directive, root_file, sibling, chain in batch:
             target = sibling if root_file in unambiguous_reached and sibling not in unambiguous_explicit else root_file
             follow(owner, directive, target, chain)
+    if archive_claims is not None and not problems:
+        # On disk, repeated operands in one file belonged to the same wave.
+        # The archive retry could split them only after both targets had
+        # already been collected, so they cannot be the sole claim to both.
+        required = {}
+        for path in sorted(reached - {root}):
+            claims = archive_claims[path]
+            if len(claims) != 1:
+                continue
+            ((owner, operand), directive), = claims.items()
+            first = required.setdefault((owner, operand), path)
+            if first != path:
+                error = PrepError("invalid_project", "Repeated INCLUDE operands cannot account for both archived files.",
+                                  {"paths": [first, path]})
+                problems.append((owner, directive, error))
     return reached, bindings, problems

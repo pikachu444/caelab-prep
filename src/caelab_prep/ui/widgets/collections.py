@@ -5,7 +5,10 @@ validated value and retain ``raw_value()`` when an incomplete draft must survive
 """
 from __future__ import annotations
 
+from collections import ChainMap, Counter, OrderedDict, UserDict, defaultdict
+from collections.abc import Mapping, Set
 import re
+from types import MappingProxyType
 
 from PySide6.QtCore import QSignalBlocker, QSize, Qt, Signal
 from PySide6.QtGui import QClipboard, QKeySequence, QValidator
@@ -211,26 +214,43 @@ class BooleanVectorEdit(QWidget):
         del blocked
 
 
+_MAPPING_EQUALITIES = (dict.__eq__, MappingProxyType.__eq__, Mapping.__eq__, OrderedDict.__eq__,
+                       defaultdict.__eq__, Counter.__eq__, UserDict.__eq__, ChainMap.__eq__)
+_SET_EQUALITIES = (set.__eq__, frozenset.__eq__, Set.__eq__)
+
+
 def _bucket_key(value):
     kind = type(value)
     if kind is str or kind is int:
         return ("hash", hash(value))
     equality = kind.__eq__
-    if isinstance(value, dict) and equality is dict.__eq__:
+    if kind is dict or isinstance(value, Mapping):
+        if kind is not dict and not any(equality is standard for standard in _MAPPING_EQUALITIES):
+            return None
+        counts_can_omit_zero = equality is Counter.__eq__ or equality is MappingProxyType.__eq__
         items = []
         for key, item in value.items():
             pair = (_bucket_key(key), _bucket_key(item))
             if None in pair:
                 return None
+            # Counter equality can equate an explicit zero count with a missing key.
+            if counts_can_omit_zero and pair[1] == ("hash", 0):
+                return None
             items.append(pair)
-        return ("dict", frozenset(items))
-    if isinstance(value, tuple) and equality is tuple.__eq__:
+        return ("mapping", frozenset(items))
+    if isinstance(value, tuple):
+        if equality is not tuple.__eq__:
+            return None
         items = tuple(_bucket_key(item) for item in value)
         return ("tuple", items) if None not in items else None
-    if isinstance(value, list) and equality is list.__eq__:
+    if isinstance(value, list):
+        if equality is not list.__eq__:
+            return None
         items = tuple(_bucket_key(item) for item in value)
         return ("list", items) if None not in items else None
-    if isinstance(value, (set, frozenset)) and equality in (set.__eq__, frozenset.__eq__):
+    if isinstance(value, Set):
+        if not any(equality is standard for standard in _SET_EQUALITIES):
+            return None
         items = frozenset(_bucket_key(item) for item in value)
         return ("set", items) if None not in items else None
     try:

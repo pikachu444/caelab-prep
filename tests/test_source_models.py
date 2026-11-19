@@ -466,6 +466,37 @@ def _bde_wave_source(folder):
     return source
 
 
+def test_ac0_repeated_operand_archive_requires_its_shell_namespace(tmp_path):
+    # ac0a255 wrote both bindings. The 8e85a669 writer collected only three
+    # source files from the same disk layout, omitting sub/mesh.inc.
+    fixture = Path(__file__).with_name("fixtures") / "ac0a255-quad-repeated-include.caeprep"
+    with zipfile.ZipFile(fixture) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    files = {item["original_path"]: item for item in source["files"]}
+    assert set(files) == {"conditions_0000.rad", "sub/chooser.inc", "mesh.inc", "sub/mesh.inc"}
+    chooser = files["sub/chooser.inc"]["original_resource_id"]
+    assert members[f'sources/{source["id"]}/{chooser}.rad'] == b"#include mesh.inc\n#include mesh.inc\n"
+
+    session = PrepSession()
+    session.open_project(fixture)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+    assert any(cell["id"] == 9009 and cell["formulation"] == "QUAD" for cell in projection["cells"])
+
+    entry = next(entry for entry in source["id_map"] if entry == ["E:SHELL", 9007, 9009])
+    entry[0] = "E:QUAD"
+    members["manifest.json"] = json.dumps(manifest).encode()
+    forged = tmp_path / "forged.caeprep"
+    with zipfile.ZipFile(forged, "w") as archive:
+        for name, payload in members.items():
+            archive.writestr(name, payload)
+    with pytest.raises(PrepError) as error:
+        session.open_project(forged)
+    assert error.value.code == "invalid_project"
+
+
 @pytest.mark.parametrize("tampered", (False, True))
 def test_bde_frozen_include_wave_preserves_quad_namespace(tmp_path, tampered):
     session = PrepSession()
@@ -561,17 +592,24 @@ def test_archive_signed_element_exclusions_follow_writer_support(tmp_path, write
     assert _i(-ids["E:SHELL", 9007]) in session.card_text(group)
 
 
-def test_8e85_signed_archive_replays_fallback_include_traversal(tmp_path):
+@pytest.mark.parametrize("repeated_operand", (False, True), ids=("seven-files", "eleven-files"))
+def test_8e85_signed_archive_replays_fallback_include_traversal(tmp_path, repeated_operand):
     # Written by 8e85a669 with an empty source_paths list. The unused
     # a/door/marker.inc on disk delayed door/marker.inc by one INCLUDE wave.
-    fixture = Path(__file__).with_name("fixtures") / "8e85a669-signed-includes.caeprep"
+    name = "8e85a669-signed-repeated-include" if repeated_operand else "8e85a669-signed-includes"
+    fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
     with zipfile.ZipFile(fixture) as archive:
         manifest = json.loads(archive.read("manifest.json"))
         source, = manifest["source_models"]
-        assert len(source["files"]) == 7
-        for path in ("b/entry.inc", "door/marker.inc"):
+        assert len(source["files"]) == (11 if repeated_operand else 7)
+        operands = {"b/entry.inc": b"#include mesh.inc\n", "door/marker.inc": b"#include mesh.inc\n"}
+        if repeated_operand:
+            operands["door/marker.inc"] += b"#include sub/alternate.inc\n"
+            operands["sub/chooser.inc"] = b"#include dups.inc\n#include dups.inc\n"
+            operands["sub/alternate.inc"] = b"#include dups.inc\n"
+        for path, expected in operands.items():
             record = next(item for item in source["files"] if item["original_path"] == path)
-            assert archive.read(f'sources/{source["id"]}/{record["original_resource_id"]}.rad') == b"#include mesh.inc\n"
+            assert archive.read(f'sources/{source["id"]}/{record["original_resource_id"]}.rad') == expected
 
     def assert_group(session):
         projection = session.mesh_view()
@@ -586,6 +624,10 @@ def test_8e85_signed_archive_replays_fallback_include_traversal(tmp_path):
         ids = {item["original_path"]: item["resource_id"] for item in source["files"]}
         assert session._include_bindings[ids["b/entry.inc"], 0] == ids["mesh.inc"]
         assert session._include_bindings[ids["door/marker.inc"], 0] == ids["door/mesh.inc"]
+        if repeated_operand:
+            assert session._include_bindings[ids["sub/chooser.inc"], 0] == ids["dups.inc"]
+            assert session._include_bindings[ids["sub/chooser.inc"], 1] == ids["sub/dups.inc"]
+            assert session._include_bindings[ids["sub/alternate.inc"], 0] == ids["sub/dups.inc"]
 
     session = PrepSession()
     session.open_project(fixture)

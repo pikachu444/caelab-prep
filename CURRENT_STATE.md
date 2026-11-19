@@ -206,6 +206,14 @@ Windows Python 3.13로 집중 검사 104건과 영향 범위 32개 모듈 812건
 
 Windows Python 3.13에서 집중 검사 111건과 영향 범위 32개 모듈 821건을 통과했다. 선택 실행 VTK 렌더링·피킹 검사는 별도로 활성화해 통과했고 OCP 미설치 검사 3건은 건너뛰었다. 20,000절점 덱의 스칼라 편집 41회에서 표시 리비전을 유지했으며 구조 직렬화와 해시는 각각 0회였다.
 
+### 스물여섯 번째 검토 수정
+
+`82622b1` 재검토를 반영했다. `8e85a669`의 INCLUDE 재시도는 두 원본 파일을 같은 파일의 반복 피연산자 하나로만 설명해야 하는 경우를 거부한다. 같은 디스크 입력에서 `ac0a255`는 원본 4개, `8e85a669`는 3개를 수집했다. 실제 `ac0a255` 보관본은 열렸고 `E:SHELL 9007 → 9009` 태그만 `E:QUAD`로 바꾼 보관본은 거부했다. 실제 `8e85a669` 7파일 보관본과 별도 경로로 반복 대상에 도달하는 11파일 보관본, `bde82a5` 13파일 보관본은 케이스 내보내기와 재열기를 확인했다.
+
+Qt 참조 목록은 읽기 전용 프록시를 포함한 표준 매핑과 집합에서 Python 동등성을 적용한다. 셸 8,000개 폼의 열기·검증 시간은 Windows Qt offscreen에서 중앙값 268.6 ms였다(5회, 257.9–298.4 ms).
+
+Windows Python 3.13에서 집중 검사 131건과 영향 범위 32개 모듈 841건을 통과했다. 선택 실행 VTK 피킹 검사는 별도로 통과했고 OCP 미설치 검사 3건은 건너뛰었다. 20,000절점 덱의 스칼라 편집 41회에서 표시 리비전을 유지했으며 구조 직렬화와 해시는 각각 0회였다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

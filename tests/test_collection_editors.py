@@ -1,8 +1,11 @@
 """Real Qt collection drafts; reading input never submits a document command."""
+from collections import ChainMap, Counter, OrderedDict, UserDict, defaultdict
+from collections.abc import Set
 from dataclasses import dataclass, field
 from decimal import Decimal
 from fractions import Fraction
 import os
+from types import MappingProxyType
 from typing import NamedTuple
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -167,6 +170,62 @@ class _ContainerReference(NamedTuple):
 def test_reference_buckets_match_equal_container_representations(first, second, reverse):
     choice, selected = (second, first) if reverse else (first, second)
     assert choice == selected
+    editor = ReferenceListEdit((selected,), choices=(choice,))
+    assert editor.list.count() == 1
+    assert editor.value() == (choice,)
+
+
+class _FrozenDict(dict):
+    def __hash__(self):
+        return hash(frozenset(self.items()))
+
+
+class _ReadOnlySet(Set):
+    def __init__(self, *values):
+        self.values = values
+
+    def __contains__(self, value):
+        return value in self.values
+
+    def __iter__(self):
+        return iter(self.values)
+
+    def __len__(self):
+        return len(self.values)
+
+
+@pytest.mark.parametrize("other", (
+    MappingProxyType(_FrozenDict(id=201)), {"id": 201}, OrderedDict(id=Decimal("201")),
+    defaultdict(int, id=201), Counter(id=201), UserDict(id=201), ChainMap({"id": 201}),
+))
+@pytest.mark.parametrize("reverse", (False, True))
+def test_reference_editor_matches_equal_mapping_representations(other, reverse):
+    choice, selected = _FrozenDict(id=201), other
+    if reverse:
+        choice, selected = selected, choice
+    for first, second in ((choice, selected), ([(choice,)], [(selected,)])):
+        assert first == second
+        editor = ReferenceListEdit((second,), choices=(first,))
+        assert editor.list.count() == 1
+        assert editor.value() == (first,)
+
+
+@pytest.mark.parametrize("reverse", (False, True))
+def test_reference_editor_matches_standard_set_protocol(reverse):
+    choice, selected = _ReadOnlySet(201), frozenset({Decimal("201")})
+    if reverse:
+        choice, selected = selected, choice
+    editor = ReferenceListEdit(((selected,),), choices=((choice,),))
+    assert editor.list.count() == 1
+    assert editor.value() == ((choice,),)
+
+
+@pytest.mark.parametrize("proxy", (False, True))
+def test_reference_editor_keeps_counter_equality_with_omitted_zero_counts(proxy):
+    choice = Counter(id=201)
+    selected = Counter(id=201, extra=0)
+    if proxy:
+        selected = MappingProxyType(selected)
     editor = ReferenceListEdit((selected,), choices=(choice,))
     assert editor.list.count() == 1
     assert editor.value() == (choice,)
