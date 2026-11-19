@@ -6,6 +6,9 @@ from pathlib import PurePosixPath
 from ..cae_core import PrepError
 
 
+_MAX_8E85_DISK_WALKS = 4096
+
+
 def include_relative(value: str) -> PurePosixPath:
     if not isinstance(value, str):
         raise PrepError("invalid_project", "INCLUDE 경로는 문자열이어야 합니다.")
@@ -57,7 +60,14 @@ def disk_include_lookup(base, *, canonical=True):
 def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, selected=None, recovered=None, historical=None):
     """Resolve live paths or replay validated bindings against an archive inventory."""
     selected, recovered = selected or {}, recovered or {}
+    if historical == "8e85":
+        load = cache(load)
     result = _walk_includes(root, lookup, load, scope, selected, recovered, historical)
+    if (historical == "8e85" and not result[2] and result[0] == archive_inventory
+            and not _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory)):
+        directive = next(iter(load(root).include_directives), None)
+        result[2].append((root, directive, PrepError(
+            "invalid_project", "The archived INCLUDE inventory could not have been collected by the writer's disk traversal.")))
     if historical is None and archive_inventory is not None and not result[2] and archive_inventory - result[0]:
         # ac0a255d let an earlier ambiguous directive claim the root for the
         # next directive. Use that policy only if it explains the entire ZIP.
@@ -67,12 +77,51 @@ def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, se
     return result
 
 
-def _walk_includes(root, lookup, load, scope, selected, recovered, historical):
+def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory):
+    """Look for a wave traversal that collects exactly the archived paths."""
+    lookup = cache(lookup)
+
+    def load_archived(path):
+        if path not in archive_inventory:
+            raise PrepError("include_missing", "Disk traversal would collect an unarchived INCLUDE.")
+        return load(path)
+
+    empty = frozenset()
+    pending = deque([empty])
+    seen = {empty}
+    while pending:
+        phantoms = pending.popleft()
+        candidates = {}
+
+        def disk_lookup(path):
+            archived = lookup(path)
+            if archived is None and path.casefold() in phantoms:
+                return path.casefold()
+            return archived
+
+        def record_phantom(sibling_path, root_file):
+            if root_file in archive_inventory:
+                candidates.setdefault(sibling_path.casefold(), None)
+
+        reached, _, problems = _walk_includes(root, disk_lookup, load_archived, scope, {}, {}, None,
+                                              record_phantom=record_phantom)
+        if not problems and reached == archive_inventory:
+            return True
+        # Only a missing sibling seen in this traversal can change its next replay.
+        for path in candidates:
+            if len(seen) >= _MAX_8E85_DISK_WALKS:
+                break
+            if path not in phantoms and (delayed := phantoms | {path}) not in seen:
+                seen.add(delayed)
+                pending.append(delayed)
+    return False
+
+
+def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *, record_phantom=None):
     reached, explicit = set(), set()
     bindings, problems = {}, []
     outgoing = defaultdict(set)
     pending = deque()
-    archive_claims = defaultdict(dict) if historical == "8e85" else None
 
     def leads_to(start, owner):
         todo, visited = [start], set()
@@ -114,10 +163,6 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical):
                 root_file = lookup(root_path)
                 # The 24137d60 reader resolved every operand from the Starter root.
                 sibling = lookup(sibling_path) if historical != "241" and sibling_path != root_path else root_file
-                if archive_claims is not None:
-                    for candidate in (root_file, sibling):
-                        if candidate is not None and candidate != owner:
-                            archive_claims[candidate][owner, relative] = directive
                 key = owner, ordinal
                 if key in recovered:
                     follow(owner, directive, recovered[key], chain)
@@ -127,6 +172,9 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical):
                                     {"path": logical, "target": selected[key]})
                 if not (root_file or sibling):
                     raise PrepError("include_missing", "INCLUDE 파일이 없습니다.", {"path": logical})
+                if (record_phantom is not None and owner != root and sibling_path != root_path
+                        and root_file is not None and root_file not in reached and sibling is None):
+                    record_phantom(sibling_path, root_file)
                 if root_file and sibling and root_file != sibling:
                     if key in selected:
                         follow(owner, directive, selected[key], chain)
@@ -165,19 +213,4 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical):
         for owner, directive, root_file, sibling, chain in batch:
             target = sibling if root_file in unambiguous_reached and sibling not in unambiguous_explicit else root_file
             follow(owner, directive, target, chain)
-    if archive_claims is not None and not problems:
-        # On disk, repeated operands in one file belonged to the same wave.
-        # The archive retry could split them only after both targets had
-        # already been collected, so they cannot be the sole claim to both.
-        required = {}
-        for path in sorted(reached - {root}):
-            claims = archive_claims[path]
-            if len(claims) != 1:
-                continue
-            ((owner, operand), directive), = claims.items()
-            first = required.setdefault((owner, operand), path)
-            if first != path:
-                error = PrepError("invalid_project", "Repeated INCLUDE operands cannot account for both archived files.",
-                                  {"paths": [first, path]})
-                problems.append((owner, directive, error))
     return reached, bindings, problems

@@ -205,6 +205,8 @@ def source_include_graph(resources, paths, *, selected=None, historical=None, lo
             return normal
         if load_order is not None:
             load_order.clear()
+        return resolve_includes(root, lookup, load, selected=selected, historical=historical,
+                                archive_inventory=set(paths))
     return resolve_includes(root, lookup, load, selected=selected, historical=historical)
 
 

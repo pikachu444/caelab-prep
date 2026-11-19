@@ -1,6 +1,6 @@
 """Real Qt collection drafts; reading input never submits a document command."""
 from collections import ChainMap, Counter, OrderedDict, UserDict, defaultdict
-from collections.abc import Set
+from collections.abc import Mapping, Set
 from dataclasses import dataclass, field
 from decimal import Decimal
 from fractions import Fraction
@@ -229,6 +229,67 @@ def test_reference_editor_keeps_counter_equality_with_omitted_zero_counts(proxy)
     editor = ReferenceListEdit((selected,), choices=(choice,))
     assert editor.list.count() == 1
     assert editor.value() == (choice,)
+
+
+class _CaseInsensitiveDict(dict):
+    def __eq__(self, other):
+        if not isinstance(other, Mapping):
+            return NotImplemented
+        return {key.casefold(): value for key, value in self.items()} == {
+            key.casefold(): value for key, value in other.items()}
+
+
+@pytest.mark.parametrize("mapping_type", ("standalone", "requests"))
+@pytest.mark.parametrize("proxy", (False, True))
+@pytest.mark.parametrize("reverse", (False, True))
+def test_reference_editor_matches_case_insensitive_mappings(mapping_type, proxy, reverse):
+    if mapping_type == "requests":
+        factory = pytest.importorskip("requests.structures").CaseInsensitiveDict
+    else:
+        factory = _CaseInsensitiveDict
+    choice, selected = factory({"ID": 201}), factory({"id": 201})
+    if proxy:
+        choice, selected = MappingProxyType(choice), MappingProxyType(selected)
+    if reverse:
+        choice, selected = selected, choice
+    for first, second in ((choice, selected), ({"path": [choice]}, {"path": [selected]})):
+        assert first == second
+        editor = ReferenceListEdit((second,), choices=(first,))
+        assert editor.list.count() == 1
+        assert editor.value() == (first,)
+
+
+class _TupleLikeRow:
+    def __eq__(self, other):
+        if isinstance(other, _TupleLikeRow):
+            return True
+        return (201,) == other
+
+    def __hash__(self):
+        return hash((201,))
+
+
+@pytest.mark.parametrize("row_type", ("standalone", "sqlalchemy"))
+@pytest.mark.parametrize("reverse", (False, True))
+def test_reference_editor_matches_hashable_rows_and_tuples(row_type, reverse):
+    if row_type == "sqlalchemy":
+        sqlalchemy = pytest.importorskip("sqlalchemy")
+        engine = sqlalchemy.create_engine("sqlite://")
+        try:
+            with engine.connect() as connection:
+                row = connection.execute(sqlalchemy.text("SELECT 201 AS id")).one()
+        finally:
+            engine.dispose()
+    else:
+        row = _TupleLikeRow()
+    choice, selected = (201,), row
+    if reverse:
+        choice, selected = selected, choice
+    for first, second in ((choice, selected), ({"path": [choice]}, {"path": [selected]})):
+        assert first == second
+        editor = ReferenceListEdit((second,), choices=(first,))
+        assert editor.list.count() == 1
+        assert editor.value() == (first,)
 
 
 @pytest.mark.parametrize("fallback_choice", (False, True))

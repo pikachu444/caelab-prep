@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 from threading import Event, Thread
+from uuid import uuid4
 import zipfile
 
 import pytest
@@ -466,7 +467,8 @@ def _bde_wave_source(folder):
     return source
 
 
-def test_ac0_repeated_operand_archive_requires_its_shell_namespace(tmp_path):
+@pytest.mark.parametrize("variant", ("stock", "case", "same-wave", "downstream"))
+def test_ac0_repeated_operand_archive_requires_its_shell_namespace(tmp_path, variant):
     # ac0a255 wrote both bindings. The 8e85a669 writer collected only three
     # source files from the same disk layout, omitting sub/mesh.inc.
     fixture = Path(__file__).with_name("fixtures") / "ac0a255-quad-repeated-include.caeprep"
@@ -476,22 +478,63 @@ def test_ac0_repeated_operand_archive_requires_its_shell_namespace(tmp_path):
     source, = manifest["source_models"]
     files = {item["original_path"]: item for item in source["files"]}
     assert set(files) == {"conditions_0000.rad", "sub/chooser.inc", "mesh.inc", "sub/mesh.inc"}
-    chooser = files["sub/chooser.inc"]["original_resource_id"]
-    assert members[f'sources/{source["id"]}/{chooser}.rad'] == b"#include mesh.inc\n#include mesh.inc\n"
+    decks = {deck["id"]: deck for deck in manifest["resources"]}
 
+    def original_member(record):
+        return f'sources/{source["id"]}/{record["original_resource_id"]}.rad'
+
+    def original(record, data):
+        members[original_member(record)] = data
+        record["sha256"] = sha256(data).hexdigest()
+
+    def write_project(path):
+        members["manifest.json"] = json.dumps(manifest).encode()
+        with zipfile.ZipFile(path, "w") as archive:
+            for name, payload in members.items():
+                archive.writestr(name, payload)
+
+    chooser = files["sub/chooser.inc"]
+    assert members[original_member(chooser)] == b"#include mesh.inc\n#include mesh.inc\n"
+    if variant == "case":
+        original(chooser, b"#include mesh.inc\n#include MESH.INC\n")
+    elif variant == "same-wave":
+        filename = "sub/peer.inc"
+        directory = f'sources/{source["id"]}'
+        identifier = str(uuid4())
+        peer = {"original_resource_id": str(uuid4()), "resource_id": identifier,
+                "original_path": filename, "logical_path": f"{directory}/{filename}"}
+        source["files"].insert(2, peer)
+        original(peer, b"#include mesh.inc\n")
+        raw_member = f"raw/{identifier}.rad"
+        manifest["resources"].append({
+            **decks[chooser["resource_id"]], "id": identifier, "name": peer["logical_path"],
+            "logical_path": peer["logical_path"], "raw_member": raw_member,
+        })
+        members[raw_member] = f'#include {files["sub/mesh.inc"]["logical_path"]}\n'.encode()
+        starter = files["conditions_0000.rad"]
+        raw_starter = decks[starter["resource_id"]]["raw_member"]
+        raw_directive = f'#include {chooser["logical_path"]}\n'.encode()
+        members[raw_starter] = members[raw_starter].replace(
+            raw_directive, raw_directive + f'#include {peer["logical_path"]}\n'.encode())
+        original(starter, members[original_member(starter)].replace(
+            b"#include sub/chooser.inc\n", b"#include sub/chooser.inc\n#include sub/peer.inc\n"))
+    elif variant == "downstream":
+        sibling = files["sub/mesh.inc"]
+        original(sibling, members[original_member(sibling)] + b"#include mesh.inc\n")
+        members[decks[sibling["resource_id"]]["raw_member"]] += f'#include {files["mesh.inc"]["logical_path"]}\n'.encode()
+
+    project = tmp_path / "original.caeprep"
+    write_project(project)
     session = PrepSession()
-    session.open_project(fixture)
+    session.open_project(project)
     projection = session.mesh_view()
     assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
     assert any(cell["id"] == 9009 and cell["formulation"] == "QUAD" for cell in projection["cells"])
 
     entry = next(entry for entry in source["id_map"] if entry == ["E:SHELL", 9007, 9009])
     entry[0] = "E:QUAD"
-    members["manifest.json"] = json.dumps(manifest).encode()
     forged = tmp_path / "forged.caeprep"
-    with zipfile.ZipFile(forged, "w") as archive:
-        for name, payload in members.items():
-            archive.writestr(name, payload)
+    write_project(forged)
     with pytest.raises(PrepError) as error:
         session.open_project(forged)
     assert error.value.code == "invalid_project"

@@ -5,10 +5,10 @@ validated value and retain ``raw_value()`` when an incomplete draft must survive
 """
 from __future__ import annotations
 
-from collections import ChainMap, Counter, OrderedDict, UserDict, defaultdict
-from collections.abc import Mapping, Set
+from collections.abc import Mapping
+from decimal import Decimal
+from fractions import Fraction
 import re
-from types import MappingProxyType
 
 from PySide6.QtCore import QSignalBlocker, QSize, Qt, Signal
 from PySide6.QtGui import QClipboard, QKeySequence, QValidator
@@ -214,45 +214,33 @@ class BooleanVectorEdit(QWidget):
         del blocked
 
 
-_MAPPING_EQUALITIES = (dict.__eq__, MappingProxyType.__eq__, Mapping.__eq__, OrderedDict.__eq__,
-                       defaultdict.__eq__, Counter.__eq__, UserDict.__eq__, ChainMap.__eq__)
-_SET_EQUALITIES = (set.__eq__, frozenset.__eq__, Set.__eq__)
+_PLAIN_PRIMITIVES = frozenset({str, int, float, bool, type(None), Decimal, Fraction, complex})
+
+
+def _plain_key(value):
+    kind = type(value)
+    if kind in _PLAIN_PRIMITIVES:
+        return ("prim", hash(value))
+    if kind is dict:
+        items = []
+        for key, item in value.items():
+            pair = (_plain_key(key), _plain_key(item))
+            if None in pair:
+                return None
+            items.append(pair)
+        return ("dict", frozenset(items))
+    if kind is tuple or kind is list:
+        items = tuple(_plain_key(item) for item in value)
+        return (kind.__name__, items) if None not in items else None
+    return None
 
 
 def _bucket_key(value):
     kind = type(value)
-    if kind is str or kind is int:
-        return ("hash", hash(value))
-    equality = kind.__eq__
-    if kind is dict or isinstance(value, Mapping):
-        if kind is not dict and not any(equality is standard for standard in _MAPPING_EQUALITIES):
-            return None
-        counts_can_omit_zero = equality is Counter.__eq__ or equality is MappingProxyType.__eq__
-        items = []
-        for key, item in value.items():
-            pair = (_bucket_key(key), _bucket_key(item))
-            if None in pair:
-                return None
-            # Counter equality can equate an explicit zero count with a missing key.
-            if counts_can_omit_zero and pair[1] == ("hash", 0):
-                return None
-            items.append(pair)
-        return ("mapping", frozenset(items))
-    if isinstance(value, tuple):
-        if equality is not tuple.__eq__:
-            return None
-        items = tuple(_bucket_key(item) for item in value)
-        return ("tuple", items) if None not in items else None
-    if isinstance(value, list):
-        if equality is not list.__eq__:
-            return None
-        items = tuple(_bucket_key(item) for item in value)
-        return ("list", items) if None not in items else None
-    if isinstance(value, Set):
-        if not any(equality is standard for standard in _SET_EQUALITIES):
-            return None
-        items = frozenset(_bucket_key(item) for item in value)
-        return ("set", items) if None not in items else None
+    if kind is dict or kind is list:
+        return _plain_key(value)
+    if isinstance(value, (Mapping, list)):
+        return None
     try:
         return ("hash", hash(value))
     except TypeError:
@@ -260,13 +248,15 @@ def _bucket_key(value):
 
 
 def _contains(buckets, item, key):
-    if any(existing == item for existing in buckets.get(key, ())):
+    matches = buckets.get(key)
+    if matches and any(existing == item for existing in matches):
         return True
     # A value without a reliable key may compare equal to a keyed value.
     if key is None:
         return any(existing == item for other, bucket in buckets.items()
                    if other is not None for existing in bucket)
-    return any(existing == item for existing in buckets.get(None, ()))
+    fallback = buckets.get(None)
+    return bool(fallback and any(existing == item for existing in fallback))
 
 
 class ReferenceListEdit(QWidget):
@@ -288,6 +278,8 @@ class ReferenceListEdit(QWidget):
         self.list.setAccessibleName("Referenced objects")
         self.list.setMinimumHeight(120)
         self.list.setMaximumHeight(160)
+        self._row_refs = []
+        self._available_count = 0
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.list)
@@ -295,14 +287,18 @@ class ReferenceListEdit(QWidget):
         self.set_raw_value(value)
 
     def raw_value(self):
-        return tuple(self.list.item(index).data(Qt.ItemDataRole.UserRole)
-                     for index in range(self.list.count())
-                     if self.list.item(index).checkState() == Qt.CheckState.Checked)
+        item_at = self.list.item
+        checked = Qt.CheckState.Checked
+        return tuple(ref for index, ref in enumerate(self._row_refs)
+                     if item_at(index).checkState() == checked)
 
     def value(self):
         selected = self.raw_value()
-        if any(not _contains(self._choice_buckets, ref, _bucket_key(ref)) for ref in selected):
-            raise ValueError("A selected object is no longer available; uncheck it or choose an available object")
+        for index in range(self._available_count, len(self._row_refs)):
+            if self.list.item(index).checkState() == Qt.CheckState.Checked:
+                ref = self._row_refs[index]
+                if not _contains(self._choice_buckets, ref, _bucket_key(ref)):
+                    raise ValueError("A selected object is no longer available; uncheck it or choose an available object")
         return selected
 
     def set_raw_value(self, value):
@@ -311,30 +307,43 @@ class ReferenceListEdit(QWidget):
         selected_buckets = {}
         for key, ref in zip(selected_keys, selected):
             selected_buckets.setdefault(key, []).append(ref)
-        blocked = QSignalBlocker(self.list)
-        self.list.clear()
-        displayed_buckets = {}
-        for index, (key, ref) in enumerate(zip(self._choice_keys, self.choices)):
-            if _contains(displayed_buckets, ref, key):
-                continue
-            label = (self.choice_labels[index] if index < len(self.choice_labels)
-                     else str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref)))
-            self._add_item(ref, label, _contains(selected_buckets, ref, key))
-            displayed_buckets.setdefault(key, []).append(ref)
-        for key, ref in zip(selected_keys, selected):
-            if not _contains(displayed_buckets, ref, key):
-                label = str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
-                self._add_item(ref, "Unavailable: " + label, True)
-                displayed_buckets.setdefault(key, []).append(ref)
-        del blocked
+        item_type, add_item = QListWidgetItem, self.list.addItem
+        checked, unchecked = Qt.CheckState.Checked, Qt.CheckState.Unchecked
+        user_role = Qt.ItemDataRole.UserRole
+        flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsUserCheckable
+        rows = self._row_refs
 
-    def _add_item(self, ref, label, checked):
-        item = QListWidgetItem(str(label))
-        item.setData(Qt.ItemDataRole.UserRole, ref)
-        item.setToolTip(str(label))
-        item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-        item.setCheckState(Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
-        self.list.addItem(item)
+        def add_row(ref, label, selected):
+            item = item_type(label)
+            item.setData(user_role, ref)
+            item.setToolTip(label)
+            item.setFlags(flags)
+            item.setCheckState(checked if selected else unchecked)
+            add_item(item)
+            rows.append(ref)
+
+        displayed_buckets = {}
+        blocked = QSignalBlocker(self.list)
+        self.list.setUpdatesEnabled(False)
+        try:
+            self.list.clear()
+            rows.clear()
+            for index, (key, ref) in enumerate(zip(self._choice_keys, self.choices)):
+                if _contains(displayed_buckets, ref, key):
+                    continue
+                label = (self.choice_labels[index] if index < len(self.choice_labels)
+                         else getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
+                add_row(ref, str(label), _contains(selected_buckets, ref, key))
+                displayed_buckets.setdefault(key, []).append(ref)
+            self._available_count = len(rows)
+            for key, ref in zip(selected_keys, selected):
+                if not _contains(displayed_buckets, ref, key):
+                    label = str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
+                    add_row(ref, "Unavailable: " + label, True)
+                    displayed_buckets.setdefault(key, []).append(ref)
+        finally:
+            self.list.setUpdatesEnabled(True)
+            del blocked
 
 
 class NumericTableEdit(CurveTable):
