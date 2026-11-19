@@ -64,11 +64,13 @@ def element_part_reference(keyword, *, allow_underscore=False):
 
 def _inspect(resources, *, profile: str = "current"):
     """Collect definitions and fixed-width references, retaining file ownership."""
-    if profile not in ("current", "legacy_pass15", "legacy_pass14", "legacy_pre14"):
+    if profile not in ("current", "legacy_pass15", "legacy_pass14", "legacy_pre14", "legacy_quad_as_shell"):
         raise PrepError("unsupported_source_profile", "Unknown native source reader profile.")
-    allow_underscore = profile in ("legacy_pass14", "legacy_pre14")
-    allow_zero_padding = profile != "legacy_pre14"
-    allow_empty_node_group = profile in ("legacy_pass15", "legacy_pre14")
+    old_profiles = ("legacy_pre14", "legacy_quad_as_shell")
+    quad_as_shell = profile == "legacy_quad_as_shell"
+    allow_underscore = profile in ("legacy_pass14", *old_profiles)
+    allow_zero_padding = profile not in old_profiles
+    allow_empty_node_group = profile in ("legacy_pass15", *old_profiles)
     parse_id = partial(_int, allow_underscore=allow_underscore)
     definitions, refs, edits, omitted = {}, [], {}, {}
     def define(ns, value, rid, line, start=None):
@@ -85,7 +87,8 @@ def _inspect(resources, *, profile: str = "current"):
         omitted[rid] = set()
         for card in resource.cards:
             words = card.keyword.upper().strip("/").split("/"); root = words[0]; pair = "/".join(words[:2])
-            if root not in {"BEGIN", "END", "NODE", "PART", "FUNCT", "BCS", "CLOAD", *ELEMENTS} and pair not in PAIRS:
+            if (root not in {"BEGIN", "END", "NODE", "PART", "FUNCT", "BCS", "CLOAD", *ELEMENTS} and pair not in PAIRS
+                    or quad_as_shell and pair == "GRQUAD/QUAD"):
                 raise PrepError("unsupported_source_profile", "This card's complete reference mapping is not supported.", {"keyword": card.keyword})
             header_id = identity(card.keyword)
             if root == "NODE" and len(words) != 1:
@@ -100,8 +103,9 @@ def _inspect(resources, *, profile: str = "current"):
                 for row in card.data: define("NODE", parse_id(lines[row][:10]), rid, row, 0)
             elif root in ELEMENTS:
                 reference("PART", element_part_reference(card.keyword, allow_underscore=allow_underscore), rid, card.start, -1)
+                namespace = "SHELL" if quad_as_shell and root == "QUAD" else ELEMENT_NAMESPACE[root]
                 for row in card.data:
-                    define("E:" + ELEMENT_NAMESPACE[root], parse_id(lines[row][:10]), rid, row, 0)
+                    define("E:" + namespace, parse_id(lines[row][:10]), rid, row, 0)
                     for start, identifier in element_node_references(root, lines[row], allow_underscore=allow_underscore):
                         reference("NODE", identifier, rid, row, start)
             elif root == "PART":

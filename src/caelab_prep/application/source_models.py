@@ -13,14 +13,11 @@ from .projection import readonly, mutable
 
 
 _QUOTED_INCLUDE_POLICY = (None, "quoted", False)
-_WRITER_PROFILES = {
-    _QUOTED_INCLUDE_POLICY: ("current", "legacy_pass15", "legacy_pass14", "legacy_pre14"),
-    ("bde", "quoted", False): ("legacy_pre14",),
-    ("ac0", "quoted", False): ("legacy_pre14",),
-    ("987", "unquoted", False): ("legacy_pre14",),
-    ("241", "unchanged", True): ("legacy_pre14",),
-    ("8fe", "unchanged", True): ("legacy_pre14",),
-}
+_ROOT_FIRST_INCLUDE_POLICY = ("241", "unchanged", True)
+_UNRECORDED_INCLUDE_POLICIES = (
+    _QUOTED_INCLUDE_POLICY, ("bde", "quoted", False), ("ac0", "quoted", False),
+    ("987", "unquoted", False), _ROOT_FIRST_INCLUDE_POLICY, ("8fe", "unchanged", True),
+)
 
 
 class SourceArchiveResource:
@@ -69,30 +66,36 @@ class SourceArchiveResource:
 
     def validate_mapped_payloads(self, document, *, project_bindings=None):
         """The correspondence table is checked evidence, not an unchecked label."""
+        records = self.metadata.get("include_bindings")
+        # The sibling-first reader first shipped with deck state v5.
+        deck_versions = [resource._restored_state_version for resource in document.resources.values()
+                         if isinstance(resource, DeckResource)]
+        pre_v5 = bool(deck_versions) and all(isinstance(version, int) and version <= 4 for version in deck_versions)
+        if records is not None and pre_v5:
+            raise PrepError("invalid_project", "Pre-v5 decks cannot carry explicit source INCLUDE bindings.")
+        if records is not None:
+            profiles = ("current", "legacy_pass15", "legacy_pass14", "legacy_pre14")
+            policies = (_QUOTED_INCLUDE_POLICY,)
+        else:
+            profiles = ("legacy_pre14", "legacy_quad_as_shell")
+            policies = (_ROOT_FIRST_INCLUDE_POLICY,) if pre_v5 else _UNRECORDED_INCLUDE_POLICIES
+
         originals = [DeckResource(self.files[item["original_resource_id"]], resource_id=item["original_resource_id"],
             name=item["original_path"], is_include=item["resource_id"] != self.metadata["root_resource_id"])
             for item in self.metadata["files"]]
-        recorded_mapping = {(ns, original): mapped for ns, original, mapped in self.metadata["id_map"]}
-        shared = {("NODE", value) for value in self.metadata["shared_nodes"]}
+        mapping = NativeMap({(ns, original): mapped for ns, original, mapped in self.metadata["id_map"]},
+                            shared={("NODE", value) for value in self.metadata["shared_nodes"]})
         reader_matches = []
         inspection_errors = []
         # The historical field rules must hold across all originals together.
-        profiles = _WRITER_PROFILES[_QUOTED_INCLUDE_POLICY]
         for profile in profiles:
             try:
                 definitions, _, _ = inspect(originals, profile=profile)
             except PrepError as exc:
                 inspection_errors.append(exc)
                 continue
-            mapping = NativeMap(recorded_mapping, shared=shared)
-            # Reinterpret a historical shell key only when the native
-            # definitions prove that it represents a QUAD.
-            for namespace, original in definitions.keys() - mapping.keys():
-                old_key = ("E:SHELL", original)
-                if namespace == "E:QUAD" and old_key in mapping and old_key not in definitions:
-                    mapping[namespace, original] = mapping.pop(old_key)
             if definitions.keys() == mapping.keys():
-                reader_matches.append((profile, mapping))
+                reader_matches.append(profile)
         if len(inspection_errors) == len(profiles):
             raise inspection_errors[0]
         if not reader_matches:
@@ -108,7 +111,6 @@ class SourceArchiveResource:
         # preserved two-line paths or rewrote them without quotes. Compare
         # the entire mapped payload using one historical policy at a time.
         originals_by_id = {resource.id: resource for resource in originals}
-        records = self.metadata.get("include_bindings")
         selected = {}
         if "include_bindings" in self.metadata:
             if not isinstance(records, tuple):
@@ -127,28 +129,13 @@ class SourceArchiveResource:
                 selected[key] = originals_by_id[target].name
             if len(selected) != sum(len(resource.include_directives) for resource in originals):
                 raise PrepError("invalid_project", "Original source INCLUDE bindings are incomplete.")
-        # The sibling-first reader first shipped with deck state v5. Later
-        # writers can share both mapped bytes and native first-visit order.
-        deck_versions = [resource._restored_state_version for resource in document.resources.values()
-                         if isinstance(resource, DeckResource)]
-        pre_v5 = bool(deck_versions) and all(isinstance(version, int) and version <= 4 for version in deck_versions)
+        # Later writers can share both mapped bytes and native first-visit order.
         archived_order = [resource.name for resource in originals]
-        if records is not None:
-            policies = (_QUOTED_INCLUDE_POLICY,)
-        elif pre_v5:
-            policies = (("241", "unchanged", True),)
-        else:
-            policies = _WRITER_PROFILES
         matches_by_order = {True: {}, False: {}}
         mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
         mapped_keys = {(resource.name, directive.header_row): (mapped_ids[resource.name], ordinal)
                        for resource in originals for ordinal, directive in enumerate(resource.include_directives)}
-        for policy in policies:
-            historical, style, direct_writer = policy
-            compatible_readers = [(profile, mapping) for profile, mapping in reader_matches
-                                  if profile in _WRITER_PROFILES[policy]]
-            if not compatible_readers:
-                continue
+        for historical, style, direct_writer in policies:
             load_order = []
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
                                          load_order=load_order)
@@ -159,7 +146,7 @@ class SourceArchiveResource:
                 matches_payload = any(
                     actual == remap(originals, mapping, paths, include_graph=graph, two_line=style,
                                     legacy_direct_inline=direct_writer, profile=profile)
-                    for profile, mapping in compatible_readers
+                    for profile in reader_matches
                 )
             except PrepError as exc:
                 if exc.code != "include_missing":

@@ -29,7 +29,7 @@ def mesh_edit_reference(value, *, kind, code, message, snapshot=None):
         raise PrepError(code, message)
     if formulation is not None:
         cell = snapshot._cells.get(ref)
-        if cell is None or cell.family != formulation:
+        if cell is None or cell.family != ELEMENT_ALIASES.get(formulation, formulation):
             raise PrepError(code, "The element formulation does not match its native mesh reference.")
     return ref
 

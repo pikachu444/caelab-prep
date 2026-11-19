@@ -737,6 +737,10 @@ class DeckResource:
                         diagnostics.append({"severity": "warning", "code": "element_display_parse",
                                             "message": "일부 요소 행을 표시하지 못했습니다.",
                                             "line": index + 1, "part_id": part})
+                        token = line[:10].strip()
+                        if re.fullmatch(r"[+-]?\d+", token) and (identifier := int(token)) > 0:
+                            cells.append({"id": identifier, "type": kind, "formulation": key[1], "nodes": [],
+                                          "part_id": part, "card_id": card.id, "resource_id": self.id, "parse_error": True})
         identifiers = sorted(nodes)
         # An element resource may refer to nodes in another INCLUDE resource.
         # Validate connectivity only after the document has assembled all resources.

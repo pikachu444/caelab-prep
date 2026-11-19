@@ -156,6 +156,35 @@ def test_shell_selection_accounts_for_display_omitted_duplicates(tmp_path, formu
             assert field.value == (ref,) and ref not in field.choices
 
 
+@pytest.mark.parametrize(("family", "connectivity"), (("SH4N", _i(501, 605, 709, 811)),
+                                                    ("SHELL", _i(501, 605, 709) + " " * 10)),
+                         ids=("shell-alias", "malformed-shell-connectivity"))
+def test_qualified_shell_selection_rejects_same_family_duplicates(tmp_path, family, connectivity):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "input"))
+    mesh = session.document.resources[_card(session, "/SHELL/902")["resource_id"]]
+    picked, = session.select_entity("element", 7001, resource_id=mesh.id, formulation="SHELL")["refs"]
+    state, _ = mesh.inserted_state(f"/{family}/903\n{_i(7001)}{connectivity}\n")
+    session.dispatcher.execute(mesh.id, state, "Add a repeated native element ID")
+
+    projection = session.mesh_view()
+    if family == "SHELL":
+        assert sum(cell["id"] == 7001 for cell in projection["cells"]) == 1
+        assert [item["code"] for item in projection["diagnostics"]] == ["element_display_parse"]
+    assert session.selection()["refs"] == []
+    pick = {key: projection[key] for key in ("document_id", "document_epoch", "revision", "projection_revision")} | {
+        "kind": "element", "id": 7001, "formulation": "SHELL", "resource_id": mesh.id,
+        "resource_revision": projection["resource_revisions"][mesh.id],
+    }
+    with pytest.raises(PrepError) as error:
+        session.select_pick(pick)
+    assert error.value.code == "ambiguous_selection"
+    with pytest.raises(PrepError) as error:
+        session.create_element_group("Ambiguous shells", [picked], native_id=987)
+    assert error.value.code == "ambiguous_reference"
+    assert not any(card["keyword"] == "/GRSHEL/SHEL/987" for card in session.list_cards())
+
+
 def test_unqualified_shell_pick_is_cleared_when_quad_uses_same_id(tmp_path):
     session = PrepSession()
     session.open_rad(_base_model(tmp_path / "input"))

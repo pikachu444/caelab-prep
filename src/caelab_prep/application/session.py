@@ -21,7 +21,7 @@ from ..radioss import DeckResource
 from ..radioss.deck import number
 from ..radioss.includes import disk_include_lookup, include_lookup, include_relative, resolve_includes
 from ..radioss.relations import element_group_members
-from ..radioss.modeling import (ELEMENT_GROUP_FAMILIES, ELEMENT_GROUP_PAIRS, TYPE14_PROPERTIES, native_identity, integer, material_block, shell_block, copy_block,
+from ..radioss.modeling import (ELEMENT_ALIASES, ELEMENT_GROUP_FAMILIES, ELEMENT_GROUP_PAIRS, TYPE14_PROPERTIES, native_identity, integer, material_block, shell_block, copy_block,
     curve_points, curve_block, member_block, boundary_block, load_block, velocity_block, contact_block, title, real, solid_block, engine_input, condition_scalar_default, reject_default_zero)
 from .storage import write_container
 from .contracts import ObjectRef
@@ -390,6 +390,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 else:
                     native, displayed = self._matching_selection_cells(ref.local_id, ref.resource_id, ref.formulation)
                     unique = len(native) == len(displayed) == 1
+                    if unique and ref.formulation is not None and ref.formulation != displayed[0].get("formulation"):
+                        ref = self._element_selection_ref(displayed[0], formulation=displayed[0].get("formulation"))
                 if unique:
                     refs.append(ref)
             refs = tuple(refs)
@@ -960,6 +962,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         # Structural edits already rebuild resource.lines and card.data.
         # Only field patches are applied separately during rendering.
         lines = resource.render().decode("latin1").splitlines() if card.id in resource._patches else resource.lines
+        pair = tuple(card.keyword.upper().strip("/").split("/")[:2])
         values = []
         try:
             for index in card.data[1:]:
@@ -968,11 +971,12 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     field = line[offset:offset + 10].strip()
                     if field:
                         if not re.fullmatch(r"[+-]?\d+", field):
+                            if pair == ("GRNOD", "NODE") and re.fullmatch(r"[+-]?0(?:_?0)*", field):
+                                continue
                             raise ValueError()
                         values.append(int(field))
         except ValueError:
             raise PrepError("invalid_reference", "The member list is not a supported fixed-width integer list.") from None
-        pair = tuple(card.keyword.upper().strip("/").split("/")[:2])
         if pair in ELEMENT_GROUP_PAIRS:
             return element_group_members(values)
         if pair == ("GRNOD", "NODE"):
@@ -996,6 +1000,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         cells = [cell for resource in self._deck_resources() for cell in resource.mesh_projection()["cells"]]
         kinds_by_part = {}
         for cell in cells:
+            if cell.get("parse_error"):
+                continue
             family = self._element_group_family(cell["type"], cell.get("formulation"))
             kinds_by_part.setdefault(cell.get("part_id"), set()).add(family)
         for part_id in part_ids:
@@ -1039,7 +1045,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             matches = cells_by_id.get(native_id, [])
             owned = [cell for cell in matches if cell["resource_id"] == ref.resource_id]
             if ref.formulation is not None:
-                owned = [cell for cell in owned if cell.get("formulation") == ref.formulation]
+                if not isinstance(ref.formulation, str):
+                    raise PrepError("invalid_reference", "The native element formulation must be a string.")
+                family_name = ELEMENT_ALIASES.get(ref.formulation, ref.formulation)
+                owned = [cell for cell in owned
+                         if ELEMENT_ALIASES.get(cell.get("formulation"), cell.get("formulation")) == family_name]
                 if not owned:
                     raise PrepError("invalid_reference", "The native element formulation does not match the reference.")
             if family is not None:
@@ -1053,6 +1063,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             if len(matches) != 1:
                 raise PrepError("dangling_reference" if not matches else "ambiguous_reference", "Element IDs in a native group must resolve uniquely across resources.", {"element_id": native_id})
             cell = matches[0]
+            if cell.get("parse_error"):
+                raise PrepError("dangling_reference", "The group's element has unreadable native connectivity.", {"element_id": native_id})
             if cell["resource_id"] != ref.resource_id:
                 raise PrepError("invalid_reference", "The element does not belong to the stated resource.")
             kind = self._element_group_family(cell["type"], cell.get("formulation"))
@@ -1629,6 +1641,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 for cell in cells:
                     all_by_id.setdefault(cell["id"], []).append(cell)
                     all_by_part.setdefault(cell.get("part_id"), []).append(cell)
+                    if cell.get("parse_error"):
+                        continue
                     if all(node in nodes for node in cell["nodes"]):
                         valid.append(cell)
                     else:
@@ -1905,10 +1919,15 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             return self.select_entity(kind, entity_id, resource_id=resource_id, formulation=candidate.get("formulation"))
 
     def _matching_selection_cells(self, entity_id, resource_id, formulation):
+        if formulation is not None and not isinstance(formulation, str):
+            return [], []
+        requested_family = ELEMENT_ALIASES.get(formulation, formulation)
+
         def matches(index):
             return [cell for cell in self._projection_index[index].get(entity_id, ())
                     if (resource_id is None or cell["resource_id"] == resource_id)
-                    and (formulation is None or cell.get("formulation") == formulation)]
+                    and (requested_family is None or
+                         ELEMENT_ALIASES.get(cell.get("formulation"), cell.get("formulation")) == requested_family)]
         return matches("all_cells_by_id"), matches("cells_by_id")
 
     def select_entity(self, kind: str, entity_id: int, *, resource_id=None, formulation=None) -> dict:
@@ -1929,8 +1948,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 raise PrepError("ambiguous_selection", "여러 자원에 같은 ID가 있어 선택 대상을 확정할 수 없습니다.", {"kind": kind, "id": entity_id})
             if not resources:
                 raise PrepError("invalid_selection", "선택한 모델 객체를 찾을 수 없습니다.", {"kind": kind, "id": entity_id})
-            reference = (self._element_selection_ref(cells[0], formulation=formulation)
-                         if cells else SelectionRef(resources[0], kind, entity_id))
+            if cells:
+                cell = cells[0]
+                reference = self._element_selection_ref(cell, formulation=cell.get("formulation") if formulation is not None else None)
+            else:
+                reference = SelectionRef(resources[0], kind, entity_id)
             document.selection = Selection(kind, (entity_id,), (reference,))
             self._active_object = self._element_selection_owner(document, (reference,)) if cells else None
             self._active_target_role = None

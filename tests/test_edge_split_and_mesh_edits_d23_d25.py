@@ -1852,12 +1852,12 @@ def test_d25_micrometre_triangle_and_automatic_id_bounds(tmp_path, unit, side):
     assert sum(row.signed_measure for row in candidate.quality_after) / side**2 == pytest.approx(0.5)
 
 
-def _pick_triangle(session, element_id):
+def _pick_element(session, element_id, formulation="SH3N"):
     parent = _cell_ref(session, element_id)
     view = session.mesh_view()
     return session.select_pick({
         **{key: view[key] for key in ("document_id", "document_epoch", "revision", "projection_revision")},
-        "kind": "element", "id": element_id, "formulation": "SH3N",
+        "kind": "element", "id": element_id, "formulation": formulation,
         "resource_id": parent["resource_id"],
         "resource_revision": view["resource_revisions"][parent["resource_id"]],
     })
@@ -1867,7 +1867,7 @@ def _pick_triangle(session, element_id):
 def test_mesh_planners_accept_formulation_qualified_picks(tmp_path, operation):
     session = PrepSession()
     session.open_rad(_build_deck_multi_include(tmp_path))
-    picked, = _pick_triangle(session, 101)["refs"]
+    picked, = _pick_element(session, 101)["refs"]
     part = _card_by_prefix(session, "/PART/4")
     part_ref = {"resource_id": part["resource_id"], "entity_kind": "part", "local_id": part["id"]}
     edge = (_node_ref(session, 1), _node_ref(session, 3))
@@ -1896,10 +1896,43 @@ def test_mesh_planners_accept_formulation_qualified_picks(tmp_path, operation):
             session.plan_part_reassignment([{"element": picked, "part": {**part_ref, "formulation": None}}])
 
 
+@pytest.mark.parametrize(("family", "element_id"), (("SH4N", 201), ("TETRA", 301)))
+def test_mesh_planners_accept_native_alias_from_viewport_pick(tmp_path, family, element_id):
+    starter = _build_deck_multi_include(tmp_path)
+    if family == "SH4N":
+        mesh = tmp_path / "shells_b.inc"
+        mesh.write_bytes(mesh.read_bytes().replace(b"/SHELL/2", b"/SH4N/2"))
+    else:
+        mesh = tmp_path / "shells_a.inc"
+        mesh.write_bytes(mesh.read_bytes().replace(b"/TETRA4/3", b"/TETRA/3"))
+        text = starter.read_bytes().replace(b"/PART/4\n", b"/PART/5\nSecond solid part\n"
+                                           b"         3         1         0\n/PART/4\n")
+        starter.write_bytes(text)
+    session = PrepSession()
+    session.open_rad(starter)
+    picked, = _pick_element(session, element_id, family)["refs"]
+    assert picked["formulation"] == family
+    canonical = "SHELL" if family == "SH4N" else "TETRA4"
+    selected = session.select_entity("element", element_id, resource_id=picked["resource_id"], formulation=canonical)
+    assert selected["refs"] == [picked]
+    deletion = session.plan_element_deletion([picked], orphan_policy="keep")
+    assert [cell["ref"]["local_id"] for cell in deletion["removed_cells"]] == [element_id]
+    if family == "SH4N":
+        assert deletion["admissible"]
+        assert session.plan_shell_normal_flip([picked])["admissible"]
+    else:
+        with pytest.raises(PrepError) as error:
+            session.plan_shell_normal_flip([picked])
+        assert error.value.code == "not_shell"
+    part = _card_by_prefix(session, "/PART/4" if family == "SH4N" else "/PART/5")
+    part_ref = {"resource_id": part["resource_id"], "entity_kind": "part", "local_id": part["id"]}
+    assert session.plan_part_reassignment([{"element": picked, "part": part_ref}])["admissible"]
+
+
 def test_reassigning_picked_split_children_updates_selection_owner(tmp_path):
     session = PrepSession()
     session.open_rad(_build_deck_multi_include(tmp_path))
-    _pick_triangle(session, 101)
+    _pick_element(session, 101)
     split = session.plan_triangle_edge_split([_cell_ref(session, 101), _cell_ref(session, 102)],
                                              (_node_ref(session, 1), _node_ref(session, 3)))
     session.apply_triangle_edge_split(split["plan_id"])
@@ -1933,7 +1966,7 @@ def test_d25_edge_split_keeps_selected_triangles_part(tmp_path, selection_source
         from caelab_prep.application.rad_provider import RadProvider
         session.activate_object(RadProvider(session).ref_for_card(_card_by_prefix(session, "/PART/1")))
     elif selection_source == "pick":
-        _pick_triangle(session, 101)
+        _pick_element(session, 101)
     else:
         session.select_entity("element", 101)
     owner = session.active_object()

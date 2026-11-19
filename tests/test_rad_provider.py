@@ -1,5 +1,6 @@
 from dataclasses import replace
 from pathlib import Path
+from time import perf_counter
 
 import pytest
 
@@ -20,6 +21,30 @@ def opened(name="shell_panels_0000.rad"):
 
 def node(provider, keyword):
     return next(item for item in provider.tree_nodes() if item.ref.native_scope == keyword)
+
+
+def test_element_group_form_preparation_scales_to_8000_selected_shells(tmp_path):
+    count = 8000
+    raw = (INPUTS / "shell_panels_0000.rad").read_bytes().replace(b"\r\n", b"\n")
+    before, elements = raw.split(b"\n/SHELL/1\n", 1)
+    _, after = elements.split(b"\n/SHELL/2\n", 1)
+    shells = "".join(f"{identifier:10d}{1:10d}{2:10d}{5:10d}{4:10d}\n"
+                     for identifier in range(100, 100 + count))
+    source = tmp_path / "large_shells_0000.rad"
+    source.write_bytes(before + b"\n/SHELL/1\n" + shells.encode() + b"/SHELL/2\n" + after)
+    session = PrepSession()
+    session.open_rad(source)
+    provider = RadProvider(session)
+    part = next(card for card in session.list_cards() if card["keyword"] == "/PART/1")
+    session.activate_object(provider.ref_for_card(part))
+    assert len(session.selection()["refs"]) == count
+
+    start = perf_counter()
+    spec = provider.operation_spec("element_group.create")
+    elapsed = perf_counter() - start
+    field = next(field for field in spec.fields if field.name == "element_refs")
+    assert len(field.value) == count and field.value == field.choices[:count]
+    assert elapsed < 0.5, f"Preparing 8000 selected shells took {elapsed:.3f} seconds"
 
 
 def test_element_group_picker_qualifies_same_file_shell_and_quad_ids(tmp_path):
