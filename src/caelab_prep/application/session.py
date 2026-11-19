@@ -66,6 +66,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._source_paths: set[str] = set()
         self._diagnostics: list[dict] = []
         self._projection_cache: dict | None = None
+        self._projection_tokens: tuple[tuple[str, str], ...] | None = None
         self._raw_node_counts_cache: tuple[tuple[tuple[str, str], ...], dict[int, int]] | None = None
         self._projection_index = {}
         self._source_path: str | None = None
@@ -128,6 +129,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._source_paths = source_paths
         self._diagnostics = diagnostics
         self._projection_cache = None
+        self._projection_tokens = None
         self._raw_node_counts_cache = None
         self._projection_index = {}
         self._source_path = source_path
@@ -218,8 +220,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         "capabilities": self.capabilities(), "diagnostics": [], "source_path": None,
                         "project_path": None, "last_change": None, "active_object": None, "selected_objects": [], "active_case_id": None,
                         "document_epoch": self._document_epoch, "projection_revision": self._projection_revision}
-            if self._projection_cache is None:
-                self.mesh_view()
+            self._ensure_projection(document)
             projection = self._projection_cache
             assert self.dispatcher is not None
             return {"document_id": document.id, "revision": document.revision, "dirty": document.dirty,
@@ -261,7 +262,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             document = self._require()
             result = list(self._diagnostics)
             for resource in self._deck_resources(document): result.extend(resource.diagnostics)
-            if self._projection_cache is None: self.mesh_view()
+            self._ensure_projection(document)
             result.extend(self._projection_cache.get("diagnostics", []))
             # Diagnostics can contain export guards; never expose their internal objects.
             return mutable_projection(result)
@@ -325,6 +326,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         if change.kind == "structure":
             self._sync_source_paths()
             self._projection_cache = None
+            self._projection_tokens = None
             self._projection_index = {}
             self._projection_revision += 1
             if self._active_object is not None:
@@ -915,6 +917,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 for offset in range(0, len(line), 10):
                     field = line[offset:offset + 10].strip()
                     if field:
+                        if not re.fullmatch(r"[+-]?\d+", field):
+                            raise ValueError()
                         values.append(int(field))
         except ValueError:
             raise PrepError("invalid_reference", "The member list is not a supported fixed-width integer list.") from None
@@ -967,7 +971,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
     def _element_members(self, members, family=None):
         if not isinstance(members, (tuple, list)) or not members:
             raise PrepError("invalid_reference", "Choose at least one typed element reference.")
-        if self._projection_cache is None: self.mesh_view()
+        self._ensure_projection()
         references, identifiers, families, seen = [], [], set(), set()
         cells_by_id = self._projection_index["all_cells_by_id"]
         for value in members:
@@ -1041,7 +1045,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 result["member_ids"] = identifiers
                 if family == "GRNOD/NODE":
                     self._node_members(identifiers)
-                    if self._projection_cache is None: self.mesh_view()
+                    self._ensure_projection()
                     refs = []
                     for identifier in identifiers:
                         owners = self._projection_cache["node_resources"].get(identifier, [])
@@ -1049,7 +1053,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                             raise PrepError("invalid_reference", "A group node cannot be displayed uniquely.")
                         refs.append(SelectionRef(owners[0], "node", identifier))
                 else:
-                    if self._projection_cache is None: self.mesh_view()
+                    self._ensure_projection()
                     refs = []
                     for identifier in identifiers:
                         matches = [cell for cell in self._projection_index["all_cells_by_id"].get(identifier, ())
@@ -1073,7 +1077,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             else:
                 if not isinstance(members, (list, tuple)) or not members:
                     raise PrepError("invalid_reference", "Choose at least one node.")
-                if self._projection_cache is None: self.mesh_view()
+                self._ensure_projection()
                 identifiers = []
                 for member in members:
                     ref = member if isinstance(member, SelectionRef) else SelectionRef(**member) if isinstance(member, dict) and set(member) == {"resource_id", "entity_kind", "local_id"} else None
@@ -1488,7 +1492,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             resource, card, refs = self._part_native_references(card_id)
-            if self._projection_cache is None: self.mesh_view()
+            self._ensure_projection()
             part_kinds = self._projection_index["part_element_kinds"].get(refs["native_part_id"], set())
             if material_id is None and property_id is None:
                 raise PrepError("invalid_command", "Choose a material or property to assign.")
@@ -1529,20 +1533,32 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             self.dispatcher.redo()
             return self.describe()
 
+    def _ensure_projection(self, document=None):
+        tokens = tuple((resource.id, resource.structure_token()) for resource in self._deck_resources(document))
+        if self._projection_cache is None or self._projection_tokens != tokens:
+            self.mesh_view()
+
     def mesh_view(self, *, mutable: bool = False) -> dict:
         """Return shared, nested read-only geometry plus current small stamps.
 
-        Geometry identity is stable until a structural command, Undo/Redo of
-        that command, or document replacement. ``mutable=True`` explicitly
+        Geometry identity is stable across scalar changes. Structural changes
+        and document replacement refresh it. ``mutable=True`` explicitly
         materializes detached lists/dicts for editing or JSON serialization.
         Neither form permits mutations of the document through this view.
         """
         with self._lock:
             document = self._require()
+            resources = self._deck_resources(document)
+            tokens = tuple((resource.id, resource.structure_token()) for resource in resources)
+            if self._projection_cache is not None and self._projection_tokens != tokens:
+                self._projection_cache = None
+                self._projection_index = {}
+                self._projection_tokens = None
+                self._projection_revision += 1
             if self._projection_cache is None:
                 nodes: dict[int, list[float]] = {}; node_resources: dict[int, list[str]] = {}; cells = []; diagnostics = []
                 part_element_kinds: dict[int, set[str]] = {}
-                for resource in self._deck_resources(document):
+                for resource in resources:
                     projection = resource.mesh_projection()
                     for part, kinds in projection["part_element_kinds"].items():
                         part_element_kinds.setdefault(part, set()).update(kinds)
@@ -1566,7 +1582,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                             "message": f"요소 {cell['id']}의 참조 절점이 없어 표시하지 못했습니다."})
                 identifiers = sorted(nodes)
                 parts = {}
-                for resource in self._deck_resources(document):
+                for resource in resources:
                     for card in resource.cards:
                         identity = native_identity(card.keyword)
                         if identity and identity[0] == "PART":
@@ -1581,6 +1597,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     by_id[cell["id"]] = (*by_id.get(cell["id"], ()), cell)
                     by_part.setdefault(cell.get("part_id"), []).append(cell)
                 self._projection_cache = cache
+                self._projection_tokens = tokens
                 self._projection_index = {"cells_by_id": by_id, "cells_by_part": by_part,
                                           "all_cells_by_id": all_by_id, "all_cells_by_part": all_by_part,
                                           "part_element_kinds": part_element_kinds}
@@ -1622,8 +1639,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         matching = [item for item in self.list_cards() if self._native_part_id(item["keyword"]) == part_id]
         if len(matching) != 1:
             raise PrepError("ambiguous_selection", "The PART ID is repeated across resources.")
-        if self._projection_cache is None:
-            self.mesh_view()
+        self._ensure_projection()
         cells = self._projection_index["cells_by_part"].get(part_id, [])
         keys = [(cell["resource_id"], cell["id"]) for cell in cells]
         if len(keys) != len(set(keys)):
@@ -1652,7 +1668,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             if card_id in stale or any(item["card_id"] == card_id for item in conditions):
                 result["diagnostics"].append({"code": "stale_mesh_target", "message": "Reconnect explicit targets before displaying them as current selections."})
                 return result
-            if self._projection_cache is None: self.mesh_view()
+            self._ensure_projection()
             def nodes(group_id):
                 self._group_reference(group_id)
                 owner = self._find_card(group_id)
@@ -1802,8 +1818,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             if resource is None or candidate.get("resource_revision") != resource.state_token():
                 raise PrepError("stale_pick", "The displayed resource has changed. Pick again.")
             entity_id = candidate.get("id")
-            if self._projection_cache is None:
-                self.mesh_view()
+            self._ensure_projection()
             resources = self._projection_cache["node_resources"].get(entity_id, ()) if kind == "node" else [
                 cell["resource_id"] for cell in self._projection_index["cells_by_id"].get(entity_id, ())]
             if resource_id not in resources:
@@ -1815,7 +1830,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             document = self._require()
             if kind not in ("node", "element") or type(entity_id) is not int:
                 raise PrepError("invalid_selection", "선택에는 node/element와 정수 원본 ID가 필요합니다.")
-            if self._projection_cache is None: self.mesh_view()
+            self._ensure_projection()
             cells = ()
             if kind == "node":
                 resources = self._projection_cache["node_resources"].get(entity_id, ())
@@ -1960,6 +1975,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                             owner = document.resources.get(record["resource_id"])
                             if not isinstance(owner, DeckResource) or card_id not in owner._by_id or record["mesh_resource_id"] not in paths:
                                 raise ValueError("stale relation target does not exist")
+                            if "/".join(owner.card(card_id).keyword.upper().strip("/").split("/")[:2]) != record["family"]:
+                                raise ValueError("stale relation target family does not match native card")
                             if any(rid not in paths for rid in record.get("mesh_dependencies", {})):
                                 raise ValueError("stale mesh dependency does not exist")
                         document.resources[relations.id] = relations

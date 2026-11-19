@@ -33,8 +33,11 @@ def identity(keyword):
 
 
 def _int(text, *, zero=False):
+    raw = text.strip()
     try:
-        value = int(text.strip() or "0")
+        if raw and not re.fullmatch(r"[+-]?\d+", raw):
+            raise ValueError()
+        value = int(raw) if raw else 0
         if value < (0 if zero else 1): raise ValueError()
         return value
     except ValueError:
@@ -104,6 +107,7 @@ def _inspect(resources):
                 namespace = GROUPS[pair]
                 node_group = pair == "GRNOD/NODE"
                 entries = []
+                saw_zero = False
                 for row in card.data[1:]:
                     for start in range(0, len(lines[row].rstrip("\r\n")), 10):
                         token = lines[row][start:start + 10].strip()
@@ -112,7 +116,9 @@ def _inspect(resources):
                                      else _int(token, zero=node_group))
                             if value:
                                 entries.append((row, start, value))
-                if node_group and not entries:
+                            elif node_group:
+                                saw_zero = True
+                if node_group and saw_zero and not entries:
                     raise PrepError("unsupported_source_profile", "Node group must reference at least one positive node ID.")
                 effective = set(element_group_members([value for _, _, value in entries]))
                 for row, start, value in entries:

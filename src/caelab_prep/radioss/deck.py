@@ -130,6 +130,7 @@ class DeckResource:
         self._retained_comments: dict[str, str] = {}
         self._node_positions: dict[str, list[float]] = {}
         self._state_token_cache = None
+        self._structure_token_cache = None
         self._source_lines = self.raw.decode("latin1").splitlines(keepends=True)
         self._parse_layout(self._source_lines)
         self._source_cards = tuple(self.cards)
@@ -554,6 +555,7 @@ class DeckResource:
         candidate._created, candidate._deleted, candidate._patches, candidate._replaced = created, deleted, {}, replaced
         candidate._retained_comments = dict(retained_comments)
         candidate._state_token_cache = None
+        candidate._structure_token_cache = None
         if (created != self._created or deleted != self._deleted or replaced != self._replaced
                 or retained_comments != self._retained_comments or state["node_positions"] != self._node_positions):
             candidate._rebuild_layout()
@@ -642,6 +644,14 @@ class DeckResource:
         if self._state_token_cache is None:
             self._state_token_cache = hashlib.sha256(self._raw_digest + json.dumps(self.snapshot(), sort_keys=True).encode()).hexdigest()
         return self._state_token_cache
+
+    def structure_token(self) -> str:
+        if self._structure_token_cache is None:
+            structure = {"created": self._created, "deleted": sorted(self._deleted),
+                         "replaced": self._replaced, "node_positions": self._node_positions}
+            self._structure_token_cache = hashlib.sha256(
+                self._raw_digest + json.dumps(structure, sort_keys=True).encode()).hexdigest()
+        return self._structure_token_cache
 
     def render(self) -> bytes:
         if not self._patches and not self._created and not self._deleted and not self._replaced and not self._node_positions:

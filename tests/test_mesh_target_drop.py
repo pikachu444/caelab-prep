@@ -1,8 +1,12 @@
 """Explicit old-link removal stays separate from missing maps and coalescence."""
+import json
+from zipfile import ZipFile
+
 import pytest
 
 from caelab_prep.application import PrepSession
 from caelab_prep.cae_core import PrepError
+from test_condition_workflow import _base_model
 from test_group_member_review import related, state
 from test_node_moves import MODELS, opened, updates
 
@@ -18,6 +22,46 @@ def node_request(session, members=(1, 2)):
     revision = moved(session, group)
     ref = session.resolve_entity_reference("node", 2)["reference"]
     return group, load, bcs, velocity, {group: {"mesh_revision": revision, "mapping": {2: ref}, "drop_members": [1]}}
+
+
+def test_surface_stale_target_family_mismatch_blocks_open_and_reconnection(tmp_path):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "source"))
+    parts = [session.resolve_part_reference(part)["card_id"] for part in (902, 903)]
+    surface = session.create_surface("Stale surface", parts)["card_id"]
+    reference = session.resolve_entity_reference("node", 101)["reference"]
+    move = session.plan_node_move([{"reference": reference, "position": [-.1, 0, 0]}], length_unit="mm")
+    session.apply_node_move(move["plan_id"])
+    source = tmp_path / "valid.caeprep"
+    session.save_project(source)
+    with ZipFile(source) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    relations = manifest["model_relations"]
+    stale = relations["stale_targets"][surface]
+    assert stale["family"] == "SURF/PART" and stale["members"] == [902, 903]
+    stale["family"] = "GRNOD/NODE"
+    members["manifest.json"] = json.dumps(manifest).encode()
+    invalid = tmp_path / "tampered.caeprep"
+    with ZipFile(invalid, "w") as archive:
+        for name, raw in members.items():
+            archive.writestr(name, raw)
+    before = state(session)
+    with pytest.raises(PrepError) as error:
+        session.open_project(invalid)
+    assert error.value.code == "invalid_project"
+    assert "stale relation target family does not match native card" in error.value.details["reason"]
+    assert state(session) == before
+
+    session._relations_resource().restore(relations)
+    declared = session.card_text(surface)
+    before = state(session)
+    replacement = {surface: {"mesh_revision": stale["mesh_revision"], "mapping": {
+        902: reference, 903: session.resolve_entity_reference("node", 205)["reference"]}}}
+    with pytest.raises(PrepError, match="stale target card family") as error:
+        session.plan_mesh_reconnection(replacement)
+    assert error.value.code == "invalid_reference"
+    assert state(session) == before and session.card_text(surface) == declared
 
 
 def test_reviewed_drop_preserves_declarations_until_one_apply_undo_and_v6(tmp_path):

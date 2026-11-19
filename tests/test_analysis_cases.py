@@ -1,4 +1,5 @@
 """Persisted alternatives, independent native presence checks and fresh-process reopen."""
+from copy import copy
 import json
 import os
 from pathlib import Path
@@ -230,6 +231,69 @@ def test_create_node_group_reads_current_raw_ids_after_nonstructural_change(tmp_
     assert snapshot(session) == before
     current = session.create_node_group("New ID", [9101])["card_id"]
     assert session.group_members(current)["member_ids"] == [9101]
+
+
+@pytest.mark.parametrize("write", ("restore", "field"))
+@pytest.mark.parametrize("first_reader", ("group", "projection"))
+def test_nonstructural_dispatch_refreshes_node_ownership_after_renumber(tmp_path, write, first_reader):
+    source = _base_model(tmp_path / "input")
+    source.write_bytes(source.read_bytes().replace(b"#include mesh.inc\n", source.with_name("mesh.inc").read_bytes()))
+    session = PrepSession()
+    session.open_rad(source)
+    group = session.create_node_group("Renumbered", [101, 205])["card_id"]
+    case = session.create_analysis_case("Native renumbering", [], .01, .001, "s")["case_id"]
+    initial = session.mesh_view()
+    assert session.group_members(group)["member_ids"] == [101, 205]
+    owner = session._model_resource(None)
+    candidate = copy(owner)
+    for card_id in (_card(session, "/NODE")["id"], _card(session, "/SHELL/902")["id"], group):
+        before = session.card_text(card_id)
+        candidate.restore(candidate.replaced_state(card_id, before.replace(_i(101), _i(9101))))
+    if write == "restore":
+        owner.restore(candidate.snapshot())
+    else:
+        session.dispatcher.execute(owner.id, candidate.snapshot(), "Renumber node and its references")
+
+    if first_reader == "projection":
+        assert 9101 in session.mesh_view()["node_resources"]
+    resolved = session.group_members(group)
+    assert resolved["diagnostics"] == [] and resolved["member_ids"] == [9101, 205]
+    assert [item["resource_id"] for item in resolved["members"]] == [owner.id, owner.id]
+    view = session.mesh_view()
+    assert 101 not in view["node_resources"] and len(view["cells"]) == 2
+    assert view["projection_revision"] == initial["projection_revision"] + 1
+    assert session.mesh_view()["projection_revision"] == view["projection_revision"]
+    target = tmp_path / "out/case_0000.rad"
+    session.export_analysis_case(target, case)
+    reopened = PrepSession()
+    reopened.open_rad(target)
+    exported_group = _card(reopened, "/GRNOD/NODE/1")["id"]
+    assert reopened.group_members(exported_group)["member_ids"] == [9101, 205]
+
+
+@pytest.mark.parametrize("literal", ("0_0", "1_01"))
+def test_native_group_and_import_reject_integer_fields_with_underscores(tmp_path, literal):
+    source = _base_model(tmp_path / "input")
+    group_text = f"/GRNOD/NODE/47\nMalformed target\n{101:10d}{literal:>10}{205:10d}\n".encode()
+    source.write_bytes(source.read_bytes().replace(b"/END", group_text + b"/END"))
+    session = PrepSession()
+    session.open_rad(source)
+    group_id = _card(session, "/GRNOD/NODE/47")["id"]
+    owner = session._model_resource(None)
+    with pytest.raises(PrepError, match="fixed-width integer list") as error:
+        session._integer_members(owner, owner.card(group_id))
+    assert error.value.code == "invalid_reference"
+    assert session.group_members(group_id)["diagnostics"][0]["code"] == "invalid_reference"
+    case = session.create_analysis_case("Malformed group", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "out/case_0000.rad"
+    with pytest.raises(PrepError) as error:
+        session.export_analysis_case(output, case)
+    assert error.value.code == "invalid_reference" and not output.parent.exists()
+    destination = PrepSession()
+    destination.open_rad(_base_model(tmp_path / "destination"))
+    with pytest.raises(PrepError) as error:
+        destination.plan_import_source(source)
+    assert error.value.code == "unsupported_source_profile"
 
 
 @pytest.mark.parametrize(("member", "diagnostic"), ((0, "dangling_reference"), (-201, "invalid_reference"),

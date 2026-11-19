@@ -345,6 +345,8 @@ class MeshRelationCommands:
                 raise PrepError("invalid_reference", "The target is not marked stale.", {"card_id": card_id})
             resource = self._find_card(card_id); card = resource.card(card_id)
             stale = relations["stale_targets"][card_id]
+            if "/".join(card.keyword.upper().strip("/").split("/")[:2]) != stale["family"]:
+                raise PrepError("invalid_reference", "The stale target card family does not match its native keyword.")
             required = {"mesh_revision", "mapping"}
             permitted = required | ({"coalesce_duplicates"} if allow_coalescence else set()) | ({"drop_members"} if allow_drop else set())
             if (not isinstance(replacement, dict) or not required <= set(replacement) <= permitted

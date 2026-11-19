@@ -1,5 +1,6 @@
 """Independent IDs, original bytes and atomic native/case relationships."""
 import json
+from hashlib import sha256
 from pathlib import Path
 import subprocess
 import sys
@@ -11,6 +12,7 @@ import pytest
 from caelab_prep.application import PrepSession
 from caelab_prep.cae_core import PrepError
 from caelab_prep.radioss.modeling import material_block, shell_block
+from test_condition_workflow import _base_model, _card, _i
 
 
 def model(folder, *, offset=0):
@@ -71,6 +73,50 @@ def test_explicit_shared_node_is_single_entity_and_unmapped_nodes_stay_distinct(
     with pytest.raises(PrepError, match="identical coordinates"):
         session.plan_import_source(shifted, shared_node_map={1: reference})
     assert session.describe()["node_count"] == 4
+
+
+def test_reopen_source_archive_with_deleted_title_only_node_group(tmp_path):
+    source = _base_model(tmp_path / "source")
+    native_row = f"{_i(101, 205)}\n".encode()
+    source.write_bytes(source.read_bytes().replace(b"/END", b"/GRNOD/NODE/47\nUnused target\n" + native_row + b"/END"))
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "base"))
+    plan = session.plan_import_source(source)
+    ids = {(namespace, original): mapped for namespace, original, mapped in plan["source"]["id_map"]}
+    session.import_source(plan["plan_id"])
+    group = _card(session, f'/GRNOD/NODE/{ids["GRNOD", 47]}')["id"]
+    session.delete_card(group)
+    case = session.create_analysis_case("No conditions", [], .01, .001, "s")["case_id"]
+    saved = tmp_path / "saved.caeprep"
+    session.save_project(saved)
+    with zipfile.ZipFile(saved) as archive:
+        payloads = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(payloads["manifest.json"])
+    source_model, = manifest["source_models"]
+    file = next(item for item in source_model["files"] if item["original_path"] == source.name)
+    original_member = f'sources/{source_model["id"]}/{file["original_resource_id"]}.rad'
+    mapped_member = next(item["raw_member"] for item in manifest["resources"] if item["id"] == file["resource_id"])
+    # Reproduce the older writer's matching title-only original and remap.
+    assert payloads[original_member].count(native_row) == 1
+    payloads[original_member] = payloads[original_member].replace(native_row, b"")
+    file["sha256"] = sha256(payloads[original_member]).hexdigest()
+    translated_row = f'{_i(ids["NODE", 101], ids["NODE", 205])}\n'.encode()
+    assert payloads[mapped_member].count(translated_row) == 1
+    payloads[mapped_member] = payloads[mapped_member].replace(translated_row, b"")
+    payloads["manifest.json"] = json.dumps(manifest).encode()
+    legacy = tmp_path / "pass13.caeprep"
+    with zipfile.ZipFile(legacy, "w") as archive:
+        for name, raw in payloads.items():
+            archive.writestr(name, raw)
+
+    session.open_project(legacy)
+    view = session.mesh_view()
+    assert len(view["node_ids"]) == 16 and len(view["cells"]) == 4
+    assert not any(card["keyword"].startswith("/GRNOD/") for card in session.list_cards())
+    target = tmp_path / "export/case_0000.rad"
+    session.export_analysis_case(target, case)
+    session.open_rad(target)
+    assert len(session.mesh_view()["node_ids"]) == 16 and len(session.mesh_view()["cells"]) == 4
 
 
 def test_legacy_quad_source_archive_recovers_the_native_solid_group(tmp_path):
