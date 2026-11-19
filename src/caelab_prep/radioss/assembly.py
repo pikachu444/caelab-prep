@@ -64,9 +64,9 @@ def element_part_reference(keyword, *, allow_underscore=False):
 
 def _inspect(resources, *, profile: str = "current"):
     """Collect definitions and fixed-width references, retaining file ownership."""
-    if profile not in ("current", "legacy_pass15", "legacy_pass14", "legacy_pre14", "legacy_quad_as_shell"):
+    old_profiles = ("legacy_pre_quad", "legacy_pre14", "legacy_quad_as_shell")
+    if profile not in ("current", "legacy_pass15", "legacy_pass14", *old_profiles):
         raise PrepError("unsupported_source_profile", "Unknown native source reader profile.")
-    old_profiles = ("legacy_pre14", "legacy_quad_as_shell")
     quad_as_shell = profile == "legacy_quad_as_shell"
     allow_underscore = profile in ("legacy_pass14", *old_profiles)
     allow_zero_padding = profile not in old_profiles
@@ -88,7 +88,8 @@ def _inspect(resources, *, profile: str = "current"):
         for card in resource.cards:
             words = card.keyword.upper().strip("/").split("/"); root = words[0]; pair = "/".join(words[:2])
             if (root not in {"BEGIN", "END", "NODE", "PART", "FUNCT", "BCS", "CLOAD", *ELEMENTS} and pair not in PAIRS
-                    or quad_as_shell and pair == "GRQUAD/QUAD"):
+                    or quad_as_shell and pair == "GRQUAD/QUAD"
+                    or profile == "legacy_pre_quad" and (root == "QUAD" or pair == "GRQUAD/QUAD")):
                 raise PrepError("unsupported_source_profile", "This card's complete reference mapping is not supported.", {"keyword": card.keyword})
             header_id = identity(card.keyword)
             if root == "NODE" and len(words) != 1:

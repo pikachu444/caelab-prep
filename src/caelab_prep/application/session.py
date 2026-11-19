@@ -957,12 +957,12 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._node_members(self._integer_members(resource, card))
         return identity[1]
 
-    @staticmethod
-    def _integer_members(resource, card):
+    def _integer_members(self, resource, card):
         # Structural edits already rebuild resource.lines and card.data.
         # Only field patches are applied separately during rendering.
         lines = resource.render().decode("latin1").splitlines() if card.id in resource._patches else resource.lines
         pair = tuple(card.keyword.upper().strip("/").split("/")[:2])
+        allows_legacy_zero = None
         values = []
         try:
             for index in card.data[1:]:
@@ -972,7 +972,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     if field:
                         if not re.fullmatch(r"[+-]?\d+", field):
                             if pair == ("GRNOD", "NODE") and re.fullmatch(r"[+-]?0(?:_?0)*", field):
-                                continue
+                                if allows_legacy_zero is None:
+                                    allows_legacy_zero = any(
+                                        isinstance(archive, SourceArchiveResource) and archive.validated_profile == "legacy_pass14"
+                                        and any(item["resource_id"] == resource.id for item in archive.metadata["files"])
+                                        for archive in self.document.resources.values()
+                                    )
+                                if allows_legacy_zero:
+                                    continue
                             raise ValueError()
                         values.append(int(field))
         except ValueError:
@@ -995,19 +1002,13 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
 
     def _surface_part_ids(self, part_ids):
         self._member_sequence(part_ids)
+        self._ensure_projection()
         identifiers = []
-        # Read all cells, even those the display omitted for missing nodes.
-        cells = [cell for resource in self._deck_resources() for cell in resource.mesh_projection()["cells"]]
-        kinds_by_part = {}
-        for cell in cells:
-            if cell.get("parse_error"):
-                continue
-            family = self._element_group_family(cell["type"], cell.get("formulation"))
-            kinds_by_part.setdefault(cell.get("part_id"), set()).add(family)
         for part_id in part_ids:
             _, _, identity = self._unique_card(part_id, "PART")
-            kinds = kinds_by_part.get(identity[1], set())
-            if not kinds or kinds - {"GRSHEL/SHEL", "GRSH3N/SH3N"}:
+            kinds = self._projection_index["part_element_kinds"].get(identity[1], set())
+            native = self._projection_index["all_cells_by_part"].get(identity[1], ())
+            if kinds - {"quad", "triangle"} or not any(not cell.get("parse_error") for cell in native):
                 raise PrepError("incompatible_surface", "SURF/PART supports nonempty shell/triangle parts; solid faces need a different surface definition.")
             identifiers.append(identity[1])
         return identifiers
@@ -1728,8 +1729,12 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             raise PrepError("ambiguous_selection", "The PART ID is repeated across resources.")
         self._ensure_projection()
         cells = self._projection_index["cells_by_part"].get(part_id, [])
-        keys = [(cell["resource_id"], cell["id"]) for cell in cells]
-        if len(keys) != len(set(keys)):
+        all_cells = self._projection_index["all_cells_by_part"].get(part_id, ())
+        keys = {(cell["resource_id"], cell["id"], ELEMENT_ALIASES.get(cell["formulation"], cell["formulation"]))
+                for cell in all_cells}
+        if len(keys) != len(all_cells) or any(
+                len(self._matching_selection_cells(cell["id"], cell["resource_id"], cell["formulation"])[0]) != 1
+                for cell in cells):
             raise PrepError("ambiguous_selection", "The part contains repeated element IDs.")
         return cells
 

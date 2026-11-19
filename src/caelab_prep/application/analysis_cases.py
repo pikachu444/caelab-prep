@@ -201,7 +201,8 @@ class AnalysisCaseCommands:
             self._validate_case_refs(case)
             # The activation scope is deliberately closed. Unknown physics or
             # sensor/activation cards must never silently survive as active.
-            neutral_roots = {"BEGIN", "END", "NODE", "BEAM", "TRUSS", "SHELL", "QUAD", "SH3N", "TETRA4", "TETRA10", "BRICK", "PART", "FUNCT", "UNIT"}
+            neutral_roots = {"BEGIN", "END", "NODE", "BEAM", "TRUSS", "SHELL", "SH4N", "QUAD", "SH3N",
+                             "TETRA", "TETRA4", "TETRA10", "BRICK", "PART", "FUNCT", "UNIT"}
             group_pairs = {("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS}
             neutral_pairs = {("MAT", "LAW1"), ("MAT", "ELAST"), ("MAT", "LAW36"), ("MAT", "PLAS_TAB"),
                 ("PROP", "BEAM"), ("PROP", "TYPE3"), ("PROP", "TRUSS"), ("PROP", "TYPE2"), ("SKEW", "FIX"), ("PROP", "SHELL"), ("PROP", "TYPE1"),

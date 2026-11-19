@@ -716,16 +716,20 @@ class DeckResource:
                 part_element_kinds.setdefault(part, set()).add(part_kind)
             if formulation == "TETRA10":
                 from .tetra10 import records
-                try:
-                    parsed = records(self.lines, card.data)
-                except PrepError as exc:
-                    diagnostics.append({"severity": "warning", "code": "element_display_parse",
-                                        "message": str(exc), "line": card.start + 1, "part_id": part})
-                    continue
-                cells.extend({"id": identifier, "type": "tetra10", "formulation": "TETRA10",
-                              "nodes": list(connectivity), "part_id": part,
-                              "card_id": card.id, "resource_id": self.id}
-                             for identifier, connectivity, _, _ in parsed)
+                for offset in range(0, len(card.data), 2):
+                    pair = card.data[offset:offset + 2]
+                    try:
+                        (identifier, connectivity, _, _), = records(self.lines, pair)
+                        cells.append({"id": identifier, "type": kind, "formulation": formulation,
+                                      "nodes": list(connectivity), "part_id": part,
+                                      "card_id": card.id, "resource_id": self.id})
+                    except PrepError as exc:
+                        diagnostics.append({"severity": "warning", "code": "element_display_parse",
+                                            "message": str(exc), "line": pair[0] + 1, "part_id": part})
+                        token = self.lines[pair[0]][:10].strip()
+                        if re.fullmatch(r"[+-]?\d+", token) and (identifier := int(token)) > 0:
+                            cells.append({"id": identifier, "type": kind, "formulation": formulation, "nodes": [],
+                                          "part_id": part, "card_id": card.id, "resource_id": self.id, "parse_error": True})
             else:
                 for index in card.data:
                     line = self.lines[index].rstrip("\r\n")

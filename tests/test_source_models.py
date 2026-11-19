@@ -78,7 +78,8 @@ def test_explicit_shared_node_is_single_entity_and_unmapped_nodes_stay_distinct(
 @pytest.mark.parametrize("variant", ("title-only-deleted", "all-zero-deleted", "underscore-retained", "underscore-corrected",
                                      "underscore-deleted", "underscore-node", "underscore-connectivity",
                                      "padded-with-title-only", "hybrid", "pass14-padded", "pass14-underscore-zero",
-                                     "older-unquoted-padded", "older-quoted-padded", "pre-v5-explicit"))
+                                     "older-unquoted-padded", "older-quoted-padded", "pre-v5-explicit",
+                                     "v5-host-v4-archive-explicit", "mixed-archive-unrecorded"))
 def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     source = _base_model(tmp_path / "source")
     padded = variant in ("padded-with-title-only", "hybrid", "pass14-padded", "pass14-underscore-zero",
@@ -164,10 +165,15 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
         quoted = b'"' + mapped_mesh + b'"'
         assert payloads[mapped_member].count(quoted) == 1
         payloads[mapped_member] = payloads[mapped_member].replace(quoted, mapped_mesh)
-    if variant == "pre-v5-explicit":
+    if variant in ("pre-v5-explicit", "v5-host-v4-archive-explicit", "mixed-archive-unrecorded"):
+        archived_ids = {item["resource_id"] for item in source_model["files"]}
+        if variant == "mixed-archive-unrecorded":
+            source_model.pop("include_bindings")
+            archived_ids = {source_model["root_resource_id"]}
         for resource in manifest["resources"]:
-            resource["state"]["state_version"] = 4
-            assert not resource["state"].pop("retained_comments")
+            if variant == "pre-v5-explicit" or resource["id"] in archived_ids:
+                resource["state"]["state_version"] = 4
+                assert not resource["state"].pop("retained_comments")
     payloads["manifest.json"] = json.dumps(manifest).encode()
     legacy = tmp_path / "pass13.caeprep"
     with zipfile.ZipFile(legacy, "w") as archive:
@@ -189,8 +195,13 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
             session.open_project(legacy)
         assert error.value.code == "unsupported_source_profile"
         return
-    if variant == "pre-v5-explicit":
-        with pytest.raises(PrepError, match="Pre-v5 decks cannot carry explicit source INCLUDE bindings") as error:
+    if variant in ("pre-v5-explicit", "v5-host-v4-archive-explicit"):
+        with pytest.raises(PrepError, match="cannot carry explicit source INCLUDE bindings") as error:
+            session.open_project(legacy)
+        assert error.value.code == "invalid_project"
+        return
+    if variant == "mixed-archive-unrecorded":
+        with pytest.raises(PrepError, match="cannot mix v4 and v5 state versions") as error:
             session.open_project(legacy)
         assert error.value.code == "invalid_project"
         return
@@ -203,26 +214,42 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
         assert session.group_members(group)["member_ids"] == list(expected)
         native_members = expected if padded or variant.endswith("corrected") else (expected[0], *expected)
         assert session.card_text(group).splitlines()[-1] == _i(*native_members)
+    if variant == "pass14-underscore-zero":
+        padded_group = _card(session, f'/GRNOD/NODE/{ids["GRNOD", 48]}')["id"]
+        assert session.group_members(padded_group)["member_ids"] == list(expected)
     target = tmp_path / "export/case_0000.rad"
     session.export_analysis_case(target, case)
     assert all(b"1_01" not in path.read_bytes() for path in target.parent.rglob("*") if path.is_file())
+    if variant == "pass14-underscore-zero":
+        host = session._model_resource(None)
+        text = f"/GRNOD/NODE/97\nUnrelated host padding\n{101:10d}{'0_0':>10}{205:10d}\n"
+        state, card_id = host.inserted_state(text)
+        session.dispatcher.execute(host.id, state, "Add malformed group outside the archive", kind="structure")
+        assert session.group_members(card_id)["diagnostics"][0]["code"] == "invalid_reference"
     session.open_rad(target)
     assert len(session.mesh_view()["node_ids"]) == 16 and len(session.mesh_view()["cells"]) == 4
     if padded:
         padded_keyword = f'/GRNOD/NODE/{ids["GRNOD", 48]}'
         padded_group = _card(session, padded_keyword)["id"]
-        assert session.group_members(padded_group)["member_ids"] == list(expected)
+        members = session.group_members(padded_group)
+        if variant == "pass14-underscore-zero":
+            assert members["diagnostics"][0]["code"] == "invalid_reference"
+        else:
+            assert members["member_ids"] == list(expected)
         padding = f"{'0_0':>10}" if variant == "pass14-underscore-zero" else _i(0)
         assert session.card_text(padded_group).splitlines()[-1] == _i(expected[0]) + padding + _i(expected[1])
     elif not variant.endswith("deleted"):
         assert session.group_members(_card(session, group_keyword)["id"])["member_ids"] == list(expected)
 
 
-@pytest.mark.parametrize("variant", ("legacy-map", "legacy-shell-group", "tampered-with-bindings"))
+@pytest.mark.parametrize("variant", ("legacy-map", "legacy-shell-group", "tampered-with-bindings",
+                                    "forged-241-quad", "forged-987-quad"))
 def test_legacy_quad_source_archive_recovers_the_native_solid_group(tmp_path, variant):
     starter, source = model(tmp_path / "base"), model(tmp_path / "source", offset=20)
     mesh = source.with_name("mesh.inc")
     mesh.write_bytes(mesh.read_bytes().replace(b"/SHELL/9", b"/QUAD/9"))
+    if variant == "forged-987-quad":
+        source.write_bytes(source.read_bytes().replace(b"#include mesh.inc", b'#include\n"mesh.inc"'))
     if variant == "legacy-shell-group":
         source.write_bytes(source.read_bytes().replace(
             b"/END", f"/GRQUAD/QUAD/48\nArchived solid group\n{_i(77)}\n/END".encode()))
@@ -241,6 +268,20 @@ def test_legacy_quad_source_archive_recovers_the_native_solid_group(tmp_path, va
         source_model.pop("include_bindings")
     entries = source_model["id_map"]
     entries[entries.index(["E:QUAD", 77, identifier])][0] = "E:SHELL"
+    if variant == "forged-241-quad":
+        archived_ids = {item["resource_id"] for item in source_model["files"]}
+        for deck in manifest["resources"]:
+            if deck["id"] in archived_ids:
+                deck["state"]["state_version"] = 4
+                assert not deck["state"].pop("retained_comments")
+    if variant == "forged-987-quad":
+        mapped_mesh = next(item["logical_path"].encode() for item in source_model["files"]
+                           if item["original_path"] == "mesh.inc")
+        member = next(item["raw_member"] for item in manifest["resources"]
+                      if item["id"] == source_model["root_resource_id"])
+        quoted = b'"' + mapped_mesh + b'"'
+        assert members[member].count(quoted) == 1
+        members[member] = members[member].replace(quoted, mapped_mesh)
     if variant == "legacy-shell-group":
         entry = next(entry for entry in entries if entry[:2] == ["GRQUAD", 48])
         entry[0] = "GRSHEL"
@@ -261,6 +302,11 @@ def test_legacy_quad_source_archive_recovers_the_native_solid_group(tmp_path, va
         with pytest.raises(PrepError) as error:
             session.open_project(legacy)
         assert error.value.code == "invalid_project"
+        return
+    if variant.startswith("forged-"):
+        with pytest.raises(PrepError) as error:
+            session.open_project(legacy)
+        assert error.value.code in {"invalid_project", "unsupported_source_profile"}
         return
     session.open_project(legacy)
     ref = session.resolve_entity_reference("element", identifier)["reference"]

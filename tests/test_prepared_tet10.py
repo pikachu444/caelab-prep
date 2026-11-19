@@ -243,5 +243,8 @@ def test_malformed_native_tetra10_keeps_raw_and_reports_projection_error(text):
     raw = ('/TETRA10/1\n'+text).encode('ascii')
     deck = DeckResource(raw)
     assert deck.render() == raw
-    assert not deck.mesh_projection()['cells']
-    assert deck.mesh_projection()['diagnostics'][0]['code'] == 'element_display_parse'
+    projection = deck.mesh_projection()
+    cell, = projection['cells']
+    assert cell['id'] == 1 and cell['formulation'] == 'TETRA10'
+    assert cell['parse_error'] and cell['nodes'] == []
+    assert projection['diagnostics'][0]['code'] == 'element_display_parse'

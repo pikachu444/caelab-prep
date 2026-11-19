@@ -14,10 +14,15 @@ from .projection import readonly, mutable
 
 _QUOTED_INCLUDE_POLICY = (None, "quoted", False)
 _ROOT_FIRST_INCLUDE_POLICY = ("241", "unchanged", True)
-_UNRECORDED_INCLUDE_POLICIES = (
-    _QUOTED_INCLUDE_POLICY, ("bde", "quoted", False), ("ac0", "quoted", False),
-    ("987", "unquoted", False), _ROOT_FIRST_INCLUDE_POLICY, ("8fe", "unchanged", True),
-)
+_LEGACY_QUAD_PROFILES = ("legacy_pre14", "legacy_quad_as_shell")
+_UNRECORDED_INCLUDE_PROFILES = {
+    _QUOTED_INCLUDE_POLICY: _LEGACY_QUAD_PROFILES,
+    ("bde", "quoted", False): _LEGACY_QUAD_PROFILES,
+    ("ac0", "quoted", False): _LEGACY_QUAD_PROFILES,
+    ("987", "unquoted", False): ("legacy_pre_quad",),
+    _ROOT_FIRST_INCLUDE_POLICY: ("legacy_pre_quad",),
+    ("8fe", "unchanged", True): ("legacy_pre_quad",),
+}
 
 
 class SourceArchiveResource:
@@ -54,6 +59,7 @@ class SourceArchiveResource:
         self.metadata = readonly(metadata)
         self.files = readonly(files)
         self.recovered_include_bindings = {}
+        self.validated_profile: str | None = None
         self._token = sha256(json.dumps(metadata, sort_keys=True).encode()).hexdigest()
 
     def snapshot(self): return {"state_version": 1}
@@ -66,19 +72,24 @@ class SourceArchiveResource:
 
     def validate_mapped_payloads(self, document, *, project_bindings=None):
         """The correspondence table is checked evidence, not an unchecked label."""
+        self.validated_profile = None
         records = self.metadata.get("include_bindings")
         # The sibling-first reader first shipped with deck state v5.
-        deck_versions = [resource._restored_state_version for resource in document.resources.values()
-                         if isinstance(resource, DeckResource)]
-        pre_v5 = bool(deck_versions) and all(isinstance(version, int) and version <= 4 for version in deck_versions)
-        if records is not None and pre_v5:
-            raise PrepError("invalid_project", "Pre-v5 decks cannot carry explicit source INCLUDE bindings.")
+        archive_versions = [resource._restored_state_version for item in self.metadata["files"]
+                            if isinstance(resource := document.resources.get(item["resource_id"]), DeckResource)]
+        any_pre_v5 = any(isinstance(version, int) and version <= 4 for version in archive_versions)
+        all_pre_v5 = bool(archive_versions) and all(isinstance(version, int) and version <= 4 for version in archive_versions)
+        if records is not None and any_pre_v5:
+            raise PrepError("invalid_project", "Pre-v5 archived decks cannot carry explicit source INCLUDE bindings.")
+        if records is None and any_pre_v5 and not all_pre_v5:
+            raise PrepError("invalid_project", "Archived decks cannot mix v4 and v5 state versions.")
         if records is not None:
-            profiles = ("current", "legacy_pass15", "legacy_pass14", "legacy_pre14")
-            policies = (_QUOTED_INCLUDE_POLICY,)
+            policies = {_QUOTED_INCLUDE_POLICY: ("current", "legacy_pass15", "legacy_pass14", "legacy_pre14")}
+        elif all_pre_v5:
+            policies = {_ROOT_FIRST_INCLUDE_POLICY: _UNRECORDED_INCLUDE_PROFILES[_ROOT_FIRST_INCLUDE_POLICY]}
         else:
-            profiles = ("legacy_pre14", "legacy_quad_as_shell")
-            policies = (_ROOT_FIRST_INCLUDE_POLICY,) if pre_v5 else _UNRECORDED_INCLUDE_POLICIES
+            policies = _UNRECORDED_INCLUDE_PROFILES
+        profiles = tuple(dict.fromkeys(profile for allowed in policies.values() for profile in allowed))
 
         originals = [DeckResource(self.files[item["original_resource_id"]], resource_id=item["original_resource_id"],
             name=item["original_path"], is_include=item["resource_id"] != self.metadata["root_resource_id"])
@@ -135,7 +146,10 @@ class SourceArchiveResource:
         mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
         mapped_keys = {(resource.name, directive.header_row): (mapped_ids[resource.name], ordinal)
                        for resource in originals for ordinal, directive in enumerate(resource.include_directives)}
-        for historical, style, direct_writer in policies:
+        for (historical, style, direct_writer), allowed_profiles in policies.items():
+            compatible_readers = [profile for profile in reader_matches if profile in allowed_profiles]
+            if not compatible_readers:
+                continue
             load_order = []
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
                                          load_order=load_order)
@@ -143,16 +157,14 @@ class SourceArchiveResource:
             if reached != set(paths):
                 continue
             try:
-                matches_payload = any(
-                    actual == remap(originals, mapping, paths, include_graph=graph, two_line=style,
-                                    legacy_direct_inline=direct_writer, profile=profile)
-                    for profile in reader_matches
-                )
+                matched_profile = next((profile for profile in compatible_readers
+                    if actual == remap(originals, mapping, paths, include_graph=graph, two_line=style,
+                                       legacy_direct_inline=direct_writer, profile=profile)), None)
             except PrepError as exc:
                 if exc.code != "include_missing":
                     raise
                 continue
-            if not matches_payload:
+            if matched_profile is None:
                 continue
             effective = tuple(sorted((mapped_keys[key], mapped_ids[target]) for key, target in original_bindings.items()))
             repairs = {}
@@ -162,18 +174,18 @@ class SourceArchiveResource:
                     directive = document.resources[owner].include_directives[ordinal]
                     if directive.path != paths[target]:
                         repairs[owner, ordinal] = mapped_ids[target]
-            matches_by_order[load_order == archived_order].setdefault(effective, repairs)
+            matches_by_order[load_order == archived_order].setdefault(effective, (repairs, matched_profile))
         matches = matches_by_order[True] or matches_by_order[False]
         if not matches:
             raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
         if len(matches) > 1 and project_bindings:
             # An explicit binding in a resaved project can distinguish writers
             # whose source archive bytes and traversal order are identical.
-            matches = {effective: repairs for effective, repairs in matches.items()
+            matches = {effective: match for effective, match in matches.items()
                        if all(project_bindings.get(key, target) == target for key, target in effective)}
         if len(matches) != 1:
             raise PrepError("invalid_project", "Archived INCLUDE bindings are ambiguous across historical project writers; re-import or resave with explicit INCLUDE bindings.")
-        self.recovered_include_bindings = next(iter(matches.values()))
+        self.recovered_include_bindings, self.validated_profile = next(iter(matches.values()))
 
 
 class SourceModelCommands:

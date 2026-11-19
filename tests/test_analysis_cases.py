@@ -272,24 +272,21 @@ def test_nonstructural_dispatch_refreshes_node_ownership_after_renumber(tmp_path
 
 
 @pytest.mark.parametrize("literal", ("0_0", "1_01"))
-def test_only_native_node_groups_accept_historical_zero_padding(tmp_path, literal):
+def test_fresh_node_group_rejects_underscore_members_in_case_export(tmp_path, literal):
     source = _base_model(tmp_path / "input")
     group_text = f"/GRNOD/NODE/47\nMalformed target\n{101:10d}{literal:>10}{205:10d}\n".encode()
-    source.write_bytes(source.read_bytes().replace(b"/END", group_text + b"/END"))
+    constraint = f"/BCS/71\nFixed target\n   100 000{_i(0, 47)}\n".encode()
+    source.write_bytes(source.read_bytes().replace(b"/END", group_text + constraint + b"/END"))
     session = PrepSession()
     session.open_rad(source)
     group_id = _card(session, "/GRNOD/NODE/47")["id"]
-    case = session.create_analysis_case("Malformed group", [], .01, .001, "s")["case_id"]
+    bcs = _card(session, "/BCS/71")["id"]
+    case = session.create_analysis_case("Malformed group", [bcs], .01, .001, "s")["case_id"]
     output = tmp_path / "out/case_0000.rad"
-    if literal == "0_0":
-        assert session.group_members(group_id)["member_ids"] == [101, 205]
+    assert session.group_members(group_id)["diagnostics"][0]["code"] == "invalid_reference"
+    with pytest.raises(PrepError) as error:
         session.export_analysis_case(output, case)
-        assert b"0_0" in output.read_bytes()
-    else:
-        assert session.group_members(group_id)["diagnostics"][0]["code"] == "invalid_reference"
-        with pytest.raises(PrepError) as error:
-            session.export_analysis_case(output, case)
-        assert error.value.code == "invalid_reference" and not output.parent.exists()
+    assert error.value.code == "invalid_reference" and not output.parent.exists()
     destination = PrepSession()
     destination.open_rad(_base_model(tmp_path / "destination"))
     with pytest.raises(PrepError) as error:

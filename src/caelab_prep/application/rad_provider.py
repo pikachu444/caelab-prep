@@ -325,7 +325,8 @@ class RadProvider:
     def _element_members_field(self, value=None):
         cells = self.session.mesh_view()["cells"]
         refs = tuple(self.session._element_selection_ref(cell).to_dict() for cell in cells)
-        ref_keys = {(ref["resource_id"], ref["entity_kind"], ref["local_id"], ref.get("formulation")) for ref in refs}
+        choice_by_key = {(ref["resource_id"], ref["entity_kind"], ref["local_id"], ref.get("formulation")): ref
+                         for ref in refs}
         if value is None:
             selection = self.session.selection()
             value = selection["refs"] if selection["kind"] == "element" else ()
@@ -334,11 +335,14 @@ class RadProvider:
             if (isinstance(ref, dict) and ref.get("entity_kind") == "element"
                     and isinstance(ref.get("resource_id"), str) and type(ref.get("local_id")) is int):
                 formulation = ref.get("formulation")
-                if ((formulation is None or isinstance(formulation, str))
-                        and (ref["resource_id"], "element", ref["local_id"], formulation) not in ref_keys):
-                    native, displayed = self.session._matching_selection_cells(ref["local_id"], ref["resource_id"], formulation)
-                    if len(native) == len(displayed) == 1:
-                        ref = self.session._element_selection_ref(displayed[0]).to_dict()
+                if formulation is None or isinstance(formulation, str):
+                    choice = choice_by_key.get((ref["resource_id"], "element", ref["local_id"], formulation))
+                    if choice is not None:
+                        ref = choice
+                    else:
+                        native, displayed = self.session._matching_selection_cells(ref["local_id"], ref["resource_id"], formulation)
+                        if len(native) == len(displayed) == 1:
+                            ref = self.session._element_selection_ref(displayed[0]).to_dict()
             normalized.append(ref)
         names = {card["resource_id"]: card["resource_name"] for card in self.session.list_cards()}
         return PropertySpec("element_refs", "Element members", tuple(normalized), kind="references", choices=refs,

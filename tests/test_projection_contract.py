@@ -200,6 +200,58 @@ def test_unqualified_shell_pick_is_cleared_when_quad_uses_same_id(tmp_path):
     assert error.value.code == "ambiguous_selection"
 
 
+@pytest.mark.parametrize("same_card", (False, True))
+def test_malformed_tetra10_still_participates_in_native_id_resolution(tmp_path, same_card):
+    source = tmp_path / "tetra10_0000.rad"
+    nodes = "".join(f"{_i(node)}{_r(node, 0, 0)}\n" for node in range(1, 11))
+    connectivity = _i(*range(1, 11))
+    valid_rows = f"{_i(401)}\n{connectivity}\n{_i(402)}\n{connectivity}\n"
+    malformed_rows = f"{_i(401)}\n{_i(*range(1, 10))}{' ' * 10}\n"
+    source.write_text(f"/BEGIN\nTETRA10\n/NODE\n{nodes}/TETRA10/1\n{valid_rows}/END\n")
+    session = PrepSession()
+    session.open_rad(source)
+    card = _card(session, "/TETRA10/1")
+    owner = session.document.resources[card["resource_id"]]
+    selected, = session.select_entity("element", 401, resource_id=owner.id, formulation="TETRA10")["refs"]
+    if same_card:
+        state = owner.replaced_state(card["id"], "/TETRA10/1\n" + malformed_rows + valid_rows)
+    else:
+        state, _ = owner.inserted_state("/TETRA10/1\n" + malformed_rows)
+    session.dispatcher.execute(owner.id, state, "Add malformed duplicate TETRA10")
+
+    projection = session.mesh_view()
+    assert [cell["id"] for cell in projection["cells"]] == [401, 402]
+    assert [entry["code"] for entry in projection["diagnostics"]] == ["element_display_parse"]
+    assert not session.selection()["refs"]
+    pick = {key: projection[key] for key in ("document_id", "document_epoch", "revision", "projection_revision")} | {
+        "kind": "element", "id": 401, "formulation": "TETRA10", "resource_id": owner.id,
+        "resource_revision": projection["resource_revisions"][owner.id],
+    }
+    with pytest.raises(PrepError) as error:
+        session.select_pick(pick)
+    assert error.value.code == "ambiguous_selection"
+    with pytest.raises(PrepError) as error:
+        session.create_element_group("Repeated TETRA10", [selected], native_id=990)
+    assert error.value.code == "ambiguous_reference"
+    assert not any(card["keyword"] == "/GRBRIC/BRIC/990" for card in session.list_cards())
+
+
+@pytest.mark.parametrize(("keyword", "code"), (("SH4N", "ambiguous_selection"), ("QUAD", "incompatible_surface")))
+def test_part_commands_count_malformed_native_cells(tmp_path, keyword, code):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "input"))
+    part = _card(session, "/PART/902")
+    mesh = session.document.resources[_card(session, "/SHELL/902")["resource_id"]]
+    state, _ = mesh.inserted_state(f"/{keyword}/902\n{_i(7001, 101, 205, 309)}{' ' * 10}\n")
+    session.dispatcher.execute(mesh.id, state, "Add a malformed element to the shell PART")
+    with pytest.raises(PrepError) as error:
+        if keyword == "SH4N":
+            session.activate_object(RadProvider(session).ref_for_card(part))
+        else:
+            session.create_surface("Shell surface", [part["id"]], native_id=987)
+    assert error.value.code == code
+
+
 @pytest.mark.parametrize("write", ("restore", "field"))
 @pytest.mark.parametrize("multiple", (False, True), ids=("single-part", "multiple-parts"))
 def test_selected_part_highlight_tracks_renumbered_element(tmp_path, write, multiple):

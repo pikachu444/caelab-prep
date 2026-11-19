@@ -211,6 +211,12 @@ class BooleanVectorEdit(QWidget):
         del blocked
 
 
+def _ref_key(ref):
+    if isinstance(ref, dict):
+        return ("dict", tuple(sorted(ref.items())))
+    return ("val", ref)
+
+
 class ReferenceListEdit(QWidget):
     """Check qualified object references by equality, keeping missing choices visible."""
 
@@ -220,8 +226,10 @@ class ReferenceListEdit(QWidget):
     def __init__(self, value=(), *, choices=(), choice_labels=(), parent=None):
         super().__init__(parent)
         self.choices = tuple(choices)
+        self._choice_keys = {_ref_key(ref) for ref in self.choices}
         self.choice_labels = tuple(choice_labels)
         self.list = QListWidget(self)
+        self.list.setUniformItemSizes(True)
         self.list.setAccessibleName("Referenced objects")
         self.list.setMinimumHeight(120)
         self.list.setMaximumHeight(160)
@@ -238,35 +246,39 @@ class ReferenceListEdit(QWidget):
 
     def value(self):
         selected = self.raw_value()
-        if any(ref not in self.choices for ref in selected):
+        if any(_ref_key(ref) not in self._choice_keys for ref in selected):
             raise ValueError("A selected object is no longer available; uncheck it or choose an available object")
         return selected
 
     def set_raw_value(self, value):
         selected = tuple(value)
+        selected_keys = {_ref_key(ref) for ref in selected}
         blocked = QSignalBlocker(self.list)
         self.list.clear()
-        displayed = []
+        displayed_keys = set()
         for index, ref in enumerate(self.choices):
-            if ref in displayed:
+            key = _ref_key(ref)
+            if key in displayed_keys:
                 continue
             label = (self.choice_labels[index] if index < len(self.choice_labels)
                      else str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref)))
-            self._add_item(ref, label, ref in selected)
-            displayed.append(ref)
+            self._add_item(ref, label, key in selected_keys)
+            displayed_keys.add(key)
         for ref in selected:
-            if ref not in displayed:
+            key = _ref_key(ref)
+            if key not in displayed_keys:
                 label = str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
                 self._add_item(ref, "Unavailable: " + label, True)
-                displayed.append(ref)
+                displayed_keys.add(key)
         del blocked
 
     def _add_item(self, ref, label, checked):
-        item = QListWidgetItem(str(label), self.list)
+        item = QListWidgetItem(str(label))
         item.setData(Qt.ItemDataRole.UserRole, ref)
         item.setToolTip(str(label))
         item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
         item.setCheckState(Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
+        self.list.addItem(item)
 
 
 class NumericTableEdit(CurveTable):

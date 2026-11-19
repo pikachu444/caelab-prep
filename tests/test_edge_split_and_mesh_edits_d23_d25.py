@@ -1929,6 +1929,23 @@ def test_mesh_planners_accept_native_alias_from_viewport_pick(tmp_path, family, 
     assert session.plan_part_reassignment([{"element": picked, "part": part_ref}])["admissible"]
 
 
+def test_case_export_round_trips_sh4n_and_tetra_keywords(tmp_path):
+    starter = _build_deck_multi_include(tmp_path / "input")
+    for include, before, after in (("shells_b.inc", b"/SHELL/2", b"/SH4N/2"),
+                                   ("shells_a.inc", b"/TETRA4/3", b"/TETRA/3")):
+        mesh = starter.parent / include
+        mesh.write_bytes(mesh.read_bytes().replace(before, after))
+    session = PrepSession()
+    session.open_rad(starter)
+    expected = _mesh_facts(session)
+    case = session.create_analysis_case("Alias round trip", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "output/case_0000.rad"
+    session.export_analysis_case(output, case)
+    session.open_rad(output)
+    assert _mesh_facts(session) == expected
+    assert {"/SH4N/2", "/TETRA/3"} <= {card["keyword"] for card in session.list_cards()}
+
+
 def test_reassigning_picked_split_children_updates_selection_owner(tmp_path):
     session = PrepSession()
     session.open_rad(_build_deck_multi_include(tmp_path))
