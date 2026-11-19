@@ -202,9 +202,10 @@ class AnalysisCaseCommands:
             # The activation scope is deliberately closed. Unknown physics or
             # sensor/activation cards must never silently survive as active.
             neutral_roots = {"BEGIN", "END", "NODE", "BEAM", "TRUSS", "SHELL", "QUAD", "SH3N", "TETRA4", "TETRA10", "BRICK", "PART", "FUNCT", "UNIT"}
+            group_pairs = {("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS}
             neutral_pairs = {("MAT", "LAW1"), ("MAT", "ELAST"), ("MAT", "LAW36"), ("MAT", "PLAS_TAB"),
                 ("PROP", "BEAM"), ("PROP", "TYPE3"), ("PROP", "TRUSS"), ("PROP", "TYPE2"), ("SKEW", "FIX"), ("PROP", "SHELL"), ("PROP", "TYPE1"),
-                *(("PROP", family) for family in TYPE14_PROPERTIES), ("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS, ("SURF", "PART")}
+                *(("PROP", family) for family in TYPE14_PROPERTIES), ("SURF", "PART")}
             unsupported = []
             conditions = []
             parts = {}
@@ -220,10 +221,10 @@ class AnalysisCaseCommands:
                 if condition_kind(item["keyword"]): conditions.append(item["id"])
                 elif words[0] == "PART" and (native_part := self._native_part_id(item["keyword"])) in cells_by_part:
                     parts.setdefault(native_part, []).append(item["id"])
-                elif tuple(words[:2]) == ("GRQUAD", "QUAD"):
+                elif tuple(words[:2]) in group_pairs:
                     diagnostics = self.group_members(item["id"])["diagnostics"]
                     if diagnostics:
-                        raise PrepError("invalid_reference", "A quad group has unresolved native targets.",
+                        raise PrepError("invalid_reference", "A native group has unresolved targets.",
                                         {"card_id": item["id"], "diagnostics": diagnostics})
                 elif words[0] not in neutral_roots and tuple(words[:2]) not in neutral_pairs:
                     unsupported.append(item)
@@ -242,7 +243,8 @@ class AnalysisCaseCommands:
                                     {"card_id": part_id, "diagnostics": assignments["diagnostics"]})
                 property_owner = self._find_card(assignments["property_id"])
                 material_owner = self._find_card(assignments["material_id"])
-                self._validate_part_compatibility(cells, material=material_owner.card(assignments["material_id"]),
+                self._validate_part_compatibility(self._projection_index["part_element_kinds"][native_part],
+                                                  material=material_owner.card(assignments["material_id"]),
                                                   property_owner=property_owner,
                                                   property_card=property_owner.card(assignments["property_id"]))
             for card_id in case["condition_ids"]:

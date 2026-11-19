@@ -55,6 +55,8 @@ def test_element_group_picker_qualifies_same_file_shell_and_quad_ids(tmp_path):
 def test_element_group_picker_rejects_shared_id_within_one_native_family(tmp_path, tetra_node):
     source = tmp_path / "shared_solids_0000.rad"
     raw = (INPUTS / "shell_panels_0000.rad").read_bytes().replace(b"\r\n", b"\n").split(b"\n/SHELL/1\n", 1)[0]
+    units = raw.splitlines(keepends=True)[4]
+    raw = raw.replace(units, units * 2, 1)
     brick = "".join(f"{value:10d}" for value in (201, 1, 2, 5, 4, 10, 11, 14, 13))
     tetra = "".join(f"{value:10d}" for value in (201, 1, 2, 5, tetra_node))
     group = f"/GRBRIC/BRIC/986\nExisting solids\n{201:10d}\n"
@@ -80,6 +82,43 @@ def test_element_group_picker_rejects_shared_id_within_one_native_family(tmp_pat
     existing = session.group_members(node(provider, "/GRBRIC/BRIC/986").ref.object_id)
     assert existing["member_ids"] == [201] and existing["members"] == []
     assert existing["diagnostics"][0]["code"] == "ambiguous_reference"
+    prop = session.create_solid_property("Solid section")["card_id"]
+    for part in (1, 2):
+        session.assign_part(node(provider, f"/PART/{part}").ref.object_id, property_id=prop)
+    case = session.create_analysis_case("Ambiguous solid group", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "out/case_0000.rad"
+    with pytest.raises(PrepError) as error:
+        session.export_analysis_case(output, case)
+    assert error.value.code == "invalid_reference"
+    assert error.value.details["diagnostics"][0]["code"] == "ambiguous_reference"
+    assert not output.parent.exists()
+
+
+def test_assign_part_checks_quad_header_when_all_connectivity_rows_are_invalid(tmp_path):
+    source = tmp_path / "bad_quad_0000.rad"
+    raw = (INPUTS / "shell_panels_0000.rad").read_bytes().replace(b"\r\n", b"\n")
+    head, tail = raw.split(b"\n/SHELL/1\n", 1)
+    rows, tail = tail.split(b"/SHELL/2\n", 1)
+    malformed = b"".join(row[:10] + b" " * 10 + row[20:] for row in rows.splitlines(keepends=True))
+    source.write_bytes(head + b"\n/QUAD/         1\n" + malformed + b"/SHELL/2\n" + tail)
+    session = PrepSession()
+    session.open_rad(source)
+    provider = RadProvider(session)
+    projection = session.mesh_view()
+    assert not any(cell["part_id"] == 1 for cell in projection["cells"])
+    assert any(item["code"] == "element_display_parse" for item in projection["diagnostics"])
+    part = node(provider, "/PART/1").ref
+    prop = node(provider, "/PROP/SHELL/2").ref
+    revision = session.document.revision
+    for edit in (lambda: session.assign_part(part.object_id, property_id=prop.object_id),
+                 lambda: provider.submit(SetProperties(part, {"property": prop}, revision))):
+        with pytest.raises(PrepError) as error:
+            edit()
+        assert error.value.code == "incompatible_property"
+        assert session.document.revision == revision
+    solid = session.create_solid_property("Quad section")["card_id"]
+    session.assign_part(part.object_id, property_id=solid)
+    assert session.part_assignments(part.object_id)["property_id"] == solid
 
 
 def test_quad_property_only_provider_edits_preserve_existing_law3(tmp_path):

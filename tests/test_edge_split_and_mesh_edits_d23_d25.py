@@ -1163,6 +1163,59 @@ def test_d23_export_can_qualify_upstream_include_to_keep_all_nine_bindings(tmp_p
             assert reopened.mesh_view()["node_ids"] == tuple(node_ids)
 
 
+def test_d23_export_qualifies_coupled_include_waves(tmp_path):
+    def directives(*paths):
+        return "".join(f"#include {path}\n" for path in paths)
+
+    marks = [f"mark{i}.inc" for i in range(9)]
+    units = f"{'Mg':>20}{'mm':>20}{'s':>20}\n"
+    begin = "/BEGIN\nCoupled INCLUDE waves\n      2025         0\n" + units * 2
+    payloads = {"model_0000.rad": begin + directives(*marks, "a/early.inc", "b/branch.inc") + "/END\n",
+                "a/early.inc": directives("nodes.inc"), "b/branch.inc": directives("main.inc"),
+                "b/main.inc": "# Unused alternative\n",
+                "main.inc": directives("c/gate.inc", "nodes.inc"),
+                "nodes.inc": f"/NODE\n{_node_line(1, 1, 0, 0)}\n",
+                "a/nodes.inc": f"/NODE\n{_node_line(88, 2, 0, 0)}\n",
+                f"c/{marks[-1]}": directives("a/nodes.inc")}
+    rewrites = {}
+    for owner, mark in zip(("c/gate.inc", *(f"c/{mark}" for mark in marks[:-1])), marks):
+        payloads[mark] = "# Root marker\n"
+        payloads[owner] = directives(mark)
+        rewrites[owner] = directives(f"c/{mark}")
+    source = tmp_path / "source"
+    for path, content in payloads.items():
+        _write(source / path, content)
+
+    def bindings(session):
+        return {(None if owner == session._root_id else session._paths[owner], ordinal): session._paths[target]
+                for (owner, ordinal), target in session._include_bindings.items()}
+
+    session = PrepSession()
+    session.open_rad(source / "model_0000.rad")
+    expected = bindings(session)
+    assert expected["a/early.inc", 0] == "nodes.inc"
+    assert len(session._paths) == 25
+    case = session.create_analysis_case("Coupled INCLUDE export", [], .01, .001, "s")["case_id"]
+    project = tmp_path / "bound.caeprep"
+    session.save_project(project)
+    for label in ("active", "reopened"):
+        if label == "reopened":
+            session.open_project(project)
+        for mode in ("native", "case"):
+            output = tmp_path / label / mode / "renamed_0000.rad"
+            if mode == "native":
+                session.export_rad(output)
+            else:
+                session.export_analysis_case(output, case)
+            for owner, text in rewrites.items():
+                assert (output.parent / owner).read_bytes() == text.encode()
+            reopened = PrepSession()
+            reopened.open_rad(output)
+            assert bindings(reopened) == expected
+            assert len(reopened._paths) == 25
+            assert reopened.mesh_view()["node_ids"] == (1, 88)
+
+
 def test_d23_reopens_archive_whose_older_resolver_claimed_second_sibling(tmp_path):
     source = tmp_path / "source"
     starter = _write(source / "starter_0000.rad", "/BEGIN\nArchived claims\n#include a/first.inc\n#include a/second.inc\n/END\n")
@@ -1354,6 +1407,59 @@ def test_d23_reopens_legacy_active_include_without_whitespace(tmp_path, name):
     ids = {path: rid for rid, path in session._paths.items()}
     assert session._include_bindings[ids[by_path["mesh/first.inc"]["logical_path"]], 0] == ids[by_path[owner]["logical_path"]]
     assert _mesh_facts(session) == expected
+
+
+@pytest.mark.parametrize("nodes_path", ("nodes.inc", "sets/nodes.inc"))
+@pytest.mark.parametrize("separator", ("", "\r\n"), ids=("tight", "two-line"))
+def test_d23_reopens_8fe_source_with_sibling_only_include(tmp_path, nodes_path, separator):
+    source = tmp_path / "source"
+    starter = _build_deck_multi_include(source)
+    raw = starter.read_bytes()
+    (source / nodes_path).parent.mkdir(parents=True, exist_ok=True)
+    (source / nodes_path).write_bytes((source / "nodes.inc").read_bytes())
+    starter.write_bytes(raw.replace(b"#include nodes.inc\n",
+        f"#include {nodes_path}\n#include mesh/{nodes_path}\n#include mesh/first.inc\n".encode()))
+    old_extra = f'#include{separator}"extra.inc"\r\n'
+    _write(source / "mesh/first.inc", f"#include {nodes_path}\n" * 2 + old_extra)
+    _write(source / f"mesh/{nodes_path}", f"/NODE\n{_node_line(100, 83, 1, 0)}\n")
+    _write(source / "mesh/extra.inc", "# Only accessible relative to the including file\n")
+    base = _write(tmp_path / "base_0000.rad", raw.split(b"/MAT", 1)[0].decode() + "/END\n")
+    session = PrepSession()
+    session.open_rad(base)
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    modern = tmp_path / "modern.caeprep"
+    session.save_project(modern)
+    with ZipFile(modern) as project:
+        members = {member: project.read(member) for member in project.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    manifest.pop("include_bindings")
+    record = manifest["source_models"][0]
+    record.pop("include_bindings")
+    members["manifest.json"] = json.dumps(manifest).encode()
+    by_path = {item["original_path"]: item for item in record["files"]}
+    owner = by_path["mesh/first.inc"]
+    mapped_member = f'raw/{owner["resource_id"]}.rad'
+    # 8fe mapped both spaced inline directives by root path and left the
+    # sibling-only operand in its original form.
+    root_include = f'#include {by_path[nodes_path]["logical_path"]}\n'.encode()
+    assert members[mapped_member].startswith(root_include * 2)
+    members[mapped_member] = root_include * 2 + old_extra.encode()
+    legacy = tmp_path / "legacy.caeprep"
+    with ZipFile(legacy, "w") as project:
+        for member, payload in members.items():
+            project.writestr(member, payload)
+    session.open_project(legacy)
+    sib_id = by_path[f"mesh/{nodes_path}"]["resource_id"]
+    assert [session._include_bindings[owner["resource_id"], ordinal] for ordinal in range(3)] == [
+        sib_id, sib_id, by_path["mesh/extra.inc"]["resource_id"]]
+    assert len(session.mesh_view()["node_ids"]) == 15
+    assert len(session.mesh_view()["cells"]) == 7
+    facts = _mesh_facts(session)
+    output = tmp_path / "out/export_0000.rad"
+    session.export_rad(output)
+    session.open_rad(output)
+    assert _mesh_facts(session) == facts
 
 
 @pytest.mark.parametrize("origin", ("source", "reassigned", "removed_comment"))

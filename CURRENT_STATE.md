@@ -98,6 +98,14 @@ Windows Python 3.13.5에서 영향 범위 pytest 334건을 통과했다. 별도 
 
 공백으로 채운 PART ID를 읽을 수 있으며, 형식이 잘못된 절점·요소 행은 해석 케이스 내보내기 전에 거부한다. PART 할당과 요소 집합 검사는 화면에서 빠진 요소도 포함한다. Windows Python 3.13.5에서 지정된 pytest 4개 모듈은 164건을 통과했고 별도 EGL 렌더링 검사 1건은 건너뛰었다.
 
+### 열두 번째 검토 수정
+
+`a0e9839` 재검토를 반영했다. `24137d6`의 루트 기준 INCLUDE 탐색과 `987c52b`의 형제 파일 탐색·경로 재작성을 각각 재현한다. `8fe6609`가 작성한 형제 파일 전용 INCLUDE의 네 조합에서 15절점·7요소와 바인딩을 재열기·내보내기로 확인했다. 동일 바이트에서 서로 다른 바인딩이 가능한 아카이브는 명시 바인딩이 없으면 거부한다.
+
+25파일 모델에서 상위 지시문 아홉 개를 함께 수정해 Starter·해석 케이스 내보내기와 작업 문서 재열기 전후의 바인딩을 확인했다. PART 할당은 요소 행 전체를 읽을 수 없는 경우에도 카드 헤더의 요소 종류를 사용한다. 해석 케이스는 모든 절점·요소 집합을 검사한다. SHELL과 QUAD가 같은 ID를 쓰고 한 요소만 표시되는 두 Qt/VTK 사례에서 해당 요소의 강조와 맞춤을 확인했다.
+
+Windows Python 3.13.5에서 지정된 pytest 4개 모듈은 172건을 통과했고 별도 EGL 렌더링 검사 1건은 건너뛰었다. 해석 케이스 추가 검사 20건을 통과했다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

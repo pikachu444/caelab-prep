@@ -91,6 +91,32 @@ def test_same_file_quad_group_and_viewport_pick_highlight_only_the_native_family
         assert view.fit_selection()
 
 
+@pytest.mark.parametrize("visible", ("SHELL", "QUAD"))
+def test_viewport_highlights_family_qualified_selection_with_hidden_same_id(tmp_path, visible):
+    from caelab_prep.application.session import PrepSession
+
+    path = tmp_path / "one_visible_0000.rad"
+    nodes = "".join(f"{i:10d}{x:20g}{y:20g}{0:20g}\n" for i, (x, y) in enumerate(
+        [(0, 0), (1, 0), (1, 1), (0, 1)], 1))
+    rows = "".join(f"/{family}/{part}\n" + "".join(f"{i:10d}" for i in
+                   (201, 1, 2, 3, 4 if family == visible else 999)) + "\n"
+                   for part, family in enumerate(("SHELL", "QUAD"), 1))
+    path.write_text("/BEGIN\nOne visible family\n/NODE\n" + nodes + rows + "/END\n")
+    session = PrepSession()
+    session.open_rad(path)
+    projection = session.mesh_view()
+    cell, = projection["cells"]
+    assert cell["formulation"] == visible
+    view = viewport(projection)
+    pick = pick_candidate(view._projection_stamp, "element", 201, cell["resource_id"])
+    chosen = session.select_pick(pick)
+    assert chosen["refs"][0]["formulation"] == visible
+    view.set_selection(chosen)
+    assert view._highlight.GetVisibility()
+    assert view._selection_cell_indices(chosen) == [0]
+    assert view.fit_selection()
+
+
 def test_part_identity_requires_resource_and_resolved_owner():
     with pytest.raises(ValueError):
         part_key(1)

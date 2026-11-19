@@ -111,7 +111,8 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical):
                 root_path = f"{scope}/{logical}" if scoped else logical
                 sibling_path = (directory / relative).as_posix()
                 root_file = lookup(root_path)
-                sibling = lookup(sibling_path) if sibling_path != root_path else root_file
+                # The 24137d60 reader resolved every operand from the Starter root.
+                sibling = lookup(sibling_path) if historical != "241" and sibling_path != root_path else root_file
                 key = owner, ordinal
                 if key in recovered:
                     follow(owner, directive, recovered[key], chain)

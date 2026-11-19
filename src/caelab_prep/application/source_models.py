@@ -107,7 +107,7 @@ class SourceArchiveResource:
         archived_order = [resource.name for resource in originals]
         policies = ((None, "quoted", False),) if records is not None else (
             (None, "quoted", False), ("bde", "quoted", False), ("ac0", "quoted", False),
-            ("987", "unquoted", False), ("987", "unchanged", True), ("8fe", "unchanged", True))
+            ("987", "unquoted", False), ("241", "unchanged", True), ("8fe", "unchanged", True))
         matches_by_order = {True: {}, False: {}}
         mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
         mapped_keys = {(resource.name, directive.header_row): (mapped_ids[resource.name], ordinal)

@@ -666,6 +666,9 @@ class DeckResource:
         nodes: dict[int, list[float]] = {}
         cells = []
         diagnostics = []
+        part_element_kinds: dict[int, set[str]] = {}
+        shapes = {"SHELL": ("quad", 4), "QUAD": ("quad", 4), "SH3N": ("triangle", 3), "BRICK": ("hexahedron", 8),
+                  "TETRA4": ("tetra", 4), "TETRA10": ("tetra10", 10), "BEAM": ("line", 2), "TRUSS": ("line", 2)}
         for card in self.cards:
             key = card.keyword.upper().split("/")
             if key[1] == "NODE":
@@ -681,10 +684,20 @@ class DeckResource:
                             nodes[identifier] = xyz
                     except ValueError:
                         diagnostics.append({"severity": "warning", "code": "node_display_parse", "message": "일부 절점 행을 표시하지 못했습니다.", "line": index + 1})
-            elif key[1] == "TETRA10":
+                continue
+            formulation = ELEMENT_ALIASES.get(key[1], key[1])
+            if formulation not in shapes or not card.data:
+                continue
+            kind, count = shapes[formulation]
+            token = key[2].strip() if len(key) > 2 else ""
+            part = int(token) if token.isdecimal() else None
+            if part is not None:
+                # These formulations need distinct property checks despite
+                # sharing their viewport shape with other elements.
+                part_kind = formulation if formulation in ("QUAD", "BEAM", "TRUSS") else kind
+                part_element_kinds.setdefault(part, set()).add(part_kind)
+            if formulation == "TETRA10":
                 from .tetra10 import records
-                token = key[2].strip() if len(key) > 2 else ""
-                part = int(token) if token.isdecimal() else None
                 try:
                     parsed = records(self.lines, card.data)
                 except PrepError as exc:
@@ -695,12 +708,7 @@ class DeckResource:
                               "nodes": list(connectivity), "part_id": part,
                               "card_id": card.id, "resource_id": self.id}
                              for identifier, connectivity, _, _ in parsed)
-            elif key[1] in ("SHELL", "QUAD", "SH3N", "BRICK", "TETRA4", "BEAM", "TRUSS", *ELEMENT_ALIASES):
-                kind, count = {"SHELL": ("quad", 4), "QUAD": ("quad", 4), "SH3N": ("triangle", 3), "BRICK": ("hexahedron", 8),
-                               "TETRA4": ("tetra", 4), "BEAM": ("line", 2), "TRUSS": ("line", 2)}[
-                                   ELEMENT_ALIASES.get(key[1], key[1])]
-                token = key[2].strip() if len(key) > 2 else ""
-                part = int(token) if token.isdecimal() else None
+            else:
                 for index in card.data:
                     line = self.lines[index].rstrip("\r\n")
                     try:
@@ -715,4 +723,4 @@ class DeckResource:
         # An element resource may refer to nodes in another INCLUDE resource.
         # Validate connectivity only after the document has assembled all resources.
         return {"points": [nodes[i] for i in identifiers], "node_ids": identifiers, "cells": cells,
-                "diagnostics": diagnostics}
+                "diagnostics": diagnostics, "part_element_kinds": part_element_kinds}

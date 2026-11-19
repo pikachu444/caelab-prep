@@ -1425,9 +1425,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             return self._model_result(resource, None, change, deleted_card_id=card_id)
 
     @staticmethod
-    def _validate_part_compatibility(part_cells, *, material=None, material_changed=False,
+    def _validate_part_compatibility(part_kinds, *, material=None, material_changed=False,
                                      property_owner=None, property_card=None, property_changed=False):
-        part_kinds = {"QUAD" if cell.get("formulation") == "QUAD" else cell["type"] for cell in part_cells}
         if "tetra10" in part_kinds and part_kinds != {"tetra10"}:
             raise PrepError("incompatible_property", "Tet10 requires a separate PART from other solid families.")
         if material is not None:
@@ -1441,7 +1440,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         family = property_card.keyword.upper().split("/")[2]
         compatible = ({"quad", "triangle"} if family in ("SHELL", "TYPE1") else
                       {"QUAD", "tetra", "tetra10", "hexahedron", "wedge", "pyramid"} if family in TYPE14_PROPERTIES else
-                      {"line"} if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2") else None)
+                      {"BEAM", "TRUSS"} if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2") else None)
         if compatible is None and (family == "QUAD" or property_changed):
             raise PrepError("unsupported_operation", "Assignment supports SHELL and SOLID property families only.")
         if compatible is not None and part_kinds - compatible:
@@ -1456,7 +1455,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 raise PrepError("incompatible_property", "Tet10 requires explicit SOLID Ismstr=4, Iale=0 and Itetra10=1000.")
         if family in ("BEAM", "TYPE3", "TRUSS", "TYPE2"):
             expected = "BEAM" if family in ("BEAM", "TYPE3") else "TRUSS"
-            if any(cell.get("formulation") != expected for cell in part_cells):
+            if part_kinds - {expected}:
                 raise PrepError("incompatible_property", "Beam and truss sections have different native mechanical formulations.")
 
     def assign_part(self, card_id, *, material_id=None, property_id=None,
@@ -1466,7 +1465,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             self._check_model_edit(expected_revision, expected_document_id)
             resource, card, refs = self._part_native_references(card_id)
             if self._projection_cache is None: self.mesh_view()
-            part_cells = self._projection_index["all_cells_by_part"].get(refs["native_part_id"], ())
+            part_kinds = self._projection_index["part_element_kinds"].get(refs["native_part_id"], set())
             if material_id is None and property_id is None:
                 raise PrepError("invalid_command", "Choose a material or property to assign.")
             values = {}
@@ -1485,7 +1484,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 else:
                     compatibility.update(property_owner=target_owner, property_card=target_card,
                                          property_changed=identity[1] != refs["native_property_id"])
-            self._validate_part_compatibility(part_cells, **compatibility)
+            self._validate_part_compatibility(part_kinds, **compatibility)
             state = resource.fields_state(card_id, values)
             self._validate_dependent_condition_states({resource.id:state})
             change = self.dispatcher.execute(resource.id, state, "Assign material / property",
@@ -1518,8 +1517,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             document = self._require()
             if self._projection_cache is None:
                 nodes: dict[int, list[float]] = {}; node_resources: dict[int, list[str]] = {}; cells = []; diagnostics = []
+                part_element_kinds: dict[int, set[str]] = {}
                 for resource in self._deck_resources(document):
                     projection = resource.mesh_projection()
+                    for part, kinds in projection["part_element_kinds"].items():
+                        part_element_kinds.setdefault(part, set()).update(kinds)
                     for identifier, point in zip(projection["node_ids"], projection["points"]):
                         node_resources.setdefault(identifier, []).append(resource.id)
                         if identifier in nodes:
@@ -1556,7 +1558,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     by_part.setdefault(cell.get("part_id"), []).append(cell)
                 self._projection_cache = cache
                 self._projection_index = {"cells_by_id": by_id, "cells_by_part": by_part,
-                                          "all_cells_by_id": all_by_id, "all_cells_by_part": all_by_part}
+                                          "all_cells_by_id": all_by_id, "all_cells_by_part": all_by_part,
+                                          "part_element_kinds": part_element_kinds}
             result = {**self._projection_cache, "revision": document.revision,
                     "document_epoch": self._document_epoch, "projection_revision": self._projection_revision,
                     "resource_revisions": readonly({key: resource.state_token() for key, resource in document.resources.items()})}
@@ -2208,6 +2211,36 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 if entry not in qualifications and entry in qualifiable:
                     yield qualifications | {entry}
 
+        def propagate(qualifications, actual, prefix):
+            for _ in range(len(ordered) + 1):
+                additions, walked = set(), set()
+                for entry in ordered:
+                    path, ordinal, intended = entry
+                    bindings = actual.get(path, ())
+                    resolved = bindings[ordinal] if ordinal < len(bindings) else None
+                    if resolved == intended:
+                        continue
+                    if entry in qualifiable and entry not in qualifications:
+                        additions.add(entry)
+                        continue
+                    # An explicit claim only affects later waves if its
+                    # entire incoming chain is reached early enough.
+                    for other in incoming.get(resolved, ()):
+                        while other is not None and other not in walked:
+                            walked.add(other)
+                            if other in qualifiable:
+                                additions.add(other)
+                            other = parent_of.get(other[0])
+                additions.difference_update(qualifications)
+                if not additions:
+                    break
+                qualifications |= additions
+                result = simulate(qualifications)
+                if progress(*result[:2]) > prefix:
+                    return qualifications, result
+                actual = result[0]
+            return None
+
         def advance(qualifications, actual, prefix):
             best, best_score = None, prefix
             pending, seen = deque(), {qualifications}
@@ -2222,6 +2255,9 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 seen.add(trial)
             if best is not None:
                 return best
+            chained = propagate(qualifications, actual, prefix)
+            if chained is not None:
+                return chained
 
             # Search combinations only when singles cannot preserve and
             # extend the matched prefix. Reset the budget after each advance.
@@ -2246,6 +2282,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         actual, issues, modified = simulate(qualifications)
         if issues or actual != expected:
             qualifiable = {entry for entry in ordered if can_qualify(entry)}
+            parent_of = {path: entries[0] for path, entries in incoming.items()}
             while issues or actual != expected:
                 step = advance(qualifications, actual, progress(actual, issues))
                 if step is None:

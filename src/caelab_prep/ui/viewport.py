@@ -214,16 +214,9 @@ class MeshViewport(QWidget):
             cell_parts.append(part)
             # Keep duplicate typed IDs explicit; an ambiguous selection is refused.
             key = (cell.get("resource_id"), cell["id"])
-            if key in self._element_index:
-                previous = self._element_index[key]
-                if previous is not None:
-                    previous_cell = self._cells[original_indices[previous]]
-                    self._element_index[(*key, previous_cell.get("formulation"))] = previous
-                qualified = (*key, cell.get("formulation"))
-                self._element_index[qualified] = None if qualified in self._element_index else row
-                self._element_index[key] = None
-            else:
-                self._element_index[key] = row
+            qualified = (*key, cell.get("formulation"))
+            self._element_index[qualified] = None if qualified in self._element_index else row
+            self._element_index[key] = None if key in self._element_index else row
         part_slots = {part: i for i, part in enumerate(part_cells)}
         part_numbers = np.fromiter((part_slots[part] % len(palette) for part in cell_parts),
                                   dtype=np.intp, count=len(cell_parts))
