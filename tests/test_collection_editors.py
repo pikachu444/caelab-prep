@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from fractions import Fraction
 import os
+from typing import NamedTuple
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
@@ -149,6 +150,24 @@ def test_reference_buckets_accept_python_numeric_equality(equivalent, nested):
         choice = {"path": ["shells", 201]}
         equivalent = {"path": ["shells", equivalent]}
     editor = ReferenceListEdit((equivalent,), choices=(choice,))
+    assert editor.list.count() == 1
+    assert editor.value() == (choice,)
+
+
+class _ContainerReference(NamedTuple):
+    ids: frozenset
+
+
+@pytest.mark.parametrize("first, second", (
+    ((frozenset({201}),), ({201},)),
+    (_ContainerReference(frozenset({201})), ({201},)),
+    ({"path": [{"ids": frozenset({Decimal("201")})}]}, {"path": [{"ids": {Fraction(201, 1)}}]}),
+))
+@pytest.mark.parametrize("reverse", (False, True))
+def test_reference_buckets_match_equal_container_representations(first, second, reverse):
+    choice, selected = (second, first) if reverse else (first, second)
+    assert choice == selected
+    editor = ReferenceListEdit((selected,), choices=(choice,))
     assert editor.list.count() == 1
     assert editor.value() == (choice,)
 

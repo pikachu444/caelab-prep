@@ -1929,8 +1929,7 @@ def test_mesh_planners_accept_native_alias_from_viewport_pick(tmp_path, family, 
     assert session.plan_part_reassignment([{"element": picked, "part": part_ref}])["admissible"]
 
 
-@pytest.mark.parametrize("blank_id", (False, True), ids=("dangling-node", "blank-element-id"))
-def test_incomplete_part_blocks_contact_surface_creation_resolution_and_export(tmp_path, blank_id):
+def _incomplete_contact_part(tmp_path, blank_id):
     starter = _build_deck_multi_include(tmp_path / "input")
     session = PrepSession()
     session.open_rad(starter)
@@ -1949,8 +1948,14 @@ def test_incomplete_part_blocks_contact_surface_creation_resolution_and_export(t
     project = tmp_path / "incomplete.caeprep"
     session.save_project(project)
     session.open_project(project)
-    part = _card_by_prefix(session, "/PART/4")
+    return session, secondary, surface, contact, case
 
+
+@pytest.mark.parametrize("blank_id", (False, True), ids=("dangling-node", "blank-element-id"))
+def test_incomplete_part_blocks_contact_surface_creation_resolution_and_export(tmp_path, blank_id):
+    session, secondary, surface, contact, case = _incomplete_contact_part(tmp_path, blank_id)
+    part = _card_by_prefix(session, "/PART/4")
+    revision = session.document.revision
     expected = "invalid_deck" if blank_id else "dangling_reference"
     from caelab_prep.application.rad_provider import RadProvider
     with pytest.raises(PrepError) as selection:
@@ -1971,10 +1976,64 @@ def test_incomplete_part_blocks_contact_surface_creation_resolution_and_export(t
     if not blank_id:
         assert diagnostic["diagnostics"][0]["missing_node_ids"] == [999999]
     output = tmp_path / "output/case_0000.rad"
+    with pytest.raises(PrepError) as validation:
+        session.validate_analysis_case(case)
+    assert validation.value.code == expected
     with pytest.raises(PrepError) as error:
         session.export_analysis_case(output, case)
     assert error.value.code == expected
-    assert not output.exists()
+    assert not output.parent.exists()
+    assert session.document.revision == revision
+
+
+@pytest.mark.parametrize("blank_id", (False, True), ids=("dangling-node", "blank-element-id"))
+def test_incomplete_part_tree_click_keeps_assignment_available(tmp_path, blank_id, qt_widgets):
+    from PySide6.QtCore import Qt
+    from PySide6.QtTest import QTest
+    from caelab_prep.ui.main_window import MainWindow
+
+    session, secondary, surface, contact, case = _incomplete_contact_part(tmp_path, blank_id)
+    before = session.document.revision
+    window = MainWindow(session, presentation="beidprep", enable_viewport=False)
+    window._allow_close = True
+    window.show()
+    qt_widgets.processEvents()
+    target = window.provider.ref_for_card(_card_by_prefix(session, "/PART/4"))
+    tree = window.model_tree
+    tree.expandAll()
+    index = tree._indices[target].index()
+    tree.scrollTo(index)
+    QTest.mouseClick(tree.viewport(), Qt.MouseButton.LeftButton, pos=tree.visualRect(index).center())
+    qt_widgets.processEvents()
+
+    assert tree.selected_refs() == (target,)
+    assert session.active_object() == target
+    assert not session.selection()["ids"]
+    assert {"material", "property"} <= window.property_editor.editors.keys()
+    warning = window.property_editor.raw_values()["mesh_status"]
+    assert ("Invalid or missing element ID" if blank_id else "Element 208 references missing nodes") in warning
+    assign = window.modeling.actions["part.assign"]
+    assert assign.isEnabled()
+    assign.trigger()
+    assert {"material", "property"} <= window.modeling.panel.editor.editors.keys()
+
+    surface_code = "incompatible_surface" if blank_id else "dangling_reference"
+    case_code = "invalid_deck" if blank_id else "dangling_reference"
+    if not blank_id:
+        with pytest.raises(PrepError) as geometry:
+            session.select_entity("element", 208, formulation="SH4N")
+        assert geometry.value.code == "invalid_selection"
+    output = tmp_path / "output/case_0000.rad"
+    for call, code in (
+            (lambda: session.create_surface("Incomplete surface", [target.object_id]), surface_code),
+            (lambda: session.create_contact("Incomplete contact", secondary, surface, .1), surface_code),
+            (lambda: session.validate_analysis_case(case), case_code),
+            (lambda: session.export_analysis_case(output, case), case_code)):
+        with pytest.raises(PrepError) as error:
+            call()
+        assert error.value.code == code and error.value.details["diagnostics"]
+    assert session.condition_targets(contact)["diagnostics"]
+    assert session.document.revision == before and not output.parent.exists()
 
 
 def test_case_export_round_trips_sh4n_and_tetra_keywords(tmp_path):

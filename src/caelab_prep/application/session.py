@@ -1872,7 +1872,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             self._notify("selection")
             return self.selection()
 
-    def activate_object(self, target: ObjectRef | None) -> dict:
+    def activate_object(self, target: ObjectRef | None, *, inspect_incomplete_part=False) -> dict:
         with self._lock:
             document = self._require()
             cells = []
@@ -1881,7 +1881,12 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 _, card = self._object_card(target)
                 part_selected = self._native_part_id(card.keyword) is not None
                 if part_selected:
-                    cells = self._part_cells(target)
+                    try:
+                        cells = self._part_cells(target)
+                    except PrepError as exc:
+                        # The tree can inspect assignments without a geometry selection.
+                        if not inspect_incomplete_part or exc.code not in ("invalid_deck", "dangling_reference"):
+                            raise
             selection = Selection("element", tuple(cell["id"] for cell in cells),
                 tuple(self._element_selection_ref(cell) for cell in cells)) if cells else Selection()
             active_role = None

@@ -611,8 +611,8 @@ class RadProvider:
     def subscribe(self, listener):
         return self.session.subscribe(listener)
 
-    def select(self, target):
-        return self.session.activate_object(target)
+    def select(self, target, *, inspect_incomplete_part=False):
+        return self.session.activate_object(target, inspect_incomplete_part=inspect_incomplete_part)
 
     def select_many(self, targets, active=None):
         return self.session.select_objects(targets, active=active)

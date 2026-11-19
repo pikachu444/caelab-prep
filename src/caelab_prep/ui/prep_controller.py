@@ -380,11 +380,13 @@ class PrepController:
             self._refresh_fields()
         elif parts and len(parts) == len(refs):
             try:
-                self.provider.select_many(parts, active=active if active in parts else parts[-1])
-                if self.viewport:
-                    self.viewport.set_selection(self.session.selection())
-                self.selectionChanged.emit(self.session.selection())
-                if len(parts) > 1:
+                if len(parts) == 1:
+                    self._activate_card(parts[0])
+                else:
+                    self.provider.select_many(parts, active=active if active in parts else parts[-1])
+                    if self.viewport:
+                        self.viewport.set_selection(self.session.selection())
+                    self.selectionChanged.emit(self.session.selection())
                     self.statusBar().showMessage(f"{len(parts)} parts selected; properties show the active part")
             except Exception as exc:
                 self._show_error(exc)
@@ -527,7 +529,7 @@ class PrepController:
             self.model_tree.blockSignals(blocked)
 
     def _activate_card(self, ref):
-        self.provider.select(ref)
+        self.provider.select(ref, inspect_incomplete_part=True)
         selection = self.session.selection()
         if self.viewport:
             self.viewport.set_selection(selection)

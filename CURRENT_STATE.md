@@ -198,6 +198,14 @@ Qt 참조 목록은 Python 값 동등성으로 선택을 확인한다. Windows Q
 
 Windows Python 3.13로 집중 검사 104건과 영향 범위 32개 모듈 812건을 통과했다. 전체 실행에서 건너뛴 선택 실행 렌더링·피킹 검사 1건은 별도로 활성화해 통과했다. OCP 미설치 검사 3건은 건너뛰었다.
 
+### 스물다섯 번째 검토 수정
+
+`b6f1c0c` 재검토를 반영했다. `8e85a669`의 순차 INCLUDE 재시도 규칙을 복원했다. 해당 작성기로 만든 원본 7파일 보관본을 두 번 저장·재열고 케이스로 내보냈다. 절점 16개와 요소 4개, 원문 셸 그룹 `[9008, 9009, -9009]`와 유효 멤버 `[9008]`를 확인했다. 음수 제외를 삽입한 `24137d60`과 `987c52b8` 보관본은 계속 거부한다.
+
+요소 ID나 참조 절점이 누락된 PART를 트리에서 클릭하면 진단과 재료·단면 편집을 표시한다. 표면·접촉·케이스 검증에서 오류를 반환하며 내보내기 파일과 리비전 변화는 없었다. Qt 참조 목록은 `set`·`frozenset`을 포함한 중첩 컨테이너의 Python 동등성을 적용한다. 셸 8,000개 폼을 열고 검증하는 시간은 Windows Qt offscreen에서 중앙값 252.5 ms였다(5회, 245.7–292.4 ms).
+
+Windows Python 3.13에서 집중 검사 111건과 영향 범위 32개 모듈 821건을 통과했다. 선택 실행 VTK 렌더링·피킹 검사는 별도로 활성화해 통과했고 OCP 미설치 검사 3건은 건너뛰었다. 20,000절점 덱의 스칼라 편집 41회에서 표시 리비전을 유지했으며 구조 직렬화와 해시는 각각 0회였다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

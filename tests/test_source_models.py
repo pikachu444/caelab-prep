@@ -561,6 +561,48 @@ def test_archive_signed_element_exclusions_follow_writer_support(tmp_path, write
     assert _i(-ids["E:SHELL", 9007]) in session.card_text(group)
 
 
+def test_8e85_signed_archive_replays_fallback_include_traversal(tmp_path):
+    # Written by 8e85a669 with an empty source_paths list. The unused
+    # a/door/marker.inc on disk delayed door/marker.inc by one INCLUDE wave.
+    fixture = Path(__file__).with_name("fixtures") / "8e85a669-signed-includes.caeprep"
+    with zipfile.ZipFile(fixture) as archive:
+        manifest = json.loads(archive.read("manifest.json"))
+        source, = manifest["source_models"]
+        assert len(source["files"]) == 7
+        for path in ("b/entry.inc", "door/marker.inc"):
+            record = next(item for item in source["files"] if item["original_path"] == path)
+            assert archive.read(f'sources/{source["id"]}/{record["original_resource_id"]}.rad') == b"#include mesh.inc\n"
+
+    def assert_group(session):
+        projection = session.mesh_view()
+        assert len(projection["node_ids"]) == 16
+        assert len(projection["cells"]) == 4
+        group = _card(session, "/GRSHEL/SHEL/48")["id"]
+        membership = session.group_members(group)
+        assert membership["member_ids"] == [9008] and not membership["diagnostics"]
+        assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
+
+    def assert_bindings(session):
+        ids = {item["original_path"]: item["resource_id"] for item in source["files"]}
+        assert session._include_bindings[ids["b/entry.inc"], 0] == ids["mesh.inc"]
+        assert session._include_bindings[ids["door/marker.inc"], 0] == ids["door/mesh.inc"]
+
+    session = PrepSession()
+    session.open_project(fixture)
+    assert_group(session)
+    assert_bindings(session)
+    for name in ("first", "second"):
+        saved = tmp_path / f"{name}.caeprep"
+        session.save_project(saved)
+        session.open_project(saved)
+        assert_group(session)
+        assert_bindings(session)
+    target = tmp_path / "export/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    assert_group(session)
+
+
 def test_stale_or_unsupported_import_has_no_partial_commit(tmp_path):
     first, second = model(tmp_path / "first"), model(tmp_path / "second")
     session = PrepSession(); session.open_rad(first)

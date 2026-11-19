@@ -213,23 +213,29 @@ class BooleanVectorEdit(QWidget):
 
 def _bucket_key(value):
     kind = type(value)
-    if kind is dict:
+    if kind is str or kind is int:
+        return ("hash", hash(value))
+    equality = kind.__eq__
+    if isinstance(value, dict) and equality is dict.__eq__:
         items = []
         for key, item in value.items():
             pair = (_bucket_key(key), _bucket_key(item))
             if None in pair:
                 return None
             items.append(pair)
-        return ("dict", hash(frozenset(items)))
-    if kind is set:
-        return hash(frozenset(value))  # Sets and frozensets can compare equal.
+        return ("dict", frozenset(items))
+    if isinstance(value, tuple) and equality is tuple.__eq__:
+        items = tuple(_bucket_key(item) for item in value)
+        return ("tuple", items) if None not in items else None
+    if isinstance(value, list) and equality is list.__eq__:
+        items = tuple(_bucket_key(item) for item in value)
+        return ("list", items) if None not in items else None
+    if isinstance(value, (set, frozenset)) and equality in (set.__eq__, frozenset.__eq__):
+        items = frozenset(_bucket_key(item) for item in value)
+        return ("set", items) if None not in items else None
     try:
-        return hash(value)
+        return ("hash", hash(value))
     except TypeError:
-        if kind in (list, tuple):
-            items = tuple(_bucket_key(item) for item in value)
-            if None not in items:
-                return (kind, items)
         return None
 
 

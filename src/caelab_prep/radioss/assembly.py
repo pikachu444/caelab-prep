@@ -195,8 +195,17 @@ def source_include_graph(resources, paths, *, selected=None, historical=None, lo
             load_order.append(path)
         return by_path[path]
 
-    return resolve_includes(root, include_lookup(paths), load,
-                            selected=selected, historical=historical)
+    lookup = include_lookup(paths)
+    if historical == "8e85":
+        # This writer retried sequential traversal only when the normal waves
+        # succeeded but left part of the immutable source inventory unreached.
+        normal = resolve_includes(root, lookup, load, selected=selected)
+        reached, _, problems = normal
+        if problems or reached == set(paths):
+            return normal
+        if load_order is not None:
+            load_order.clear()
+    return resolve_includes(root, lookup, load, selected=selected, historical=historical)
 
 
 def remap(resources, mappings, paths, *, include_graph=None, two_line="quoted", legacy_direct_inline: bool = False,

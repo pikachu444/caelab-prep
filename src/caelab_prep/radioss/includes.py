@@ -148,14 +148,15 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical):
     # Freeze the unambiguous claims so one ambiguous binding cannot change
     # the choice made for another directive.
     snapshot_reached, snapshot_explicit = reached.copy(), explicit.copy()
+    sequential = historical in ("ac0", "8e85")
     while pending:
-        if historical == "ac0":
+        if sequential:
             unambiguous_reached, unambiguous_explicit = reached, explicit
         elif historical == "bde":
             unambiguous_reached, unambiguous_explicit = snapshot_reached, snapshot_explicit
         else:
             unambiguous_reached, unambiguous_explicit = reached.copy(), explicit.copy()
-        batch = [pending.popleft() for _ in range(1 if historical == "ac0" else len(pending))]
+        batch = [pending.popleft() for _ in range(1 if sequential else len(pending))]
         for owner, directive, root_file, sibling, chain in batch:
             target = sibling if root_file in unambiguous_reached and sibling not in unambiguous_explicit else root_file
             follow(owner, directive, target, chain)
