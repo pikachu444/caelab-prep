@@ -75,11 +75,12 @@ def test_explicit_shared_node_is_single_entity_and_unmapped_nodes_stay_distinct(
     assert session.describe()["node_count"] == 4
 
 
-@pytest.mark.parametrize("variant", ("title-only-deleted", "underscore-retained", "underscore-corrected", "underscore-deleted"))
+@pytest.mark.parametrize("variant", ("title-only-deleted", "all-zero-deleted", "underscore-retained", "underscore-corrected",
+                                     "underscore-deleted", "underscore-node", "underscore-connectivity"))
 def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     source = _base_model(tmp_path / "source")
-    title_only = variant.startswith("title-only")
-    identifiers = (101, 205) if title_only else (101, 101, 205)
+    empty = variant in ("title-only-deleted", "all-zero-deleted")
+    identifiers = (101, 205) if empty else (101, 101, 205)
     native_row = f"{_i(*identifiers)}\n".encode()
     source.write_bytes(source.read_bytes().replace(b"/END", b"/GRNOD/NODE/47\nUnused target\n" + native_row + b"/END"))
     session = PrepSession()
@@ -109,19 +110,40 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     mapped_member = next(item["raw_member"] for item in manifest["resources"] if item["id"] == file["resource_id"])
     # Reproduce the older writers' immutable originals and corresponding remaps.
     assert payloads[original_member].count(native_row) == 1
-    legacy_row = b"" if title_only else f"{101:10d}{'1_01':>10}{205:10d}\n".encode()
+    if empty:
+        legacy_row = b"" if variant.startswith("title-only") else f"{_i(0, 0)}\n".encode()
+    else:
+        legacy_row = f"{101:10d}{'1_01':>10}{205:10d}\n".encode()
     payloads[original_member] = payloads[original_member].replace(native_row, legacy_row)
     file["sha256"] = sha256(payloads[original_member]).hexdigest()
-    if title_only:
+    if empty:
         translated_row = f'{_i(*expected)}\n'.encode()
         assert payloads[mapped_member].count(translated_row) == 1
-        payloads[mapped_member] = payloads[mapped_member].replace(translated_row, b"")
+        payloads[mapped_member] = payloads[mapped_member].replace(translated_row, legacy_row)
+    if variant in ("underscore-node", "underscore-connectivity"):
+        mesh_file = next(item for item in source_model["files"] if item["original_path"] == "mesh.inc")
+        mesh_member = f'sources/{source_model["id"]}/{mesh_file["original_resource_id"]}.rad'
+        prefix = b"" if variant.endswith("node") else _i(7001).encode()
+        old = b"\n" + prefix + _i(101).encode()
+        assert payloads[mesh_member].count(old) == 1
+        changed = payloads[mesh_member].replace(old, b"\n" + prefix + f"{'1_01':>10}".encode())
+        payloads[mesh_member] = changed
+        mesh_file["sha256"] = sha256(changed).hexdigest()
+        source.with_name("mesh.inc").write_bytes(changed)
+        with pytest.raises(PrepError) as error:
+            session.plan_import_source(source)
+        assert error.value.code == "unsupported_source_profile"
     payloads["manifest.json"] = json.dumps(manifest).encode()
     legacy = tmp_path / "pass13.caeprep"
     with zipfile.ZipFile(legacy, "w") as archive:
         for name, raw in payloads.items():
             archive.writestr(name, raw)
 
+    if variant == "all-zero-deleted":
+        with pytest.raises(PrepError, match="positive node ID") as error:
+            session.open_project(legacy)
+        assert error.value.code == "unsupported_source_profile"
+        return
     session.open_project(legacy)
     view = session.mesh_view()
     assert len(view["node_ids"]) == 16 and len(view["cells"]) == 4
@@ -129,10 +151,11 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
         assert not any(card["keyword"].startswith("/GRNOD/") for card in session.list_cards())
     else:
         assert session.group_members(group)["member_ids"] == list(expected)
-        native_members = (expected[0], *expected) if variant.endswith("retained") else expected
+        native_members = expected if variant.endswith("corrected") else (expected[0], *expected)
         assert session.card_text(group).splitlines()[-1] == _i(*native_members)
     target = tmp_path / "export/case_0000.rad"
     session.export_analysis_case(target, case)
+    assert all(b"1_01" not in path.read_bytes() for path in target.parent.rglob("*") if path.is_file())
     session.open_rad(target)
     assert len(session.mesh_view()["node_ids"]) == 16 and len(session.mesh_view()["cells"]) == 4
     if not variant.endswith("deleted"):

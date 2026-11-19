@@ -72,6 +72,7 @@ class PrepController:
         self._last_presented_document = None
         self._last_presented_epoch = None
         self._last_presented_revision = -1
+        self._last_presented_projection_revision = None
         self.field_editors = {}
         self._field_specs = {}
         self.actions = ActionRegistry(self)
@@ -225,9 +226,14 @@ class PrepController:
         kind = event.get("kind")
         same_document = (event.get("document_id") == self._last_presented_document
                          and event.get("document_epoch") == self._last_presented_epoch)
-        if kind == "selection":
-            if self.viewport:
-                self.viewport.set_selection(self.session.selection())
+        projection_changed = (self.viewport is not None and event.get("projection_revision", self._last_presented_projection_revision)
+                              != self._last_presented_projection_revision)
+        selection = self.session.selection() if kind == "selection" and self.viewport is not None else None
+        if selection is not None and selection["projection_revision"] != self._last_presented_projection_revision:
+            projection_changed = True
+        if kind == "selection" and not projection_changed:
+            if selection is not None:
+                self.viewport.set_selection(selection)
             active = self.provider.active_object()
             target_id = active.object_id if active else None
             if target_id != self._selected_card_id:
@@ -241,7 +247,7 @@ class PrepController:
             self._refresh_target_roles()
             self._refresh_actions()
             return
-        if kind == "field" and same_document and event.get("revision", -1) <= self._last_presented_revision:
+        if kind == "field" and same_document and not projection_changed and event.get("revision", -1) <= self._last_presented_revision:
             return
         drafts = self._text_drafts()
         if self._replacement_conflict or (not same_document and drafts):
@@ -253,7 +259,7 @@ class PrepController:
             self._refresh_actions()
             return
         draft_revision = self._editor_revision
-        self.refresh_document(rebuild_viewport=kind in ("document", "structure"))
+        self.refresh_document(rebuild_viewport=kind in ("document", "structure") or projection_changed)
         self._restore_text_drafts(drafts)
         if drafts:
             self._editor_revision = draft_revision
@@ -274,13 +280,18 @@ class PrepController:
             self._restore_approved_selection()
             self._refresh_fields()
             self._refresh_actions(summary)
-            if rebuild_viewport and self.viewport is not None and summary.get("document_id"):
+            projection_revision = summary.get("projection_revision")
+            if (self.viewport is not None and summary.get("document_id")
+                    and (rebuild_viewport or projection_revision != self._last_presented_projection_revision)):
                 try:
-                    self.viewport.set_mesh(self.session.mesh_view(), reset_camera=
+                    projection = self.session.mesh_view()
+                    self.viewport.set_mesh(projection, reset_camera=
                                            summary.get("document_epoch") != self._last_presented_epoch)
                     self._apply_display_state()
                 except Exception as exc:
                     self._viewport_diagnostic(f"Mesh display failed: {exc}")
+                else:
+                    self._last_presented_projection_revision = projection.get("projection_revision")
             if self.viewport is not None and summary.get("document_id"):
                 self.viewport.set_selection(self.session.selection())
             self._refresh_tree_appearances()

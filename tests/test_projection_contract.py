@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from caelab_prep.application import PrepSession
+from caelab_prep.application.rad_provider import RadProvider
 from caelab_prep.cae_core import PrepError
 from caelab_prep.radioss import deck
 from test_condition_workflow import _base_model, _card, _i, _r
@@ -104,6 +105,89 @@ def test_first_pick_rejects_geometry_moved_in_another_include(tmp_path):
     assert session.select_pick(pick(updated))["ids"] == [element["id"]]
 
 
+def test_selected_node_is_cleared_when_a_second_owner_appears(tmp_path):
+    source = tmp_path / "nodes_0000.rad"
+    source.write_text("/BEGIN\nShared native ID\n#include first.inc\n#include second.inc\n/END\n")
+    (tmp_path / "first.inc").write_text(f"/NODE\n{_i(2)}{_r(0, 0, 0)}\n")
+    (tmp_path / "second.inc").write_text(f"/NODE\n{_i(1)}{_r(1, 0, 0)}\n")
+    session = PrepSession()
+    session.open_rad(source)
+    assert session.select_entity("node", 1)["ids"] == [1]
+    first = next(resource for resource in session._deck_resources() if resource.name == "first.inc")
+    card, = first.cards
+    first.restore(first.replaced_state(card.id, f"/NODE\n{_i(1)}{_r(0, 0, 0)}\n"))
+    assert session.selection()["ids"] == []
+    with pytest.raises(PrepError) as error:
+        session.select_entity("node", 1)
+    assert error.value.code == "ambiguous_selection"
+
+
+def test_unqualified_shell_pick_is_cleared_when_quad_uses_same_id(tmp_path):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "input"))
+    selection = session.select_entity("element", 7001)
+    assert selection["active_object"] and "formulation" not in selection["refs"][0]
+    mesh = session.document.resources[selection["refs"][0]["resource_id"]]
+    state, _ = mesh.inserted_state(f"/QUAD/903\n{_i(7001, 501, 605, 709, 811)}\n")
+    session.dispatcher.execute(mesh.id, state, "Add same-ID quad")
+    resolved = session.selection()
+    assert resolved["ids"] == [] and resolved["active_object"] is None and resolved["selected_objects"] == []
+    with pytest.raises(PrepError) as error:
+        session.select_entity("element", 7001, resource_id=mesh.id)
+    assert error.value.code == "ambiguous_selection"
+
+
+@pytest.mark.parametrize("write", ("restore", "field"))
+@pytest.mark.parametrize("multiple", (False, True), ids=("single-part", "multiple-parts"))
+def test_selected_part_highlight_tracks_renumbered_element(tmp_path, write, multiple):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "input"))
+    provider = RadProvider(session)
+    first = provider.ref_for_card(_card(session, "/PART/902"))
+    if multiple:
+        second = provider.ref_for_card(_card(session, "/PART/903"))
+        assert session.select_objects([first, second], active=first)["ids"] == [7001, 9007]
+    else:
+        assert session.activate_object(first)["ids"] == [7001]
+    shell = _card(session, "/SHELL/902")
+    mesh = session.document.resources[shell["resource_id"]]
+    state = mesh.replaced_state(shell["id"], f"/SHELL/902\n{_i(99, 101, 205, 309, 411)}\n")
+    if write == "restore":
+        mesh.restore(state)
+    else:
+        session.dispatcher.execute(mesh.id, state, "Renumber selected part element")
+    assert session.selection()["ids"] == ([99, 9007] if multiple else [99])
+    assert session.active_object() == first
+
+
+@pytest.mark.parametrize("first_reader", ("describe", "active_object", "selected_objects", "selection"))
+@pytest.mark.parametrize("keyword", ("/GRNOD/NODE/1", "/MAT/LAW1/41"))
+def test_selection_readers_agree_after_active_card_is_deleted(tmp_path, first_reader, keyword):
+    session = PrepSession()
+    if keyword.startswith("/MAT"):
+        source = tmp_path / "material_0000.rad"
+        source.write_text("/BEGIN\nMaterial\n/MAT/LAW1/41\nSteel\n             7.8e-9\n              210000                 0.3\n/END\n")
+        session.open_rad(source)
+    else:
+        session.open_rad(_base_model(tmp_path / "input"))
+        session.create_node_group("Target", [101])
+    card = _card(session, keyword)
+    ref = RadProvider(session).ref_for_card(card)
+    assert session.activate_object(ref)["active_object"]["object_id"] == ref.object_id
+    owner = session.document.resources[ref.resource_id]
+    owner.restore(owner.deleted_state(ref.object_id))
+
+    readers = {
+        "describe": lambda: (session.describe()["active_object"], session.describe()["selected_objects"]),
+        "active_object": session.active_object,
+        "selected_objects": session.selected_objects,
+        "selection": lambda: (session.selection()["active_object"], session.selection()["selected_objects"], session.selection()["ids"]),
+    }
+    expected = {"describe": (None, []), "active_object": None, "selected_objects": (), "selection": (None, [], [])}
+    for name in (first_reader, *(name for name in readers if name != first_reader)):
+        assert readers[name]() == expected[name]
+
+
 def test_scalar_material_edits_reuse_structure_token_for_large_replaced_deck(tmp_path, monkeypatch):
     source = _base_model(tmp_path / "input")
     source.write_bytes(source.read_bytes().replace(b"#include mesh.inc\n", source.with_name("mesh.inc").read_bytes()))
@@ -115,7 +199,12 @@ def test_scalar_material_edits_reuse_structure_token_for_large_replaced_deck(tmp
     session.dispatcher.execute(owner.id, state, "Replace mesh nodes", kind="structure")
     original = session.mesh_view()
     assert len(original["node_ids"]) == 20_000
-    material = _card(session, "/MAT/ELAST/17")["id"]
+    material_card = _card(session, "/MAT/ELAST/17")
+    material = material_card["id"]
+    active = RadProvider(session).ref_for_card(material_card)
+    session.activate_object(active)
+    events = []
+    session.subscribe(events.append)
     token = owner.structure_token()
     original_dumps, original_sha256 = deck.json.dumps, deck.hashlib.sha256
     structural_keys = {"created", "deleted", "replaced", "node_positions"}
@@ -143,3 +232,6 @@ def test_scalar_material_edits_reuse_structure_token_for_large_replaced_deck(tmp
     assert updated["points"] is original["points"] and owner.structure_token() == token
     assert (len(serializations), len(hashes)) == (0, 0)
     assert owner.structure_token() is token
+    assert len(events) == 41 and all(event["kind"] == "field" for event in events)
+    assert all(event["projection_revision"] == original["projection_revision"] for event in events)
+    assert session.active_object() == active and session.selected_objects() == (active,)

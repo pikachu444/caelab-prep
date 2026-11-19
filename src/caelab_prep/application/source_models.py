@@ -61,7 +61,8 @@ class SourceArchiveResource:
         originals = [DeckResource(self.files[item["original_resource_id"]], resource_id=item["original_resource_id"],
             name=item["original_path"], is_include=item["resource_id"] != self.metadata["root_resource_id"])
             for item in self.metadata["files"]]
-        # Replay the historical reader only for immutable archived originals.
+        # Replay historical integer spellings and title-only groups only when
+        # checking immutable originals against their saved remapped bytes.
         definitions, _, _ = inspect(originals, allow_legacy_groups=True)
         mapping = NativeMap({(ns, original): mapped for ns, original, mapped in self.metadata["id_map"]},
                             shared={("NODE", value) for value in self.metadata["shared_nodes"]})

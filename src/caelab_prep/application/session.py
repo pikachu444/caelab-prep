@@ -75,6 +75,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._active_object: ObjectRef | None = None
         self._selected_objects: tuple[ObjectRef, ...] = ()
         self._active_target_role = None
+        self._part_selection_active = False
         self._document_epoch = str(uuid4())
         self._projection_revision = 0
 
@@ -94,6 +95,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
     def _notify(self, kind: str, **details) -> None:
         event = {"kind": kind, "document_id": self.document.id if self.document else None,
                  "revision": self.document.revision if self.document else 0,
+                 "projection_revision": self._projection_revision,
                  "document_epoch": self._document_epoch, **details}
         for listener in tuple(self._listeners):
             try:
@@ -138,6 +140,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         self._active_object = None
         self._selected_objects = ()
         self._active_target_role = None
+        self._part_selection_active = False
         self._document_epoch = str(uuid4())
         self._projection_revision += 1
         self._import_plan = None
@@ -222,7 +225,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         "capabilities": self.capabilities(), "diagnostics": [], "source_path": None,
                         "project_path": None, "last_change": None, "active_object": None, "selected_objects": [], "active_case_id": None,
                         "document_epoch": self._document_epoch, "projection_revision": self._projection_revision}
-            self._ensure_projection(document)
+            self._ensure_selection_synced(document)
             projection = self._projection_cache
             assert self.dispatcher is not None
             return {"document_id": document.id, "revision": document.revision, "dirty": document.dirty,
@@ -325,41 +328,79 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
 
     def _command_changed(self, change):
         self._raw_node_counts_cache = None
-        if change.kind == "structure":
+        tokens = self._deck_structure_tokens()
+        structural = (change.kind == "structure"
+                      or (self._projection_tokens is not None and self._projection_tokens != tokens)
+                      or (self._selection_structure_tokens is not None and self._selection_structure_tokens != tokens))
+        if structural:
             self._sync_source_paths()
+        if change.kind == "structure":
             self._projection_cache = None
             self._projection_tokens = None
             self._projection_index = {}
             self._projection_revision += 1
-        if change.kind == "structure" or self._selection_structure_tokens != self._deck_structure_tokens():
+        if structural:
             self._sync_selection_after_structural_change()
-        self._notify(change.kind, change=change.to_dict())
+        self._notify("structure" if structural else change.kind, change=change.to_dict())
+
+    @staticmethod
+    def _selection_object_is_current(document, ref):
+        resource = document.resources.get(ref.resource_id)
+        card = getattr(resource, "_by_id", {}).get(ref.object_id)
+        return card is not None and card.keyword == ref.native_scope
+
+    def _ensure_selection_synced(self, document=None):
+        document = document or self._require()
+        self._ensure_projection(document)
+        if (self._selection_structure_tokens != self._projection_tokens
+                or any(not self._selection_object_is_current(document, ref)
+                       for ref in (self._active_object, *self._selected_objects) if ref is not None)):
+            self._sync_selection_after_structural_change(document)
 
     def _sync_selection_after_structural_change(self, document=None):
         document = document or self._require()
         self._ensure_projection(document)
-        if self._active_object is not None:
-            resource = document.resources.get(self._active_object.resource_id)
-            if self._active_object.object_id not in getattr(resource, "_by_id", {}):
-                self._active_object = None
-                self._active_target_role = None
-                document.selection = Selection()
+        object_driven = self._part_selection_active or self._active_target_role is not None
+        if self._active_object is not None and not self._selection_object_is_current(document, self._active_object):
+            self._active_object = None
+            self._active_target_role = None
         self._selected_objects = tuple(ref for ref in self._selected_objects
-            if ref.object_id in getattr(document.resources.get(ref.resource_id), "_by_id", {}))
+                                       if self._selection_object_is_current(document, ref))
+        if not self._selected_objects:
+            self._part_selection_active = False
+            if object_driven:
+                document.selection = Selection()
         if self._active_object is not None and self._active_target_role is not None:
             document.selection, self._active_target_role = self._condition_selection(
                 self._active_object.object_id, self._active_target_role)
+        elif self._part_selection_active:
+            try:
+                cells = [cell for target in self._selected_objects for cell in self._part_cells(target)]
+                refs = tuple(dict.fromkeys(self._element_selection_ref(cell) for cell in cells))
+            except PrepError:
+                refs = ()
+            document.selection = Selection("element", tuple(ref.local_id for ref in refs), refs) if refs else Selection()
         elif document.selection.refs:
             selection = document.selection
             node_resources = self._projection_cache["node_resources"]
             cells_by_id = self._projection_index["cells_by_id"]
-            refs = tuple(ref for ref in selection.refs if (
-                ref.resource_id in node_resources.get(ref.local_id, ()) if ref.entity_kind == "node"
-                else any(cell["resource_id"] == ref.resource_id
-                         and (ref.formulation is None or cell.get("formulation") == ref.formulation)
-                         for cell in cells_by_id.get(ref.local_id, ()))))
+            refs = []
+            for ref in selection.refs:
+                if ref.entity_kind == "node":
+                    unique = node_resources.get(ref.local_id, ()) == (ref.resource_id,)
+                else:
+                    matches = [cell for cell in cells_by_id.get(ref.local_id, ())
+                               if cell["resource_id"] == ref.resource_id
+                               and (ref.formulation is None or cell.get("formulation") == ref.formulation)]
+                    unique = len(matches) == 1
+                if unique:
+                    refs.append(ref)
+            refs = tuple(refs)
             if refs != selection.refs:
                 document.selection = Selection(selection.kind if refs else None, tuple(ref.local_id for ref in refs), refs)
+                if not refs and selection.kind == "element":
+                    self._active_object = None
+                    self._selected_objects = ()
         self._selection_structure_tokens = self._projection_tokens
 
     def _check_model_edit(self, expected_revision, expected_document_id):
@@ -1638,6 +1679,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
 
     def active_object(self) -> ObjectRef | None:
         with self._lock:
+            if self.document is not None:
+                self._ensure_selection_synced(self.document)
             return self._active_object
 
     @staticmethod
@@ -1757,6 +1800,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             target = ObjectRef(self.document.id, resource.id, card.id, "rad-card", card.keyword)
             self._active_object, self._selected_objects = target, (target,)
             self._active_target_role = selected_role
+            self._part_selection_active = False
             self.document.selection = selection
             self._notify("selection")
             return self.selection()
@@ -1765,9 +1809,12 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         with self._lock:
             document = self._require()
             cells = []
+            part_selected = False
             if target is not None:
-                self._object_card(target)
-                cells = self._part_cells(target)
+                _, card = self._object_card(target)
+                part_selected = self._native_part_id(card.keyword) is not None
+                if part_selected:
+                    cells = self._part_cells(target)
             selection = Selection("element", tuple(cell["id"] for cell in cells),
                 tuple(self._element_selection_ref(cell) for cell in cells)) if cells else Selection()
             active_role = None
@@ -1776,12 +1823,15 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             self._active_object = target
             self._selected_objects = (target,) if target is not None else ()
             self._active_target_role = active_role
+            self._part_selection_active = part_selected
             document.selection = selection
             self._notify("selection")
             return self.selection()
 
     def selected_objects(self):
         with self._lock:
+            if self.document is not None:
+                self._ensure_selection_synced(self.document)
             return self._selected_objects
 
     def select_objects(self, refs, active=None):
@@ -1807,6 +1857,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             entity_refs = tuple(dict.fromkeys(self._element_selection_ref(cell) for cell in cells))
             selection = Selection("element", tuple(ref.local_id for ref in entity_refs), entity_refs) if entity_refs else Selection()
             self._selected_objects = tuple(normalized)
+            self._part_selection_active = bool(normalized)
             self._active_target_role = None
             self._active_object = active
             document.selection = selection
@@ -1862,6 +1913,7 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             document.selection = Selection(kind, (entity_id,), (reference,))
             self._active_object = None
             self._active_target_role = None
+            self._part_selection_active = False
             if kind == "element":
                 cell = cells[0]
                 parts = [item for item in self.list_cards() if self._native_part_id(item["keyword"]) == cell.get("part_id")]
@@ -1878,15 +1930,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             self._active_object = None
             self._selected_objects = ()
             self._active_target_role = None
+            self._part_selection_active = False
             self._notify("selection")
             return self.selection()
 
     def selection(self) -> dict:
         with self._lock:
             document = self._require()
-            self._ensure_projection(document)
-            if self._selection_structure_tokens != self._projection_tokens:
-                self._sync_selection_after_structural_change(document)
+            self._ensure_selection_synced(document)
             return {"kind": document.selection.kind, "ids": list(document.selection.ids),
                     "document_id": document.id, "revision": document.revision,
                     "document_epoch": self._document_epoch, "projection_revision": self._projection_revision,

@@ -6,6 +6,7 @@ DeckResource's source-header safeguards. Unsupported reference-bearing cards
 are rejected before any document mutation.
 """
 import re
+from functools import partial
 
 from ..cae_core import PrepError
 from .includes import include_lookup, resolve_includes
@@ -44,24 +45,26 @@ def _int(text, *, zero=False, allow_underscore=False):
         raise PrepError("unsupported_source_profile", "Expected a positive fixed-width native ID.", {"field": text}) from None
 
 
-def element_node_references(family, line):
+def element_node_references(family, line, *, allow_underscore=False):
     """Include BEAM's optional direction node as a native reference."""
     fields = []
     for index in range(1, ELEMENTS[family] + 1):
-        value = _int(line[index * 10:(index + 1) * 10], zero=family == "BEAM" and index == 3)
+        value = _int(line[index * 10:(index + 1) * 10], zero=family == "BEAM" and index == 3,
+                     allow_underscore=allow_underscore)
         if value: fields.append((index * 10, value))
     return tuple(fields)
 
 
-def element_part_reference(keyword):
+def element_part_reference(keyword, *, allow_underscore=False):
     words = keyword.strip("/").split("/")
     if len(words) != 2:
         raise PrepError("unsupported_source_units", "Element unit overrides are not supported.")
-    return _int(words[1])
+    return _int(words[1], allow_underscore=allow_underscore)
 
 
 def _inspect(resources, *, allow_legacy_groups: bool = False):
     """Collect definitions and fixed-width references, retaining file ownership."""
+    parse_id = partial(_int, allow_underscore=allow_legacy_groups)
     definitions, refs, edits, omitted = {}, [], {}, {}
     def define(ns, value, rid, line, start=None):
         key = (ns, value)
@@ -89,34 +92,37 @@ def _inspect(resources, *, allow_legacy_groups: bool = False):
                 omitted[rid].update((card.start, *card.data)); continue
             if header_id: define(*header_id, rid, card.start)
             if root == "NODE":
-                for row in card.data: define("NODE", _int(lines[row][:10]), rid, row, 0)
+                for row in card.data: define("NODE", parse_id(lines[row][:10]), rid, row, 0)
             elif root in ELEMENTS:
-                reference("PART", element_part_reference(card.keyword), rid, card.start, -1)
+                reference("PART", element_part_reference(card.keyword, allow_underscore=allow_legacy_groups), rid, card.start, -1)
                 for row in card.data:
-                    define("E:" + ELEMENT_NAMESPACE[root], _int(lines[row][:10]), rid, row, 0)
-                    for start, identifier in element_node_references(root, lines[row]):
+                    define("E:" + ELEMENT_NAMESPACE[root], parse_id(lines[row][:10]), rid, row, 0)
+                    for start, identifier in element_node_references(root, lines[row], allow_underscore=allow_legacy_groups):
                         reference("NODE", identifier, rid, row, start)
             elif root == "PART":
                 if len(card.data) != 2: raise PrepError("unsupported_source_profile", "PART requires the standard title and assignment row.")
                 row = card.data[1]
-                reference("PROP", _int(lines[row][:10]), rid, row, 0)
-                reference("MAT", _int(lines[row][10:20]), rid, row, 10)
-                if _int(lines[row][20:30], zero=True):
+                reference("PROP", parse_id(lines[row][:10]), rid, row, 0)
+                reference("MAT", parse_id(lines[row][10:20]), rid, row, 10)
+                if parse_id(lines[row][20:30], zero=True):
                     raise PrepError("unsupported_source_profile", "SUBSET references require a separate mapping profile.")
             elif pair in GROUPS:
                 namespace = GROUPS[pair]
                 node_group = pair == "GRNOD/NODE"
                 entries = []
+                saw_zero = False
                 for row in card.data[1:]:
                     for start in range(0, len(lines[row].rstrip("\r\n")), 10):
                         token = lines[row][start:start + 10].strip()
                         if token:
-                            value = (-_int(token[1:], allow_underscore=allow_legacy_groups)
+                            value = (-parse_id(token[1:])
                                      if namespace.startswith("E:") and token.startswith("-")
-                                     else _int(token, zero=node_group, allow_underscore=allow_legacy_groups))
+                                     else parse_id(token, zero=node_group))
                             if value:
                                 entries.append((row, start, value))
-                if node_group and not entries and not allow_legacy_groups:
+                            elif node_group:
+                                saw_zero = True
+                if node_group and not entries and (saw_zero or not allow_legacy_groups):
                     raise PrepError("unsupported_source_profile", "Node group must reference at least one positive node ID.")
                 effective = set(element_group_members([value for _, _, value in entries]))
                 for row, start, value in entries:
@@ -126,30 +132,30 @@ def _inspect(resources, *, allow_legacy_groups: bool = False):
                         edits.setdefault(rid, []).append((row, start, namespace, value))
             elif root == "BCS":
                 row = card.data[1]
-                reference("SKEW", _int(lines[row][10:20], zero=True), rid, row, 10, True)
-                reference("GRNOD", _int(lines[row][20:30]), rid, row, 20)
+                reference("SKEW", parse_id(lines[row][10:20], zero=True), rid, row, 10, True)
+                reference("GRNOD", parse_id(lines[row][20:30]), rid, row, 20)
             elif root == "CLOAD":
                 row = card.data[1]
                 for ns, start, zero in (("FUNCT", 0, False), ("SKEW", 20, True), ("GRNOD", 40, False)):
-                    reference(ns, _int(lines[row][start:start + 10], zero=zero), rid, row, start, zero)
-                if _int(lines[row][30:40], zero=True): raise PrepError("unsupported_source_profile", "CLOAD sensor activation is outside this profile.")
+                    reference(ns, parse_id(lines[row][start:start + 10], zero=zero), rid, row, start, zero)
+                if parse_id(lines[row][30:40], zero=True): raise PrepError("unsupported_source_profile", "CLOAD sensor activation is outside this profile.")
             elif pair == "INIVEL/TRA":
                 row = card.data[1]
-                reference("GRNOD", _int(lines[row][60:70]), rid, row, 60)
-                reference("SKEW", _int(lines[row][70:80], zero=True), rid, row, 70, True)
+                reference("GRNOD", parse_id(lines[row][60:70]), rid, row, 60)
+                reference("SKEW", parse_id(lines[row][70:80], zero=True), rid, row, 70, True)
             elif pair == "INTER/TYPE7":
                 row = card.data[1]
                 # Curvature, sensor and temperature-function options are not
                 # silently remapped; the initial profile is the explicit writer.
-                if len(card.data) != 7 or any(_int(lines[row][s:s + 10], zero=True) for s in (60, 80, 90)):
+                if len(card.data) != 7 or any(parse_id(lines[row][s:s + 10], zero=True) for s in (60, 80, 90)):
                     raise PrepError("unsupported_source_profile", "TYPE7 import supports the explicit non-curved, no-sensor profile.")
-                reference("GRNOD", _int(lines[row][:10]), rid, row, 0)
-                reference("SURF", _int(lines[row][10:20]), rid, row, 10)
+                reference("GRNOD", parse_id(lines[row][:10]), rid, row, 0)
+                reference("SURF", parse_id(lines[row][10:20]), rid, row, 10)
                 last = lines[card.data[6]]
                 # Row 6: Ifric, Ifiltr, Xfreq(20), Iform, sens_ID,
                 # fct_ID_F, Ascale_F(20), fric_ID. The scale is real data,
                 # never an ID; all unimplemented function/friction refs block.
-                if any(_int(last[s:s + 10], zero=True) for s in (0, 10, 50, 60, 90)):
+                if any(parse_id(last[s:s + 10], zero=True) for s in (0, 10, 50, 60, 90)):
                     raise PrepError("unsupported_source_profile", "TYPE7 function/sensor options require their own mapping profile.")
     missing = sorted(set(refs) - set(definitions))
     if missing:

@@ -488,6 +488,48 @@ def test_set_hidden_parts_applies_symmetric_difference_deltas_atomically(with_se
     assert not view._render_failed
 
 
+def test_controller_refreshes_vtk_on_geometry_changing_field_commit(qt_widgets, tmp_path, monkeypatch):
+    from caelab_prep.application import PrepSession
+    from caelab_prep.ui import viewport as viewport_module
+    from caelab_prep.ui.main_window import MainWindow
+    from test_condition_workflow import _base_model, _card, _i
+
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "source"))
+    monkeypatch.setattr(viewport_module, "MeshViewport", _SpyDatasetViewport)
+    window = MainWindow(session, enable_viewport=True)
+    window._allow_close = True
+    window.show()
+    qt_widgets.processEvents()
+    view = window.viewport
+    before = session.mesh_view()
+    old_x = view._grid.GetPoint(0)[0]
+    node_owner = session.document.resources[before["node_resources"][101][0]]
+    moved = {str(node_id): (x + 100, y, z) for node_id, (x, y, z) in zip(before["node_ids"], before["points"])}
+    events = []
+    session.subscribe(events.append)
+    change = session.dispatcher.execute(node_owner.id, node_owner.node_positions_state(moved), "Move nodes")
+    assert change.kind == "field"
+    qt_widgets.processEvents()
+    assert view._projection_stamp["projection_revision"] == before["projection_revision"] + 1
+    assert view._grid.GetPoint(0)[0] == old_x + 100
+    assert events[0]["kind"] == "structure" and events[0]["projection_revision"] == view._projection_stamp["projection_revision"]
+    element = session.mesh_view()["cells"][0]
+    view.entityPicked.emit(pick_candidate(view._projection_stamp, "element", element["id"], element["resource_id"]))
+    qt_widgets.processEvents()
+    assert session.selection()["ids"] == [element["id"]]
+
+    part = window.provider.ref_for_card(_card(session, "/PART/902"))
+    session.activate_object(part)
+    shell = _card(session, "/SHELL/902")
+    node_owner.restore(node_owner.replaced_state(shell["id"], f"/SHELL/902\n{_i(99, 101, 205, 309, 411)}\n"))
+    window.refresh_document()
+    selection = session.selection()
+    assert selection["ids"] == [99] and session.active_object() == part
+    assert view._projection_stamp["projection_revision"] == selection["projection_revision"]
+    assert view._selection_cell_indices(selection) == [0] and view._highlight.GetVisibility()
+
+
 def test_prep_controller_atomic_visibility_preserves_selection_history_and_avoids_show_all_hide(
     qt_widgets, tmp_path, monkeypatch
 ):
