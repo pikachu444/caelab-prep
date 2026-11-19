@@ -62,9 +62,14 @@ def element_part_reference(keyword, *, allow_underscore=False):
     return _int(words[1], allow_underscore=allow_underscore)
 
 
-def _inspect(resources, *, allow_legacy_groups: bool = False):
+def _inspect(resources, *, profile: str = "current"):
     """Collect definitions and fixed-width references, retaining file ownership."""
-    parse_id = partial(_int, allow_underscore=allow_legacy_groups)
+    if profile not in ("current", "legacy_pass15", "legacy_pre15"):
+        raise PrepError("unsupported_source_profile", "Unknown native source reader profile.")
+    allow_underscore = profile == "legacy_pre15"
+    allow_zero_padding = profile != "legacy_pre15"
+    allow_empty_node_group = profile != "current"
+    parse_id = partial(_int, allow_underscore=allow_underscore)
     definitions, refs, edits, omitted = {}, [], {}, {}
     def define(ns, value, rid, line, start=None):
         key = (ns, value)
@@ -94,10 +99,10 @@ def _inspect(resources, *, allow_legacy_groups: bool = False):
             if root == "NODE":
                 for row in card.data: define("NODE", parse_id(lines[row][:10]), rid, row, 0)
             elif root in ELEMENTS:
-                reference("PART", element_part_reference(card.keyword, allow_underscore=allow_legacy_groups), rid, card.start, -1)
+                reference("PART", element_part_reference(card.keyword, allow_underscore=allow_underscore), rid, card.start, -1)
                 for row in card.data:
                     define("E:" + ELEMENT_NAMESPACE[root], parse_id(lines[row][:10]), rid, row, 0)
-                    for start, identifier in element_node_references(root, lines[row], allow_underscore=allow_legacy_groups):
+                    for start, identifier in element_node_references(root, lines[row], allow_underscore=allow_underscore):
                         reference("NODE", identifier, rid, row, start)
             elif root == "PART":
                 if len(card.data) != 2: raise PrepError("unsupported_source_profile", "PART requires the standard title and assignment row.")
@@ -117,12 +122,12 @@ def _inspect(resources, *, allow_legacy_groups: bool = False):
                         if token:
                             value = (-parse_id(token[1:])
                                      if namespace.startswith("E:") and token.startswith("-")
-                                     else parse_id(token, zero=node_group))
+                                     else parse_id(token, zero=node_group and allow_zero_padding))
                             if value:
                                 entries.append((row, start, value))
                             elif node_group:
                                 saw_zero = True
-                if node_group and not entries and (saw_zero or not allow_legacy_groups):
+                if node_group and not entries and (saw_zero or not allow_empty_node_group):
                     raise PrepError("unsupported_source_profile", "Node group must reference at least one positive node ID.")
                 effective = set(element_group_members([value for _, _, value in entries]))
                 for row, start, value in entries:
@@ -163,9 +168,9 @@ def _inspect(resources, *, allow_legacy_groups: bool = False):
     return definitions, edits, omitted
 
 
-def inspect(resources, *, allow_legacy_groups: bool = False):
+def inspect(resources, *, profile: str = "current"):
     try:
-        return _inspect(resources, allow_legacy_groups=allow_legacy_groups)
+        return _inspect(resources, profile=profile)
     except (IndexError, ValueError, TypeError) as exc:
         raise PrepError("unsupported_source_profile", "A supported source card has malformed fixed-width data.", {"reason": str(exc)}) from exc
 
@@ -183,8 +188,8 @@ def source_include_graph(resources, paths, *, selected=None, historical=None, lo
 
 
 def remap(resources, mappings, paths, *, include_graph=None, two_line="quoted", legacy_direct_inline: bool = False,
-          allow_legacy_groups: bool = False):
-    definitions, edits, omitted = inspect(resources, allow_legacy_groups=allow_legacy_groups)
+          profile: str = "current"):
+    definitions, edits, omitted = inspect(resources, profile=profile)
     reached, bindings, problems = include_graph if include_graph is not None else source_include_graph(resources, paths)
     if problems or (not legacy_direct_inline and reached != set(paths)):
         raise PrepError("include_missing", "The imported INCLUDE graph could not be resolved.")

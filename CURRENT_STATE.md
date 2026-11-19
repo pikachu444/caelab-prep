@@ -142,6 +142,14 @@ Windows Python 3.13.5에서 영향 범위 pytest 8개 모듈은 326건을 통과
 
 Windows Python 3.13에서 집중 검사 37건과 영향 범위 pytest 22개 모듈 555건을 통과했다. 별도 EGL 렌더링 검사 1건은 건너뛰었다.
 
+### 열여덟 번째 검토 수정
+
+`eb11392` 재검토를 반영했다. SH3N을 선택해 변을 분할하면 자식 요소를 선택하고 유일한 소유 PART를 활성 상태로 유지한다. PART 자체를 선택한 경우 기존 요소와 자식 요소를 함께 강조한다. 셸을 선택할 때 명시한 요소 형식을 유지하므로 같은 ID의 QUAD를 추가한 뒤에도 셸이 강조된다. 같은 형식과 ID의 요소가 추가되어 선택이 모호해지면 선택을 해제한다.
+
+독립 원본 아카이브는 각 세대의 정수 표기와 절점 그룹 규칙을 원본 전체에 적용해 저장한 매핑 바이트와 대조한다. Pass 13–15 작성본 네 개를 다시 열고 케이스를 내보내 각각 16절점·4요소를 확인했다. 밑줄 정수와 0 패딩을 혼합한 아카이브는 거부했다. 새 가져오기에는 현재 규칙을 적용한다.
+
+Windows Python 3.13과 Qt offscreen에서 영향 범위 25개 모듈 627건과 요소 편집 창 3개 모듈 64건을 통과했다. 별도 EGL 렌더링 검사 1건은 건너뛰었다. 교체된 20,000절점 덱의 스칼라 편집 41회에서 구조 직렬화와 해시 호출은 각각 0회였으며 표시 리비전은 유지됐다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

@@ -134,18 +134,31 @@ class EdgeSplitCommands:
             if not admissible:
                 raise PrepError("unsupported_edge_split_targets", "Resolve the affected condition targets before splitting triangle edges.")
             selection = self.document.selection
-            remap_selection = self._active_target_role is None
+            remap_selection = self._active_target_role is None and not self._part_selection_active
             change = self.dispatcher.execute_many(
                 native_mesh_edit_states(self, candidate, layout_error_code="unsupported_edge_split_layout"),
                 "Split selected triangle edge",
                 expected_revision=self.document.revision,
                 kind="structure",
             )
-            split_refs = {SelectionRef(**asdict(parent)): tuple(SelectionRef(**asdict(child)) for child in children)
-                          for parent, children in candidate.split_cells}
+            split_refs = {
+                SelectionRef(parent.resource_id, "element", parent.local_id, formulation):
+                    tuple(SelectionRef(child.resource_id, "element", child.local_id, "SH3N") for child in children)
+                for parent, children in candidate.split_cells for formulation in (None, "SH3N")
+            }
             if remap_selection and any(ref in split_refs for ref in selection.refs):
-                refs = tuple(ref for previous in selection.refs for ref in split_refs.get(previous, (previous,)))
-                self.document.selection = Selection(selection.kind, tuple(ref.local_id for ref in refs), refs)
+                refs, cells = [], []
+                for previous in selection.refs:
+                    for ref in split_refs.get(previous, (previous,)):
+                        matches = self._matching_selection_cells(ref.local_id, ref.resource_id, ref.formulation)
+                        if len(matches) == 1:
+                            cell = matches[0]
+                            cells.append(cell)
+                            refs.append(self._element_selection_ref(cell, formulation=previous.formulation))
+                if refs:
+                    self.document.selection = Selection("element", tuple(ref.local_id for ref in refs), tuple(refs))
+                self._active_object = self._owning_part_ref(cells)
+                self._selected_objects = (self._active_object,) if self._active_object is not None else ()
                 self._notify("selection")
             if getattr(self, "_edge_split_plan", None) is plan:
                 self._edge_split_plan = None

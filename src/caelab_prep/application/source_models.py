@@ -61,18 +61,30 @@ class SourceArchiveResource:
         originals = [DeckResource(self.files[item["original_resource_id"]], resource_id=item["original_resource_id"],
             name=item["original_path"], is_include=item["resource_id"] != self.metadata["root_resource_id"])
             for item in self.metadata["files"]]
-        # Replay historical integer spellings and title-only groups only when
-        # checking immutable originals against their saved remapped bytes.
-        definitions, _, _ = inspect(originals, allow_legacy_groups=True)
-        mapping = NativeMap({(ns, original): mapped for ns, original, mapped in self.metadata["id_map"]},
-                            shared={("NODE", value) for value in self.metadata["shared_nodes"]})
-        # Prep previously labeled imported native QUAD IDs as shell IDs.
-        # Reinterpret a key only when the archived native definitions prove it.
-        for namespace, original in definitions.keys() - mapping.keys():
-            old_key = ("E:SHELL", original)
-            if namespace == "E:QUAD" and old_key in mapping and old_key not in definitions:
-                mapping[namespace, original] = mapping.pop(old_key)
-        if set(definitions) != set(mapping):
+        recorded_mapping = {(ns, original): mapped for ns, original, mapped in self.metadata["id_map"]}
+        shared = {("NODE", value) for value in self.metadata["shared_nodes"]}
+        reader_matches = []
+        inspection_errors = []
+        # The historical field rules must hold across all originals together.
+        profiles = ("current", "legacy_pass15", "legacy_pre15")
+        for profile in profiles:
+            try:
+                definitions, _, _ = inspect(originals, profile=profile)
+            except PrepError as exc:
+                inspection_errors.append(exc)
+                continue
+            mapping = NativeMap(recorded_mapping, shared=shared)
+            # Reinterpret a historical shell key only when the native
+            # definitions prove that it represents a QUAD.
+            for namespace, original in definitions.keys() - mapping.keys():
+                old_key = ("E:SHELL", original)
+                if namespace == "E:QUAD" and old_key in mapping and old_key not in definitions:
+                    mapping[namespace, original] = mapping.pop(old_key)
+            if definitions.keys() == mapping.keys():
+                reader_matches.append((profile, mapping))
+        if len(inspection_errors) == len(profiles):
+            raise inspection_errors[0]
+        if not reader_matches:
             raise PrepError("invalid_project", "Source mapping does not cover the original native definitions exactly.")
         paths = {item["original_path"]: item["logical_path"] for item in self.metadata["files"]}
         actual = {}
@@ -129,13 +141,16 @@ class SourceArchiveResource:
             if reached != set(paths):
                 continue
             try:
-                expected = remap(originals, mapping, paths, include_graph=graph, two_line=style,
-                                 legacy_direct_inline=direct_writer, allow_legacy_groups=True)
+                matches_payload = any(
+                    actual == remap(originals, mapping, paths, include_graph=graph, two_line=style,
+                                    legacy_direct_inline=direct_writer, profile=profile)
+                    for profile, mapping in reader_matches
+                )
             except PrepError as exc:
                 if exc.code != "include_missing":
                     raise
                 continue
-            if actual != expected:
+            if not matches_payload:
                 continue
             effective = tuple(sorted((mapped_keys[key], mapped_ids[target]) for key, target in original_bindings.items()))
             repairs = {}

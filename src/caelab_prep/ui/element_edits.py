@@ -131,7 +131,17 @@ class NativeElementDialog(QDialog):
     def prepare_preview(self):
         try:
             self._guard(); self._invalidate()
-            self._plan = self._plan_request()
+            self.session._ensure_projection()
+            references = []
+            for ref in self._references:
+                formulation = ref.get("formulation")
+                if formulation is not None:
+                    cells = self.session._matching_selection_cells(ref["local_id"], ref["resource_id"], None)
+                    if len(cells) != 1 or cells[0].get("formulation") != formulation:
+                        raise PrepError("invalid_element_selection",
+                                        "Element edits need an unambiguous native ID in the selected source.")
+                references.append({key: value for key, value in ref.items() if key != "formulation"})
+            self._plan = self._plan_request(references)
             plan = self._plan
             self.preview.setPlainText(self._review_text(plan))
             self.status.setText("Review the proposed changes before Apply." if plan["admissible"] else "Unsupported condition targets block Apply.")
@@ -247,8 +257,8 @@ class ShellNormalDialog(NativeElementDialog):
     preview_caption, apply_caption, result_caption = "Preview reversal", "Apply reversal", "Reversal"
     selection_hint = "Preview checks shell type, quality and affected targets."
 
-    def _plan_request(self):
-        return self.session.plan_shell_normal_flip(self._references, **self._expected())
+    def _plan_request(self, references):
+        return self.session.plan_shell_normal_flip(references, **self._expected())
 
     def _apply_request(self):
         return self.session.apply_shell_normal_flip(self._plan["plan_id"], **self._expected())
@@ -281,8 +291,8 @@ class ElementDeletionDialog(NativeElementDialog):
         form.addRow("Newly orphaned nodes", self.orphan_policy)
         return [self.orphan_policy]
 
-    def _plan_request(self):
-        return self.session.plan_element_deletion(self._references, orphan_policy=self.orphan_policy.currentData(), **self._expected())
+    def _plan_request(self, references):
+        return self.session.plan_element_deletion(references, orphan_policy=self.orphan_policy.currentData(), **self._expected())
 
     def _apply_request(self):
         return self.session.apply_element_deletion(self._plan["plan_id"], **self._expected())
@@ -319,10 +329,10 @@ class PartReassignmentDialog(NativeElementDialog):
         form.addRow("Target for all listed elements", self.target_part)
         return [self.target_part]
 
-    def _plan_request(self):
+    def _plan_request(self, references):
         part = self.target_part.currentData()
         if part is None: raise PrepError("review_required", "Choose the target PART explicitly before previewing ownership.")
-        return self.session.plan_part_reassignment([{"element": dict(ref), "part": dict(part)} for ref in self._references], **self._expected())
+        return self.session.plan_part_reassignment([{"element": ref, "part": dict(part)} for ref in references], **self._expected())
 
     def _apply_request(self):
         return self.session.apply_part_reassignment(self._plan["plan_id"], **self._expected())
@@ -465,11 +475,11 @@ class TriangleEdgeSplitDialog(NativeElementDialog):
         super().apply_change()
         self._refresh_edges()
 
-    def _plan_request(self):
+    def _plan_request(self, references):
         edge = self.edge_selector.currentData()
         if edge is None:
             raise PrepError("invalid_edge", "Choose a valid shared edge from 1 or 2 SH3N elements.")
-        return self.session.plan_triangle_edge_split(self._references, edge, **self._expected())
+        return self.session.plan_triangle_edge_split(references, edge, **self._expected())
 
     def _apply_request(self):
         return self.session.apply_triangle_edge_split(self._plan["plan_id"], **self._expected())

@@ -1852,6 +1852,44 @@ def test_d25_micrometre_triangle_and_automatic_id_bounds(tmp_path, unit, side):
     assert sum(row.signed_measure for row in candidate.quality_after) / side**2 == pytest.approx(0.5)
 
 
+@pytest.mark.parametrize("selection_source", ("entity", "pick", "part"))
+def test_d25_edge_split_keeps_selected_triangles_part(tmp_path, selection_source):
+    session = PrepSession()
+    session.open_rad(_build_deck_multi_include(tmp_path))
+    parent = _cell_ref(session, 101)
+    if selection_source == "part":
+        from caelab_prep.application.rad_provider import RadProvider
+        session.activate_object(RadProvider(session).ref_for_card(_card_by_prefix(session, "/PART/1")))
+    elif selection_source == "pick":
+        view = session.mesh_view()
+        session.select_pick({
+            **{key: view[key] for key in ("document_id", "document_epoch", "revision", "projection_revision")},
+            "kind": "element", "id": 101, "formulation": "SH3N",
+            "resource_id": parent["resource_id"],
+            "resource_revision": view["resource_revisions"][parent["resource_id"]],
+        })
+    else:
+        session.select_entity("element", 101)
+    owner = session.active_object()
+    assert owner.native_scope == "/PART/1"
+
+    plan = session.plan_triangle_edge_split(
+        [parent, _cell_ref(session, 102)], (_node_ref(session, 1), _node_ref(session, 3)))
+    session.apply_triangle_edge_split(plan["plan_id"])
+
+    selected = session.selection()
+    if selection_source == "part":
+        assert {302, 303, 304, 305} <= set(selected["ids"])
+        assert {101, 102}.isdisjoint(selected["ids"])
+    else:
+        assert selected["ids"] == [302, 303]
+        expected_family = "SH3N" if selection_source == "pick" else None
+        assert [ref.get("formulation") for ref in selected["refs"]] == [expected_family] * 2
+    assert session.active_object() == owner
+    assert session.selected_objects() == (owner,)
+    assert session.describe()["active_object"] == selected["active_object"]
+
+
 def test_d25_session_multiresource_edge_split_undo_save_reconnect_export(tmp_path: Path):
     """End-to-end session test for EdgeSplitCommands on multi-include deck."""
     starter = _build_deck_multi_include(tmp_path)
@@ -1973,7 +2011,8 @@ def test_d25_triangle_edge_split_dialog_ui_and_screenshot(tmp_path: Path, presen
         win.refresh_document()
         app.processEvents()
 
-        win.session.select_entity("element", 101)
+        parent = _cell_ref(win.session, 101)
+        win.session.select_entity("element", 101, resource_id=parent["resource_id"], formulation="SH3N")
         app.processEvents()
 
         assert hasattr(win, "edge_split_action") and win.edge_split_action.isEnabled()

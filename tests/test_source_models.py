@@ -76,13 +76,18 @@ def test_explicit_shared_node_is_single_entity_and_unmapped_nodes_stay_distinct(
 
 
 @pytest.mark.parametrize("variant", ("title-only-deleted", "all-zero-deleted", "underscore-retained", "underscore-corrected",
-                                     "underscore-deleted", "underscore-node", "underscore-connectivity"))
+                                     "underscore-deleted", "underscore-node", "underscore-connectivity",
+                                     "padded-with-title-only", "hybrid"))
 def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     source = _base_model(tmp_path / "source")
-    empty = variant in ("title-only-deleted", "all-zero-deleted")
+    padded = variant in ("padded-with-title-only", "hybrid")
+    empty = padded or variant in ("title-only-deleted", "all-zero-deleted")
     identifiers = (101, 205) if empty else (101, 101, 205)
     native_row = f"{_i(*identifiers)}\n".encode()
-    source.write_bytes(source.read_bytes().replace(b"/END", b"/GRNOD/NODE/47\nUnused target\n" + native_row + b"/END"))
+    groups = b"/GRNOD/NODE/47\nUnused target\n" + native_row
+    if padded:
+        groups += f"/GRNOD/NODE/48\nPadded target\n{_i(101, 0, 205)}\n".encode()
+    source.write_bytes(source.read_bytes().replace(b"/END", groups + b"/END"))
     session = PrepSession()
     session.open_rad(_base_model(tmp_path / "base"))
     plan = session.plan_import_source(source)
@@ -91,7 +96,7 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     group_keyword = f'/GRNOD/NODE/{ids["GRNOD", 47]}'
     group = _card(session, group_keyword)["id"]
     expected = (ids["NODE", 101], ids["NODE", 205])
-    if variant.endswith("deleted"):
+    if padded or variant.endswith("deleted"):
         session.delete_card(group)
     elif variant.endswith("corrected"):
         resource = session._find_card(group)
@@ -111,7 +116,7 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     # Reproduce the older writers' immutable originals and corresponding remaps.
     assert payloads[original_member].count(native_row) == 1
     if empty:
-        legacy_row = b"" if variant.startswith("title-only") else f"{_i(0, 0)}\n".encode()
+        legacy_row = f"{_i(0, 0)}\n".encode() if variant == "all-zero-deleted" else b""
     else:
         legacy_row = f"{101:10d}{'1_01':>10}{205:10d}\n".encode()
     payloads[original_member] = payloads[original_member].replace(native_row, legacy_row)
@@ -120,10 +125,10 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
         translated_row = f'{_i(*expected)}\n'.encode()
         assert payloads[mapped_member].count(translated_row) == 1
         payloads[mapped_member] = payloads[mapped_member].replace(translated_row, legacy_row)
-    if variant in ("underscore-node", "underscore-connectivity"):
+    if variant in ("underscore-node", "underscore-connectivity", "hybrid"):
         mesh_file = next(item for item in source_model["files"] if item["original_path"] == "mesh.inc")
         mesh_member = f'sources/{source_model["id"]}/{mesh_file["original_resource_id"]}.rad'
-        prefix = b"" if variant.endswith("node") else _i(7001).encode()
+        prefix = _i(7001).encode() if variant == "underscore-connectivity" else b""
         old = b"\n" + prefix + _i(101).encode()
         assert payloads[mesh_member].count(old) == 1
         changed = payloads[mesh_member].replace(old, b"\n" + prefix + f"{'1_01':>10}".encode())
@@ -144,11 +149,16 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
             session.open_project(legacy)
         assert error.value.code == "unsupported_source_profile"
         return
+    if variant == "hybrid":
+        with pytest.raises(PrepError) as error:
+            session.open_project(legacy)
+        assert error.value.code == "unsupported_source_profile"
+        return
     session.open_project(legacy)
     view = session.mesh_view()
     assert len(view["node_ids"]) == 16 and len(view["cells"]) == 4
-    if variant.endswith("deleted"):
-        assert not any(card["keyword"].startswith("/GRNOD/") for card in session.list_cards())
+    if padded or variant.endswith("deleted"):
+        assert not any(card["keyword"] == group_keyword for card in session.list_cards())
     else:
         assert session.group_members(group)["member_ids"] == list(expected)
         native_members = expected if variant.endswith("corrected") else (expected[0], *expected)
@@ -158,7 +168,12 @@ def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     assert all(b"1_01" not in path.read_bytes() for path in target.parent.rglob("*") if path.is_file())
     session.open_rad(target)
     assert len(session.mesh_view()["node_ids"]) == 16 and len(session.mesh_view()["cells"]) == 4
-    if not variant.endswith("deleted"):
+    if padded:
+        padded_keyword = f'/GRNOD/NODE/{ids["GRNOD", 48]}'
+        padded_group = _card(session, padded_keyword)["id"]
+        assert session.group_members(padded_group)["member_ids"] == list(expected)
+        assert session.card_text(padded_group).splitlines()[-1] == _i(expected[0], 0, expected[1])
+    elif not variant.endswith("deleted"):
         assert session.group_members(_card(session, group_keyword)["id"])["member_ids"] == list(expected)
 
 

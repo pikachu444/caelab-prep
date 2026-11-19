@@ -91,6 +91,43 @@ def test_same_file_quad_group_and_viewport_pick_highlight_only_the_native_family
         assert view.fit_selection()
 
 
+@pytest.mark.parametrize("selection_source", ("entity", "pick"))
+def test_qualified_shell_selection_survives_same_id_quad(tmp_path, selection_source):
+    from caelab_prep.application.session import PrepSession
+    from test_condition_workflow import _base_model, _card, _i
+
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "input"))
+    shell = _card(session, "/SHELL/902")
+    mesh = session.document.resources[shell["resource_id"]]
+    view = viewport(session.mesh_view())
+    try:
+        if selection_source == "pick":
+            pick = pick_candidate(view._projection_stamp, "element", 7001, mesh.id)
+            session.select_pick({**pick, "formulation": "SHELL"})
+        else:
+            session.select_entity("element", 7001, resource_id=mesh.id, formulation="SHELL")
+
+        state, _ = mesh.inserted_state(f"/QUAD/903\n{_i(7001, 501, 605, 709, 811)}\n")
+        session.dispatcher.execute(mesh.id, state, "Add same-ID quad")
+        mesh_view = session.mesh_view()
+        view.set_mesh(mesh_view, reset_camera=False)
+        selected = session.selection()
+        assert selected["ids"] == [7001]
+        assert selected["refs"][0]["formulation"] == "SHELL"
+        view.set_selection(selected)
+        row, = view._selection_cell_indices(selected)
+        assert mesh_view["cells"][row]["formulation"] == "SHELL"
+        assert view._highlight.GetVisibility() and view.fit_selection()
+
+        repeated = _i(7001, 101, 205, 309, 411)
+        state = mesh.replaced_state(shell["id"], f"/SHELL/902\n{repeated}\n{repeated}\n")
+        session.dispatcher.execute(mesh.id, state, "Duplicate shell ID in the same family")
+        assert session.selection()["ids"] == []
+    finally:
+        view.close()
+
+
 @pytest.mark.parametrize("visible", ("SHELL", "QUAD"))
 def test_viewport_highlights_family_qualified_selection_with_hidden_same_id(tmp_path, visible):
     from caelab_prep.application.session import PrepSession

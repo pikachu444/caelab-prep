@@ -383,16 +383,12 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         elif document.selection.refs:
             selection = document.selection
             node_resources = self._projection_cache["node_resources"]
-            cells_by_id = self._projection_index["cells_by_id"]
             refs = []
             for ref in selection.refs:
                 if ref.entity_kind == "node":
                     unique = node_resources.get(ref.local_id, ()) == (ref.resource_id,)
                 else:
-                    matches = [cell for cell in cells_by_id.get(ref.local_id, ())
-                               if cell["resource_id"] == ref.resource_id
-                               and (ref.formulation is None or cell.get("formulation") == ref.formulation)]
-                    unique = len(matches) == 1
+                    unique = len(self._matching_selection_cells(ref.local_id, ref.resource_id, ref.formulation)) == 1
                 if unique:
                     refs.append(ref)
             refs = tuple(refs)
@@ -1015,10 +1011,12 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         return {"triangle": "GRSH3N/SH3N", "quad": "GRSHEL/SHEL", "tetra": "GRBRIC/BRIC", "tetra10": "GRBRIC/BRIC",
                 "hexahedron": "GRBRIC/BRIC", "wedge": "GRBRIC/BRIC", "pyramid": "GRBRIC/BRIC"}.get(kind)
 
-    def _element_selection_ref(self, cell):
-        matches = self._projection_index["all_cells_by_id"][cell["id"]]
-        shared = sum(candidate["resource_id"] == cell["resource_id"] for candidate in matches) > 1
-        return SelectionRef(cell["resource_id"], "element", cell["id"], cell.get("formulation") if shared else None)
+    def _element_selection_ref(self, cell, *, formulation=None):
+        if formulation is None:
+            matches = self._projection_index["all_cells_by_id"][cell["id"]]
+            if sum(candidate["resource_id"] == cell["resource_id"] for candidate in matches) > 1:
+                formulation = cell.get("formulation")
+        return SelectionRef(cell["resource_id"], "element", cell["id"], formulation)
 
     def _element_members(self, members, family=None):
         if not isinstance(members, (tuple, list)) or not members:
@@ -1688,6 +1686,16 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         identity = native_identity(keyword)
         return identity[1] if identity and identity[0] == "PART" else None
 
+    def _owning_part_ref(self, cells):
+        part_ids = {cell.get("part_id") for cell in cells}
+        if len(part_ids) != 1 or None in part_ids:
+            return None
+        parts = [card for card in self.list_cards() if self._native_part_id(card["keyword"]) in part_ids]
+        if len(parts) == 1:
+            card = parts[0]
+            return ObjectRef(self.document.id, card["resource_id"], card["id"], "rad-card", card["keyword"])
+        return None
+
     def _part_cells(self, target: ObjectRef) -> list[dict]:
         """One supported relationship: a native PART to its displayed elements."""
         _, card = self._object_card(target)
@@ -1891,6 +1899,11 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 raise PrepError("invalid_selection", "The entity does not belong to the displayed resource.")
             return self.select_entity(kind, entity_id, resource_id=resource_id, formulation=candidate.get("formulation"))
 
+    def _matching_selection_cells(self, entity_id, resource_id, formulation):
+        return [cell for cell in self._projection_index["cells_by_id"].get(entity_id, ())
+                if (resource_id is None or cell["resource_id"] == resource_id)
+                and (formulation is None or cell.get("formulation") == formulation)]
+
     def select_entity(self, kind: str, entity_id: int, *, resource_id=None, formulation=None) -> dict:
         with self._lock:
             document = self._require()
@@ -1901,25 +1914,18 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             if kind == "node":
                 resources = self._projection_cache["node_resources"].get(entity_id, ())
             else:
-                cells = [cell for cell in self._projection_index["cells_by_id"].get(entity_id, ())
-                         if (resource_id is None or cell["resource_id"] == resource_id)
-                         and (formulation is None or cell.get("formulation") == formulation)]
+                cells = self._matching_selection_cells(entity_id, resource_id, formulation)
                 resources = [cell["resource_id"] for cell in cells]
             if isinstance(entity_id, bool) or not resources:
                 raise PrepError("invalid_selection", "선택한 모델 객체를 찾을 수 없습니다.", {"kind": kind, "id": entity_id})
             if len(resources) != 1:
                 raise PrepError("ambiguous_selection", "여러 자원에 같은 ID가 있어 선택 대상을 확정할 수 없습니다.", {"kind": kind, "id": entity_id})
-            reference = self._element_selection_ref(cells[0]) if cells else SelectionRef(resources[0], kind, entity_id)
+            reference = (self._element_selection_ref(cells[0], formulation=formulation)
+                         if cells else SelectionRef(resources[0], kind, entity_id))
             document.selection = Selection(kind, (entity_id,), (reference,))
-            self._active_object = None
+            self._active_object = self._owning_part_ref(cells)
             self._active_target_role = None
             self._part_selection_active = False
-            if kind == "element":
-                cell = cells[0]
-                parts = [item for item in self.list_cards() if self._native_part_id(item["keyword"]) == cell.get("part_id")]
-                if len(parts) == 1:
-                    card = parts[0]
-                    self._active_object = ObjectRef(document.id, card["resource_id"], card["id"], "rad-card", card["keyword"])
             self._selected_objects = (self._active_object,) if self._active_object is not None else ()
             self._notify("selection")
             return self.selection()
