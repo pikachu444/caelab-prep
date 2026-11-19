@@ -1102,6 +1102,57 @@ def test_d23_export_preserves_active_binding_when_inventory_loses_an_unselected_
         assert _mesh_facts(reparsed) == original
 
 
+def test_d23_export_can_qualify_upstream_include_to_keep_all_nine_bindings(tmp_path):
+    units = f"{'Mg':>20}{'mm':>20}{'s':>20}\n"
+    begin = "/BEGIN\nSelectively qualified\n      2025         0\n" + units * 2
+    payloads = {
+        "starter_0000.rad": begin + "#include mark.inc\n#include a/mark.inc\n#include b/branch.inc\n/END\n",
+        "mark.inc": "# Marker\n",
+        "a/mark.inc": "#include nodes.inc\n",
+        "b/branch.inc": "#include main.inc\n",
+        "b/main.inc": "# Unused alternative\n",
+        "main.inc": "#include c/gate.inc\n#include nodes.inc\n",
+        "c/gate.inc": "#include mark.inc\n",
+        "c/mark.inc": "#include a/nodes.inc\n",
+        "nodes.inc": f"/NODE\n{_node_line(1, 1, 0, 0)}\n",
+        "a/nodes.inc": f"/NODE\n{_node_line(88, 2, 0, 0)}\n",
+    }
+    source = tmp_path / "source"
+    for relative, payload in payloads.items():
+        _write(source / relative, payload)
+
+    def bindings(session):
+        return {("Starter" if owner == session._root_id else session._paths[owner], ordinal): session._paths[target]
+                for (owner, ordinal), target in session._include_bindings.items()}
+
+    session = PrepSession()
+    session.open_rad(source / "starter_0000.rad")
+    expected = bindings(session)
+    assert expected["a/mark.inc", 0] == "nodes.inc"
+    assert expected["c/gate.inc", 0] == "c/mark.inc"
+    case = session.create_analysis_case("Nested INCLUDE export", [], .01, .001, "s")["case_id"]
+    project = tmp_path / "bound.caeprep"
+    session.save_project(project)
+    for label in ("active", "reopened"):
+        if label == "reopened":
+            session.open_project(project)
+        for mode in ("native", "case"):
+            output = tmp_path / label / mode / "renamed_0000.rad"
+            if mode == "native":
+                session.export_rad(output)
+            else:
+                session.export_analysis_case(output, case)
+            assert not (output.parent / "b/main.inc").exists()
+            for relative, payload in payloads.items():
+                if relative not in ("starter_0000.rad", "b/main.inc"):
+                    rendered = "#include c/mark.inc\n" if relative == "c/gate.inc" else payload
+                    assert (output.parent / relative).read_bytes() == rendered.encode()
+            reopened = PrepSession()
+            reopened.open_rad(output)
+            assert bindings(reopened) == expected
+            assert reopened.mesh_view()["node_ids"] == (1, 88)
+
+
 def test_d23_reopens_archive_whose_older_resolver_claimed_second_sibling(tmp_path):
     source = tmp_path / "source"
     starter = _write(source / "starter_0000.rad", "/BEGIN\nArchived claims\n#include a/first.inc\n#include a/second.inc\n/END\n")
@@ -1150,12 +1201,16 @@ def test_d23_nested_include_avoids_current_file_and_ancestor_shadows(tmp_path):
 
 @pytest.mark.parametrize("legacy_format", ("unchanged", "unquoted", "mixed-direct-inline", "tampered-direct-inline",
                                              "tampered-two-line", "direct-inline-only", "direct-inline-bare",
-                                             "direct-inline-qualified-reached", "direct-inline-bare-reached", "inactive-line"))
+                                             "direct-inline-qualified-reached", "direct-inline-bare-reached",
+                                             "inactive-line", "inactive-tight", "root-first", "root-first-resaved",
+                                             "root-first-recorded"))
 def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_format):
     mixed = legacy_format in ("mixed-direct-inline", "tampered-direct-inline", "tampered-two-line")
-    inline_only = legacy_format.startswith("direct-inline-")
-    already_reached = legacy_format.endswith("-reached")
-    inactive = legacy_format == "inactive-line"
+    root_first = legacy_format.startswith("root-first")
+    inline_only = root_first or legacy_format.startswith("direct-inline-")
+    already_reached = root_first or legacy_format.endswith("-reached")
+    inactive = legacy_format.startswith("inactive-")
+    inactive_text = b'#include"nodes.inc"\r\n' if legacy_format == "inactive-tight" else b'#include "nodes.inc"\r\n'
     name = "sets/nodes.inc" if legacy_format in ("direct-inline-only", "direct-inline-qualified-reached") else "nodes.inc"
     separator = " " if inline_only else "\r\n"
     starter, begin, owner, _ = _nested_include_deck(
@@ -1169,7 +1224,7 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
             stream.write(f"#include {name}\r\n".encode())
     if inactive:
         with (starter.parent / "mesh/first.inc").open("ab") as stream:
-            stream.write(b'#enddata\r\n#include "nodes.inc"\r\n')
+            stream.write(b'#enddata\r\n' + inactive_text)
     session = PrepSession()
     # An unrelated destination file with the same name must not acquire the old source INCLUDE.
     base = _write(tmp_path / "base/base_0000.rad", begin + "#include nodes.inc\n/END\n")
@@ -1183,9 +1238,24 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     with ZipFile(archive) as project:
         members = {name: project.read(name) for name in project.namelist()}
     manifest = json.loads(members["manifest.json"])
-    manifest["source_models"][0].pop("include_bindings")
-    members["manifest.json"] = json.dumps(manifest).encode()
+    source_record = manifest["source_models"][0]
+    if legacy_format != "root-first-recorded":
+        source_record.pop("include_bindings")
+    if not root_first or legacy_format == "root-first":
+        manifest.pop("include_bindings")
+    if legacy_format == "unchanged" or legacy_format == "mixed-direct-inline" or inactive or (inline_only and not root_first):
+        # The sibling-first writer archived files in traversal order.
+        files = source_record["files"]
+        root_index = next(i for i, item in enumerate(files) if item["original_path"] == name)
+        sibling = next(item for item in files if item["original_path"] == f"mesh/{name}")
+        files.remove(sibling)
+        files.insert(root_index, sibling)
     source_files = {item["original_path"]: item for item in plan["source"]["files"]}
+    if legacy_format == "root-first-resaved":
+        nested_id = source_files["mesh/first.inc"]["resource_id"]
+        root_nodes_id = source_files[name]["resource_id"]
+        manifest["include_bindings"].extend([[nested_id, ordinal, root_nodes_id] for ordinal in range(2)])
+    members["manifest.json"] = json.dumps(manifest).encode()
     mapped_path = source_files[owner]["logical_path"]
     mapped_member = f'raw/{source_files["mesh/first.inc"]["resource_id"]}.rad'
     replacement = '"nodes.inc"' if legacy_format != "unquoted" else mapped_path
@@ -1198,14 +1268,15 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
         inline = f"#include {root_nodes if already_reached else mapped_path}\r\n".encode("ascii")
         assert members[mapped_member].count(inline) == (2 if inline_only else 1)
         members[mapped_member] = members[mapped_member].replace(inline, f"#include {root_nodes}\r\n".encode("ascii"))
-    if inactive:
+    if legacy_format == "inactive-line":
         root_nodes = source_files["nodes.inc"]["logical_path"]
         members[mapped_member] = members[mapped_member].replace(
             b'#enddata\r\n#include "nodes.inc"\r\n', f"#enddata\r\n#include {root_nodes}\r\n".encode())
+        inactive_text = f"#include {root_nodes}\r\n".encode()
     legacy = tmp_path / "legacy.caeprep"
     with ZipFile(legacy, "w") as project:
-        for name, contents in members.items():
-            project.writestr(name, contents)
+        for member, contents in members.items():
+            project.writestr(member, contents)
     if legacy_format.startswith("tampered-"):
         with pytest.raises(PrepError) as error:
             session.open_project(legacy)
@@ -1218,10 +1289,11 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
     session.export_rad(output)
     if inline_only:
         exported_include = output.parent / source_files["mesh/first.inc"]["logical_path"]
-        assert exported_include.read_bytes().count(f"#include {mapped_path}\r\n".encode()) == 2
+        intended = source_files[name]["logical_path"] if root_first else mapped_path
+        assert exported_include.read_bytes().count(f"#include {intended}\r\n".encode()) == 2
     if inactive:
         exported_include = output.parent / source_files["mesh/first.inc"]["logical_path"]
-        assert exported_include.read_bytes().endswith(f"#enddata\r\n#include {root_nodes}\r\n".encode())
+        assert exported_include.read_bytes().endswith(b"#enddata\r\n" + inactive_text)
     reopened = PrepSession()
     reopened.open_rad(output)
     assert _mesh_facts(reopened) == expected

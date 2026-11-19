@@ -207,14 +207,16 @@ class AnalysisCaseCommands:
                 *(("PROP", family) for family in TYPE14_PROPERTIES), ("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS, ("SURF", "PART")}
             unsupported = []
             conditions = []
-            parts = []
-            self.mesh_view()
-            cells_by_part = self._projection_index["cells_by_part"]
+            parts = {}
+            cells_by_part = {}
+            for resource in self._deck_resources():
+                for cell in resource.mesh_projection()["cells"]:
+                    cells_by_part.setdefault(cell.get("part_id"), []).append(cell)
             for item in self.list_cards():
                 words = item["keyword"].upper().strip("/").split("/")
                 if condition_kind(item["keyword"]): conditions.append(item["id"])
                 elif words[0] == "PART" and (native_part := self._native_part_id(item["keyword"])) in cells_by_part:
-                    parts.append((item["id"], cells_by_part[native_part]))
+                    parts.setdefault(native_part, []).append(item["id"])
                 elif tuple(words[:2]) == ("GRQUAD", "QUAD"):
                     diagnostics = self.group_members(item["id"])["diagnostics"]
                     if diagnostics:
@@ -224,7 +226,13 @@ class AnalysisCaseCommands:
                     unsupported.append(item)
             if unsupported:
                 raise PrepError("case_activation_scope_unknown", "Case export cannot prove the activation semantics of these native cards; source text is retained.", {"cards": unsupported})
-            for part_id, cells in parts:
+            for native_part, cells in cells_by_part.items():
+                owners = parts.get(native_part, ())
+                if len(owners) != 1:
+                    raise PrepError("invalid_reference" if owners or native_part is None else "dangling_reference",
+                                    "Native elements must reference an existing, unique PART.",
+                                    {"part_id": native_part, "element_id": cells[0]["id"]})
+                part_id = owners[0]
                 assignments = self.part_assignments(part_id)
                 if assignments["diagnostics"]:
                     raise PrepError("invalid_reference", "A meshed part has unresolved native assignments.",

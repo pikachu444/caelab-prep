@@ -51,6 +51,30 @@ def test_element_group_picker_qualifies_same_file_shell_and_quad_ids(tmp_path):
         provider.submit(SetProperties(group, {"element_refs": [ref]}, session.document.revision))
 
 
+def test_element_group_picker_rejects_shared_id_within_one_native_family(tmp_path):
+    source = tmp_path / "shared_solids_0000.rad"
+    raw = (INPUTS / "shell_panels_0000.rad").read_bytes().replace(b"\r\n", b"\n").split(b"\n/SHELL/1\n", 1)[0]
+    brick = "".join(f"{value:10d}" for value in (201, 1, 2, 5, 4, 10, 11, 14, 13))
+    tetra = "".join(f"{value:10d}" for value in (201, 1, 2, 5, 10))
+    source.write_bytes(raw + f"\n/BRICK/1\n{brick}\n/TETRA4/2\n{tetra}\n/END\n".encode())
+    session = PrepSession()
+    session.open_rad(source)
+    provider = RadProvider(session)
+    field = next(field for field in provider.operation_spec("element_group.create").fields
+                 if field.name == "element_refs")
+    choices = [ref for ref in field.choices if ref["local_id"] == 201]
+    assert {ref["formulation"] for ref in choices} == {"BRICK", "TETRA4"}
+    revision = session.document.revision
+    for ref in choices:
+        with pytest.raises(PrepError) as error:
+            provider.execute_operation(OperationRequest(
+                "element_group.create", {"name": "Shared solid ID", "native_id": 987, "element_refs": [ref]},
+                session.document.id, revision))
+        assert error.value.code == "ambiguous_reference"
+    assert session.document.revision == revision
+    assert all(item.ref.native_scope != "/GRBRIC/BRIC/987" for item in provider.tree_nodes())
+
+
 def test_quad_property_only_provider_edits_preserve_existing_law3(tmp_path):
     source = tmp_path / "ale_0000.rad"
     raw = (INPUTS / "shell_panels_0000.rad").read_bytes()

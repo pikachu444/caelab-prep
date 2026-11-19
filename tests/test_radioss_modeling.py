@@ -405,6 +405,35 @@ def test_case_export_checks_property_already_referenced_by_quad_part(tmp_path):
     assert props["property_id"] == lookup(reopened, f"/PROP/SOLID/{native_property}")["id"]
 
 
+@pytest.mark.parametrize(("part_id", "omit_from_display", "code"), (
+    (1, True, "incompatible_property"),
+    (999, False, "dangling_reference"),
+))
+def test_case_checks_native_quad_part_including_elements_omitted_from_display(tmp_path, part_id, omit_from_display, code):
+    source = tmp_path / "quad_0000.rad"
+    raw = SOURCE.read_bytes().replace(b"\r\n", b"\n").split(b"/PRESERVED/EDITOR/91", 1)[0]
+    units = raw.splitlines(keepends=True)[4]
+    head, tail = raw.replace(units, units * 2, 1).split(b"\n/SHELL/1\n", 1)
+    rows, remainder = tail.split(b"/SHELL/2\n", 1)
+    if omit_from_display:
+        rows = b"".join(row[:10] + f"{99999:10d}".encode() + row[20:] for row in rows.splitlines(keepends=True))
+    source.with_name("quad.inc").write_bytes(f"/QUAD/{part_id}\n".encode() + rows)
+    source.write_bytes(head + b"\n#include quad.inc\n/SHELL/2\n" + remainder + b"/END\n")
+    session = opened(source)
+    assert any(cell["formulation"] == "QUAD" for cell in session.mesh_view()["cells"]) != omit_from_display
+    if omit_from_display:
+        assert any(item["code"] == "missing_display_nodes" for item in session.mesh_view()["diagnostics"])
+    case = session.create_analysis_case("Native quad part", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "output/case_0000.rad"
+    for validate in (lambda: session.validate_analysis_case(case), lambda: session.export_analysis_case(output, case)):
+        with pytest.raises(PrepError) as error:
+            validate()
+        assert error.value.code == code
+        if code == "dangling_reference":
+            assert error.value.details["part_id"] == part_id
+    assert not output.parent.exists()
+
+
 @pytest.mark.parametrize("valid", (True, False))
 def test_signed_quad_group_is_scoped_and_checked_by_case_export(tmp_path, valid):
     source = tmp_path / "quad_0000.rad"

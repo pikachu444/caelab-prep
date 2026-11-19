@@ -102,24 +102,30 @@ class SourceArchiveResource:
                 selected[key] = originals_by_id[target].name
             if len(selected) != sum(len(resource.include_directives) for resource in originals):
                 raise PrepError("invalid_project", "Original source INCLUDE bindings are incomplete.")
-        # Inline-only ZIPs can have identical mapped bytes under the direct
-        # writer and a later resolver. Replay the direct writer first when
-        # its native traversal accounts for every archived original.
-        policies = ((None, "quoted"),) if records is not None else (
-            ("8fe", "unchanged"), (None, "quoted"), ("bde", "quoted"),
-            ("ac0", "quoted"), ("987", "unquoted"))
-        for historical, style in policies:
-            graph = source_include_graph(originals, paths, selected=selected, historical=historical)
-            if historical == "8fe" and graph[0] != set(paths):
+        # The writers all used the same versioned metadata. File order
+        # records native first visits even when their mapped bytes agree.
+        archived_order = [resource.name for resource in originals]
+        policies = ((None, "quoted", False),) if records is not None else (
+            (None, "quoted", False), ("bde", "quoted", False), ("ac0", "quoted", False),
+            ("987", "unquoted", False), ("987", "unchanged", True), ("8fe", "unchanged", True))
+        exact_mapped_fallback = False
+        for historical, style, direct_writer in policies:
+            load_order = []
+            graph = source_include_graph(originals, paths, selected=selected, historical=historical,
+                                         load_order=load_order)
+            if historical == "8fe" and load_order != archived_order:
                 continue
             try:
                 expected = remap(originals, mapping, paths, include_graph=graph, two_line=style,
-                                 legacy_direct_inline=historical == "8fe")
+                                 legacy_direct_inline=direct_writer)
             except PrepError as exc:
                 if exc.code != "include_missing":
                     raise
                 continue
             if actual != expected:
+                continue
+            if records is None and load_order != archived_order:
+                exact_mapped_fallback = True
                 continue
             if historical == "8fe":
                 _, original_bindings, _ = graph
@@ -131,6 +137,8 @@ class SourceArchiveResource:
                         if (directive.filename_row == directive.header_row and intended
                                 and direct in paths and intended != direct):
                             self.recovered_include_bindings[mapped_ids[resource.name], ordinal] = mapped_ids[intended]
+            return
+        if exact_mapped_fallback:
             return
         raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
 

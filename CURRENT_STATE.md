@@ -82,6 +82,14 @@ Windows Python 3.13.5에서 영향 범위 pytest 334건을 통과했다. 별도 
 
 해석 케이스 내보내기는 요소가 있는 PART의 속성·재료를 할당 작업과 같은 검사로 확인한다. 요소 집합 편집기는 같은 파일에 같은 ID가 있는 SHELL과 QUAD를 native 요소군 이름으로 표시한다. Windows Python 3.13.5에서 관련 pytest 176건을 통과했다. 별도 EGL 렌더링 검사 1건은 건너뛰었다.
 
+### 열 번째 검토 수정
+
+`45883d1` 재검토에서 확인한 9파일 모델은 상위 INCLUDE 지시문 하나를 수정하면 모든 바인딩을 유지한다. 수정 후보를 제한된 범위에서 개별·조합으로 시험하고, 바인딩 전부가 일치할 때 Starter를 내보낸다. 해석 케이스를 포함한 두 내보내기 경로를 작업 문서 재열기 전후에 확인했다.
+
+소스 아카이브는 기록된 파일 순서와 매핑 바이트를 함께 확인한다. `8fe6609`가 작성한 반복 지시문의 형제 파일 바인딩과 `#enddata` 뒤의 `#include"nodes.inc"` 원문을 복원했다. `24137d6`, `987c52b`, `ac0a255`, `8e85a66` 작성본과 `8e85a66`으로 다시 저장한 `ac0a255` 작성본은 두 지시문의 기존 루트 파일 바인딩을 유지했다.
+
+해석 케이스는 표시에서 제외된 요소의 PART 참조와 속성도 검사한다. 같은 native 요소 집합에 동일 ID가 두 개 있으면 생성 전에 거부한다. Windows에서 지정된 pytest 4개 모듈은 155건을 통과했고 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).

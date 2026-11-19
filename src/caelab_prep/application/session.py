@@ -955,14 +955,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             native_id = ref.local_id
             integer(native_id)
             matches = cells_by_id.get(native_id, [])
-            if ref.formulation is not None:
-                matches = [cell for cell in matches if cell.get("formulation") == ref.formulation]
-                if not any(cell["resource_id"] == ref.resource_id for cell in matches):
-                    raise PrepError("invalid_reference", "The native element formulation does not match the reference.")
             owned = [cell for cell in matches if cell["resource_id"] == ref.resource_id]
+            if ref.formulation is not None:
+                owned = [cell for cell in owned if cell.get("formulation") == ref.formulation]
+                if not owned:
+                    raise PrepError("invalid_reference", "The native element formulation does not match the reference.")
             if family is not None:
                 scoped = [cell for cell in matches if self._element_group_family(cell["type"], cell.get("formulation")) == family]
-                if owned and not any(cell["resource_id"] == ref.resource_id for cell in scoped):
+                if owned and not any(cell in scoped for cell in owned):
                     raise PrepError("incompatible_group", "The element is outside this native group family.")
                 matches = scoped
             elif len(owned) == 1:
@@ -2030,9 +2030,9 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             inventory = {paths[owner] for owner in owners}
             preferred = {(paths[owner], ordinal): paths[included] for (owner, ordinal), included in selected.items()
                          if owner in owners and included in paths}
-            repairs = {(paths[owner], ordinal): paths[included] for (owner, ordinal), included in recovered.items()}
-            if any(key in preferred and preferred[key] != value for key, value in repairs.items()):
-                raise PrepError("invalid_project", "A recorded INCLUDE binding disagrees with the validated source archive.")
+            # A resaved project can record a valid target that differs from an inferred repair.
+            repairs = {(paths[owner], ordinal): paths[included] for (owner, ordinal), included in recovered.items()
+                       if selected.get((owner, ordinal), included) == included}
             files, edges, problems = resolve_includes(
                 paths[entry], include_lookup(inventory), lambda path: document.resources[by_path[path]],
                 scope=scope, archive_inventory=inventory, selected=preferred, recovered=repairs)
@@ -2125,15 +2125,15 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
 
     @staticmethod
     def _qualify_export_includes(root, payloads, expected, lookup):
-        decks = {}
+        originals = {}
 
         def load_output(path):
             if path not in payloads:
                 raise PrepError("include_output_collision", "The exported deck would include a file outside the planned resources.",
                                 {"path": path})
-            if path not in decks:
-                decks[path] = DeckResource(payloads[path], name=path, is_include=path != root)
-            return decks[path]
+            if path not in originals:
+                originals[path] = DeckResource(payloads[path], name=path, is_include=path != root)
+            return originals[path]
 
         # Use the same resolver as native open so that an optional rewrite
         # cannot qualify every other edge in the same pending INCLUDE wave.
@@ -2149,52 +2149,81 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                 incoming.setdefault(included, []).append(entry)
                 visit(included)
 
-        def qualify(entry):
+        def can_qualify(entry):
             path, ordinal, intended = entry
             directives = load_output(path).include_directives
-            if ordinal >= len(directives):
-                return False
-            directive = directives[ordinal]
-            if include_relative(directive.path).as_posix().casefold() == intended.casefold():
-                return False
-            lines = list(decks[path].lines)
-            directive.replace_path(lines, intended)
-            payloads[path] = "".join(lines).encode("latin1")
-            del decks[path]
-            return True
+            return (ordinal < len(directives)
+                    and include_relative(directives[ordinal].path).as_posix().casefold() != intended.casefold())
+
+        def simulate(qualifications):
+            modified_lines = {}
+            for path, ordinal, intended in qualifications:
+                deck = load_output(path)
+                if path not in modified_lines:
+                    modified_lines[path] = list(deck.lines)
+                deck.include_directives[ordinal].replace_path(modified_lines[path], intended)
+            modified = {path: "".join(lines).encode("latin1") for path, lines in modified_lines.items()}
+            decks = {path: DeckResource(raw, name=path, is_include=path != root) for path, raw in modified.items()}
+            reached, edges, issues = resolve_includes(
+                root, lookup, lambda path: decks[path] if path in decks else load_output(path))
+            actual = {path: tuple(edges.get((path, directive.header_row))
+                                  for directive in (decks.get(path) or load_output(path)).include_directives)
+                      for path in reached}
+            return actual, issues, modified
+
+        def candidates(actual):
+            reached = [entry for entry in ordered if entry[0] in actual]
+            resolving_to = {}
+            for entry in reached:
+                path, ordinal, _ = entry
+                if ordinal < len(actual[path]):
+                    resolving_to.setdefault(actual[path][ordinal], []).append(entry)
+            prioritized = []
+            for entry in reached:
+                path, ordinal, intended = entry
+                resolved = actual[path][ordinal] if ordinal < len(actual[path]) else None
+                if resolved != intended:
+                    prioritized.append(entry)
+                    prioritized.extend(other for other in resolving_to.get(intended, ()) if other[2] != intended)
+                    prioritized.extend(other for other in incoming.get(resolved, ()) if other[0] in actual)
+            return dict.fromkeys((*prioritized, *reached))
 
         visit(root)
-        while True:
-            reached, edges, issues = resolve_includes(root, lookup, load_output)
-            for entry in ordered:
-                path, ordinal, intended = entry
-                if path not in reached or ordinal >= len(decks[path].include_directives):
-                    continue
-                row = decks[path].include_directives[ordinal].header_row
-                actual = edges.get((path, row))
-                if actual == intended:
-                    continue
-                if qualify(entry):
+        start = frozenset()
+        actual, issues, _ = simulate(start)
+        if not issues and actual == expected:
+            return
+        baseline, baseline_issues = actual, issues
+        # Try all single changes before combinations. A failed trial never
+        # changes the next trial's original operands or writes a file.
+        seen = {start}
+        pending = [start]
+        for qualifications in pending:
+            if qualifications:
+                actual, issues, modified = simulate(qualifications)
+                if not issues and actual == expected:
+                    payloads.update(modified)
+                    return
+            for entry in candidates(actual):
+                if len(seen) >= 256:
                     break
-                # A sibling chosen over an already-claimed canonical root can
-                # be marked explicit at the edge that actually intends it.
-                if any(qualify(other) for other in incoming.get(actual, ()) if other[0] in reached):
-                    break
-            else:
-                break
+                if entry in qualifications or not can_qualify(entry):
+                    continue
+                next_trial = qualifications | {entry}
+                if next_trial not in seen:
+                    seen.add(next_trial)
+                    pending.append(next_trial)
+        actual, issues = baseline, baseline_issues
         if issues:
             path, directive, cause = issues[0]
             raise PrepError("include_output_collision", "The exported INCLUDE graph could not be reproduced in this destination.",
                             {"path": path, "directive": directive.path, "cause": str(cause),
                              **({"target": cause.details["path"]} if isinstance(cause, PrepError) and "path" in cause.details else {})})
-        for path in reached:
-            deck = decks[path]
-            actual = tuple(edges.get((path, directive.header_row)) for directive in deck.include_directives)
-            if actual != expected[path]:
+        for path, bindings in actual.items():
+            if bindings != expected[path]:
                 raise PrepError("include_output_collision", "The exported INCLUDE bindings would change in this destination.",
-                                {"path": path, "expected": expected[path], "actual": actual})
-        if reached != set(payloads):
-            raise PrepError("include_output_collision", "The exported INCLUDE graph does not match the document.")
+                                {"path": path, "expected": expected[path], "actual": bindings})
+        raise PrepError("include_output_collision", "The exported INCLUDE graph does not match the document.")
 
     @staticmethod
     def _write_output_batch(outputs):
