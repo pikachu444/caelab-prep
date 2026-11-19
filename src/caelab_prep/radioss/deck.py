@@ -724,7 +724,7 @@ class DeckResource:
                     if line[10:].strip():
                         diagnostics.append({"severity": "warning", "code": "element_display_parse",
                                             "message": "TETRA10 connectivity row has no element ID.",
-                                            "line": index + 1, "part_id": part})
+                                            "line": index + 1, "part_id": part, "card_id": card.id, "resource_id": self.id})
                         continue
                     pair = (index,)
                     if offset < len(card.data) and self.lines[card.data[offset]][10:].strip():
@@ -737,7 +737,8 @@ class DeckResource:
                                       "card_id": card.id, "resource_id": self.id})
                     except PrepError as exc:
                         diagnostics.append({"severity": "warning", "code": "element_display_parse",
-                                            "message": str(exc), "line": index + 1, "part_id": part})
+                                            "message": str(exc), "line": index + 1, "part_id": part,
+                                            "card_id": card.id, "resource_id": self.id})
                         token = line[:10].strip()
                         if re.fullmatch(r"[+-]?\d+", token) and (identifier := int(token)) > 0:
                             cells.append({"id": identifier, "type": kind, "formulation": formulation, "nodes": [],
@@ -745,16 +746,22 @@ class DeckResource:
             else:
                 for index in card.data:
                     line = self.lines[index].rstrip("\r\n")
+                    identifier = 0
                     try:
-                        values = [int(line[p:p + 10]) for p in range(0, (count + 1) * 10, 10)]
-                        cells.append({"id": values[0], "type": kind, "formulation": key[1], "nodes": values[1:], "part_id": part,
+                        field = line[:10]
+                        if "_" in field:
+                            raise ValueError("Element ID must be a positive integer.")
+                        identifier = int(field)
+                        if identifier <= 0:
+                            raise ValueError("Element ID must be a positive integer.")
+                        connectivity = [int(line[p:p + 10]) for p in range(10, (count + 1) * 10, 10)]
+                        cells.append({"id": identifier, "type": kind, "formulation": key[1], "nodes": connectivity, "part_id": part,
                                       "card_id": card.id, "resource_id": self.id})
                     except ValueError:
                         diagnostics.append({"severity": "warning", "code": "element_display_parse",
-                                            "message": "일부 요소 행을 표시하지 못했습니다.",
-                                            "line": index + 1, "part_id": part})
-                        token = line[:10].strip()
-                        if re.fullmatch(r"[+-]?\d+", token) and (identifier := int(token)) > 0:
+                                            "message": "Invalid element connectivity." if identifier > 0 else "Invalid or missing element ID.",
+                                            "line": index + 1, "part_id": part, "card_id": card.id, "resource_id": self.id})
+                        if identifier > 0:
                             cells.append({"id": identifier, "type": kind, "formulation": key[1], "nodes": [],
                                           "part_id": part, "card_id": card.id, "resource_id": self.id, "parse_error": True})
         identifiers = sorted(nodes)

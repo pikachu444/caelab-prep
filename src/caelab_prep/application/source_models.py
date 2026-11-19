@@ -17,7 +17,7 @@ _ROOT_FIRST_INCLUDE_POLICY = ("241", "unchanged", True)
 _LEGACY_QUAD_PROFILES = ("legacy_pre14", "legacy_quad_as_shell")
 _UNRECORDED_INCLUDE_PROFILES = {
     _QUOTED_INCLUDE_POLICY: _LEGACY_QUAD_PROFILES,
-    ("bde", "quoted", False): ("legacy_pre14",),
+    ("bde", "quoted", False): ("legacy_bde",),
     ("ac0", "quoted", False): ("legacy_quad_as_shell",),
     ("987", "unquoted", False): ("legacy_pre_quad",),
     _ROOT_FIRST_INCLUDE_POLICY: ("legacy_pre_quad",),

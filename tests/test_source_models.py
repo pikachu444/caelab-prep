@@ -513,6 +513,54 @@ def test_bde_frozen_include_wave_preserves_quad_namespace(tmp_path, tampered):
         assert len(session.mesh_view()["cells"]) == 4
 
 
+@pytest.mark.parametrize("writer", ("241", "987", "quoted", "current"))
+def test_archive_signed_element_exclusions_follow_writer_support(tmp_path, writer):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "base"))
+    source = _base_model(tmp_path / "source")
+    raw = source.read_bytes().replace(b"/END", f"/GRSHEL/SHEL/48\nSource shells\n{_i(7001, 9007, -9007)}\n/END".encode())
+    if writer == "987":
+        raw = raw.replace(b"#include mesh.inc", b'#include\n"mesh.inc"')
+    source.write_bytes(raw)
+    plan = session.plan_import_source(source)
+    ids = {(namespace, original): mapped for namespace, original, mapped in plan["source"]["id_map"]}
+    session.import_source(plan["plan_id"])
+    modern = tmp_path / "modern.caeprep"
+    session.save_project(modern)
+    with zipfile.ZipFile(modern) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source_model, = manifest["source_models"]
+    if writer != "current":
+        source_model.pop("include_bindings")
+        manifest.pop("include_bindings")
+    if writer == "241":
+        archived_ids = {item["resource_id"] for item in source_model["files"]}
+        for deck in manifest["resources"]:
+            if deck["id"] in archived_ids:
+                deck["state"]["state_version"] = 4
+                assert not deck["state"].pop("retained_comments")
+    if writer == "987":
+        path = next(item["logical_path"].encode() for item in source_model["files"] if item["original_path"] == "mesh.inc")
+        root = next(deck["raw_member"] for deck in manifest["resources"] if deck["id"] == source_model["root_resource_id"])
+        assert b'"' + path + b'"' in members[root]
+        members[root] = members[root].replace(b'"' + path + b'"', path)
+    members["manifest.json"] = json.dumps(manifest).encode()
+    candidate = tmp_path / "candidate.caeprep"
+    with zipfile.ZipFile(candidate, "w") as archive:
+        for name, payload in members.items():
+            archive.writestr(name, payload)
+    if writer in ("241", "987"):
+        with pytest.raises(PrepError) as error:
+            session.open_project(candidate)
+        assert error.value.code in {"unsupported_source_profile", "invalid_project"}
+        return
+    session.open_project(candidate)
+    group = _card(session, "/GRSHEL/SHEL/48")["id"]
+    assert session.group_members(group)["member_ids"] == [ids["E:SHELL", 7001]]
+    assert _i(-ids["E:SHELL", 9007]) in session.card_text(group)
+
+
 def test_stale_or_unsupported_import_has_no_partial_commit(tmp_path):
     first, second = model(tmp_path / "first"), model(tmp_path / "second")
     session = PrepSession(); session.open_rad(first)

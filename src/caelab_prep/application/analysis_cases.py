@@ -11,6 +11,7 @@ from uuid import UUID, uuid4, uuid5
 
 from ..cae_core import PrepError
 from ..radioss.modeling import ELEMENT_GROUP_PAIRS, TYPE14_PROPERTIES
+from .projection import mutable as mutable_projection
 
 
 TIME_SECONDS = {"s": 1.0, "ms": .001, "mus": .000001}
@@ -248,6 +249,11 @@ class AnalysisCaseCommands:
                                                   material=material_owner.card(assignments["material_id"]),
                                                   property_owner=property_owner,
                                                   property_card=property_owner.card(assignments["property_id"]))
+            dangling = [mutable_projection(item) for item in projection["diagnostics"]
+                        if item["code"] == "missing_display_nodes"]
+            if dangling:
+                raise PrepError("dangling_reference", "Case export requires every element node to exist.",
+                                {"diagnostics": dangling})
             for card_id in case["condition_ids"]:
                 self._unique_card(card_id)
                 values = self.condition_values(card_id)

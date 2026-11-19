@@ -70,7 +70,8 @@ def element_part_reference(keyword, *, allow_underscore=False):
 
 def _inspect(resources, *, profile: str = "current"):
     """Collect definitions and fixed-width references, retaining file ownership."""
-    old_profiles = ("legacy_pre_quad", "legacy_pre14", "legacy_quad_as_shell")
+    unsigned_profiles = ("legacy_pre_quad", "legacy_quad_as_shell", "legacy_bde")
+    old_profiles = ("legacy_pre14", *unsigned_profiles)
     if profile not in ("current", "legacy_pass15", "legacy_pass14", *old_profiles):
         raise PrepError("unsupported_source_profile", "Unknown native source reader profile.")
     quad_as_shell = profile == "legacy_quad_as_shell"
@@ -132,7 +133,7 @@ def _inspect(resources, *, profile: str = "current"):
                         token = lines[row][start:start + 10].strip()
                         if token:
                             value = (-parse_id(token[1:])
-                                     if namespace.startswith("E:") and token.startswith("-")
+                                     if profile not in unsigned_profiles and namespace.startswith("E:") and token.startswith("-")
                                      else parse_id(token, zero=node_group and allow_zero_padding))
                             if value:
                                 entries.append((row, start, value))

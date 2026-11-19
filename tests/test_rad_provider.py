@@ -134,6 +134,10 @@ def test_assign_part_checks_quad_header_when_all_connectivity_rows_are_invalid(t
     assert any(item["code"] == "element_display_parse" for item in projection["diagnostics"])
     part = node(provider, "/PART/1").ref
     prop = node(provider, "/PROP/SHELL/2").ref
+    fields = {field.name: field for field in provider.properties(part)}
+    assert fields["mesh_status"].value == "Invalid element connectivity."
+    assert fields["property"].editable
+    assert "element_count" not in fields
     revision = session.document.revision
     for edit in (lambda: session.assign_part(part.object_id, property_id=prop.object_id),
                  lambda: provider.submit(SetProperties(part, {"property": prop}, revision))):

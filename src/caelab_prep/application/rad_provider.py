@@ -183,9 +183,13 @@ class RadProvider:
             return (self._element_members_field(membership["members"]), *status)
         if len(words) in (3, 4) and words[1] == "PART" and words[2].isdigit():
             summary = self.session.part_summary(ref)
+            diagnostics = summary.get("diagnostics", ())
+            mesh_status = (PropertySpec("mesh_status", "Mesh status",
+                                        " ".join(dict.fromkeys(item["message"] for item in diagnostics)),
+                                        kind="text", editable=False) if diagnostics else
+                           PropertySpec("element_count", "Displayed elements", summary["element_count"], editable=False))
             return (PropertySpec("part_id", "Native part ID", summary["part_id"], editable=False),
-                    PropertySpec("element_count", "Displayed elements", summary["element_count"], editable=False),
-                    *self._assignment_fields(card))
+                    mesh_status, *self._assignment_fields(card))
         if (card["keyword"].upper().startswith("/FUNCT/") and fields
                 and set(values) == {f"point_{i}_{axis}" for i in range(len(fields) // 2) for axis in ("x", "y")}):
             points = tuple((values[f"point_{i}_x"], values[f"point_{i}_y"])

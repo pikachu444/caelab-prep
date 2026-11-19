@@ -1929,6 +1929,54 @@ def test_mesh_planners_accept_native_alias_from_viewport_pick(tmp_path, family, 
     assert session.plan_part_reassignment([{"element": picked, "part": part_ref}])["admissible"]
 
 
+@pytest.mark.parametrize("blank_id", (False, True), ids=("dangling-node", "blank-element-id"))
+def test_incomplete_part_blocks_contact_surface_creation_resolution_and_export(tmp_path, blank_id):
+    starter = _build_deck_multi_include(tmp_path / "input")
+    session = PrepSession()
+    session.open_rad(starter)
+    part = _card_by_prefix(session, "/PART/4")
+    mesh = session._find_card(_find_card_id(session, "/SH3N/1"))
+    state, _ = mesh.inserted_state(f"/SH3N/4\n{_tri_line(299, 1, 2, 3)}\n")
+    session.dispatcher.execute(mesh.id, state, "Add a valid face to the surface PART", kind="structure")
+    surface = session.create_surface("Main surface", [part["id"]], native_id=987)["card_id"]
+    secondary = _find_card_id(session, "/GRNOD/NODE/12")
+    contact = session.create_contact("Main contact", secondary, surface, .1)["card_id"]
+    case = session.create_analysis_case("Contact case", [contact], .01, .001, "s")["case_id"]
+    nodes = (15, 16, 17, 18 if blank_id else 999999)
+    row = " " * 10 + _quad_line(0, *nodes)[10:] if blank_id else _quad_line(208, *nodes)
+    state, _ = mesh.inserted_state(f"/SH4N/4\n{row}\n")
+    session.dispatcher.execute(mesh.id, state, "Add an invalid face to the surface PART", kind="structure")
+    project = tmp_path / "incomplete.caeprep"
+    session.save_project(project)
+    session.open_project(project)
+    part = _card_by_prefix(session, "/PART/4")
+
+    expected = "invalid_deck" if blank_id else "dangling_reference"
+    from caelab_prep.application.rad_provider import RadProvider
+    with pytest.raises(PrepError) as selection:
+        session.activate_object(RadProvider(session).ref_for_card(part))
+    assert selection.value.code == expected
+    for operation in (lambda: session.create_surface("Incomplete surface", [part["id"]]),
+                      lambda: session.create_contact("Incomplete contact", secondary, surface, .1)):
+        with pytest.raises(PrepError) as error:
+            operation()
+        assert error.value.code == ("incompatible_surface" if blank_id else expected)
+        assert error.value.details["diagnostics"][0]["part_id"] == 4
+
+    targets = session.condition_targets(contact)
+    main = next(role for role in targets["roles"] if role["key"] == "main_elements")
+    assert main["ids"] == []
+    diagnostic = next(item for item in targets["diagnostics"] if item.get("role") == "main_elements")
+    assert diagnostic["diagnostics"][0]["part_id"] == 4
+    if not blank_id:
+        assert diagnostic["diagnostics"][0]["missing_node_ids"] == [999999]
+    output = tmp_path / "output/case_0000.rad"
+    with pytest.raises(PrepError) as error:
+        session.export_analysis_case(output, case)
+    assert error.value.code == expected
+    assert not output.exists()
+
+
 def test_case_export_round_trips_sh4n_and_tetra_keywords(tmp_path):
     starter = _build_deck_multi_include(tmp_path / "input")
     for include, before, after in (("shells_b.inc", b"/SHELL/2", b"/SH4N/2"),

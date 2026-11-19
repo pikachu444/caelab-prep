@@ -1012,12 +1012,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
         for part_id in part_ids:
             resource, card, identity = self._unique_card(part_id, "PART")
             kinds = self._projection_index["part_element_kinds"].get(identity[1], set())
-            native = self._projection_index["all_cells_by_part"].get(identity[1], ())
-            if kinds - {"quad", "triangle"} or not any(not cell.get("parse_error") for cell in native):
+            if not kinds or kinds - {"quad", "triangle"}:
                 raise PrepError("incompatible_surface", "SURF/PART supports nonempty shell/triangle parts; solid faces need a different surface definition.")
-            self._part_cells(ObjectRef(self.document.id, resource.id, card.id, "rad-card", card.keyword))
-            if any(cell.get("parse_error") for cell in native):
-                raise PrepError("incompatible_surface", "SURF/PART requires readable connectivity for every element in the part.")
+            try:
+                self._part_cells(ObjectRef(self.document.id, resource.id, card.id, "rad-card", card.keyword))
+            except PrepError as exc:
+                if exc.code != "invalid_deck":
+                    raise
+                raise PrepError("incompatible_surface", str(exc), exc.details) from exc
             identifiers.append(identity[1])
         return identifiers
 
@@ -1656,7 +1658,14 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                         valid.append(cell)
                     else:
                         diagnostics.append({"severity": "warning", "code": "missing_display_nodes",
-                            "message": f"요소 {cell['id']}의 참조 절점이 없어 표시하지 못했습니다."})
+                            "message": f"Element {cell['id']} references missing nodes.",
+                            "part_id": cell.get("part_id"), "resource_id": cell["resource_id"],
+                            "card_id": cell["card_id"], "element_id": cell["id"],
+                            "missing_node_ids": sorted({node for node in cell["nodes"] if node not in nodes})})
+                part_element_diagnostics = {}
+                for diagnostic in diagnostics:
+                    if diagnostic["code"] in ("element_display_parse", "missing_display_nodes"):
+                        part_element_diagnostics.setdefault(diagnostic["part_id"], []).append(diagnostic)
                 identifiers = sorted(nodes)
                 parts = {}
                 for resource in resources:
@@ -1679,7 +1688,8 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                     self._selection_structure_tokens = tokens
                 self._projection_index = {"cells_by_id": by_id, "cells_by_part": by_part,
                                           "all_cells_by_id": all_by_id, "all_cells_by_part": all_by_part,
-                                          "part_element_kinds": part_element_kinds}
+                                          "part_element_kinds": part_element_kinds,
+                                          "part_element_diagnostics": part_element_diagnostics}
             result = {**self._projection_cache, "revision": document.revision,
                     "document_epoch": self._document_epoch, "projection_revision": self._projection_revision,
                     "resource_revisions": readonly({key: resource.state_token() for key, resource in document.resources.items()})}
@@ -1746,6 +1756,13 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
                           for other in by_id[cell["id"]])
             if matches != 1:
                 raise PrepError("ambiguous_selection", "The part contains repeated element IDs.")
+        diagnostics = self._projection_index["part_element_diagnostics"].get(part_id)
+        if diagnostics:
+            if any(item["code"] == "element_display_parse" for item in diagnostics):
+                raise PrepError("invalid_deck", "The part contains malformed native element rows.",
+                                {"diagnostics": deepcopy(diagnostics)})
+            raise PrepError("dangling_reference", "The part contains elements that reference missing nodes.",
+                            {"diagnostics": deepcopy(diagnostics)})
         return cells
 
     def part_summary(self, target: ObjectRef) -> dict:
@@ -1754,7 +1771,13 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             part_id = self._native_part_id(card.keyword)
             if part_id is None:
                 raise PrepError("invalid_reference", "A native PART is required.")
-            cells = self._part_cells(target)
+            try:
+                cells = self._part_cells(target)
+            except PrepError as exc:
+                if exc.code not in ("invalid_deck", "dangling_reference"):
+                    raise
+                return {"part_id": part_id, "element_count": None,
+                        "diagnostics": exc.details["diagnostics"]}
             return {"part_id": part_id, "element_count": len(cells)}
 
     def condition_targets(self, card_id):

@@ -212,28 +212,35 @@ class BooleanVectorEdit(QWidget):
 
 
 def _bucket_key(value):
-    if isinstance(value, (int, float, complex)):
-        return ("num", hash(value))
-    if isinstance(value, dict):
-        return ("dict", hash(frozenset((_bucket_key(key), _bucket_key(item)) for key, item in value.items())))
-    if isinstance(value, list):
-        return ("list", tuple(_bucket_key(item) for item in value))
-    if isinstance(value, tuple):
-        return ("tuple", tuple(_bucket_key(item) for item in value))
-    if isinstance(value, (set, frozenset)):
-        return ("set", hash(frozenset(_bucket_key(item) for item in value)))
+    kind = type(value)
+    if kind is dict:
+        items = []
+        for key, item in value.items():
+            pair = (_bucket_key(key), _bucket_key(item))
+            if None in pair:
+                return None
+            items.append(pair)
+        return ("dict", hash(frozenset(items)))
+    if kind is set:
+        return hash(frozenset(value))  # Sets and frozensets can compare equal.
     try:
-        return ("hash", hash(value))
+        return hash(value)
     except TypeError:
-        return ("unhashable", type(value).__qualname__, repr(value))
+        if kind in (list, tuple):
+            items = tuple(_bucket_key(item) for item in value)
+            if None not in items:
+                return (kind, items)
+        return None
 
 
-def _add_bucket(buckets, item):
-    buckets.setdefault(_bucket_key(item), []).append(item)
-
-
-def _contains(buckets, item):
-    return any(existing == item for existing in buckets.get(_bucket_key(item), ()))
+def _contains(buckets, item, key):
+    if any(existing == item for existing in buckets.get(key, ())):
+        return True
+    # A value without a reliable key may compare equal to a keyed value.
+    if key is None:
+        return any(existing == item for other, bucket in buckets.items()
+                   if other is not None for existing in bucket)
+    return any(existing == item for existing in buckets.get(None, ()))
 
 
 class ReferenceListEdit(QWidget):
@@ -245,9 +252,10 @@ class ReferenceListEdit(QWidget):
     def __init__(self, value=(), *, choices=(), choice_labels=(), parent=None):
         super().__init__(parent)
         self.choices = tuple(choices)
+        self._choice_keys = tuple(_bucket_key(ref) for ref in self.choices)
         self._choice_buckets = {}
-        for ref in self.choices:
-            _add_bucket(self._choice_buckets, ref)
+        for key, ref in zip(self._choice_keys, self.choices):
+            self._choice_buckets.setdefault(key, []).append(ref)
         self.choice_labels = tuple(choice_labels)
         self.list = QListWidget(self)
         self.list.setUniformItemSizes(True)
@@ -267,32 +275,31 @@ class ReferenceListEdit(QWidget):
 
     def value(self):
         selected = self.raw_value()
-        if any(not _contains(self._choice_buckets, ref) for ref in selected):
+        if any(not _contains(self._choice_buckets, ref, _bucket_key(ref)) for ref in selected):
             raise ValueError("A selected object is no longer available; uncheck it or choose an available object")
         return selected
 
     def set_raw_value(self, value):
         selected = tuple(value)
+        selected_keys = tuple(_bucket_key(ref) for ref in selected)
         selected_buckets = {}
-        for ref in selected:
-            _add_bucket(selected_buckets, ref)
+        for key, ref in zip(selected_keys, selected):
+            selected_buckets.setdefault(key, []).append(ref)
         blocked = QSignalBlocker(self.list)
         self.list.clear()
         displayed_buckets = {}
-        for index, ref in enumerate(self.choices):
-            bucket = displayed_buckets.setdefault(_bucket_key(ref), [])
-            if any(existing == ref for existing in bucket):
+        for index, (key, ref) in enumerate(zip(self._choice_keys, self.choices)):
+            if _contains(displayed_buckets, ref, key):
                 continue
             label = (self.choice_labels[index] if index < len(self.choice_labels)
                      else str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref)))
-            self._add_item(ref, label, _contains(selected_buckets, ref))
-            bucket.append(ref)
-        for ref in selected:
-            bucket = displayed_buckets.setdefault(_bucket_key(ref), [])
-            if not any(existing == ref for existing in bucket):
+            self._add_item(ref, label, _contains(selected_buckets, ref, key))
+            displayed_buckets.setdefault(key, []).append(ref)
+        for key, ref in zip(selected_keys, selected):
+            if not _contains(displayed_buckets, ref, key):
                 label = str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
                 self._add_item(ref, "Unavailable: " + label, True)
-                bucket.append(ref)
+                displayed_buckets.setdefault(key, []).append(ref)
         del blocked
 
     def _add_item(self, ref, label, checked):

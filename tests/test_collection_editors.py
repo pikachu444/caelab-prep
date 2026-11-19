@@ -1,4 +1,7 @@
 """Real Qt collection drafts; reading input never submits a document command."""
+from dataclasses import dataclass, field
+from decimal import Decimal
+from fractions import Fraction
 import os
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -118,6 +121,51 @@ def test_reference_buckets_match_equal_numeric_values_in_nested_references():
     assert editor.list.count() == 1
     value, = editor.value()
     assert value == first and type(value["id"]) is int
+
+
+@pytest.mark.parametrize("frozen", (False, True))
+@pytest.mark.parametrize("nested", (False, True))
+def test_reference_labels_do_not_affect_dataclass_equality(frozen, nested):
+    @dataclass(frozen=frozen)
+    class Reference:
+        identifier: int
+        label: str = field(compare=False)
+
+    choice = Reference(201, "Original label")
+    selected = Reference(201, "New label")
+    if nested:
+        choice = {"path": [choice]}
+        selected = {"path": [selected]}
+    editor = ReferenceListEdit((selected,), choices=(choice,))
+    assert editor.list.count() == 1
+    assert editor.value() == (choice,)
+
+
+@pytest.mark.parametrize("equivalent", (Decimal("201"), Fraction(201, 1), 201.0))
+@pytest.mark.parametrize("nested", (False, True))
+def test_reference_buckets_accept_python_numeric_equality(equivalent, nested):
+    choice = 201
+    if nested:
+        choice = {"path": ["shells", 201]}
+        equivalent = {"path": ["shells", equivalent]}
+    editor = ReferenceListEdit((equivalent,), choices=(choice,))
+    assert editor.list.count() == 1
+    assert editor.value() == (choice,)
+
+
+@pytest.mark.parametrize("fallback_choice", (False, True))
+def test_reference_fallback_can_match_a_hashable_value(fallback_choice):
+    class Reference:
+        def __eq__(self, other):
+            return isinstance(other, Reference) or other == 201
+
+    selected, choice = Reference(), 201
+    if fallback_choice:
+        selected, choice = choice, selected
+    editor = ReferenceListEdit((selected,), choices=(choice,))
+    assert editor.list.count() == 1
+    result, = editor.value()
+    assert type(result) is type(choice)
 
 
 def test_numeric_table_csv_rows_and_failed_paste_are_uncommitted_drafts():
