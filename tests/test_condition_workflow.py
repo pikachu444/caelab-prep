@@ -90,18 +90,22 @@ def _create_conditions(session):
                 velocity=velocity, contact=contact)
 
 
-@pytest.mark.parametrize("members", ((101, 0, 205), (101, 101, 205), (0, 0), (101, -205)))
+@pytest.mark.parametrize("members", ((101, 0, 205), (101, 101, 205), (), (0, 0), (101, -205),
+                                     (101, "0_0", 205), (101, "1_01", 205)))
 def test_source_import_and_mesh_previews_resolve_explicit_node_groups(tmp_path, members):
     source = _base_model(tmp_path / "source", newline=b"\r\n")
-    group = f"/GRNOD/NODE/47\r\nImported target\r\n{_i(*members)}\r\n".encode()
-    source.write_bytes(source.read_bytes().replace(b"/END", group + b"/END"))
+    group = b"/GRNOD/NODE/47\r\nImported target\r\n"
+    if members:
+        group += ("".join(f"{member:>10}" for member in members) + "\r\n").encode()
+    bcs = b"/BCS/71\r\nSupport\r\n   111 000         0        47\r\n" if not members else b""
+    source.write_bytes(source.read_bytes().replace(b"/END", group + bcs + b"/END"))
     original = PrepSession()
     original.open_rad(source)
     group_id = _card(original, "/GRNOD/NODE/47")["id"]
     move = [{"reference": original.resolve_entity_reference("node", 101)["reference"], "position": [-.1, 0, 0]}]
     destination = PrepSession()
     destination.open_rad(_base_model(tmp_path / "destination"))
-    if members == (0, 0) or -205 in members:
+    if members not in ((101, 0, 205), (101, 101, 205)):
         for preview in (lambda: destination.plan_import_source(source),
                         lambda: original.plan_group_members(group_id, [101, 309]),
                         lambda: original.plan_node_move(move, length_unit="mm")):

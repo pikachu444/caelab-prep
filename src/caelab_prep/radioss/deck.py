@@ -555,9 +555,11 @@ class DeckResource:
         candidate._created, candidate._deleted, candidate._patches, candidate._replaced = created, deleted, {}, replaced
         candidate._retained_comments = dict(retained_comments)
         candidate._state_token_cache = None
-        candidate._structure_token_cache = None
-        if (created != self._created or deleted != self._deleted or replaced != self._replaced
-                or retained_comments != self._retained_comments or state["node_positions"] != self._node_positions):
+        structural_changed = (created != self._created or deleted != self._deleted or replaced != self._replaced
+                              or state["node_positions"] != self._node_positions)
+        if structural_changed:
+            candidate._structure_token_cache = None
+        if structural_changed or retained_comments != self._retained_comments:
             candidate._rebuild_layout()
         positions = candidate._position_rows(state["node_positions"])
         candidate.lines = list(candidate.lines)

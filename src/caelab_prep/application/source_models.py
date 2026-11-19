@@ -61,7 +61,8 @@ class SourceArchiveResource:
         originals = [DeckResource(self.files[item["original_resource_id"]], resource_id=item["original_resource_id"],
             name=item["original_path"], is_include=item["resource_id"] != self.metadata["root_resource_id"])
             for item in self.metadata["files"]]
-        definitions, _, _ = inspect(originals)
+        # Replay the historical reader only for immutable archived originals.
+        definitions, _, _ = inspect(originals, allow_legacy_groups=True)
         mapping = NativeMap({(ns, original): mapped for ns, original, mapped in self.metadata["id_map"]},
                             shared={("NODE", value) for value in self.metadata["shared_nodes"]})
         # Prep previously labeled imported native QUAD IDs as shell IDs.
@@ -128,7 +129,7 @@ class SourceArchiveResource:
                 continue
             try:
                 expected = remap(originals, mapping, paths, include_graph=graph, two_line=style,
-                                 legacy_direct_inline=direct_writer)
+                                 legacy_direct_inline=direct_writer, allow_legacy_groups=True)
             except PrepError as exc:
                 if exc.code != "include_missing":
                     raise

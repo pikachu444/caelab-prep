@@ -75,17 +75,28 @@ def test_explicit_shared_node_is_single_entity_and_unmapped_nodes_stay_distinct(
     assert session.describe()["node_count"] == 4
 
 
-def test_reopen_source_archive_with_deleted_title_only_node_group(tmp_path):
+@pytest.mark.parametrize("variant", ("title-only-deleted", "underscore-retained", "underscore-corrected", "underscore-deleted"))
+def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
     source = _base_model(tmp_path / "source")
-    native_row = f"{_i(101, 205)}\n".encode()
+    title_only = variant.startswith("title-only")
+    identifiers = (101, 205) if title_only else (101, 101, 205)
+    native_row = f"{_i(*identifiers)}\n".encode()
     source.write_bytes(source.read_bytes().replace(b"/END", b"/GRNOD/NODE/47\nUnused target\n" + native_row + b"/END"))
     session = PrepSession()
     session.open_rad(_base_model(tmp_path / "base"))
     plan = session.plan_import_source(source)
     ids = {(namespace, original): mapped for namespace, original, mapped in plan["source"]["id_map"]}
     session.import_source(plan["plan_id"])
-    group = _card(session, f'/GRNOD/NODE/{ids["GRNOD", 47]}')["id"]
-    session.delete_card(group)
+    group_keyword = f'/GRNOD/NODE/{ids["GRNOD", 47]}'
+    group = _card(session, group_keyword)["id"]
+    expected = (ids["NODE", 101], ids["NODE", 205])
+    if variant.endswith("deleted"):
+        session.delete_card(group)
+    elif variant.endswith("corrected"):
+        resource = session._find_card(group)
+        corrected = f"{group_keyword}\nUnused target\n{_i(*expected)}\n"
+        state = resource.replaced_state(group, corrected)
+        session.dispatcher.execute(resource.id, state, "Normalize mapped group row", kind="structure")
     case = session.create_analysis_case("No conditions", [], .01, .001, "s")["case_id"]
     saved = tmp_path / "saved.caeprep"
     session.save_project(saved)
@@ -96,13 +107,15 @@ def test_reopen_source_archive_with_deleted_title_only_node_group(tmp_path):
     file = next(item for item in source_model["files"] if item["original_path"] == source.name)
     original_member = f'sources/{source_model["id"]}/{file["original_resource_id"]}.rad'
     mapped_member = next(item["raw_member"] for item in manifest["resources"] if item["id"] == file["resource_id"])
-    # Reproduce the older writer's matching title-only original and remap.
+    # Reproduce the older writers' immutable originals and corresponding remaps.
     assert payloads[original_member].count(native_row) == 1
-    payloads[original_member] = payloads[original_member].replace(native_row, b"")
+    legacy_row = b"" if title_only else f"{101:10d}{'1_01':>10}{205:10d}\n".encode()
+    payloads[original_member] = payloads[original_member].replace(native_row, legacy_row)
     file["sha256"] = sha256(payloads[original_member]).hexdigest()
-    translated_row = f'{_i(ids["NODE", 101], ids["NODE", 205])}\n'.encode()
-    assert payloads[mapped_member].count(translated_row) == 1
-    payloads[mapped_member] = payloads[mapped_member].replace(translated_row, b"")
+    if title_only:
+        translated_row = f'{_i(*expected)}\n'.encode()
+        assert payloads[mapped_member].count(translated_row) == 1
+        payloads[mapped_member] = payloads[mapped_member].replace(translated_row, b"")
     payloads["manifest.json"] = json.dumps(manifest).encode()
     legacy = tmp_path / "pass13.caeprep"
     with zipfile.ZipFile(legacy, "w") as archive:
@@ -112,11 +125,18 @@ def test_reopen_source_archive_with_deleted_title_only_node_group(tmp_path):
     session.open_project(legacy)
     view = session.mesh_view()
     assert len(view["node_ids"]) == 16 and len(view["cells"]) == 4
-    assert not any(card["keyword"].startswith("/GRNOD/") for card in session.list_cards())
+    if variant.endswith("deleted"):
+        assert not any(card["keyword"].startswith("/GRNOD/") for card in session.list_cards())
+    else:
+        assert session.group_members(group)["member_ids"] == list(expected)
+        native_members = (expected[0], *expected) if variant.endswith("retained") else expected
+        assert session.card_text(group).splitlines()[-1] == _i(*native_members)
     target = tmp_path / "export/case_0000.rad"
     session.export_analysis_case(target, case)
     session.open_rad(target)
     assert len(session.mesh_view()["node_ids"]) == 16 and len(session.mesh_view()["cells"]) == 4
+    if not variant.endswith("deleted"):
+        assert session.group_members(_card(session, group_keyword)["id"])["member_ids"] == list(expected)
 
 
 def test_legacy_quad_source_archive_recovers_the_native_solid_group(tmp_path):

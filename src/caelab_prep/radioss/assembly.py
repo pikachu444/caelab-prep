@@ -32,10 +32,10 @@ def identity(keyword):
     return native_identity(keyword)
 
 
-def _int(text, *, zero=False):
+def _int(text, *, zero=False, allow_underscore=False):
     raw = text.strip()
     try:
-        if raw and not re.fullmatch(r"[+-]?\d+", raw):
+        if raw and not allow_underscore and not re.fullmatch(r"[+-]?\d+", raw):
             raise ValueError()
         value = int(raw) if raw else 0
         if value < (0 if zero else 1): raise ValueError()
@@ -60,7 +60,7 @@ def element_part_reference(keyword):
     return _int(words[1])
 
 
-def _inspect(resources):
+def _inspect(resources, *, allow_legacy_groups: bool = False):
     """Collect definitions and fixed-width references, retaining file ownership."""
     definitions, refs, edits, omitted = {}, [], {}, {}
     def define(ns, value, rid, line, start=None):
@@ -107,18 +107,16 @@ def _inspect(resources):
                 namespace = GROUPS[pair]
                 node_group = pair == "GRNOD/NODE"
                 entries = []
-                saw_zero = False
                 for row in card.data[1:]:
                     for start in range(0, len(lines[row].rstrip("\r\n")), 10):
                         token = lines[row][start:start + 10].strip()
                         if token:
-                            value = (-_int(token[1:]) if namespace.startswith("E:") and token.startswith("-")
-                                     else _int(token, zero=node_group))
+                            value = (-_int(token[1:], allow_underscore=allow_legacy_groups)
+                                     if namespace.startswith("E:") and token.startswith("-")
+                                     else _int(token, zero=node_group, allow_underscore=allow_legacy_groups))
                             if value:
                                 entries.append((row, start, value))
-                            elif node_group:
-                                saw_zero = True
-                if node_group and saw_zero and not entries:
+                if node_group and not entries and not allow_legacy_groups:
                     raise PrepError("unsupported_source_profile", "Node group must reference at least one positive node ID.")
                 effective = set(element_group_members([value for _, _, value in entries]))
                 for row, start, value in entries:
@@ -159,9 +157,9 @@ def _inspect(resources):
     return definitions, edits, omitted
 
 
-def inspect(resources):
+def inspect(resources, *, allow_legacy_groups: bool = False):
     try:
-        return _inspect(resources)
+        return _inspect(resources, allow_legacy_groups=allow_legacy_groups)
     except (IndexError, ValueError, TypeError) as exc:
         raise PrepError("unsupported_source_profile", "A supported source card has malformed fixed-width data.", {"reason": str(exc)}) from exc
 
@@ -178,8 +176,9 @@ def source_include_graph(resources, paths, *, selected=None, historical=None, lo
                             selected=selected, historical=historical)
 
 
-def remap(resources, mappings, paths, *, include_graph=None, two_line="quoted", legacy_direct_inline: bool = False):
-    definitions, edits, omitted = inspect(resources)
+def remap(resources, mappings, paths, *, include_graph=None, two_line="quoted", legacy_direct_inline: bool = False,
+          allow_legacy_groups: bool = False):
+    definitions, edits, omitted = inspect(resources, allow_legacy_groups=allow_legacy_groups)
     reached, bindings, problems = include_graph if include_graph is not None else source_include_graph(resources, paths)
     if problems or (not legacy_direct_inline and reached != set(paths)):
         raise PrepError("include_missing", "The imported INCLUDE graph could not be resolved.")

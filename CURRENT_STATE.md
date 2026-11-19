@@ -128,6 +128,12 @@ Windows Python 3.13.5에서 영향 범위 pytest 8개 모듈은 326건을 통과
 
 덱 구조 토큰이 바뀌면 기존 메시 표시와 절점 소유권을 갱신한다. 자원 직접 복원과 기본 필드 변경 이벤트에서 절점·요소 연결·그룹의 새 ID를 확인했다. 재료 스칼라 편집의 표시 리비전은 유지한다. 20,000절점·96그룹 웜 검증은 단일 파일 중앙값 1.259 ms, 절점 INCLUDE 1.285 ms였다(각 81회 성공). 집중 검사 27건과 전체 영향 범위 pytest 13개 모듈 408건을 통과했고, 별도 EGL 렌더링 검사 1건은 건너뛰었다.
 
+### 열여섯 번째 검토 수정
+
+`24c8a2e` 재검토를 반영했다. `2a82798`로 작성한 원본 노드 그룹의 밑줄 정수 사례 세 개를 다시 열어 16절점·4요소와 각 활성 그룹 상태를 내보냈다. `acd8a18`로 작성한 제목만 있는 원본 그룹 사례도 재출력했다. 새 가져오기와 메시 편집 미리보기는 빈 그룹과 밑줄 정수 필드를 거부한다.
+
+자원 직접 복원과 기본 필드 변경 이벤트에서 이전 절점 선택을 제거한다. 다른 INCLUDE의 메시 좌표를 바꾼 뒤 첫 번째 이전 선택 요청을 거부했다. 교체된 20,000절점 덱의 재료 스칼라 편집 41회에서 구조 JSON 직렬화와 해시 호출은 각각 0회였고 표시 리비전은 유지됐다. 집중 검사 23건과 전체 영향 범위 pytest 13개 모듈 418건을 통과했고, 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).
