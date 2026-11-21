@@ -527,13 +527,15 @@ def test_reference_editor_preserves_frozen_cycles_and_detaches_caches(cached):
         draft.members[0] = 404
         assert ref.members == editor.value()[0].members == [101]
     else:
-        assert editor.value()[0] is ref
+        selected, = editor.value()
+        assert selected is not ref and selected.back is selected
+        assert "members" not in vars(ref) and "members" not in vars(selected)
 
 
 @pytest.mark.parametrize("kind", ("bytearray", "memoryview", "dict_keys"))
 def test_reference_editor_snapshots_buffers_and_key_views(kind):
     if kind == "dict_keys":
-        backing = {"shell": 101}
+        backing = {"shell": 101, "nested": [101]}
         ref = backing.keys()
     else:
         backing = bytearray(b"X")
@@ -542,13 +544,113 @@ def test_reference_editor_snapshots_buffers_and_key_views(kind):
     value, = editor.value()
     assert type(value) is type(ref) and value == ref
     if kind == "dict_keys":
+        assert value.mapping["shell"] == 101
+        value.mapping["nested"].append(404)
+        backing["nested"].append(405)
         backing["new shell"] = 404
-        assert set(editor.value()[0]) == {"shell"}
+        assert set(editor.value()[0]) == {"shell", "nested"}
+        assert editor.value()[0].mapping["nested"] == [101]
     else:
         backing[0] = ord("Y")
         if kind == "bytearray":
             value[0] = ord("Z")
         assert bytes(editor.value()[0]) == b"X"
+
+
+def test_reference_editor_preserves_endian_buffer_type_and_shape():
+    np = pytest.importorskip("numpy")
+    allowed = memoryview(np.array([[1065353216]], dtype=">u4"))
+    unavailable = memoryview(np.array([[1.0]], dtype=">f4")).toreadonly()
+    assert allowed != unavailable and allowed.tobytes() == unavailable.tobytes()
+    editor = ReferenceListEdit((unavailable,), choices=(allowed,))
+    draft, = editor.raw_value()
+    assert (draft.format, draft.shape, draft.readonly) == (unavailable.format, (1, 1), True)
+    assert draft == unavailable and draft != allowed
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+    editor.set_raw_value((allowed,))
+    selected, = editor.value()
+    assert selected == allowed and selected.format == allowed.format and selected.shape == (1, 1)
+    allowed.obj[0, 0] = 0
+    assert editor.value()[0].tobytes() != allowed.tobytes()
+
+
+def test_reference_editor_leaves_cold_cached_property_on_its_own_instance():
+    class Members:
+        @cached_property
+        def members(self):
+            return [self.local_id]
+
+    @dataclass(frozen=True)
+    class Reference(Members):
+        local_id: int
+
+    ref = Reference(101)
+    editor = ReferenceListEdit((ref,), choices=(ref,))
+    draft, = editor.raw_value()
+    draft.members[0] = 404
+    assert "members" not in vars(ref)
+    assert editor.value()[0].members == [101]
+
+
+def test_reference_editor_supports_immutable_ranges_in_reference_state():
+    @dataclass(frozen=True)
+    class Reference:
+        local_id: int
+
+        @cached_property
+        def members(self):
+            return range(self.local_id, self.local_id + 2)
+
+    class ReadonlyMapping(Mapping):
+        def __init__(self, values):
+            self.values_range = values
+
+        def __getitem__(self, index):
+            return self.values_range[index]
+
+        def __iter__(self):
+            return iter(range(len(self.values_range)))
+
+        def __len__(self):
+            return len(self.values_range)
+
+    ref = Reference(101)
+    expected = ref.members
+    assert ReferenceListEdit((ref,), choices=(ref,)).value()[0].members == expected
+    mapping = ReadonlyMapping(expected)
+    assert ReferenceListEdit((mapping,), choices=(mapping,)).value()[0] == {0: 101, 1: 102}
+
+
+def test_reference_editor_reads_nested_frozen_slots_once_per_snapshot(monkeypatch):
+    from caelab_prep.ui.widgets import collections
+
+    reads = 0
+
+    @dataclass(frozen=True, slots=True)
+    class Link:
+        parent: object
+
+        def __getattribute__(self, name):
+            nonlocal reads
+            reads += name == "parent"
+            return object.__getattribute__(self, name)
+
+    original_slots = collections._ref_slots
+
+    def count_slot_reads(ref):
+        nonlocal reads
+        for member, value in original_slots(ref):
+            reads += isinstance(ref, Link) and member.__name__ == "parent"
+            yield member, value
+
+    monkeypatch.setattr(collections, "_ref_slots", count_slot_reads)
+    chain = None
+    for _ in range(16):
+        chain = Link(chain)
+    editor = ReferenceListEdit((chain,), choices=(chain,))
+    assert editor.value()[0] is chain
+    assert reads <= 100
 
 
 def test_reference_editor_handles_frozendict_choices_without_mutating_them():

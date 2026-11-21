@@ -30,6 +30,8 @@ def _validate_element_allocation(mapping):
     elements = [(original, mapped) for (namespace, original), mapped in sorted(mapping.items())
                 if namespace.startswith("E:")]
     mapped_ids = {mapped for _, mapped in elements}
+    if len(mapped_ids) != len(elements):
+        raise PrepError("invalid_project", "Multiple source elements map to the same element ID.")
     assigned = set()
     first = cursor = None
     highest = 0
@@ -178,7 +180,7 @@ class SourceArchiveResource:
                 raise PrepError("invalid_project", "Original source INCLUDE bindings are incomplete.")
         # Later writers can share both mapped bytes and native first-visit order.
         archived_order = [item["original_path"] for item in self.metadata["files"]]
-        matches_by_order = {True: {}, False: {}}
+        matches = {}
         mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
         mapped_keys = {(resource.name, directive.header_row): (mapped_ids[resource.name], ordinal)
                        for resource in originals for ordinal, directive in enumerate(resource.include_directives)}
@@ -190,10 +192,7 @@ class SourceArchiveResource:
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
                                          archived_order=archived_order, load_order=load_order)
             reached, original_bindings, _ = graph
-            # These policies must explain the recorded disk order as well as the mapped bytes.
-            # Older rewrite formats retain their byte-and-binding compatibility checks.
-            requires_order = records is None and historical in (None, "ac0", "bde", "8e85")
-            if reached != set(paths) or (requires_order and load_order != archived_order):
+            if reached != set(paths) or (records is None and load_order != archived_order):
                 continue
             try:
                 matched_profile = next((profile for profile in compatible_readers
@@ -213,8 +212,7 @@ class SourceArchiveResource:
                     directive = document.resources[owner].include_directives[ordinal]
                     if directive.path != paths[target]:
                         repairs[owner, ordinal] = mapped_ids[target]
-            matches_by_order[load_order == archived_order].setdefault(effective, (repairs, matched_profile))
-        matches = matches_by_order[True] or matches_by_order[False]
+            matches.setdefault(effective, (repairs, matched_profile))
         if not matches:
             raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
         if len(matches) > 1 and project_bindings:

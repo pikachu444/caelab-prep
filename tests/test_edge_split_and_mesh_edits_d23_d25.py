@@ -1331,6 +1331,14 @@ def test_d23_reopens_legacy_quoted_two_line_source_archive(tmp_path, legacy_form
         sibling = next(item for item in files if item["original_path"] == f"mesh/{name}")
         files.remove(sibling)
         files.insert(root_index, sibling)
+    if legacy_format == "unquoted":
+        # The root-first writer visited the nested operand before the
+        # Starter's next directive explicitly included its sibling.
+        files = source_record["files"]
+        root_nodes = next(item for item in files if item["original_path"] == name)
+        files.remove(root_nodes)
+        sibling_index = next(i for i, item in enumerate(files) if item["original_path"] == f"mesh/{name}")
+        files.insert(sibling_index, root_nodes)
     source_files = {item["original_path"]: item for item in plan["source"]["files"]}
     if legacy_format in ("root-first-resaved", "ambiguous-resaved"):
         nested_id = source_files["mesh/first.inc"]["resource_id"]

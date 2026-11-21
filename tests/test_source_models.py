@@ -591,7 +591,8 @@ def test_8e85_reopens_signed_archive_with_delayed_includes(tmp_path, file_count)
 @pytest.mark.parametrize("name,count", (("ac0a255-qualified-70-includes", 70),
                                           ("8e85a669-signed-shared-includes", 19),
                                           ("8e85a669-signed-repeated-24-includes", 24),
-                                          ("8e85a669-signed-same-directory-includes", 14)))
+                                          ("8e85a669-signed-same-directory-includes", 14),
+                                          ("8e85a669-signed-borrowed-leaf-includes", 21)))
 def test_historical_include_search_skips_irrelevant_prefix_alternatives(tmp_path, monkeypatch, name, count):
     fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
     original_walk = includes._walk_includes
@@ -609,7 +610,7 @@ def test_historical_include_search_skips_irrelevant_prefix_alternatives(tmp_path
         before = deductions
         session.open_project(fixture)
         assert len(session.source_models()[0]["files"]) == count
-        assert deductions - before < 10
+        assert deductions - before <= (4 if count == 21 else 9)
         fixture = tmp_path / f"saved-{index}.caeprep"
         session.save_project(fixture)
     exported = tmp_path / "native/case_0000.rad"
@@ -667,6 +668,60 @@ def test_element_allocation_cursor_can_continue_below_an_unchanged_id(tmp_path):
     session.export_analysis_case(target)
     session.open_rad(target)
     assert len(session.mesh_view()["cells"]) == 5
+
+
+def test_archive_rejects_element_target_used_by_two_namespaces(tmp_path):
+    fixture = Path(__file__).with_name("fixtures") / "8e85a669-quad-triangle-collision.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    with zipfile.ZipFile(fixture) as archive:
+        members = {member: archive.read(member) for member in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    assert ["E:QUAD", 9007, 9008] in source["id_map"]
+    triangle = next(entry for entry in source["id_map"] if entry[:2] == ["E:SH3N", 9008])
+    assert triangle[2] == 9009
+    triangle[2] = 9008
+    file = next(file for file in source["files"] if file["original_path"] == "mesh.inc")
+    resource = next(resource for resource in manifest["resources"] if resource["id"] == file["resource_id"])
+    native = resource["raw_member"]
+    assert members[native].count(_i(9009).encode()) == 1
+    members[native] = members[native].replace(_i(9009).encode(), _i(9008).encode())
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "duplicate.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for member, payload in members.items():
+            archive.writestr(member, payload)
+    with pytest.raises(PrepError) as error:
+        session.open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize("name", ("ac0a255-qualified-70-includes", "24137d60-nested-include-order",
+                                  "987c52b8-nested-include-order", "8fe6609b-nested-include-order"))
+def test_unrecorded_include_policy_requires_genuine_visit_order(tmp_path, name):
+    fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    target = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    assert len(session.mesh_view()["cells"]) == 4
+    with zipfile.ZipFile(fixture) as archive:
+        members = {member: archive.read(member) for member in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    files = manifest["source_models"][0]["files"]
+    assert files[1]["original_path"] == "a/chooser.inc"
+    assert files[2]["original_path"] == ("trigger.inc" if name.startswith("ac0") else "mesh.inc")
+    files[1], files[2] = files[2], files[1]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "altered-order.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for member, payload in members.items():
+            archive.writestr(member, payload)
+    with pytest.raises(PrepError) as error:
+        session.open_project(altered)
+    assert error.value.code == "invalid_project"
 
 
 @pytest.mark.parametrize("name", ("bde82a5-quad-14-includes", "bde82a5-quad-qualified-order",

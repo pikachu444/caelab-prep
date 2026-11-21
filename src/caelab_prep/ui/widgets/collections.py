@@ -13,6 +13,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
+from functools import cache, cached_property
 import gc
 from ipaddress import IPv4Address, IPv6Address
 from numbers import Number
@@ -231,10 +232,10 @@ class BooleanVectorEdit(QWidget):
 _PLAIN_PRIMITIVES = frozenset({str, int, float, bool, type(None), Decimal, Fraction, complex})
 _HASH_SCALARS = _PLAIN_PRIMITIVES | {
     bytes, ObjectRef, UUID, date, datetime, time, timedelta, IPv4Address, IPv6Address,
-    PurePosixPath, PureWindowsPath, PosixPath, WindowsPath,
+    PurePosixPath, PureWindowsPath, PosixPath, WindowsPath, range,
 }
 _ROW_ID_ROLE = Qt.ItemDataRole.UserRole + 1
-_DICT_KEYS = type({}.keys())
+_DICT_VIEWS = {type({}.keys()): dict.keys, type({}.items()): dict.items}
 
 
 def _proxy_target(value):
@@ -317,13 +318,70 @@ def _copy_ref_state(ref, clone, memo):
 def _frozen_state_values(ref):
     attributes = getattr(ref, "__dict__", {})
     yield from attributes.values()
-    yield from (value for _, value in _ref_slots(ref))
+    names = set(attributes)
+    for slot, value in _ref_slots(ref):
+        names.add(slot.__name__)
+        yield value
     for member in fields(ref):
-        if member.name not in attributes:
+        if member.name not in names:
             try:
                 yield getattr(ref, member.name)
             except AttributeError:
                 continue
+
+
+@cache
+def _has_cached_property(kind):
+    return any(isinstance(member, cached_property) for base in kind.__mro__ for member in vars(base).values())
+
+
+def _share_frozen_state(ref, memo):
+    """Share a frozen graph only after all of its reachable state is safe."""
+    pending = [ref]
+    visited = {}
+    while pending:
+        value = pending.pop()
+        kind = type(value)
+        key = id(value)
+        if key in memo:
+            if memo[key] is not value:
+                return False
+        elif key not in visited and kind not in _HASH_SCALARS:
+            visited[key] = value
+            if kind in (tuple, frozenset):
+                pending.extend(value)
+            elif kind is slice:
+                pending.extend((value.start, value.stop, value.step))
+            elif is_dataclass(kind) and kind.__dataclass_params__.frozen and not _has_cached_property(kind):
+                pending.extend(_frozen_state_values(value))
+            else:
+                return False
+    memo.update(visited)
+    return True
+
+
+def _copy_memoryview(ref):
+    data = ref.tobytes()
+    backing = data if ref.readonly else bytearray(data)
+    snapshot = memoryview(backing)
+    layout = ref.format, ref.shape
+    if (snapshot.format, snapshot.shape) == layout:
+        return snapshot
+    try:
+        return snapshot.cast(*layout)
+    except (TypeError, ValueError):
+        if ref.readonly and type(ref.obj) is bytes:
+            return ref
+        numpy = sys.modules.get("numpy")
+        if numpy is not None:
+            try:
+                dtype = ref.obj.dtype if isinstance(ref.obj, numpy.ndarray) else numpy.dtype(ref.format)
+                snapshot = memoryview(numpy.frombuffer(backing, dtype=dtype).reshape(ref.shape))
+                if (snapshot.format, snapshot.shape) == layout:
+                    return snapshot
+            except (TypeError, ValueError):
+                pass
+    raise TypeError(f"Cannot snapshot memoryview with format {ref.format!r} and shape {ref.shape!r}")
 
 
 def _clone_sqlalchemy_row(ref, memo):
@@ -357,15 +415,16 @@ def _clone_ref(ref, memo=None):
     if kind is bytearray:
         return memo.setdefault(key, bytearray(ref))
     if kind is memoryview:
-        snapshot = memoryview(ref.tobytes())
-        if (snapshot.format, snapshot.shape) != (ref.format, ref.shape):
-            try:
-                snapshot = snapshot.cast(ref.format, ref.shape)
-            except (TypeError, ValueError):
-                pass
-        return memo.setdefault(key, snapshot)
-    if kind is _DICT_KEYS:
-        return memo.setdefault(key, dict.fromkeys(_clone_ref(name, memo) for name in ref).keys())
+        return memo.setdefault(key, _copy_memoryview(ref))
+    if kind is slice:
+        parts = (ref.start, ref.stop, ref.step)
+        cloned = tuple(_clone_ref(value, memo) for value in parts)
+        return memo.setdefault(key, ref if all(a is b for a, b in zip(parts, cloned)) else slice(*cloned))
+    if kind in _DICT_VIEWS:
+        backing = {}
+        memo[key] = _DICT_VIEWS[kind](backing)
+        backing.update((_clone_ref(name, memo), _clone_ref(value, memo)) for name, value in ref.mapping.items())
+        return memo[key]
     if isinstance(ref, dict):
         clone = {} if kind is dict else copy(ref)
         if clone is ref:
@@ -441,11 +500,8 @@ def _clone_ref(ref, memo=None):
             # NumPy booleans, dates and strings are immutable values outside
             # numbers.Number. Keep the widget package independent of NumPy.
             return ref
-        if is_dataclass(ref) and kind.__dataclass_params__.frozen:
-            # Treat back-references as unchanged while probing. If any state
-            # needs detaching, revisit it with the real clone in the memo.
-            probe = memo | {key: ref}
-            if all(_clone_ref(value, probe) is value for value in _frozen_state_values(ref)):
+        if is_dataclass(kind) and kind.__dataclass_params__.frozen:
+            if _share_frozen_state(ref, memo):
                 return ref
         clone = object.__new__(kind)
         memo[key] = clone

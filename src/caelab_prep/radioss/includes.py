@@ -1,6 +1,8 @@
 """Resolve Starter INCLUDE graphs against disk or a portable file inventory."""
 from collections import defaultdict, deque
 from functools import cache
+from heapq import heappop, heappush
+from itertools import count
 from pathlib import PurePosixPath
 
 from ..cae_core import PrepError
@@ -154,18 +156,14 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
             raise PrepError("include_missing", "Disk traversal would collect an unarchived INCLUDE.")
         return load(path)
 
-    pending = [iter((frozenset(),))]
-    seen = set()
+    initial = frozenset()
+    pending = [(0, 0, 0, initial)]
+    seen = {initial}
+    sequence = count(1)
     best_prefix = -1
     stalled = 0
     while pending:
-        alternatives = next(pending[-1], None)
-        if alternatives is None:
-            pending.pop()
-            continue
-        if alternatives in seen:
-            continue
-        seen.add(alternatives)
+        _, _, _, alternatives = heappop(pending)
         phantoms = set(alternatives)
         fallback = {}
         deduced_order = []
@@ -230,10 +228,16 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
         # A shared target entirely within the matched prefix is harmless when
         # neither its callers nor any pending choice need it after that prefix.
         matched = set(verified_order[:prefix])
-        candidates = ((path,) for path, target in reversed(fallback.items())
-                      if any(site[0] not in matched for site in lookup_sites[path])
-                      or not isolated_prefix(target, matched, wave_targets))
-        pending.append(map(alternatives.union, candidates))
+        for path, target in fallback.items():
+            if (all(site[0] in matched for site in lookup_sites[path])
+                    and isolated_prefix(target, matched, wave_targets)):
+                continue
+            candidate = alternatives | {path}
+            if candidate not in seen:
+                seen.add(candidate)
+                # Follow verified progress. For equally promising branches,
+                # try smaller explanations before combining alternatives.
+                heappush(pending, (-prefix, len(candidate), next(sequence), candidate))
     return False
 
 
