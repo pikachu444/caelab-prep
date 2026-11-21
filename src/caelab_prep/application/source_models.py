@@ -192,7 +192,7 @@ class SourceArchiveResource:
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
                                          archived_order=archived_order, load_order=load_order)
             reached, original_bindings, _ = graph
-            if reached != set(paths) or (records is None and load_order != archived_order):
+            if reached != set(paths) or load_order != archived_order:
                 continue
             try:
                 matched_profile = next((profile for profile in compatible_readers

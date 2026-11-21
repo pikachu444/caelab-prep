@@ -5,6 +5,7 @@ validated value and retain ``raw_value()`` when an incomplete draft must survive
 """
 from __future__ import annotations
 
+from array import array
 from collections import OrderedDict, deque
 from collections.abc import Mapping, MutableMapping
 from copy import copy
@@ -13,7 +14,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
-from functools import cache, cached_property
+from functools import cached_property
 import gc
 from ipaddress import IPv4Address, IPv6Address
 from numbers import Number
@@ -23,6 +24,7 @@ import sqlite3
 import sys
 from types import MappingProxyType, MemberDescriptorType
 from uuid import UUID
+from weakref import WeakKeyDictionary
 
 from PySide6.QtCore import QSignalBlocker, QSize, Qt, Signal
 from PySide6.QtGui import QClipboard, QKeySequence, QValidator
@@ -235,7 +237,16 @@ _HASH_SCALARS = _PLAIN_PRIMITIVES | {
     PurePosixPath, PureWindowsPath, PosixPath, WindowsPath, range,
 }
 _ROW_ID_ROLE = Qt.ItemDataRole.UserRole + 1
-_DICT_VIEWS = {type({}.keys()): dict.keys, type({}.items()): dict.items}
+_DICT_VALUES = type({}.values())
+_DICT_VIEWS = {type({}.keys()): dict.keys, type({}.items()): dict.items, _DICT_VALUES: dict.values}
+_CACHED_PROPERTY_TYPES = WeakKeyDictionary()
+
+
+class _ReferenceMemo(dict):
+    def __init__(self, entries=()):
+        super().__init__(entries)
+        self.unshareable = set()
+        self.frozen_slots = {}
 
 
 def _proxy_target(value):
@@ -311,15 +322,19 @@ def _ref_slots(ref):
 def _copy_ref_state(ref, clone, memo):
     if hasattr(ref, "__dict__"):
         object.__setattr__(clone, "__dict__", _clone_ref(vars(ref), memo))
-    for member, value in _ref_slots(ref):
+    slots = memo.frozen_slots.get(id(ref))
+    for member, value in _ref_slots(ref) if slots is None else slots:
         member.__set__(clone, _clone_ref(value, memo))
 
 
-def _frozen_state_values(ref):
+def _frozen_state_values(ref, memo):
     attributes = getattr(ref, "__dict__", {})
     yield from attributes.values()
     names = set(attributes)
-    for slot, value in _ref_slots(ref):
+    slots = memo.frozen_slots.get(id(ref))
+    if slots is None:
+        slots = memo.frozen_slots[id(ref)] = tuple(_ref_slots(ref))
+    for slot, value in slots:
         names.add(slot.__name__)
         yield value
     for member in fields(ref):
@@ -330,32 +345,61 @@ def _frozen_state_values(ref):
                 continue
 
 
-@cache
 def _has_cached_property(kind):
-    return any(isinstance(member, cached_property) for base in kind.__mro__ for member in vars(base).values())
+    try:
+        return _CACHED_PROPERTY_TYPES[kind]
+    except (KeyError, TypeError):
+        result = any(isinstance(member, cached_property) for base in kind.__mro__ for member in vars(base).values())
+        try:
+            _CACHED_PROPERTY_TYPES[kind] = result
+        except TypeError:
+            pass
+        return result
 
 
-def _share_frozen_state(ref, memo):
+def _retains_identity(ref, kind):
+    if isinstance(ref, (Enum, Number)) or (kind.__eq__ is object.__eq__ and not isinstance(ref, Mapping)):
+        return True
+    numpy = sys.modules.get("numpy")
+    return isinstance(ref, getattr(numpy, "generic", ())) and ref.dtype.kind in "bMSU"
+
+
+def _share_frozen_state(ref, memo, unshareable):
     """Share a frozen graph only after all of its reachable state is safe."""
-    pending = [ref]
+    if id(ref) in unshareable:
+        return False
+    path = [(None, iter((ref,)))]
     visited = {}
-    while pending:
-        value = pending.pop()
+    while path:
+        try:
+            value = next(path[-1][1])
+        except StopIteration:
+            path.pop()
+            continue
         kind = type(value)
         key = id(value)
         if key in memo:
-            if memo[key] is not value:
-                return False
-        elif key not in visited and kind not in _HASH_SCALARS:
+            if memo[key] is value:
+                continue
+        elif key in visited or kind in _HASH_SCALARS:
+            continue
+        elif key not in unshareable:
             visited[key] = value
             if kind in (tuple, frozenset):
-                pending.extend(value)
+                path.append((key, iter(value)))
+                continue
             elif kind is slice:
-                pending.extend((value.start, value.stop, value.step))
+                path.append((key, iter((value.start, value.stop, value.step))))
+                continue
             elif is_dataclass(kind) and kind.__dataclass_params__.frozen and not _has_cached_property(kind):
-                pending.extend(_frozen_state_values(value))
-            else:
-                return False
+                path.append((key, _frozen_state_values(value, memo)))
+                continue
+            elif (kind not in _DICT_VIEWS and not isinstance(value, (list, deque, set, tuple, array))
+                  and _retains_identity(value, kind)):
+                continue
+        unshareable.add(key)
+        unshareable.update(ancestor for ancestor, _ in path[1:])
+        return False
     memo.update(visited)
     return True
 
@@ -372,6 +416,24 @@ def _copy_memoryview(ref):
     except (TypeError, ValueError):
         if ref.readonly and type(ref.obj) is bytes:
             return ref
+        ctypes = sys.modules.get("ctypes")
+        if isinstance(ref.obj, getattr(ctypes, "Array", ())):
+            array_type = type(ref.obj)
+            if len(data) != ctypes.sizeof(ref.obj) or memoryview(ref.obj).shape != ref.shape:
+                while issubclass(array_type, ctypes.Array):
+                    array_type = array_type._type_
+                for dim in reversed(ref.shape):
+                    array_type = array_type * dim
+            if ctypes.sizeof(array_type) == len(data):
+                snapshot = memoryview(array_type.from_buffer_copy(data))
+                if (snapshot.format, snapshot.shape) == layout:
+                    return snapshot.toreadonly() if ref.readonly else snapshot
+        if isinstance(ref.obj, array):
+            copied = array(ref.obj.typecode)
+            copied.frombytes(data)
+            snapshot = memoryview(copied)
+            if (snapshot.format, snapshot.shape) == layout:
+                return snapshot.toreadonly() if ref.readonly else snapshot
         numpy = sys.modules.get("numpy")
         if numpy is not None:
             try:
@@ -406,7 +468,7 @@ def _clone_ref(ref, memo=None):
     if memo is None and kind is MappingProxyType:
         return MappingProxyType(_clone_ref(_proxy_target(ref)))
     if memo is None:
-        memo = {}
+        memo = _ReferenceMemo()
     key = id(ref)
     if key in memo:
         return memo[key]
@@ -414,6 +476,8 @@ def _clone_ref(ref, memo=None):
         return memo.setdefault(key, MappingProxyType(_clone_ref(_proxy_target(ref), memo)))
     if kind is bytearray:
         return memo.setdefault(key, bytearray(ref))
+    if isinstance(ref, array):
+        return memo.setdefault(key, copy(ref))
     if kind is memoryview:
         return memo.setdefault(key, _copy_memoryview(ref))
     if kind is slice:
@@ -447,7 +511,7 @@ def _clone_ref(ref, memo=None):
         entries = tuple(ref.items())
         pairs = tuple((_clone_ref(name, memo), _clone_ref(value, memo)) for name, value in entries)
         state = tuple(getattr(ref, "__dict__", {}).values()) + tuple(value for _, value in _ref_slots(ref))
-        probe = memo | {key: ref}
+        probe = _ReferenceMemo(memo | {key: ref})
         if (all(name is old_name and value is old_value for (name, value), (old_name, old_value) in zip(pairs, entries))
                 and all(_clone_ref(value, probe) is value for value in state)):
             return ref
@@ -491,17 +555,15 @@ def _clone_ref(ref, memo=None):
         else:
             return memo.setdefault(key, _SQLiteRowSnapshot(_sqlite_description(ref), values))
         memo[key] = clone
-    elif isinstance(ref, (Enum, Number)) or (kind.__eq__ is object.__eq__ and not isinstance(ref, Mapping)):
+    elif _retains_identity(ref, kind):
         # Identity-valued references, such as an ORM entity, must stay attached.
         return ref
     else:
         numpy = sys.modules.get("numpy")
-        if isinstance(ref, getattr(numpy, "generic", ())) and ref.dtype.kind in "bMSU":
-            # NumPy booleans, dates and strings are immutable values outside
-            # numbers.Number. Keep the widget package independent of NumPy.
-            return ref
+        if isinstance(ref, getattr(numpy, "ndarray", ())):
+            return memo.setdefault(key, ref.copy())
         if is_dataclass(kind) and kind.__dataclass_params__.frozen:
-            if _share_frozen_state(ref, memo):
+            if _share_frozen_state(ref, memo, memo.unshareable):
                 return ref
         clone = object.__new__(kind)
         memo[key] = clone
@@ -595,7 +657,13 @@ class ReferenceListEdit(QWidget):
         self.list.itemChanged.connect(self.draftChanged)
         selected = tuple(value)
         checked_rows = None
-        if len(self._choice_buckets) == len(source_choices) and None not in self._choice_buckets:
+        if len(source_choices) == 1 and all(ref is source_choices[0] for ref in selected):
+            checked_rows = {0} if selected else set()
+        elif _DICT_VALUES in map(type, selected):
+            views = {id(ref): snapshot for ref, snapshot in zip(source_choices, self.choices)
+                     if type(ref) is _DICT_VALUES}
+            selected = tuple(views.get(id(ref), ref) for ref in selected)
+        if checked_rows is None and len(self._choice_buckets) == len(source_choices) and None not in self._choice_buckets:
             # Providers can pass the actual choices back as the initial
             # selection. With unique keys, those rows need no second indexing.
             positions = {id(ref): index for index, ref in enumerate(source_choices)}

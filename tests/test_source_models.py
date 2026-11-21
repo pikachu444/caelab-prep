@@ -592,7 +592,9 @@ def test_8e85_reopens_signed_archive_with_delayed_includes(tmp_path, file_count)
                                           ("8e85a669-signed-shared-includes", 19),
                                           ("8e85a669-signed-repeated-24-includes", 24),
                                           ("8e85a669-signed-same-directory-includes", 14),
-                                          ("8e85a669-signed-borrowed-leaf-includes", 21)))
+                                          ("8e85a669-signed-borrowed-leaf-includes", 21),
+                                          ("8e85a669-signed-74-frontier-includes", 74),
+                                          ("8e85a669-signed-25-nested-choosers", 25)))
 def test_historical_include_search_skips_irrelevant_prefix_alternatives(tmp_path, monkeypatch, name, count):
     fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
     original_walk = includes._walk_includes
@@ -721,6 +723,38 @@ def test_unrecorded_include_policy_requires_genuine_visit_order(tmp_path, name):
             archive.writestr(member, payload)
     with pytest.raises(PrepError) as error:
         session.open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize("move_starter", (False, True), ids=("swap-trigger", "move-starter"))
+def test_explicit_source_bindings_cannot_authorize_an_impossible_order(tmp_path, move_starter):
+    from caelab_prep.radioss import DeckResource
+
+    fixture = Path(__file__).with_name("fixtures") / "ac0a255-qualified-70-includes.caeprep"
+    with zipfile.ZipFile(fixture) as archive:
+        members = {member: archive.read(member) for member in archive.namelist()}
+    manifest = json.loads(members.pop("manifest.json"))
+    source, = manifest["source_models"]
+    files = source["files"]
+    ids = {record["logical_path"]: record["original_resource_id"] for record in files}
+    resources = {resource["id"]: resource["raw_member"] for resource in manifest["resources"]}
+    source["include_bindings"] = []
+    for record in files:
+        deck = DeckResource(members[resources[record["resource_id"]]], name=record["logical_path"],
+                            is_include=record["resource_id"] != source["root_resource_id"])
+        source["include_bindings"].extend([record["original_resource_id"], index, ids[directive.path]]
+                                          for index, directive in enumerate(deck.include_directives))
+    assert files[0]["resource_id"] == source["root_resource_id"]
+    assert files[1]["original_path"] == "a/chooser.inc" and files[2]["original_path"] == "trigger.inc"
+    index = 0 if move_starter else 2
+    files[index], files[1] = files[1], files[index]
+    altered = tmp_path / "recorded-altered-order.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        archive.writestr("manifest.json", json.dumps(manifest))
+        for member, payload in members.items():
+            archive.writestr(member, payload)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
     assert error.value.code == "invalid_project"
 
 

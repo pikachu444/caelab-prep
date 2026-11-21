@@ -67,6 +67,27 @@ def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, se
                      historical=None, archived_order=None, load_order=None):
     """Resolve live paths or replay validated bindings against an archive inventory."""
     selected, recovered = selected or {}, recovered or {}
+    if selected and archived_order is not None and archive_inventory is not None:
+        load = cache(load)
+        expected_bindings = {(owner, load(owner).include_directives[ordinal].header_row): target
+                             for (owner, ordinal), target in selected.items()}
+        order = []
+        result = _walk_includes(root, lookup, load, scope, {}, recovered, historical, load_order=order)
+        if result != (archive_inventory, expected_bindings, []) or order != archived_order:
+            # The archive may omit an alternate that delayed a native wave.
+            # Validate the recorded order and bindings against one disk replay.
+            replay = _can_collect_from_disk(root, lookup, load, scope, archive_inventory, historical,
+                                            archived_order=archived_order, load_order=order,
+                                            expected_bindings=expected_bindings)
+            if replay:
+                result = replay
+            else:
+                directive = next(iter(load(root).include_directives), None)
+                result[2].append((root, directive, PrepError(
+                    "invalid_project", "The recorded INCLUDE bindings and order could not be verified.")))
+        if load_order is not None:
+            load_order[:] = order
+        return result
     if historical in ("ac0", "bde", "8e85") and archive_inventory is not None:
         load = cache(load)
         disk_policy = None if historical == "8e85" else historical
@@ -107,7 +128,7 @@ def _include_paths(directory, operand, scope):
 
 
 def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, historical, *,
-                           archived_order=None, load_order=None):
+                           archived_order=None, load_order=None, expected_bindings=None):
     """Deduce missing sibling paths from disk order and verify a fixed layout."""
     lookup = cache(lookup)
     expected = list(archived_order) if archived_order is not None else None
@@ -157,13 +178,13 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
         return load(path)
 
     initial = frozenset()
-    pending = [(0, 0, 0, initial)]
+    pending = [(0, 0, 0, 0, initial)]
     seen = {initial}
     sequence = count(1)
     best_prefix = -1
     stalled = 0
     while pending:
-        _, _, _, alternatives = heappop(pending)
+        _, _, _, _, alternatives = heappop(pending)
         phantoms = set(alternatives)
         fallback = {}
         deduced_order = []
@@ -206,15 +227,16 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
 
         # Verify from the Starter with every deduced file present from the start.
         verified_order = []
-        wave_targets = set()
+        wave_pairs = set()
         if not any(parent.as_posix() in phantoms for path in phantoms for parent in PurePosixPath(path).parents):
-            reached, _, problems = _walk_includes(root, disk_lookup, load_archived, scope, {}, {}, historical,
-                                                  load_order=verified_order, wave_targets=wave_targets)
+            reached, bindings, problems = _walk_includes(root, disk_lookup, load_archived, scope, {}, {}, historical,
+                                                         load_order=verified_order, wave_pairs=wave_pairs)
             if (not problems and reached == archive_inventory
-                    and (expected is None or verified_order == expected)):
+                    and (expected is None or verified_order == expected)
+                    and (expected_bindings is None or bindings == expected_bindings)):
                 if load_order is not None:
                     load_order[:] = verified_order
-                return True
+                return reached, bindings, problems
         prefix = len(verified_order)
         if expected is not None:
             prefix = next((i for i, (actual, wanted) in enumerate(zip(verified_order, expected))
@@ -224,25 +246,28 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
         else:
             stalled += 1
             if stalled >= _MAX_8E85_STALLED_WALKS:
-                return False
+                return None
         # A shared target entirely within the matched prefix is harmless when
         # neither its callers nor any pending choice need it after that prefix.
         matched = set(verified_order[:prefix])
-        for path, target in fallback.items():
+        wave_targets = {target for pair in wave_pairs
+                        if expected_bindings is not None
+                        or any(path not in matched or load(path).include_directives for path in pair)
+                        for target in pair}
+        for fallback_order, (path, target) in enumerate(fallback.items()):
             if (all(site[0] in matched for site in lookup_sites[path])
                     and isolated_prefix(target, matched, wave_targets)):
                 continue
             candidate = alternatives | {path}
             if candidate not in seen:
                 seen.add(candidate)
-                # Follow verified progress. For equally promising branches,
-                # try smaller explanations before combining alternatives.
-                heappush(pending, (-prefix, len(candidate), next(sequence), candidate))
-    return False
+                # Favor recent alternatives near the end of the matched prefix.
+                heappush(pending, (-prefix, len(candidate), -fallback_order, next(sequence), candidate))
+    return None
 
 
 def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *, load_order=None, deduce_sibling=None,
-                   wave_targets=None):
+                   wave_pairs=None):
     reached, explicit = set(), set()
     bindings, problems = {}, []
     outgoing = defaultdict(set)
@@ -314,8 +339,8 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
                         follow(owner, directive, sibling if root_file in chain else root_file, chain)
                     else:
                         pending.append((owner, directive, root_file, sibling, chain))
-                        if wave_targets is not None:
-                            wave_targets.update((root_file, sibling))
+                        if wave_pairs is not None:
+                            wave_pairs.add((root_file, sibling))
                 else:
                     target = root_file or sibling
                     if len(relative.parts) > 1:

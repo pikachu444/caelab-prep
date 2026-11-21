@@ -1,21 +1,26 @@
 """Real Qt collection drafts; reading input never submits a document command."""
+from array import array
 from collections import ChainMap, Counter, OrderedDict, UserDict, defaultdict
 from collections.abc import Mapping, Set
-from dataclasses import dataclass, field
+import ctypes
+from dataclasses import dataclass, field, make_dataclass
 from decimal import Decimal
+from enum import Enum
 from fractions import Fraction
 from functools import cached_property
 from http.cookies import Morsel
+import gc
 import os
 import sqlite3
 from time import perf_counter
 from types import MappingProxyType
 from typing import NamedTuple
 from uuid import UUID
+from weakref import ref as weakref
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QCoreApplication, QEvent, Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QLineEdit
 
@@ -573,6 +578,141 @@ def test_reference_editor_preserves_endian_buffer_type_and_shape():
     assert selected == allowed and selected.format == allowed.format and selected.shape == (1, 1)
     allowed.obj[0, 0] = 0
     assert editor.value()[0].tobytes() != allowed.tobytes()
+
+
+@pytest.mark.parametrize("kind", ("ctypes", "ctypes-slice", "ctypes-reshape", "array", "numpy-slice"))
+def test_reference_editor_copies_typed_views_of_standard_backings(kind):
+    if kind == "ctypes-reshape":
+        backing = ((ctypes.c_ubyte * 2) * 2)((101, 102), (103, 104))
+        original = memoryview(backing)[:1].toreadonly()
+    elif kind == "numpy-slice":
+        np = pytest.importorskip("numpy")
+        backing = np.array([[101, 102], [103, 104]], dtype=">u4")
+        original = memoryview(backing)[::2].toreadonly()
+    else:
+        backing = (ctypes.c_ubyte * 2)(101, 102) if kind.startswith("ctypes") else array("i", [101, 102])
+        original = memoryview(backing).toreadonly()
+        if kind.endswith("slice") or kind == "array":
+            original = original[1:]
+    editor = ReferenceListEdit((original,), choices=(original,))
+    result, = editor.value()
+    assert result == original
+    assert (result.format, result.shape, result.readonly) == (original.format, original.shape, True)
+    assert result.obj is not backing
+
+
+def test_reference_editor_preserves_sqlite_row_containing_frozen_enum():
+    class Kind(Enum):
+        SHELL = "shell"
+
+    @dataclass(frozen=True)
+    class Reference:
+        local_id: int
+        kind: Kind
+
+    sqlite3.register_converter("PREP_FROZEN_ENUM", lambda value: Reference(int(value), Kind.SHELL))
+    with sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_COLNAMES) as connection:
+        connection.row_factory = sqlite3.Row
+        original = connection.execute('select 101 as "member [PREP_FROZEN_ENUM]"').fetchone()
+    connection.close()
+    result, = ReferenceListEdit((original,), choices=(original,)).value()
+    assert result is original and sqlite3.Row.keys(result) == ["member"]
+
+
+@pytest.mark.parametrize("kind", ("numpy-keys", "array-keys", "dict-values"))
+def test_reference_editor_detaches_dictionary_views_with_mutable_values(kind):
+    if kind == "numpy-keys":
+        backing = {"shell": pytest.importorskip("numpy").array([101, 102])}
+    elif kind == "array-keys":
+        backing = {"shell": array("i", [101, 102])}
+    else:
+        backing = {"shell": [101, 102]}
+    original = backing.values() if kind == "dict-values" else backing.keys()
+    editor = ReferenceListEdit((original,), choices=(original,))
+    assert editor.list.count() == 1
+    draft, = editor.raw_value()
+    draft.mapping["shell"][0] = 404
+    assert backing["shell"][0] == 101
+    backing["shell"][1] = 405
+    result, = editor.value()
+    assert type(result) is type(original)
+    assert list(result.mapping["shell"]) == [101, 102]
+    result.mapping["shell"][0] = 406
+    assert list(editor.value()[0].mapping["shell"]) == [101, 102]
+
+
+@pytest.mark.parametrize("depth", (8, 16, 32))
+@pytest.mark.parametrize("leaf", ("mutable", "enum"))
+@pytest.mark.parametrize("mixed", (False, True), ids=("slots", "mixed"))
+def test_reference_editor_visits_frozen_chain_linearly(monkeypatch, depth, leaf, mixed):
+    from caelab_prep.ui.widgets import collections
+
+    reads = slot_reads = attribute_reads = 0
+
+    class Kind(Enum):
+        SHELL = "shell"
+
+    class Node:
+        __slots__ = ()
+
+        def __getattribute__(self, name):
+            nonlocal attribute_reads
+            attribute_reads += name == "parent"
+            return object.__getattribute__(self, name)
+
+    @dataclass(frozen=True)
+    class Plain(Node):
+        parent: object
+
+    @dataclass(frozen=True, slots=True)
+    class Slot(Node):
+        parent: object
+
+    original = collections._frozen_state_values
+    original_slots = collections._ref_slots
+
+    def values(ref, memo):
+        nonlocal reads
+        for value in original(ref, memo):
+            reads += isinstance(ref, (Slot, Plain))
+            yield value
+
+    def count_slots(ref):
+        nonlocal slot_reads
+        for member, value in original_slots(ref):
+            slot_reads += isinstance(ref, Slot) and member.__name__ == "parent"
+            yield member, value
+
+    node = payload = [101] if leaf == "mutable" else Kind.SHELL
+    for index in range(depth):
+        node = (Plain if mixed and index % 2 else Slot)(node)
+    monkeypatch.setattr(collections, "_frozen_state_values", values)
+    monkeypatch.setattr(collections, "_ref_slots", count_slots)
+    result, = ReferenceListEdit((node,), choices=(node,)).value()
+    assert reads <= 4 * depth
+    assert slot_reads + attribute_reads <= 4 * depth
+    if leaf == "enum":
+        assert result is node
+    else:
+        for _ in range(depth):
+            result = result.parent
+        result[0] = 404
+        assert payload == [101]
+
+
+def test_reference_editor_does_not_retain_generated_frozen_types():
+    def closed_form(index):
+        kind = make_dataclass(f"GeneratedReference{index}", [("member", int)], frozen=True)
+        original = kind(index)
+        editor = ReferenceListEdit((original,), choices=(original,))
+        assert editor.value()[0] == original
+        editor.deleteLater()
+        return weakref(kind)
+
+    classes = [closed_form(index) for index in range(20)]
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    gc.collect()
+    assert sum(kind() is not None for kind in classes) == 0
 
 
 def test_reference_editor_leaves_cold_cached_property_on_its_own_instance():
