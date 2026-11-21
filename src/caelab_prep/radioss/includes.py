@@ -72,7 +72,8 @@ def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, se
         expected_bindings = {(owner, load(owner).include_directives[ordinal].header_row): target
                              for (owner, ordinal), target in selected.items()}
         order = []
-        result = _walk_includes(root, lookup, load, scope, {}, recovered, historical, load_order=order)
+        result = _walk_includes(root, lookup, load, scope, selected, recovered, historical,
+                                load_order=order, recorded_order=archived_order)
         if result != (archive_inventory, expected_bindings, []) or order != archived_order:
             # The archive may omit an alternate that delayed a native wave.
             # Validate the recorded order and bindings against one disk replay.
@@ -168,6 +169,16 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
         return True
 
     @cache
+    def frontier_ancestors(target):
+        todo, ancestors = [target], set()
+        while todo:
+            path = todo.pop()
+            if path not in ancestors:
+                ancestors.add(path)
+                todo.extend(callers.get(path, ()))
+        return ancestors
+
+    @cache
     def is_legal_phantom(path):
         return (path not in archived_files and path not in archived_dirs
                 and not any(parent.as_posix() in archived_files for parent in PurePosixPath(path).parents))
@@ -178,13 +189,13 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
         return load(path)
 
     initial = frozenset()
-    pending = [(0, 0, 0, 0, initial)]
+    pending = [(0, 0, 0, (0, 0, 0), 0, initial)]
     seen = {initial}
     sequence = count(1)
     best_prefix = -1
     stalled = 0
     while pending:
-        _, _, _, _, alternatives = heappop(pending)
+        _, _, _, _, _, alternatives = heappop(pending)
         phantoms = set(alternatives)
         fallback = {}
         deduced_order = []
@@ -250,6 +261,8 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
         # A shared target entirely within the matched prefix is harmless when
         # neither its callers nor any pending choice need it after that prefix.
         matched = set(verified_order[:prefix])
+        relevant = frontier_ancestors(expected[prefix]) if expected is not None and prefix < len(expected) else set()
+        positions = {path: index for index, path in enumerate(verified_order)}
         wave_targets = {target for pair in wave_pairs
                         if expected_bindings is not None
                         or any(path not in matched or load(path).include_directives for path in pair)
@@ -261,13 +274,20 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
             candidate = alternatives | {path}
             if candidate not in seen:
                 seen.add(candidate)
-                # Favor recent alternatives near the end of the matched prefix.
-                heappush(pending, (-prefix, len(candidate), -fallback_order, next(sequence), candidate))
+                # Downstream directives can change wave order. Interleave both
+                # ends of discovery order within each tier.
+                priority = (not bool(load(target).include_directives),
+                            min(fallback_order, len(fallback) - 1 - fallback_order), fallback_order)
+                # Explore alternatives that can reach the first missing file
+                # before unrelated branches, using the latest visited target.
+                predicted_prefix = prefix + (target in relevant)
+                position = -positions.get(target, 0) if target in relevant else 0
+                heappush(pending, (-predicted_prefix, len(candidate), position, priority, next(sequence), candidate))
     return None
 
 
 def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *, load_order=None, deduce_sibling=None,
-                   wave_pairs=None):
+                   wave_pairs=None, recorded_order=None):
     reached, explicit = set(), set()
     bindings, problems = {}, []
     outgoing = defaultdict(set)
@@ -327,7 +347,15 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
                     sibling = deduce_sibling(sibling_path, root_file)
                 if root_file and sibling and root_file != sibling:
                     if key in selected:
-                        follow(owner, directive, selected[key], chain)
+                        target = selected[key]
+                        # A recorded choice can still have first opened in a
+                        # later wave. Defer only genuinely ambiguous operands.
+                        next_path = (recorded_order[len(load_order)]
+                                     if recorded_order is not None and len(load_order) < len(recorded_order) else None)
+                        if next_path is not None and target not in reached and target != next_path:
+                            pending.append((owner, directive, root_file, sibling, chain, target))
+                        else:
+                            follow(owner, directive, target, chain)
                     elif historical == "8fe":
                         follow(owner, directive, sibling, chain)
                     elif historical == "987":
@@ -338,7 +366,7 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
                     elif (root_file in chain) != (sibling in chain):
                         follow(owner, directive, sibling if root_file in chain else root_file, chain)
                     else:
-                        pending.append((owner, directive, root_file, sibling, chain))
+                        pending.append((owner, directive, root_file, sibling, chain, None))
                         if wave_pairs is not None:
                             wave_pairs.add((root_file, sibling))
                 else:
@@ -362,7 +390,8 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
         else:
             unambiguous_reached, unambiguous_explicit = reached.copy(), explicit.copy()
         batch = [pending.popleft() for _ in range(1 if sequential else len(pending))]
-        for owner, directive, root_file, sibling, chain in batch:
-            target = sibling if root_file in unambiguous_reached and sibling not in unambiguous_explicit else root_file
+        for owner, directive, root_file, sibling, chain, recorded_target in batch:
+            target = recorded_target or (sibling if root_file in unambiguous_reached
+                                         and sibling not in unambiguous_explicit else root_file)
             follow(owner, directive, target, chain)
     return reached, bindings, problems

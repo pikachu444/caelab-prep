@@ -237,9 +237,14 @@ _HASH_SCALARS = _PLAIN_PRIMITIVES | {
     PurePosixPath, PureWindowsPath, PosixPath, WindowsPath, range,
 }
 _ROW_ID_ROLE = Qt.ItemDataRole.UserRole + 1
+_DICT_ITEMS = type({}.items())
 _DICT_VALUES = type({}.values())
-_DICT_VIEWS = {type({}.keys()): dict.keys, type({}.items()): dict.items, _DICT_VALUES: dict.values}
+_DICT_VIEWS = {type({}.keys()): dict.keys, _DICT_ITEMS: dict.items, _DICT_VALUES: dict.values}
 _CACHED_PROPERTY_TYPES = WeakKeyDictionary()
+
+
+class _DetachedViewDict(dict):
+    __slots__ = ("_source_view_id",)
 
 
 class _ReferenceMemo(dict):
@@ -252,6 +257,10 @@ class _ReferenceMemo(dict):
 def _proxy_target(value):
     target, = gc.get_referents(value)
     return target
+
+
+def _view_source_id(view):
+    return getattr(_proxy_target(view.mapping), "_source_view_id", id(view))
 
 
 def _unwrap_standard_dict(value):
@@ -417,6 +426,11 @@ def _copy_memoryview(ref):
         if ref.readonly and type(ref.obj) is bytes:
             return ref
         ctypes = sys.modules.get("ctypes")
+        scalar_type = getattr(ctypes, "_CData", getattr(ctypes, "_SimpleCData", ()))
+        if not ref.shape and isinstance(ref.obj, scalar_type) and ctypes.sizeof(type(ref.obj)) == len(data):
+            snapshot = memoryview(type(ref.obj).from_buffer_copy(data))
+            if (snapshot.format, snapshot.shape) == layout:
+                return snapshot.toreadonly() if ref.readonly else snapshot
         if isinstance(ref.obj, getattr(ctypes, "Array", ())):
             array_type = type(ref.obj)
             if len(data) != ctypes.sizeof(ref.obj) or memoryview(ref.obj).shape != ref.shape:
@@ -476,8 +490,13 @@ def _clone_ref(ref, memo=None):
         return memo.setdefault(key, MappingProxyType(_clone_ref(_proxy_target(ref), memo)))
     if kind is bytearray:
         return memo.setdefault(key, bytearray(ref))
-    if isinstance(ref, array):
+    if kind is array:
         return memo.setdefault(key, copy(ref))
+    if isinstance(ref, array):
+        clone = array.__new__(kind, ref.typecode, ref)
+        memo[key] = clone
+        _copy_ref_state(ref, clone, memo)
+        return clone
     if kind is memoryview:
         return memo.setdefault(key, _copy_memoryview(ref))
     if kind is slice:
@@ -485,7 +504,11 @@ def _clone_ref(ref, memo=None):
         cloned = tuple(_clone_ref(value, memo) for value in parts)
         return memo.setdefault(key, ref if all(a is b for a, b in zip(parts, cloned)) else slice(*cloned))
     if kind in _DICT_VIEWS:
-        backing = {}
+        if kind is _DICT_VALUES:
+            backing = _DetachedViewDict()
+            backing._source_view_id = _view_source_id(ref)
+        else:
+            backing = {}
         memo[key] = _DICT_VIEWS[kind](backing)
         backing.update((_clone_ref(name, memo), _clone_ref(value, memo)) for name, value in ref.mapping.items())
         return memo[key]
@@ -561,7 +584,18 @@ def _clone_ref(ref, memo=None):
     else:
         numpy = sys.modules.get("numpy")
         if isinstance(ref, getattr(numpy, "ndarray", ())):
-            return memo.setdefault(key, ref.copy())
+            clone = ref.copy()
+            memo[key] = clone
+            if clone.dtype.hasobject:
+                if clone.dtype.names:
+                    original_fields = [(name, ref[name]) for name in clone.dtype.names]
+                    for name, values in original_fields:
+                        if values.dtype.hasobject:
+                            clone[name] = _clone_ref(values, memo)
+                else:
+                    for index in numpy.ndindex(clone.shape):
+                        clone[index] = _clone_ref(clone[index], memo)
+            return clone
         if is_dataclass(kind) and kind.__dataclass_params__.frozen:
             if _share_frozen_state(ref, memo, memo.unshareable):
                 return ref
@@ -617,16 +651,64 @@ def _bucket_key(value):
         return None
 
 
+def _same_dict_values(left, right, compared):
+    return (type(left) is type(right) is _DICT_VALUES
+            and _view_source_id(left) == _view_source_id(right)
+            and _safe_equal(dict(left.mapping), dict(right.mapping), compared))
+
+
+def _safe_equal(left, right, compared=None):
+    left_kind, right_kind = type(left), type(right)
+    if left_kind in _HASH_SCALARS and right_kind in _HASH_SCALARS:
+        return bool(left == right)
+    values_view = left_kind is _DICT_VALUES or right_kind is _DICT_VALUES
+    numpy = sys.modules.get("numpy")
+    ndarray = getattr(numpy, "ndarray", ())
+    array_value = isinstance(left, ndarray) or isinstance(right, ndarray)
+    if not values_view and not array_value:
+        try:
+            return bool(left == right)
+        except (ValueError, RecursionError):
+            pass
+    if compared is None:
+        compared = set()
+    pair = (id(left), id(right))
+    if pair in compared:
+        return True
+    compared.add(pair)
+    try:
+        if values_view:
+            return _same_dict_values(left, right, compared)
+        if array_value:
+            if left_kind is not right_kind or left.shape != right.shape or left.dtype != right.dtype:
+                return False
+            if not left.dtype.hasobject:
+                return bool(numpy.array_equal(left, right))
+            if left.dtype.names:
+                return all(_safe_equal(left[name], right[name], compared) for name in left.dtype.names)
+            return all(_safe_equal(a, b, compared) for a, b in zip(left.flat, right.flat))
+        if left_kind is right_kind is _DICT_ITEMS:
+            return _safe_equal(left.mapping, right.mapping, compared)
+        if isinstance(left, Mapping) and isinstance(right, Mapping):
+            return len(left) == len(right) and all(
+                key in right and _safe_equal(left[key], right[key], compared) for key in left)
+        if left_kind is right_kind and isinstance(left, (list, tuple)):
+            return len(left) == len(right) and all(_safe_equal(a, b, compared) for a, b in zip(left, right))
+        return False
+    finally:
+        compared.remove(pair)
+
+
 def _contains(buckets, item, key):
     matches = buckets.get(key)
-    if matches and any(existing == item for existing in matches):
+    if matches and any(_safe_equal(existing, item) for existing in matches):
         return True
     # A value without a reliable key may compare equal to a keyed value.
     if key is None:
-        return any(existing == item for other, bucket in buckets.items()
+        return any(_safe_equal(existing, item) for other, bucket in buckets.items()
                    if other is not None for existing in bucket)
     fallback = buckets.get(None)
-    return bool(fallback and any(existing == item for existing in fallback))
+    return bool(fallback and any(_safe_equal(existing, item) for existing in fallback))
 
 
 class ReferenceListEdit(QWidget):
@@ -657,20 +739,14 @@ class ReferenceListEdit(QWidget):
         self.list.itemChanged.connect(self.draftChanged)
         selected = tuple(value)
         checked_rows = None
-        if len(source_choices) == 1 and all(ref is source_choices[0] for ref in selected):
-            checked_rows = {0} if selected else set()
-        elif _DICT_VALUES in map(type, selected):
-            views = {id(ref): snapshot for ref, snapshot in zip(source_choices, self.choices)
-                     if type(ref) is _DICT_VALUES}
-            selected = tuple(views.get(id(ref), ref) for ref in selected)
-        if checked_rows is None and len(self._choice_buckets) == len(source_choices) and None not in self._choice_buckets:
+        if len(self._choice_buckets) == len(source_choices) and None not in self._choice_buckets:
             # Providers can pass the actual choices back as the initial
             # selection. With unique keys, those rows need no second indexing.
             positions = {id(ref): index for index, ref in enumerate(source_choices)}
             indices = tuple(positions.get(id(ref)) for ref in selected)
-            if all(index is not None and self.choices[index] == ref for index, ref in zip(indices, selected)):
+            if all(index is not None and _safe_equal(self.choices[index], ref) for index, ref in zip(indices, selected)):
                 checked_rows = set(indices)
-        self._set_raw_value(selected, checked_rows)
+        self._set_raw_value(selected, checked_rows, matching_choices=source_choices)
 
     def _checked_row_ids(self):
         item_at = self.list.item
@@ -695,7 +771,7 @@ class ReferenceListEdit(QWidget):
     def set_raw_value(self, value):
         self._set_raw_value(tuple(value), None)
 
-    def _set_raw_value(self, selected, checked_rows):
+    def _set_raw_value(self, selected, checked_rows, *, matching_choices=None):
         if checked_rows is None:
             selected_keys = tuple(_bucket_key(ref) for ref in selected)
             selected_buckets = {}
@@ -710,15 +786,15 @@ class ReferenceListEdit(QWidget):
         available_rows = self._row_available
 
         def add_row(ref, label, selected, available):
-            cloned = _clone_ref(ref)
+            snapshot = ref if available else _clone_ref(ref)
             item = item_type(label)
-            item.setData(user_role, cloned)
+            item.setData(user_role, snapshot)
             item.setData(row_role, len(rows))
             item.setToolTip(label)
             item.setFlags(flags)
             item.setCheckState(checked if selected else unchecked)
             add_item(item)
-            rows.append(cloned)
+            rows.append(snapshot)
             available_rows.append(available)
 
         displayed_buckets = {}
@@ -730,10 +806,11 @@ class ReferenceListEdit(QWidget):
             available_rows.clear()
             for index, (key, ref) in enumerate(zip(self._choice_keys, self.choices)):
                 if checked_rows is None:
-                    if _contains(displayed_buckets, ref, key):
+                    choice = ref if matching_choices is None else matching_choices[index]
+                    if _contains(displayed_buckets, choice, key):
                         continue
-                    selected_row = _contains(selected_buckets, ref, key)
-                    displayed_buckets.setdefault(key, []).append(ref)
+                    selected_row = _contains(selected_buckets, choice, key)
+                    displayed_buckets.setdefault(key, []).append(choice)
                 else:
                     selected_row = index in checked_rows
                 label = (self.choice_labels[index] if index < len(self.choice_labels)

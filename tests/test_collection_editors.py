@@ -25,6 +25,7 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QLineEdit
 
 from caelab_prep.application.contracts import ObjectRef, PropertySpec
+from caelab_prep.ui.modeling import OperationPanel
 from caelab_prep.ui.widgets.collections import (
     BooleanVectorEdit, IntegerListEdit, NumericTableEdit, ReferenceListEdit,
 )
@@ -639,6 +640,125 @@ def test_reference_editor_detaches_dictionary_views_with_mutable_values(kind):
     assert list(result.mapping["shell"]) == [101, 102]
     result.mapping["shell"][0] = 406
     assert list(editor.value()[0].mapping["shell"]) == [101, 102]
+
+
+def _reference_apply_panel(fields):
+    panel = OperationPanel()
+    panel.editor.set_fields(fields)
+    submitted = []
+
+    def apply():
+        try:
+            submitted.append(panel.editor.values()["members"])
+        except ValueError as error:
+            panel.fail(str(error))
+
+    panel.applyRequested.connect(apply)
+    return panel, submitted
+
+
+@pytest.mark.parametrize("view", ("items", "keys", "values"))
+def test_reference_apply_isolates_nested_objects_in_array_views(view):
+    np = pytest.importorskip("numpy")
+    allowed = np.empty(1, dtype=object)
+    allowed[0] = [101]
+    stale = np.empty(1, dtype=object)
+    stale[0] = [404]
+    choice = getattr({"id": allowed}, view)()
+    selected_key = "stale" if view == "keys" else "id"
+    selection = getattr({selected_key: stale}, view)()
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selection,), kind="references", choices=(choice,)),
+    ))
+    draft, = panel.editor.raw_values()["members"]
+    draft.mapping[selected_key][0][0] = 101
+    assert stale[0] == [404]
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+    if view == "items":
+        panel.editor.editors["members"].set_raw_value((draft,))
+        panel.apply_button.click()
+        assert len(submitted) == 1
+
+
+@pytest.mark.parametrize("kind", ("values", "items", "multi-choice-items"))
+def test_reference_apply_keeps_view_drafts_across_property_context_refresh(kind):
+    if kind == "values":
+        backing = {"id": [101, 102]}
+        choice = backing.values()
+        choices = (choice, choice)
+    else:
+        np = pytest.importorskip("numpy")
+        backing = {"id": np.array([101, 102])}
+        choice = backing.items()
+        choices = (choice, {"other": np.array([201, 202])}.items()) if kind == "multi-choice-items" else (choice,)
+    spec = PropertySpec("members", "Members", (choice,), kind="references", choices=choices)
+    panel, submitted = _reference_apply_panel((spec, PropertySpec("size", "Size", 2, unit_context={"quantity": "length"})))
+    assert panel.editor.editors["members"].list.count() == (2 if kind == "multi-choice-items" else 1)
+    panel.apply_button.click()
+    assert len(submitted) == len(submitted[0]) == 1
+    assert panel.editor.refresh_context((spec, PropertySpec("size", "Size", 2, unit_context={"quantity": "area"})))
+    panel.editor.editors["size"].setText("2")
+    panel.apply_button.click()
+    assert len(submitted) == 2 and len(submitted[1]) == 1
+    assert list(submitted[1][0].mapping["id"]) == [101, 102]
+    if kind == "values":
+        draft, = panel.editor.raw_values()["members"]
+        draft.mapping["id"].append(404)
+        assert backing["id"] == [101, 102]
+        panel.editor.editors["members"].set_raw_value((draft,))
+        panel.apply_button.click()
+        assert len(submitted) == 2 and "no longer available" in panel.error.text()
+        distinct = {"id": [101, 102]}.values()
+        panel.editor.editors["members"].set_raw_value((distinct,))
+        panel.apply_button.click()
+        assert len(submitted) == 2
+
+
+def test_reference_apply_preserves_array_subclass_equality():
+    class OwnedArray(array):
+        def __eq__(self, other):
+            return type(self) is type(other) and self.owner == other.owner and super().__eq__(other)
+
+    choice = OwnedArray("i", [101])
+    stale = OwnedArray("i", [101])
+    choice.owner, stale.owner = "allowed", "stale"
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (stale,), kind="references", choices=(choice,)),
+    ))
+    draft, = panel.editor.raw_values()["members"]
+    assert type(draft) is OwnedArray and draft.owner == "stale" and not draft == choice
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+    panel.editor.editors["members"].set_raw_value((choice,))
+    panel.apply_button.click()
+    assert len(submitted) == 1 and type(submitted[0][0]) is OwnedArray
+
+
+@pytest.mark.parametrize("invalid", (float("nan"), Decimal("NaN")), ids=("float", "decimal"))
+def test_reference_apply_rejects_nonreflexive_singleton_before_and_after_restore(invalid):
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (invalid,), kind="references", choices=(invalid,)),
+    ))
+    for _ in range(2):
+        panel.apply_button.click()
+        assert not submitted and "no longer available" in panel.error.text()
+        panel.editor.editors["members"].set_raw_value(panel.editor.raw_values()["members"])
+
+
+def test_reference_apply_detaches_zero_dimensional_ctypes_scalar_view():
+    backing = ctypes.c_int(101)
+    original = memoryview(backing).toreadonly()
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (original,), kind="references", choices=(original,)),
+    ))
+    panel.apply_button.click()
+    restored, = submitted[0]
+    assert restored == original
+    assert (restored.format, restored.shape, restored.readonly) == (original.format, (), True)
+    backing.value = 404
+    assert restored.obj is not backing
+    assert restored.obj.value == 101
 
 
 @pytest.mark.parametrize("depth", (8, 16, 32))

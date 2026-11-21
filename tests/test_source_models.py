@@ -594,7 +594,10 @@ def test_8e85_reopens_signed_archive_with_delayed_includes(tmp_path, file_count)
                                           ("8e85a669-signed-same-directory-includes", 14),
                                           ("8e85a669-signed-borrowed-leaf-includes", 21),
                                           ("8e85a669-signed-74-frontier-includes", 74),
-                                          ("8e85a669-signed-25-nested-choosers", 25)))
+                                          ("8e85a669-signed-25-nested-choosers", 25),
+                                          ("8e85a669-signed-74-late-frontier-includes", 74),
+                                          ("8e85a669-signed-25-borrowed-choosers", 25),
+                                          ("8e85a669-signed-25-late-borrowed-choosers", 25)))
 def test_historical_include_search_skips_irrelevant_prefix_alternatives(tmp_path, monkeypatch, name, count):
     fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
     original_walk = includes._walk_includes
@@ -612,7 +615,8 @@ def test_historical_include_search_skips_irrelevant_prefix_alternatives(tmp_path
         before = deductions
         session.open_project(fixture)
         assert len(session.source_models()[0]["files"]) == count
-        assert deductions - before <= (4 if count == 21 else 9)
+        limit = 10 if name in ("8e85a669-signed-25-borrowed-choosers", "8e85a669-signed-25-late-borrowed-choosers") else 9
+        assert deductions - before <= (4 if count == 21 else limit)
         fixture = tmp_path / f"saved-{index}.caeprep"
         session.save_project(fixture)
     exported = tmp_path / "native/case_0000.rad"
@@ -624,6 +628,49 @@ def test_historical_include_search_skips_irrelevant_prefix_alternatives(tmp_path
         group = _card(session, "/GRSHEL/SHEL/48")["id"]
         assert session.group_members(group)["member_ids"] == [9008]
         assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
+
+
+def test_current_import_reopens_exact_recorded_chooser_bindings_in_one_walk(tmp_path, monkeypatch):
+    fixture = Path(__file__).with_name("fixtures") / "8e85a669-signed-25-borrowed-choosers.caeprep"
+    source_dir = tmp_path / "input"
+    with zipfile.ZipFile(fixture) as archive:
+        meta, = json.loads(archive.read("manifest.json"))["source_models"]
+        for record in meta["files"]:
+            source = source_dir / record["original_path"]
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_bytes(archive.read(f"sources/{meta['id']}/{record['original_resource_id']}.rad"))
+            if source.name in ("chooser.inc", "owner.inc"):
+                source.with_name("trigger.inc").write_text("# uncollected alternate\n")
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "host"))
+    plan = session.plan_import_source(source_dir / meta["name"])
+    assert len(plan["source"]["files"]) == 25
+    assert len(plan["source"]["include_bindings"]) == 39
+    session.import_source(plan["plan_id"])
+    session.create_analysis_case("Recorded chooser replay", [], .01, .001, "s")
+    original = includes._walk_includes
+    recorded = []
+
+    def count(root, lookup, load, scope, selected, recovered, historical, **options):
+        if root == meta["name"] and options.get("load_order") is not None:
+            recorded.append(len(selected))
+        return original(root, lookup, load, scope, selected, recovered, historical, **options)
+
+    monkeypatch.setattr(includes, "_walk_includes", count)
+    for index in range(3):
+        project = tmp_path / f"saved-{index}.caeprep"
+        session.save_project(project)
+        recorded.clear()
+        session.open_project(project)
+        assert recorded == [39]
+    target = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+    group = _card(session, "/GRSHEL/SHEL/48")["id"]
+    assert session.group_members(group)["member_ids"] == [9008]
+    assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
 
 
 @pytest.mark.parametrize("writer", ("ac0a255", "bde82a5", "8e85a669"))
