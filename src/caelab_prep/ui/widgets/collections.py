@@ -5,14 +5,22 @@ validated value and retain ``raw_value()`` when an incomplete draft must survive
 """
 from __future__ import annotations
 
-from collections import OrderedDict, UserDict
+from collections import deque
 from collections.abc import Mapping
-from copy import Error as CopyError, deepcopy
+from copy import copy
+from dataclasses import is_dataclass
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
+from enum import Enum
 from fractions import Fraction
 import gc
+from ipaddress import IPv4Address, IPv6Address
+from pathlib import PosixPath, PurePosixPath, PureWindowsPath, WindowsPath
 import re
-from types import MappingProxyType
+import sqlite3
+import sys
+from types import MappingProxyType, MemberDescriptorType
+from uuid import UUID
 
 from PySide6.QtCore import QSignalBlocker, QSize, Qt, Signal
 from PySide6.QtGui import QClipboard, QKeySequence, QValidator
@@ -220,13 +228,16 @@ class BooleanVectorEdit(QWidget):
 
 
 _PLAIN_PRIMITIVES = frozenset({str, int, float, bool, type(None), Decimal, Fraction, complex})
-_HASH_SCALARS = _PLAIN_PRIMITIVES | {bytes, ObjectRef}
+_HASH_SCALARS = _PLAIN_PRIMITIVES | {
+    bytes, ObjectRef, UUID, date, datetime, time, timedelta, IPv4Address, IPv6Address,
+    PurePosixPath, PureWindowsPath, PosixPath, WindowsPath,
+}
 _ROW_ID_ROLE = Qt.ItemDataRole.UserRole + 1
 
 
 def _proxy_target(value):
-    mappings = [ref for ref in gc.get_referents(value) if isinstance(ref, Mapping)]
-    return mappings[0] if len(mappings) == 1 else None
+    target, = gc.get_referents(value)
+    return target
 
 
 def _unwrap_standard_dict(value):
@@ -237,36 +248,119 @@ def _unwrap_standard_dict(value):
     return None
 
 
-def _clone_ref(ref):
+class _SQLiteRowSnapshot:
+    """A detached sqlite row with the same column lookup and equality."""
+
+    __slots__ = ("_columns", "_values")
+
+    def __init__(self, columns, values):
+        self._columns = tuple(columns)
+        self._values = values
+
+    def keys(self):
+        return list(self._columns)
+
+    def __iter__(self):
+        return iter(self._values)
+
+    def __len__(self):
+        return len(self._values)
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            for index, name in enumerate(self._columns):
+                if key == name or (key.isascii() and name.isascii() and key.lower() == name.lower()):
+                    return self._values[index]
+            raise IndexError("No item with that key")
+        return self._values[key]
+
+    def __eq__(self, other):
+        if isinstance(other, (sqlite3.Row, _SQLiteRowSnapshot)):
+            return self.keys() == other.keys() and self._values == tuple(other)
+        return NotImplemented
+
+    def __repr__(self):
+        return repr(list(zip(self._columns, self._values)))
+
+
+def _copy_ref_state(ref, clone, memo):
+    if hasattr(ref, "__dict__"):
+        object.__setattr__(clone, "__dict__", _clone_ref(vars(ref), memo))
+    for base in type(ref).__mro__:
+        for member in vars(base).values():
+            if isinstance(member, MemberDescriptorType):
+                try:
+                    value = member.__get__(ref)
+                except AttributeError:
+                    continue
+                member.__set__(clone, _clone_ref(value, memo))
+
+
+def _clone_ref(ref, memo=None):
     kind = type(ref)
     if kind in _HASH_SCALARS:
         return ref
-    if kind is dict:
-        return {key: _clone_ref(value) for key, value in ref.items()}
-    if kind is list:
-        return [_clone_ref(value) for value in ref]
-    if kind is tuple:
-        return tuple(_clone_ref(value) for value in ref)
-    if kind is set:
+    if memo is None and kind is dict and all(type(value) in _HASH_SCALARS for value in ref.values()):
         return ref.copy()
+    if memo is None and kind is MappingProxyType:
+        return MappingProxyType(_clone_ref(_proxy_target(ref)))
+    if memo is None:
+        memo = {}
+    key = id(ref)
+    if key in memo:
+        return memo[key]
     if kind is MappingProxyType:
-        target = _proxy_target(ref)
-        return MappingProxyType(_clone_ref(target)) if target is not None else ref
-    if kind is OrderedDict or kind is UserDict:
-        return kind((key, _clone_ref(value)) for key, value in ref.items())
-    if isinstance(ref, (Mapping, list, tuple, set)):
-        return deepcopy(ref)
-    if kind.__eq__ is object.__eq__:
-        return ref  # Opaque identity tokens cannot be copied without changing their meaning.
-    try:
-        return deepcopy(ref)
-    except (CopyError, TypeError):
+        return memo.setdefault(key, MappingProxyType(_clone_ref(_proxy_target(ref), memo)))
+    if isinstance(ref, dict):
+        clone = {} if kind is dict else copy(ref)
+        clone.clear()
+        memo[key] = clone
+        for name, value in ref.items():
+            clone[_clone_ref(name, memo)] = _clone_ref(value, memo)
+    elif isinstance(ref, (list, deque, set)):
+        clone = copy(ref)
+        clone.clear()
+        memo[key] = clone
+        values = (_clone_ref(value, memo) for value in ref)
+        if isinstance(ref, set):
+            clone.update(values)
+        else:
+            clone.extend(values)
+    elif (isinstance(ref, (tuple, frozenset, sqlite3.Row, _SQLiteRowSnapshot))
+          or kind is getattr(sys.modules.get("sqlalchemy.engine.row"), "Row", None)):
+        items = tuple(ref)
+        values = tuple(_clone_ref(item, memo) for item in items)
+        unchanged = all(value is item for value, item in zip(values, items))
+        if unchanged and not hasattr(ref, "__dict__"):
+            return ref
+        if key in memo:
+            return memo[key]
+        if isinstance(ref, tuple):
+            clone = tuple.__new__(kind, values)
+        elif isinstance(ref, frozenset):
+            clone = frozenset.__new__(kind, values)
+        elif isinstance(ref, (sqlite3.Row, _SQLiteRowSnapshot)):
+            return memo.setdefault(key, _SQLiteRowSnapshot(ref.keys(), values))
+        else:
+            clone = kind.__new__(kind)
+            clone.__setstate__({**ref.__getstate__(), "_data": values})
+            return memo.setdefault(key, clone)
+        memo[key] = clone
+    elif (isinstance(ref, Enum)
+          or (kind.__eq__ is object.__eq__ and not is_dataclass(ref) and not isinstance(ref, Mapping))):
+        # Identity-valued references, such as an ORM entity, must stay attached.
         return ref
+    else:
+        clone = object.__new__(kind)
+        memo[key] = clone
+    if kind not in (dict, list, set, tuple, frozenset, deque):
+        _copy_ref_state(ref, clone, memo)
+    return clone
 
 
 def _plain_key(value):
     kind = type(value)
-    if kind in _PLAIN_PRIMITIVES:
+    if kind in _HASH_SCALARS:
         return ("prim", hash(value))
     if kind is tuple or kind is list:
         items = tuple(_plain_key(item) for item in value)
@@ -286,7 +380,8 @@ def _plain_key(value):
 def _shares_hash_bucket(value):
     kind = type(value)
     return (kind in _HASH_SCALARS or
-            (kind is tuple or kind is frozenset) and all(_shares_hash_bucket(item) for item in value))
+            (kind is tuple or kind is frozenset) and all(_shares_hash_bucket(item) for item in value) or
+            isinstance(value, Enum) and kind.__eq__ in (object.__eq__, int.__eq__, str.__eq__))
 
 
 def _bucket_key(value):

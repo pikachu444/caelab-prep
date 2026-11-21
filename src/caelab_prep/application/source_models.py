@@ -14,9 +14,8 @@ from .projection import readonly, mutable
 
 _QUOTED_INCLUDE_POLICY = (None, "quoted", False)
 _ROOT_FIRST_INCLUDE_POLICY = ("241", "unchanged", True)
-_LEGACY_QUAD_PROFILES = ("legacy_pre14", "legacy_quad_as_shell")
 _UNRECORDED_INCLUDE_PROFILES = {
-    _QUOTED_INCLUDE_POLICY: _LEGACY_QUAD_PROFILES,
+    _QUOTED_INCLUDE_POLICY: ("legacy_pre14",),
     ("8e85", "quoted", False): ("legacy_pre14",),
     ("bde", "quoted", False): ("legacy_bde",),
     ("ac0", "quoted", False): ("legacy_quad_as_shell",),
@@ -157,9 +156,9 @@ class SourceArchiveResource:
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
                                          archived_order=archived_order, load_order=load_order)
             reached, original_bindings, _ = graph
-            # The wave-era policies must explain the recorded disk order.
+            # These policies must explain the recorded disk order as well as the mapped bytes.
             # Older rewrite formats retain their byte-and-binding compatibility checks.
-            requires_order = records is None and historical in (None, "bde", "8e85")
+            requires_order = records is None and historical in (None, "ac0", "bde", "8e85")
             if reached != set(paths) or (requires_order and load_order != archived_order):
                 continue
             try:

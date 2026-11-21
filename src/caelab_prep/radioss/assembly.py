@@ -193,7 +193,7 @@ def source_include_graph(resources, paths, *, selected=None, historical=None, ar
     load = by_path.__getitem__
     lookup = include_lookup(paths)
     return resolve_includes(root, lookup, load, selected=selected, historical=historical,
-                            archive_inventory=set(paths) if historical == "8e85" else None,
+                            archive_inventory=set(paths) if historical in ("ac0", "bde", "8e85") else None,
                             archived_order=archived_order, load_order=load_order)
 
 

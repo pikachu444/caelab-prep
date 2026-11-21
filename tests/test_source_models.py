@@ -568,7 +568,7 @@ def test_ac0_include_wave_archive_rejects_altered_quad_namespace(tmp_path, suffi
     assert error.value.code == "invalid_project"
 
 
-@pytest.mark.parametrize("file_count", (79, 132, 41))
+@pytest.mark.parametrize("file_count", (79, 132, 41, 24, 39))
 def test_8e85_reopens_signed_archive_with_delayed_includes(tmp_path, file_count):
     fixture = Path(__file__).with_name("fixtures") / f"8e85a669-signed-{file_count}-includes.caeprep"
     session = PrepSession()
@@ -585,6 +585,43 @@ def test_8e85_reopens_signed_archive_with_delayed_includes(tmp_path, file_count)
     group = _card(session, "/GRSHEL/SHEL/48")["id"]
     assert session.group_members(group)["member_ids"] == [9008]
     assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
+
+
+@pytest.mark.parametrize("name", ("bde82a5-quad-14-includes", "bde82a5-quad-qualified-order",
+                                  "8e85a669-quad-qualified-order"))
+def test_historical_quad_archive_requires_its_writer_namespace(tmp_path, name):
+    fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
+    with zipfile.ZipFile(fixture) as archive:
+        members = {member: archive.read(member) for member in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    order = [record["original_path"] for record in source["files"]]
+    if name.endswith("14-includes"):
+        assert len(order) == 14 and order[11] == "extra.inc"
+        assert "top/extra.inc" not in order
+    else:
+        assert order == ["conditions_0000.rad", "a/first.inc", "a/sub/mesh.inc", "sub/mesh.inc"]
+    session = PrepSession()
+    session.open_project(fixture)
+    saved = tmp_path / "resaved.caeprep"
+    session.save_project(saved)
+    session.open_project(saved)
+    target = tmp_path / "export/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+
+    entry = next(entry for entry in source["id_map"] if entry == ["E:QUAD", 9007, 9008])
+    entry[0] = "E:SHELL"
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "altered.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for member, payload in members.items():
+            archive.writestr(member, payload)
+    with pytest.raises(PrepError) as error:
+        session.open_project(altered)
+    assert error.value.code == "invalid_project"
 
 
 @pytest.mark.parametrize("tampered", (False, True))

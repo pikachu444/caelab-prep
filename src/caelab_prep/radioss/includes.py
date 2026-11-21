@@ -65,18 +65,19 @@ def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, se
                      historical=None, archived_order=None, load_order=None):
     """Resolve live paths or replay validated bindings against an archive inventory."""
     selected, recovered = selected or {}, recovered or {}
-    if historical == "8e85":
+    if historical in ("ac0", "bde", "8e85") and archive_inventory is not None:
         load = cache(load)
+        disk_policy = None if historical == "8e85" else historical
         order = []
-        result = _walk_includes(root, lookup, load, scope, selected, recovered, None, load_order=order)
-        sequential = not result[2] and result[0] != archive_inventory
+        result = _walk_includes(root, lookup, load, scope, selected, recovered, disk_policy, load_order=order)
+        sequential = historical == "8e85" and not result[2] and result[0] != archive_inventory
         if sequential:
             # The writer used sequential replay to remap the archived bytes after disk collection.
             result = _walk_includes(root, lookup, load, scope, selected, recovered, historical)
         if (not result[2] and result[0] == archive_inventory
                 and (sequential or (archived_order is not None and order != archived_order))
-                and not _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory,
-                                                   archived_order=archived_order, load_order=order)):
+                and not _can_collect_from_disk(root, lookup, load, scope, archive_inventory, disk_policy,
+                                              archived_order=archived_order, load_order=order)):
             directive = next(iter(load(root).include_directives), None)
             result[2].append((root, directive, PrepError(
                 "invalid_project", "The writer's disk traversal could not verify the archived INCLUDE inventory and order.")))
@@ -103,7 +104,8 @@ def _include_paths(directory, operand, scope):
     return relative, f"{scope}/{logical}" if scoped else logical, (directory / relative).as_posix()
 
 
-def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *, archived_order=None, load_order=None):
+def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, historical, *,
+                           archived_order=None, load_order=None):
     """Deduce missing sibling paths from disk order and verify a fixed layout."""
     lookup = cache(lookup)
     expected = list(archived_order) if archived_order is not None else None
@@ -112,12 +114,27 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *,
                      for parent in PurePosixPath(path).parents if parent != PurePosixPath(".")}
     references = Counter()
     lookups = Counter()
+    children = defaultdict(set)
     for owner in archive_inventory:
         directory = PurePosixPath(owner).parent
         for directive in load(owner).include_directives:
             _, root_path, sibling_path = _include_paths(directory, directive.path, scope)
             lookups.update({root_path.casefold(), sibling_path.casefold()})
-            references.update(candidate for candidate in {lookup(root_path), lookup(sibling_path)} if candidate is not None)
+            targets = {lookup(root_path), lookup(sibling_path)} - {None}
+            references.update(targets)
+            children[owner].update(targets)
+
+    def isolated_prefix(root_file, matched):
+        todo, visited = [root_file], set()
+        while todo:
+            path = todo.pop()
+            if path in visited:
+                continue
+            if path not in matched or references[path] != 1:
+                return False
+            visited.add(path)
+            todo.extend(children.get(path, ()))
+        return True
 
     @cache
     def is_legal_phantom(path):
@@ -167,7 +184,7 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *,
                 # An isolated leaf cannot change any later wave decision.
                 affects_wave = references[root_file] > 1 or load(root_file).include_directives or lookups[path] > 1
                 if affects_wave and is_legal_phantom(path):
-                    fallback.setdefault(path, None)
+                    fallback.setdefault(path, root_file)
                 return None
             if not is_legal_phantom(path):
                 raise _DiskOrderMismatch()
@@ -175,7 +192,7 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *,
             return path
 
         try:
-            _walk_includes(root, disk_lookup, load_in_order, scope, {}, {}, None,
+            _walk_includes(root, disk_lookup, load_in_order, scope, {}, {}, historical,
                            load_order=deduced_order, deduce_sibling=deduce_sibling)
         except _DiskOrderMismatch:
             pass
@@ -183,7 +200,7 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *,
         # Verify from the Starter with every deduced file present from the start.
         verified_order = []
         if not any(parent.as_posix() in phantoms for path in phantoms for parent in PurePosixPath(path).parents):
-            reached, _, problems = _walk_includes(root, disk_lookup, load_archived, scope, {}, {}, None,
+            reached, _, problems = _walk_includes(root, disk_lookup, load_archived, scope, {}, {}, historical,
                                                   load_order=verified_order)
             if (not problems and reached == archive_inventory
                     and (expected is None or verified_order == expected)):
@@ -200,10 +217,13 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *,
             stalled += 1
             if stalled >= _MAX_8E85_STALLED_WALKS:
                 return False
-        # Try the decisions closest to the first mismatch, then continue past each
-        # verified prefix before revisiting earlier alternatives.
-        if fallback:
-            pending.append(map(alternatives.union, ((path,) for path in reversed(fallback))))
+        # Delaying an entire private subtree already consumed in order cannot
+        # change later bindings. Keep alternatives that cross the mismatch or
+        # affect a path shared with another branch.
+        matched = set(verified_order[:prefix])
+        candidates = ((path,) for path, target in reversed(fallback.items())
+                      if lookups[path] > 1 or not isolated_prefix(target, matched))
+        pending.append(map(alternatives.union, candidates))
     return False
 
 

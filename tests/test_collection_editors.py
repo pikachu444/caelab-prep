@@ -5,9 +5,11 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from fractions import Fraction
 import os
+import sqlite3
 from time import perf_counter
 from types import MappingProxyType
 from typing import NamedTuple
+from uuid import UUID
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
@@ -346,6 +348,85 @@ def test_reference_editor_keeps_returned_mapping_edits_detached(mapping):
         editor.value()
 
 
+@pytest.mark.parametrize("proxy", (False, True))
+def test_reference_editor_isolates_mutable_sqlite_row_values(proxy):
+    sqlite3.register_converter("PREP_REFERENCE_LIST", lambda value: [int(value)])
+    connection = sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_COLNAMES)
+    try:
+        connection.row_factory = sqlite3.Row
+        choice, stale, matching = (
+            connection.execute('SELECT ? AS "nested [PREP_REFERENCE_LIST]"', (value,)).fetchone()
+            for value in (101, 404, 101)
+        )
+    finally:
+        connection.close()
+    wrap = MappingProxyType if proxy else lambda row: row
+    editor = ReferenceListEdit((wrap(stale),), choices=(wrap(choice),))
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+    editor.raw_value()[0]["nested"][0] = 101
+    stale["nested"][0] = 101
+    assert editor.raw_value()[0]["nested"] == [404]
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+    editor.set_raw_value((wrap(matching),))
+    assert editor.list.count() == 1
+    assert editor.value()[0] == wrap(matching)
+
+
+@pytest.mark.parametrize("container", ("dataclass", "chain-map", "named-tuple"))
+def test_reference_property_editor_clones_objects_containing_mapping_proxies(container):
+    @dataclass
+    class DataReference:
+        mapping: Mapping
+
+    class TupleReference(NamedTuple):
+        mapping: Mapping
+
+    wrap, read = {
+        "dataclass": (DataReference, lambda ref: ref.mapping),
+        "chain-map": (ChainMap, lambda ref: ref),
+        "named-tuple": (TupleReference, lambda ref: ref.mapping),
+    }[container]
+    nested = [101]
+    ref = wrap(MappingProxyType({"nested": nested}))
+    editor = PropertyEditor()
+    editor.set_fields((PropertySpec("members", "Members", (ref,), kind="references", choices=(ref,)),))
+    field = editor.editors["members"]
+    assert field.list.count() == 1
+    draft, = field.value()
+    assert type(draft) is type(ref)
+    read(draft)["nested"][0] = 404
+    nested[0] = 205
+    assert read(field.value()[0])["nested"] == [101]
+
+
+def test_reference_editor_preserves_sqlalchemy_row_and_bound_entity():
+    sqlalchemy = pytest.importorskip("sqlalchemy")
+    orm = pytest.importorskip("sqlalchemy.orm")
+    base = orm.declarative_base()
+
+    class Shell(base):
+        __tablename__ = "shells"
+        id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+
+    engine = sqlalchemy.create_engine("sqlite://")
+    try:
+        base.metadata.create_all(engine)
+        with orm.Session(engine) as session:
+            shell = Shell(id=201)
+            session.add(shell)
+            row = session.execute(sqlalchemy.select(Shell)).one()
+            for selected, choice in ((row, row), (tuple(row), row), (row, tuple(row))):
+                editor = ReferenceListEdit((selected,), choices=(choice,))
+                assert editor.list.count() == 1
+                assert editor.value()[0] is choice
+                assert editor.value()[0][0] is shell
+                assert orm.object_session(editor.value()[0][0]) is session
+    finally:
+        engine.dispose()
+
+
 @pytest.mark.parametrize("reverse", (False, True))
 def test_reference_editor_matches_frozen_pydantic_models_and_mapping_proxies(reverse):
     pydantic = pytest.importorskip("pydantic.v1")
@@ -380,6 +461,17 @@ def test_reference_editor_validates_8000_standard_mapping_proxies():
     elapsed = perf_counter() - start
     assert selected == choices
     assert elapsed < 1.0, f"Opening and validating the proxy list took {elapsed:.3f} seconds"
+
+
+@pytest.mark.parametrize("mixed", (False, True), ids=("uuid", "mixed"))
+def test_reference_editor_validates_8000_uuids(mixed):
+    choices = tuple({"local_id": index} if mixed and index % 2 else UUID(int=index) for index in range(8000))
+    start = perf_counter()
+    editor = ReferenceListEdit(choices, choices=choices)
+    selected = editor.value()
+    elapsed = perf_counter() - start
+    assert selected == choices
+    assert elapsed < .5, f"Opening and validating the UUID list took {elapsed:.3f} seconds"
 
 
 def test_numeric_table_csv_rows_and_failed_paste_are_uncommitted_drafts():
