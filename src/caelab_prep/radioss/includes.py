@@ -1,12 +1,12 @@
 """Resolve Starter INCLUDE graphs against disk or a portable file inventory."""
-from collections import defaultdict, deque
+from collections import Counter, defaultdict, deque
 from functools import cache
 from pathlib import PurePosixPath
 
 from ..cae_core import PrepError
 
 
-_MAX_8E85_ORDER_ALTERNATIVES = 64
+_MAX_8E85_STALLED_WALKS = 64
 
 
 class _DiskOrderMismatch(Exception):
@@ -67,13 +67,23 @@ def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, se
     selected, recovered = selected or {}, recovered or {}
     if historical == "8e85":
         load = cache(load)
-    result = _walk_includes(root, lookup, load, scope, selected, recovered, historical, load_order=load_order)
-    if historical == "8e85" and not result[2] and result[0] == archive_inventory:
-        if not _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory,
-                                          archived_order=archived_order, load_order=load_order):
+        order = []
+        result = _walk_includes(root, lookup, load, scope, selected, recovered, None, load_order=order)
+        sequential = not result[2] and result[0] != archive_inventory
+        if sequential:
+            # The writer used sequential replay to remap the archived bytes after disk collection.
+            result = _walk_includes(root, lookup, load, scope, selected, recovered, historical)
+        if (not result[2] and result[0] == archive_inventory
+                and (sequential or (archived_order is not None and order != archived_order))
+                and not _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory,
+                                                   archived_order=archived_order, load_order=order)):
             directive = next(iter(load(root).include_directives), None)
             result[2].append((root, directive, PrepError(
                 "invalid_project", "The writer's disk traversal could not verify the archived INCLUDE inventory and order.")))
+        if load_order is not None:
+            load_order[:] = order
+        return result
+    result = _walk_includes(root, lookup, load, scope, selected, recovered, historical, load_order=load_order)
     if historical is None and archive_inventory is not None and not result[2] and archive_inventory - result[0]:
         # ac0a255d let an earlier ambiguous directive claim the root for the
         # next directive. Use that policy only if it explains the entire ZIP.
@@ -86,6 +96,13 @@ def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, se
     return result
 
 
+def _include_paths(directory, operand, scope):
+    relative = include_relative(operand)
+    logical = relative.as_posix()
+    scoped = scope and not logical.casefold().startswith(scope.casefold() + "/")
+    return relative, f"{scope}/{logical}" if scoped else logical, (directory / relative).as_posix()
+
+
 def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *, archived_order=None, load_order=None):
     """Deduce missing sibling paths from disk order and verify a fixed layout."""
     lookup = cache(lookup)
@@ -93,6 +110,14 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *,
     archived_files = {path.casefold() for path in archive_inventory}
     archived_dirs = {parent.as_posix().casefold() for path in archive_inventory
                      for parent in PurePosixPath(path).parents if parent != PurePosixPath(".")}
+    references = Counter()
+    lookups = Counter()
+    for owner in archive_inventory:
+        directory = PurePosixPath(owner).parent
+        for directive in load(owner).include_directives:
+            _, root_path, sibling_path = _include_paths(directory, directive.path, scope)
+            lookups.update({root_path.casefold(), sibling_path.casefold()})
+            references.update(candidate for candidate in {lookup(root_path), lookup(sibling_path)} if candidate is not None)
 
     @cache
     def is_legal_phantom(path):
@@ -104,11 +129,18 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *,
             raise PrepError("include_missing", "Disk traversal would collect an unarchived INCLUDE.")
         return load(path)
 
-    empty = frozenset()
-    pending = deque([empty])
-    seen = {empty}
+    pending = [iter((frozenset(),))]
+    seen = set()
+    best_prefix = -1
+    stalled = 0
     while pending:
-        alternatives = pending.popleft()
+        alternatives = next(pending[-1], None)
+        if alternatives is None:
+            pending.pop()
+            continue
+        if alternatives in seen:
+            continue
+        seen.add(alternatives)
         phantoms = set(alternatives)
         fallback = {}
         deduced_order = []
@@ -132,7 +164,9 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *,
                 return None
             path = sibling_path.casefold()
             if expected is None or root_file == next_expected():
-                if is_legal_phantom(path):
+                # An isolated leaf cannot change any later wave decision.
+                affects_wave = references[root_file] > 1 or load(root_file).include_directives or lookups[path] > 1
+                if affects_wave and is_legal_phantom(path):
                     fallback.setdefault(path, None)
                 return None
             if not is_legal_phantom(path):
@@ -147,8 +181,8 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *,
             pass
 
         # Verify from the Starter with every deduced file present from the start.
+        verified_order = []
         if not any(parent.as_posix() in phantoms for path in phantoms for parent in PurePosixPath(path).parents):
-            verified_order = []
             reached, _, problems = _walk_includes(root, disk_lookup, load_archived, scope, {}, {}, None,
                                                   load_order=verified_order)
             if (not problems and reached == archive_inventory
@@ -156,14 +190,20 @@ def _can_8e85_collect_from_disk(root, lookup, load, scope, archive_inventory, *,
                 if load_order is not None:
                     load_order[:] = verified_order
                 return True
-        # Only edges that could have been immediate in the recorded order need alternatives.
-        for path in fallback:
-            if len(seen) >= _MAX_8E85_ORDER_ALTERNATIVES:
-                break
-            delayed = alternatives | {path}
-            if delayed not in seen:
-                seen.add(delayed)
-                pending.append(delayed)
+        prefix = len(verified_order)
+        if expected is not None:
+            prefix = next((i for i, (actual, wanted) in enumerate(zip(verified_order, expected))
+                           if actual != wanted), prefix)
+        if prefix > best_prefix:
+            best_prefix, stalled = prefix, 0
+        else:
+            stalled += 1
+            if stalled >= _MAX_8E85_STALLED_WALKS:
+                return False
+        # Try the decisions closest to the first mismatch, then continue past each
+        # verified prefix before revisiting earlier alternatives.
+        if fallback:
+            pending.append(map(alternatives.union, ((path,) for path in reversed(fallback))))
     return False
 
 
@@ -205,13 +245,10 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
         directory = PurePosixPath(owner).parent
         for ordinal, directive in enumerate(directives):
             try:
-                relative = include_relative(directive.path)
-                logical = relative.as_posix()
                 # Archived imports have their own original root. A converted
                 # path that already names that namespace stays project-relative.
-                scoped = scope and not logical.casefold().startswith(scope.casefold() + "/")
-                root_path = f"{scope}/{logical}" if scoped else logical
-                sibling_path = (directory / relative).as_posix()
+                relative, root_path, sibling_path = _include_paths(directory, directive.path, scope)
+                logical = relative.as_posix()
                 root_file = lookup(root_path)
                 # The 24137d60 reader resolved every operand from the Starter root.
                 sibling = lookup(sibling_path) if historical != "241" and sibling_path != root_path else root_file

@@ -540,9 +540,8 @@ def test_ac0_repeated_operand_archive_requires_its_shell_namespace(tmp_path, var
     assert error.value.code == "invalid_project"
 
 
-@pytest.mark.parametrize("leaf", (False, True), ids=("load-order", "directory"))
-def test_ac0_include_wave_archive_rejects_altered_quad_namespace(tmp_path, leaf):
-    suffix = "directory-include" if leaf else "include-order"
+@pytest.mark.parametrize("suffix", ("include-order", "directory-include", "qualified-order"))
+def test_ac0_include_wave_archive_rejects_altered_quad_namespace(tmp_path, suffix):
     fixture = Path(__file__).with_name("fixtures") / f"ac0a255-quad-{suffix}.caeprep"
     session = PrepSession()
     session.open_project(fixture)
@@ -550,9 +549,13 @@ def test_ac0_include_wave_archive_rejects_altered_quad_namespace(tmp_path, leaf)
         manifest = json.loads(archive.read("manifest.json"))
         source, = manifest["source_models"]
         order = [record["original_path"] for record in source["files"]]
-        assert len(order) == (8 if leaf else 7)
-        assert order.index("trigger.inc") < order.index("mesh.inc")
-        assert ("b/trigger.inc/leaf.inc" in order) is leaf
+        if suffix == "qualified-order":
+            assert order == ["conditions_0000.rad", "a/first.inc", "sub/mesh.inc", "a/sub/mesh.inc"]
+        else:
+            leaf = suffix == "directory-include"
+            assert len(order) == (8 if leaf else 7)
+            assert order.index("trigger.inc") < order.index("mesh.inc")
+            assert ("b/trigger.inc/leaf.inc" in order) is leaf
         entry = next(entry for entry in source["id_map"] if entry == ["E:SHELL", 9007, 9009])
         entry[0] = "E:QUAD"
         edited = tmp_path / "altered.caeprep"
@@ -565,11 +568,12 @@ def test_ac0_include_wave_archive_rejects_altered_quad_namespace(tmp_path, leaf)
     assert error.value.code == "invalid_project"
 
 
-def test_8e85_reopens_signed_archive_with_thirteen_include_layouts(tmp_path):
-    fixture = Path(__file__).with_name("fixtures") / "8e85a669-signed-79-includes.caeprep"
+@pytest.mark.parametrize("file_count", (79, 132, 41))
+def test_8e85_reopens_signed_archive_with_delayed_includes(tmp_path, file_count):
+    fixture = Path(__file__).with_name("fixtures") / f"8e85a669-signed-{file_count}-includes.caeprep"
     session = PrepSession()
     session.open_project(fixture)
-    assert len(session.source_models()[0]["files"]) == 79
+    assert len(session.source_models()[0]["files"]) == file_count
     saved = tmp_path / "saved.caeprep"
     session.save_project(saved)
     session.open_project(saved)

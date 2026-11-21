@@ -320,6 +320,47 @@ def test_reference_editor_isolates_nested_mutable_choices_and_results():
     assert editor.value() == (expected,)
 
 
+@pytest.mark.parametrize("mapping", (UserDict, OrderedDict, MappingProxyType))
+def test_reference_editor_keeps_mutated_mapping_draft_unavailable(mapping):
+    source = {"local_id": [404]}
+    editor = ReferenceListEdit((mapping(source),), choices=(mapping({"local_id": [101]}),))
+    label = next(editor.list.item(i).text() for i in range(editor.list.count())
+                 if editor.list.item(i).text().startswith("Unavailable:"))
+    assert "404" in label
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+    source["local_id"][0] = 101
+    [draft] = editor.raw_value()
+    draft["local_id"][0] = 101
+    assert editor.raw_value()[0]["local_id"] == [404]
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+
+
+@pytest.mark.parametrize("mapping", (UserDict, OrderedDict))
+def test_reference_editor_keeps_returned_mapping_edits_detached(mapping):
+    editor = ReferenceListEdit((mapping(local_id=404),), choices=(mapping(local_id=101),))
+    editor.raw_value()[0]["local_id"] = 101
+    assert editor.raw_value()[0]["local_id"] == 404
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+
+
+@pytest.mark.parametrize("reverse", (False, True))
+def test_reference_editor_matches_frozen_pydantic_models_and_mapping_proxies(reverse):
+    pydantic = pytest.importorskip("pydantic.v1")
+    model = pydantic.create_model("ElementReference", __config__=type("Config", (), {"frozen": True}),
+                                  local_id=(int, ...))
+    proxy, ref = MappingProxyType({"local_id": 201}), model(local_id=201)
+    assert proxy == ref and ref == proxy
+    choice, selected = (ref, proxy) if reverse else (proxy, ref)
+    editor = ReferenceListEdit((selected,), choices=(choice,))
+    assert editor.list.count() == 1
+    assert editor.value() == (choice,)
+    editor.set_raw_value((selected,))
+    assert editor.value() == (choice,)
+
+
 def test_reference_editor_sort_keeps_unavailable_row_and_checked_references():
     editor = ReferenceListEdit(("missing",), choices=("a", "z"), choice_labels=("Zulu", "Alpha"))
     editor.list.sortItems()

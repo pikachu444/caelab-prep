@@ -5,7 +5,9 @@ validated value and retain ``raw_value()`` when an incomplete draft must survive
 """
 from __future__ import annotations
 
+from collections import OrderedDict, UserDict
 from collections.abc import Mapping
+from copy import Error as CopyError, deepcopy
 from decimal import Decimal
 from fractions import Fraction
 import gc
@@ -17,6 +19,7 @@ from PySide6.QtGui import QClipboard, QKeySequence, QValidator
 from PySide6.QtWidgets import (QApplication, QCheckBox, QHBoxLayout, QLineEdit, QListWidget,
                               QListWidgetItem, QMenu, QVBoxLayout, QWidget)
 
+from ...application.contracts import ObjectRef
 from .curve import CurveTable
 
 
@@ -217,15 +220,18 @@ class BooleanVectorEdit(QWidget):
 
 
 _PLAIN_PRIMITIVES = frozenset({str, int, float, bool, type(None), Decimal, Fraction, complex})
+_HASH_SCALARS = _PLAIN_PRIMITIVES | {bytes, ObjectRef}
 _ROW_ID_ROLE = Qt.ItemDataRole.UserRole + 1
+
+
+def _proxy_target(value):
+    mappings = [ref for ref in gc.get_referents(value) if isinstance(ref, Mapping)]
+    return mappings[0] if len(mappings) == 1 else None
 
 
 def _unwrap_standard_dict(value):
     while type(value) is MappingProxyType:
-        mappings = [ref for ref in gc.get_referents(value) if isinstance(ref, Mapping)]
-        if len(mappings) != 1:
-            return None
-        value = mappings[0]
+        value = _proxy_target(value)
     if isinstance(value, dict) and type(value).__eq__ is dict.__eq__:
         return value
     return None
@@ -233,6 +239,8 @@ def _unwrap_standard_dict(value):
 
 def _clone_ref(ref):
     kind = type(ref)
+    if kind in _HASH_SCALARS:
+        return ref
     if kind is dict:
         return {key: _clone_ref(value) for key, value in ref.items()}
     if kind is list:
@@ -241,7 +249,19 @@ def _clone_ref(ref):
         return tuple(_clone_ref(value) for value in ref)
     if kind is set:
         return ref.copy()
-    return ref
+    if kind is MappingProxyType:
+        target = _proxy_target(ref)
+        return MappingProxyType(_clone_ref(target)) if target is not None else ref
+    if kind is OrderedDict or kind is UserDict:
+        return kind((key, _clone_ref(value)) for key, value in ref.items())
+    if isinstance(ref, (Mapping, list, tuple, set)):
+        return deepcopy(ref)
+    if kind.__eq__ is object.__eq__:
+        return ref  # Opaque identity tokens cannot be copied without changing their meaning.
+    try:
+        return deepcopy(ref)
+    except (CopyError, TypeError):
+        return ref
 
 
 def _plain_key(value):
@@ -263,13 +283,21 @@ def _plain_key(value):
     return ("dict", frozenset(items))
 
 
+def _shares_hash_bucket(value):
+    kind = type(value)
+    return (kind in _HASH_SCALARS or
+            (kind is tuple or kind is frozenset) and all(_shares_hash_bucket(item) for item in value))
+
+
 def _bucket_key(value):
     kind = type(value)
     if kind is dict or kind is list:
         return _plain_key(value)
     if isinstance(value, Mapping):
         return _plain_key(value)
-    if isinstance(value, list):
+    # Arbitrary record classes can compare equal to a structured mapping even
+    # when they provide a hash. Compare those values against all buckets.
+    if not _shares_hash_bucket(value):
         return None
     try:
         return ("hash", hash(value))

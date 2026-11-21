@@ -157,7 +157,10 @@ class SourceArchiveResource:
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
                                          archived_order=archived_order, load_order=load_order)
             reached, original_bindings, _ = graph
-            if reached != set(paths):
+            # The wave-era policies must explain the recorded disk order.
+            # Older rewrite formats retain their byte-and-binding compatibility checks.
+            requires_order = records is None and historical in (None, "bde", "8e85")
+            if reached != set(paths) or (requires_order and load_order != archived_order):
                 continue
             try:
                 matched_profile = next((profile for profile in compatible_readers
