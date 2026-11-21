@@ -5,16 +5,17 @@ validated value and retain ``raw_value()`` when an incomplete draft must survive
 """
 from __future__ import annotations
 
-from collections import deque
-from collections.abc import Mapping
+from collections import OrderedDict, deque
+from collections.abc import Mapping, MutableMapping
 from copy import copy
-from dataclasses import is_dataclass
+from dataclasses import fields, is_dataclass
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
 import gc
 from ipaddress import IPv4Address, IPv6Address
+from numbers import Number
 from pathlib import PosixPath, PurePosixPath, PureWindowsPath, WindowsPath
 import re
 import sqlite3
@@ -251,14 +252,14 @@ def _unwrap_standard_dict(value):
 class _SQLiteRowSnapshot:
     """A detached sqlite row with the same column lookup and equality."""
 
-    __slots__ = ("_columns", "_values")
+    __slots__ = ("_description", "_values")
 
-    def __init__(self, columns, values):
-        self._columns = tuple(columns)
+    def __init__(self, description, values):
+        self._description = description
         self._values = values
 
     def keys(self):
-        return list(self._columns)
+        return [column[0] for column in self._description]
 
     def __iter__(self):
         return iter(self._values)
@@ -268,7 +269,7 @@ class _SQLiteRowSnapshot:
 
     def __getitem__(self, key):
         if isinstance(key, str):
-            for index, name in enumerate(self._columns):
+            for index, (name, *_) in enumerate(self._description):
                 if key == name or (key.isascii() and name.isascii() and key.lower() == name.lower()):
                     return self._values[index]
             raise IndexError("No item with that key")
@@ -276,11 +277,22 @@ class _SQLiteRowSnapshot:
 
     def __eq__(self, other):
         if isinstance(other, (sqlite3.Row, _SQLiteRowSnapshot)):
-            return self.keys() == other.keys() and self._values == tuple(other)
+            return self._description == _sqlite_description(other) and self._values == tuple(other)
         return NotImplemented
 
+    def __hash__(self):
+        # CPython's sqlite row hashes the full cursor description and values.
+        return hash(self._description) ^ hash(self._values)
+
     def __repr__(self):
-        return repr(list(zip(self._columns, self._values)))
+        return repr(list(zip(self.keys(), self._values)))
+
+
+def _sqlite_description(row):
+    if isinstance(row, _SQLiteRowSnapshot):
+        return row._description
+    # sqlite3 supplies the DB-API seven-tuple with only the column name set.
+    return tuple((name, None, None, None, None, None, None) for name in row.keys())
 
 
 def _copy_ref_state(ref, clone, memo):
@@ -298,10 +310,10 @@ def _copy_ref_state(ref, clone, memo):
 
 def _clone_ref(ref, memo=None):
     kind = type(ref)
+    if kind is dict and memo is None and _HASH_SCALARS.issuperset(map(type, ref.values())):
+        return ref.copy()
     if kind in _HASH_SCALARS:
         return ref
-    if memo is None and kind is dict and all(type(value) in _HASH_SCALARS for value in ref.values()):
-        return ref.copy()
     if memo is None and kind is MappingProxyType:
         return MappingProxyType(_clone_ref(_proxy_target(ref)))
     if memo is None:
@@ -311,12 +323,27 @@ def _clone_ref(ref, memo=None):
         return memo[key]
     if kind is MappingProxyType:
         return memo.setdefault(key, MappingProxyType(_clone_ref(_proxy_target(ref), memo)))
-    if isinstance(ref, dict):
+    if kind is dict or (isinstance(ref, dict) and kind.__setitem__ in (dict.__setitem__, OrderedDict.__setitem__)):
         clone = {} if kind is dict else copy(ref)
-        clone.clear()
+        if isinstance(clone, OrderedDict):
+            OrderedDict.clear(clone)
+        else:
+            dict.clear(clone)
         memo[key] = clone
         for name, value in ref.items():
             clone[_clone_ref(name, memo)] = _clone_ref(value, memo)
+    elif isinstance(ref, Mapping) and (isinstance(ref, dict) or not isinstance(ref, MutableMapping)):
+        entries = tuple(ref.items())
+        pairs = tuple((_clone_ref(name, memo), _clone_ref(value, memo)) for name, value in entries)
+        if all(key is old_key and value is old_value for (key, value), (old_key, old_value) in zip(pairs, entries)):
+            return ref
+        # Views such as SQLAlchemy RowMapping cannot be constructed from
+        # detached entries. A plain dict retains their structural equality.
+        try:
+            clone = kind(pairs)
+        except (AttributeError, TypeError):
+            clone = dict(pairs)
+        return memo.setdefault(key, clone)
     elif isinstance(ref, (list, deque, set)):
         clone = copy(ref)
         clone.clear()
@@ -340,17 +367,27 @@ def _clone_ref(ref, memo=None):
         elif isinstance(ref, frozenset):
             clone = frozenset.__new__(kind, values)
         elif isinstance(ref, (sqlite3.Row, _SQLiteRowSnapshot)):
-            return memo.setdefault(key, _SQLiteRowSnapshot(ref.keys(), values))
+            return memo.setdefault(key, _SQLiteRowSnapshot(_sqlite_description(ref), values))
         else:
             clone = kind.__new__(kind)
             clone.__setstate__({**ref.__getstate__(), "_data": values})
             return memo.setdefault(key, clone)
         memo[key] = clone
-    elif (isinstance(ref, Enum)
-          or (kind.__eq__ is object.__eq__ and not is_dataclass(ref) and not isinstance(ref, Mapping))):
+    elif isinstance(ref, (Enum, Number)) or (kind.__eq__ is object.__eq__ and not isinstance(ref, Mapping)):
         # Identity-valued references, such as an ORM entity, must stay attached.
         return ref
     else:
+        numpy = sys.modules.get("numpy")
+        if isinstance(ref, getattr(numpy, "generic", ())) and ref.dtype.kind in "bMSU":
+            # NumPy booleans, dates and strings are immutable values outside
+            # numbers.Number. Keep the widget package independent of NumPy.
+            return ref
+        if is_dataclass(ref) and kind.__dataclass_params__.frozen:
+            values = tuple(getattr(ref, member.name) for member in fields(ref))
+            if all(_clone_ref(value, memo) is value for value in values):
+                return ref
+            if key in memo:
+                return memo[key]
         clone = object.__new__(kind)
         memo[key] = clone
     if kind not in (dict, list, set, tuple, frozenset, deque):
@@ -361,7 +398,7 @@ def _clone_ref(ref, memo=None):
 def _plain_key(value):
     kind = type(value)
     if kind in _HASH_SCALARS:
-        return ("prim", hash(value))
+        return hash(value)
     if kind is tuple or kind is list:
         items = tuple(_plain_key(item) for item in value)
         return (kind.__name__, items) if None not in items else None
@@ -370,10 +407,11 @@ def _plain_key(value):
         return None
     items = []
     for key, item in dict.items(target):
-        pair = (_plain_key(key), _plain_key(item))
-        if None in pair:
+        name_key = hash(key) if type(key) in _HASH_SCALARS else _plain_key(key)
+        value_key = hash(item) if type(item) in _HASH_SCALARS else _plain_key(item)
+        if name_key is None or value_key is None:
             return None
-        items.append(pair)
+        items.append((name_key, value_key))
     return ("dict", frozenset(items))
 
 
@@ -386,6 +424,8 @@ def _shares_hash_bucket(value):
 
 def _bucket_key(value):
     kind = type(value)
+    if kind in _HASH_SCALARS:
+        return ("hash", hash(value))
     if kind is dict or kind is list:
         return _plain_key(value)
     if isinstance(value, Mapping):
@@ -420,7 +460,8 @@ class ReferenceListEdit(QWidget):
 
     def __init__(self, value=(), *, choices=(), choice_labels=(), parent=None):
         super().__init__(parent)
-        self.choices = tuple(_clone_ref(ref) for ref in choices)
+        source_choices = tuple(choices)
+        self.choices = tuple(_clone_ref(ref) for ref in source_choices)
         self._choice_keys = tuple(_bucket_key(ref) for ref in self.choices)
         self._choice_buckets = {}
         for key, ref in zip(self._choice_keys, self.choices):
@@ -437,7 +478,16 @@ class ReferenceListEdit(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.list)
         self.list.itemChanged.connect(self.draftChanged)
-        self.set_raw_value(value)
+        selected = tuple(value)
+        checked_rows = None
+        if len(self._choice_buckets) == len(source_choices) and None not in self._choice_buckets:
+            # Providers can pass the actual choices back as the initial
+            # selection. With unique keys, those rows need no second indexing.
+            positions = {id(ref): index for index, ref in enumerate(source_choices)}
+            indices = tuple(positions.get(id(ref)) for ref in selected)
+            if all(index is not None and self.choices[index] == ref for index, ref in zip(indices, selected)):
+                checked_rows = set(indices)
+        self._set_raw_value(selected, checked_rows)
 
     def _checked_row_ids(self):
         item_at = self.list.item
@@ -460,11 +510,14 @@ class ReferenceListEdit(QWidget):
         return tuple(selected)
 
     def set_raw_value(self, value):
-        selected = tuple(value)
-        selected_keys = tuple(_bucket_key(ref) for ref in selected)
-        selected_buckets = {}
-        for key, ref in zip(selected_keys, selected):
-            selected_buckets.setdefault(key, []).append(ref)
+        self._set_raw_value(tuple(value), None)
+
+    def _set_raw_value(self, selected, checked_rows):
+        if checked_rows is None:
+            selected_keys = tuple(_bucket_key(ref) for ref in selected)
+            selected_buckets = {}
+            for key, ref in zip(selected_keys, selected):
+                selected_buckets.setdefault(key, []).append(ref)
         item_type, add_item = QListWidgetItem, self.list.addItem
         checked, unchecked = Qt.CheckState.Checked, Qt.CheckState.Unchecked
         user_role = Qt.ItemDataRole.UserRole
@@ -493,17 +546,22 @@ class ReferenceListEdit(QWidget):
             rows.clear()
             available_rows.clear()
             for index, (key, ref) in enumerate(zip(self._choice_keys, self.choices)):
-                if _contains(displayed_buckets, ref, key):
-                    continue
+                if checked_rows is None:
+                    if _contains(displayed_buckets, ref, key):
+                        continue
+                    selected_row = _contains(selected_buckets, ref, key)
+                    displayed_buckets.setdefault(key, []).append(ref)
+                else:
+                    selected_row = index in checked_rows
                 label = (self.choice_labels[index] if index < len(self.choice_labels)
                          else getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
-                add_row(ref, str(label), _contains(selected_buckets, ref, key), True)
-                displayed_buckets.setdefault(key, []).append(ref)
-            for key, ref in zip(selected_keys, selected):
-                if not _contains(displayed_buckets, ref, key):
-                    label = str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
-                    add_row(ref, "Unavailable: " + label, True, False)
-                    displayed_buckets.setdefault(key, []).append(ref)
+                add_row(ref, str(label), selected_row, True)
+            if checked_rows is None:
+                for key, ref in zip(selected_keys, selected):
+                    if not _contains(displayed_buckets, ref, key):
+                        label = str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
+                        add_row(ref, "Unavailable: " + label, True, False)
+                        displayed_buckets.setdefault(key, []).append(ref)
         finally:
             self.list.setUpdatesEnabled(True)
             del blocked

@@ -427,6 +427,112 @@ def test_reference_editor_preserves_sqlalchemy_row_and_bound_entity():
         engine.dispose()
 
 
+@pytest.mark.parametrize("kind,value", (("int64", 201), ("bool_", True), ("str_", "shell"),
+                                        ("bytes_", b"shell"), ("datetime64", "2026-01-01")))
+def test_reference_property_editor_accepts_an_immutable_numpy_scalar(kind, value):
+    np = pytest.importorskip("numpy")
+    reference = getattr(np, kind)(value)
+    editor = PropertyEditor()
+    editor.set_fields((PropertySpec("members", "Members", (reference.item(),),
+                                    kind="references", choices=(reference,)),))
+    field = editor.editors["members"]
+    assert field.list.count() == 1
+    assert field.value()[0] is reference
+
+
+def test_reference_editor_accepts_sqlalchemy_row_mapping_and_isolates_mutable_values():
+    sqlalchemy = pytest.importorskip("sqlalchemy")
+    engine = sqlalchemy.create_engine("sqlite://")
+    try:
+        with engine.connect() as connection:
+            ref = connection.execute(sqlalchemy.text("SELECT 201 AS local_id")).one()._mapping
+            editor = ReferenceListEdit(({"local_id": 201},), choices=(ref,))
+            assert editor.list.count() == 1
+            assert editor.value() == (ref,)
+            expression = sqlalchemy.bindparam("ids", [201], type_=sqlalchemy.JSON).label("nodes")
+            ref = connection.execute(sqlalchemy.select(expression)).one()._mapping
+            editor = ReferenceListEdit((ref,), choices=(ref,))
+            editor.raw_value()[0]["nodes"].append(404)
+            ref["nodes"].append(404)
+            assert editor.value() == ({"nodes": [201]},)
+    finally:
+        engine.dispose()
+
+
+def test_reference_editor_handles_frozendict_choices_without_mutating_them():
+    immutable_dict = pytest.importorskip("frozendict").frozendict
+    choice = {"local_id": 101}
+    nested = [404]
+    other = immutable_dict(local_id=404)
+    ref = immutable_dict(nodes=nested)
+    editor = ReferenceListEdit((choice, ref), choices=(choice, other, ref))
+    assert editor.list.count() == 3
+    assert editor.value() == (choice, ref)
+    nested[0] = 101
+    editor.raw_value()[1]["nodes"].append(101)
+    assert editor.value() == (choice, {"nodes": [404]})
+
+
+def test_reference_editor_keeps_identity_valued_dataclass():
+    @dataclass(eq=False)
+    class Reference:
+        local_id: int
+
+    ref = Reference(201)
+    editor = ReferenceListEdit((ref,), choices=(ref,))
+    assert editor.list.count() == 1
+    assert editor.value()[0] is ref
+
+
+def test_reference_editor_keeps_sqlalchemy_identity_valued_mapped_dataclass():
+    sqlalchemy = pytest.importorskip("sqlalchemy")
+    orm = pytest.importorskip("sqlalchemy.orm")
+
+    class Base(orm.MappedAsDataclass, orm.DeclarativeBase, eq=False):
+        pass
+
+    class Shell(Base, eq=False):
+        __tablename__ = "shells"
+        id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
+
+    engine = sqlalchemy.create_engine("sqlite://")
+    try:
+        Base.metadata.create_all(engine)
+        with orm.Session(engine) as session:
+            ref = Shell(id=201)
+            session.add(ref)
+            session.flush()
+            editor = ReferenceListEdit((ref,), choices=(ref,))
+            assert editor.list.count() == 1
+            assert editor.value()[0] is ref
+            assert orm.object_session(editor.value()[0]) is session
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize("frozen", (False, True))
+def test_reference_editor_preserves_sqlite_row_hash_contract(frozen):
+    @dataclass(frozen=frozen, unsafe_hash=True)
+    class Reference:
+        local_id: int
+
+    sqlite3.register_converter("PREP_HASHABLE_REFERENCE", lambda value: Reference(int(value)))
+    connection = sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_COLNAMES)
+    try:
+        connection.row_factory = sqlite3.Row
+        row = connection.execute('SELECT 201 AS "ref [PREP_HASHABLE_REFERENCE]"').fetchone()
+    finally:
+        connection.close()
+    editor = ReferenceListEdit((row,), choices=(row,))
+    result, = editor.value()
+    assert result == row and row == result
+    assert {row: "shell"}[result] == "shell"
+    if frozen:
+        assert result is row
+    else:
+        assert result["ref"] is not row["ref"]
+
+
 @pytest.mark.parametrize("reverse", (False, True))
 def test_reference_editor_matches_frozen_pydantic_models_and_mapping_proxies(reverse):
     pydantic = pytest.importorskip("pydantic.v1")

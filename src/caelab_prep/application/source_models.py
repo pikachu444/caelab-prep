@@ -98,6 +98,13 @@ class SourceArchiveResource:
             for item in self.metadata["files"]]
         mapping = NativeMap({(ns, original): mapped for ns, original, mapped in self.metadata["id_map"]},
                             shared={("NODE", value) for value in self.metadata["shared_nodes"]})
+        # Writers visit definitions in sorted order and share one increasing
+        # allocation cursor across every element namespace. Unchanged IDs never
+        # use that cursor. This applies even when INCLUDE replay is identical.
+        assigned = [mapped for (namespace, original), mapped in sorted(mapping.items())
+                    if namespace.startswith("E:") and mapped != original]
+        if any(earlier >= later for earlier, later in zip(assigned, assigned[1:])):
+            raise PrepError("invalid_project", "Remapped element IDs do not follow the source allocation order.")
         reader_matches = []
         inspection_errors = []
         # The historical field rules must hold across all originals together.

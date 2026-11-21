@@ -1,5 +1,5 @@
 """Resolve Starter INCLUDE graphs against disk or a portable file inventory."""
-from collections import Counter, defaultdict, deque
+from collections import defaultdict, deque
 from functools import cache
 from pathlib import PurePosixPath
 
@@ -112,25 +112,33 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
     archived_files = {path.casefold() for path in archive_inventory}
     archived_dirs = {parent.as_posix().casefold() for path in archive_inventory
                      for parent in PurePosixPath(path).parents if parent != PurePosixPath(".")}
-    references = Counter()
-    lookups = Counter()
+    callers = defaultdict(set)
+    lookup_sites = defaultdict(set)
     children = defaultdict(set)
     for owner in archive_inventory:
         directory = PurePosixPath(owner).parent
-        for directive in load(owner).include_directives:
-            _, root_path, sibling_path = _include_paths(directory, directive.path, scope)
-            lookups.update({root_path.casefold(), sibling_path.casefold()})
-            targets = {lookup(root_path), lookup(sibling_path)} - {None}
-            references.update(targets)
+        for ordinal, directive in enumerate(load(owner).include_directives):
+            relative, root_path, sibling_path = _include_paths(directory, directive.path, scope)
+            root_target = lookup(root_path)
+            qualified_root = historical == "ac0" and len(relative.parts) > 1 and root_target is not None
+            operands = {root_path} if qualified_root else {root_path, sibling_path}
+            # Repeat operands in a frozen wave make the same selection. The
+            # sequential reader can make two decisions even within one file.
+            site = (owner, root_path.casefold(), sibling_path.casefold(), ordinal if historical == "ac0" else None)
+            for path in operands:
+                lookup_sites[path.casefold()].add(site)
+            targets = {lookup(path) for path in operands} - {None}
+            for target in targets:
+                callers[target].add(owner)
             children[owner].update(targets)
 
-    def isolated_prefix(root_file, matched):
+    def isolated_prefix(root_file, matched, wave_targets):
         todo, visited = [root_file], set()
         while todo:
             path = todo.pop()
             if path in visited:
                 continue
-            if path not in matched or references[path] != 1:
+            if path not in matched or path in wave_targets or not callers[path].issubset(matched):
                 return False
             visited.add(path)
             todo.extend(children.get(path, ()))
@@ -182,7 +190,8 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
             path = sibling_path.casefold()
             if expected is None or root_file == next_expected():
                 # An isolated leaf cannot change any later wave decision.
-                affects_wave = references[root_file] > 1 or load(root_file).include_directives or lookups[path] > 1
+                affects_wave = (len(callers[root_file]) > 1 or children.get(root_file)
+                                or len(lookup_sites[path]) > 1)
                 if affects_wave and is_legal_phantom(path):
                     fallback.setdefault(path, root_file)
                 return None
@@ -199,9 +208,10 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
 
         # Verify from the Starter with every deduced file present from the start.
         verified_order = []
+        wave_targets = set()
         if not any(parent.as_posix() in phantoms for path in phantoms for parent in PurePosixPath(path).parents):
             reached, _, problems = _walk_includes(root, disk_lookup, load_archived, scope, {}, {}, historical,
-                                                  load_order=verified_order)
+                                                  load_order=verified_order, wave_targets=wave_targets)
             if (not problems and reached == archive_inventory
                     and (expected is None or verified_order == expected)):
                 if load_order is not None:
@@ -217,17 +227,17 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
             stalled += 1
             if stalled >= _MAX_8E85_STALLED_WALKS:
                 return False
-        # Delaying an entire private subtree already consumed in order cannot
-        # change later bindings. Keep alternatives that cross the mismatch or
-        # affect a path shared with another branch.
+        # A shared target entirely within the matched prefix is harmless when
+        # neither its callers nor any pending choice need it after that prefix.
         matched = set(verified_order[:prefix])
         candidates = ((path,) for path, target in reversed(fallback.items())
-                      if lookups[path] > 1 or not isolated_prefix(target, matched))
+                      if len(lookup_sites[path]) > 1 or not isolated_prefix(target, matched, wave_targets))
         pending.append(map(alternatives.union, candidates))
     return False
 
 
-def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *, load_order=None, deduce_sibling=None):
+def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *, load_order=None, deduce_sibling=None,
+                   wave_targets=None):
     reached, explicit = set(), set()
     bindings, problems = {}, []
     outgoing = defaultdict(set)
@@ -282,7 +292,8 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
                 if not (root_file or sibling):
                     raise PrepError("include_missing", "INCLUDE 파일이 없습니다.", {"path": logical})
                 if (deduce_sibling is not None and owner != root and sibling_path != root_path
-                        and root_file is not None and root_file not in reached and sibling is None):
+                        and root_file is not None and root_file not in reached and sibling is None
+                        and not (historical == "ac0" and len(relative.parts) > 1)):
                     sibling = deduce_sibling(sibling_path, root_file)
                 if root_file and sibling and root_file != sibling:
                     if key in selected:
@@ -298,6 +309,8 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
                         follow(owner, directive, sibling if root_file in chain else root_file, chain)
                     else:
                         pending.append((owner, directive, root_file, sibling, chain))
+                        if wave_targets is not None:
+                            wave_targets.update((root_file, sibling))
                 else:
                     target = root_file or sibling
                     if len(relative.parts) > 1:

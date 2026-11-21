@@ -12,6 +12,7 @@ import pytest
 
 from caelab_prep.application import PrepSession
 from caelab_prep.cae_core import PrepError
+from caelab_prep.radioss import includes
 from caelab_prep.radioss.modeling import material_block, shell_block, solid_block
 from test_condition_workflow import _base_model, _card, _i
 
@@ -585,6 +586,70 @@ def test_8e85_reopens_signed_archive_with_delayed_includes(tmp_path, file_count)
     group = _card(session, "/GRSHEL/SHEL/48")["id"]
     assert session.group_members(group)["member_ids"] == [9008]
     assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
+
+
+@pytest.mark.parametrize("name,count", (("ac0a255-qualified-70-includes", 70),
+                                          ("8e85a669-signed-shared-includes", 19),
+                                          ("8e85a669-signed-repeated-24-includes", 24)))
+def test_historical_include_search_skips_irrelevant_prefix_alternatives(tmp_path, monkeypatch, name, count):
+    fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
+    original_walk = includes._walk_includes
+    deductions = 0
+    disk_policy = "ac0" if name.startswith("ac0") else None
+
+    def count_deductions(root, lookup, load, scope, selected, recovered, historical, **options):
+        nonlocal deductions
+        deductions += historical == disk_policy and options.get("deduce_sibling") is not None
+        return original_walk(root, lookup, load, scope, selected, recovered, historical, **options)
+
+    monkeypatch.setattr(includes, "_walk_includes", count_deductions)
+    session = PrepSession()
+    for index in range(3):
+        before = deductions
+        session.open_project(fixture)
+        assert len(session.source_models()[0]["files"]) == count
+        assert deductions - before < 10
+        fixture = tmp_path / f"saved-{index}.caeprep"
+        session.save_project(fixture)
+    exported = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(exported)
+    session.open_rad(exported)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+    if name.startswith("8e85"):
+        group = _card(session, "/GRSHEL/SHEL/48")["id"]
+        assert session.group_members(group)["member_ids"] == [9008]
+        assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
+
+
+@pytest.mark.parametrize("writer", ("ac0a255", "bde82a5", "8e85a669"))
+def test_two_file_quad_mapping_requires_historical_allocation_order(tmp_path, writer):
+    fixture = Path(__file__).with_name("fixtures") / f"{writer}-quad-two-file.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    exported = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(exported)
+    session.open_rad(exported)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+    with zipfile.ZipFile(fixture) as archive:
+        members = {member: archive.read(member) for member in archive.namelist()}
+    manifest = json.loads(members.pop("manifest.json"))
+    source, = manifest["source_models"]
+    old, new = ("E:SHELL", "E:QUAD") if writer == "ac0a255" else ("E:QUAD", "E:SHELL")
+    entry = next(entry for entry in source["id_map"] if entry[:2] == [old, 9007])
+    entry[0] = new
+    for order in ("original", "sorted"):
+        if order == "sorted":
+            source["id_map"].sort()
+        altered = tmp_path / f"{order}.caeprep"
+        with zipfile.ZipFile(altered, "w") as archive:
+            archive.writestr("manifest.json", json.dumps(manifest).encode())
+            for member, payload in members.items():
+                archive.writestr(member, payload)
+        with pytest.raises(PrepError) as error:
+            session.open_project(altered)
+        assert error.value.code == "invalid_project"
 
 
 @pytest.mark.parametrize("name", ("bde82a5-quad-14-includes", "bde82a5-quad-qualified-order",
