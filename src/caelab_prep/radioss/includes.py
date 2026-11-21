@@ -231,7 +231,8 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
         # neither its callers nor any pending choice need it after that prefix.
         matched = set(verified_order[:prefix])
         candidates = ((path,) for path, target in reversed(fallback.items())
-                      if len(lookup_sites[path]) > 1 or not isolated_prefix(target, matched, wave_targets))
+                      if any(site[0] not in matched for site in lookup_sites[path])
+                      or not isolated_prefix(target, matched, wave_targets))
         pending.append(map(alternatives.union, candidates))
     return False
 

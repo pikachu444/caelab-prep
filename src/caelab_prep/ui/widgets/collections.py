@@ -234,6 +234,7 @@ _HASH_SCALARS = _PLAIN_PRIMITIVES | {
     PurePosixPath, PureWindowsPath, PosixPath, WindowsPath,
 }
 _ROW_ID_ROLE = Qt.ItemDataRole.UserRole + 1
+_DICT_KEYS = type({}.keys())
 
 
 def _proxy_target(value):
@@ -295,9 +296,7 @@ def _sqlite_description(row):
     return tuple((name, None, None, None, None, None, None) for name in row.keys())
 
 
-def _copy_ref_state(ref, clone, memo):
-    if hasattr(ref, "__dict__"):
-        object.__setattr__(clone, "__dict__", _clone_ref(vars(ref), memo))
+def _ref_slots(ref):
     for base in type(ref).__mro__:
         for member in vars(base).values():
             if isinstance(member, MemberDescriptorType):
@@ -305,7 +304,39 @@ def _copy_ref_state(ref, clone, memo):
                     value = member.__get__(ref)
                 except AttributeError:
                     continue
-                member.__set__(clone, _clone_ref(value, memo))
+                yield member, value
+
+
+def _copy_ref_state(ref, clone, memo):
+    if hasattr(ref, "__dict__"):
+        object.__setattr__(clone, "__dict__", _clone_ref(vars(ref), memo))
+    for member, value in _ref_slots(ref):
+        member.__set__(clone, _clone_ref(value, memo))
+
+
+def _frozen_state_values(ref):
+    attributes = getattr(ref, "__dict__", {})
+    yield from attributes.values()
+    yield from (value for _, value in _ref_slots(ref))
+    for member in fields(ref):
+        if member.name not in attributes:
+            try:
+                yield getattr(ref, member.name)
+            except AttributeError:
+                continue
+
+
+def _clone_sqlalchemy_row(ref, memo):
+    state = ref.__getstate__()
+    items = state["_data"]
+    values = tuple(_clone_ref(item, memo) for item in items)
+    if all(value is item for value, item in zip(values, items)):
+        return ref
+    kind = type(ref)
+    clone = kind.__new__(kind)
+    # The original parent preserves both string and SQL-expression lookups.
+    clone.__setstate__({**state, "_data": values})
+    return memo.setdefault(id(ref), clone)
 
 
 def _clone_ref(ref, memo=None):
@@ -323,22 +354,53 @@ def _clone_ref(ref, memo=None):
         return memo[key]
     if kind is MappingProxyType:
         return memo.setdefault(key, MappingProxyType(_clone_ref(_proxy_target(ref), memo)))
-    if kind is dict or (isinstance(ref, dict) and kind.__setitem__ in (dict.__setitem__, OrderedDict.__setitem__)):
+    if kind is bytearray:
+        return memo.setdefault(key, bytearray(ref))
+    if kind is memoryview:
+        snapshot = memoryview(ref.tobytes())
+        if (snapshot.format, snapshot.shape) != (ref.format, ref.shape):
+            try:
+                snapshot = snapshot.cast(ref.format, ref.shape)
+            except (TypeError, ValueError):
+                pass
+        return memo.setdefault(key, snapshot)
+    if kind is _DICT_KEYS:
+        return memo.setdefault(key, dict.fromkeys(_clone_ref(name, memo) for name in ref).keys())
+    if isinstance(ref, dict):
         clone = {} if kind is dict else copy(ref)
+        if clone is ref:
+            # Immutable dict subclasses may implement copy as an identity
+            # operation. Rebuild them without ever clearing the original.
+            return memo.setdefault(key, kind((_clone_ref(name, memo), _clone_ref(value, memo))
+                                             for name, value in ref.items()))
         if isinstance(clone, OrderedDict):
             OrderedDict.clear(clone)
+            set_item = OrderedDict.__setitem__
         else:
             dict.clear(clone)
+            set_item = dict.__setitem__
         memo[key] = clone
         for name, value in ref.items():
-            clone[_clone_ref(name, memo)] = _clone_ref(value, memo)
-    elif isinstance(ref, Mapping) and (isinstance(ref, dict) or not isinstance(ref, MutableMapping)):
+            set_item(clone, _clone_ref(name, memo), _clone_ref(value, memo))
+    elif kind is getattr(sys.modules.get("sqlalchemy.engine.row"), "RowMapping", None):
+        return _clone_sqlalchemy_row(ref, memo)
+    elif isinstance(ref, Mapping) and not isinstance(ref, MutableMapping):
         entries = tuple(ref.items())
         pairs = tuple((_clone_ref(name, memo), _clone_ref(value, memo)) for name, value in entries)
-        if all(key is old_key and value is old_value for (key, value), (old_key, old_value) in zip(pairs, entries)):
+        state = tuple(getattr(ref, "__dict__", {}).values()) + tuple(value for _, value in _ref_slots(ref))
+        probe = memo | {key: ref}
+        if (all(name is old_name and value is old_value for (name, value), (old_name, old_value) in zip(pairs, entries))
+                and all(_clone_ref(value, probe) is value for value in state)):
             return ref
-        # Views such as SQLAlchemy RowMapping cannot be constructed from
-        # detached entries. A plain dict retains their structural equality.
+        if state:
+            try:
+                clone = copy(ref)
+            except TypeError:
+                clone = ref
+            if clone is not ref:
+                memo[key] = clone
+                _copy_ref_state(ref, clone, memo)
+                return clone
         try:
             clone = kind(pairs)
         except (AttributeError, TypeError):
@@ -353,8 +415,9 @@ def _clone_ref(ref, memo=None):
             clone.update(values)
         else:
             clone.extend(values)
-    elif (isinstance(ref, (tuple, frozenset, sqlite3.Row, _SQLiteRowSnapshot))
-          or kind is getattr(sys.modules.get("sqlalchemy.engine.row"), "Row", None)):
+    elif kind is getattr(sys.modules.get("sqlalchemy.engine.row"), "Row", None):
+        return _clone_sqlalchemy_row(ref, memo)
+    elif isinstance(ref, (tuple, frozenset, sqlite3.Row, _SQLiteRowSnapshot)):
         items = tuple(ref)
         values = tuple(_clone_ref(item, memo) for item in items)
         unchanged = all(value is item for value, item in zip(values, items))
@@ -366,12 +429,8 @@ def _clone_ref(ref, memo=None):
             clone = tuple.__new__(kind, values)
         elif isinstance(ref, frozenset):
             clone = frozenset.__new__(kind, values)
-        elif isinstance(ref, (sqlite3.Row, _SQLiteRowSnapshot)):
-            return memo.setdefault(key, _SQLiteRowSnapshot(_sqlite_description(ref), values))
         else:
-            clone = kind.__new__(kind)
-            clone.__setstate__({**ref.__getstate__(), "_data": values})
-            return memo.setdefault(key, clone)
+            return memo.setdefault(key, _SQLiteRowSnapshot(_sqlite_description(ref), values))
         memo[key] = clone
     elif isinstance(ref, (Enum, Number)) or (kind.__eq__ is object.__eq__ and not isinstance(ref, Mapping)):
         # Identity-valued references, such as an ORM entity, must stay attached.
@@ -383,11 +442,11 @@ def _clone_ref(ref, memo=None):
             # numbers.Number. Keep the widget package independent of NumPy.
             return ref
         if is_dataclass(ref) and kind.__dataclass_params__.frozen:
-            values = tuple(getattr(ref, member.name) for member in fields(ref))
-            if all(_clone_ref(value, memo) is value for value in values):
+            # Treat back-references as unchanged while probing. If any state
+            # needs detaching, revisit it with the real clone in the memo.
+            probe = memo | {key: ref}
+            if all(_clone_ref(value, probe) is value for value in _frozen_state_values(ref)):
                 return ref
-            if key in memo:
-                return memo[key]
         clone = object.__new__(kind)
         memo[key] = clone
     if kind not in (dict, list, set, tuple, frozenset, deque):

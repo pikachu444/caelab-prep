@@ -4,6 +4,8 @@ from collections.abc import Mapping, Set
 from dataclasses import dataclass, field
 from decimal import Decimal
 from fractions import Fraction
+from functools import cached_property
+from http.cookies import Morsel
 import os
 import sqlite3
 from time import perf_counter
@@ -449,14 +451,104 @@ def test_reference_editor_accepts_sqlalchemy_row_mapping_and_isolates_mutable_va
             editor = ReferenceListEdit(({"local_id": 201},), choices=(ref,))
             assert editor.list.count() == 1
             assert editor.value() == (ref,)
-            expression = sqlalchemy.bindparam("ids", [201], type_=sqlalchemy.JSON).label("nodes")
+            expression = sqlalchemy.literal([201], type_=sqlalchemy.JSON).label("nodes")
             ref = connection.execute(sqlalchemy.select(expression)).one()._mapping
             editor = ReferenceListEdit((ref,), choices=(ref,))
-            editor.raw_value()[0]["nodes"].append(404)
+            draft, = editor.raw_value()
+            assert draft[expression] == [201]
+            draft["nodes"].append(404)
             ref["nodes"].append(404)
-            assert editor.value() == ({"nodes": [201]},)
+            result, = editor.value()
+            assert type(result) is type(ref)
+            assert result[expression] == result["nodes"] == [201]
     finally:
         engine.dispose()
+
+
+@pytest.mark.parametrize("kind", ("morsel", "html-flat", "html-nested"))
+def test_reference_editor_detaches_mutable_dict_subclasses(kind):
+    if kind.startswith("html"):
+        mapping = pytest.importorskip("bs4.element").HTMLAttributeDict
+        values = (["/101"], ["/404"]) if kind == "html-nested" else ("/101", "/404")
+        choice, stale = (mapping(path=value) for value in values)
+    else:
+        choice, stale = Morsel(), Morsel()
+        for ref, value in ((choice, "/101"), (stale, "/404")):
+            ref.set("shell", "shell", "shell")
+            ref["path"] = value
+    editor = ReferenceListEdit((stale,), choices=(choice,))
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+    draft, = editor.raw_value()
+    assert type(draft) is type(stale) and draft is not stale
+    if kind == "html-nested":
+        draft["path"][0] = "/101"
+        assert stale["path"] == editor.raw_value()[0]["path"] == ["/404"]
+    else:
+        draft["path"] = "/101"
+        if kind == "morsel":
+            assert draft.key == stale.key == "shell"
+        assert stale["path"] == editor.raw_value()[0]["path"] == "/404"
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+
+
+def test_reference_editor_preserves_frozen_row_with_uninitialized_slot():
+    @dataclass(frozen=True, slots=True)
+    class Reference:
+        local_id: int
+        _cache: list = field(init=False, repr=False, compare=False)
+
+    ref = Reference(101)
+    editor = ReferenceListEdit((ref,), choices=(ref,))
+    assert editor.value()[0] is ref
+    assert not hasattr(editor.value()[0], "_cache")
+
+
+@pytest.mark.parametrize("cached", (False, True))
+def test_reference_editor_preserves_frozen_cycles_and_detaches_caches(cached):
+    @dataclass(frozen=True)
+    class Reference:
+        local_id: int
+        back: object = field(init=False, repr=False, compare=False)
+
+        @cached_property
+        def members(self):
+            return [self.local_id]
+
+    ref = Reference(101)
+    object.__setattr__(ref, "back", ref)
+    if cached:
+        assert ref.members == [101]
+    editor = ReferenceListEdit((ref,), choices=(ref,))
+    draft, = editor.raw_value()
+    assert draft.back is draft
+    if cached:
+        draft.members[0] = 404
+        assert ref.members == editor.value()[0].members == [101]
+    else:
+        assert editor.value()[0] is ref
+
+
+@pytest.mark.parametrize("kind", ("bytearray", "memoryview", "dict_keys"))
+def test_reference_editor_snapshots_buffers_and_key_views(kind):
+    if kind == "dict_keys":
+        backing = {"shell": 101}
+        ref = backing.keys()
+    else:
+        backing = bytearray(b"X")
+        ref = memoryview(backing) if kind == "memoryview" else backing
+    editor = ReferenceListEdit((ref,), choices=(ref,))
+    value, = editor.value()
+    assert type(value) is type(ref) and value == ref
+    if kind == "dict_keys":
+        backing["new shell"] = 404
+        assert set(editor.value()[0]) == {"shell"}
+    else:
+        backing[0] = ord("Y")
+        if kind == "bytearray":
+            value[0] = ord("Z")
+        assert bytes(editor.value()[0]) == b"X"
 
 
 def test_reference_editor_handles_frozendict_choices_without_mutating_them():

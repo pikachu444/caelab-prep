@@ -25,6 +25,39 @@ _UNRECORDED_INCLUDE_PROFILES = {
 }
 
 
+def _validate_element_allocation(mapping):
+    """Check the writer's element cursor without assuming the host is unedited."""
+    elements = [(original, mapped) for (namespace, original), mapped in sorted(mapping.items())
+                if namespace.startswith("E:")]
+    mapped_ids = {mapped for _, mapped in elements}
+    assigned = set()
+    first = cursor = None
+    highest = 0
+    for original, mapped in elements:
+        if mapped != original:
+            # Mapped IDs are all free in the original host. A collision with
+            # one of them is possible only after that source ID was assigned.
+            collision_possible = (original in assigned or
+                                  (original not in mapped_ids and (first is None or original < first)))
+            if cursor is None:
+                # The initial cursor starts above the host and the prefix.
+                # A future unchanged m-1 could not have been occupied by either.
+                allocation_possible = (mapped > max(highest, original)
+                                       and (mapped - 1 not in mapped_ids or mapped - 1 in assigned))
+                first = mapped
+            else:
+                # The host is below the first allocation. The running cursor
+                # can skip only IDs already assigned while importing the source.
+                while cursor in assigned:
+                    cursor += 1
+                allocation_possible = mapped == cursor
+            if not (collision_possible and allocation_possible):
+                raise PrepError("invalid_project", "Remapped element IDs do not follow the source allocation order.")
+            cursor = mapped + 1
+        assigned.add(mapped)
+        highest = max(highest, mapped)
+
+
 class SourceArchiveResource:
     kind = "radioss-source-archive"
 
@@ -98,13 +131,7 @@ class SourceArchiveResource:
             for item in self.metadata["files"]]
         mapping = NativeMap({(ns, original): mapped for ns, original, mapped in self.metadata["id_map"]},
                             shared={("NODE", value) for value in self.metadata["shared_nodes"]})
-        # Writers visit definitions in sorted order and share one increasing
-        # allocation cursor across every element namespace. Unchanged IDs never
-        # use that cursor. This applies even when INCLUDE replay is identical.
-        assigned = [mapped for (namespace, original), mapped in sorted(mapping.items())
-                    if namespace.startswith("E:") and mapped != original]
-        if any(earlier >= later for earlier, later in zip(assigned, assigned[1:])):
-            raise PrepError("invalid_project", "Remapped element IDs do not follow the source allocation order.")
+        _validate_element_allocation(mapping)
         reader_matches = []
         inspection_errors = []
         # The historical field rules must hold across all originals together.

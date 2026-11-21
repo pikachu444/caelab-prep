@@ -590,7 +590,8 @@ def test_8e85_reopens_signed_archive_with_delayed_includes(tmp_path, file_count)
 
 @pytest.mark.parametrize("name,count", (("ac0a255-qualified-70-includes", 70),
                                           ("8e85a669-signed-shared-includes", 19),
-                                          ("8e85a669-signed-repeated-24-includes", 24)))
+                                          ("8e85a669-signed-repeated-24-includes", 24),
+                                          ("8e85a669-signed-same-directory-includes", 14)))
 def test_historical_include_search_skips_irrelevant_prefix_alternatives(tmp_path, monkeypatch, name, count):
     fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
     original_walk = includes._walk_includes
@@ -623,8 +624,9 @@ def test_historical_include_search_skips_irrelevant_prefix_alternatives(tmp_path
 
 
 @pytest.mark.parametrize("writer", ("ac0a255", "bde82a5", "8e85a669"))
-def test_two_file_quad_mapping_requires_historical_allocation_order(tmp_path, writer):
-    fixture = Path(__file__).with_name("fixtures") / f"{writer}-quad-two-file.caeprep"
+@pytest.mark.parametrize("geometry", ("two-file", "unchanged-triangle"))
+def test_two_file_quad_mapping_requires_historical_allocation_order(tmp_path, writer, geometry):
+    fixture = Path(__file__).with_name("fixtures") / f"{writer}-quad-{geometry}.caeprep"
     session = PrepSession()
     session.open_project(fixture)
     exported = tmp_path / "native/case_0000.rad"
@@ -638,6 +640,9 @@ def test_two_file_quad_mapping_requires_historical_allocation_order(tmp_path, wr
     source, = manifest["source_models"]
     old, new = ("E:SHELL", "E:QUAD") if writer == "ac0a255" else ("E:QUAD", "E:SHELL")
     entry = next(entry for entry in source["id_map"] if entry[:2] == [old, 9007])
+    if geometry == "unchanged-triangle":
+        assert ["E:SH3N", 9900, 9900] in source["id_map"]
+        assert entry[2] == (9901 if writer == "ac0a255" else 9008)
     entry[0] = new
     for order in ("original", "sorted"):
         if order == "sorted":
@@ -650,6 +655,18 @@ def test_two_file_quad_mapping_requires_historical_allocation_order(tmp_path, wr
         with pytest.raises(PrepError) as error:
             session.open_project(altered)
         assert error.value.code == "invalid_project"
+
+
+def test_element_allocation_cursor_can_continue_below_an_unchanged_id(tmp_path):
+    fixture = Path(__file__).with_name("fixtures") / "8e85a669-quad-allocation-cursor.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    entries = [entry for entry in session.source_models()[0]["id_map"] if entry[0].startswith("E:")]
+    assert entries == [["E:QUAD", 9007, 9008], ["E:SH3N", 9900, 9900], ["E:SHELL", 7001, 9009]]
+    target = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    assert len(session.mesh_view()["cells"]) == 5
 
 
 @pytest.mark.parametrize("name", ("bde82a5-quad-14-includes", "bde82a5-quad-qualified-order",
