@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 from ..cae_core import CommandDispatcher, PrepError
 from ..radioss import DeckResource
 from ..radioss.assembly import inspect, remap, identity, is_legacy_zero_padding, NativeMap, source_include_graph
+from ..radioss.includes import source_disk_siblings
 from .projection import readonly, mutable
 
 
@@ -64,9 +65,14 @@ class SourceArchiveResource:
     kind = "radioss-source-archive"
 
     def __init__(self, metadata, files):
-        if not isinstance(metadata, dict) or set(metadata) - {"include_bindings"} != {
+        if not isinstance(metadata, dict) or set(metadata) - {"include_bindings", "uncollected_include_siblings"} != {
                 "id", "name", "root_resource_id", "files", "id_map", "shared_nodes"}:
             raise PrepError("invalid_project", "Invalid source archive metadata.")
+        if "uncollected_include_siblings" in metadata:
+            siblings = metadata["uncollected_include_siblings"]
+            if (not isinstance(siblings, list) or not siblings
+                    or any(not isinstance(path, str) for path in siblings) or len(set(siblings)) != len(siblings)):
+                raise PrepError("invalid_project", "Invalid uncollected INCLUDE siblings.")
         self.id = metadata["id"]; UUID(self.id)
         if not isinstance(metadata["name"], str) or not isinstance(metadata["files"], list) or not metadata["files"]:
             raise PrepError("invalid_project", "An archive must identify its source files.")
@@ -180,6 +186,8 @@ class SourceArchiveResource:
                 raise PrepError("invalid_project", "Original source INCLUDE bindings are incomplete.")
         # Later writers can share both mapped bytes and native first-visit order.
         archived_order = [item["original_path"] for item in self.metadata["files"]]
+        siblings = self.metadata.get("uncollected_include_siblings")
+        uncollected_siblings = set(siblings) if siblings is not None else None
         matches = {}
         mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
         mapped_keys = {(resource.name, directive.header_row): (mapped_ids[resource.name], ordinal)
@@ -190,7 +198,8 @@ class SourceArchiveResource:
                 continue
             load_order = []
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
-                                         archived_order=archived_order, load_order=load_order)
+                                         archived_order=archived_order, load_order=load_order,
+                                         uncollected_siblings=uncollected_siblings)
             reached, original_bindings, _ = graph
             if reached != set(paths) or load_order != archived_order:
                 continue
@@ -422,10 +431,14 @@ class SourceModelCommands:
                 if original.id == source._root_id: root_id = converted.id
                 records.append(dict(original_resource_id=original.id, resource_id=converted.id,
                     original_path=source._paths[original.id], logical_path=logical, sha256=sha256(original.raw).hexdigest()))
-            archive = SourceArchiveResource(dict(id=source_id, name=Path(path).name, root_resource_id=root_id,
+            metadata = dict(id=source_id, name=Path(path).name, root_resource_id=root_id,
                 files=records, id_map=[[ns, original, mapped] for (ns, original), mapped in sorted(mapping.items())],
                 shared_nodes=sorted(shared), include_bindings=[[owner, ordinal, target]
-                    for (owner, ordinal), target in source._include_bindings.items()]), files)
+                    for (owner, ordinal), target in source._include_bindings.items()])
+            siblings = source_disk_siblings(Path(path).expanduser().resolve().parent, original_resources)
+            if siblings:
+                metadata["uncollected_include_siblings"] = siblings
+            archive = SourceArchiveResource(metadata, files)
             plan_id = str(uuid4())
             self._import_plan = (plan_id, document.id, document.revision, self._document_epoch, archive, tuple(resources), source._source_paths)
             return {"plan_id": plan_id, "document_id": document.id, "revision": document.revision,

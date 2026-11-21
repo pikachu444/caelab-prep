@@ -244,7 +244,7 @@ _CACHED_PROPERTY_TYPES = WeakKeyDictionary()
 
 
 class _DetachedViewDict(dict):
-    __slots__ = ("_source_view_id",)
+    __slots__ = ("_origin_view",)
 
 
 class _ReferenceMemo(dict):
@@ -259,8 +259,8 @@ def _proxy_target(value):
     return target
 
 
-def _view_source_id(view):
-    return getattr(_proxy_target(view.mapping), "_source_view_id", id(view))
+def _view_origin(view):
+    return getattr(_proxy_target(view.mapping), "_origin_view", view)
 
 
 def _unwrap_standard_dict(value):
@@ -506,7 +506,7 @@ def _clone_ref(ref, memo=None):
     if kind in _DICT_VIEWS:
         if kind is _DICT_VALUES:
             backing = _DetachedViewDict()
-            backing._source_view_id = _view_source_id(ref)
+            backing._origin_view = _view_origin(ref)
         else:
             backing = {}
         memo[key] = _DICT_VIEWS[kind](backing)
@@ -595,6 +595,8 @@ def _clone_ref(ref, memo=None):
                 else:
                     for index in numpy.ndindex(clone.shape):
                         clone[index] = _clone_ref(clone[index], memo)
+            if kind is not numpy.ndarray:
+                _copy_ref_state(ref, clone, memo)
             return clone
         if is_dataclass(kind) and kind.__dataclass_params__.frozen:
             if _share_frozen_state(ref, memo, memo.unshareable):
@@ -653,8 +655,50 @@ def _bucket_key(value):
 
 def _same_dict_values(left, right, compared):
     return (type(left) is type(right) is _DICT_VALUES
-            and _view_source_id(left) == _view_source_id(right)
+            and _view_origin(left) is _view_origin(right)
             and _safe_equal(dict(left.mapping), dict(right.mapping), compared))
+
+
+def _equality_method(value):
+    while type(value) is MappingProxyType:
+        value = _proxy_target(value)
+    return type(value).__eq__
+
+
+def _structural_equality(value):
+    return type(value) is _DICT_ITEMS or _equality_method(value) in (
+        dict.__eq__, Mapping.__eq__, OrderedDict.__eq__, list.__eq__, tuple.__eq__)
+
+
+def _equal_array_data(left, right, numpy, compared):
+    if not left.dtype.hasobject:
+        return bool(numpy.array_equal(left, right))
+    if left.dtype.names:
+        return all(_safe_equal(left[name], right[name], compared) for name in left.dtype.names)
+    return all(_safe_equal(a, b, compared) for a, b in zip(left.flat, right.flat))
+
+
+def _equal_arrays(left, right, numpy, compared):
+    kind = type(left)
+    if kind is not type(right) or left.shape != right.shape or left.dtype != right.dtype:
+        return False
+    if kind is numpy.ndarray:
+        return _equal_array_data(left, right, numpy, compared)
+    if isinstance(left, numpy.ma.MaskedArray):
+        mask = numpy.ma.getmaskarray(left)
+        if not numpy.array_equal(mask, numpy.ma.getmaskarray(right)):
+            return False
+        if mask.dtype.names:
+            return all(_safe_equal(left[name], right[name], compared) for name in mask.dtype.names)
+        return _equal_array_data(numpy.ma.getdata(left)[~mask], numpy.ma.getdata(right)[~mask], numpy, compared)
+    try:
+        equal = left == right
+    except (ValueError, RecursionError):
+        return False
+    if isinstance(equal, (bool, numpy.bool_)):
+        return bool(equal)
+    return (isinstance(equal, numpy.ndarray) and equal.dtype.kind == "b" and bool(equal.all())
+            and _safe_equal(getattr(left, "__dict__", {}), getattr(right, "__dict__", {}), compared))
 
 
 def _safe_equal(left, right, compared=None):
@@ -667,9 +711,13 @@ def _safe_equal(left, right, compared=None):
     array_value = isinstance(left, ndarray) or isinstance(right, ndarray)
     if not values_view and not array_value:
         try:
-            return bool(left == right)
+            if bool(left == right):
+                return True
         except (ValueError, RecursionError):
             pass
+        else:
+            if left_kind is not right_kind or not (_structural_equality(left) and _structural_equality(right)):
+                return False
     if compared is None:
         compared = set()
     pair = (id(left), id(right))
@@ -680,16 +728,12 @@ def _safe_equal(left, right, compared=None):
         if values_view:
             return _same_dict_values(left, right, compared)
         if array_value:
-            if left_kind is not right_kind or left.shape != right.shape or left.dtype != right.dtype:
-                return False
-            if not left.dtype.hasobject:
-                return bool(numpy.array_equal(left, right))
-            if left.dtype.names:
-                return all(_safe_equal(left[name], right[name], compared) for name in left.dtype.names)
-            return all(_safe_equal(a, b, compared) for a, b in zip(left.flat, right.flat))
+            return _equal_arrays(left, right, numpy, compared)
         if left_kind is right_kind is _DICT_ITEMS:
             return _safe_equal(left.mapping, right.mapping, compared)
         if isinstance(left, Mapping) and isinstance(right, Mapping):
+            if _equality_method(left) is _equality_method(right) is OrderedDict.__eq__ and tuple(left) != tuple(right):
+                return False
             return len(left) == len(right) and all(
                 key in right and _safe_equal(left[key], right[key], compared) for key in left)
         if left_kind is right_kind and isinstance(left, (list, tuple)):
@@ -786,9 +830,15 @@ class ReferenceListEdit(QWidget):
         available_rows = self._row_available
 
         def add_row(ref, label, selected, available):
-            snapshot = ref if available else _clone_ref(ref)
+            memo = _ReferenceMemo() if is_dataclass(type(ref)) else None
+            snapshot = _clone_ref(ref, memo)
+            if memo is not None:
+                # Reuse the state inspection, never the detached objects.
+                for key in tuple(memo):
+                    if id(memo[key]) != key:
+                        del memo[key]
             item = item_type(label)
-            item.setData(user_role, snapshot)
+            item.setData(user_role, _clone_ref(ref, memo))
             item.setData(row_role, len(rows))
             item.setToolTip(label)
             item.setFlags(flags)

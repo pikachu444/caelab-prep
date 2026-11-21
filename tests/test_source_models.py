@@ -630,6 +630,47 @@ def test_historical_include_search_skips_irrelevant_prefix_alternatives(tmp_path
         assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
 
 
+def test_recorded_ambiguous_include_cannot_authorize_swapped_wave_order(tmp_path):
+    starter = model(tmp_path / "source")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                                                    b"#include a/chooser.inc\n#include a/mesh.inc\n"))
+    sibling = starter.parent / "a"
+    sibling.mkdir()
+    (sibling / "chooser.inc").write_text("#include mesh.inc\n")
+    (sibling / "mesh.inc").write_text("# wave-one sibling\n")
+
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    session.create_analysis_case("Recorded INCLUDE wave", [], .01, .001, "s")
+    for version in range(3):
+        project = tmp_path / f"wave-{version}.caeprep"
+        session.save_project(project)
+        session.open_project(project)
+    target = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    assert session.describe()["node_count"] == 8 and session.describe()["element_count"] == 2
+
+    with zipfile.ZipFile(project) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    assert len(source["include_bindings"]) == 3
+    files = source["files"]
+    assert [item["original_path"] for item in files] == [starter.name, "a/chooser.inc", "a/mesh.inc", "mesh.inc"]
+    files[-2], files[-1] = files[-1], files[-2]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "swapped.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for name, data in members.items():
+            archive.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        session.open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
 def test_current_import_reopens_exact_recorded_chooser_bindings_in_one_walk(tmp_path, monkeypatch):
     fixture = Path(__file__).with_name("fixtures") / "8e85a669-signed-25-borrowed-choosers.caeprep"
     source_dir = tmp_path / "input"
@@ -646,6 +687,9 @@ def test_current_import_reopens_exact_recorded_chooser_bindings_in_one_walk(tmp_
     plan = session.plan_import_source(source_dir / meta["name"])
     assert len(plan["source"]["files"]) == 25
     assert len(plan["source"]["include_bindings"]) == 39
+    assert set(plan["source"]["uncollected_include_siblings"]) == {
+        "a/" + "c/" * depth + "trigger.inc" for depth in range(9)
+    }
     session.import_source(plan["plan_id"])
     session.create_analysis_case("Recorded chooser replay", [], .01, .001, "s")
     original = includes._walk_includes
@@ -671,6 +715,29 @@ def test_current_import_reopens_exact_recorded_chooser_bindings_in_one_walk(tmp_
     group = _card(session, "/GRSHEL/SHEL/48")["id"]
     assert session.group_members(group)["member_ids"] == [9008]
     assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
+
+    with zipfile.ZipFile(project) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    field = "uncollected_include_siblings"
+    for invalid in (True, False):
+        if invalid:
+            source[field].append("a/not-an-alternate.inc")
+        else:
+            del source[field]  # The previous writer had no explicit disk evidence.
+        members["manifest.json"] = json.dumps(manifest).encode()
+        alternate = tmp_path / f"alternate-{invalid}.caeprep"
+        with zipfile.ZipFile(alternate, "w") as archive:
+            for name, data in members.items():
+                archive.writestr(name, data)
+        if invalid:
+            with pytest.raises(PrepError) as error:
+                session.open_project(alternate)
+            assert error.value.code == "invalid_project"
+        else:
+            session.open_project(alternate)
+            assert len(session.source_models()[0]["files"]) == 25
 
 
 @pytest.mark.parametrize("writer", ("ac0a255", "bde82a5", "8e85a669"))

@@ -715,6 +715,129 @@ def test_reference_apply_keeps_view_drafts_across_property_context_refresh(kind)
         assert len(submitted) == 2
 
 
+def test_reference_values_draft_keeps_its_original_view_only_for_its_lifetime():
+    class Backing(dict):
+        pass
+
+    def saved_draft():
+        backing = Backing(id=[101])
+        view = backing.values()
+        editor = ReferenceListEdit((view,), choices=(view,))
+        draft, = editor.raw_value()
+        editor.deleteLater()
+        return draft, weakref(backing), id(view)
+
+    draft, original_backing, original_address = saved_draft()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    gc.collect()
+    assert original_backing() is not None
+    new_view = {"id": [101]}.values()
+    assert id(new_view) != original_address
+    editor = ReferenceListEdit((draft,), choices=(new_view,))
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (draft,), kind="references", choices=(new_view,)),
+    ))
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+    editor.deleteLater()
+    panel.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    del editor, panel, draft
+    gc.collect()
+    assert original_backing() is None
+
+
+@pytest.mark.parametrize("wrap", (
+    lambda view: {"members": view},
+    lambda view: MappingProxyType({"members": [view]}),
+    lambda view: {"members": (view,)}.items(),
+    lambda view: OrderedDict(members=view, other=201),
+), ids=("dict", "proxy-list", "items-tuple", "ordered-dict"))
+def test_reference_apply_keeps_nested_values_draft_across_context_refresh(wrap):
+    view = {"id": [101]}.values()
+    choice = wrap(view)
+    spec = PropertySpec("members", "Members", (choice,), kind="references", choices=(choice,))
+    panel, submitted = _reference_apply_panel((spec, PropertySpec("size", "Size", 2, unit_context={"quantity": "length"})))
+    editor = panel.editor.editors["members"]
+    editor.set_raw_value(editor.raw_value())
+    assert editor.list.count() == 1
+    panel.apply_button.click()
+    assert len(submitted) == 1 and len(submitted[0]) == 1
+    assert panel.editor.refresh_context((spec, PropertySpec("size", "Size", 2, unit_context={"quantity": "area"})))
+    panel.editor.editors["size"].setText("2")
+    panel.apply_button.click()
+    assert len(submitted) == 2 and len(submitted[1]) == 1
+
+
+def test_reference_nested_view_matching_respects_container_specific_inequality():
+    class OwnedList(list):
+        def __eq__(self, other):
+            return type(self) is type(other) and self.owner == other.owner and super().__eq__(other)
+
+    view = {"id": [101]}.values()
+    choice = OwnedList([view])
+    stale = OwnedList([view])
+    choice.owner, stale.owner = "allowed", "stale"
+    ordered = OrderedDict(members=view, other=201)
+    reverse = OrderedDict(reversed(ordered.items()))
+    for allowed, rejected in ((choice, stale), (ordered, reverse)):
+        editor = ReferenceListEdit((rejected,), choices=(allowed,))
+        with pytest.raises(ValueError, match="no longer available"):
+            editor.value()
+
+
+@pytest.mark.parametrize("masked", (False, True), ids=("owner", "mask"))
+def test_reference_apply_uses_numpy_subclass_equality_and_detaches_state(masked):
+    np = pytest.importorskip("numpy")
+    if masked:
+        choice = np.ma.array([101, 201], mask=[False, True])
+        stale = np.ma.array([101, 201], mask=[True, True])
+        equivalent = np.ma.array([101, 404], mask=[False, True])
+    else:
+        class OwnedArray(np.ndarray):
+            def __eq__(self, other):
+                if type(other) is not type(self) or self.owner != other.owner:
+                    return False
+                return super().__eq__(other)
+
+        choice, stale, equivalent = (np.array([101, 201]).view(OwnedArray) for _ in range(3))
+        choice.owner, stale.owner, equivalent.owner = ["allowed"], ["stale"], ["allowed"]
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (stale,), kind="references", choices=(choice,)),
+    ))
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+    editor = panel.editor.editors["members"]
+    editor.set_raw_value((equivalent,))
+    panel.apply_button.click()
+    result, = submitted[0]
+    assert type(result) is type(choice)
+    if masked:
+        result.mask[0] = True
+        assert not editor.value()[0].mask[0] and not choice.mask[0]
+    else:
+        assert result.owner == ["allowed"]
+        result.owner[0] = "stale"
+        assert editor.value()[0].owner == ["allowed"] and choice.owner == ["allowed"]
+
+
+def test_reference_apply_cannot_mutate_choices_through_user_role():
+    choice = array("i", [101])
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (choice,), kind="references", choices=(choice,)),
+    ))
+    editor = panel.editor.editors["members"]
+    editor.list.item(0).data(Qt.ItemDataRole.UserRole)[0] = 404
+    assert editor.value() == (array("i", [101]),)
+    editor.set_raw_value((array("i", [404]),))
+    with pytest.raises(ValueError, match="no longer available"):
+        editor.value()
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+
+
 def test_reference_apply_preserves_array_subclass_equality():
     class OwnedArray(array):
         def __eq__(self, other):
