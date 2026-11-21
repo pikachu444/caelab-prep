@@ -671,6 +671,123 @@ def test_recorded_ambiguous_include_cannot_authorize_swapped_wave_order(tmp_path
     assert error.value.code == "invalid_project"
 
 
+def test_archive_rejects_sibling_evidence_without_source_bindings(tmp_path):
+    fixture = Path(__file__).with_name("fixtures") / "8e85a669-signed-25-borrowed-choosers.caeprep"
+    with zipfile.ZipFile(fixture) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    assert "include_bindings" not in source
+    source["uncollected_include_siblings"] = ["d/leaf0.inc"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "siblings-without-bindings.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for name, data in members.items():
+            archive.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+def test_archive_rejects_sibling_evidence_with_empty_source_bindings(tmp_path):
+    starter = model(tmp_path / "source")
+    mesh = starter.with_name("mesh.inc").read_bytes().split(b"#enddata", 1)[0]
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n", mesh))
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    project = tmp_path / "one-file.caeprep"
+    session.save_project(project)
+    with zipfile.ZipFile(project) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    assert source["include_bindings"] == []
+    source["uncollected_include_siblings"] = ["extraneous.inc"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "empty-bindings.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for name, data in members.items():
+            archive.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+def test_archive_rejects_binding_that_contradicts_native_resolution(tmp_path):
+    starter = model(tmp_path / "source")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                         b"#include a/chooser.inc\n#include a/mesh.inc\n#include mesh.inc\n"))
+    sibling = starter.parent / "a"
+    sibling.mkdir()
+    (sibling / "chooser.inc").write_text("#include mesh.inc\n")
+    (sibling / "mesh.inc").write_text("# sibling mesh\n")
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    original = tmp_path / "original.caeprep"
+    session.save_project(original)
+    PrepSession().open_project(original)
+
+    with zipfile.ZipFile(original) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    assert "uncollected_include_siblings" not in source
+    files = {entry["original_path"]: entry for entry in source["files"]}
+    chooser = files["a/chooser.inc"]
+    recorded = next(entry for entry in source["include_bindings"] if entry[:2] == [chooser["original_resource_id"], 0])
+    assert recorded[2] == files["mesh.inc"]["original_resource_id"]
+    recorded[2] = files["a/mesh.inc"]["original_resource_id"]
+    mapped = f'raw/{chooser["resource_id"]}.rad'
+    members[mapped] = members[mapped].replace(files["mesh.inc"]["logical_path"].encode(),
+                                              files["a/mesh.inc"]["logical_path"].encode())
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "different-binding.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for name, data in members.items():
+            archive.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+def test_archive_records_uncollected_sibling_with_in_tree_symlink(tmp_path, monkeypatch):
+    starter = model(tmp_path / "source")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                         b"#include a/chooser.inc\n#include other.inc\n"))
+    sibling = starter.parent / "a"
+    sibling.mkdir()
+    (sibling / "chooser.inc").write_text("#include mesh.inc\n#include label.inc\n")
+    (sibling / "mesh.inc").write_text("# uncollected sibling\n")
+    for name in ("label.inc", "other.inc", "unused.inc"):
+        starter.with_name(name).write_text("# " + name + "\n")
+    alias = sibling / "label.inc"
+    alias.write_bytes(starter.with_name("unused.inc").read_bytes())
+    resolve = Path.resolve
+
+    def resolve_alias(path, *args, **kwargs):
+        return resolve(starter.with_name("unused.inc") if path == alias else path, *args, **kwargs)
+
+    with monkeypatch.context() as simulated_link:
+        simulated_link.setattr(Path, "resolve", resolve_alias)
+        session = PrepSession()
+        session.open_rad(model(tmp_path / "host"))
+        plan = session.plan_import_source(starter)
+        assert plan["source"]["uncollected_include_siblings"] == ["a/label.inc", "a/mesh.inc"]
+        session.import_source(plan["plan_id"])
+        archive = tmp_path / "linked.caeprep"
+        session.save_project(archive)
+    reopened = PrepSession()
+    reopened.open_project(archive)
+    source, = reopened.source_models()
+    assert [entry["original_path"] for entry in source["files"]] == [
+        starter.name, "a/chooser.inc", "other.inc", "mesh.inc", "label.inc",
+    ]
+
+
 def test_current_import_reopens_exact_recorded_chooser_bindings_in_one_walk(tmp_path, monkeypatch):
     fixture = Path(__file__).with_name("fixtures") / "8e85a669-signed-25-borrowed-choosers.caeprep"
     source_dir = tmp_path / "input"

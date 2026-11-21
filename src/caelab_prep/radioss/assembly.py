@@ -9,7 +9,7 @@ import re
 from functools import partial
 
 from ..cae_core import PrepError
-from .includes import include_lookup, include_lookup_with_siblings, resolve_includes
+from .includes import include_lookup, resolve_includes
 from .modeling import ELEMENT_ALIASES, native_identity
 from .relations import element_group_members
 
@@ -192,15 +192,9 @@ def source_include_graph(resources, paths, *, selected=None, historical=None, ar
     by_path = {resource.name: resource for resource in resources}
     root = next(resource.name for resource in resources if not resource.is_include)
     load = by_path.__getitem__
-    lookup = include_lookup(paths)
-    verify_disk = bool(selected) and uncollected_siblings is not None
-    if uncollected_siblings is not None:
-        disk_lookup = include_lookup_with_siblings(paths, load, lookup, uncollected_siblings)
-        if verify_disk:
-            lookup = disk_lookup
-    return resolve_includes(root, lookup, load, selected=selected, historical=historical,
+    return resolve_includes(root, include_lookup(paths), load, selected=selected, historical=historical,
                             archive_inventory=set(paths) if selected or historical in ("ac0", "bde", "8e85") else None,
-                            archived_order=archived_order, load_order=load_order, verify_disk=verify_disk)
+                            archived_order=archived_order, load_order=load_order, uncollected_siblings=uncollected_siblings)
 
 
 def remap(resources, mappings, paths, *, include_graph=None, two_line="quoted", legacy_direct_inline: bool = False,

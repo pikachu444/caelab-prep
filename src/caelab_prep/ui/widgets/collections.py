@@ -260,7 +260,8 @@ def _proxy_target(value):
 
 
 def _view_origin(view):
-    return getattr(_proxy_target(view.mapping), "_origin_view", view)
+    backing = _proxy_target(view.mapping)
+    return backing._origin_view if type(backing) is _DetachedViewDict else view
 
 
 def _unwrap_standard_dict(value):
@@ -587,14 +588,17 @@ def _clone_ref(ref, memo=None):
             clone = ref.copy()
             memo[key] = clone
             if clone.dtype.hasobject:
+                masked = isinstance(clone, numpy.ma.MaskedArray)
+                original = numpy.ma.getdata(ref) if masked else ref
+                data = numpy.ma.getdata(clone) if masked else clone
                 if clone.dtype.names:
-                    original_fields = [(name, ref[name]) for name in clone.dtype.names]
+                    original_fields = [(name, original[name]) for name in clone.dtype.names]
                     for name, values in original_fields:
                         if values.dtype.hasobject:
-                            clone[name] = _clone_ref(values, memo)
+                            data[name] = _clone_ref(values, memo)
                 else:
                     for index in numpy.ndindex(clone.shape):
-                        clone[index] = _clone_ref(clone[index], memo)
+                        data[index] = _clone_ref(data[index], memo)
             if kind is not numpy.ndarray:
                 _copy_ref_state(ref, clone, memo)
             return clone
@@ -656,18 +660,53 @@ def _bucket_key(value):
 def _same_dict_values(left, right, compared):
     return (type(left) is type(right) is _DICT_VALUES
             and _view_origin(left) is _view_origin(right)
-            and _safe_equal(dict(left.mapping), dict(right.mapping), compared))
+            and _equal_mappings(_proxy_target(left.mapping), _proxy_target(right.mapping), compared))
 
 
-def _equality_method(value):
+def _equality_target(value):
     while type(value) is MappingProxyType:
         value = _proxy_target(value)
-    return type(value).__eq__
+    return value
 
 
-def _structural_equality(value):
-    return type(value) is _DICT_ITEMS or _equality_method(value) in (
-        dict.__eq__, Mapping.__eq__, OrderedDict.__eq__, list.__eq__, tuple.__eq__)
+_MAPPING_EQUALITY = (dict.__eq__, OrderedDict.__eq__, Mapping.__eq__)
+_SEQUENCE_EQUALITY = (list.__eq__, tuple.__eq__, deque.__eq__)
+_SET_EQUALITY = (set.__eq__, frozenset.__eq__)
+
+
+def _equal_mappings(left, right, compared):
+    if isinstance(left, dict) and isinstance(right, dict):
+        if type(left).__eq__ is type(right).__eq__ is OrderedDict.__eq__:
+            if tuple(OrderedDict.keys(left)) != tuple(OrderedDict.keys(right)):
+                return False
+        return dict.__len__(left) == dict.__len__(right) and all(
+            dict.__contains__(right, key)
+            and _safe_equal(dict.__getitem__(left, key), dict.__getitem__(right, key), compared)
+            for key in dict.keys(left))
+    return len(left) == len(right) and all(key in right and _safe_equal(left[key], right[key], compared) for key in left)
+
+
+def _equal_sets(left, right, compared):
+    if len(left) != len(right):
+        return False
+    if _HASH_SCALARS.issuperset(map(type, left)) and _HASH_SCALARS.issuperset(map(type, right)):
+        return left == right
+    choices = tuple(right)
+    edges = [tuple(i for i, candidate in enumerate(choices) if _safe_equal(value, candidate, compared))
+             for value in left]
+    matched = {}
+
+    def assign(row, seen):
+        for column in edges[row]:
+            if column in seen:
+                continue
+            seen.add(column)
+            if column not in matched or assign(matched[column], seen):
+                matched[column] = row
+                return True
+        return False
+
+    return all(assign(row, set()) for row in sorted(range(len(edges)), key=lambda row: len(edges[row])))
 
 
 def _equal_array_data(left, right, numpy, compared):
@@ -684,40 +723,57 @@ def _equal_arrays(left, right, numpy, compared):
         return False
     if kind is numpy.ndarray:
         return _equal_array_data(left, right, numpy, compared)
-    if isinstance(left, numpy.ma.MaskedArray):
+    masked = isinstance(left, numpy.ma.MaskedArray)
+    if kind is not numpy.ma.MaskedArray:
+        try:
+            equal = left == right
+        except ValueError:
+            if not masked:
+                return _equal_array_data(left, right, numpy, compared)
+        except RecursionError:
+            return False
+        else:
+            if isinstance(equal, (bool, numpy.bool_)):
+                if not masked or not bool(equal):
+                    return bool(equal)
+            elif not (isinstance(equal, numpy.ndarray) and equal.dtype.kind == "b"
+                      and bool(numpy.ma.filled(equal, True).all())):
+                return False
+            elif not masked:
+                return True
+    if masked:
         mask = numpy.ma.getmaskarray(left)
         if not numpy.array_equal(mask, numpy.ma.getmaskarray(right)):
             return False
         if mask.dtype.names:
             return all(_safe_equal(left[name], right[name], compared) for name in mask.dtype.names)
         return _equal_array_data(numpy.ma.getdata(left)[~mask], numpy.ma.getdata(right)[~mask], numpy, compared)
-    try:
-        equal = left == right
-    except (ValueError, RecursionError):
-        return False
-    if isinstance(equal, (bool, numpy.bool_)):
-        return bool(equal)
-    return (isinstance(equal, numpy.ndarray) and equal.dtype.kind == "b" and bool(equal.all())
-            and _safe_equal(getattr(left, "__dict__", {}), getattr(right, "__dict__", {}), compared))
+    return False
 
 
 def _safe_equal(left, right, compared=None):
     left_kind, right_kind = type(left), type(right)
     if left_kind in _HASH_SCALARS and right_kind in _HASH_SCALARS:
         return bool(left == right)
+    if (left_kind is right_kind is dict and _HASH_SCALARS.issuperset(map(type, left.values()))
+            and _HASH_SCALARS.issuperset(map(type, right.values()))):
+        return left == right
     values_view = left_kind is _DICT_VALUES or right_kind is _DICT_VALUES
     numpy = sys.modules.get("numpy")
     ndarray = getattr(numpy, "ndarray", ())
     array_value = isinstance(left, ndarray) or isinstance(right, ndarray)
-    if not values_view and not array_value:
+    left_target, right_target = _equality_target(left), _equality_target(right)
+    left_eq, right_eq = type(left_target).__eq__, type(right_target).__eq__
+    mapping = (left_eq in _MAPPING_EQUALITY and right_eq in _MAPPING_EQUALITY
+               and isinstance(left_target, Mapping) and isinstance(right_target, Mapping))
+    sequence = left_eq is right_eq and left_eq in _SEQUENCE_EQUALITY
+    unordered = left_eq in _SET_EQUALITY and right_eq in _SET_EQUALITY
+    items_view = left_kind is right_kind is _DICT_ITEMS
+    if not (values_view or array_value or mapping or sequence or unordered or items_view):
         try:
-            if bool(left == right):
-                return True
+            return bool(left == right)
         except (ValueError, RecursionError):
-            pass
-        else:
-            if left_kind is not right_kind or not (_structural_equality(left) and _structural_equality(right)):
-                return False
+            return False
     if compared is None:
         compared = set()
     pair = (id(left), id(right))
@@ -729,16 +785,14 @@ def _safe_equal(left, right, compared=None):
             return _same_dict_values(left, right, compared)
         if array_value:
             return _equal_arrays(left, right, numpy, compared)
-        if left_kind is right_kind is _DICT_ITEMS:
-            return _safe_equal(left.mapping, right.mapping, compared)
-        if isinstance(left, Mapping) and isinstance(right, Mapping):
-            if _equality_method(left) is _equality_method(right) is OrderedDict.__eq__ and tuple(left) != tuple(right):
-                return False
-            return len(left) == len(right) and all(
-                key in right and _safe_equal(left[key], right[key], compared) for key in left)
-        if left_kind is right_kind and isinstance(left, (list, tuple)):
-            return len(left) == len(right) and all(_safe_equal(a, b, compared) for a, b in zip(left, right))
-        return False
+        if items_view:
+            return _equal_mappings(_proxy_target(left.mapping), _proxy_target(right.mapping), compared)
+        if mapping:
+            return _equal_mappings(left_target, right_target, compared)
+        if unordered:
+            return _equal_sets(left_target, right_target, compared)
+        return len(left_target) == len(right_target) and all(
+            _safe_equal(a, b, compared) for a, b in zip(left_target, right_target))
     finally:
         compared.remove(pair)
 

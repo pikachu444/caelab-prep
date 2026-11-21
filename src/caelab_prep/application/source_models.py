@@ -69,6 +69,8 @@ class SourceArchiveResource:
                 "id", "name", "root_resource_id", "files", "id_map", "shared_nodes"}:
             raise PrepError("invalid_project", "Invalid source archive metadata.")
         if "uncollected_include_siblings" in metadata:
+            if not metadata.get("include_bindings"):
+                raise PrepError("invalid_project", "Uncollected INCLUDE siblings require explicit INCLUDE bindings.")
             siblings = metadata["uncollected_include_siblings"]
             if (not isinstance(siblings, list) or not siblings
                     or any(not isinstance(path, str) for path in siblings) or len(set(siblings)) != len(siblings)):

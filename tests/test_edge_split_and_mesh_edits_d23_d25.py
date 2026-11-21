@@ -1004,7 +1004,10 @@ def test_d23_import_preserves_writer_bindings_when_inventory_loses_a_candidate(t
         with ZipFile(archive) as project:
             members = {name: project.read(name) for name in project.namelist()}
         manifest = json.loads(members["manifest.json"])
-        manifest["source_models"][0].pop("include_bindings")
+        source_record, = manifest["source_models"]
+        source_record.pop("include_bindings")
+        # The simulated ac0 writer predates both pieces of INCLUDE metadata.
+        assert source_record.pop("uncollected_include_siblings") == ["a/nodes.inc"]
         members["manifest.json"] = json.dumps(manifest).encode()
         include = f"#include {sibling_nodes}\n"
         members[f'raw/{second["resource_id"]}.rad'] = include.encode()

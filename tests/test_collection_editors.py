@@ -1,6 +1,6 @@
 """Real Qt collection drafts; reading input never submits a document command."""
 from array import array
-from collections import ChainMap, Counter, OrderedDict, UserDict, defaultdict
+from collections import ChainMap, Counter, OrderedDict, UserDict, defaultdict, deque
 from collections.abc import Mapping, Set
 import ctypes
 from dataclasses import dataclass, field, make_dataclass
@@ -836,6 +836,116 @@ def test_reference_apply_cannot_mutate_choices_through_user_role():
         editor.value()
     panel.apply_button.click()
     assert not submitted and "no longer available" in panel.error.text()
+
+
+@pytest.mark.parametrize("kind", ("first-item-dict", "provider-view", "masked-owner", "nested-array-layout"))
+def test_reference_apply_rejects_distinct_provider_values(kind):
+    if kind == "first-item-dict":
+        class First(dict):
+            def __getitem__(self, key):
+                return super().__getitem__(key)[0]
+
+        choice = First(picks=array("i", [101, 202]))
+        stale = First(picks=array("i", [101, 404]))
+    elif kind == "provider-view":
+        class ProviderMap(dict):
+            _origin_view = None
+
+        choice, stale = ProviderMap(s=1).values(), ProviderMap(s=1).values()
+    else:
+        np = pytest.importorskip("numpy")
+        if kind == "masked-owner":
+            class OwnedMask(np.ma.MaskedArray):
+                def __eq__(self, other):
+                    if type(other) is not type(self) or other.owner != self.owner:
+                        return False
+                    return super().__eq__(other)
+
+            choice, stale = (np.ma.array([101], mask=[False]).view(OwnedMask) for _ in range(2))
+            choice.owner, stale.owner = "A", "B"
+        else:
+            choice = {"k": np.array([1], dtype=np.int32)}
+            stale = {"k": np.array([[1]], dtype=np.float64)}
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (stale,), kind="references", choices=(choice,)),
+    ))
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+
+
+@pytest.mark.parametrize("kind", ("record-array", "labeled-array"))
+def test_reference_apply_accepts_equal_numpy_subclass_values(kind):
+    np = pytest.importorskip("numpy")
+    if kind == "record-array":
+        choice = np.recarray(1, dtype=[("member", object)])
+        choice["member"][0] = np.array([3, 4])
+        selected = choice
+    else:
+        class Labeled(np.ndarray):
+            pass
+
+        choice, selected = (np.array([5, 7]).view(Labeled) for _ in range(2))
+        choice.label, selected.label = "old", "new"
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    editor = panel.editor.editors["members"]
+    assert editor.list.count() == 1
+    editor.set_raw_value(editor.raw_value())
+    panel.apply_button.click()
+    assert len(submitted) == 1
+    restored, = submitted[0]
+    assert type(restored) is type(choice)
+    if kind == "record-array":
+        assert restored["member"][0].tolist() == [3, 4]
+    else:
+        assert restored.label == "old"
+
+
+def test_reference_apply_detaches_masked_object_cells_in_qt_user_role():
+    np = pytest.importorskip("numpy")
+    values = np.empty(2, dtype=object)
+    values[0], values[1] = [101], [202]
+    choice = np.ma.array(values, mask=[False, True])
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (choice,), kind="references", choices=(choice,)),
+    ))
+    editor = panel.editor.editors["members"]
+    editor.list.item(0).data(Qt.ItemDataRole.UserRole).data[1].append(999)
+    assert choice.data[1] == [202]
+    assert editor.value()[0].data[1] == [202]
+    panel.apply_button.click()
+    assert submitted[0][0].data[1] == [202]
+
+
+@pytest.mark.parametrize("wrap", (deque, set, frozenset), ids=("deque", "set", "frozenset"))
+def test_reference_apply_restores_values_view_in_container(wrap):
+    backing = {"id": [101]}
+    choice = wrap((backing.values(),))
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (choice,), kind="references", choices=(choice,)),
+    ))
+    editor = panel.editor.editors["members"]
+    editor.set_raw_value(editor.raw_value())
+    assert editor.list.count() == 1
+    panel.apply_button.click()
+    assert len(submitted) == len(submitted[0]) == 1
+    assert list(next(iter(submitted[0][0]))) == [[101]]
+
+
+def test_reference_apply_refreshes_values_view_from_dict_to_ordered_dict():
+    view = {"id": [101]}.values()
+    old = {"ref": view}
+    new = OrderedDict(ref=view)
+    spec = PropertySpec("members", "Members", (old,), kind="references", choices=(old,))
+    panel, submitted = _reference_apply_panel((spec, PropertySpec("size", "Size", 2, unit_context={"quantity": "length"})))
+    replacement = PropertySpec("members", "Members", (new,), kind="references", choices=(new,))
+    assert panel.editor.refresh_context((replacement, PropertySpec("size", "Size", 2, unit_context={"quantity": "area"})))
+    panel.editor.editors["size"].setText("2")
+    panel.apply_button.click()
+    assert len(submitted) == len(submitted[0]) == 1
+    assert isinstance(submitted[0][0], OrderedDict)
+    assert list(submitted[0][0]["ref"]) == [[101]]
 
 
 def test_reference_apply_preserves_array_subclass_equality():
