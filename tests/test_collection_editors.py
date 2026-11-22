@@ -1028,6 +1028,24 @@ def test_reference_apply_matches_passive_numpy_subclasses(kind):
     assert (saved[0] if saved.dtype.hasobject else saved).tolist() == [1, 2]
 
 
+def test_reference_apply_rejects_numpy_ufunc_not_implemented():
+    np = pytest.importorskip("numpy")
+
+    class NoEquality(np.ndarray):
+        def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+            return NotImplemented
+
+    allowed, rejected = (np.array([item]).view(NoEquality) for item in (101, 205))
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (rejected,), kind="references", choices=(allowed,)),
+    ))
+    editor = panel.editor.editors["members"]
+    assert editor.list.count() == 2
+    editor.set_raw_value(editor.raw_value())
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+
+
 def test_reference_apply_matches_mixed_sets_by_element_hash():
     class Member:
         def __init__(self, number):
@@ -1067,19 +1085,26 @@ def test_reference_apply_matches_counter_array_counts_and_missing_zeros(zero_on_
     assert len(submitted) == 1 and "no longer available" in panel.error.text()
 
 
-@pytest.mark.parametrize("kind", ("strict-equality", "hidden-keys"))
+@pytest.mark.parametrize("kind", ("strict-equality", "hidden-keys", "custom-missing"))
 def test_reference_apply_rejects_distinct_counter_subclasses(kind):
     if kind == "strict-equality":
         class Strict(Counter):
             __eq__ = dict.__eq__
 
         choice, selected = Counter(a=1), Strict(a=1, b=0)
-    else:
+    elif kind == "hidden-keys":
         class Index(Counter):
             def keys(self):
                 return {}.keys()
 
         choice, selected = Index(a=1), Index(a=2)
+    else:
+        class NegativeMissing(Counter):
+            def __missing__(self, key):
+                return -1
+
+        choice, selected = NegativeMissing(part=1), NegativeMissing(part=1, retired=0)
+        assert choice != selected
     panel, submitted = _reference_apply_panel((
         PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
     ))
@@ -1131,6 +1156,63 @@ def test_reference_apply_matches_hashed_abstract_set_of_values_views(reverse):
     wrapped, = values
     restored, = wrapped
     assert list(restored) == [[101]]
+
+
+def test_reference_apply_honors_abstract_set_owner_ordering():
+    class Owned(Set):
+        def __init__(self, owner):
+            self.owner = owner
+            self.members = {("PART", 12)}
+
+        def __len__(self):
+            return len(self.members)
+
+        def __iter__(self):
+            return iter(self.members)
+
+        def __contains__(self, item):
+            return item in self.members
+
+        def __le__(self, other):
+            return isinstance(other, Owned) and self.owner == other.owner and super().__le__(other)
+
+    choice, selected = Owned("A"), Owned("B")
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+
+
+@pytest.mark.parametrize("nested", (False, True), ids=("direct", "inside-set"))
+def test_reference_apply_honors_abstract_set_case_insensitive_membership(nested):
+    class Insensitive(Set):
+        def __init__(self, prefix):
+            self.member = (prefix, 12)
+
+        def __len__(self):
+            return 1
+
+        def __iter__(self):
+            return iter((self.member,))
+
+        def __contains__(self, item):
+            return (item[0].casefold(), item[1]) == (self.member[0].casefold(), self.member[1])
+
+        def __hash__(self):
+            return hash(frozenset({(self.member[0].casefold(), self.member[1])}))
+
+    choice, selected = Insensitive("PART"), Insensitive("part")
+    if nested:
+        choice, selected = {choice}, {selected}
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    editor = panel.editor.editors["members"]
+    assert editor.list.count() == 1
+    editor.set_raw_value(editor.raw_value())
+    panel.apply_button.click()
+    assert submitted == [(choice,)]
 
 
 def test_reference_apply_matches_abstract_set_with_unhashable_members():

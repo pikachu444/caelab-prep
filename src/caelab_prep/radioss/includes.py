@@ -140,11 +140,13 @@ def _include_paths(directory, operand, scope):
     return relative, f"{scope}/{logical}" if scoped else logical, (directory / relative).as_posix()
 
 
-def _archived_path_types(inventory):
-    files = {path.casefold() for path in inventory}
-    directories = {parent.as_posix().casefold() for path in inventory
+def _archived_path_types(inventory, *, exact=False):
+    files = set(inventory)
+    directories = {parent.as_posix() for path in inventory
                    for parent in PurePosixPath(path).parents if parent != PurePosixPath(".")}
-    return files, directories
+    if exact:
+        return files, directories
+    return {path.casefold() for path in files}, {path.casefold() for path in directories}
 
 
 def _legal_phantom(path, files, directories):
@@ -152,16 +154,16 @@ def _legal_phantom(path, files, directories):
             and not any(parent.as_posix() in files for parent in PurePosixPath(path).parents))
 
 
-def _sibling_evidence(inventory, load, lookup, scope=""):
+def _sibling_evidence(inventory, load, lookup, scope="", *, path_name=None):
     """Find alternate disk paths absent from the collected inventory."""
-    files, directories = _archived_path_types(inventory)
+    files, directories = _archived_path_types(inventory, exact=True)
     siblings, aliases = set(), {}
     for owner in inventory:
         directory = PurePosixPath(owner).parent
         for directive in load(owner).include_directives:
             _, root_path, sibling_path = _include_paths(directory, directive.path, scope)
-            candidate = sibling_path.casefold()
-            if root_path != sibling_path and _legal_phantom(candidate, files, directories):
+            candidate = sibling_path if path_name is None else path_name(sibling_path)
+            if root_path != sibling_path and candidate is not None and _legal_phantom(candidate, files, directories):
                 target = lookup(sibling_path)
                 root_target = lookup(root_path)
                 if target is not None and root_target in inventory and target != root_target:
@@ -181,17 +183,21 @@ def source_disk_siblings(base, resources):
 
 def _include_lookup_with_siblings(inventory, load, lookup, siblings, aliases, scope):
     """Check that the archived disk evidence could coexist with the inventory."""
-    def disk_lookup(path):
-        folded = path.casefold()
-        return lookup(path) or aliases.get(folded) or (folded if folded in siblings else None)
-
-    files, directories = _archived_path_types(inventory)
     alternate_paths = siblings | aliases.keys()
+    path_name = include_lookup(inventory | alternate_paths)
+
+    def disk_lookup(path):
+        name = path_name(path)
+        if name in inventory:
+            return lookup(name)
+        return aliases.get(name, name)
+
+    files, directories = _archived_path_types(inventory, exact=True)
     if (siblings & aliases.keys() or any(target not in inventory for target in aliases.values())
             or any(not _legal_phantom(path, files, directories)
                    or any(parent.as_posix() in alternate_paths for parent in PurePosixPath(path).parents)
                    for path in alternate_paths)
-            or _sibling_evidence(inventory, load, disk_lookup, scope) != (siblings, aliases)):
+            or _sibling_evidence(inventory, load, disk_lookup, scope, path_name=path_name) != (siblings, aliases)):
         raise PrepError("invalid_project", "Invalid INCLUDE sibling evidence.")
     return disk_lookup
 

@@ -673,13 +673,17 @@ def _equality_target(value):
 
 _MAPPING_EQUALITY = (dict.__eq__, OrderedDict.__eq__, Counter.__eq__, Mapping.__eq__)
 _SEQUENCE_EQUALITY = (list.__eq__, tuple.__eq__, deque.__eq__)
-_SET_EQUALITY = (set.__eq__, frozenset.__eq__, AbstractSet.__eq__)
+_SET_EQUALITY = (set.__eq__, frozenset.__eq__)
+
+
+def _counter_count(counter, key):
+    return dict.__getitem__(counter, key) if dict.__contains__(counter, key) else counter[key]
 
 
 def _equal_mappings(left, right, compared, *, mapping_rules=True):
     if (mapping_rules and type(left).__eq__ is type(right).__eq__ is Counter.__eq__
             and isinstance(left, Counter) and isinstance(right, Counter)):
-        return all(_safe_equal(dict.get(left, key, 0), dict.get(right, key, 0), compared)
+        return all(_safe_equal(_counter_count(left, key), _counter_count(right, key), compared)
                    for key in dict.keys(left) | dict.keys(right))
     if isinstance(left, dict) and isinstance(right, dict):
         if mapping_rules and type(left).__eq__ is type(right).__eq__ is OrderedDict.__eq__:
@@ -703,6 +707,36 @@ def _set_item_bucket(value):
         if any(isinstance(part, tuple) for part in parts):
             return (tuple, parts) if sequence else (frozenset, frozenset(parts))
     return hash(value)
+
+
+def _set_values_views(container):
+    seen = set()
+    pending = [container]
+    while pending:
+        value = pending.pop()
+        key = id(value)
+        if key in seen:
+            continue
+        seen.add(key)
+        if type(value) is _DICT_VALUES:
+            yield value
+        elif isinstance(value, (tuple, AbstractSet)):
+            pending.extend(value)
+
+
+def _equal_with_shared_set_views(left, right, compared):
+    # Give native set equality the same view identities for corresponding
+    # snapshots so subclass ordering and containment rules still run.
+    left_views = defaultdict(list)
+    for view in _set_values_views(left):
+        left_views[id(_view_origin(view))].append(view)
+    memo = _ReferenceMemo()
+    for view in _set_values_views(right):
+        for candidate in left_views.get(id(_view_origin(view)), ()):
+            if candidate is not view and _same_dict_values(candidate, view, compared):
+                memo[id(view)] = candidate
+                break
+    return bool(memo and left == _clone_ref(right, memo))
 
 
 def _match_colliding_set_items(left, right, compared):
@@ -783,7 +817,7 @@ def _equal_arrays(left, right, numpy, compared):
     if not passive:
         try:
             equal = left == right
-        except (ValueError, RecursionError):
+        except (ValueError, TypeError, RecursionError):
             return False
         if isinstance(equal, (bool, numpy.bool_)):
             matches = bool(equal)
@@ -824,7 +858,11 @@ def _safe_equal(left, right, compared=None):
     items_view = left_kind is right_kind is _DICT_ITEMS
     if not (values_view or array_value or mapping or sequence or unordered or items_view):
         try:
-            return bool(left == right)
+            if bool(left == right):
+                return True
+            return (AbstractSet.__eq__ in (left_eq, right_eq)
+                    and isinstance(left, AbstractSet) and isinstance(right, AbstractSet)
+                    and _equal_with_shared_set_views(left, right, compared))
         except (ValueError, RecursionError):
             return False
     if compared is None:

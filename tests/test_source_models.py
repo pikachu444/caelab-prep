@@ -11,6 +11,7 @@ import zipfile
 import pytest
 
 from caelab_prep.application import PrepSession
+from caelab_prep.application import session as prep_session
 from caelab_prep.cae_core import PrepError
 from caelab_prep.radioss import includes
 from caelab_prep.radioss.modeling import material_block, shell_block, solid_block
@@ -872,6 +873,96 @@ def test_archive_replays_collected_sibling_target(tmp_path, monkeypatch, tamper)
     with pytest.raises(PrepError) as error:
         PrepSession().open_project(altered)
     assert error.value.code == "invalid_project"
+
+
+def test_archive_replays_distinct_case_sensitive_sibling_aliases(tmp_path, monkeypatch):
+    starter = model(tmp_path / "source")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                         b"#include a/chooser1.inc\n#include a/chooser2.inc\n#include b/y.inc\n"))
+    source = starter.parent
+    (source / "a").mkdir()
+    (source / "b").mkdir()
+    (source / "a/chooser1.inc").write_bytes(b"#include mesh.inc\n")
+    (source / "a/chooser2.inc").write_bytes(b"#include Mesh.inc\n")
+    (source / "b/y.inc").write_bytes(b"# collected target\n")
+    aliases = {"a/mesh.inc": "b/y.inc", "a/Mesh.inc": "a/chooser1.inc"}
+    paths = {starter.name, "mesh.inc", "a/chooser1.inc", "a/chooser2.inc", "b/y.inc"}
+    lookup_name = includes.include_lookup(paths | aliases.keys())
+    disk_lookup = includes.disk_include_lookup
+
+    def case_sensitive_tree(base, **kwargs):
+        if base != source:
+            return disk_lookup(base, **kwargs)
+
+        def lookup(path):
+            name = lookup_name(path)
+            return aliases.get(name, name)
+
+        return lookup
+
+    with monkeypatch.context() as filesystem:
+        filesystem.setattr(includes, "disk_include_lookup", case_sensitive_tree)
+        filesystem.setattr(prep_session, "disk_include_lookup", case_sensitive_tree)
+        session = PrepSession()
+        session.open_rad(model(tmp_path / "host"))
+        plan = session.plan_import_source(starter)
+        session.import_source(plan["plan_id"])
+        project = tmp_path / "case-sensitive.caeprep"
+        session.save_project(project)
+
+    reopened = PrepSession()
+    reopened.open_project(project)
+    archived, = reopened.source_models()
+    assert archived["include_sibling_aliases"] == aliases
+    assert "uncollected_include_siblings" not in archived
+    assert {item["original_path"] for item in archived["files"]} == paths
+    assert reopened.describe()["element_count"] == 2
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    recorded, = manifest["source_models"]
+    assert recorded["include_sibling_aliases"] == aliases
+    recorded["include_sibling_aliases"]["a/MESH.inc"] = "b/y.inc"
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "unobserved-alias.caeprep"
+    with zipfile.ZipFile(altered, "w") as saved:
+        for name, data in members.items():
+            saved.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+def test_archive_replays_legacy_folded_sibling_evidence(tmp_path):
+    starter = model(tmp_path / "source")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                         b"#include a/chooser.inc\n#include other.inc\n"))
+    source = starter.parent
+    (source / "a").mkdir()
+    (source / "a/chooser.inc").write_bytes(b"#include Mesh.inc\n")
+    (source / "a/Mesh.inc").write_bytes(b"# uncollected sibling\n")
+    (source / "other.inc").write_bytes(b"# collected before root mesh\n")
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    project = tmp_path / "mixed-case.caeprep"
+    session.save_project(project)
+    PrepSession().open_project(project)
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    archived, = manifest["source_models"]
+    assert archived["uncollected_include_siblings"] == ["a/Mesh.inc"]
+    archived["uncollected_include_siblings"] = ["a/mesh.inc"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    legacy = tmp_path / "legacy-folded.caeprep"
+    with zipfile.ZipFile(legacy, "w") as saved:
+        for name, data in members.items():
+            saved.writestr(name, data)
+    reopened = PrepSession()
+    reopened.open_project(legacy)
+    assert reopened.describe()["element_count"] == 2
 
 
 def test_current_import_reopens_exact_recorded_chooser_bindings_in_one_walk(tmp_path, monkeypatch):
