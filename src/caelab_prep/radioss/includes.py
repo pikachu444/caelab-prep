@@ -1,5 +1,5 @@
 """Resolve Starter INCLUDE graphs against disk or a portable file inventory."""
-from collections import defaultdict, deque
+from collections import Counter, defaultdict, deque
 from functools import cache
 from heapq import heappop, heappush
 from itertools import count
@@ -157,8 +157,7 @@ def _legal_phantom(path, files, directories):
 def _sibling_evidence(inventory, load, lookup, scope="", *, path_name=None):
     """Find alternate disk paths absent from the collected inventory."""
     files, directories = _archived_path_types(inventory, exact=True)
-    inventory_lookup = include_lookup(files)
-    siblings, aliases = set(), {}
+    siblings, raw_aliases = set(), {}
     for owner in inventory:
         directory = PurePosixPath(owner).parent
         for directive in load(owner).include_directives:
@@ -167,20 +166,29 @@ def _sibling_evidence(inventory, load, lookup, scope="", *, path_name=None):
             if root_path != sibling_path and candidate is not None and _legal_phantom(candidate, files, directories):
                 target = lookup(sibling_path)
                 root_target = lookup(root_path)
-                if (target is not None and root_target in inventory and target != root_target
-                        and inventory_lookup(sibling_path) != target):
+                if target is not None and root_target in inventory and target != root_target:
                     if target in inventory:
-                        aliases[candidate] = target
+                        raw_aliases[candidate] = target
                     else:
                         siblings.add(candidate)
-    return siblings, aliases
+    folded_counts = Counter(path.casefold() for path in files | siblings | raw_aliases.keys())
+    required_aliases, optional_self_aliases = {}, {}
+    for path, target in raw_aliases.items():
+        folded = path.casefold()
+        # Removing the alias leaves a unique case-folded match only when
+        # its collected target is the sole other spelling in the inventory.
+        if target.casefold() == folded and folded_counts[folded] == 2:
+            optional_self_aliases[path] = target
+        else:
+            required_aliases[path] = target
+    return siblings, required_aliases, optional_self_aliases
 
 
 def source_disk_siblings(base, resources):
     """Capture uncollected files and aliases to collected files before saving."""
     by_path = {resource.name: resource for resource in resources}
-    siblings, aliases = _sibling_evidence(by_path.keys(), by_path.__getitem__, disk_include_lookup(base))
-    return sorted(siblings), dict(sorted(aliases.items()))
+    siblings, required_aliases, _ = _sibling_evidence(by_path.keys(), by_path.__getitem__, disk_include_lookup(base))
+    return sorted(siblings), dict(sorted(required_aliases.items()))
 
 
 def _include_lookup_with_siblings(inventory, load, lookup, siblings, aliases, scope):
@@ -198,8 +206,12 @@ def _include_lookup_with_siblings(inventory, load, lookup, siblings, aliases, sc
     if (siblings & aliases.keys() or any(target not in inventory for target in aliases.values())
             or any(not _legal_phantom(path, files, directories)
                    or any(parent.as_posix() in alternate_paths for parent in PurePosixPath(path).parents)
-                   for path in alternate_paths)
-            or _sibling_evidence(inventory, load, disk_lookup, scope, path_name=path_name) != (siblings, aliases)):
+                   for path in alternate_paths)):
+        raise PrepError("invalid_project", "Invalid INCLUDE sibling evidence.")
+    computed_siblings, required_aliases, optional_self_aliases = _sibling_evidence(
+        inventory, load, disk_lookup, scope, path_name=path_name)
+    if (siblings != computed_siblings
+            or not required_aliases.items() <= aliases.items() <= (required_aliases | optional_self_aliases).items()):
         raise PrepError("invalid_project", "Invalid INCLUDE sibling evidence.")
     return disk_lookup
 
