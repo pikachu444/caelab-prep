@@ -65,7 +65,7 @@ class SourceArchiveResource:
     kind = "radioss-source-archive"
 
     def __init__(self, metadata, files):
-        optional = {"include_bindings", "uncollected_include_siblings", "include_sibling_aliases"}
+        optional = {"include_bindings", "uncollected_include_siblings", "include_sibling_aliases", "unresolved_include_paths"}
         if not isinstance(metadata, dict) or set(metadata) - optional != {
                 "id", "name", "root_resource_id", "files", "id_map", "shared_nodes"}:
             raise PrepError("invalid_project", "Invalid source archive metadata.")
@@ -76,6 +76,12 @@ class SourceArchiveResource:
             if (not isinstance(siblings, list) or not siblings
                     or any(not isinstance(path, str) for path in siblings) or len(set(siblings)) != len(siblings)):
                 raise PrepError("invalid_project", "Invalid uncollected INCLUDE siblings.")
+        if "unresolved_include_paths" in metadata:
+            unresolved = metadata["unresolved_include_paths"]
+            if (not metadata.get("include_bindings") or not isinstance(unresolved, list) or not unresolved
+                    or any(not isinstance(path, str) or not path for path in unresolved)
+                    or len(set(unresolved)) != len(unresolved)):
+                raise PrepError("invalid_project", "Invalid unresolved INCLUDE paths.")
         if "include_sibling_aliases" in metadata:
             aliases = metadata["include_sibling_aliases"]
             if (not metadata.get("include_bindings") or not isinstance(aliases, dict) or not aliases
@@ -197,6 +203,8 @@ class SourceArchiveResource:
         archived_order = [item["original_path"] for item in self.metadata["files"]]
         siblings = self.metadata.get("uncollected_include_siblings")
         uncollected_siblings = set(siblings) if siblings is not None else None
+        unresolved = self.metadata.get("unresolved_include_paths")
+        unresolved_paths = set(unresolved) if unresolved is not None else None
         matches = {}
         mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
         mapped_keys = {(resource.name, directive.header_row): (mapped_ids[resource.name], ordinal)
@@ -209,7 +217,8 @@ class SourceArchiveResource:
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
                                          archived_order=archived_order, load_order=load_order,
                                          uncollected_siblings=uncollected_siblings,
-                                         sibling_aliases=self.metadata.get("include_sibling_aliases"))
+                                         sibling_aliases=self.metadata.get("include_sibling_aliases"),
+                                         unresolved_paths=unresolved_paths)
             reached, original_bindings, _ = graph
             if reached != set(paths) or load_order != archived_order:
                 continue
@@ -445,11 +454,16 @@ class SourceModelCommands:
                 files=records, id_map=[[ns, original, mapped] for (ns, original), mapped in sorted(mapping.items())],
                 shared_nodes=sorted(shared), include_bindings=[[owner, ordinal, target]
                     for (owner, ordinal), target in source._include_bindings.items()])
-            siblings, aliases = source_disk_siblings(Path(path).expanduser().resolve().parent, original_resources)
+            source_bindings = {(source._paths[owner], ordinal): source._paths[target]
+                               for (owner, ordinal), target in source._include_bindings.items()}
+            siblings, aliases, unresolved = source_disk_siblings(
+                Path(path).expanduser().resolve().parent, original_resources, source_bindings)
             if siblings:
                 metadata["uncollected_include_siblings"] = siblings
             if aliases:
                 metadata["include_sibling_aliases"] = aliases
+            if unresolved:
+                metadata["unresolved_include_paths"] = unresolved
             archive = SourceArchiveResource(metadata, files)
             plan_id = str(uuid4())
             self._import_plan = (plan_id, document.id, document.revision, self._document_epoch, archive, tuple(resources), source._source_paths)

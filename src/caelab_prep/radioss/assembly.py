@@ -188,14 +188,14 @@ def inspect(resources, *, profile: str = "current"):
 
 
 def source_include_graph(resources, paths, *, selected=None, historical=None, archived_order=None, load_order=None,
-                         uncollected_siblings=None, sibling_aliases=None):
+                         uncollected_siblings=None, sibling_aliases=None, unresolved_paths=None):
     by_path = {resource.name: resource for resource in resources}
     root = next(resource.name for resource in resources if not resource.is_include)
     load = by_path.__getitem__
     return resolve_includes(root, include_lookup(paths), load, selected=selected, historical=historical,
                             archive_inventory=set(paths) if selected or historical in ("ac0", "bde", "8e85") else None,
                             archived_order=archived_order, load_order=load_order, uncollected_siblings=uncollected_siblings,
-                            sibling_aliases=sibling_aliases)
+                            sibling_aliases=sibling_aliases, unresolved_paths=unresolved_paths)
 
 
 def remap(resources, mappings, paths, *, include_graph=None, two_line="quoted", legacy_direct_inline: bool = False,

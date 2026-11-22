@@ -778,22 +778,21 @@ def test_archive_records_uncollected_sibling_with_in_tree_symlink(tmp_path, monk
         return resolve(aliases.get(path, path), *args, **kwargs)
 
     same_target = label_target == "label.inc"
-    collected = {"a/label.inc": "other.inc"} if label_target == "other.inc" else {}
-    siblings = ["a/mesh.inc"] if same_target or collected else ["a/label.inc", "a/mesh.inc"]
+    siblings = ["a/mesh.inc"] if same_target else ["a/label.inc", "a/mesh.inc"]
     with monkeypatch.context() as simulated_link:
         simulated_link.setattr(Path, "resolve", resolve_alias)
         session = PrepSession()
         session.open_rad(model(tmp_path / "host"))
         plan = session.plan_import_source(starter)
         assert plan["source"]["uncollected_include_siblings"] == siblings
-        assert plan["source"].get("include_sibling_aliases", {}) == collected
+        assert "include_sibling_aliases" not in plan["source"]
         session.import_source(plan["plan_id"])
         archive = tmp_path / "linked.caeprep"
         session.save_project(archive)
     with zipfile.ZipFile(archive) as saved:
         source, = json.loads(saved.read("manifest.json"))["source_models"]
         assert source["uncollected_include_siblings"] == siblings
-        assert source.get("include_sibling_aliases", {}) == collected
+        assert "include_sibling_aliases" not in source
         other = next(entry for entry in source["files"] if entry["original_path"] == "other.inc")
         member = f'sources/{source["id"]}/{other["original_resource_id"]}.rad'
         assert saved.read(member) == starter.with_name("other.inc").read_bytes()
@@ -839,8 +838,12 @@ def test_archive_replays_collected_sibling_target(tmp_path, monkeypatch, tamper)
         reopened = PrepSession()
         reopened.open_project(project)
         source, = reopened.source_models()
-        assert source["include_sibling_aliases"] == {"a/mesh.inc": "b/y.inc"}
-        assert "uncollected_include_siblings" not in source
+        if selects_alias:
+            assert source["include_sibling_aliases"] == {"a/mesh.inc": "b/y.inc"}
+            assert "uncollected_include_siblings" not in source
+        else:
+            assert "include_sibling_aliases" not in source
+            assert source["uncollected_include_siblings"] == ["a/mesh.inc"]
         files = {record["original_path"]: record for record in source["files"]}
         chooser = files["a/chooser.inc"]
         target = files["b/y.inc" if selects_alias else "mesh.inc"]
@@ -913,16 +916,16 @@ def test_archive_replays_distinct_case_sensitive_sibling_aliases(tmp_path, monke
     reopened = PrepSession()
     reopened.open_project(project)
     archived, = reopened.source_models()
-    assert archived["include_sibling_aliases"] == aliases
-    assert "uncollected_include_siblings" not in archived
+    assert "include_sibling_aliases" not in archived
+    assert archived["uncollected_include_siblings"] == sorted(aliases)
     assert {item["original_path"] for item in archived["files"]} == paths
     assert reopened.describe()["element_count"] == 2
     with zipfile.ZipFile(project) as saved:
         members = {name: saved.read(name) for name in saved.namelist()}
     manifest = json.loads(members["manifest.json"])
     recorded, = manifest["source_models"]
-    assert recorded["include_sibling_aliases"] == aliases
-    recorded["include_sibling_aliases"]["a/MESH.inc"] = "b/y.inc"
+    assert recorded["uncollected_include_siblings"] == sorted(aliases)
+    recorded["include_sibling_aliases"] = {"a/MESH.inc": "b/y.inc"}
     members["manifest.json"] = json.dumps(manifest).encode()
     altered = tmp_path / "unobserved-alias.caeprep"
     with zipfile.ZipFile(altered, "w") as saved:
@@ -980,7 +983,10 @@ def test_archive_keeps_self_alias_when_case_variants_collide(tmp_path, monkeypat
     reopened = PrepSession()
     reopened.open_project(project)
     archived, = reopened.source_models()
-    assert archived["include_sibling_aliases"] == aliases
+    expected_aliases = {} if direct_sibling else {"a/MESH.INC": "a/mesh.inc"}
+    expected_competitors = sorted(aliases.keys() - expected_aliases.keys())
+    assert archived.get("include_sibling_aliases", {}) == expected_aliases
+    assert archived.get("uncollected_include_siblings", []) == expected_competitors
     assert {item["original_path"] for item in archived["files"]} == paths
     assert reopened.describe()["element_count"] == 2
     assert not reopened.diagnostics()
@@ -996,7 +1002,7 @@ def test_archive_keeps_self_alias_when_case_variants_collide(tmp_path, monkeypat
             members = {name: saved.read(name) for name in saved.namelist()}
         manifest = json.loads(members["manifest.json"])
         recorded, = manifest["source_models"]
-        del recorded["include_sibling_aliases"]["a/MESH.INC"]
+        del recorded["include_sibling_aliases"]
         members["manifest.json"] = json.dumps(manifest).encode()
         altered = tmp_path / "missing-case-alias.caeprep"
         with zipfile.ZipFile(altered, "w") as saved:
@@ -1082,13 +1088,17 @@ def test_archive_preserves_root_operand_case_miss(tmp_path, monkeypatch, sibling
     assert error.value.code == "invalid_project"
 
 
-@pytest.mark.parametrize("root_operand", ("qualified", "qualified-with-sibling", "starter"))
+@pytest.mark.parametrize("root_operand", ("qualified", "qualified-with-sibling", "qualified-reversed",
+                                          "ancestor-competitor", "unreferenced-case-variant", "starter"))
 def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_operand):
     starter = model(tmp_path / "source")
     source = starter.parent
     (source / "a").mkdir()
     (source / "a/mesh.inc").write_bytes(b"# sibling mesh\n")
     aliases = {"a/Mesh.inc": "mesh.inc"}
+    has_sibling = root_operand in ("qualified-with-sibling", "qualified-reversed", "ancestor-competitor",
+                                   "unreferenced-case-variant")
+    has_case_miss = root_operand == "unreferenced-case-variant"
     operands = ["mesh.inc"]
     bindings = {starter.name: ["mesh.inc"]}
     paths = {starter.name, "mesh.inc", "a/mesh.inc"}
@@ -1096,20 +1106,26 @@ def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_oper
         operands.extend(("a/mesh.inc", "a/Mesh.inc"))
         bindings[starter.name].extend(("a/mesh.inc", "mesh.inc"))
     else:
-        (source / "a/first.inc").write_bytes(b"#include MESH.INC\n")
+        (source / "a/first.inc").write_bytes(b"#include mesh.inc\n" if has_case_miss else b"#include MESH.INC\n")
         (source / "b").mkdir()
         (source / "b/second.inc").write_bytes(b"#include a/Mesh.inc\n")
         paths.update(("a/first.inc", "b/second.inc"))
-        operands.extend(("a/first.inc", "b/second.inc"))
-        bindings[starter.name].extend(("a/first.inc", "b/second.inc"))
+        owners = ("b/second.inc", "a/first.inc") if root_operand == "qualified-reversed" else (
+            "a/first.inc", "b/second.inc")
+        operands.extend(owners)
+        bindings[starter.name].extend(owners)
         aliases["a/MESH.INC"] = "a/mesh.inc"
+        if root_operand == "ancestor-competitor":
+            aliases["a/Mesh.inc"] = "b/second.inc"
         bindings["a/first.inc"] = ["a/mesh.inc"]
         bindings["b/second.inc"] = ["mesh.inc"]
-        if root_operand == "qualified-with-sibling":
+        if has_sibling:
             (source / "b/a").mkdir()
             (source / "b/a/mesh.inc").write_bytes(b"# qualified sibling mesh\n")
             paths.add("b/a/mesh.inc")
             bindings["b/second.inc"] = ["b/a/mesh.inc"]
+        if has_case_miss:
+            del aliases["a/Mesh.inc"]
     include_lines = "".join(f"#include {operand}\n" for operand in operands).encode()
     starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n", include_lines))
 
@@ -1141,7 +1157,6 @@ def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_oper
     reopened.open_project(project)
     assert not reopened.diagnostics()
     archived, = reopened.source_models()
-    assert archived["include_sibling_aliases"] == aliases
     mapped_ids = {item["original_path"]: item["resource_id"] for item in archived["files"]}
     assert mapped_ids.keys() == paths
     assert {key: target for key, target in reopened._include_bindings.items() if key[0] in mapped_ids.values()} == {
@@ -1154,24 +1169,54 @@ def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_oper
         members = {name: saved.read(name) for name in saved.namelist()}
     manifest = json.loads(members["manifest.json"])
     recorded, = manifest["source_models"]
-    wrong_targets = {"a/MESH.INC": "mesh.inc", "a/Mesh.inc": bindings.get("b/second.inc", ["mesh.inc"])[0]}
-    if wrong_targets["a/Mesh.inc"] == "mesh.inc":
-        wrong_targets["a/Mesh.inc"] = "a/mesh.inc"
-    for index, path in enumerate(aliases):
-        removed = {name: target for name, target in aliases.items() if name != path}
-        for action, changed in (("removed", removed), ("retargeted", aliases | {path: wrong_targets[path]})):
-            if changed:
-                recorded["include_sibling_aliases"] = changed
-            else:
-                recorded.pop("include_sibling_aliases")
-            members["manifest.json"] = json.dumps(manifest).encode()
-            altered = tmp_path / f"alias-{index}-{action}.caeprep"
-            with zipfile.ZipFile(altered, "w") as saved:
-                for name, data in members.items():
-                    saved.writestr(name, data)
-            with pytest.raises(PrepError) as error:
-                PrepSession().open_project(altered)
-            assert error.value.code == "invalid_project", (path, action)
+    alias_field, sibling_field, miss_field = ("include_sibling_aliases", "uncollected_include_siblings",
+                                              "unresolved_include_paths")
+    baseline = dict(recorded)
+
+    def reject_change(label, **changes):
+        recorded.clear()
+        recorded.update(baseline | changes)
+        for key in changes:
+            if changes[key] is None:
+                del recorded[key]
+        members["manifest.json"] = json.dumps(manifest).encode()
+        altered = tmp_path / f"{label}.caeprep"
+        with zipfile.ZipFile(altered, "w") as saved:
+            for name, data in members.items():
+                saved.writestr(name, data)
+        with pytest.raises(PrepError) as error:
+            PrepSession().open_project(altered)
+        assert error.value.code == "invalid_project", label
+
+    recorded_aliases = baseline.get(alias_field, {})
+    if has_case_miss:
+        assert baseline[miss_field] == ["a/Mesh.inc"]
+        assert alias_field not in baseline and sibling_field not in baseline
+        reject_change("missing-case-evidence", **{miss_field: None})
+        for index, paths in enumerate((["a/MeSh.inc"], ["a/mesh.inc"], ["a/Mesh.inc"] * 2, [""])):
+            reject_change(f"invalid-case-evidence-{index}", **{miss_field: paths})
+        reject_change("case-evidence-without-bindings", **{"include_bindings": None})
+        return
+    if has_sibling:
+        # An unbound competing path contributes its existence, without an unchecked target.
+        injected_targets = ["a/first.inc"] if root_operand == "ancestor-competitor" else sorted(paths)
+        for index, target in enumerate(injected_targets):
+            forged = recorded_aliases | {"a/Mesh.inc": target}
+            reject_change(f"unbound-alias-injected-{index}", **{sibling_field: None, alias_field: forged})
+        assert baseline[sibling_field] == ["a/Mesh.inc"]
+        assert recorded_aliases == {"a/MESH.INC": "a/mesh.inc"}
+        if root_operand != "ancestor-competitor":
+            reject_change("missing-competitor", **{sibling_field: None})
+        reject_change("wrong-competitor", **{sibling_field: ["a/Other.inc"]})
+    else:
+        assert recorded_aliases == aliases
+        assert sibling_field not in baseline
+    assert miss_field not in baseline
+    wrong_targets = {"a/MESH.INC": "mesh.inc", "a/Mesh.inc": "a/mesh.inc"}
+    for index, path in enumerate(recorded_aliases):
+        removed = {name: target for name, target in recorded_aliases.items() if name != path}
+        reject_change(f"alias-{index}-removed", **{alias_field: removed or None})
+        reject_change(f"alias-{index}-retargeted", **{alias_field: recorded_aliases | {path: wrong_targets[path]}})
 
 
 def test_archive_omits_multiple_case_spellings_of_the_same_file(tmp_path):
@@ -1193,7 +1238,7 @@ def test_archive_omits_multiple_case_spellings_of_the_same_file(tmp_path):
     reopened.open_project(project)
     assert not reopened.diagnostics()
     archived, = reopened.source_models()
-    assert "include_sibling_aliases" not in archived
+    assert not {"include_sibling_aliases", "uncollected_include_siblings", "unresolved_include_paths"} & archived.keys()
     mapped_ids = {item["original_path"]: item["resource_id"] for item in archived["files"]}
     assert [reopened._include_bindings[mapped_ids["a/first.inc"], ordinal] for ordinal in (0, 1)] == [
         mapped_ids["a/mesh.inc"], mapped_ids["a/mesh.inc"],
