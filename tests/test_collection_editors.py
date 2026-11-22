@@ -969,6 +969,65 @@ def test_reference_apply_rejects_array_subclass_equality_error(masked):
     assert not submitted and "no longer available" in panel.error.text()
 
 
+@pytest.mark.parametrize("raises", (False, True), ids=("returns-false", "value-error"))
+def test_reference_apply_rejects_ufunc_owner_mismatch(raises):
+    np = pytest.importorskip("numpy")
+
+    class OwnedArray(np.ndarray):
+        def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+            if ufunc is np.equal and method == "__call__":
+                if raises and inputs[0].owner != inputs[1].owner:
+                    raise ValueError("incompatible owners")
+                return np.full(self.shape, inputs[0].owner == inputs[1].owner)
+            return NotImplemented
+
+    choice, mismatch, match = (np.array([101, 101]).view(OwnedArray) for _ in range(3))
+    choice.owner, mismatch.owner, match.owner = "A", "B", "A"
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (mismatch,), kind="references", choices=(choice,)),
+    ))
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+    panel.editor.editors["members"].set_raw_value((match,))
+    panel.apply_button.click()
+    assert len(submitted) == 1 and submitted[0][0].owner == "A"
+
+
+@pytest.mark.parametrize("kind", ("ndarray-function", "masked-function", "masked-object"))
+def test_reference_apply_matches_passive_numpy_subclasses(kind):
+    np = pytest.importorskip("numpy")
+    if kind == "ndarray-function":
+        class Passive(np.ndarray):
+            def __array_function__(self, func, types, args, kwargs):
+                return NotImplemented
+
+        make_array = lambda: np.array([1, 2]).view(Passive)
+    elif kind == "masked-function":
+        class Passive(np.ma.MaskedArray):
+            def __array_function__(self, func, types, args, kwargs):
+                return NotImplemented
+
+        make_array = lambda: np.ma.array([1, 2]).view(Passive)
+    else:
+        class Passive(np.ma.MaskedArray):
+            pass
+
+        def make_array():
+            values = np.empty(1, dtype=object)
+            values[0] = np.array([1, 2])
+            return np.ma.array(values, mask=[False]).view(Passive)
+
+    choice, selected = make_array(), make_array()
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    assert panel.editor.editors["members"].list.count() == 1
+    panel.apply_button.click()
+    assert len(submitted) == 1 and type(submitted[0][0]) is Passive
+    saved = np.asarray(submitted[0][0])
+    assert (saved[0] if saved.dtype.hasobject else saved).tolist() == [1, 2]
+
+
 def test_reference_apply_matches_mixed_sets_by_element_hash():
     class Member:
         def __init__(self, number):
@@ -1006,6 +1065,95 @@ def test_reference_apply_matches_counter_array_counts_and_missing_zeros(zero_on_
     editor.set_raw_value((Counter(a=np.array([1, 3])),))
     panel.apply_button.click()
     assert len(submitted) == 1 and "no longer available" in panel.error.text()
+
+
+@pytest.mark.parametrize("kind", ("strict-equality", "hidden-keys"))
+def test_reference_apply_rejects_distinct_counter_subclasses(kind):
+    if kind == "strict-equality":
+        class Strict(Counter):
+            __eq__ = dict.__eq__
+
+        choice, selected = Counter(a=1), Strict(a=1, b=0)
+    else:
+        class Index(Counter):
+            def keys(self):
+                return {}.keys()
+
+        choice, selected = Index(a=1), Index(a=2)
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+
+
+def test_reference_apply_formats_mapping_proxy_of_array_counter():
+    np = pytest.importorskip("numpy")
+    choice, selected = (MappingProxyType(Counter(a=np.array([1, 2]), b=0)) for _ in range(2))
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    assert panel.editor.editors["members"].list.count() == 1
+    panel.apply_button.click()
+    restored, = submitted[0]
+    assert isinstance(restored, MappingProxyType) and restored["a"].tolist() == [1, 2]
+
+
+@pytest.mark.parametrize("reverse", (False, True))
+def test_reference_apply_matches_hashed_abstract_set_of_values_views(reverse):
+    class H(Set):
+        def __init__(self, members):
+            self.members = frozenset(members)
+
+        def __len__(self):
+            return len(self.members)
+
+        def __iter__(self):
+            return iter(self.members)
+
+        def __contains__(self, item):
+            return item in self.members
+
+        __hash__ = Set._hash
+
+    view = {"id": [101]}.values()
+    plain, abstract = {frozenset([view])}, {H([view])}
+    choice, selected = (abstract, plain) if reverse else (plain, abstract)
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    editor = panel.editor.editors["members"]
+    assert editor.list.count() == 1
+    editor.set_raw_value(editor.raw_value())
+    panel.apply_button.click()
+    assert len(submitted) == 1
+    values, = submitted[0]
+    wrapped, = values
+    restored, = wrapped
+    assert list(restored) == [[101]]
+
+
+def test_reference_apply_matches_abstract_set_with_unhashable_members():
+    class ListBacked(Set):
+        def __init__(self, members):
+            self.members = list(members)
+
+        def __len__(self):
+            return len(self.members)
+
+        def __iter__(self):
+            return iter(self.members)
+
+        def __contains__(self, item):
+            return item in self.members
+
+    choice = ListBacked([{"id": 101}, {"id": 205}])
+    selected = ListBacked([{"id": 205}, {"id": 101}])
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    panel.apply_button.click()
+    assert submitted == [(choice,)]
 
 
 def test_reference_apply_ignores_backing_order_for_dict_items():

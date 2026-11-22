@@ -65,7 +65,8 @@ class SourceArchiveResource:
     kind = "radioss-source-archive"
 
     def __init__(self, metadata, files):
-        if not isinstance(metadata, dict) or set(metadata) - {"include_bindings", "uncollected_include_siblings"} != {
+        optional = {"include_bindings", "uncollected_include_siblings", "include_sibling_aliases"}
+        if not isinstance(metadata, dict) or set(metadata) - optional != {
                 "id", "name", "root_resource_id", "files", "id_map", "shared_nodes"}:
             raise PrepError("invalid_project", "Invalid source archive metadata.")
         if "uncollected_include_siblings" in metadata:
@@ -75,6 +76,12 @@ class SourceArchiveResource:
             if (not isinstance(siblings, list) or not siblings
                     or any(not isinstance(path, str) for path in siblings) or len(set(siblings)) != len(siblings)):
                 raise PrepError("invalid_project", "Invalid uncollected INCLUDE siblings.")
+        if "include_sibling_aliases" in metadata:
+            aliases = metadata["include_sibling_aliases"]
+            if (not metadata.get("include_bindings") or not isinstance(aliases, dict) or not aliases
+                    or any(not isinstance(path, str) or not isinstance(target, str) or not path or not target
+                           for path, target in aliases.items())):
+                raise PrepError("invalid_project", "Invalid collected INCLUDE sibling aliases.")
         self.id = metadata["id"]; UUID(self.id)
         if not isinstance(metadata["name"], str) or not isinstance(metadata["files"], list) or not metadata["files"]:
             raise PrepError("invalid_project", "An archive must identify its source files.")
@@ -201,7 +208,8 @@ class SourceArchiveResource:
             load_order = []
             graph = source_include_graph(originals, paths, selected=selected, historical=historical,
                                          archived_order=archived_order, load_order=load_order,
-                                         uncollected_siblings=uncollected_siblings)
+                                         uncollected_siblings=uncollected_siblings,
+                                         sibling_aliases=self.metadata.get("include_sibling_aliases"))
             reached, original_bindings, _ = graph
             if reached != set(paths) or load_order != archived_order:
                 continue
@@ -437,9 +445,11 @@ class SourceModelCommands:
                 files=records, id_map=[[ns, original, mapped] for (ns, original), mapped in sorted(mapping.items())],
                 shared_nodes=sorted(shared), include_bindings=[[owner, ordinal, target]
                     for (owner, ordinal), target in source._include_bindings.items()])
-            siblings = source_disk_siblings(Path(path).expanduser().resolve().parent, original_resources)
+            siblings, aliases = source_disk_siblings(Path(path).expanduser().resolve().parent, original_resources)
             if siblings:
                 metadata["uncollected_include_siblings"] = siblings
+            if aliases:
+                metadata["include_sibling_aliases"] = aliases
             archive = SourceArchiveResource(metadata, files)
             plan_id = str(uuid4())
             self._import_plan = (plan_id, document.id, document.revision, self._document_epoch, archive, tuple(resources), source._source_paths)

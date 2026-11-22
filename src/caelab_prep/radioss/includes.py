@@ -64,15 +64,17 @@ def disk_include_lookup(base, *, canonical=True):
 
 
 def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, selected=None, recovered=None,
-                     historical=None, archived_order=None, load_order=None, uncollected_siblings=None):
+                     historical=None, archived_order=None, load_order=None, uncollected_siblings=None, sibling_aliases=None):
     """Resolve live paths or replay validated bindings against an archive inventory."""
     selected, recovered = selected or {}, recovered or {}
     if selected and archived_order is not None and archive_inventory is not None:
         load = cache(load)
         expected_bindings = {(owner, load(owner).include_directives[ordinal].header_row): target
                              for (owner, ordinal), target in selected.items()}
-        if uncollected_siblings is not None:
-            lookup = _include_lookup_with_siblings(archive_inventory, load, lookup, uncollected_siblings, scope)
+        has_sibling_evidence = uncollected_siblings is not None or sibling_aliases is not None
+        if has_sibling_evidence:
+            lookup = _include_lookup_with_siblings(archive_inventory, load, lookup, uncollected_siblings or set(),
+                                                   sibling_aliases or {}, scope)
         order = []
 
         def load_collected(path):
@@ -86,7 +88,7 @@ def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, se
             # The archive may omit an alternate that delayed a native wave.
             # Validate the recorded order and bindings against one disk replay.
             replay = None
-            if uncollected_siblings is None:
+            if not has_sibling_evidence:
                 replay = _can_collect_from_disk(root, lookup, load, scope, archive_inventory, historical,
                                                 archived_order=archived_order, load_order=order,
                                                 expected_bindings=expected_bindings)
@@ -150,10 +152,10 @@ def _legal_phantom(path, files, directories):
             and not any(parent.as_posix() in files for parent in PurePosixPath(path).parents))
 
 
-def _uncollected_siblings(inventory, load, lookup, scope=""):
-    """Find alternate disk files that influenced the walk but were not collected."""
+def _sibling_evidence(inventory, load, lookup, scope=""):
+    """Find alternate disk paths absent from the collected inventory."""
     files, directories = _archived_path_types(inventory)
-    siblings = set()
+    siblings, aliases = set(), {}
     for owner in inventory:
         directory = PurePosixPath(owner).parent
         for directive in load(owner).include_directives:
@@ -163,24 +165,34 @@ def _uncollected_siblings(inventory, load, lookup, scope=""):
                 target = lookup(sibling_path)
                 root_target = lookup(root_path)
                 if target is not None and root_target in inventory and target != root_target:
-                    siblings.add(candidate)
-    return siblings
+                    if target in inventory:
+                        aliases[candidate] = target
+                    else:
+                        siblings.add(candidate)
+    return siblings, aliases
 
 
 def source_disk_siblings(base, resources):
-    """Capture unarchived sibling-file evidence while the source is available."""
+    """Capture uncollected files and aliases to collected files before saving."""
     by_path = {resource.name: resource for resource in resources}
-    return sorted(_uncollected_siblings(by_path.keys(), by_path.__getitem__, disk_include_lookup(base)))
+    siblings, aliases = _sibling_evidence(by_path.keys(), by_path.__getitem__, disk_include_lookup(base))
+    return sorted(siblings), dict(sorted(aliases.items()))
 
 
-def _include_lookup_with_siblings(inventory, load, lookup, siblings, scope):
+def _include_lookup_with_siblings(inventory, load, lookup, siblings, aliases, scope):
     """Check that the archived disk evidence could coexist with the inventory."""
     def disk_lookup(path):
-        return lookup(path) or (path.casefold() if path.casefold() in siblings else None)
+        folded = path.casefold()
+        return lookup(path) or aliases.get(folded) or (folded if folded in siblings else None)
 
-    if (_uncollected_siblings(inventory, load, disk_lookup, scope) != siblings
-            or any(parent.as_posix() in siblings for path in siblings for parent in PurePosixPath(path).parents)):
-        raise PrepError("invalid_project", "Invalid uncollected INCLUDE siblings.")
+    files, directories = _archived_path_types(inventory)
+    alternate_paths = siblings | aliases.keys()
+    if (siblings & aliases.keys() or any(target not in inventory for target in aliases.values())
+            or any(not _legal_phantom(path, files, directories)
+                   or any(parent.as_posix() in alternate_paths for parent in PurePosixPath(path).parents)
+                   for path in alternate_paths)
+            or _sibling_evidence(inventory, load, disk_lookup, scope) != (siblings, aliases)):
+        raise PrepError("invalid_project", "Invalid INCLUDE sibling evidence.")
     return disk_lookup
 
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from array import array
 from collections import Counter, OrderedDict, defaultdict, deque
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping, Set as AbstractSet
 from copy import copy
 from dataclasses import fields, is_dataclass
 from datetime import date, datetime, time, timedelta
@@ -673,12 +673,14 @@ def _equality_target(value):
 
 _MAPPING_EQUALITY = (dict.__eq__, OrderedDict.__eq__, Counter.__eq__, Mapping.__eq__)
 _SEQUENCE_EQUALITY = (list.__eq__, tuple.__eq__, deque.__eq__)
-_SET_EQUALITY = (set.__eq__, frozenset.__eq__)
+_SET_EQUALITY = (set.__eq__, frozenset.__eq__, AbstractSet.__eq__)
 
 
 def _equal_mappings(left, right, compared, *, mapping_rules=True):
-    if mapping_rules and isinstance(left, Counter) and isinstance(right, Counter):
-        return all(_safe_equal(left[key], right[key], compared) for key in left.keys() | right.keys())
+    if (mapping_rules and type(left).__eq__ is type(right).__eq__ is Counter.__eq__
+            and isinstance(left, Counter) and isinstance(right, Counter)):
+        return all(_safe_equal(dict.get(left, key, 0), dict.get(right, key, 0), compared)
+                   for key in dict.keys(left) | dict.keys(right))
     if isinstance(left, dict) and isinstance(right, dict):
         if mapping_rules and type(left).__eq__ is type(right).__eq__ is OrderedDict.__eq__:
             if tuple(OrderedDict.keys(left)) != tuple(OrderedDict.keys(right)):
@@ -695,10 +697,11 @@ def _set_item_bucket(value):
     kind = type(value)
     if kind is _DICT_VALUES:
         return (_DICT_VALUES, id(_view_origin(value)))
-    if kind.__eq__ is tuple.__eq__ or kind.__eq__ is frozenset.__eq__:
+    sequence = kind.__eq__ is tuple.__eq__
+    if sequence or (kind.__eq__ in (frozenset.__eq__, AbstractSet.__eq__) and isinstance(value, AbstractSet)):
         parts = tuple(_set_item_bucket(item) for item in value)
         if any(isinstance(part, tuple) for part in parts):
-            return (tuple, parts) if kind.__eq__ is tuple.__eq__ else (frozenset, frozenset(parts))
+            return (tuple, parts) if sequence else (frozenset, frozenset(parts))
     return hash(value)
 
 
@@ -720,16 +723,23 @@ def _match_colliding_set_items(left, right, compared):
     return all(assign(row, set()) for row in sorted(range(len(edges)), key=lambda row: len(edges[row])))
 
 
+def _set_buckets(values):
+    buckets = defaultdict(list)
+    for value in values:
+        buckets[_set_item_bucket(value)].append(value)
+    return buckets
+
+
 def _equal_sets(left, right, compared):
     if len(left) != len(right):
         return False
     if _HASH_SCALARS.issuperset(map(type, left)) and _HASH_SCALARS.issuperset(map(type, right)):
         return left == right
-    left_by_hash, right_by_hash = defaultdict(list), defaultdict(list)
-    for value in left:
-        left_by_hash[_set_item_bucket(value)].append(value)
-    for value in right:
-        right_by_hash[_set_item_bucket(value)].append(value)
+    try:
+        left_by_hash, right_by_hash = _set_buckets(left), _set_buckets(right)
+    except TypeError:
+        # An abstract set can support items that built-in sets cannot hash.
+        return _match_colliding_set_items(left, right, compared)
     if left_by_hash.keys() != right_by_hash.keys():
         return False
     for key, left_items in left_by_hash.items():
@@ -745,6 +755,7 @@ def _equal_sets(left, right, compared):
 
 
 def _equal_array_data(left, right, numpy, compared):
+    left, right = numpy.asarray(left), numpy.asarray(right)
     if not left.dtype.hasobject:
         return bool(numpy.array_equal(left, right))
     if left.dtype.names:
@@ -752,31 +763,45 @@ def _equal_array_data(left, right, numpy, compared):
     return all(_safe_equal(a, b, compared) for a, b in zip(left.flat, right.flat))
 
 
+def _array_mask(array, numpy):
+    mask = numpy.ma.getmask(array)
+    if mask is numpy.ma.nomask:
+        return numpy.ma.make_mask_none(array.shape, array.dtype)
+    return numpy.asarray(mask)
+
+
 def _equal_arrays(left, right, numpy, compared):
     kind = type(left)
     if kind is not type(right) or left.shape != right.shape or left.dtype != right.dtype:
         return False
     masked = isinstance(left, numpy.ma.MaskedArray)
-    if not masked and kind.__eq__ in (numpy.ndarray.__eq__, numpy.recarray.__eq__):
+    plain_equality = (numpy.ma.MaskedArray.__eq__,) if masked else (numpy.ndarray.__eq__, numpy.recarray.__eq__)
+    passive = (kind in (numpy.ndarray, numpy.ma.MaskedArray)
+               or (kind.__array_ufunc__ is numpy.ndarray.__array_ufunc__ and kind.__eq__ in plain_equality))
+    if passive and not masked:
         return _equal_array_data(left, right, numpy, compared)
-    if kind is not numpy.ma.MaskedArray:
+    if not passive:
         try:
             equal = left == right
         except (ValueError, RecursionError):
             return False
         if isinstance(equal, (bool, numpy.bool_)):
             matches = bool(equal)
+        elif isinstance(equal, numpy.ndarray) and equal.dtype.kind == "b":
+            data = numpy.asarray(equal)
+            if isinstance(equal, numpy.ma.MaskedArray):
+                data = data[~_array_mask(equal, numpy)]
+            matches = bool(data.all())
         else:
-            matches = (isinstance(equal, numpy.ndarray) and equal.dtype.kind == "b"
-                       and bool(numpy.ma.filled(equal, True).all()))
+            matches = False
         if not masked or not matches:
             return matches
-    mask = numpy.ma.getmaskarray(left)
-    if not numpy.array_equal(mask, numpy.ma.getmaskarray(right)):
+    mask = _array_mask(left, numpy)
+    if not numpy.array_equal(mask, _array_mask(right, numpy)):
         return False
     if mask.dtype.names:
         return all(_safe_equal(left[name], right[name], compared) for name in mask.dtype.names)
-    return _equal_array_data(numpy.ma.getdata(left)[~mask], numpy.ma.getdata(right)[~mask], numpy, compared)
+    return _equal_array_data(numpy.asarray(left)[~mask], numpy.asarray(right)[~mask], numpy, compared)
 
 
 def _safe_equal(left, right, compared=None):
@@ -842,6 +867,7 @@ def _reference_text(label):
     try:
         return str(label)
     except ValueError:
+        label = _equality_target(label)
         if not isinstance(label, Counter):
             raise
         # Counter sorts counts for display, which can fail for array counts.

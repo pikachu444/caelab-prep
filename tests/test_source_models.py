@@ -777,19 +777,22 @@ def test_archive_records_uncollected_sibling_with_in_tree_symlink(tmp_path, monk
         return resolve(aliases.get(path, path), *args, **kwargs)
 
     same_target = label_target == "label.inc"
-    siblings = ["a/mesh.inc"] if same_target else ["a/label.inc", "a/mesh.inc"]
+    collected = {"a/label.inc": "other.inc"} if label_target == "other.inc" else {}
+    siblings = ["a/mesh.inc"] if same_target or collected else ["a/label.inc", "a/mesh.inc"]
     with monkeypatch.context() as simulated_link:
         simulated_link.setattr(Path, "resolve", resolve_alias)
         session = PrepSession()
         session.open_rad(model(tmp_path / "host"))
         plan = session.plan_import_source(starter)
         assert plan["source"]["uncollected_include_siblings"] == siblings
+        assert plan["source"].get("include_sibling_aliases", {}) == collected
         session.import_source(plan["plan_id"])
         archive = tmp_path / "linked.caeprep"
         session.save_project(archive)
     with zipfile.ZipFile(archive) as saved:
         source, = json.loads(saved.read("manifest.json"))["source_models"]
         assert source["uncollected_include_siblings"] == siblings
+        assert source.get("include_sibling_aliases", {}) == collected
         other = next(entry for entry in source["files"] if entry["original_path"] == "other.inc")
         member = f'sources/{source["id"]}/{other["original_resource_id"]}.rad'
         assert saved.read(member) == starter.with_name("other.inc").read_bytes()
@@ -798,6 +801,77 @@ def test_archive_records_uncollected_sibling_with_in_tree_symlink(tmp_path, monk
     source, = reopened.source_models()
     tail = ["label.inc", "other.inc", "mesh.inc"] if same_target else ["other.inc", "mesh.inc", "label.inc"]
     assert [entry["original_path"] for entry in source["files"]] == [starter.name, "a/chooser.inc", *tail]
+
+
+@pytest.mark.parametrize("tamper", (None, "selected-alias", "cycle", "missing-target", "wrong-binding", "shadow",
+                                    "overlap", "malformed", "no-bindings"))
+def test_archive_replays_collected_sibling_target(tmp_path, monkeypatch, tamper):
+    starter = model(tmp_path / "source")
+    selects_alias = tamper in ("selected-alias", "wrong-binding")
+    collector = b"b/collector.inc" if selects_alias else b"b/y.inc"
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                         b"#include mesh.inc\n#include " + collector + b"\n#include a/chooser.inc\n"))
+    collected = starter.parent / "b/y.inc"
+    collected.parent.mkdir()
+    collected.write_bytes(b"# already collected\n")
+    if selects_alias:
+        collected.with_name("collector.inc").write_bytes(b"#include y.inc\n")
+    alias = starter.parent / "a/mesh.inc"
+    alias.parent.mkdir()
+    alias.write_bytes(collected.read_bytes())
+    alias.with_name("chooser.inc").write_bytes(b"#include mesh.inc\n")
+    resolve = Path.resolve
+
+    def resolve_alias(path, *args, **kwargs):
+        return resolve(collected if path == alias else path, *args, **kwargs)
+
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    with monkeypatch.context() as links:
+        links.setattr(Path, "resolve", resolve_alias)
+        plan = session.plan_import_source(starter)
+        session.import_source(plan["plan_id"])
+        project = tmp_path / "collected-alias.caeprep"
+        session.save_project(project)
+
+    if tamper in (None, "selected-alias"):
+        reopened = PrepSession()
+        reopened.open_project(project)
+        source, = reopened.source_models()
+        assert source["include_sibling_aliases"] == {"a/mesh.inc": "b/y.inc"}
+        assert "uncollected_include_siblings" not in source
+        files = {record["original_path"]: record for record in source["files"]}
+        chooser = files["a/chooser.inc"]
+        target = files["b/y.inc" if selects_alias else "mesh.inc"]
+        assert [chooser["original_resource_id"], 0, target["original_resource_id"]] in source["include_bindings"]
+        with zipfile.ZipFile(project) as saved:
+            assert saved.read(f'raw/{chooser["resource_id"]}.rad') == f'#include {target["logical_path"]}\n'.encode()
+        return
+
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    variants = {
+        "cycle": {"a/mesh.inc": "a/loop.inc", "a/loop.inc": "a/mesh.inc"},
+        "missing-target": {"a/mesh.inc": "b/missing.inc"},
+        "wrong-binding": {"a/mesh.inc": "a/chooser.inc"},
+        "shadow": {"mesh.inc": "b/y.inc"},
+        "malformed": {"a/mesh.inc": ["b/y.inc"]},
+    }
+    source["include_sibling_aliases"] = variants.get(tamper, {"a/mesh.inc": "b/y.inc"})
+    if tamper == "overlap":
+        source["uncollected_include_siblings"] = ["a/mesh.inc"]
+    elif tamper == "no-bindings":
+        del source["include_bindings"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "invalid-alias.caeprep"
+    with zipfile.ZipFile(altered, "w") as saved:
+        for name, data in members.items():
+            saved.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
 
 
 def test_current_import_reopens_exact_recorded_chooser_bindings_in_one_walk(tmp_path, monkeypatch):
