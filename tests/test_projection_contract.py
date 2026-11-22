@@ -156,6 +156,27 @@ def test_shell_selection_accounts_for_display_omitted_duplicates(tmp_path, formu
             assert field.value == (ref,) and ref not in field.choices
 
 
+def test_renderer_card_qualifies_only_ambiguous_element_picks(tmp_path):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "input"))
+    shell = _card(session, "/SHELL/902")
+    mesh = session.document.resources[shell["resource_id"]]
+
+    def pick():
+        projection = session.mesh_view()
+        return {key: projection[key] for key in ("document_id", "document_epoch", "revision", "projection_revision")} | {
+            "kind": "element", "id": 7001, "resource_id": mesh.id, "card_id": shell["id"],
+            "resource_revision": projection["resource_revisions"][mesh.id],
+        }
+
+    unqualified, = session.select_pick(pick())["refs"]
+    assert unqualified == {"entity_kind": "element", "local_id": 7001, "resource_id": mesh.id}
+    state, _ = mesh.inserted_state(f"/QUAD/903\n{_i(7001, 501, 605, 709, 999999)}\n")
+    session.dispatcher.execute(mesh.id, state, "Add a duplicate element with a missing node")
+    qualified, = session.select_pick(pick())["refs"]
+    assert qualified == {**unqualified, "formulation": "SHELL"}
+
+
 @pytest.mark.parametrize(("family", "connectivity"), (("SH4N", _i(501, 605, 709, 811)),
                                                     ("SHELL", _i(501, 605, 709) + " " * 10)),
                          ids=("shell-alias", "malformed-shell-connectivity"))

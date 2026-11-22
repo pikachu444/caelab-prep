@@ -1999,7 +1999,9 @@ def test_incomplete_part_blocks_contact_surface_creation_resolution_and_export(t
 
 
 @pytest.mark.parametrize("blank_id", (False, True), ids=("dangling-node", "blank-element-id"))
-def test_incomplete_part_tree_click_keeps_assignment_available(tmp_path, blank_id, qt_widgets):
+def test_incomplete_part_tree_click_keeps_assignment_available(tmp_path, blank_id, request):
+    pytest.importorskip("PySide6")
+    qt_widgets = request.getfixturevalue("qt_widgets")
     from PySide6.QtCore import Qt
     from PySide6.QtTest import QTest
     from caelab_prep.ui.main_window import MainWindow

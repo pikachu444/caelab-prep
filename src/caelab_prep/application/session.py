@@ -1959,7 +1959,17 @@ class PrepSession(AnalysisCaseCommands, SourceModelCommands, ModelRelationComman
             entity_id = candidate.get("id")
             if kind == "node" and resource_id not in self._projection_cache["node_resources"].get(entity_id, ()):
                 raise PrepError("invalid_selection", "The entity does not belong to the displayed resource.")
-            return self.select_entity(kind, entity_id, resource_id=resource_id, formulation=candidate.get("formulation"))
+            formulation = candidate.get("formulation")
+            card_id = candidate.get("card_id")
+            if kind == "element" and formulation is None and card_id is not None:
+                native, displayed = self._matching_selection_cells(entity_id, resource_id, None)
+                if len(native) > 1:
+                    # The renderer's card identifies the hit even when another
+                    # formulation with the same ID could not be displayed.
+                    hits = [cell for cell in displayed if cell.get("card_id") == card_id]
+                    if len(hits) == 1:
+                        formulation = hits[0].get("formulation")
+            return self.select_entity(kind, entity_id, resource_id=resource_id, formulation=formulation)
 
     def _matching_selection_cells(self, entity_id, resource_id, formulation):
         if formulation is not None and not isinstance(formulation, str):

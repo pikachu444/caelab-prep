@@ -31,7 +31,6 @@ from PySide6.QtGui import QClipboard, QKeySequence, QValidator
 from PySide6.QtWidgets import (QApplication, QCheckBox, QHBoxLayout, QLineEdit, QListWidget,
                               QListWidgetItem, QMenu, QVBoxLayout, QWidget)
 
-from ...application.contracts import ObjectRef
 from .curve import CurveTable
 
 
@@ -233,7 +232,7 @@ class BooleanVectorEdit(QWidget):
 
 _PLAIN_PRIMITIVES = frozenset({str, int, float, bool, type(None), Decimal, Fraction, complex})
 _HASH_SCALARS = _PLAIN_PRIMITIVES | {
-    bytes, ObjectRef, UUID, date, datetime, time, timedelta, IPv4Address, IPv6Address,
+    bytes, UUID, date, datetime, time, timedelta, IPv4Address, IPv6Address,
     PurePosixPath, PureWindowsPath, PosixPath, WindowsPath, range,
 }
 _ROW_ID_ROLE = Qt.ItemDataRole.UserRole + 1
@@ -252,6 +251,11 @@ class _ReferenceMemo(dict):
         super().__init__(entries)
         self.unshareable = set()
         self.frozen_slots = {}
+
+
+def _is_object_ref(kind):
+    contracts = sys.modules.get("caelab_prep.application.contracts")
+    return kind is getattr(contracts, "ObjectRef", None)
 
 
 def _proxy_target(value):
@@ -482,6 +486,8 @@ def _clone_ref(ref, memo=None):
         return ref
     if memo is None and kind is MappingProxyType:
         return MappingProxyType(_clone_ref(_proxy_target(ref)))
+    if _is_object_ref(kind):
+        return ref
     if memo is None:
         memo = _ReferenceMemo()
     key = id(ref)
@@ -621,7 +627,7 @@ def _plain_key(value):
         return (kind.__name__, items) if None not in items else None
     target = value if kind is dict else _unwrap_standard_dict(value)
     if target is None:
-        return None
+        return hash(value) if _is_object_ref(kind) else None
     items = []
     for key, item in dict.items(target):
         name_key = hash(key) if type(key) in _HASH_SCALARS else _plain_key(key)
@@ -636,7 +642,8 @@ def _shares_hash_bucket(value):
     kind = type(value)
     return (kind in _HASH_SCALARS or
             (kind is tuple or kind is frozenset) and all(_shares_hash_bucket(item) for item in value) or
-            isinstance(value, Enum) and kind.__eq__ in (object.__eq__, int.__eq__, str.__eq__))
+            isinstance(value, Enum) and kind.__eq__ in (object.__eq__, int.__eq__, str.__eq__) or
+            _is_object_ref(kind))
 
 
 def _bucket_key(value):
@@ -924,7 +931,23 @@ class ReferenceListEdit(QWidget):
     def __init__(self, value=(), *, choices=(), choice_labels=(), parent=None):
         super().__init__(parent)
         source_choices = tuple(choices)
-        self.choices = tuple(_clone_ref(ref) for ref in source_choices)
+        choice_slots = {}
+
+        def snapshot_choice(ref):
+            params = getattr(type(ref), "__dataclass_params__", None)
+            if params is None or not params.frozen:
+                return _clone_ref(ref)
+            memo = _ReferenceMemo()
+            snapshot = _clone_ref(ref, memo)
+            if memo.frozen_slots:
+                # Read the slots once and reuse their detached values during row setup.
+                choice_slots[id(snapshot)] = {
+                    id(memo[key]): tuple((slot, memo.get(id(value), value)) for slot, value in slots)
+                    for key, slots in memo.frozen_slots.items() if key in memo
+                }
+            return snapshot
+
+        self.choices = tuple(snapshot_choice(ref) for ref in source_choices)
         self._choice_keys = tuple(_bucket_key(ref) for ref in self.choices)
         self._choice_buckets = {}
         for key, ref in zip(self._choice_keys, self.choices):
@@ -950,7 +973,7 @@ class ReferenceListEdit(QWidget):
             indices = tuple(positions.get(id(ref)) for ref in selected)
             if all(index is not None and _safe_equal(self.choices[index], ref) for index, ref in zip(indices, selected)):
                 checked_rows = set(indices)
-        self._set_raw_value(selected, checked_rows, matching_choices=source_choices)
+        self._set_raw_value(selected, checked_rows, matching_choices=source_choices, choice_slots=choice_slots)
 
     def _checked_row_ids(self):
         item_at = self.list.item
@@ -975,7 +998,7 @@ class ReferenceListEdit(QWidget):
     def set_raw_value(self, value):
         self._set_raw_value(tuple(value), None)
 
-    def _set_raw_value(self, selected, checked_rows, *, matching_choices=None):
+    def _set_raw_value(self, selected, checked_rows, *, matching_choices=None, choice_slots=None):
         if checked_rows is None:
             selected_keys = tuple(_bucket_key(ref) for ref in selected)
             selected_buckets = {}
@@ -991,6 +1014,8 @@ class ReferenceListEdit(QWidget):
 
         def add_row(ref, label, selected, available):
             memo = _ReferenceMemo() if is_dataclass(type(ref)) else None
+            if memo is not None and available and choice_slots:
+                memo.frozen_slots.update(choice_slots.get(id(ref), ()))
             snapshot = _clone_ref(ref, memo)
             if memo is not None:
                 # Reuse the state inspection, never the detached objects.

@@ -490,9 +490,9 @@ class MeshViewport(QWidget):
         if not 0 <= index < len(self._cells):
             return
         cell = self._cells[index]
-        self.entityPicked.emit({**pick_candidate(self._projection_stamp, "element", cell["id"], cell.get("resource_id")), "part_id": cell.get("part_id"),
-                                "resource_id": cell.get("resource_id"), "card_id": cell.get("card_id"),
-                                "formulation": cell.get("formulation")})
+        candidate = pick_candidate(self._projection_stamp, "element", cell["id"], cell.get("resource_id"))
+        candidate.update(part_id=cell.get("part_id"), card_id=cell.get("card_id"))
+        self.entityPicked.emit(candidate)
 
     def set_selection(self, selection):
         """Only an approved canonical selection changes geometry or highlight.

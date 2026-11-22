@@ -11,7 +11,7 @@ import threading
 from uuid import uuid4
 
 from PySide6.QtCore import QObject, Qt, Signal, Slot, QThread
-from PySide6.QtWidgets import QApplication, QLineEdit
+from PySide6.QtWidgets import QAbstractItemView, QApplication
 
 from ..application.contracts import ObjectRef, SetProperties
 from ..application.live_transport import LiveServer
@@ -123,9 +123,9 @@ class LiveControl(QObject):
         return {key: description[key] for key in ("document_id", "document_epoch", "revision")}
 
     def _draft_pending(self):
-        # Do not close a user's active table delegate just to answer a query.
-        focused = QApplication.focusWidget()
-        if isinstance(focused, QLineEdit) and self.host.curve_table.table.isAncestorOf(focused): return True
+        # An open delegate owns the draft even when another window has focus.
+        if self.host.curve_table.table.state() == QAbstractItemView.State.EditingState:
+            return True
         return bool(self.host.file_edits.has_draft())
 
     def _owner_state(self):

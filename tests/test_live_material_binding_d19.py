@@ -479,7 +479,7 @@ def test_d19_live_rpc_guards_refresh_and_idempotent_replay(tmp_path: Path, reque
     pytest.importorskip("PySide6")
     request.getfixturevalue("qt_settings")
     from PySide6.QtCore import Qt
-    from PySide6.QtWidgets import QApplication, QDialog, QLineEdit
+    from PySide6.QtWidgets import QAbstractItemDelegate, QApplication, QDialog, QLineEdit
     from caelab_prep.ui.main_window import MainWindow
 
     app = QApplication.instance() or QApplication([])
@@ -530,17 +530,20 @@ def test_d19_live_rpc_guards_refresh_and_idempotent_replay(tmp_path: Path, reque
             win.show()
             win.select_card(_object_ref(win.session, "/FUNCT/10")["object_id"])
             app.processEvents()
-            editor = QLineEdit(win.curve_table.table)
-            editor.show()
-            editor.setFocus()
+            grid = win.curve_table.table
+            grid.setCurrentCell(0, 1)
+            grid.editItem(grid.item(0, 1))
             app.processEvents()
+            editor = grid.findChild(QLineEdit)
+            assert editor is not None and editor.isVisible()
+            editor.setText("99")
             try:
                 with pytest.raises(LiveRemoteError) as draft:
                     call("material.prepare_apply", request)
                 assert draft.value.code == "draft_pending"
+                assert editor.text() == "99" and _handle(win.session) == handle
             finally:
-                editor.clearFocus()
-                editor.deleteLater()
+                grid.closeEditor(editor, QAbstractItemDelegate.EndEditHint.RevertModelCache)
                 app.processEvents()
 
             win.select_card(target["object_id"])
