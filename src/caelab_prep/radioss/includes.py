@@ -163,13 +163,14 @@ def _sibling_evidence(inventory, load, lookup, scope="", *, path_name=None):
         directory = PurePosixPath(owner).parent
         for directive in load(owner).include_directives:
             _, root_path, sibling_path = _include_paths(directory, directive.path, scope)
+            root_target = lookup(root_path)
+            observed_targets[root_path.casefold()].add(root_target)
             if root_path == sibling_path:
                 continue
             target = lookup(sibling_path)
             observed_targets[sibling_path.casefold()].add(target)
             candidate = sibling_path if path_name is None else path_name(sibling_path)
             if candidate is not None and _legal_phantom(candidate, files, directories):
-                root_target = lookup(root_path)
                 if target is not None and root_target in inventory and target != root_target:
                     if target in inventory:
                         raw_aliases[candidate] = target

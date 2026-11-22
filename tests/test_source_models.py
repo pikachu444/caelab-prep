@@ -1007,6 +1007,81 @@ def test_archive_keeps_self_alias_when_case_variants_collide(tmp_path, monkeypat
         assert error.value.code == "invalid_project"
 
 
+@pytest.mark.parametrize("sibling_present", (True, False), ids=("resolved-sibling", "missing-sibling"))
+def test_archive_preserves_root_operand_case_miss(tmp_path, monkeypatch, sibling_present):
+    starter = model(tmp_path / "source")
+    source = starter.parent
+    (source / "a").mkdir()
+    (source / "b").mkdir()
+    (source / "a/first.inc").write_bytes(b"#include MESH.INC\n")
+    (source / "a/mesh.inc").write_bytes(b"# sibling mesh\n")
+    (source / "b/second.inc").write_bytes(b"#include a/Mesh.inc\n")
+    starter.write_bytes(starter.read_bytes().replace(
+        b"#include mesh.inc\n", b"#include mesh.inc\n#include a/first.inc\n#include b/second.inc\n"))
+
+    paths = {starter.name, "mesh.inc", "a/first.inc", "a/mesh.inc", "b/second.inc"}
+    if sibling_present:
+        (source / "b/a").mkdir()
+        (source / "b/a/mesh.inc").write_bytes(b"# qualified sibling mesh\n")
+        paths.add("b/a/mesh.inc")
+    aliases = {"a/MESH.INC": "a/mesh.inc"}
+    lookup_name = includes.include_lookup(paths | aliases.keys())
+    disk_lookup = includes.disk_include_lookup
+
+    def case_sensitive_tree(base, **kwargs):
+        if base != source:
+            return disk_lookup(base, **kwargs)
+
+        def lookup(path):
+            name = lookup_name(path)
+            return aliases.get(name, name)
+
+        return lookup
+
+    with monkeypatch.context() as filesystem:
+        filesystem.setattr(includes, "disk_include_lookup", case_sensitive_tree)
+        filesystem.setattr(prep_session, "disk_include_lookup", case_sensitive_tree)
+        session = PrepSession()
+        session.open_rad(model(tmp_path / "host"))
+        if not sibling_present:
+            with pytest.raises(PrepError) as error:
+                session.plan_import_source(starter)
+            assert error.value.code == "unresolved_include"
+            return
+        plan = session.plan_import_source(starter)
+        session.import_source(plan["plan_id"])
+        project = tmp_path / "root-case-miss.caeprep"
+        session.save_project(project)
+
+    reopened = PrepSession()
+    reopened.open_project(project)
+    assert not reopened.diagnostics()
+    archived, = reopened.source_models()
+    assert archived["include_sibling_aliases"] == aliases
+    mapped_ids = {item["original_path"]: item["resource_id"] for item in archived["files"]}
+    assert mapped_ids.keys() == paths
+    assert {key: target for key, target in reopened._include_bindings.items() if key[0] in mapped_ids.values()} == {
+        (mapped_ids[starter.name], 0): mapped_ids["mesh.inc"],
+        (mapped_ids[starter.name], 1): mapped_ids["a/first.inc"],
+        (mapped_ids[starter.name], 2): mapped_ids["b/second.inc"],
+        (mapped_ids["a/first.inc"], 0): mapped_ids["a/mesh.inc"],
+        (mapped_ids["b/second.inc"], 0): mapped_ids["b/a/mesh.inc"],
+    }
+
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    del manifest["source_models"][0]["include_sibling_aliases"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "root-case-miss-without-alias.caeprep"
+    with zipfile.ZipFile(altered, "w") as saved:
+        for name, data in members.items():
+            saved.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
 @pytest.mark.parametrize("ungrounded", (False, True), ids=("observed", "ungrounded"))
 def test_archive_replays_legacy_case_insensitive_self_alias(tmp_path, ungrounded):
     starter = model(tmp_path / "source")
