@@ -1,7 +1,7 @@
 """Real Qt collection drafts; reading input never submits a document command."""
 from array import array
 from collections import ChainMap, Counter, OrderedDict, UserDict, defaultdict, deque
-from collections.abc import Mapping, Set
+from collections.abc import ItemsView, Mapping, Set
 import ctypes
 from dataclasses import dataclass, field, make_dataclass
 from decimal import Decimal
@@ -1236,6 +1236,51 @@ def test_reference_apply_matches_abstract_set_with_unhashable_members():
     ))
     panel.apply_button.click()
     assert submitted == [(choice,)]
+
+
+@pytest.mark.parametrize("reverse", (False, True), ids=("items-choice", "items-selection"))
+def test_reference_apply_rejects_incompatible_items_view_and_frozenset(reverse):
+    view = ItemsView({"part": [12]})
+    frozen = frozenset({("part", (12,))})
+    choice, selected = (frozen, view) if reverse else (view, frozen)
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    assert panel.editor.editors["members"].list.count() == 2
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+
+
+def test_reference_apply_matches_items_views_with_equal_lists():
+    choice, selected = (ItemsView({"part": [12]}) for _ in range(2))
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    assert panel.editor.editors["members"].list.count() == 1
+    panel.apply_button.click()
+    assert len(submitted) == 1 and list(submitted[0][0]) == [("part", [12])]
+
+
+@pytest.mark.parametrize("nested", ("list", "dict"))
+def test_reference_apply_restores_nested_values_views_inside_items_views(nested):
+    view = {"id": [101]}.values()
+
+    def wrapped():
+        return ItemsView({"part": [view] if nested == "list" else {"nested": view}})
+
+    choice, selected = wrapped(), wrapped()
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    editor = panel.editor.editors["members"]
+    assert editor.list.count() == 1
+    editor.set_raw_value(editor.raw_value())
+    assert editor.list.count() == 1
+    panel.apply_button.click()
+    assert len(submitted) == 1 and isinstance(submitted[0][0], ItemsView)
+    (key, value), = submitted[0][0]
+    restored = value[0] if nested == "list" else value["nested"]
+    assert key == "part" and list(restored) == [[101]]
 
 
 def test_reference_apply_ignores_backing_order_for_dict_items():

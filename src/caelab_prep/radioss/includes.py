@@ -157,6 +157,7 @@ def _legal_phantom(path, files, directories):
 def _sibling_evidence(inventory, load, lookup, scope="", *, path_name=None):
     """Find alternate disk paths absent from the collected inventory."""
     files, directories = _archived_path_types(inventory, exact=True)
+    inventory_lookup = include_lookup(files)
     siblings, aliases = set(), {}
     for owner in inventory:
         directory = PurePosixPath(owner).parent
@@ -166,7 +167,8 @@ def _sibling_evidence(inventory, load, lookup, scope="", *, path_name=None):
             if root_path != sibling_path and candidate is not None and _legal_phantom(candidate, files, directories):
                 target = lookup(sibling_path)
                 root_target = lookup(root_path)
-                if target is not None and root_target in inventory and target != root_target:
+                if (target is not None and root_target in inventory and target != root_target
+                        and inventory_lookup(sibling_path) != target):
                     if target in inventory:
                         aliases[candidate] = target
                     else:

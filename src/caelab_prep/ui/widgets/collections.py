@@ -710,17 +710,20 @@ def _set_item_bucket(value):
 
 
 def _set_values_views(container):
-    seen = set()
+    seen = {}
     pending = [container]
     while pending:
         value = pending.pop()
         key = id(value)
         if key in seen:
             continue
-        seen.add(key)
+        # Iterating an items view can allocate temporary tuples.
+        seen[key] = value
         if type(value) is _DICT_VALUES:
             yield value
-        elif isinstance(value, (tuple, AbstractSet)):
+        elif isinstance(value, Mapping):
+            pending.extend(dict.items(value) if isinstance(value, dict) else value.items())
+        elif isinstance(value, (list, tuple, deque, AbstractSet)):
             pending.extend(value)
 
 
@@ -863,7 +866,7 @@ def _safe_equal(left, right, compared=None):
             return (AbstractSet.__eq__ in (left_eq, right_eq)
                     and isinstance(left, AbstractSet) and isinstance(right, AbstractSet)
                     and _equal_with_shared_set_views(left, right, compared))
-        except (ValueError, RecursionError):
+        except (ValueError, TypeError, RecursionError):
             return False
     if compared is None:
         compared = set()

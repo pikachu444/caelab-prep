@@ -854,6 +854,7 @@ def test_d23_nested_include_lookup_agrees_in_native_and_independent_source(tmp_p
     plan = destination.plan_import_source(starter)
     expected_points = expected_native[0]
     assert (plan["node_count"], plan["element_count"], plan["collisions"]) == (len(expected_points), 1, [])
+    assert "include_sibling_aliases" not in plan["source"]
     destination.import_source(plan["plan_id"])
     paths = {item["original_path"]: item["logical_path"] for item in plan["source"]["files"]}
     expected_import = ({node: (point, (paths[path[0]],)) for node, (point, path) in expected_points.items()},
