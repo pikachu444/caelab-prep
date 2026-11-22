@@ -214,6 +214,8 @@ class MeshViewport(QWidget):
             cell_parts.append(part)
             # Keep duplicate typed IDs explicit; an ambiguous selection is refused.
             key = (cell.get("resource_id"), cell["id"])
+            qualified = (*key, cell.get("formulation"))
+            self._element_index[qualified] = None if qualified in self._element_index else row
             self._element_index[key] = None if key in self._element_index else row
         part_slots = {part: i for i, part in enumerate(part_cells)}
         part_numbers = np.fromiter((part_slots[part] % len(palette) for part in cell_parts),
@@ -362,11 +364,11 @@ class MeshViewport(QWidget):
         if any(selection.get(key) != self._projection_stamp.get(key) for key in
                ("document_id", "document_epoch", "projection_revision")):
             return []
-        keys = {(ref.get("resource_id"), ref.get("local_id")) for ref in selection.get("refs", ())
+        keys = {(ref.get("resource_id"), ref.get("local_id"), ref.get("formulation")) for ref in selection.get("refs", ())
                 if ref.get("entity_kind") == "element"}
         matches = []
         for key in keys:
-            index = self._element_index.get(key)
+            index = self._element_index.get(key[:2] if key[2] is None else key)
             if index is None:
                 return []
             if self._cell_parts[index] not in self._hidden_parts:
@@ -488,8 +490,9 @@ class MeshViewport(QWidget):
         if not 0 <= index < len(self._cells):
             return
         cell = self._cells[index]
-        self.entityPicked.emit({**pick_candidate(self._projection_stamp, "element", cell["id"], cell.get("resource_id")), "part_id": cell.get("part_id"),
-                                "resource_id": cell.get("resource_id"), "card_id": cell.get("card_id")})
+        candidate = pick_candidate(self._projection_stamp, "element", cell["id"], cell.get("resource_id"))
+        candidate.update(part_id=cell.get("part_id"), card_id=cell.get("card_id"))
+        self.entityPicked.emit(candidate)
 
     def set_selection(self, selection):
         """Only an approved canonical selection changes geometry or highlight.
@@ -511,7 +514,7 @@ class MeshViewport(QWidget):
         self._projection_stamp["resource_revisions"] = dict(selection.get("resource_revisions", {}))
         key = (selection.get("document_id"), selection.get("document_epoch"),
                selection.get("projection_revision"), selection.get("kind"), tuple(selection.get("ids", ())),
-               tuple((ref.get("resource_id"), ref.get("entity_kind"), ref.get("local_id"))
+               tuple((ref.get("resource_id"), ref.get("entity_kind"), ref.get("local_id"), ref.get("formulation"))
                      for ref in selection.get("refs", ())))
         if key == self._selection_visual_key:
             return

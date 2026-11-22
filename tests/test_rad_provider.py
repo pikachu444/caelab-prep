@@ -1,9 +1,10 @@
 from dataclasses import replace
 from pathlib import Path
+from time import perf_counter
 
 import pytest
 
-from caelab_prep.application.contracts import DocumentSession, SetProperties
+from caelab_prep.application.contracts import DocumentSession, OperationRequest, SetProperties
 from caelab_prep.application.rad_provider import RadProvider
 from caelab_prep.application.session import PrepSession
 from caelab_prep.cae_core import PrepError
@@ -20,6 +21,158 @@ def opened(name="shell_panels_0000.rad"):
 
 def node(provider, keyword):
     return next(item for item in provider.tree_nodes() if item.ref.native_scope == keyword)
+
+
+def test_element_group_form_preparation_scales_to_8000_selected_shells(tmp_path):
+    count = 8000
+    raw = (INPUTS / "shell_panels_0000.rad").read_bytes().replace(b"\r\n", b"\n")
+    before, elements = raw.split(b"\n/SHELL/1\n", 1)
+    _, after = elements.split(b"\n/SHELL/2\n", 1)
+    shells = "".join(f"{identifier:10d}{1:10d}{2:10d}{5:10d}{4:10d}\n"
+                     for identifier in range(100, 100 + count))
+    source = tmp_path / "large_shells_0000.rad"
+    source.write_bytes(before + b"\n/SHELL/1\n" + shells.encode() + b"/SHELL/2\n" + after)
+    session = PrepSession()
+    session.open_rad(source)
+    provider = RadProvider(session)
+    part = next(card for card in session.list_cards() if card["keyword"] == "/PART/1")
+    session.activate_object(provider.ref_for_card(part))
+    assert len(session.selection()["refs"]) == count
+
+    start = perf_counter()
+    spec = provider.operation_spec("element_group.create")
+    elapsed = perf_counter() - start
+    field = next(field for field in spec.fields if field.name == "element_refs")
+    assert len(field.value) == count and field.value == field.choices[:count]
+    assert elapsed < 0.5, f"Preparing 8000 selected shells took {elapsed:.3f} seconds"
+
+
+def test_element_group_picker_qualifies_same_file_shell_and_quad_ids(tmp_path):
+    source = tmp_path / "shared_0000.rad"
+    raw = (INPUTS / "shell_panels_0000.rad").read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0]
+    raw = raw.replace(b"\n/SHELL/1", b"\n/QUAD/1", 1).replace(b"\n         5        10", b"\n         1        10", 1)
+    source.write_bytes(raw + b"/END\n")
+    session = PrepSession()
+    session.open_rad(source)
+    provider = RadProvider(session)
+    spec = provider.operation_spec("element_group.create")
+    field = next(field for field in spec.fields if field.name == "element_refs")
+    choices = {ref["formulation"]: (ref, label) for ref, label in zip(field.choices, field.choice_labels)
+               if ref["local_id"] == 1}
+    assert set(choices) == {"SHELL", "QUAD"}
+    for family, keyword in (("SHELL", "/GRSHEL/SHEL/987"), ("QUAD", "/GRQUAD/QUAD/987")):
+        ref, label = choices[family]
+        assert f"({family})" in label
+        result = provider.execute_operation(OperationRequest(
+            "element_group.create", {"name": family, "native_id": 987, "element_refs": [ref]},
+            session.document.id, session.document.revision))
+        group = node(provider, keyword).ref
+        assert group.object_id == result["card_id"]
+        assert session.group_members(group.object_id)["members"] == [ref]
+        other = choices["QUAD" if family == "SHELL" else "SHELL"][0]
+        with pytest.raises(PrepError) as error:
+            provider.submit(SetProperties(group, {"element_refs": [other]}, session.document.revision))
+        assert error.value.code == "incompatible_group"
+        provider.submit(SetProperties(group, {"element_refs": [ref]}, session.document.revision))
+
+
+@pytest.mark.parametrize("tetra_node", (10, 99999), ids=("both-visible", "tetra-omitted"))
+def test_element_group_picker_rejects_shared_id_within_one_native_family(tmp_path, tetra_node):
+    source = tmp_path / "shared_solids_0000.rad"
+    raw = (INPUTS / "shell_panels_0000.rad").read_bytes().replace(b"\r\n", b"\n").split(b"\n/SHELL/1\n", 1)[0]
+    units = raw.splitlines(keepends=True)[4]
+    raw = raw.replace(units, units * 2, 1)
+    brick = "".join(f"{value:10d}" for value in (201, 1, 2, 5, 4, 10, 11, 14, 13))
+    tetra = "".join(f"{value:10d}" for value in (201, 1, 2, 5, tetra_node))
+    group = f"/GRBRIC/BRIC/986\nExisting solids\n{201:10d}\n"
+    source.write_bytes(raw + f"\n/BRICK/1\n{brick}\n/TETRA4/2\n{tetra}\n{group}/END\n".encode())
+    session = PrepSession()
+    session.open_rad(source)
+    provider = RadProvider(session)
+    field = next(field for field in provider.operation_spec("element_group.create").fields
+                 if field.name == "element_refs")
+    choices = [ref for ref in field.choices if ref["local_id"] == 201]
+    assert {cell["formulation"] for cell in session.mesh_view()["cells"]} == (
+        {"BRICK", "TETRA4"} if tetra_node == 10 else {"BRICK"})
+    assert len(choices) == (2 if tetra_node == 10 else 1)
+    revision = session.document.revision
+    for ref in choices:
+        with pytest.raises(PrepError) as error:
+            provider.execute_operation(OperationRequest(
+                "element_group.create", {"name": "Shared solid ID", "native_id": 987, "element_refs": [ref]},
+                session.document.id, revision))
+        assert error.value.code == "ambiguous_reference"
+    assert session.document.revision == revision
+    assert all(item.ref.native_scope != "/GRBRIC/BRIC/987" for item in provider.tree_nodes())
+    existing = session.group_members(node(provider, "/GRBRIC/BRIC/986").ref.object_id)
+    assert existing["member_ids"] == [201] and existing["members"] == []
+    assert existing["diagnostics"][0]["code"] == "ambiguous_reference"
+    prop = session.create_solid_property("Solid section")["card_id"]
+    for part in (1, 2):
+        session.assign_part(node(provider, f"/PART/{part}").ref.object_id, property_id=prop)
+    case = session.create_analysis_case("Ambiguous solid group", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "out/case_0000.rad"
+    with pytest.raises(PrepError) as error:
+        session.export_analysis_case(output, case)
+    assert error.value.code == "invalid_reference"
+    assert error.value.details["diagnostics"][0]["code"] == "ambiguous_reference"
+    assert not output.parent.exists()
+
+
+def test_assign_part_checks_quad_header_when_all_connectivity_rows_are_invalid(tmp_path):
+    source = tmp_path / "bad_quad_0000.rad"
+    raw = (INPUTS / "shell_panels_0000.rad").read_bytes().replace(b"\r\n", b"\n")
+    head, tail = raw.split(b"\n/SHELL/1\n", 1)
+    rows, tail = tail.split(b"/SHELL/2\n", 1)
+    malformed = b"".join(row[:10] + b" " * 10 + row[20:] for row in rows.splitlines(keepends=True))
+    source.write_bytes(head + b"\n/QUAD/         1\n" + malformed + b"/SHELL/2\n" + tail)
+    session = PrepSession()
+    session.open_rad(source)
+    provider = RadProvider(session)
+    projection = session.mesh_view()
+    assert not any(cell["part_id"] == 1 for cell in projection["cells"])
+    assert any(item["code"] == "element_display_parse" for item in projection["diagnostics"])
+    part = node(provider, "/PART/1").ref
+    prop = node(provider, "/PROP/SHELL/2").ref
+    fields = {field.name: field for field in provider.properties(part)}
+    assert fields["mesh_status"].value == "Invalid element connectivity."
+    assert fields["property"].editable
+    assert "element_count" not in fields
+    revision = session.document.revision
+    for edit in (lambda: session.assign_part(part.object_id, property_id=prop.object_id),
+                 lambda: provider.submit(SetProperties(part, {"property": prop}, revision))):
+        with pytest.raises(PrepError) as error:
+            edit()
+        assert error.value.code == "incompatible_property"
+        assert session.document.revision == revision
+    solid = session.create_solid_property("Quad section")["card_id"]
+    session.assign_part(part.object_id, property_id=solid)
+    assert session.part_assignments(part.object_id)["property_id"] == solid
+
+
+def test_quad_property_only_provider_edits_preserve_existing_law3(tmp_path):
+    source = tmp_path / "ale_0000.rad"
+    raw = (INPUTS / "shell_panels_0000.rad").read_bytes()
+    raw = raw.split(b"/PRESERVED/EDITOR/91", 1)[0]
+    source.write_bytes(raw.replace(b"\n/SHELL/1", b"\n/QUAD/1", 1).replace(b"/MAT/LAW1/1", b"/MAT/LAW3/1", 1) + b"/END\n")
+    session = PrepSession()
+    session.open_rad(source)
+    provider = RadProvider(session)
+    part = node(provider, "/PART/1").ref
+    material = node(provider, "/MAT/LAW3/1").ref
+    for action in ("inspector", "operation", "full-operation"):
+        card = session.create_solid_property(f"Solid {action}")["card_id"]
+        prop = next(item.ref for item in provider.tree_nodes() if item.ref.object_id == card)
+        revision = session.document.revision
+        if action == "inspector":
+            provider.submit(SetProperties(part, {"property": prop}, revision))
+        else:
+            values = {"property": prop}
+            if action == "full-operation":
+                values["material"] = material
+            provider.execute_operation(OperationRequest("part.assign", values, part.document_id, revision, part))
+        assignments = session.part_assignments(part.object_id)
+        assert (assignments["material_id"], assignments["property_id"]) == (material.object_id, card)
 
 
 def test_rad_provider_scalar_contract_and_native_unit_context():

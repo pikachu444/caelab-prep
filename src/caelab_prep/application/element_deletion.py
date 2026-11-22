@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from ..cae_core import PrepError
 from . import mesh_edit_candidates as edits
-from .native_mesh_edit import native_mesh_edit_states, project_native_mesh_edit
+from .native_mesh_edit import mesh_edit_reference, native_mesh_edit_states, project_native_mesh_edit
 
 
 class ElementDeletionCommands:
@@ -12,11 +12,13 @@ class ElementDeletionCommands:
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             try:
-                if (not isinstance(references, (list, tuple)) or not references
-                        or any(not isinstance(ref, dict) or set(ref) != {"resource_id", "entity_kind", "local_id"} for ref in references)):
+                if not isinstance(references, (list, tuple)) or not references:
                     raise PrepError("invalid_element_selection", "Choose explicit source-qualified element references.")
                 snapshot = self._mesh_edit_snapshot()
-                candidate = edits.delete_elements(snapshot, tuple(edits.Ref(**ref) for ref in references), orphan_policy=orphan_policy)
+                members = tuple(mesh_edit_reference(ref, kind="element", snapshot=snapshot,
+                    code="invalid_element_selection", message="Choose explicit source-qualified element references.")
+                    for ref in references)
+                candidate = edits.delete_elements(snapshot, members, orphan_policy=orphan_policy)
                 states = native_mesh_edit_states(self, candidate, layout_error_code="unsupported_deletion_layout")
                 conditions, overlaps, blocked, correspondences, _ = project_native_mesh_edit(self, candidate, states)
             except edits.MeshEditError as exc:

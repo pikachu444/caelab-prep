@@ -11,10 +11,16 @@ import re
 from ..cae_core.errors import PrepError
 
 
+ELEMENT_ALIASES = {"SH4N": "SHELL", "TETRA": "TETRA4"}
+TYPE14_PROPERTIES = ("SOLID", "TYPE14", "FLUID", "P14_SOLID")
+ELEMENT_GROUP_FAMILIES = ("GRSH3N/SH3N", "GRSHEL/SHEL", "GRQUAD/QUAD", "GRBRIC/BRIC", "GRBEAM/BEAM", "GRTRUS/TRUS")
+ELEMENT_GROUP_PAIRS = tuple(tuple(family.split("/")) for family in ELEMENT_GROUP_FAMILIES)
+
+
 def native_identity(keyword):
     words = keyword.strip().upper().split("/")
     index = {"MAT": 3, "PROP": 3, "PART": 2, "FUNCT": 2, "GRNOD": 3,
-             "SURF": 3, "BCS": 2, "CLOAD": 2, "INIVEL": 3, "INTER": 3, "TABLE": 3, "GRSH3N": 3, "GRSHEL": 3, "GRBRIC": 3,
+             "SURF": 3, "BCS": 2, "CLOAD": 2, "INIVEL": 3, "INTER": 3, "TABLE": 3, "GRSH3N": 3, "GRSHEL": 3, "GRBRIC": 3, "GRQUAD": 3,
              "SKEW": 3, "FRAME": 3, "GRBEAM": 3, "GRTRUS": 3}.get(words[1] if len(words) > 1 else "")
     if index is not None and len(words) > index and words[index].isdigit():
         if words[1] == "PART" and (len(words) not in (3, 4) or (len(words) == 4 and not words[3].isdigit())):

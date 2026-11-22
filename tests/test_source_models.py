@@ -1,16 +1,21 @@
 """Independent IDs, original bytes and atomic native/case relationships."""
 import json
+from hashlib import sha256
 from pathlib import Path
 import subprocess
 import sys
 from threading import Event, Thread
+from uuid import uuid4
 import zipfile
 
 import pytest
 
 from caelab_prep.application import PrepSession
+from caelab_prep.application import session as prep_session
 from caelab_prep.cae_core import PrepError
-from caelab_prep.radioss.modeling import material_block, shell_block
+from caelab_prep.radioss import includes
+from caelab_prep.radioss.modeling import material_block, shell_block, solid_block
+from test_condition_workflow import _base_model, _card, _i
 
 
 def model(folder, *, offset=0):
@@ -71,6 +76,1701 @@ def test_explicit_shared_node_is_single_entity_and_unmapped_nodes_stay_distinct(
     with pytest.raises(PrepError, match="identical coordinates"):
         session.plan_import_source(shifted, shared_node_map={1: reference})
     assert session.describe()["node_count"] == 4
+
+
+@pytest.mark.parametrize("variant", ("title-only-deleted", "all-zero-deleted", "underscore-retained", "underscore-corrected",
+                                     "underscore-deleted", "underscore-node", "underscore-connectivity",
+                                     "padded-with-title-only", "hybrid", "pass14-padded", "pass14-underscore-zero",
+                                     "pass14-new-underscore-zero", "pass14-recreated-padding-card",
+                                     "older-unquoted-padded", "older-quoted-padded", "pre-v5-explicit",
+                                     "v5-host-v4-archive-explicit", "mixed-archive-unrecorded"))
+def test_reopen_source_archive_with_legacy_node_group(tmp_path, variant):
+    source = _base_model(tmp_path / "source")
+    padded = variant in ("padded-with-title-only", "hybrid", "pass14-padded", "pass14-underscore-zero", "pass14-new-underscore-zero",
+                         "pass14-recreated-padding-card", "older-unquoted-padded", "older-quoted-padded")
+    empty = variant in ("padded-with-title-only", "hybrid", "title-only-deleted", "all-zero-deleted")
+    identifiers = (101, 205) if empty or padded else (101, 101, 205)
+    native_row = f"{_i(*identifiers)}\n".encode()
+    groups = b"/GRNOD/NODE/47\nUnused target\n" + native_row
+    if padded:
+        groups += f"/GRNOD/NODE/48\nPadded target\n{_i(101, 0, 205)}\n".encode()
+    if variant == "pass14-underscore-zero":
+        groups += f"/BCS/71\nArchived fixity\n   100 000{_i(0, 48)}\n".encode()
+    raw = source.read_bytes().replace(b"/END", groups + b"/END")
+    if padded:
+        raw = raw.replace(b"#include mesh.inc\n", b'#include\n"mesh.inc"\n')
+    source.write_bytes(raw)
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "base"))
+    plan = session.plan_import_source(source)
+    ids = {(namespace, original): mapped for namespace, original, mapped in plan["source"]["id_map"]}
+    session.import_source(plan["plan_id"])
+    group_keyword = f'/GRNOD/NODE/{ids["GRNOD", 47]}'
+    group = _card(session, group_keyword)["id"]
+    expected = (ids["NODE", 101], ids["NODE", 205])
+    if empty or variant.endswith("deleted"):
+        session.delete_card(group)
+    elif variant.endswith("corrected"):
+        resource = session._find_card(group)
+        corrected = f"{group_keyword}\nUnused target\n{_i(*expected)}\n"
+        state = resource.replaced_state(group, corrected)
+        session.dispatcher.execute(resource.id, state, "Normalize mapped group row", kind="structure")
+    active_conditions = [_card(session, f'/BCS/{ids["BCS", 71]}')["id"]] if variant == "pass14-underscore-zero" else []
+    case = session.create_analysis_case("Archive case", active_conditions, .01, .001, "s")["case_id"]
+    saved = tmp_path / "saved.caeprep"
+    session.save_project(saved)
+    with zipfile.ZipFile(saved) as archive:
+        payloads = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(payloads["manifest.json"])
+    source_model, = manifest["source_models"]
+    file = next(item for item in source_model["files"] if item["original_path"] == source.name)
+    original_member = f'sources/{source_model["id"]}/{file["original_resource_id"]}.rad'
+    mapped_member = next(item["raw_member"] for item in manifest["resources"] if item["id"] == file["resource_id"])
+    # Reproduce the older writers' immutable originals and corresponding remaps.
+    assert payloads[original_member].count(native_row) == 1
+    if empty:
+        legacy_row = f"{_i(0, 0)}\n".encode() if variant == "all-zero-deleted" else b""
+    elif padded:
+        legacy_row = native_row
+    else:
+        legacy_row = f"{101:10d}{'1_01':>10}{205:10d}\n".encode()
+    payloads[original_member] = payloads[original_member].replace(native_row, legacy_row)
+    file["sha256"] = sha256(payloads[original_member]).hexdigest()
+    if empty:
+        translated_row = f'{_i(*expected)}\n'.encode()
+        assert payloads[mapped_member].count(translated_row) == 1
+        payloads[mapped_member] = payloads[mapped_member].replace(translated_row, legacy_row)
+    if variant in ("underscore-node", "underscore-connectivity", "hybrid", "pass14-padded", "pass14-new-underscore-zero"):
+        mesh_file = next(item for item in source_model["files"] if item["original_path"] == "mesh.inc")
+        mesh_member = f'sources/{source_model["id"]}/{mesh_file["original_resource_id"]}.rad'
+        prefix = _i(7001).encode() if variant == "underscore-connectivity" else b""
+        old = b"\n" + prefix + _i(101).encode()
+        assert payloads[mesh_member].count(old) == 1
+        changed = payloads[mesh_member].replace(old, b"\n" + prefix + f"{'1_01':>10}".encode())
+        payloads[mesh_member] = changed
+        mesh_file["sha256"] = sha256(changed).hexdigest()
+        source.with_name("mesh.inc").write_bytes(changed)
+        with pytest.raises(PrepError) as error:
+            session.plan_import_source(source)
+        assert error.value.code == "unsupported_source_profile"
+    if variant in ("pass14-underscore-zero", "pass14-recreated-padding-card"):
+        for member, first, last in ((original_member, 101, 205), (mapped_member, *expected)):
+            numeric_row = f"{_i(first, 0, last)}\n".encode()
+            assert payloads[member].count(numeric_row) == 1
+            payloads[member] = payloads[member].replace(numeric_row, f"{first:10d}{'0_0':>10}{last:10d}\n".encode())
+        file["sha256"] = sha256(payloads[original_member]).hexdigest()
+        source.write_bytes(payloads[original_member])
+        with pytest.raises(PrepError) as error:
+            session.plan_import_source(source)
+        assert error.value.code == "unsupported_source_profile"
+    if variant.startswith("older-"):
+        source_model.pop("include_bindings")
+        manifest.pop("include_bindings")
+    if variant == "older-unquoted-padded":
+        mapped_mesh = next(item["logical_path"].encode() for item in source_model["files"]
+                           if item["original_path"] == "mesh.inc")
+        quoted = b'"' + mapped_mesh + b'"'
+        assert payloads[mapped_member].count(quoted) == 1
+        payloads[mapped_member] = payloads[mapped_member].replace(quoted, mapped_mesh)
+    if variant in ("pre-v5-explicit", "v5-host-v4-archive-explicit", "mixed-archive-unrecorded"):
+        archived_ids = {item["resource_id"] for item in source_model["files"]}
+        if variant == "mixed-archive-unrecorded":
+            source_model.pop("include_bindings")
+            archived_ids = {source_model["root_resource_id"]}
+        for resource in manifest["resources"]:
+            if variant == "pre-v5-explicit" or resource["id"] in archived_ids:
+                resource["state"]["state_version"] = 4
+                assert not resource["state"].pop("retained_comments")
+    payloads["manifest.json"] = json.dumps(manifest).encode()
+    legacy = tmp_path / "pass13.caeprep"
+    with zipfile.ZipFile(legacy, "w") as archive:
+        for name, raw in payloads.items():
+            archive.writestr(name, raw)
+
+    if variant == "all-zero-deleted":
+        with pytest.raises(PrepError, match="positive node ID") as error:
+            session.open_project(legacy)
+        assert error.value.code == "unsupported_source_profile"
+        return
+    if variant == "hybrid":
+        with pytest.raises(PrepError) as error:
+            session.open_project(legacy)
+        assert error.value.code == "unsupported_source_profile"
+        return
+    if variant.startswith("older-"):
+        with pytest.raises(PrepError) as error:
+            session.open_project(legacy)
+        assert error.value.code == "unsupported_source_profile"
+        return
+    if variant in ("pre-v5-explicit", "v5-host-v4-archive-explicit"):
+        with pytest.raises(PrepError, match="cannot carry explicit source INCLUDE bindings") as error:
+            session.open_project(legacy)
+        assert error.value.code == "invalid_project"
+        return
+    if variant == "mixed-archive-unrecorded":
+        with pytest.raises(PrepError, match="cannot mix v4 and v5 state versions") as error:
+            session.open_project(legacy)
+        assert error.value.code == "invalid_project"
+        return
+    session.open_project(legacy)
+    if variant == "pass14-recreated-padding-card":
+        original_group = _card(session, "/GRNOD/NODE/48")["id"]
+        owner = session._find_card(original_group)
+        original_text = session.card_text(original_group)
+        session.delete_card(original_group)
+        added = session.create_node_group("Replacement group", list(expected), native_id=48, resource_id=owner.id)["card_id"]
+        assert added != original_group
+        state = owner.replaced_state(added, original_text)
+        session.dispatcher.execute(owner.id, state, "Copy the old padding to a new card", kind="structure")
+        saved = tmp_path / "recreated-group.caeprep"
+        session.save_project(saved)
+        session.open_project(saved)
+        assert [item["code"] for item in session.group_members(added)["diagnostics"]] == ["invalid_reference"]
+        with pytest.raises(PrepError) as error:
+            session.export_analysis_case(tmp_path / "reject/case_0000.rad", case)
+        assert error.value.code == "invalid_reference"
+        return
+    if variant == "pass14-new-underscore-zero":
+        owner = session._find_card(group)
+        assert b"0_0" not in owner.render()
+        added = session.create_node_group("New padding", list(expected), native_id=50, resource_id=owner.id)["card_id"]
+        assert owner.card(added).keyword == "/GRNOD/NODE/50"
+        line = f"{expected[0]:10d}{'0_0':>10}{expected[1]:10d}"
+        state = owner.replaced_state(added, f"/GRNOD/NODE/50\nNew padding\n{line}\n")
+        session.dispatcher.execute(owner.id, state, "Insert unarchived zero padding", kind="structure")
+        changed = tmp_path / "new-padding.caeprep"
+        session.save_project(changed)
+        session.open_project(changed)
+        assert [item["code"] for item in session.group_members(added)["diagnostics"]] == ["invalid_reference"]
+        with pytest.raises(PrepError) as error:
+            session.export_analysis_case(tmp_path / "reject/case_0000.rad", case)
+        assert error.value.code == "invalid_reference"
+        return
+    view = session.mesh_view()
+    assert len(view["node_ids"]) == 16 and len(view["cells"]) == 4
+    if empty or variant.endswith("deleted"):
+        assert not any(card["keyword"] == group_keyword for card in session.list_cards())
+    else:
+        assert session.group_members(group)["member_ids"] == list(expected)
+        native_members = expected if padded or variant.endswith("corrected") else (expected[0], *expected)
+        assert session.card_text(group).splitlines()[-1] == _i(*native_members)
+    if variant == "pass14-underscore-zero":
+        padded_group = _card(session, f'/GRNOD/NODE/{ids["GRNOD", 48]}')["id"]
+        assert session.group_members(padded_group)["member_ids"] == list(expected)
+        original_group = session.card_text(padded_group)
+    target = tmp_path / "export/case_0000.rad"
+    session.export_analysis_case(target, case)
+    assert all(b"1_01" not in path.read_bytes() for path in target.parent.rglob("*") if path.is_file())
+    if variant == "pass14-underscore-zero":
+        assert session.card_text(padded_group) == original_group and "0_0" in original_group
+        session.export_rad(tmp_path / "starter/starter_0000.rad")
+        starter_check = PrepSession()
+        starter_check.open_rad(tmp_path / "starter/starter_0000.rad")
+        starter_group = _card(starter_check, f'/GRNOD/NODE/{ids["GRNOD", 48]}')["id"]
+        assert starter_check.group_members(starter_group)["member_ids"] == list(expected)
+        owner = session._find_card(padded_group)
+        updated_members = (expected[0], ids["NODE", 309])
+        amended = f"{updated_members[0]:10d}{'0_0':>10}{updated_members[1]:10d}"
+        state = owner.replaced_state(padded_group, original_group.replace(original_group.splitlines()[-1], amended))
+        session.dispatcher.execute(owner.id, state, "Edit beside the archived padding slot", kind="structure")
+        assert session.group_members(padded_group)["member_ids"] == list(updated_members)
+        saved = tmp_path / "amended-project.caeprep"
+        session.save_project(saved)
+        session.open_project(saved)
+        updated = tmp_path / "amended/case_0000.rad"
+        session.export_analysis_case(updated, case)
+        check = PrepSession()
+        check.open_rad(updated)
+        edited_group = _card(check, "/GRNOD/NODE/48")["id"]
+        assert check.group_members(edited_group)["member_ids"] == list(updated_members)
+        assert check.card_text(edited_group).splitlines()[-1] == _i(updated_members[0], 0, updated_members[1])
+        owner = session._find_card(padded_group)
+        shifted = f"{'0_0':>10}{updated_members[0]:10d}{updated_members[1]:10d}"
+        state = owner.replaced_state(padded_group, original_group.replace(original_group.splitlines()[-1], shifted))
+        session.dispatcher.execute(owner.id, state, "Move the archived padding token to a different slot", kind="structure")
+        assert [item["code"] for item in session.group_members(padded_group)["diagnostics"]] == ["invalid_reference"]
+        host = session._model_resource(None)
+        text = f"/GRNOD/NODE/97\nUnrelated host padding\n{101:10d}{'0_0':>10}{205:10d}\n"
+        state, card_id = host.inserted_state(text)
+        session.dispatcher.execute(host.id, state, "Add malformed group outside the archive", kind="structure")
+        assert session.group_members(card_id)["diagnostics"][0]["code"] == "invalid_reference"
+    session.open_rad(target)
+    assert len(session.mesh_view()["node_ids"]) == 16 and len(session.mesh_view()["cells"]) == 4
+    if padded:
+        padded_keyword = f'/GRNOD/NODE/{ids["GRNOD", 48]}'
+        padded_group = _card(session, padded_keyword)["id"]
+        members = session.group_members(padded_group)
+        assert members["member_ids"] == list(expected) and not members["diagnostics"]
+        assert session.card_text(padded_group).splitlines()[-1] == _i(expected[0], 0, expected[1])
+        if variant == "pass14-underscore-zero":
+            condition = _card(session, f'/BCS/{ids["BCS", 71]}')["id"]
+            reexport_case = session.create_analysis_case("Re-export", [condition], .01, .001, "s")["case_id"]
+            session.export_analysis_case(tmp_path / "reexport/case_0000.rad", reexport_case)
+    elif not variant.endswith("deleted"):
+        assert session.group_members(_card(session, group_keyword)["id"])["member_ids"] == list(expected)
+
+
+@pytest.mark.parametrize("variant", ("legacy-map", "legacy-shell-group", "tampered-with-bindings",
+                                    "forged-241-quad", "forged-987-quad", "forged-241-sh4n", "forged-987-sh4n",
+                                    "forged-241-tetra", "forged-987-tetra"))
+def test_legacy_quad_source_archive_recovers_the_native_solid_group(tmp_path, variant):
+    starter, source = model(tmp_path / "base"), model(tmp_path / "source", offset=20)
+    mesh = source.with_name("mesh.inc")
+    family, namespace = {
+        "sh4n": (b"/SH4N/9", "E:SHELL"), "tetra": (b"/TETRA/9", "E:SOLID"),
+    }.get(variant.rsplit("-", 1)[-1], (b"/QUAD/9", "E:QUAD"))
+    mesh.write_bytes(mesh.read_bytes().replace(b"/SHELL/9", family))
+    if variant.startswith("forged-987-"):
+        source.write_bytes(source.read_bytes().replace(b"#include mesh.inc", b'#include\n"mesh.inc"'))
+    if variant == "legacy-shell-group":
+        source.write_bytes(source.read_bytes().replace(
+            b"/END", f"/GRQUAD/QUAD/48\nArchived solid group\n{_i(77)}\n/END".encode()))
+    session = PrepSession()
+    session.open_rad(starter)
+    plan = session.plan_import_source(source)
+    session.import_source(plan["plan_id"])
+    identifier = next(mapped for ns, original, mapped in plan["source"]["id_map"] if (ns, original) == (namespace, 77))
+    project = tmp_path / "modern.caeprep"
+    session.save_project(project)
+    with zipfile.ZipFile(project) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source_model, = manifest["source_models"]
+    if variant != "tampered-with-bindings":
+        source_model.pop("include_bindings")
+    entries = source_model["id_map"]
+    if namespace == "E:QUAD":
+        entries[entries.index([namespace, 77, identifier])][0] = "E:SHELL"
+    if variant.startswith("forged-241-"):
+        archived_ids = {item["resource_id"] for item in source_model["files"]}
+        for deck in manifest["resources"]:
+            if deck["id"] in archived_ids:
+                deck["state"]["state_version"] = 4
+                assert not deck["state"].pop("retained_comments")
+    if variant.startswith("forged-987-"):
+        mapped_mesh = next(item["logical_path"].encode() for item in source_model["files"]
+                           if item["original_path"] == "mesh.inc")
+        member = next(item["raw_member"] for item in manifest["resources"]
+                      if item["id"] == source_model["root_resource_id"])
+        quoted = b'"' + mapped_mesh + b'"'
+        assert members[member].count(quoted) == 1
+        members[member] = members[member].replace(quoted, mapped_mesh)
+    if variant == "legacy-shell-group":
+        entry = next(entry for entry in entries if entry[:2] == ["GRQUAD", 48])
+        entry[0] = "GRSHEL"
+        file = next(item for item in source_model["files"] if item["original_path"] == source.name)
+        original = f'sources/{source_model["id"]}/{file["original_resource_id"]}.rad'
+        mapped = next(item["raw_member"] for item in manifest["resources"] if item["id"] == file["resource_id"])
+        for member in (original, mapped):
+            assert members[member].count(b"/GRQUAD/QUAD/") == 1
+            members[member] = members[member].replace(b"/GRQUAD/QUAD/", b"/GRSHEL/SHEL/")
+        file["sha256"] = sha256(members[original]).hexdigest()
+    members["manifest.json"] = json.dumps(manifest).encode()
+    legacy = tmp_path / "legacy.caeprep"
+    with zipfile.ZipFile(legacy, "w") as archive:
+        for name, data in members.items():
+            archive.writestr(name, data)
+
+    if variant == "tampered-with-bindings":
+        with pytest.raises(PrepError) as error:
+            session.open_project(legacy)
+        assert error.value.code == "invalid_project"
+        return
+    if variant.startswith("forged-"):
+        with pytest.raises(PrepError) as error:
+            session.open_project(legacy)
+        assert error.value.code in {"invalid_project", "unsupported_source_profile"}
+        return
+    session.open_project(legacy)
+    ref = session.resolve_entity_reference("element", identifier)["reference"]
+    group = session.create_element_group("Imported 2D solid", [ref])["card_id"]
+    assert session.group_members(group)["members"] == [ref]
+    assert session.card_text(group).startswith("/GRQUAD/QUAD/")
+
+
+@pytest.mark.parametrize("tampered", (False, True))
+def test_ac0_qualified_include_requires_its_shell_namespace_for_quad(tmp_path, tampered):
+    source = model(tmp_path / "source", offset=20)
+    root = source.parent
+    bank = root / "bank"
+    bank.mkdir()
+    original_mesh = root / "mesh.inc"
+    original_mesh.rename(bank / "mesh.inc")
+    mesh = bank / "mesh.inc"
+    mesh.write_bytes(mesh.read_bytes().replace(b"/SHELL/9", b"/QUAD/9"))
+    (root / "nested/bank").mkdir(parents=True)
+    (root / "nested/bank/mesh.inc").write_bytes(b"# Additional source\n")
+    (root / "nested/bank/entry.inc").write_bytes(b"#include mesh.inc\n")
+    (root / "nested/first.inc").write_bytes(b"#include bank/mesh.inc\n")
+    source.write_bytes(source.read_bytes().replace(b"#include mesh.inc", b"#include bank/mesh.inc\n"
+                                                    b"#include nested/first.inc\n#include nested/bank/entry.inc"))
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "base"))
+    session.import_source(session.plan_import_source(source)["plan_id"])
+    saved = tmp_path / "modern.caeprep"
+    session.save_project(saved)
+    with zipfile.ZipFile(saved) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source_model, = manifest["source_models"]
+    source_model.pop("include_bindings")
+    manifest.pop("include_bindings")
+    files = {file["original_path"]: file for file in source_model["files"]}
+    first = next(item["raw_member"] for item in manifest["resources"]
+                 if item["id"] == files["nested/first.inc"]["resource_id"])
+    # ac0a255 resolves the qualified operand to the import root. Later writers
+    # bind this particular operand to the sibling, which entry.inc also reaches.
+    assert files["nested/bank/mesh.inc"]["logical_path"].encode() in members[first]
+    members[first] = members[first].replace(files["nested/bank/mesh.inc"]["logical_path"].encode(),
+                                             files["bank/mesh.inc"]["logical_path"].encode())
+    if not tampered:
+        next(entry for entry in source_model["id_map"] if entry[:2] == ["E:QUAD", 77])[0] = "E:SHELL"
+    members["manifest.json"] = json.dumps(manifest).encode()
+    historical = tmp_path / "ac0.caeprep"
+    with zipfile.ZipFile(historical, "w") as archive:
+        for name, raw in members.items():
+            archive.writestr(name, raw)
+    if tampered:
+        with pytest.raises(PrepError) as error:
+            session.open_project(historical)
+        assert error.value.code == "invalid_project"
+    else:
+        session.open_project(historical)
+        assert session.describe()["element_count"] == 2
+
+
+def _bde_wave_source(folder):
+    source = _base_model(folder)
+    mesh = folder / "mesh.inc"
+    mesh.write_bytes(mesh.read_bytes().replace(b"/SHELL/903", b"/QUAD/903"))
+    raw = source.read_bytes().replace(
+        ("/PART/903\nUpper plate\n" + _i(19, 17, 0)).encode(),
+        (solid_block(20, "QUAD property") + "/PART/903\nUpper plate\n" + _i(20, 17, 0)).encode(),
+    )
+    source.write_bytes(raw.replace(b"#include mesh.inc", b"#include mesh.inc\n#include top/start.inc\n"
+                                  b"#include top/gate.inc\n#include top/dummy.inc\n#include deeper/c.inc"))
+    includes = {
+        "top/start.inc": "#include gate.inc\n#include dummy.inc\n",
+        "top/gate.inc": "# First alternate\n",
+        "top/dummy.inc": "# Second alternate\n",
+        "deeper/c.inc": "# Third alternate\n",
+        "gate.inc": "#include nodes.inc\n#include relay/route.inc\n",
+        "nodes.inc": "# Root target\n",
+        "relay/route.inc": "#include nodes.inc\n",
+        "dummy.inc": "#include deeper/start.inc\n",
+        "deeper/start.inc": "#include c.inc\n",
+        "c.inc": "#include relay/nodes.inc\n",
+        "relay/nodes.inc": "# Sibling target\n",
+    }
+    for name, contents in includes.items():
+        include = folder / name
+        include.parent.mkdir(parents=True, exist_ok=True)
+        include.write_bytes(contents.encode())
+    return source
+
+
+@pytest.mark.parametrize("variant", ("stock", "case", "same-wave", "downstream"))
+def test_ac0_repeated_operand_archive_requires_its_shell_namespace(tmp_path, variant):
+    # ac0a255 wrote both bindings. The 8e85a669 writer collected only three
+    # source files from the same disk layout, omitting sub/mesh.inc.
+    fixture = Path(__file__).with_name("fixtures") / "ac0a255-quad-repeated-include.caeprep"
+    with zipfile.ZipFile(fixture) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    files = {item["original_path"]: item for item in source["files"]}
+    assert set(files) == {"conditions_0000.rad", "sub/chooser.inc", "mesh.inc", "sub/mesh.inc"}
+    decks = {deck["id"]: deck for deck in manifest["resources"]}
+
+    def original_member(record):
+        return f'sources/{source["id"]}/{record["original_resource_id"]}.rad'
+
+    def original(record, data):
+        members[original_member(record)] = data
+        record["sha256"] = sha256(data).hexdigest()
+
+    def write_project(path):
+        members["manifest.json"] = json.dumps(manifest).encode()
+        with zipfile.ZipFile(path, "w") as archive:
+            for name, payload in members.items():
+                archive.writestr(name, payload)
+
+    chooser = files["sub/chooser.inc"]
+    assert members[original_member(chooser)] == b"#include mesh.inc\n#include mesh.inc\n"
+    if variant == "case":
+        original(chooser, b"#include mesh.inc\n#include MESH.INC\n")
+    elif variant == "same-wave":
+        filename = "sub/peer.inc"
+        directory = f'sources/{source["id"]}'
+        identifier = str(uuid4())
+        peer = {"original_resource_id": str(uuid4()), "resource_id": identifier,
+                "original_path": filename, "logical_path": f"{directory}/{filename}"}
+        source["files"].insert(2, peer)
+        original(peer, b"#include mesh.inc\n")
+        raw_member = f"raw/{identifier}.rad"
+        manifest["resources"].append({
+            **decks[chooser["resource_id"]], "id": identifier, "name": peer["logical_path"],
+            "logical_path": peer["logical_path"], "raw_member": raw_member,
+        })
+        members[raw_member] = f'#include {files["sub/mesh.inc"]["logical_path"]}\n'.encode()
+        starter = files["conditions_0000.rad"]
+        raw_starter = decks[starter["resource_id"]]["raw_member"]
+        raw_directive = f'#include {chooser["logical_path"]}\n'.encode()
+        members[raw_starter] = members[raw_starter].replace(
+            raw_directive, raw_directive + f'#include {peer["logical_path"]}\n'.encode())
+        original(starter, members[original_member(starter)].replace(
+            b"#include sub/chooser.inc\n", b"#include sub/chooser.inc\n#include sub/peer.inc\n"))
+    elif variant == "downstream":
+        sibling = files["sub/mesh.inc"]
+        original(sibling, members[original_member(sibling)] + b"#include mesh.inc\n")
+        members[decks[sibling["resource_id"]]["raw_member"]] += f'#include {files["mesh.inc"]["logical_path"]}\n'.encode()
+
+    project = tmp_path / "original.caeprep"
+    write_project(project)
+    session = PrepSession()
+    session.open_project(project)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+    assert any(cell["id"] == 9009 and cell["formulation"] == "QUAD" for cell in projection["cells"])
+
+    entry = next(entry for entry in source["id_map"] if entry == ["E:SHELL", 9007, 9009])
+    entry[0] = "E:QUAD"
+    forged = tmp_path / "forged.caeprep"
+    write_project(forged)
+    with pytest.raises(PrepError) as error:
+        session.open_project(forged)
+    assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize("suffix", ("include-order", "directory-include", "qualified-order"))
+def test_ac0_include_wave_archive_rejects_altered_quad_namespace(tmp_path, suffix):
+    fixture = Path(__file__).with_name("fixtures") / f"ac0a255-quad-{suffix}.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    with zipfile.ZipFile(fixture) as archive:
+        manifest = json.loads(archive.read("manifest.json"))
+        source, = manifest["source_models"]
+        order = [record["original_path"] for record in source["files"]]
+        if suffix == "qualified-order":
+            assert order == ["conditions_0000.rad", "a/first.inc", "sub/mesh.inc", "a/sub/mesh.inc"]
+        else:
+            leaf = suffix == "directory-include"
+            assert len(order) == (8 if leaf else 7)
+            assert order.index("trigger.inc") < order.index("mesh.inc")
+            assert ("b/trigger.inc/leaf.inc" in order) is leaf
+        entry = next(entry for entry in source["id_map"] if entry == ["E:SHELL", 9007, 9009])
+        entry[0] = "E:QUAD"
+        edited = tmp_path / "altered.caeprep"
+        with zipfile.ZipFile(edited, "w") as project:
+            for member in archive.namelist():
+                payload = json.dumps(manifest).encode() if member == "manifest.json" else archive.read(member)
+                project.writestr(member, payload)
+    with pytest.raises(PrepError) as error:
+        session.open_project(edited)
+    assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize("file_count", (79, 132, 41, 24, 39))
+def test_8e85_reopens_signed_archive_with_delayed_includes(tmp_path, file_count):
+    fixture = Path(__file__).with_name("fixtures") / f"8e85a669-signed-{file_count}-includes.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    assert len(session.source_models()[0]["files"]) == file_count
+    saved = tmp_path / "saved.caeprep"
+    session.save_project(saved)
+    session.open_project(saved)
+    target = tmp_path / "export/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+    group = _card(session, "/GRSHEL/SHEL/48")["id"]
+    assert session.group_members(group)["member_ids"] == [9008]
+    assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
+
+
+@pytest.mark.parametrize("name,count", (("ac0a255-qualified-70-includes", 70),
+                                          ("8e85a669-signed-shared-includes", 19),
+                                          ("8e85a669-signed-repeated-24-includes", 24),
+                                          ("8e85a669-signed-same-directory-includes", 14),
+                                          ("8e85a669-signed-borrowed-leaf-includes", 21),
+                                          ("8e85a669-signed-74-frontier-includes", 74),
+                                          ("8e85a669-signed-25-nested-choosers", 25),
+                                          ("8e85a669-signed-74-late-frontier-includes", 74),
+                                          ("8e85a669-signed-25-borrowed-choosers", 25),
+                                          ("8e85a669-signed-25-late-borrowed-choosers", 25)))
+def test_historical_include_search_skips_irrelevant_prefix_alternatives(tmp_path, monkeypatch, name, count):
+    fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
+    original_walk = includes._walk_includes
+    deductions = 0
+    disk_policy = "ac0" if name.startswith("ac0") else None
+
+    def count_deductions(root, lookup, load, scope, selected, recovered, historical, **options):
+        nonlocal deductions
+        deductions += historical == disk_policy and options.get("deduce_sibling") is not None
+        return original_walk(root, lookup, load, scope, selected, recovered, historical, **options)
+
+    monkeypatch.setattr(includes, "_walk_includes", count_deductions)
+    session = PrepSession()
+    for index in range(3):
+        before = deductions
+        session.open_project(fixture)
+        assert len(session.source_models()[0]["files"]) == count
+        limit = 10 if name in ("8e85a669-signed-25-borrowed-choosers", "8e85a669-signed-25-late-borrowed-choosers") else 9
+        assert deductions - before <= (4 if count == 21 else limit)
+        fixture = tmp_path / f"saved-{index}.caeprep"
+        session.save_project(fixture)
+    exported = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(exported)
+    session.open_rad(exported)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+    if name.startswith("8e85"):
+        group = _card(session, "/GRSHEL/SHEL/48")["id"]
+        assert session.group_members(group)["member_ids"] == [9008]
+        assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
+
+
+def test_recorded_ambiguous_include_cannot_authorize_swapped_wave_order(tmp_path):
+    starter = model(tmp_path / "source")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                                                    b"#include a/chooser.inc\n#include a/mesh.inc\n"))
+    sibling = starter.parent / "a"
+    sibling.mkdir()
+    (sibling / "chooser.inc").write_text("#include mesh.inc\n")
+    (sibling / "mesh.inc").write_text("# wave-one sibling\n")
+
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    session.create_analysis_case("Recorded INCLUDE wave", [], .01, .001, "s")
+    for version in range(3):
+        project = tmp_path / f"wave-{version}.caeprep"
+        session.save_project(project)
+        session.open_project(project)
+    target = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    assert session.describe()["node_count"] == 8 and session.describe()["element_count"] == 2
+
+    with zipfile.ZipFile(project) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    assert len(source["include_bindings"]) == 3
+    files = source["files"]
+    assert [item["original_path"] for item in files] == [starter.name, "a/chooser.inc", "a/mesh.inc", "mesh.inc"]
+    files[-2], files[-1] = files[-1], files[-2]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "swapped.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for name, data in members.items():
+            archive.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        session.open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+def test_archive_rejects_sibling_evidence_without_source_bindings(tmp_path):
+    fixture = Path(__file__).with_name("fixtures") / "8e85a669-signed-25-borrowed-choosers.caeprep"
+    with zipfile.ZipFile(fixture) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    assert "include_bindings" not in source
+    source["uncollected_include_siblings"] = ["d/leaf0.inc"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "siblings-without-bindings.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for name, data in members.items():
+            archive.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+def test_archive_rejects_sibling_evidence_with_empty_source_bindings(tmp_path):
+    starter = model(tmp_path / "source")
+    mesh = starter.with_name("mesh.inc").read_bytes().split(b"#enddata", 1)[0]
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n", mesh))
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    project = tmp_path / "one-file.caeprep"
+    session.save_project(project)
+    with zipfile.ZipFile(project) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    assert source["include_bindings"] == []
+    source["uncollected_include_siblings"] = ["extraneous.inc"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "empty-bindings.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for name, data in members.items():
+            archive.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+def test_archive_rejects_binding_that_contradicts_native_resolution(tmp_path):
+    starter = model(tmp_path / "source")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                         b"#include a/chooser.inc\n#include a/mesh.inc\n#include mesh.inc\n"))
+    sibling = starter.parent / "a"
+    sibling.mkdir()
+    (sibling / "chooser.inc").write_text("#include mesh.inc\n")
+    (sibling / "mesh.inc").write_text("# sibling mesh\n")
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    original = tmp_path / "original.caeprep"
+    session.save_project(original)
+    PrepSession().open_project(original)
+
+    with zipfile.ZipFile(original) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    assert "uncollected_include_siblings" not in source
+    files = {entry["original_path"]: entry for entry in source["files"]}
+    chooser = files["a/chooser.inc"]
+    recorded = next(entry for entry in source["include_bindings"] if entry[:2] == [chooser["original_resource_id"], 0])
+    assert recorded[2] == files["mesh.inc"]["original_resource_id"]
+    recorded[2] = files["a/mesh.inc"]["original_resource_id"]
+    mapped = f'raw/{chooser["resource_id"]}.rad'
+    members[mapped] = members[mapped].replace(files["mesh.inc"]["logical_path"].encode(),
+                                              files["a/mesh.inc"]["logical_path"].encode())
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "different-binding.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for name, data in members.items():
+            archive.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize("label_target, link_mesh", (("unused.inc", False), ("other.inc", True), ("label.inc", True)),
+                         ids=("uncollected-target", "collected-target", "same-as-root"))
+def test_archive_records_uncollected_sibling_with_in_tree_symlink(tmp_path, monkeypatch, label_target, link_mesh):
+    starter = model(tmp_path / "source")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                         b"#include a/chooser.inc\n#include other.inc\n"))
+    sibling = starter.parent / "a"
+    sibling.mkdir()
+    (sibling / "chooser.inc").write_text("#include mesh.inc\n#include label.inc\n")
+    (sibling / "mesh.inc").write_text("# uncollected sibling\n")
+    for name in ("label.inc", "other.inc", "unused.inc"):
+        starter.with_name(name).write_text("# " + name + "\n")
+    aliases = {sibling / "label.inc": starter.with_name(label_target)}
+    if link_mesh:
+        aliases[sibling / "mesh.inc"] = starter.with_name("unused.inc")
+    for alias, target in aliases.items():
+        alias.write_bytes(target.read_bytes())
+    resolve = Path.resolve
+
+    def resolve_alias(path, *args, **kwargs):
+        return resolve(aliases.get(path, path), *args, **kwargs)
+
+    same_target = label_target == "label.inc"
+    siblings = ["a/mesh.inc"] if same_target else ["a/label.inc", "a/mesh.inc"]
+    with monkeypatch.context() as simulated_link:
+        simulated_link.setattr(Path, "resolve", resolve_alias)
+        session = PrepSession()
+        session.open_rad(model(tmp_path / "host"))
+        plan = session.plan_import_source(starter)
+        assert plan["source"]["uncollected_include_siblings"] == siblings
+        assert "include_sibling_aliases" not in plan["source"]
+        session.import_source(plan["plan_id"])
+        archive = tmp_path / "linked.caeprep"
+        session.save_project(archive)
+    with zipfile.ZipFile(archive) as saved:
+        source, = json.loads(saved.read("manifest.json"))["source_models"]
+        assert source["uncollected_include_siblings"] == siblings
+        assert "include_sibling_aliases" not in source
+        other = next(entry for entry in source["files"] if entry["original_path"] == "other.inc")
+        member = f'sources/{source["id"]}/{other["original_resource_id"]}.rad'
+        assert saved.read(member) == starter.with_name("other.inc").read_bytes()
+    reopened = PrepSession()
+    reopened.open_project(archive)
+    source, = reopened.source_models()
+    tail = ["label.inc", "other.inc", "mesh.inc"] if same_target else ["other.inc", "mesh.inc", "label.inc"]
+    assert [entry["original_path"] for entry in source["files"]] == [starter.name, "a/chooser.inc", *tail]
+
+
+@pytest.mark.parametrize("tamper", (None, "selected-alias", "cycle", "missing-target", "wrong-binding", "shadow",
+                                    "overlap", "malformed", "no-bindings"))
+def test_archive_replays_collected_sibling_target(tmp_path, monkeypatch, tamper):
+    starter = model(tmp_path / "source")
+    selects_alias = tamper in ("selected-alias", "wrong-binding")
+    collector = b"b/collector.inc" if selects_alias else b"b/y.inc"
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                         b"#include mesh.inc\n#include " + collector + b"\n#include a/chooser.inc\n"))
+    collected = starter.parent / "b/y.inc"
+    collected.parent.mkdir()
+    collected.write_bytes(b"# already collected\n")
+    if selects_alias:
+        collected.with_name("collector.inc").write_bytes(b"#include y.inc\n")
+    alias = starter.parent / "a/mesh.inc"
+    alias.parent.mkdir()
+    alias.write_bytes(collected.read_bytes())
+    alias.with_name("chooser.inc").write_bytes(b"#include mesh.inc\n")
+    resolve = Path.resolve
+
+    def resolve_alias(path, *args, **kwargs):
+        return resolve(collected if path == alias else path, *args, **kwargs)
+
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    with monkeypatch.context() as links:
+        links.setattr(Path, "resolve", resolve_alias)
+        plan = session.plan_import_source(starter)
+        session.import_source(plan["plan_id"])
+        project = tmp_path / "collected-alias.caeprep"
+        session.save_project(project)
+
+    if tamper in (None, "selected-alias"):
+        reopened = PrepSession()
+        reopened.open_project(project)
+        source, = reopened.source_models()
+        if selects_alias:
+            assert source["include_sibling_aliases"] == {"a/mesh.inc": "b/y.inc"}
+            assert "uncollected_include_siblings" not in source
+        else:
+            assert "include_sibling_aliases" not in source
+            assert source["uncollected_include_siblings"] == ["a/mesh.inc"]
+        files = {record["original_path"]: record for record in source["files"]}
+        chooser = files["a/chooser.inc"]
+        target = files["b/y.inc" if selects_alias else "mesh.inc"]
+        assert [chooser["original_resource_id"], 0, target["original_resource_id"]] in source["include_bindings"]
+        with zipfile.ZipFile(project) as saved:
+            assert saved.read(f'raw/{chooser["resource_id"]}.rad') == f'#include {target["logical_path"]}\n'.encode()
+        return
+
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    variants = {
+        "cycle": {"a/mesh.inc": "a/loop.inc", "a/loop.inc": "a/mesh.inc"},
+        "missing-target": {"a/mesh.inc": "b/missing.inc"},
+        "wrong-binding": {"a/mesh.inc": "a/chooser.inc"},
+        "shadow": {"mesh.inc": "b/y.inc"},
+        "malformed": {"a/mesh.inc": ["b/y.inc"]},
+    }
+    source["include_sibling_aliases"] = variants.get(tamper, {"a/mesh.inc": "b/y.inc"})
+    if tamper == "overlap":
+        source["uncollected_include_siblings"] = ["a/mesh.inc"]
+    elif tamper == "no-bindings":
+        del source["include_bindings"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "invalid-alias.caeprep"
+    with zipfile.ZipFile(altered, "w") as saved:
+        for name, data in members.items():
+            saved.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+def test_archive_replays_distinct_case_sensitive_sibling_aliases(tmp_path, monkeypatch):
+    starter = model(tmp_path / "source")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                         b"#include a/chooser1.inc\n#include a/chooser2.inc\n#include b/y.inc\n"))
+    source = starter.parent
+    (source / "a").mkdir()
+    (source / "b").mkdir()
+    (source / "a/chooser1.inc").write_bytes(b"#include mesh.inc\n")
+    (source / "a/chooser2.inc").write_bytes(b"#include Mesh.inc\n")
+    (source / "b/y.inc").write_bytes(b"# collected target\n")
+    aliases = {"a/mesh.inc": "b/y.inc", "a/Mesh.inc": "a/chooser1.inc"}
+    paths = {starter.name, "mesh.inc", "a/chooser1.inc", "a/chooser2.inc", "b/y.inc"}
+    lookup_name = includes.include_lookup(paths | aliases.keys())
+    disk_lookup = includes.disk_include_lookup
+
+    def case_sensitive_tree(base, **kwargs):
+        if base != source:
+            return disk_lookup(base, **kwargs)
+
+        def lookup(path):
+            name = lookup_name(path)
+            return aliases.get(name, name)
+
+        return lookup
+
+    with monkeypatch.context() as filesystem:
+        filesystem.setattr(includes, "disk_include_lookup", case_sensitive_tree)
+        filesystem.setattr(prep_session, "disk_include_lookup", case_sensitive_tree)
+        session = PrepSession()
+        session.open_rad(model(tmp_path / "host"))
+        plan = session.plan_import_source(starter)
+        session.import_source(plan["plan_id"])
+        project = tmp_path / "case-sensitive.caeprep"
+        session.save_project(project)
+
+    reopened = PrepSession()
+    reopened.open_project(project)
+    archived, = reopened.source_models()
+    assert "include_sibling_aliases" not in archived
+    assert archived["uncollected_include_siblings"] == sorted(aliases)
+    assert {item["original_path"] for item in archived["files"]} == paths
+    assert reopened.describe()["element_count"] == 2
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    recorded, = manifest["source_models"]
+    assert recorded["uncollected_include_siblings"] == sorted(aliases)
+    recorded["include_sibling_aliases"] = {"a/MESH.inc": "b/y.inc"}
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "unobserved-alias.caeprep"
+    with zipfile.ZipFile(altered, "w") as saved:
+        for name, data in members.items():
+            saved.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize(("direct_sibling", "second_alias"), ((True, True), (False, True), (False, False)),
+                         ids=("already-collected", "selected-by-alias", "missing-case-variant"))
+def test_archive_keeps_self_alias_when_case_variants_collide(tmp_path, monkeypatch, direct_sibling, second_alias):
+    starter = model(tmp_path / "source")
+    source = starter.parent
+    (source / "a").mkdir()
+    (source / "b").mkdir()
+    (source / "a/first.inc").write_bytes(b"#include MESH.INC\n#include Mesh.inc\n")
+    (source / "a/mesh.inc").write_bytes(b"# sibling mesh\n")
+    (source / "b/y.inc").write_bytes(b"# second alias target\n")
+    includes_text = b"#include mesh.inc\n#include a/first.inc\n#include b/y.inc\n"
+    if direct_sibling:
+        includes_text += b"#include a/mesh.inc\n"
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n", includes_text))
+
+    paths = {starter.name, "mesh.inc", "a/first.inc", "a/mesh.inc", "b/y.inc"}
+    aliases = {"a/MESH.INC": "a/mesh.inc"}
+    if second_alias:
+        aliases["a/Mesh.inc"] = "b/y.inc"
+    lookup_name = includes.include_lookup(paths | aliases.keys())
+    if not second_alias:
+        assert lookup_name("a/Mesh.inc") is None
+    disk_lookup = includes.disk_include_lookup
+
+    def case_sensitive_tree(base, **kwargs):
+        if base != source:
+            return disk_lookup(base, **kwargs)
+
+        def lookup(path):
+            name = lookup_name(path)
+            return aliases.get(name, name)
+
+        return lookup
+
+    with monkeypatch.context() as filesystem:
+        filesystem.setattr(includes, "disk_include_lookup", case_sensitive_tree)
+        filesystem.setattr(prep_session, "disk_include_lookup", case_sensitive_tree)
+        session = PrepSession()
+        session.open_rad(model(tmp_path / "host"))
+        plan = session.plan_import_source(starter)
+        session.import_source(plan["plan_id"])
+        project = tmp_path / "colliding-aliases.caeprep"
+        session.save_project(project)
+
+    reopened = PrepSession()
+    reopened.open_project(project)
+    archived, = reopened.source_models()
+    expected_aliases = {} if direct_sibling else {"a/MESH.INC": "a/mesh.inc"}
+    expected_competitors = sorted(aliases.keys() - expected_aliases.keys())
+    assert archived.get("include_sibling_aliases", {}) == expected_aliases
+    assert archived.get("uncollected_include_siblings", []) == expected_competitors
+    assert {item["original_path"] for item in archived["files"]} == paths
+    assert reopened.describe()["element_count"] == 2
+    assert not reopened.diagnostics()
+    if not second_alias:
+        mapped_ids = {item["original_path"]: item["resource_id"] for item in archived["files"]}
+        owner = mapped_ids["a/first.inc"]
+        assert [reopened._include_bindings[owner, ordinal] for ordinal in (0, 1)] == [
+            mapped_ids["a/mesh.inc"], mapped_ids["mesh.inc"],
+        ]
+    if not direct_sibling and second_alias:
+        # With no direct Starter include, this alias is the only route to a/mesh.inc.
+        with zipfile.ZipFile(project) as saved:
+            members = {name: saved.read(name) for name in saved.namelist()}
+        manifest = json.loads(members["manifest.json"])
+        recorded, = manifest["source_models"]
+        del recorded["include_sibling_aliases"]
+        members["manifest.json"] = json.dumps(manifest).encode()
+        altered = tmp_path / "missing-case-alias.caeprep"
+        with zipfile.ZipFile(altered, "w") as saved:
+            for name, data in members.items():
+                saved.writestr(name, data)
+        with pytest.raises(PrepError) as error:
+            PrepSession().open_project(altered)
+        assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize("sibling_present", (True, False), ids=("resolved-sibling", "missing-sibling"))
+def test_archive_preserves_root_operand_case_miss(tmp_path, monkeypatch, sibling_present):
+    starter = model(tmp_path / "source")
+    source = starter.parent
+    (source / "a").mkdir()
+    (source / "b").mkdir()
+    (source / "a/first.inc").write_bytes(b"#include MESH.INC\n")
+    (source / "a/mesh.inc").write_bytes(b"# sibling mesh\n")
+    (source / "b/second.inc").write_bytes(b"#include a/Mesh.inc\n")
+    starter.write_bytes(starter.read_bytes().replace(
+        b"#include mesh.inc\n", b"#include mesh.inc\n#include a/first.inc\n#include b/second.inc\n"))
+
+    paths = {starter.name, "mesh.inc", "a/first.inc", "a/mesh.inc", "b/second.inc"}
+    if sibling_present:
+        (source / "b/a").mkdir()
+        (source / "b/a/mesh.inc").write_bytes(b"# qualified sibling mesh\n")
+        paths.add("b/a/mesh.inc")
+    aliases = {"a/MESH.INC": "a/mesh.inc"}
+    lookup_name = includes.include_lookup(paths | aliases.keys())
+    disk_lookup = includes.disk_include_lookup
+
+    def case_sensitive_tree(base, **kwargs):
+        if base != source:
+            return disk_lookup(base, **kwargs)
+
+        def lookup(path):
+            name = lookup_name(path)
+            return aliases.get(name, name)
+
+        return lookup
+
+    with monkeypatch.context() as filesystem:
+        filesystem.setattr(includes, "disk_include_lookup", case_sensitive_tree)
+        filesystem.setattr(prep_session, "disk_include_lookup", case_sensitive_tree)
+        session = PrepSession()
+        session.open_rad(model(tmp_path / "host"))
+        if not sibling_present:
+            with pytest.raises(PrepError) as error:
+                session.plan_import_source(starter)
+            assert error.value.code == "unresolved_include"
+            return
+        plan = session.plan_import_source(starter)
+        session.import_source(plan["plan_id"])
+        project = tmp_path / "root-case-miss.caeprep"
+        session.save_project(project)
+
+    reopened = PrepSession()
+    reopened.open_project(project)
+    assert not reopened.diagnostics()
+    archived, = reopened.source_models()
+    assert archived["include_sibling_aliases"] == aliases
+    mapped_ids = {item["original_path"]: item["resource_id"] for item in archived["files"]}
+    assert mapped_ids.keys() == paths
+    assert {key: target for key, target in reopened._include_bindings.items() if key[0] in mapped_ids.values()} == {
+        (mapped_ids[starter.name], 0): mapped_ids["mesh.inc"],
+        (mapped_ids[starter.name], 1): mapped_ids["a/first.inc"],
+        (mapped_ids[starter.name], 2): mapped_ids["b/second.inc"],
+        (mapped_ids["a/first.inc"], 0): mapped_ids["a/mesh.inc"],
+        (mapped_ids["b/second.inc"], 0): mapped_ids["b/a/mesh.inc"],
+    }
+
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    del manifest["source_models"][0]["include_sibling_aliases"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "root-case-miss-without-alias.caeprep"
+    with zipfile.ZipFile(altered, "w") as saved:
+        for name, data in members.items():
+            saved.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize(("root_operand", "reverse", "sibling_name"), (
+    pytest.param("qualified", False, "mesh.inc", id="qualified"),
+    pytest.param("qualified-with-sibling", False, "mesh.inc", id="qualified-with-sibling"),
+    pytest.param("qualified-with-sibling", True, "mesh.inc", id="qualified-reversed"),
+    pytest.param("ancestor-competitor", False, "mesh.inc", id="ancestor-competitor"),
+    pytest.param("ancestor-competitor", True, "mesh.inc", id="ancestor-competitor-reversed"),
+    pytest.param("ancestor-competitor", False, "Mesh.inc", id="ancestor-competitor-mixed-case"),
+    pytest.param("ancestor-competitor", True, "Mesh.inc", id="ancestor-competitor-reversed-mixed-case"),
+    pytest.param("unreferenced-case-variant", False, "mesh.inc", id="unreferenced-case-variant"),
+    pytest.param("starter", False, "mesh.inc", id="starter"),
+))
+def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_operand, reverse, sibling_name):
+    starter = model(tmp_path / "source")
+    source = starter.parent
+    (source / "a").mkdir()
+    (source / "a/mesh.inc").write_bytes(b"# sibling mesh\n")
+    aliases = {"a/Mesh.inc": "mesh.inc"}
+    has_sibling = root_operand in ("qualified-with-sibling", "ancestor-competitor", "unreferenced-case-variant")
+    has_case_miss = root_operand == "unreferenced-case-variant"
+    operands = ["mesh.inc"]
+    bindings = {starter.name: ["mesh.inc"]}
+    paths = {starter.name, "mesh.inc", "a/mesh.inc"}
+    if root_operand == "starter":
+        operands.extend(("a/mesh.inc", "a/Mesh.inc"))
+        bindings[starter.name].extend(("a/mesh.inc", "mesh.inc"))
+    else:
+        (source / "a/first.inc").write_bytes(b"#include mesh.inc\n" if has_case_miss else b"#include MESH.INC\n")
+        (source / "b").mkdir()
+        (source / "b/second.inc").write_bytes(b"#include a/Mesh.inc\n")
+        paths.update(("a/first.inc", "b/second.inc"))
+        owners = ("a/first.inc", "b/second.inc")
+        if reverse:
+            owners = owners[::-1]
+        operands.extend(owners)
+        bindings[starter.name].extend(owners)
+        aliases["a/MESH.INC"] = "a/mesh.inc"
+        if root_operand == "ancestor-competitor":
+            aliases["a/Mesh.inc"] = "b/second.inc"
+        bindings["a/first.inc"] = ["a/mesh.inc"]
+        bindings["b/second.inc"] = ["mesh.inc"]
+        if has_sibling:
+            (source / "b/a").mkdir()
+            sibling_path = f"b/a/{sibling_name}"
+            (source / sibling_path).write_bytes(b"# qualified sibling mesh\n")
+            paths.add(sibling_path)
+            bindings["b/second.inc"] = [sibling_path]
+        if has_case_miss:
+            del aliases["a/Mesh.inc"]
+    include_lines = "".join(f"#include {operand}\n" for operand in operands).encode()
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n", include_lines))
+
+    lookup_name = includes.include_lookup(paths | aliases.keys())
+    disk_lookup = includes.disk_include_lookup
+
+    def case_sensitive_tree(base, **kwargs):
+        if base != source:
+            return disk_lookup(base, **kwargs)
+
+        def lookup(path):
+            name = lookup_name(path)
+            return aliases.get(name, name)
+
+        return lookup
+
+    with monkeypatch.context() as filesystem:
+        filesystem.setattr(includes, "disk_include_lookup", case_sensitive_tree)
+        filesystem.setattr(prep_session, "disk_include_lookup", case_sensitive_tree)
+        session = PrepSession()
+        session.open_rad(model(tmp_path / "host"))
+        plan = session.plan_import_source(starter)
+        session.import_source(plan["plan_id"])
+        assert not session.diagnostics()
+        project = tmp_path / "root-operand-alias.caeprep"
+        session.save_project(project)
+
+    reopened = PrepSession()
+    reopened.open_project(project)
+    assert not reopened.diagnostics()
+    archived, = reopened.source_models()
+    mapped_ids = {item["original_path"]: item["resource_id"] for item in archived["files"]}
+    assert mapped_ids.keys() == paths
+    assert {key: target for key, target in reopened._include_bindings.items() if key[0] in mapped_ids.values()} == {
+        (mapped_ids[owner], ordinal): mapped_ids[target]
+        for owner, targets in bindings.items()
+        for ordinal, target in enumerate(targets)
+    }
+
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    recorded, = manifest["source_models"]
+    alias_field, sibling_field, miss_field = ("include_sibling_aliases", "uncollected_include_siblings",
+                                              "unresolved_include_paths")
+    baseline = dict(recorded)
+
+    def reject_change(label, **changes):
+        recorded.clear()
+        recorded.update(baseline | changes)
+        for key in changes:
+            if changes[key] is None:
+                del recorded[key]
+        members["manifest.json"] = json.dumps(manifest).encode()
+        altered = tmp_path / f"{label}.caeprep"
+        with zipfile.ZipFile(altered, "w") as saved:
+            for name, data in members.items():
+                saved.writestr(name, data)
+        with pytest.raises(PrepError) as error:
+            PrepSession().open_project(altered)
+        assert error.value.code == "invalid_project", label
+
+    recorded_aliases = baseline.get(alias_field, {})
+    if has_case_miss:
+        assert baseline[miss_field] == ["a/Mesh.inc"]
+        assert alias_field not in baseline and sibling_field not in baseline
+        reject_change("missing-case-evidence", **{miss_field: None})
+        for index, paths in enumerate((["a/MeSh.inc"], ["a/mesh.inc"], ["a/Mesh.inc"] * 2, [""])):
+            reject_change(f"invalid-case-evidence-{index}", **{miss_field: paths})
+        reject_change("case-evidence-without-bindings", **{"include_bindings": None})
+        return
+    if has_sibling:
+        for index, target in enumerate(sorted(paths)):
+            forged = recorded_aliases | {"a/Mesh.inc": target}
+            reject_change(f"unbound-alias-injected-{index}", **{sibling_field: None, alias_field: forged})
+            reject_change(f"overlapping-path-and-alias-{index}",
+                          **{sibling_field: ["a/Mesh.inc"], alias_field: forged})
+        assert recorded_aliases == {"a/MESH.INC": "a/mesh.inc"}
+        if root_operand == "ancestor-competitor":
+            reject_change("unneeded-ancestor-competitor", **{sibling_field: ["a/Mesh.inc"]})
+            assert sibling_field not in baseline
+        else:
+            assert baseline[sibling_field] == ["a/Mesh.inc"]
+            reject_change("missing-competitor", **{sibling_field: None})
+        reject_change("wrong-competitor", **{sibling_field: ["a/Other.inc"]})
+    else:
+        assert recorded_aliases == aliases
+        assert sibling_field not in baseline
+    assert miss_field not in baseline
+    wrong_targets = {"a/MESH.INC": "mesh.inc", "a/Mesh.inc": "a/mesh.inc"}
+    for index, path in enumerate(recorded_aliases):
+        removed = {name: target for name, target in recorded_aliases.items() if name != path}
+        reject_change(f"alias-{index}-removed", **{alias_field: removed or None})
+        reject_change(f"alias-{index}-retargeted", **{alias_field: recorded_aliases | {path: wrong_targets[path]}})
+
+
+def test_archive_preserves_ancestor_competitor_that_changes_a_later_choice(tmp_path, monkeypatch):
+    starter = model(tmp_path / "source")
+    source = starter.parent
+    (source / "a").mkdir()
+    (source / "b/a").mkdir(parents=True)
+    (source / "a/mesh.inc").write_bytes(b"# root mesh candidate\n")
+    (source / "b/a/mesh.inc").write_bytes(b"# sibling mesh candidate\n")
+    (source / "b/second.inc").write_bytes(b"#include a/selected.inc\n")
+    (source / "b/third.inc").write_bytes(b"#include a/mesh.inc\n")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n", (
+        b"#include mesh.inc\n#include a/mesh.inc\n#include b/second.inc\n#include b/third.inc\n")))
+
+    aliases = {source / "a/selected.inc": source / "b/second.inc",
+               source / "b/a/selected.inc": source / "b/a/mesh.inc"}
+    for alias, target in aliases.items():
+        alias.write_bytes(target.read_bytes())
+    resolve = Path.resolve
+
+    def resolve_alias(path, *args, **kwargs):
+        return resolve(aliases.get(path, path), *args, **kwargs)
+
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    with monkeypatch.context() as filesystem:
+        filesystem.setattr(Path, "resolve", resolve_alias)
+        plan = session.plan_import_source(starter)
+        assert plan["source"]["uncollected_include_siblings"] == ["a/selected.inc"]
+        session.import_source(plan["plan_id"])
+        project = tmp_path / "explicit-claim.caeprep"
+        session.save_project(project)
+
+    reopened = PrepSession()
+    reopened.open_project(project)
+    assert not reopened.diagnostics()
+    archived, = reopened.source_models()
+    files = {item["original_path"]: item["resource_id"] for item in archived["files"]}
+    assert reopened._include_bindings[files["b/second.inc"], 0] == files["b/a/mesh.inc"]
+    assert reopened._include_bindings[files["b/third.inc"], 0] == files["b/a/mesh.inc"]
+
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    del manifest["source_models"][0]["uncollected_include_siblings"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "missing-explicit-claim-evidence.caeprep"
+    with zipfile.ZipFile(altered, "w") as saved:
+        for name, data in members.items():
+            saved.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+def test_archive_omits_multiple_case_spellings_of_the_same_file(tmp_path):
+    starter = model(tmp_path / "source")
+    (starter.parent / "a").mkdir()
+    (starter.parent / "a/first.inc").write_bytes(b"#include MESH.INC\n#include Mesh.inc\n")
+    (starter.parent / "a/mesh.inc").write_bytes(b"# sibling mesh\n")
+    starter.write_bytes(starter.read_bytes().replace(
+        b"#include mesh.inc\n", b"#include a/first.inc\n#include mesh.inc\n#include MESH.INC\n#include Mesh.inc\n"))
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    plan = session.plan_import_source(starter)
+    assert "include_sibling_aliases" not in plan["source"]
+    session.import_source(plan["plan_id"])
+    project = tmp_path / "ordinary-case-spellings.caeprep"
+    session.save_project(project)
+
+    reopened = PrepSession()
+    reopened.open_project(project)
+    assert not reopened.diagnostics()
+    archived, = reopened.source_models()
+    assert not {"include_sibling_aliases", "uncollected_include_siblings", "unresolved_include_paths"} & archived.keys()
+    mapped_ids = {item["original_path"]: item["resource_id"] for item in archived["files"]}
+    assert [reopened._include_bindings[mapped_ids["a/first.inc"], ordinal] for ordinal in (0, 1)] == [
+        mapped_ids["a/mesh.inc"], mapped_ids["a/mesh.inc"],
+    ]
+
+
+@pytest.mark.parametrize("ungrounded", (False, True), ids=("observed", "ungrounded"))
+def test_archive_replays_legacy_case_insensitive_self_alias(tmp_path, ungrounded):
+    starter = model(tmp_path / "source")
+    source = starter.parent
+    (source / "mesh").mkdir()
+    (source / "mesh/first.inc").write_bytes(b'#include\r\n"NODES.INC"\r\n')
+    (source / "mesh/nodes.inc").write_bytes(b"# claimed sibling\n")
+    (source / "nodes.inc").write_bytes((source / "mesh.inc").read_bytes())
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                         b"#include mesh/first.inc\n#include mesh/nodes.inc\n"))
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    plan = session.plan_import_source(starter)
+    assert "include_sibling_aliases" not in plan["source"]
+    session.import_source(plan["plan_id"])
+    project = tmp_path / "current.caeprep"
+    session.save_project(project)
+
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    recorded, = manifest["source_models"]
+    aliases = {"mesh/NODES.INC": "mesh/nodes.inc"}
+    if ungrounded:
+        aliases["mesh/FIRST.INC"] = "mesh/first.inc"
+    recorded["include_sibling_aliases"] = aliases
+    members["manifest.json"] = json.dumps(manifest).encode()
+    legacy = tmp_path / "legacy-self-alias.caeprep"
+    with zipfile.ZipFile(legacy, "w") as saved:
+        for name, data in members.items():
+            saved.writestr(name, data)
+
+    reopened = PrepSession()
+    if ungrounded:
+        with pytest.raises(PrepError) as error:
+            reopened.open_project(legacy)
+        assert error.value.code == "invalid_project"
+    else:
+        reopened.open_project(legacy)
+        archived, = reopened.source_models()
+        assert archived["include_sibling_aliases"] == aliases
+        assert reopened.describe()["element_count"] == 2
+
+
+def test_archive_replays_legacy_folded_sibling_evidence(tmp_path):
+    starter = model(tmp_path / "source")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
+                         b"#include a/chooser.inc\n#include other.inc\n"))
+    source = starter.parent
+    (source / "a").mkdir()
+    (source / "a/chooser.inc").write_bytes(b"#include Mesh.inc\n")
+    (source / "a/Mesh.inc").write_bytes(b"# uncollected sibling\n")
+    (source / "other.inc").write_bytes(b"# collected before root mesh\n")
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    plan = session.plan_import_source(starter)
+    session.import_source(plan["plan_id"])
+    project = tmp_path / "mixed-case.caeprep"
+    session.save_project(project)
+    PrepSession().open_project(project)
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    archived, = manifest["source_models"]
+    assert archived["uncollected_include_siblings"] == ["a/Mesh.inc"]
+    archived["uncollected_include_siblings"] = ["a/mesh.inc"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    legacy = tmp_path / "legacy-folded.caeprep"
+    with zipfile.ZipFile(legacy, "w") as saved:
+        for name, data in members.items():
+            saved.writestr(name, data)
+    reopened = PrepSession()
+    reopened.open_project(legacy)
+    assert reopened.describe()["element_count"] == 2
+
+
+def test_current_import_reopens_exact_recorded_chooser_bindings_in_one_walk(tmp_path, monkeypatch):
+    fixture = Path(__file__).with_name("fixtures") / "8e85a669-signed-25-borrowed-choosers.caeprep"
+    source_dir = tmp_path / "input"
+    with zipfile.ZipFile(fixture) as archive:
+        meta, = json.loads(archive.read("manifest.json"))["source_models"]
+        for record in meta["files"]:
+            source = source_dir / record["original_path"]
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_bytes(archive.read(f"sources/{meta['id']}/{record['original_resource_id']}.rad"))
+            if source.name in ("chooser.inc", "owner.inc"):
+                source.with_name("trigger.inc").write_text("# uncollected alternate\n")
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "host"))
+    plan = session.plan_import_source(source_dir / meta["name"])
+    assert len(plan["source"]["files"]) == 25
+    assert len(plan["source"]["include_bindings"]) == 39
+    assert set(plan["source"]["uncollected_include_siblings"]) == {
+        "a/" + "c/" * depth + "trigger.inc" for depth in range(9)
+    }
+    session.import_source(plan["plan_id"])
+    session.create_analysis_case("Recorded chooser replay", [], .01, .001, "s")
+    original = includes._walk_includes
+    recorded = []
+
+    def count(root, lookup, load, scope, selected, recovered, historical, **options):
+        if root == meta["name"] and options.get("load_order") is not None:
+            recorded.append(len(selected))
+        return original(root, lookup, load, scope, selected, recovered, historical, **options)
+
+    monkeypatch.setattr(includes, "_walk_includes", count)
+    for index in range(3):
+        project = tmp_path / f"saved-{index}.caeprep"
+        session.save_project(project)
+        recorded.clear()
+        session.open_project(project)
+        assert recorded == [39]
+    target = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+    group = _card(session, "/GRSHEL/SHEL/48")["id"]
+    assert session.group_members(group)["member_ids"] == [9008]
+    assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
+
+    with zipfile.ZipFile(project) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    field = "uncollected_include_siblings"
+    for invalid in (True, False):
+        if invalid:
+            source[field].append("a/not-an-alternate.inc")
+        else:
+            del source[field]  # The previous writer had no explicit disk evidence.
+        members["manifest.json"] = json.dumps(manifest).encode()
+        alternate = tmp_path / f"alternate-{invalid}.caeprep"
+        with zipfile.ZipFile(alternate, "w") as archive:
+            for name, data in members.items():
+                archive.writestr(name, data)
+        if invalid:
+            with pytest.raises(PrepError) as error:
+                session.open_project(alternate)
+            assert error.value.code == "invalid_project"
+        else:
+            session.open_project(alternate)
+            assert len(session.source_models()[0]["files"]) == 25
+
+
+@pytest.mark.parametrize("writer", ("ac0a255", "bde82a5", "8e85a669"))
+@pytest.mark.parametrize("geometry", ("two-file", "unchanged-triangle"))
+def test_two_file_quad_mapping_requires_historical_allocation_order(tmp_path, writer, geometry):
+    fixture = Path(__file__).with_name("fixtures") / f"{writer}-quad-{geometry}.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    exported = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(exported)
+    session.open_rad(exported)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+    with zipfile.ZipFile(fixture) as archive:
+        members = {member: archive.read(member) for member in archive.namelist()}
+    manifest = json.loads(members.pop("manifest.json"))
+    source, = manifest["source_models"]
+    old, new = ("E:SHELL", "E:QUAD") if writer == "ac0a255" else ("E:QUAD", "E:SHELL")
+    entry = next(entry for entry in source["id_map"] if entry[:2] == [old, 9007])
+    if geometry == "unchanged-triangle":
+        assert ["E:SH3N", 9900, 9900] in source["id_map"]
+        assert entry[2] == (9901 if writer == "ac0a255" else 9008)
+    entry[0] = new
+    for order in ("original", "sorted"):
+        if order == "sorted":
+            source["id_map"].sort()
+        altered = tmp_path / f"{order}.caeprep"
+        with zipfile.ZipFile(altered, "w") as archive:
+            archive.writestr("manifest.json", json.dumps(manifest).encode())
+            for member, payload in members.items():
+                archive.writestr(member, payload)
+        with pytest.raises(PrepError) as error:
+            session.open_project(altered)
+        assert error.value.code == "invalid_project"
+
+
+def test_element_allocation_cursor_can_continue_below_an_unchanged_id(tmp_path):
+    fixture = Path(__file__).with_name("fixtures") / "8e85a669-quad-allocation-cursor.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    entries = [entry for entry in session.source_models()[0]["id_map"] if entry[0].startswith("E:")]
+    assert entries == [["E:QUAD", 9007, 9008], ["E:SH3N", 9900, 9900], ["E:SHELL", 7001, 9009]]
+    target = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    assert len(session.mesh_view()["cells"]) == 5
+
+
+def test_archive_rejects_element_target_used_by_two_namespaces(tmp_path):
+    fixture = Path(__file__).with_name("fixtures") / "8e85a669-quad-triangle-collision.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    with zipfile.ZipFile(fixture) as archive:
+        members = {member: archive.read(member) for member in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    assert ["E:QUAD", 9007, 9008] in source["id_map"]
+    triangle = next(entry for entry in source["id_map"] if entry[:2] == ["E:SH3N", 9008])
+    assert triangle[2] == 9009
+    triangle[2] = 9008
+    file = next(file for file in source["files"] if file["original_path"] == "mesh.inc")
+    resource = next(resource for resource in manifest["resources"] if resource["id"] == file["resource_id"])
+    native = resource["raw_member"]
+    assert members[native].count(_i(9009).encode()) == 1
+    members[native] = members[native].replace(_i(9009).encode(), _i(9008).encode())
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "duplicate.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for member, payload in members.items():
+            archive.writestr(member, payload)
+    with pytest.raises(PrepError) as error:
+        session.open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize("name", ("ac0a255-qualified-70-includes", "24137d60-nested-include-order",
+                                  "987c52b8-nested-include-order", "8fe6609b-nested-include-order"))
+def test_unrecorded_include_policy_requires_genuine_visit_order(tmp_path, name):
+    fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
+    session = PrepSession()
+    session.open_project(fixture)
+    target = tmp_path / "native/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    assert len(session.mesh_view()["cells"]) == 4
+    with zipfile.ZipFile(fixture) as archive:
+        members = {member: archive.read(member) for member in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    files = manifest["source_models"][0]["files"]
+    assert files[1]["original_path"] == "a/chooser.inc"
+    assert files[2]["original_path"] == ("trigger.inc" if name.startswith("ac0") else "mesh.inc")
+    files[1], files[2] = files[2], files[1]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "altered-order.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for member, payload in members.items():
+            archive.writestr(member, payload)
+    with pytest.raises(PrepError) as error:
+        session.open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize("move_starter", (False, True), ids=("swap-trigger", "move-starter"))
+def test_explicit_source_bindings_cannot_authorize_an_impossible_order(tmp_path, move_starter):
+    from caelab_prep.radioss import DeckResource
+
+    fixture = Path(__file__).with_name("fixtures") / "ac0a255-qualified-70-includes.caeprep"
+    with zipfile.ZipFile(fixture) as archive:
+        members = {member: archive.read(member) for member in archive.namelist()}
+    manifest = json.loads(members.pop("manifest.json"))
+    source, = manifest["source_models"]
+    files = source["files"]
+    ids = {record["logical_path"]: record["original_resource_id"] for record in files}
+    resources = {resource["id"]: resource["raw_member"] for resource in manifest["resources"]}
+    source["include_bindings"] = []
+    for record in files:
+        deck = DeckResource(members[resources[record["resource_id"]]], name=record["logical_path"],
+                            is_include=record["resource_id"] != source["root_resource_id"])
+        source["include_bindings"].extend([record["original_resource_id"], index, ids[directive.path]]
+                                          for index, directive in enumerate(deck.include_directives))
+    assert files[0]["resource_id"] == source["root_resource_id"]
+    assert files[1]["original_path"] == "a/chooser.inc" and files[2]["original_path"] == "trigger.inc"
+    index = 0 if move_starter else 2
+    files[index], files[1] = files[1], files[index]
+    altered = tmp_path / "recorded-altered-order.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        archive.writestr("manifest.json", json.dumps(manifest))
+        for member, payload in members.items():
+            archive.writestr(member, payload)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize("name", ("bde82a5-quad-14-includes", "bde82a5-quad-qualified-order",
+                                  "8e85a669-quad-qualified-order"))
+def test_historical_quad_archive_requires_its_writer_namespace(tmp_path, name):
+    fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
+    with zipfile.ZipFile(fixture) as archive:
+        members = {member: archive.read(member) for member in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source, = manifest["source_models"]
+    order = [record["original_path"] for record in source["files"]]
+    if name.endswith("14-includes"):
+        assert len(order) == 14 and order[11] == "extra.inc"
+        assert "top/extra.inc" not in order
+    else:
+        assert order == ["conditions_0000.rad", "a/first.inc", "a/sub/mesh.inc", "sub/mesh.inc"]
+    session = PrepSession()
+    session.open_project(fixture)
+    saved = tmp_path / "resaved.caeprep"
+    session.save_project(saved)
+    session.open_project(saved)
+    target = tmp_path / "export/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    projection = session.mesh_view()
+    assert len(projection["node_ids"]) == 16 and len(projection["cells"]) == 4
+
+    entry = next(entry for entry in source["id_map"] if entry == ["E:QUAD", 9007, 9008])
+    entry[0] = "E:SHELL"
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "altered.caeprep"
+    with zipfile.ZipFile(altered, "w") as archive:
+        for member, payload in members.items():
+            archive.writestr(member, payload)
+    with pytest.raises(PrepError) as error:
+        session.open_project(altered)
+    assert error.value.code == "invalid_project"
+
+
+@pytest.mark.parametrize("tampered", (False, True))
+def test_bde_frozen_include_wave_preserves_quad_namespace(tmp_path, tampered):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "base"))
+    source = _bde_wave_source(tmp_path / "source")
+    session.import_source(session.plan_import_source(source)["plan_id"])
+    case = session.create_analysis_case("Legacy QUAD", [], .01, .001, "s")["case_id"]
+    modern = tmp_path / "modern.caeprep"
+    session.save_project(modern)
+    with zipfile.ZipFile(modern) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source_model, = manifest["source_models"]
+    source_model.pop("include_bindings")
+    manifest.pop("include_bindings")
+    files = {file["original_path"]: file for file in source_model["files"]}
+    assert len(files) == 13
+    member = next(deck["raw_member"] for deck in manifest["resources"]
+                  if deck["id"] == files["relay/route.inc"]["resource_id"])
+    # The frozen wave binds route.inc to the root. This reaches the sibling
+    # only later, through c.inc, unlike the modern wave and ac0a255 policies.
+    sibling = files["relay/nodes.inc"]
+    assert sibling["logical_path"].encode() in members[member]
+    members[member] = members[member].replace(sibling["logical_path"].encode(), files["nodes.inc"]["logical_path"].encode())
+    ordered = source_model["files"]
+    ordered.remove(sibling)
+    ordered.insert(ordered.index(files["c.inc"]) + 1, sibling)
+    if tampered:
+        next(entry for entry in source_model["id_map"] if entry[:2] == ["E:QUAD", 9007])[0] = "E:SHELL"
+    members["manifest.json"] = json.dumps(manifest).encode()
+    legacy = tmp_path / "bde.caeprep"
+    with zipfile.ZipFile(legacy, "w") as archive:
+        for name, raw in members.items():
+            archive.writestr(name, raw)
+    if tampered:
+        with pytest.raises(PrepError) as error:
+            session.open_project(legacy)
+        assert error.value.code == "invalid_project"
+    else:
+        session.open_project(legacy)
+        target = tmp_path / "export/case_0000.rad"
+        session.export_analysis_case(target, case)
+        session.open_rad(target)
+        assert len(session.mesh_view()["node_ids"]) == 16
+        assert len(session.mesh_view()["cells"]) == 4
+
+
+@pytest.mark.parametrize("writer", ("241", "987", "quoted", "current"))
+def test_archive_signed_element_exclusions_follow_writer_support(tmp_path, writer):
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "base"))
+    source = _base_model(tmp_path / "source")
+    raw = source.read_bytes().replace(b"/END", f"/GRSHEL/SHEL/48\nSource shells\n{_i(7001, 9007, -9007)}\n/END".encode())
+    if writer == "987":
+        raw = raw.replace(b"#include mesh.inc", b'#include\n"mesh.inc"')
+    source.write_bytes(raw)
+    plan = session.plan_import_source(source)
+    ids = {(namespace, original): mapped for namespace, original, mapped in plan["source"]["id_map"]}
+    session.import_source(plan["plan_id"])
+    modern = tmp_path / "modern.caeprep"
+    session.save_project(modern)
+    with zipfile.ZipFile(modern) as archive:
+        members = {name: archive.read(name) for name in archive.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    source_model, = manifest["source_models"]
+    if writer != "current":
+        source_model.pop("include_bindings")
+        manifest.pop("include_bindings")
+    if writer == "241":
+        archived_ids = {item["resource_id"] for item in source_model["files"]}
+        for deck in manifest["resources"]:
+            if deck["id"] in archived_ids:
+                deck["state"]["state_version"] = 4
+                assert not deck["state"].pop("retained_comments")
+    if writer == "987":
+        path = next(item["logical_path"].encode() for item in source_model["files"] if item["original_path"] == "mesh.inc")
+        root = next(deck["raw_member"] for deck in manifest["resources"] if deck["id"] == source_model["root_resource_id"])
+        assert b'"' + path + b'"' in members[root]
+        members[root] = members[root].replace(b'"' + path + b'"', path)
+    members["manifest.json"] = json.dumps(manifest).encode()
+    candidate = tmp_path / "candidate.caeprep"
+    with zipfile.ZipFile(candidate, "w") as archive:
+        for name, payload in members.items():
+            archive.writestr(name, payload)
+    if writer in ("241", "987"):
+        with pytest.raises(PrepError) as error:
+            session.open_project(candidate)
+        assert error.value.code in {"unsupported_source_profile", "invalid_project"}
+        return
+    session.open_project(candidate)
+    group = _card(session, "/GRSHEL/SHEL/48")["id"]
+    assert session.group_members(group)["member_ids"] == [ids["E:SHELL", 7001]]
+    assert _i(-ids["E:SHELL", 9007]) in session.card_text(group)
+
+
+@pytest.mark.parametrize("repeated_operand", (False, True), ids=("seven-files", "eleven-files"))
+def test_8e85_signed_archive_replays_fallback_include_traversal(tmp_path, repeated_operand):
+    # Written by 8e85a669 with an empty source_paths list. The unused
+    # a/door/marker.inc on disk delayed door/marker.inc by one INCLUDE wave.
+    name = "8e85a669-signed-repeated-include" if repeated_operand else "8e85a669-signed-includes"
+    fixture = Path(__file__).with_name("fixtures") / f"{name}.caeprep"
+    with zipfile.ZipFile(fixture) as archive:
+        manifest = json.loads(archive.read("manifest.json"))
+        source, = manifest["source_models"]
+        assert len(source["files"]) == (11 if repeated_operand else 7)
+        operands = {"b/entry.inc": b"#include mesh.inc\n", "door/marker.inc": b"#include mesh.inc\n"}
+        if repeated_operand:
+            operands["door/marker.inc"] += b"#include sub/alternate.inc\n"
+            operands["sub/chooser.inc"] = b"#include dups.inc\n#include dups.inc\n"
+            operands["sub/alternate.inc"] = b"#include dups.inc\n"
+        for path, expected in operands.items():
+            record = next(item for item in source["files"] if item["original_path"] == path)
+            assert archive.read(f'sources/{source["id"]}/{record["original_resource_id"]}.rad') == expected
+
+    def assert_group(session):
+        projection = session.mesh_view()
+        assert len(projection["node_ids"]) == 16
+        assert len(projection["cells"]) == 4
+        group = _card(session, "/GRSHEL/SHEL/48")["id"]
+        membership = session.group_members(group)
+        assert membership["member_ids"] == [9008] and not membership["diagnostics"]
+        assert session.card_text(group).splitlines()[2] == _i(9008, 9009, -9009)
+
+    def assert_bindings(session):
+        ids = {item["original_path"]: item["resource_id"] for item in source["files"]}
+        assert session._include_bindings[ids["b/entry.inc"], 0] == ids["mesh.inc"]
+        assert session._include_bindings[ids["door/marker.inc"], 0] == ids["door/mesh.inc"]
+        if repeated_operand:
+            assert session._include_bindings[ids["sub/chooser.inc"], 0] == ids["dups.inc"]
+            assert session._include_bindings[ids["sub/chooser.inc"], 1] == ids["sub/dups.inc"]
+            assert session._include_bindings[ids["sub/alternate.inc"], 0] == ids["sub/dups.inc"]
+
+    session = PrepSession()
+    session.open_project(fixture)
+    assert_group(session)
+    assert_bindings(session)
+    for name in ("first", "second"):
+        saved = tmp_path / f"{name}.caeprep"
+        session.save_project(saved)
+        session.open_project(saved)
+        assert_group(session)
+        assert_bindings(session)
+    target = tmp_path / "export/case_0000.rad"
+    session.export_analysis_case(target)
+    session.open_rad(target)
+    assert_group(session)
 
 
 def test_stale_or_unsupported_import_has_no_partial_commit(tmp_path):

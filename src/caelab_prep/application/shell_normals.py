@@ -5,7 +5,7 @@ from uuid import uuid4
 from ..cae_core import PrepError
 from ..radioss.relations import node_support
 from . import mesh_edit_candidates as edits
-from .native_mesh_edit import native_mesh_edit_states, project_native_mesh_edit
+from .native_mesh_edit import mesh_edit_reference, native_mesh_edit_states, project_native_mesh_edit
 
 
 class ShellNormalCommands:
@@ -15,11 +15,11 @@ class ShellNormalCommands:
             try:
                 if not isinstance(references, (list, tuple)) or not references:
                     raise PrepError("invalid_shell_selection", "Choose explicit source-qualified shell elements.")
-                if any(not isinstance(ref, dict) or set(ref) != {"resource_id", "entity_kind", "local_id"}
-                       for ref in references):
-                    raise PrepError("invalid_shell_selection", "Each shell needs its source, element kind and native ID.")
                 snapshot = self._mesh_edit_snapshot()
-                candidate = edits.flip_shell_normals(snapshot, tuple(edits.Ref(**ref) for ref in references))
+                members = tuple(mesh_edit_reference(ref, kind="element", snapshot=snapshot,
+                    code="invalid_shell_selection", message="Each shell needs its source, element kind and native ID.")
+                    for ref in references)
+                candidate = edits.flip_shell_normals(snapshot, members)
                 selected = {cell.ref for cell in candidate.cell_updates}
                 view = self.mesh_view()
                 # Reuse the mechanical profile on the selected shells, including

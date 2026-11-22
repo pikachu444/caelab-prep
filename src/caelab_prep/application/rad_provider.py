@@ -14,6 +14,7 @@ import re
 
 from .contracts import ObjectRef, OperationRequest, OperationSpec, PropertySpec, SetProperties, TreeNode
 from ..cae_core.errors import PrepError
+from ..radioss.modeling import ELEMENT_GROUP_PAIRS, TYPE14_PROPERTIES
 
 
 _LABELS = {
@@ -182,9 +183,13 @@ class RadProvider:
             return (self._element_members_field(membership["members"]), *status)
         if len(words) in (3, 4) and words[1] == "PART" and words[2].isdigit():
             summary = self.session.part_summary(ref)
+            diagnostics = summary.get("diagnostics", ())
+            mesh_status = (PropertySpec("mesh_status", "Mesh status",
+                                        " ".join(dict.fromkeys(item["message"] for item in diagnostics)),
+                                        kind="text", editable=False) if diagnostics else
+                           PropertySpec("element_count", "Displayed elements", summary["element_count"], editable=False))
             return (PropertySpec("part_id", "Native part ID", summary["part_id"], editable=False),
-                    PropertySpec("element_count", "Displayed elements", summary["element_count"], editable=False),
-                    *self._assignment_fields(card))
+                    mesh_status, *self._assignment_fields(card))
         if (card["keyword"].upper().startswith("/FUNCT/") and fields
                 and set(values) == {f"point_{i}_{axis}" for i in range(len(fields) // 2) for axis in ("x", "y")}):
             points = tuple((values[f"point_{i}_x"], values[f"point_{i}_y"])
@@ -238,10 +243,8 @@ class RadProvider:
             for name, unit in command.units.items():
                 if unit != specs[name].unit:
                     raise PrepError("invalid_unit", "Object references do not have display units.")
-            values = {name: command.values.get(name, specs[name].value)
-                      for name in ("material", "property")}
             return self.execute_operation(OperationRequest(
-                "part.assign", values, command.target.document_id,
+                "part.assign", command.values, command.target.document_id,
                 command.expected_revision, command.target))
         for name in command.values:
             if not specs[name].editable:
@@ -313,7 +316,7 @@ class RadProvider:
         return (len(words) >= 4 and
                 ((words[1] == "MAT" and words[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB")) or
                  (words[1] == "PROP" and words[2] in ("SHELL", "TYPE1", "SOLID", "TYPE14")) or
-                 tuple(words[1:3]) in (("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS"),
+                 tuple(words[1:3]) in (("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS,
                                       ("SURF", "PART"), ("INIVEL", "TRA"), ("INTER", "TYPE7")))) or (
                     len(words) >= 3 and words[1] in ("FUNCT", "BCS", "CLOAD") and words[2].isdigit())
 
@@ -321,20 +324,36 @@ class RadProvider:
     def _group_kind(card):
         words = card["keyword"].upper().split("/")
         family = tuple(words[1:3])
-        return "node" if family == ("GRNOD", "NODE") else "element" if family in (
-            ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS")) else None
+        return "node" if family == ("GRNOD", "NODE") else "element" if family in ELEMENT_GROUP_PAIRS else None
 
     def _element_members_field(self, value=None):
         cells = self.session.mesh_view()["cells"]
-        refs = tuple({"resource_id": cell["resource_id"], "entity_kind": "element", "local_id": cell["id"]}
-                     for cell in cells)
+        refs = tuple(self.session._element_selection_ref(cell).to_dict() for cell in cells)
+        choice_by_key = {(ref["resource_id"], ref["entity_kind"], ref["local_id"], ref.get("formulation")): ref
+                         for ref in refs}
         if value is None:
             selection = self.session.selection()
             value = selection["refs"] if selection["kind"] == "element" else ()
+        normalized = []
+        for ref in value:
+            if (isinstance(ref, dict) and ref.get("entity_kind") == "element"
+                    and isinstance(ref.get("resource_id"), str) and type(ref.get("local_id")) is int):
+                formulation = ref.get("formulation")
+                if formulation is None or isinstance(formulation, str):
+                    choice = choice_by_key.get((ref["resource_id"], "element", ref["local_id"], formulation))
+                    if choice is not None:
+                        ref = choice
+                    else:
+                        native, displayed = self.session._matching_selection_cells(ref["local_id"], ref["resource_id"], formulation)
+                        if len(native) == len(displayed) == 1:
+                            ref = self.session._element_selection_ref(displayed[0]).to_dict()
+            normalized.append(ref)
         names = {card["resource_id"]: card["resource_name"] for card in self.session.list_cards()}
-        return PropertySpec("element_refs", "Element members", tuple(value), kind="references", choices=refs,
-            choice_labels=tuple(f"Element {cell['id']} · {names.get(cell['resource_id'], cell['resource_id'])} · {cell['type']}"
-                                for cell in cells), unit_context={"reference_kind": "mesh-element"})
+        return PropertySpec("element_refs", "Element members", tuple(normalized), kind="references", choices=refs,
+            choice_labels=tuple(
+                f"Element {cell['id']} · {names.get(cell['resource_id'], cell['resource_id'])} · {cell['type']}"
+                + (f" ({ref['formulation']})" if "formulation" in ref else "")
+                for cell, ref in zip(cells, refs)), unit_context={"reference_kind": "mesh-element"})
 
     @staticmethod
     def _condition_kind(card):
@@ -420,7 +439,7 @@ class RadProvider:
                 candidates = [card for card in candidates
                               if card["id"] == current_id or
                               (len(card["keyword"].split("/")) > 2 and
-                               card["keyword"].upper().split("/")[2] in ("SHELL", "TYPE1", "SOLID", "TYPE14", "BEAM", "TYPE3", "TRUSS", "TYPE2"))]
+                               card["keyword"].upper().split("/")[2] in ("SHELL", "TYPE1", *TYPE14_PROPERTIES, "BEAM", "TYPE3", "TRUSS", "TYPE2"))]
             else:
                 candidates = [card for card in candidates if card["id"] == current_id or
                               card["keyword"].upper().split("/")[2] in ("LAW1", "ELAST", "LAW36", "PLAS_TAB")]
@@ -519,7 +538,9 @@ class RadProvider:
             if type(request.expected_revision) is not int or request.expected_revision != state["revision"]:
                 raise PrepError("revision_conflict", "The model changed. Cancel this draft and read the current values.")
             spec = self.operation_spec(request.key, request.target, request.values)
-            if set(request.values) != {field.name for field in spec.fields}:
+            fields = {field.name for field in spec.fields}
+            partial_assignment = request.key == "part.assign" and 0 < len(request.values) and request.values.keys() <= fields
+            if not partial_assignment and request.values.keys() != fields:
                 raise PrepError("invalid_value", "Supply exactly the fields in the operation form.")
             values = dict(request.values)
             if not isinstance(request.units, dict):
@@ -551,13 +572,15 @@ class RadProvider:
                 result = self.session.delete_card(request.target.object_id, **expected)
             elif request.key == "part.assign":
                 self._native_values({field.name: field for field in spec.fields}, values, request.units)
+                assignments = {}
                 for name, category in (("material", "Materials"), ("property", "Properties")):
+                    if name not in values:
+                        continue
                     card = self._card(values[name])
                     if card["category"] != category:
                         raise PrepError("invalid_reference", f"Choose a {name} object.", {"field": name})
-                result = self.session.assign_part(request.target.object_id,
-                    material_id=values["material"].object_id,
-                    property_id=values["property"].object_id, **expected)
+                    assignments[f"{name}_id"] = card["id"]
+                result = self.session.assign_part(request.target.object_id, **assignments, **expected)
             object_id = result.get("card_id")
             if object_id is None and request.key in ("part.assign", "object.edit"):
                 object_id = request.target.object_id
@@ -588,8 +611,8 @@ class RadProvider:
     def subscribe(self, listener):
         return self.session.subscribe(listener)
 
-    def select(self, target):
-        return self.session.activate_object(target)
+    def select(self, target, *, inspect_incomplete_part=False):
+        return self.session.activate_object(target, inspect_incomplete_part=inspect_incomplete_part)
 
     def select_many(self, targets, active=None):
         return self.session.select_objects(targets, active=active)

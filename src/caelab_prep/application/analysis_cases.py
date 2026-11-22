@@ -10,6 +10,8 @@ import math
 from uuid import UUID, uuid4, uuid5
 
 from ..cae_core import PrepError
+from ..radioss.modeling import ELEMENT_GROUP_PAIRS, TYPE14_PROPERTIES
+from .projection import mutable as mutable_projection
 
 
 TIME_SECONDS = {"s": 1.0, "ms": .001, "mus": .000001}
@@ -200,19 +202,58 @@ class AnalysisCaseCommands:
             self._validate_case_refs(case)
             # The activation scope is deliberately closed. Unknown physics or
             # sensor/activation cards must never silently survive as active.
-            neutral_roots = {"BEGIN", "END", "NODE", "BEAM", "TRUSS", "SHELL", "SH3N", "TETRA4", "TETRA10", "BRICK", "PART", "FUNCT", "UNIT"}
+            neutral_roots = {"BEGIN", "END", "NODE", "BEAM", "TRUSS", "SHELL", "SH4N", "QUAD", "SH3N",
+                             "TETRA", "TETRA4", "TETRA10", "BRICK", "PART", "FUNCT", "UNIT"}
+            group_pairs = {("GRNOD", "NODE"), *ELEMENT_GROUP_PAIRS}
             neutral_pairs = {("MAT", "LAW1"), ("MAT", "ELAST"), ("MAT", "LAW36"), ("MAT", "PLAS_TAB"),
-                ("PROP", "BEAM"), ("PROP", "TYPE3"), ("PROP", "TRUSS"), ("PROP", "TYPE2"), ("SKEW", "FIX"), ("PROP", "SHELL"), ("PROP", "TYPE1"), ("PROP", "SOLID"), ("PROP", "TYPE14"),
-                ("GRNOD", "NODE"), ("GRSH3N", "SH3N"), ("GRSHEL", "SHEL"), ("GRBRIC", "BRIC"), ("GRBEAM", "BEAM"), ("GRTRUS", "TRUS"), ("SURF", "PART")}
+                ("PROP", "BEAM"), ("PROP", "TYPE3"), ("PROP", "TRUSS"), ("PROP", "TYPE2"), ("SKEW", "FIX"), ("PROP", "SHELL"), ("PROP", "TYPE1"),
+                *(("PROP", family) for family in TYPE14_PROPERTIES), ("SURF", "PART")}
             unsupported = []
             conditions = []
+            parts = {}
+            projection = self.mesh_view()
+            malformed = [dict(item) for item in projection["diagnostics"]
+                         if item["code"] in ("element_display_parse", "node_display_parse")]
+            if malformed:
+                raise PrepError("invalid_deck", "Case export requires valid native node and element rows.",
+                                {"diagnostics": malformed})
+            cells_by_part = self._projection_index["all_cells_by_part"]
             for item in self.list_cards():
                 words = item["keyword"].upper().strip("/").split("/")
                 if condition_kind(item["keyword"]): conditions.append(item["id"])
+                elif words[0] == "PART" and (native_part := self._native_part_id(item["keyword"])) in cells_by_part:
+                    parts.setdefault(native_part, []).append(item["id"])
+                elif tuple(words[:2]) in group_pairs:
+                    diagnostics = self.group_members(item["id"])["diagnostics"]
+                    if diagnostics:
+                        raise PrepError("invalid_reference", "A native group has unresolved targets.",
+                                        {"card_id": item["id"], "diagnostics": diagnostics})
                 elif words[0] not in neutral_roots and tuple(words[:2]) not in neutral_pairs:
                     unsupported.append(item)
             if unsupported:
                 raise PrepError("case_activation_scope_unknown", "Case export cannot prove the activation semantics of these native cards; source text is retained.", {"cards": unsupported})
+            for native_part, cells in cells_by_part.items():
+                owners = parts.get(native_part, ())
+                if len(owners) != 1:
+                    raise PrepError("invalid_reference" if owners or native_part is None else "dangling_reference",
+                                    "Native elements must reference an existing, unique PART.",
+                                    {"part_id": native_part, "element_id": cells[0]["id"]})
+                part_id = owners[0]
+                assignments = self.part_assignments(part_id)
+                if assignments["diagnostics"]:
+                    raise PrepError("invalid_reference", "A meshed part has unresolved native assignments.",
+                                    {"card_id": part_id, "diagnostics": assignments["diagnostics"]})
+                property_owner = self._find_card(assignments["property_id"])
+                material_owner = self._find_card(assignments["material_id"])
+                self._validate_part_compatibility(self._projection_index["part_element_kinds"][native_part],
+                                                  material=material_owner.card(assignments["material_id"]),
+                                                  property_owner=property_owner,
+                                                  property_card=property_owner.card(assignments["property_id"]))
+            dangling = [mutable_projection(item) for item in projection["diagnostics"]
+                        if item["code"] == "missing_display_nodes"]
+            if dangling:
+                raise PrepError("dangling_reference", "Case export requires every element node to exist.",
+                                {"diagnostics": dangling})
             for card_id in case["condition_ids"]:
                 self._unique_card(card_id)
                 values = self.condition_values(card_id)

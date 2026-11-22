@@ -8,16 +8,86 @@ from uuid import UUID, uuid4
 
 from ..cae_core import CommandDispatcher, PrepError
 from ..radioss import DeckResource
-from ..radioss.assembly import inspect, remap, identity, NativeMap
+from ..radioss.assembly import inspect, remap, identity, is_legacy_zero_padding, NativeMap, source_include_graph
+from ..radioss.includes import source_disk_siblings
 from .projection import readonly, mutable
+
+
+_QUOTED_INCLUDE_POLICY = (None, "quoted", False)
+_ROOT_FIRST_INCLUDE_POLICY = ("241", "unchanged", True)
+_UNRECORDED_INCLUDE_PROFILES = {
+    _QUOTED_INCLUDE_POLICY: ("legacy_pre14",),
+    ("8e85", "quoted", False): ("legacy_pre14",),
+    ("bde", "quoted", False): ("legacy_bde",),
+    ("ac0", "quoted", False): ("legacy_quad_as_shell",),
+    ("987", "unquoted", False): ("legacy_pre_quad",),
+    _ROOT_FIRST_INCLUDE_POLICY: ("legacy_pre_quad",),
+    ("8fe", "unchanged", True): ("legacy_pre_quad",),
+}
+
+
+def _validate_element_allocation(mapping):
+    """Check the writer's element cursor without assuming the host is unedited."""
+    elements = [(original, mapped) for (namespace, original), mapped in sorted(mapping.items())
+                if namespace.startswith("E:")]
+    mapped_ids = {mapped for _, mapped in elements}
+    if len(mapped_ids) != len(elements):
+        raise PrepError("invalid_project", "Multiple source elements map to the same element ID.")
+    assigned = set()
+    first = cursor = None
+    highest = 0
+    for original, mapped in elements:
+        if mapped != original:
+            # Mapped IDs are all free in the original host. A collision with
+            # one of them is possible only after that source ID was assigned.
+            collision_possible = (original in assigned or
+                                  (original not in mapped_ids and (first is None or original < first)))
+            if cursor is None:
+                # The initial cursor starts above the host and the prefix.
+                # A future unchanged m-1 could not have been occupied by either.
+                allocation_possible = (mapped > max(highest, original)
+                                       and (mapped - 1 not in mapped_ids or mapped - 1 in assigned))
+                first = mapped
+            else:
+                # The host is below the first allocation. The running cursor
+                # can skip only IDs already assigned while importing the source.
+                while cursor in assigned:
+                    cursor += 1
+                allocation_possible = mapped == cursor
+            if not (collision_possible and allocation_possible):
+                raise PrepError("invalid_project", "Remapped element IDs do not follow the source allocation order.")
+            cursor = mapped + 1
+        assigned.add(mapped)
+        highest = max(highest, mapped)
 
 
 class SourceArchiveResource:
     kind = "radioss-source-archive"
 
     def __init__(self, metadata, files):
-        if not isinstance(metadata, dict) or set(metadata) != {"id", "name", "root_resource_id", "files", "id_map", "shared_nodes"}:
+        optional = {"include_bindings", "uncollected_include_siblings", "include_sibling_aliases", "unresolved_include_paths"}
+        if not isinstance(metadata, dict) or set(metadata) - optional != {
+                "id", "name", "root_resource_id", "files", "id_map", "shared_nodes"}:
             raise PrepError("invalid_project", "Invalid source archive metadata.")
+        if "uncollected_include_siblings" in metadata:
+            if not metadata.get("include_bindings"):
+                raise PrepError("invalid_project", "Uncollected INCLUDE siblings require explicit INCLUDE bindings.")
+            siblings = metadata["uncollected_include_siblings"]
+            if (not isinstance(siblings, list) or not siblings
+                    or any(not isinstance(path, str) for path in siblings) or len(set(siblings)) != len(siblings)):
+                raise PrepError("invalid_project", "Invalid uncollected INCLUDE siblings.")
+        if "unresolved_include_paths" in metadata:
+            unresolved = metadata["unresolved_include_paths"]
+            if (not metadata.get("include_bindings") or not isinstance(unresolved, list) or not unresolved
+                    or any(not isinstance(path, str) or not path for path in unresolved)
+                    or len(set(unresolved)) != len(unresolved)):
+                raise PrepError("invalid_project", "Invalid unresolved INCLUDE paths.")
+        if "include_sibling_aliases" in metadata:
+            aliases = metadata["include_sibling_aliases"]
+            if (not metadata.get("include_bindings") or not isinstance(aliases, dict) or not aliases
+                    or any(not isinstance(path, str) or not isinstance(target, str) or not path or not target
+                           for path, target in aliases.items())):
+                raise PrepError("invalid_project", "Invalid collected INCLUDE sibling aliases.")
         self.id = metadata["id"]; UUID(self.id)
         if not isinstance(metadata["name"], str) or not isinstance(metadata["files"], list) or not metadata["files"]:
             raise PrepError("invalid_project", "An archive must identify its source files.")
@@ -44,6 +114,9 @@ class SourceArchiveResource:
             raise PrepError("invalid_project", "Invalid explicit shared-node mapping.")
         self.metadata = readonly(metadata)
         self.files = readonly(files)
+        self.recovered_include_bindings = {}
+        self.validated_profile: str | None = None
+        self.legacy_zero_padding_slots: dict[tuple[str, str], frozenset[tuple[int, int, str]]] = {}
         self._token = sha256(json.dumps(metadata, sort_keys=True).encode()).hexdigest()
 
     def snapshot(self): return {"state_version": 1}
@@ -54,22 +127,147 @@ class SourceArchiveResource:
     def state_token(self): return self._token
     def manifest(self): return mutable(self.metadata)
 
-    def validate_mapped_payloads(self, document):
+    def validate_mapped_payloads(self, document, *, project_bindings=None):
         """The correspondence table is checked evidence, not an unchecked label."""
+        self.validated_profile = None
+        self.legacy_zero_padding_slots = {}
+        records = self.metadata.get("include_bindings")
+        # The sibling-first reader first shipped with deck state v5.
+        archive_versions = [resource._restored_state_version for item in self.metadata["files"]
+                            if isinstance(resource := document.resources.get(item["resource_id"]), DeckResource)]
+        any_pre_v5 = any(isinstance(version, int) and version <= 4 for version in archive_versions)
+        all_pre_v5 = bool(archive_versions) and all(isinstance(version, int) and version <= 4 for version in archive_versions)
+        if records is not None and any_pre_v5:
+            raise PrepError("invalid_project", "Pre-v5 archived decks cannot carry explicit source INCLUDE bindings.")
+        if records is None and any_pre_v5 and not all_pre_v5:
+            raise PrepError("invalid_project", "Archived decks cannot mix v4 and v5 state versions.")
+        if records is not None:
+            policies = {_QUOTED_INCLUDE_POLICY: ("current", "legacy_pass15", "legacy_pass14", "legacy_pre14")}
+        elif all_pre_v5:
+            policies = {_ROOT_FIRST_INCLUDE_POLICY: _UNRECORDED_INCLUDE_PROFILES[_ROOT_FIRST_INCLUDE_POLICY]}
+        else:
+            policies = _UNRECORDED_INCLUDE_PROFILES
+        profiles = tuple(dict.fromkeys(profile for allowed in policies.values() for profile in allowed))
+
         originals = [DeckResource(self.files[item["original_resource_id"]], resource_id=item["original_resource_id"],
             name=item["original_path"], is_include=item["resource_id"] != self.metadata["root_resource_id"])
             for item in self.metadata["files"]]
-        definitions, _, _ = inspect(originals)
         mapping = NativeMap({(ns, original): mapped for ns, original, mapped in self.metadata["id_map"]},
                             shared={("NODE", value) for value in self.metadata["shared_nodes"]})
-        if set(definitions) != set(mapping):
+        _validate_element_allocation(mapping)
+        reader_matches = []
+        inspection_errors = []
+        # The historical field rules must hold across all originals together.
+        for profile in profiles:
+            try:
+                definitions, _, _ = inspect(originals, profile=profile)
+            except PrepError as exc:
+                inspection_errors.append(exc)
+                continue
+            if definitions.keys() == mapping.keys():
+                reader_matches.append(profile)
+        if len(inspection_errors) == len(profiles):
+            raise inspection_errors[0]
+        if not reader_matches:
             raise PrepError("invalid_project", "Source mapping does not cover the original native definitions exactly.")
         paths = {item["original_path"]: item["logical_path"] for item in self.metadata["files"]}
-        expected = remap(originals, mapping, paths)
+        actual = {}
         for item in self.metadata["files"]:
             resource = document.resources.get(item["resource_id"])
-            if not isinstance(resource, DeckResource) or resource.raw != expected[item["original_resource_id"]]:
+            if not isinstance(resource, DeckResource):
                 raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
+            actual[item["original_resource_id"]] = resource.raw
+        # Older imports addressed inline filenames from the root and either
+        # preserved two-line paths or rewrote them without quotes. Compare
+        # the entire mapped payload using one historical policy at a time.
+        originals_by_id = {resource.id: resource for resource in originals}
+        selected = {}
+        if "include_bindings" in self.metadata:
+            if not isinstance(records, tuple):
+                raise PrepError("invalid_project", "Invalid original source INCLUDE bindings.")
+            for record in records:
+                if not isinstance(record, tuple) or len(record) != 3:
+                    raise PrepError("invalid_project", "Invalid original source INCLUDE binding.")
+                owner, ordinal, target = record
+                if (not isinstance(owner, str) or owner not in originals_by_id or not isinstance(target, str)
+                        or target not in originals_by_id or type(ordinal) is not int
+                        or not 0 <= ordinal < len(originals_by_id[owner].include_directives)):
+                    raise PrepError("invalid_project", "Invalid original source INCLUDE binding.")
+                key = originals_by_id[owner].name, ordinal
+                if key in selected:
+                    raise PrepError("invalid_project", "Duplicate original source INCLUDE binding.")
+                selected[key] = originals_by_id[target].name
+            if len(selected) != sum(len(resource.include_directives) for resource in originals):
+                raise PrepError("invalid_project", "Original source INCLUDE bindings are incomplete.")
+        # Later writers can share both mapped bytes and native first-visit order.
+        archived_order = [item["original_path"] for item in self.metadata["files"]]
+        siblings = self.metadata.get("uncollected_include_siblings")
+        uncollected_siblings = set(siblings) if siblings is not None else None
+        unresolved = self.metadata.get("unresolved_include_paths")
+        unresolved_paths = set(unresolved) if unresolved is not None else None
+        matches = {}
+        mapped_ids = {item["original_path"]: item["resource_id"] for item in self.metadata["files"]}
+        mapped_keys = {(resource.name, directive.header_row): (mapped_ids[resource.name], ordinal)
+                       for resource in originals for ordinal, directive in enumerate(resource.include_directives)}
+        for (historical, style, direct_writer), allowed_profiles in policies.items():
+            compatible_readers = [profile for profile in reader_matches if profile in allowed_profiles]
+            if not compatible_readers:
+                continue
+            load_order = []
+            graph = source_include_graph(originals, paths, selected=selected, historical=historical,
+                                         archived_order=archived_order, load_order=load_order,
+                                         uncollected_siblings=uncollected_siblings,
+                                         sibling_aliases=self.metadata.get("include_sibling_aliases"),
+                                         unresolved_paths=unresolved_paths)
+            reached, original_bindings, _ = graph
+            if reached != set(paths) or load_order != archived_order:
+                continue
+            try:
+                matched_profile = next((profile for profile in compatible_readers
+                    if actual == remap(originals, mapping, paths, include_graph=graph, two_line=style,
+                                       legacy_direct_inline=direct_writer, profile=profile)), None)
+            except PrepError as exc:
+                if exc.code != "include_missing":
+                    raise
+                continue
+            if matched_profile is None:
+                continue
+            effective = tuple(sorted((mapped_keys[key], mapped_ids[target]) for key, target in original_bindings.items()))
+            repairs = {}
+            if direct_writer:
+                for key, target in original_bindings.items():
+                    owner, ordinal = mapped_keys[key]
+                    directive = document.resources[owner].include_directives[ordinal]
+                    if directive.path != paths[target]:
+                        repairs[owner, ordinal] = mapped_ids[target]
+            matches.setdefault(effective, (repairs, matched_profile))
+        if not matches:
+            raise PrepError("invalid_project", "Mapped native payload differs from its archived source and correspondence table.")
+        if len(matches) > 1 and project_bindings:
+            # An explicit binding in a resaved project can distinguish writers
+            # whose source archive bytes and traversal order are identical.
+            matches = {effective: match for effective, match in matches.items()
+                       if all(project_bindings.get(key, target) == target for key, target in effective)}
+        if len(matches) != 1:
+            raise PrepError("invalid_project", "Archived INCLUDE bindings are ambiguous across historical project writers; re-import or resave with explicit INCLUDE bindings.")
+        self.recovered_include_bindings, self.validated_profile = next(iter(matches.values()))
+        if self.validated_profile == "legacy_pass14":
+            for file in self.metadata["files"]:
+                # The mapped raw payload matched remap byte for byte. Use its
+                # original card identities, including cards now deleted.
+                deck = document.resources[file["resource_id"]]
+                for card in deck._source_cards:
+                    if not card.keyword.upper().startswith("/GRNOD/NODE/"):
+                        continue
+                    slots = set()
+                    for row_offset, index in enumerate(card.data[1:]):
+                        line = deck._source_lines[index].rstrip("\r\n")
+                        for column in range(0, len(line), 10):
+                            token = line[column:column + 10].strip()
+                            if is_legacy_zero_padding(token):
+                                slots.add((row_offset, column, token))
+                    if slots:
+                        self.legacy_zero_padding_slots[deck.id, card.id] = frozenset(slots)
 
 
 class SourceModelCommands:
@@ -238,7 +436,11 @@ class SourceModelCommands:
                 used.add(identifier)
             source_id = str(uuid4()); prefix = f"sources/{source_id}/"
             translated_paths = {logical: prefix + logical for logical in source._paths.values()}
-            payloads = remap(original_resources, mapping, translated_paths)
+            active_edges = {(source._paths[resource.id], directive.header_row):
+                            source._paths[source._include_bindings[resource.id, ordinal]]
+                            for resource in original_resources for ordinal, directive in enumerate(resource.include_directives)}
+            payloads = remap(original_resources, mapping, translated_paths,
+                             include_graph=(set(translated_paths), active_edges, []))
             resources, files, records = [], {}, []
             root_id = None
             for original in original_resources:
@@ -248,9 +450,21 @@ class SourceModelCommands:
                 if original.id == source._root_id: root_id = converted.id
                 records.append(dict(original_resource_id=original.id, resource_id=converted.id,
                     original_path=source._paths[original.id], logical_path=logical, sha256=sha256(original.raw).hexdigest()))
-            archive = SourceArchiveResource(dict(id=source_id, name=Path(path).name, root_resource_id=root_id,
+            metadata = dict(id=source_id, name=Path(path).name, root_resource_id=root_id,
                 files=records, id_map=[[ns, original, mapped] for (ns, original), mapped in sorted(mapping.items())],
-                shared_nodes=sorted(shared)), files)
+                shared_nodes=sorted(shared), include_bindings=[[owner, ordinal, target]
+                    for (owner, ordinal), target in source._include_bindings.items()])
+            source_bindings = {(source._paths[owner], ordinal): source._paths[target]
+                               for (owner, ordinal), target in source._include_bindings.items()}
+            siblings, aliases, unresolved = source_disk_siblings(
+                Path(path).expanduser().resolve().parent, original_resources, source_bindings)
+            if siblings:
+                metadata["uncollected_include_siblings"] = siblings
+            if aliases:
+                metadata["include_sibling_aliases"] = aliases
+            if unresolved:
+                metadata["unresolved_include_paths"] = unresolved
+            archive = SourceArchiveResource(metadata, files)
             plan_id = str(uuid4())
             self._import_plan = (plan_id, document.id, document.revision, self._document_epoch, archive, tuple(resources), source._source_paths)
             return {"plan_id": plan_id, "document_id": document.id, "revision": document.revision,

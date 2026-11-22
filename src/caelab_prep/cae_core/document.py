@@ -47,6 +47,13 @@ class SelectionRef:
     resource_id: str
     entity_kind: str
     local_id: int
+    formulation: str | None = None
+
+    def to_dict(self):
+        result = {"resource_id": self.resource_id, "entity_kind": self.entity_kind, "local_id": self.local_id}
+        if self.formulation is not None:
+            result["formulation"] = self.formulation
+        return result
 
 
 @dataclass

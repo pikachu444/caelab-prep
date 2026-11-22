@@ -197,10 +197,10 @@ def test_coarse_shell_family_does_not_accept_an_invalid_target_formulation(tmp_p
     assert error.value.code == "unsupported_part_profile" and state(session) == before
 
 
-def test_moved_element_does_not_bypass_nested_file_directives(tmp_path):
+def test_moved_element_does_not_bypass_interleaved_file_directives(tmp_path):
     base = MODELS / "beam_shell_tet"
     (tmp_path / "model_0000.rad").write_bytes((base / "model_0000.rad").read_bytes())
-    raw = (base / "mesh.inc").read_bytes().replace(b"/BEAM/10", b'#include "extra.inc"\n/BEAM/10', 1)
+    raw = (base / "mesh.inc").read_bytes().replace(b"/SHELL/9", b'/SHELL/9\n#include "extra.inc"', 1)
     (tmp_path / "mesh.inc").write_bytes(raw); (tmp_path / "extra.inc").write_text("# Keep include\n", encoding="ascii")
     session = PrepSession(); session.open_rad(tmp_path / "model_0000.rad")
     session.import_source(session.plan_import_source(MODELS / "truss_shell_hex/model_0000.rad")["plan_id"])

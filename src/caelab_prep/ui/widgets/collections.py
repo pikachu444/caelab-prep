@@ -5,7 +5,26 @@ validated value and retain ``raw_value()`` when an incomplete draft must survive
 """
 from __future__ import annotations
 
+from array import array
+from collections import Counter, OrderedDict, defaultdict, deque
+from collections.abc import Mapping, MutableMapping, Set as AbstractSet
+from copy import copy
+from dataclasses import fields, is_dataclass
+from datetime import date, datetime, time, timedelta
+from decimal import Decimal
+from enum import Enum
+from fractions import Fraction
+from functools import cached_property
+import gc
+from ipaddress import IPv4Address, IPv6Address
+from numbers import Number
+from pathlib import PosixPath, PurePosixPath, PureWindowsPath, WindowsPath
 import re
+import sqlite3
+import sys
+from types import MappingProxyType, MemberDescriptorType
+from uuid import UUID
+from weakref import WeakKeyDictionary
 
 from PySide6.QtCore import QSignalBlocker, QSize, Qt, Signal
 from PySide6.QtGui import QClipboard, QKeySequence, QValidator
@@ -211,6 +230,698 @@ class BooleanVectorEdit(QWidget):
         del blocked
 
 
+_PLAIN_PRIMITIVES = frozenset({str, int, float, bool, type(None), Decimal, Fraction, complex})
+_HASH_SCALARS = _PLAIN_PRIMITIVES | {
+    bytes, UUID, date, datetime, time, timedelta, IPv4Address, IPv6Address,
+    PurePosixPath, PureWindowsPath, PosixPath, WindowsPath, range,
+}
+_ROW_ID_ROLE = Qt.ItemDataRole.UserRole + 1
+_DICT_ITEMS = type({}.items())
+_DICT_VALUES = type({}.values())
+_DICT_VIEWS = {type({}.keys()): dict.keys, _DICT_ITEMS: dict.items, _DICT_VALUES: dict.values}
+_CACHED_PROPERTY_TYPES = WeakKeyDictionary()
+
+
+class _DetachedViewDict(dict):
+    __slots__ = ("_origin_view",)
+
+
+class _ReferenceMemo(dict):
+    def __init__(self, entries=()):
+        super().__init__(entries)
+        self.unshareable = set()
+        self.frozen_slots = {}
+
+
+def _is_object_ref(kind):
+    contracts = sys.modules.get("caelab_prep.application.contracts")
+    return kind is getattr(contracts, "ObjectRef", None)
+
+
+def _proxy_target(value):
+    target, = gc.get_referents(value)
+    return target
+
+
+def _view_origin(view):
+    backing = _proxy_target(view.mapping)
+    return backing._origin_view if type(backing) is _DetachedViewDict else view
+
+
+def _unwrap_standard_dict(value):
+    while type(value) is MappingProxyType:
+        value = _proxy_target(value)
+    if isinstance(value, dict) and type(value).__eq__ is dict.__eq__:
+        return value
+    return None
+
+
+class _SQLiteRowSnapshot:
+    """A detached sqlite row with the same column lookup and equality."""
+
+    __slots__ = ("_description", "_values")
+
+    def __init__(self, description, values):
+        self._description = description
+        self._values = values
+
+    def keys(self):
+        return [column[0] for column in self._description]
+
+    def __iter__(self):
+        return iter(self._values)
+
+    def __len__(self):
+        return len(self._values)
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            for index, (name, *_) in enumerate(self._description):
+                if key == name or (key.isascii() and name.isascii() and key.lower() == name.lower()):
+                    return self._values[index]
+            raise IndexError("No item with that key")
+        return self._values[key]
+
+    def __eq__(self, other):
+        if isinstance(other, (sqlite3.Row, _SQLiteRowSnapshot)):
+            return self._description == _sqlite_description(other) and self._values == tuple(other)
+        return NotImplemented
+
+    def __hash__(self):
+        # CPython's sqlite row hashes the full cursor description and values.
+        return hash(self._description) ^ hash(self._values)
+
+    def __repr__(self):
+        return repr(list(zip(self.keys(), self._values)))
+
+
+def _sqlite_description(row):
+    if isinstance(row, _SQLiteRowSnapshot):
+        return row._description
+    # sqlite3 supplies the DB-API seven-tuple with only the column name set.
+    return tuple((name, None, None, None, None, None, None) for name in row.keys())
+
+
+def _ref_slots(ref):
+    for base in type(ref).__mro__:
+        for member in vars(base).values():
+            if isinstance(member, MemberDescriptorType):
+                try:
+                    value = member.__get__(ref)
+                except AttributeError:
+                    continue
+                yield member, value
+
+
+def _copy_ref_state(ref, clone, memo):
+    if hasattr(ref, "__dict__"):
+        object.__setattr__(clone, "__dict__", _clone_ref(vars(ref), memo))
+    slots = memo.frozen_slots.get(id(ref))
+    for member, value in _ref_slots(ref) if slots is None else slots:
+        member.__set__(clone, _clone_ref(value, memo))
+
+
+def _frozen_state_values(ref, memo):
+    attributes = getattr(ref, "__dict__", {})
+    yield from attributes.values()
+    names = set(attributes)
+    slots = memo.frozen_slots.get(id(ref))
+    if slots is None:
+        slots = memo.frozen_slots[id(ref)] = tuple(_ref_slots(ref))
+    for slot, value in slots:
+        names.add(slot.__name__)
+        yield value
+    for member in fields(ref):
+        if member.name not in names:
+            try:
+                yield getattr(ref, member.name)
+            except AttributeError:
+                continue
+
+
+def _has_cached_property(kind):
+    try:
+        return _CACHED_PROPERTY_TYPES[kind]
+    except (KeyError, TypeError):
+        result = any(isinstance(member, cached_property) for base in kind.__mro__ for member in vars(base).values())
+        try:
+            _CACHED_PROPERTY_TYPES[kind] = result
+        except TypeError:
+            pass
+        return result
+
+
+def _retains_identity(ref, kind):
+    if isinstance(ref, (Enum, Number)) or (kind.__eq__ is object.__eq__ and not isinstance(ref, Mapping)):
+        return True
+    numpy = sys.modules.get("numpy")
+    return isinstance(ref, getattr(numpy, "generic", ())) and ref.dtype.kind in "bMSU"
+
+
+def _share_frozen_state(ref, memo, unshareable):
+    """Share a frozen graph only after all of its reachable state is safe."""
+    if id(ref) in unshareable:
+        return False
+    path = [(None, iter((ref,)))]
+    visited = {}
+    while path:
+        try:
+            value = next(path[-1][1])
+        except StopIteration:
+            path.pop()
+            continue
+        kind = type(value)
+        key = id(value)
+        if key in memo:
+            if memo[key] is value:
+                continue
+        elif key in visited or kind in _HASH_SCALARS:
+            continue
+        elif key not in unshareable:
+            visited[key] = value
+            if kind in (tuple, frozenset):
+                path.append((key, iter(value)))
+                continue
+            elif kind is slice:
+                path.append((key, iter((value.start, value.stop, value.step))))
+                continue
+            elif is_dataclass(kind) and kind.__dataclass_params__.frozen and not _has_cached_property(kind):
+                path.append((key, _frozen_state_values(value, memo)))
+                continue
+            elif (kind not in _DICT_VIEWS and not isinstance(value, (list, deque, set, tuple, array))
+                  and _retains_identity(value, kind)):
+                continue
+        unshareable.add(key)
+        unshareable.update(ancestor for ancestor, _ in path[1:])
+        return False
+    memo.update(visited)
+    return True
+
+
+def _copy_memoryview(ref):
+    data = ref.tobytes()
+    backing = data if ref.readonly else bytearray(data)
+    snapshot = memoryview(backing)
+    layout = ref.format, ref.shape
+    if (snapshot.format, snapshot.shape) == layout:
+        return snapshot
+    try:
+        return snapshot.cast(*layout)
+    except (TypeError, ValueError):
+        if ref.readonly and type(ref.obj) is bytes:
+            return ref
+        ctypes = sys.modules.get("ctypes")
+        scalar_type = getattr(ctypes, "_CData", getattr(ctypes, "_SimpleCData", ()))
+        if not ref.shape and isinstance(ref.obj, scalar_type) and ctypes.sizeof(type(ref.obj)) == len(data):
+            snapshot = memoryview(type(ref.obj).from_buffer_copy(data))
+            if (snapshot.format, snapshot.shape) == layout:
+                return snapshot.toreadonly() if ref.readonly else snapshot
+        if isinstance(ref.obj, getattr(ctypes, "Array", ())):
+            array_type = type(ref.obj)
+            if len(data) != ctypes.sizeof(ref.obj) or memoryview(ref.obj).shape != ref.shape:
+                while issubclass(array_type, ctypes.Array):
+                    array_type = array_type._type_
+                for dim in reversed(ref.shape):
+                    array_type = array_type * dim
+            if ctypes.sizeof(array_type) == len(data):
+                snapshot = memoryview(array_type.from_buffer_copy(data))
+                if (snapshot.format, snapshot.shape) == layout:
+                    return snapshot.toreadonly() if ref.readonly else snapshot
+        if isinstance(ref.obj, array):
+            copied = array(ref.obj.typecode)
+            copied.frombytes(data)
+            snapshot = memoryview(copied)
+            if (snapshot.format, snapshot.shape) == layout:
+                return snapshot.toreadonly() if ref.readonly else snapshot
+        numpy = sys.modules.get("numpy")
+        if numpy is not None:
+            try:
+                dtype = ref.obj.dtype if isinstance(ref.obj, numpy.ndarray) else numpy.dtype(ref.format)
+                snapshot = memoryview(numpy.frombuffer(backing, dtype=dtype).reshape(ref.shape))
+                if (snapshot.format, snapshot.shape) == layout:
+                    return snapshot
+            except (TypeError, ValueError):
+                pass
+    raise TypeError(f"Cannot snapshot memoryview with format {ref.format!r} and shape {ref.shape!r}")
+
+
+def _clone_sqlalchemy_row(ref, memo):
+    state = ref.__getstate__()
+    items = state["_data"]
+    values = tuple(_clone_ref(item, memo) for item in items)
+    if all(value is item for value, item in zip(values, items)):
+        return ref
+    kind = type(ref)
+    clone = kind.__new__(kind)
+    # The original parent preserves both string and SQL-expression lookups.
+    clone.__setstate__({**state, "_data": values})
+    return memo.setdefault(id(ref), clone)
+
+
+def _clone_ref(ref, memo=None):
+    kind = type(ref)
+    if kind is dict and memo is None and _HASH_SCALARS.issuperset(map(type, ref.values())):
+        return ref.copy()
+    if kind in _HASH_SCALARS:
+        return ref
+    if memo is None and kind is MappingProxyType:
+        return MappingProxyType(_clone_ref(_proxy_target(ref)))
+    if _is_object_ref(kind):
+        return ref
+    if memo is None:
+        memo = _ReferenceMemo()
+    key = id(ref)
+    if key in memo:
+        return memo[key]
+    if kind is MappingProxyType:
+        return memo.setdefault(key, MappingProxyType(_clone_ref(_proxy_target(ref), memo)))
+    if kind is bytearray:
+        return memo.setdefault(key, bytearray(ref))
+    if kind is array:
+        return memo.setdefault(key, copy(ref))
+    if isinstance(ref, array):
+        clone = array.__new__(kind, ref.typecode, ref)
+        memo[key] = clone
+        _copy_ref_state(ref, clone, memo)
+        return clone
+    if kind is memoryview:
+        return memo.setdefault(key, _copy_memoryview(ref))
+    if kind is slice:
+        parts = (ref.start, ref.stop, ref.step)
+        cloned = tuple(_clone_ref(value, memo) for value in parts)
+        return memo.setdefault(key, ref if all(a is b for a, b in zip(parts, cloned)) else slice(*cloned))
+    if kind in _DICT_VIEWS:
+        if kind is _DICT_VALUES:
+            backing = _DetachedViewDict()
+            backing._origin_view = _view_origin(ref)
+        else:
+            backing = {}
+        memo[key] = _DICT_VIEWS[kind](backing)
+        backing.update((_clone_ref(name, memo), _clone_ref(value, memo)) for name, value in ref.mapping.items())
+        return memo[key]
+    if isinstance(ref, dict):
+        clone = {} if kind is dict else copy(ref)
+        if clone is ref:
+            # Immutable dict subclasses may implement copy as an identity
+            # operation. Rebuild them without ever clearing the original.
+            return memo.setdefault(key, kind((_clone_ref(name, memo), _clone_ref(value, memo))
+                                             for name, value in ref.items()))
+        if isinstance(clone, OrderedDict):
+            OrderedDict.clear(clone)
+            set_item = OrderedDict.__setitem__
+        else:
+            dict.clear(clone)
+            set_item = dict.__setitem__
+        memo[key] = clone
+        for name, value in ref.items():
+            set_item(clone, _clone_ref(name, memo), _clone_ref(value, memo))
+    elif kind is getattr(sys.modules.get("sqlalchemy.engine.row"), "RowMapping", None):
+        return _clone_sqlalchemy_row(ref, memo)
+    elif isinstance(ref, Mapping) and not isinstance(ref, MutableMapping):
+        entries = tuple(ref.items())
+        pairs = tuple((_clone_ref(name, memo), _clone_ref(value, memo)) for name, value in entries)
+        state = tuple(getattr(ref, "__dict__", {}).values()) + tuple(value for _, value in _ref_slots(ref))
+        probe = _ReferenceMemo(memo | {key: ref})
+        if (all(name is old_name and value is old_value for (name, value), (old_name, old_value) in zip(pairs, entries))
+                and all(_clone_ref(value, probe) is value for value in state)):
+            return ref
+        if state:
+            try:
+                clone = copy(ref)
+            except TypeError:
+                clone = ref
+            if clone is not ref:
+                memo[key] = clone
+                _copy_ref_state(ref, clone, memo)
+                return clone
+        try:
+            clone = kind(pairs)
+        except (AttributeError, TypeError):
+            clone = dict(pairs)
+        return memo.setdefault(key, clone)
+    elif isinstance(ref, (list, deque, set)):
+        clone = copy(ref)
+        clone.clear()
+        memo[key] = clone
+        values = (_clone_ref(value, memo) for value in ref)
+        if isinstance(ref, set):
+            clone.update(values)
+        else:
+            clone.extend(values)
+    elif kind is getattr(sys.modules.get("sqlalchemy.engine.row"), "Row", None):
+        return _clone_sqlalchemy_row(ref, memo)
+    elif isinstance(ref, (tuple, frozenset, sqlite3.Row, _SQLiteRowSnapshot)):
+        items = tuple(ref)
+        values = tuple(_clone_ref(item, memo) for item in items)
+        unchanged = all(value is item for value, item in zip(values, items))
+        if unchanged and not hasattr(ref, "__dict__"):
+            return ref
+        if key in memo:
+            return memo[key]
+        if isinstance(ref, tuple):
+            clone = tuple.__new__(kind, values)
+        elif isinstance(ref, frozenset):
+            clone = frozenset.__new__(kind, values)
+        else:
+            return memo.setdefault(key, _SQLiteRowSnapshot(_sqlite_description(ref), values))
+        memo[key] = clone
+    elif _retains_identity(ref, kind):
+        # Identity-valued references, such as an ORM entity, must stay attached.
+        return ref
+    else:
+        numpy = sys.modules.get("numpy")
+        if isinstance(ref, getattr(numpy, "ndarray", ())):
+            clone = ref.copy()
+            memo[key] = clone
+            if clone.dtype.hasobject:
+                masked = isinstance(clone, numpy.ma.MaskedArray)
+                original = numpy.ma.getdata(ref) if masked else ref
+                data = numpy.ma.getdata(clone) if masked else clone
+                if clone.dtype.names:
+                    original_fields = [(name, original[name]) for name in clone.dtype.names]
+                    for name, values in original_fields:
+                        if values.dtype.hasobject:
+                            data[name] = _clone_ref(values, memo)
+                else:
+                    for index in numpy.ndindex(clone.shape):
+                        data[index] = _clone_ref(data[index], memo)
+            if kind is not numpy.ndarray:
+                _copy_ref_state(ref, clone, memo)
+            return clone
+        if is_dataclass(kind) and kind.__dataclass_params__.frozen:
+            if _share_frozen_state(ref, memo, memo.unshareable):
+                return ref
+        clone = object.__new__(kind)
+        memo[key] = clone
+    if kind not in (dict, list, set, tuple, frozenset, deque):
+        _copy_ref_state(ref, clone, memo)
+    return clone
+
+
+def _plain_key(value):
+    kind = type(value)
+    if kind in _HASH_SCALARS:
+        return hash(value)
+    if kind is tuple or kind is list:
+        items = tuple(_plain_key(item) for item in value)
+        return (kind.__name__, items) if None not in items else None
+    target = value if kind is dict else _unwrap_standard_dict(value)
+    if target is None:
+        return hash(value) if _is_object_ref(kind) else None
+    items = []
+    for key, item in dict.items(target):
+        name_key = hash(key) if type(key) in _HASH_SCALARS else _plain_key(key)
+        value_key = hash(item) if type(item) in _HASH_SCALARS else _plain_key(item)
+        if name_key is None or value_key is None:
+            return None
+        items.append((name_key, value_key))
+    return ("dict", frozenset(items))
+
+
+def _shares_hash_bucket(value):
+    kind = type(value)
+    return (kind in _HASH_SCALARS or
+            (kind is tuple or kind is frozenset) and all(_shares_hash_bucket(item) for item in value) or
+            isinstance(value, Enum) and kind.__eq__ in (object.__eq__, int.__eq__, str.__eq__) or
+            _is_object_ref(kind))
+
+
+def _bucket_key(value):
+    kind = type(value)
+    if kind in _HASH_SCALARS:
+        return ("hash", hash(value))
+    if kind is dict or kind is list:
+        return _plain_key(value)
+    if isinstance(value, Mapping):
+        # Counters use the fallback because an explicit zero can equal a missing key.
+        return _plain_key(value)
+    # Items views can compare equal to unordered sets. Arbitrary records can
+    # compare equal to mappings. Keep both eligible for cross-bucket matching.
+    if not _shares_hash_bucket(value):
+        return None
+    try:
+        return ("hash", hash(value))
+    except TypeError:
+        return None
+
+
+def _same_dict_values(left, right, compared):
+    return (type(left) is type(right) is _DICT_VALUES
+            and _view_origin(left) is _view_origin(right)
+            and _equal_mappings(_proxy_target(left.mapping), _proxy_target(right.mapping), compared,
+                                mapping_rules=False))
+
+
+def _equality_target(value):
+    while type(value) is MappingProxyType:
+        value = _proxy_target(value)
+    return value
+
+
+_MAPPING_EQUALITY = (dict.__eq__, OrderedDict.__eq__, Counter.__eq__, Mapping.__eq__)
+_SEQUENCE_EQUALITY = (list.__eq__, tuple.__eq__, deque.__eq__)
+_SET_EQUALITY = (set.__eq__, frozenset.__eq__)
+
+
+def _counter_count(counter, key):
+    return dict.__getitem__(counter, key) if dict.__contains__(counter, key) else counter[key]
+
+
+def _equal_mappings(left, right, compared, *, mapping_rules=True):
+    if (mapping_rules and type(left).__eq__ is type(right).__eq__ is Counter.__eq__
+            and isinstance(left, Counter) and isinstance(right, Counter)):
+        return all(_safe_equal(_counter_count(left, key), _counter_count(right, key), compared)
+                   for key in dict.keys(left) | dict.keys(right))
+    if isinstance(left, dict) and isinstance(right, dict):
+        if mapping_rules and type(left).__eq__ is type(right).__eq__ is OrderedDict.__eq__:
+            if tuple(OrderedDict.keys(left)) != tuple(OrderedDict.keys(right)):
+                return False
+        return dict.__len__(left) == dict.__len__(right) and all(
+            dict.__contains__(right, key)
+            and _safe_equal(dict.__getitem__(left, key), dict.__getitem__(right, key), compared)
+            for key in dict.keys(left))
+    return len(left) == len(right) and all(key in right and _safe_equal(left[key], right[key], compared) for key in left)
+
+
+def _set_item_bucket(value):
+    # Detached values views compare by origin even though Python hashes them by identity.
+    kind = type(value)
+    if kind is _DICT_VALUES:
+        return (_DICT_VALUES, id(_view_origin(value)))
+    sequence = kind.__eq__ is tuple.__eq__
+    if sequence or (kind.__eq__ in (frozenset.__eq__, AbstractSet.__eq__) and isinstance(value, AbstractSet)):
+        parts = tuple(_set_item_bucket(item) for item in value)
+        if any(isinstance(part, tuple) for part in parts):
+            return (tuple, parts) if sequence else (frozenset, frozenset(parts))
+    return hash(value)
+
+
+def _set_values_views(container):
+    seen = {}
+    pending = [container]
+    while pending:
+        value = pending.pop()
+        key = id(value)
+        if key in seen:
+            continue
+        # Iterating an items view can allocate temporary tuples.
+        seen[key] = value
+        if type(value) is _DICT_VALUES:
+            yield value
+        elif isinstance(value, Mapping):
+            pending.extend(dict.items(value) if isinstance(value, dict) else value.items())
+        elif isinstance(value, (list, tuple, deque, AbstractSet)):
+            pending.extend(value)
+
+
+def _equal_with_shared_set_views(left, right, compared):
+    # Give native set equality the same view identities for corresponding
+    # snapshots so subclass ordering and containment rules still run.
+    left_views = defaultdict(list)
+    for view in _set_values_views(left):
+        left_views[id(_view_origin(view))].append(view)
+    memo = _ReferenceMemo()
+    for view in _set_values_views(right):
+        for candidate in left_views.get(id(_view_origin(view)), ()):
+            if candidate is not view and _same_dict_values(candidate, view, compared):
+                memo[id(view)] = candidate
+                break
+    return bool(memo and left == _clone_ref(right, memo))
+
+
+def _match_colliding_set_items(left, right, compared):
+    edges = [tuple(i for i, candidate in enumerate(right) if _safe_equal(value, candidate, compared))
+             for value in left]
+    matched = {}
+
+    def assign(row, seen):
+        for column in edges[row]:
+            if column in seen:
+                continue
+            seen.add(column)
+            if column not in matched or assign(matched[column], seen):
+                matched[column] = row
+                return True
+        return False
+
+    return all(assign(row, set()) for row in sorted(range(len(edges)), key=lambda row: len(edges[row])))
+
+
+def _set_buckets(values):
+    buckets = defaultdict(list)
+    for value in values:
+        buckets[_set_item_bucket(value)].append(value)
+    return buckets
+
+
+def _equal_sets(left, right, compared):
+    if len(left) != len(right):
+        return False
+    if _HASH_SCALARS.issuperset(map(type, left)) and _HASH_SCALARS.issuperset(map(type, right)):
+        return left == right
+    try:
+        left_by_hash, right_by_hash = _set_buckets(left), _set_buckets(right)
+    except TypeError:
+        # An abstract set can support items that built-in sets cannot hash.
+        return _match_colliding_set_items(left, right, compared)
+    if left_by_hash.keys() != right_by_hash.keys():
+        return False
+    for key, left_items in left_by_hash.items():
+        right_items = right_by_hash[key]
+        if len(left_items) != len(right_items):
+            return False
+        if len(left_items) == 1:
+            if not _safe_equal(left_items[0], right_items[0], compared):
+                return False
+        elif not _match_colliding_set_items(left_items, right_items, compared):
+            return False
+    return True
+
+
+def _equal_array_data(left, right, numpy, compared):
+    left, right = numpy.asarray(left), numpy.asarray(right)
+    if not left.dtype.hasobject:
+        return bool(numpy.array_equal(left, right))
+    if left.dtype.names:
+        return all(_safe_equal(left[name], right[name], compared) for name in left.dtype.names)
+    return all(_safe_equal(a, b, compared) for a, b in zip(left.flat, right.flat))
+
+
+def _array_mask(array, numpy):
+    mask = numpy.ma.getmask(array)
+    if mask is numpy.ma.nomask:
+        return numpy.ma.make_mask_none(array.shape, array.dtype)
+    return numpy.asarray(mask)
+
+
+def _equal_arrays(left, right, numpy, compared):
+    kind = type(left)
+    if kind is not type(right) or left.shape != right.shape or left.dtype != right.dtype:
+        return False
+    masked = isinstance(left, numpy.ma.MaskedArray)
+    plain_equality = (numpy.ma.MaskedArray.__eq__,) if masked else (numpy.ndarray.__eq__, numpy.recarray.__eq__)
+    passive = (kind in (numpy.ndarray, numpy.ma.MaskedArray)
+               or (kind.__array_ufunc__ is numpy.ndarray.__array_ufunc__ and kind.__eq__ in plain_equality))
+    if passive and not masked:
+        return _equal_array_data(left, right, numpy, compared)
+    if not passive:
+        try:
+            equal = left == right
+        except (ValueError, TypeError, RecursionError):
+            return False
+        if isinstance(equal, (bool, numpy.bool_)):
+            matches = bool(equal)
+        elif isinstance(equal, numpy.ndarray) and equal.dtype.kind == "b":
+            data = numpy.asarray(equal)
+            if isinstance(equal, numpy.ma.MaskedArray):
+                data = data[~_array_mask(equal, numpy)]
+            matches = bool(data.all())
+        else:
+            matches = False
+        if not masked or not matches:
+            return matches
+    mask = _array_mask(left, numpy)
+    if not numpy.array_equal(mask, _array_mask(right, numpy)):
+        return False
+    if mask.dtype.names:
+        return all(_safe_equal(left[name], right[name], compared) for name in mask.dtype.names)
+    return _equal_array_data(numpy.asarray(left)[~mask], numpy.asarray(right)[~mask], numpy, compared)
+
+
+def _safe_equal(left, right, compared=None):
+    left_kind, right_kind = type(left), type(right)
+    if left_kind in _HASH_SCALARS and right_kind in _HASH_SCALARS:
+        return bool(left == right)
+    if (left_kind is right_kind is dict and _HASH_SCALARS.issuperset(map(type, left.values()))
+            and _HASH_SCALARS.issuperset(map(type, right.values()))):
+        return left == right
+    values_view = left_kind is _DICT_VALUES or right_kind is _DICT_VALUES
+    numpy = sys.modules.get("numpy")
+    ndarray = getattr(numpy, "ndarray", ())
+    array_value = isinstance(left, ndarray) or isinstance(right, ndarray)
+    left_target, right_target = _equality_target(left), _equality_target(right)
+    left_eq, right_eq = type(left_target).__eq__, type(right_target).__eq__
+    mapping = (left_eq in _MAPPING_EQUALITY and right_eq in _MAPPING_EQUALITY
+               and isinstance(left_target, Mapping) and isinstance(right_target, Mapping))
+    sequence = left_eq is right_eq and left_eq in _SEQUENCE_EQUALITY
+    unordered = left_eq in _SET_EQUALITY and right_eq in _SET_EQUALITY
+    items_view = left_kind is right_kind is _DICT_ITEMS
+    if not (values_view or array_value or mapping or sequence or unordered or items_view):
+        try:
+            if bool(left == right):
+                return True
+            return (AbstractSet.__eq__ in (left_eq, right_eq)
+                    and isinstance(left, AbstractSet) and isinstance(right, AbstractSet)
+                    and _equal_with_shared_set_views(left, right, compared))
+        except (ValueError, TypeError, RecursionError):
+            return False
+    if compared is None:
+        compared = set()
+    pair = (id(left), id(right))
+    if pair in compared:
+        return True
+    compared.add(pair)
+    try:
+        if values_view:
+            return _same_dict_values(left, right, compared)
+        if array_value:
+            return _equal_arrays(left, right, numpy, compared)
+        if items_view:
+            return _equal_mappings(_proxy_target(left.mapping), _proxy_target(right.mapping), compared,
+                                   mapping_rules=False)
+        if mapping:
+            return _equal_mappings(left_target, right_target, compared)
+        if unordered:
+            return _equal_sets(left_target, right_target, compared)
+        return len(left_target) == len(right_target) and all(
+            _safe_equal(a, b, compared) for a, b in zip(left_target, right_target))
+    finally:
+        compared.remove(pair)
+
+
+def _contains(buckets, item, key):
+    matches = buckets.get(key)
+    if matches and any(_safe_equal(existing, item) for existing in matches):
+        return True
+    # A value without a reliable key may compare equal to a keyed value.
+    if key is None:
+        return any(_safe_equal(existing, item) for other, bucket in buckets.items()
+                   if other is not None for existing in bucket)
+    fallback = buckets.get(None)
+    return bool(fallback and any(_safe_equal(existing, item) for existing in fallback))
+
+
+def _reference_text(label):
+    try:
+        return str(label)
+    except ValueError:
+        label = _equality_target(label)
+        if not isinstance(label, Counter):
+            raise
+        # Counter sorts counts for display, which can fail for array counts.
+        return f"{type(label).__name__}({dict.__repr__(label)})"
+
+
 class ReferenceListEdit(QWidget):
     """Check qualified object references by equality, keeping missing choices visible."""
 
@@ -219,54 +930,136 @@ class ReferenceListEdit(QWidget):
 
     def __init__(self, value=(), *, choices=(), choice_labels=(), parent=None):
         super().__init__(parent)
-        self.choices = tuple(choices)
+        source_choices = tuple(choices)
+        choice_slots = {}
+
+        def snapshot_choice(ref):
+            params = getattr(type(ref), "__dataclass_params__", None)
+            if params is None or not params.frozen:
+                return _clone_ref(ref)
+            memo = _ReferenceMemo()
+            snapshot = _clone_ref(ref, memo)
+            if memo.frozen_slots:
+                # Read the slots once and reuse their detached values during row setup.
+                choice_slots[id(snapshot)] = {
+                    id(memo[key]): tuple((slot, memo.get(id(value), value)) for slot, value in slots)
+                    for key, slots in memo.frozen_slots.items() if key in memo
+                }
+            return snapshot
+
+        self.choices = tuple(snapshot_choice(ref) for ref in source_choices)
+        self._choice_keys = tuple(_bucket_key(ref) for ref in self.choices)
+        self._choice_buckets = {}
+        for key, ref in zip(self._choice_keys, self.choices):
+            self._choice_buckets.setdefault(key, []).append(ref)
         self.choice_labels = tuple(choice_labels)
         self.list = QListWidget(self)
+        self.list.setUniformItemSizes(True)
         self.list.setAccessibleName("Referenced objects")
         self.list.setMinimumHeight(120)
         self.list.setMaximumHeight(160)
+        self._row_refs = []
+        self._row_available = []
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.list)
         self.list.itemChanged.connect(self.draftChanged)
-        self.set_raw_value(value)
+        selected = tuple(value)
+        checked_rows = None
+        if len(self._choice_buckets) == len(source_choices) and None not in self._choice_buckets:
+            # Providers can pass the actual choices back as the initial
+            # selection. With unique keys, those rows need no second indexing.
+            positions = {id(ref): index for index, ref in enumerate(source_choices)}
+            indices = tuple(positions.get(id(ref)) for ref in selected)
+            if all(index is not None and _safe_equal(self.choices[index], ref) for index, ref in zip(indices, selected)):
+                checked_rows = set(indices)
+        self._set_raw_value(selected, checked_rows, matching_choices=source_choices, choice_slots=choice_slots)
+
+    def _checked_row_ids(self):
+        item_at = self.list.item
+        checked = Qt.CheckState.Checked
+        for index in range(self.list.count()):
+            item = item_at(index)
+            if item.checkState() == checked:
+                yield item.data(_ROW_ID_ROLE)
 
     def raw_value(self):
-        return tuple(self.list.item(index).data(Qt.ItemDataRole.UserRole)
-                     for index in range(self.list.count())
-                     if self.list.item(index).checkState() == Qt.CheckState.Checked)
+        return tuple(_clone_ref(self._row_refs[row_id]) for row_id in self._checked_row_ids())
 
     def value(self):
-        selected = self.raw_value()
-        if any(ref not in self.choices for ref in selected):
-            raise ValueError("A selected object is no longer available; uncheck it or choose an available object")
-        return selected
+        selected = []
+        for row_id in self._checked_row_ids():
+            ref = self._row_refs[row_id]
+            if not self._row_available[row_id] and not _contains(self._choice_buckets, ref, _bucket_key(ref)):
+                raise ValueError("A selected object is no longer available; uncheck it or choose an available object")
+            selected.append(_clone_ref(ref))
+        return tuple(selected)
 
     def set_raw_value(self, value):
-        selected = tuple(value)
-        blocked = QSignalBlocker(self.list)
-        self.list.clear()
-        displayed = []
-        for index, ref in enumerate(self.choices):
-            if ref in displayed:
-                continue
-            label = (self.choice_labels[index] if index < len(self.choice_labels)
-                     else str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref)))
-            self._add_item(ref, label, ref in selected)
-            displayed.append(ref)
-        for ref in selected:
-            if ref not in displayed:
-                label = str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
-                self._add_item(ref, "Unavailable: " + label, True)
-                displayed.append(ref)
-        del blocked
+        self._set_raw_value(tuple(value), None)
 
-    def _add_item(self, ref, label, checked):
-        item = QListWidgetItem(str(label), self.list)
-        item.setData(Qt.ItemDataRole.UserRole, ref)
-        item.setToolTip(str(label))
-        item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-        item.setCheckState(Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
+    def _set_raw_value(self, selected, checked_rows, *, matching_choices=None, choice_slots=None):
+        if checked_rows is None:
+            selected_keys = tuple(_bucket_key(ref) for ref in selected)
+            selected_buckets = {}
+            for key, ref in zip(selected_keys, selected):
+                selected_buckets.setdefault(key, []).append(ref)
+        item_type, add_item = QListWidgetItem, self.list.addItem
+        checked, unchecked = Qt.CheckState.Checked, Qt.CheckState.Unchecked
+        user_role = Qt.ItemDataRole.UserRole
+        row_role = _ROW_ID_ROLE
+        flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsUserCheckable
+        rows = self._row_refs
+        available_rows = self._row_available
+
+        def add_row(ref, label, selected, available):
+            memo = _ReferenceMemo() if is_dataclass(type(ref)) else None
+            if memo is not None and available and choice_slots:
+                memo.frozen_slots.update(choice_slots.get(id(ref), ()))
+            snapshot = _clone_ref(ref, memo)
+            if memo is not None:
+                # Reuse the state inspection, never the detached objects.
+                for key in tuple(memo):
+                    if id(memo[key]) != key:
+                        del memo[key]
+            item = item_type(label)
+            item.setData(user_role, _clone_ref(ref, memo))
+            item.setData(row_role, len(rows))
+            item.setToolTip(label)
+            item.setFlags(flags)
+            item.setCheckState(checked if selected else unchecked)
+            add_item(item)
+            rows.append(snapshot)
+            available_rows.append(available)
+
+        displayed_buckets = {}
+        blocked = QSignalBlocker(self.list)
+        self.list.setUpdatesEnabled(False)
+        try:
+            self.list.clear()
+            rows.clear()
+            available_rows.clear()
+            for index, (key, ref) in enumerate(zip(self._choice_keys, self.choices)):
+                if checked_rows is None:
+                    choice = ref if matching_choices is None else matching_choices[index]
+                    if _contains(displayed_buckets, choice, key):
+                        continue
+                    selected_row = _contains(selected_buckets, choice, key)
+                    displayed_buckets.setdefault(key, []).append(choice)
+                else:
+                    selected_row = index in checked_rows
+                label = (self.choice_labels[index] if index < len(self.choice_labels)
+                         else getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
+                add_row(ref, _reference_text(label), selected_row, True)
+            if checked_rows is None:
+                for key, ref in zip(selected_keys, selected):
+                    if not _contains(displayed_buckets, ref, key):
+                        label = getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref)
+                        add_row(ref, "Unavailable: " + _reference_text(label), True, False)
+                        displayed_buckets.setdefault(key, []).append(ref)
+        finally:
+            self.list.setUpdatesEnabled(True)
+            del blocked
 
 
 class NumericTableEdit(CurveTable):

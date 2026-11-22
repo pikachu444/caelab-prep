@@ -13,9 +13,15 @@ import math
 
 from ..cae_core import PrepError
 from .deck import number
-from .modeling import native_identity, real, title, integer
+from .modeling import ELEMENT_ALIASES, native_identity, real, title, integer
 
 AXES = ((1., 0., 0.), (0., 1., 0.), (0., 0., 1.))
+
+
+def element_group_members(entries):
+    """Resolve an explicit native element list with signed exclusions."""
+    excluded = {-identifier for identifier in entries if identifier < 0}
+    return list(dict.fromkeys(identifier for identifier in entries if identifier >= 0 and identifier not in excluded))
 
 
 def dot(a, b): return sum(x * y for x, y in zip(a, b))
@@ -93,6 +99,7 @@ def node_support(resources, projection, node_ids):
         targets = requested.intersection(cell["nodes"])
         if not targets: continue
         family = cell.get("formulation")
+        family = ELEMENT_ALIASES.get(family, family)
         rotations = {identifier: [] for identifier in targets}
         try:
             if len(parts.get(cell["part_id"], ())) != 1: raise ValueError("PART assignment is unresolved")
@@ -159,6 +166,11 @@ def node_support(resources, projection, node_ids):
 
 def validate_components(resources, projection, node_ids, *, translations=(False,False,False), rotations=(False,False,False), native_skew_id=0, enforce=True):
     frame = coordinate_frame(resources, native_skew_id)
+    if not node_ids:
+        if enforce:
+            raise PrepError("invalid_reference", "Choose at least one member.")
+        return {"coordinate_system": frame, "nodes": [], "status": "unverified",
+                "diagnostics": [{"code": "empty_node_group", "message": "Target node group has no valid node members."}]}
     supports = node_support(resources, projection, node_ids)
     failures = []
     for support in supports:

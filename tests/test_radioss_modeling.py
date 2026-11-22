@@ -184,12 +184,17 @@ def test_replacement_overlay_is_compatible_with_v2_and_invalidates_cached_state_
     session = known_only(tmp_path)
     curve = session.create_curve("Measured curve", [(0, 0), (1, 1)])
     resource = session.document.resources[curve["resource_id"]]
-    v2 = resource.snapshot()
+    v4 = resource.snapshot()
+    v4.pop("retained_comments")
+    v4["state_version"] = 4
+    restored = DeckResource(resource.raw, resource_id=resource.id)
+    restored.restore(v4)
+    assert restored.render() == resource.render()
+    v2 = dict(v4)
     v2.pop("replaced")
     v2.pop("node_positions")
     v2["state_version"] = 2
     assert set(v2) == {"state_version", "patches", "created", "deleted"}
-    restored = DeckResource(resource.raw, resource_id=resource.id)
     restored.restore(v2)
     assert restored.render() == resource.render()
     saved = resource.state_token()
@@ -313,6 +318,191 @@ def test_element_group_membership_is_typed_atomic_and_selected_after_edit(tmp_pa
     for invalid in ([1, 2], [refs[0], refs[0]], [{**refs[0], "entity_kind": "node"}], [{**refs[0], "local_id": 999999}]):
         with pytest.raises(PrepError): session.set_group_members(card["id"], invalid)
         assert (session.describe()["revision"], session.card_text(card["id"])) == old
+
+
+def test_native_quad_uses_its_own_element_group_through_export(tmp_path):
+    source = tmp_path / "mixed_0000.rad"
+    original = SOURCE.read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0] + b"/END\n"
+    source.write_bytes(original.replace(b"\n/SHELL/1", b"\n/QUAD/1", 1))
+    session = opened(source)
+    refs = {cell["id"]: dict(resource_id=cell["resource_id"], entity_kind="element", local_id=cell["id"])
+            for cell in session.mesh_view()["cells"]}
+    solid = session.create_element_group("2D solid", [refs[1]], native_id=987)["card_id"]
+    shell = session.create_element_group("Shell", [refs[5]], native_id=987)["card_id"]
+    assert lookup(session, "/GRQUAD/QUAD/987")["id"] == solid
+    assert lookup(session, "/GRSHEL/SHEL/987")["id"] == shell
+    with pytest.raises(PrepError) as error:
+        session.set_group_members(solid, [refs[1], refs[5]])
+    assert error.value.code == "incompatible_group"
+    assert session.group_members(solid)["member_ids"] == [1]
+    session.set_group_members(solid, [refs[2]])
+
+    project = tmp_path / "mixed.caeprep"
+    session.save_project(project)
+    session.open_project(project)
+    assert session.group_members(solid)["members"] == [refs[2]]
+    exported = tmp_path / "export/mixed_0000.rad"
+    session.export_rad(exported)
+    reopened = opened(exported)
+    for keyword, member in (("/GRQUAD/QUAD/987", 2), ("/GRSHEL/SHEL/987", 5)):
+        group = reopened.group_members(lookup(reopened, keyword)["id"])
+        assert group["member_ids"] == [member] and group["diagnostics"] == []
+
+
+def test_native_quad_property_assignment_checks_solid_compatibility(tmp_path):
+    source = tmp_path / "quad_0000.rad"
+    original = SOURCE.read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0]
+    units = original.splitlines(keepends=True)[4]
+    original = original.replace(units, units * 2, 1).replace(b"\n/SHELL/1", b"\n/QUAD/1", 1)
+    source.write_bytes(original + b"/PROP/QUAD/99\nOpaque section\n/PROP/FLUID/98\nFluid section\n"
+                                  b"/PROP/P14_SOLID/97\nType 14 section\n/END\n")
+    session = opened(source)
+    part = lookup(session, "/PART/1")["id"]
+    shell = lookup(session, "/PROP/SHELL/1")["id"]
+    solid = session.create_solid_property("Solid section")["card_id"]
+    session.assign_part(part, property_id=solid)
+    assert session.part_assignments(part)["property_id"] == solid
+    for keyword in ("/PROP/FLUID/98", "/PROP/P14_SOLID/97"):
+        valid = lookup(session, keyword)["id"]
+        session.assign_part(part, property_id=valid)
+        assert session.part_assignments(part)["property_id"] == valid
+    quad = lookup(session, "/PROP/QUAD/99")["id"]
+    with pytest.raises(PrepError) as invalid:
+        session.assign_part(part, property_id=quad)
+    assert invalid.value.code == "unsupported_operation"
+    with pytest.raises(PrepError) as error:
+        session.assign_part(part, property_id=shell)
+    assert error.value.code == "incompatible_property"
+    assert session.part_assignments(part)["property_id"] == valid
+    case = session.create_analysis_case("Reject opaque property", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "case_0000.rad"
+    with pytest.raises(PrepError) as invalid:
+        session.export_analysis_case(output, case)
+    assert invalid.value.code == "case_activation_scope_unknown"
+    assert not output.exists()
+
+
+def test_case_export_checks_property_already_referenced_by_quad_part(tmp_path):
+    source = tmp_path / "quad_0000.rad"
+    raw = SOURCE.read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0]
+    units = raw.splitlines(keepends=True)[4]
+    source.write_bytes(raw.replace(units, units * 2, 1).replace(b"\n/SHELL/1", b"\n/QUAD/1", 1) + b"/END\n")
+    session = opened(source)
+    case = session.create_analysis_case("Quad property", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "output/case_0000.rad"
+    for validate in (lambda: session.validate_analysis_case(case), lambda: session.export_analysis_case(output, case)):
+        with pytest.raises(PrepError) as error:
+            validate()
+        assert error.value.code == "incompatible_property"
+    assert not output.parent.exists()
+    part = lookup(session, "/PART/1")["id"]
+    solid = session.create_solid_property("Solid section")["card_id"]
+    session.assign_part(part, property_id=solid)
+    native_property = session.part_assignments(part)["native_property_id"]
+    session.export_analysis_case(output, case)
+    reopened = opened(output)
+    props = reopened.part_assignments(lookup(reopened, "/PART/1")["id"])
+    assert props["property_id"] == lookup(reopened, f"/PROP/SOLID/{native_property}")["id"]
+
+
+@pytest.mark.parametrize(("part_id", "omit_from_display", "code"), (
+    (1, True, "incompatible_property"),
+    (999, False, "dangling_reference"),
+))
+def test_case_checks_native_quad_part_including_elements_omitted_from_display(tmp_path, part_id, omit_from_display, code):
+    source = tmp_path / "quad_0000.rad"
+    raw = SOURCE.read_bytes().replace(b"\r\n", b"\n").split(b"/PRESERVED/EDITOR/91", 1)[0]
+    units = raw.splitlines(keepends=True)[4]
+    head, tail = raw.replace(units, units * 2, 1).split(b"\n/SHELL/1\n", 1)
+    rows, remainder = tail.split(b"/SHELL/2\n", 1)
+    if omit_from_display:
+        rows = b"".join(row[:10] + f"{99999:10d}".encode() + row[20:] for row in rows.splitlines(keepends=True))
+    source.with_name("quad.inc").write_bytes(f"/QUAD/{part_id}\n".encode() + rows)
+    source.write_bytes(head + b"\n#include quad.inc\n/SHELL/2\n" + remainder + b"/END\n")
+    session = opened(source)
+    assert any(cell["formulation"] == "QUAD" for cell in session.mesh_view()["cells"]) != omit_from_display
+    if omit_from_display:
+        assert any(item["code"] == "missing_display_nodes" for item in session.mesh_view()["diagnostics"])
+        part = lookup(session, "/PART/1")["id"]
+        prop = lookup(session, "/PROP/SHELL/2")["id"]
+        before = session.part_assignments(part)
+        with pytest.raises(PrepError) as assignment:
+            session.assign_part(part, property_id=prop)
+        assert assignment.value.code == "incompatible_property"
+        assert session.part_assignments(part) == before
+    case = session.create_analysis_case("Native quad part", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "output/case_0000.rad"
+    for validate in (lambda: session.validate_analysis_case(case), lambda: session.export_analysis_case(output, case)):
+        with pytest.raises(PrepError) as error:
+            validate()
+        assert error.value.code == code
+        if code == "dangling_reference":
+            assert error.value.details["part_id"] == part_id
+    assert not output.parent.exists()
+
+
+@pytest.mark.parametrize("malformed", (None, "element", "node"), ids=("padded-part", "blank-element", "blank-node"))
+def test_case_export_checks_padded_quad_part_and_malformed_native_rows(tmp_path, malformed):
+    source = tmp_path / "quad_0000.rad"
+    raw = SOURCE.read_bytes().replace(b"\r\n", b"\n").split(b"/PRESERVED/EDITOR/91", 1)[0]
+    units = raw.splitlines(keepends=True)[4]
+    quad_header = b"/QUAD/1\n" if malformed else b"/QUAD/         1\n"
+    raw = raw.replace(units, units * 2, 1).replace(b"\n/SHELL/1\n", b"\n" + quad_header, 1)
+    if malformed:
+        header = b"/NODE\n" if malformed == "node" else quad_header
+        end = raw.index(header) + len(header)
+        width = 20 if malformed == "node" else 10
+        raw = raw[:end + 10] + b" " * width + raw[end + 10 + width:]
+    source.write_bytes(raw + b"/END\n")
+    session = opened(source)
+    part = lookup(session, "/PART/1")["id"]
+    solid = session.create_solid_property("Solid section")["card_id"]
+    session.assign_part(part, property_id=solid)
+    case = session.create_analysis_case("Quad validation", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "output/case_0000.rad"
+    if malformed:
+        with pytest.raises(PrepError) as error:
+            session.export_analysis_case(output, case)
+        assert error.value.code == "invalid_deck"
+        diagnostic = error.value.details["diagnostics"][0]
+        assert diagnostic["code"] == f"{malformed}_display_parse"
+        if malformed == "element":
+            assert diagnostic["part_id"] == 1
+        assert not output.parent.exists()
+    else:
+        session.export_analysis_case(output, case)
+        reopened = opened(output)
+        assert {cell["part_id"] for cell in reopened.mesh_view()["cells"] if cell["formulation"] == "QUAD"} == {1}
+
+
+@pytest.mark.parametrize("valid", (True, False))
+def test_signed_quad_group_is_scoped_and_checked_by_case_export(tmp_path, valid):
+    source = tmp_path / "quad_0000.rad"
+    original = SOURCE.read_bytes().split(b"/PRESERVED/EDITOR/91", 1)[0]
+    original = original.replace(b"\n/SHELL/1", b"\n/QUAD/1", 1).replace(b"\n         5        10", b"\n         1        10", 1)
+    units = original.splitlines(keepends=True)[4]
+    original = original.replace(units, units * 2, 1)
+    positive = (1, 1, 2, 2) if valid else (1, 9999)
+    members = "".join(f"{value:10d}" for value in (*positive, -2, -500))
+    source.write_bytes(original + f"/GRQUAD/QUAD/987\nSigned quad group\n{members}\n/END\n".encode("ascii"))
+    session = opened(source)
+    solid = session.create_solid_property("Quad solid section")["card_id"]
+    session.assign_part(lookup(session, "/PART/1")["id"], property_id=solid)
+    group = lookup(session, "/GRQUAD/QUAD/987")["id"]
+    record = session.group_members(group)
+    case = session.create_analysis_case("Quad group", [], .01, .001, "s")["case_id"]
+    output = tmp_path / "export/case_0000.rad"
+    if valid:
+        assert record["diagnostics"] == [] and record["member_ids"] == [1]
+        session.export_analysis_case(output, case)
+        assert members.encode("ascii") in output.read_bytes()
+    else:
+        assert record["diagnostics"][0]["code"] == "dangling_reference"
+        with pytest.raises(PrepError) as error:
+            session.export_analysis_case(output, case)
+        assert error.value.code == "invalid_reference"
+        assert error.value.details["diagnostics"] == record["diagnostics"]
+        assert not output.exists()
 
 
 def test_node_group_rows_can_be_edited_without_changing_group_identity(tmp_path):

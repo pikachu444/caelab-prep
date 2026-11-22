@@ -90,6 +90,69 @@ def _create_conditions(session):
                 velocity=velocity, contact=contact)
 
 
+@pytest.mark.parametrize("members", ((101, 0, 205), (101, 101, 205), (), (0, 0), (101, -205),
+                                     (101, "0_0", 205), (101, "1_01", 205)))
+def test_source_import_and_mesh_previews_resolve_explicit_node_groups(tmp_path, members):
+    source = _base_model(tmp_path / "source", newline=b"\r\n")
+    group = b"/GRNOD/NODE/47\r\nImported target\r\n"
+    if members:
+        group += ("".join(f"{member:>10}" for member in members) + "\r\n").encode()
+    bcs = b"/BCS/71\r\nSupport\r\n   111 000         0        47\r\n" if not members else b""
+    source.write_bytes(source.read_bytes().replace(b"/END", group + bcs + b"/END"))
+    original = PrepSession()
+    original.open_rad(source)
+    group_id = _card(original, "/GRNOD/NODE/47")["id"]
+    move = [{"reference": original.resolve_entity_reference("node", 101)["reference"], "position": [-.1, 0, 0]}]
+    destination = PrepSession()
+    destination.open_rad(_base_model(tmp_path / "destination"))
+    if members not in ((101, 0, 205), (101, 101, 205)):
+        for preview in (lambda: destination.plan_import_source(source),
+                        lambda: original.plan_group_members(group_id, [101, 309]),
+                        lambda: original.plan_node_move(move, length_unit="mm")):
+            with pytest.raises(PrepError) as error:
+                preview()
+            assert error.value.code == "unsupported_source_profile"
+        return
+
+    plan = original.plan_group_members(group_id, [101, 309])
+    assert plan["admissible"] and [ref["local_id"] for ref in plan["before"]] == [101, 205]
+    assert [ref["local_id"] for ref in plan["after"]] == [101, 309]
+    assert original.plan_node_move(move, length_unit="mm")["nodes"][0]["after"] == [-.1, 0, 0]
+    assert original.card_text(group_id).encode() == group
+
+    plan = destination.plan_import_source(source)
+    ids = {(namespace, source_id): mapped for namespace, source_id, mapped in plan["source"]["id_map"]}
+    destination.import_source(plan["plan_id"])
+    archive = tmp_path / "imported.caeprep"
+    destination.save_project(archive)
+    destination.open_project(archive)
+    name = f'/GRNOD/NODE/{ids["GRNOD", 47]}'
+    imported = _card(destination, name)["id"]
+    assert destination.group_members(imported)["member_ids"] == [ids["NODE", 101], ids["NODE", 205]]
+    expected = tuple(ids["NODE", member] if member else 0 for member in members)
+    assert destination.card_text(imported).splitlines()[-1] == _i(*expected)
+
+
+def test_bcs_inspector_reports_empty_native_node_group_as_unverified(tmp_path):
+    from caelab_prep.application.rad_provider import RadProvider
+
+    source = _base_model(tmp_path / "input")
+    declarations = f"/GRNOD/NODE/47\nEmpty target\n{_i(0, 0)}\n/BCS/71\nSupport\n   111 000         0        47\n".encode()
+    source.write_bytes(source.read_bytes().replace(b"/END", declarations + b"/END"))
+    session = PrepSession()
+    session.open_rad(source)
+    card = _card(session, "/BCS/71")
+    support = session.condition_support(card["id"])
+    assert support["status"] == "unverified" and support["nodes"] == []
+    assert [item["code"] for item in support["diagnostics"]] == ["empty_node_group"]
+    provider = RadProvider(session)
+    ref = next(item.ref for item in provider.tree_nodes() if item.ref.object_id == card["id"])
+    assert next(field.value for field in provider.properties(ref) if field.name == "component_support") == "unverified: empty_node_group"
+    with pytest.raises(PrepError) as error:
+        session._validate_condition_components(_card(session, "/GRNOD/NODE/47")["id"])
+    assert error.value.code == "invalid_reference"
+
+
 @pytest.mark.parametrize("model", [b"\n", b"\r\n"], indirect=True, ids=["lf", "crlf"])
 def test_conditions_create_curve_edit_undo_save_reopen_export(model, tmp_path):
     session, source = model

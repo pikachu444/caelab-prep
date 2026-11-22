@@ -72,6 +72,7 @@ class PrepController:
         self._last_presented_document = None
         self._last_presented_epoch = None
         self._last_presented_revision = -1
+        self._last_presented_projection_revision = None
         self.field_editors = {}
         self._field_specs = {}
         self.actions = ActionRegistry(self)
@@ -126,6 +127,7 @@ class PrepController:
         self.node_move_dialog = None
         self.node_merge_dialog = None
         self.shell_normal_dialog = None
+        self.edge_split_dialog = None
         self.element_deletion_dialog = None
         self.part_reassignment_dialog = None
         self.source_models_action = self._action(
@@ -140,6 +142,9 @@ class PrepController:
                                               action_id="mesh.merge_nodes")
         self.shell_normal_action = self._action("mesh", "Reverse shell normals…", self.open_shell_normals,
                                                 action_id="mesh.flip_shell_normals")
+        self.edge_split_action = self._action("mesh", "Split triangle edge…", self.open_edge_split,
+                                              action_id="mesh.split_triangle_edge")
+        self.edge_split_action.setStatusTip("Preview and split an edge of selected SH3N triangles.")
         self.element_deletion_action = self._action("mesh", "Delete elements…", self.open_element_deletion,
                                                    action_id="mesh.delete_elements")
         self.part_reassignment_action = self._action("mesh", "Move elements to PART…", self.open_part_reassignment,
@@ -156,6 +161,10 @@ class PrepController:
     def open_shell_normals(self):
         from .element_edits import ShellNormalDialog
         return self._open_model_relation_dialog("shell_normal_dialog", ShellNormalDialog, "changed")
+
+    def open_edge_split(self):
+        from .element_edits import TriangleEdgeSplitDialog
+        return self._open_model_relation_dialog("edge_split_dialog", TriangleEdgeSplitDialog, "changed")
 
     def open_node_merge(self):
         from .node_merges import NodeMergeDialog
@@ -217,9 +226,14 @@ class PrepController:
         kind = event.get("kind")
         same_document = (event.get("document_id") == self._last_presented_document
                          and event.get("document_epoch") == self._last_presented_epoch)
-        if kind == "selection":
-            if self.viewport:
-                self.viewport.set_selection(self.session.selection())
+        projection_changed = (self.viewport is not None and event.get("projection_revision", self._last_presented_projection_revision)
+                              != self._last_presented_projection_revision)
+        selection = self.session.selection() if kind == "selection" and self.viewport is not None else None
+        if selection is not None and selection["projection_revision"] != self._last_presented_projection_revision:
+            projection_changed = True
+        if kind == "selection" and not projection_changed:
+            if selection is not None:
+                self.viewport.set_selection(selection)
             active = self.provider.active_object()
             target_id = active.object_id if active else None
             if target_id != self._selected_card_id:
@@ -233,7 +247,7 @@ class PrepController:
             self._refresh_target_roles()
             self._refresh_actions()
             return
-        if kind == "field" and same_document and event.get("revision", -1) <= self._last_presented_revision:
+        if kind == "field" and same_document and not projection_changed and event.get("revision", -1) <= self._last_presented_revision:
             return
         drafts = self._text_drafts()
         if self._replacement_conflict or (not same_document and drafts):
@@ -245,7 +259,7 @@ class PrepController:
             self._refresh_actions()
             return
         draft_revision = self._editor_revision
-        self.refresh_document(rebuild_viewport=kind in ("document", "structure"))
+        self.refresh_document(rebuild_viewport=kind in ("document", "structure") or projection_changed)
         self._restore_text_drafts(drafts)
         if drafts:
             self._editor_revision = draft_revision
@@ -266,13 +280,18 @@ class PrepController:
             self._restore_approved_selection()
             self._refresh_fields()
             self._refresh_actions(summary)
-            if rebuild_viewport and self.viewport is not None and summary.get("document_id"):
+            projection_revision = summary.get("projection_revision")
+            if (self.viewport is not None and summary.get("document_id")
+                    and (rebuild_viewport or projection_revision != self._last_presented_projection_revision)):
                 try:
-                    self.viewport.set_mesh(self.session.mesh_view(), reset_camera=
+                    projection = self.session.mesh_view()
+                    self.viewport.set_mesh(projection, reset_camera=
                                            summary.get("document_epoch") != self._last_presented_epoch)
                     self._apply_display_state()
                 except Exception as exc:
                     self._viewport_diagnostic(f"Mesh display failed: {exc}")
+                else:
+                    self._last_presented_projection_revision = projection.get("projection_revision")
             if self.viewport is not None and summary.get("document_id"):
                 self.viewport.set_selection(self.session.selection())
             self._refresh_tree_appearances()
@@ -291,7 +310,8 @@ class PrepController:
                              context="mesh" if loaded and self.viewport is not None else "",
                              enabled={"file.save": loaded and editable, "file.save_as": loaded and editable,
                                       "file.export": loaded and editable, "edit.undo": editable,
-                                      "edit.redo": editable, "edit.reload": loaded})
+                                      "edit.redo": editable, "edit.reload": loaded,
+                                      "mesh.split_triangle_edge": loaded and editable})
         form_enabled = loaded and not self._busy and self._card_text_draft is None
         self._form_host.setEnabled(form_enabled)
         self.apply_vector_button.setEnabled(form_enabled)
@@ -360,11 +380,13 @@ class PrepController:
             self._refresh_fields()
         elif parts and len(parts) == len(refs):
             try:
-                self.provider.select_many(parts, active=active if active in parts else parts[-1])
-                if self.viewport:
-                    self.viewport.set_selection(self.session.selection())
-                self.selectionChanged.emit(self.session.selection())
-                if len(parts) > 1:
+                if len(parts) == 1:
+                    self._activate_card(parts[0])
+                else:
+                    self.provider.select_many(parts, active=active if active in parts else parts[-1])
+                    if self.viewport:
+                        self.viewport.set_selection(self.session.selection())
+                    self.selectionChanged.emit(self.session.selection())
                     self.statusBar().showMessage(f"{len(parts)} parts selected; properties show the active part")
             except Exception as exc:
                 self._show_error(exc)
@@ -507,7 +529,7 @@ class PrepController:
             self.model_tree.blockSignals(blocked)
 
     def _activate_card(self, ref):
-        self.provider.select(ref)
+        self.provider.select(ref, inspect_incomplete_part=True)
         selection = self.session.selection()
         if self.viewport:
             self.viewport.set_selection(selection)
@@ -1133,7 +1155,9 @@ class PrepController:
                 return
         self._settings.setValue("windowGeometry", self.saveGeometry())
         self._settings.setValue("windowState", self.saveState(self.LAYOUT_VERSION))
-        for dialog in (self.source_models_dialog, self.prepared_mesh_dialog, self.node_move_dialog, self.node_merge_dialog, self.shell_normal_dialog, self.element_deletion_dialog, self.part_reassignment_dialog):
+        for dialog in (self.source_models_dialog, self.prepared_mesh_dialog, self.node_move_dialog,
+                       self.node_merge_dialog, self.shell_normal_dialog, self.element_deletion_dialog,
+                       self.part_reassignment_dialog, self.edge_split_dialog):
             if dialog is not None:
                 dialog.reject()
         if self.viewport:

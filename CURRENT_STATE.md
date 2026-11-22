@@ -2,6 +2,234 @@
 
 실행 순서는 [단계 계획 앞부분](docs/execution-stages.md#execution-order)을 따릅니다. 첫 코드는 D03 표시 갱신이며 D23/D38의 기존 과업 확인, D24/D25 성능·편집 확대, D26–D31 메시·8제품 후속, D19 재료 적용, D33/D34/D36 실제 환경·전체 인수까지 이어갑니다. 이 문서의 N01–N26 상태와 7/16/3 분류는 유지합니다.
 
+<a id="track-3-corrections"></a>
+
+## Track 3 검토 수정 (D23, D25, D19) — 2026-11-18
+
+검토 기준은 `cef119b9fa9b610ec9ff41339a14ea916abdfd6b`다. 수정 범위는 `feature/prep-d23-d25-mesh-and-binding`의 D23, D25, D19 검사다.
+
+| 작업 | 구현 및 확인 | 후속 |
+|---|---|---|
+| D23 / N18 | 두 다중 INCLUDE 입력에서 `node_move`, `node_merge`, `element_delete`, `shell_flip`, `part_reassign`, 준비한 INCLUDE 교체(`replace_prepared_mesh`)와 Undo/Redo를 확인했다. Deck B의 별도 검사는 평면 패치를 Gmsh 최대 크기 10 mm와 2.5 mm로 각각 생성해 절점 수, 삼각형 수, 최대 변 길이를 비교하고 더 조밀한 후보를 추가했다. `.caeprep` 및 Starter를 다시 열어 절점 좌표, 순서가 있는 연결, BEAM 방향, PART와 INCLUDE 소유권, 집합 멤버, 조건 참조를 비교했다. | 기존 CAD 영역을 다시 메시하는 일반 작업 흐름, 실제 Starter/Engine 실행 및 물리 응답 확인 |
+| D25 / N18 | `split_triangle_edge`로 선형 SH3N 한두 개의 공용 변을 분할한다. 다른 요소가 같은 변을 사용하면 차단한다. 두 자식에 부모 행의 두께·각도·후행 필드를 복사한다. GUI와 API에서 명시한 자식 전부를 집합에 재연결할 수 있다. 내보낸 `/GRSH3N` 재파싱에서 자식 4개와 합계 100 mm²를 확인했다. Qt 창에서 저장 확인을 취소해도 검토 창이 유지된다. | edge swap, quad/tri 변환, 고차 승격, 실제 Windows 데스크톱/VTK 및 원제품 비교 |
+| D19 / N19 | C10의 해시·만료 검사를 기존 소유 프로세스 IPC에 연결했다. `radioss_law1_elastic_v1`은 루트 또는 INCLUDE의 LAW1/ELAST에서 E·ν·ρ를 값 변경 한 건으로 적용한다. Prony, LAW36 및 동반 곡선 요청은 `UNSUPPORTED_ATOMIC_APPLY`를 반환한다. | Workbench 저장 평가와의 합동 확인 및 모델별 솔버 검증 |
+
+Windows Python 3.13에서 집중 pytest 43건을 확인했다. `prep-tests.yml`에 나열된 검사의 로컬 결과는 `document` 1,239 통과·11 건너뜀·11 제외, `qt-document` 508 통과·2 건너뜀, `live-automation` 86 통과·7 건너뜀이다. BeidPrep 표현의 Qt offscreen 검토 화면(780×640)은 로컬 `C:/Users/pikac/.gemini/antigravity/brain/9beddcd8-3baf-44f6-9560-2c07a847da3f/d25_prep_edge_split_dialog.png`에 있다. 원 검토자의 수정본 재검토는 통합 인계에 남긴다.
+
+### 두 번째 검토 수정
+
+`16a387046e7429b9d8358f776edacb6313add9c3` 재검토에서 찾은 문제를 수정했다. D23은 루트 메시 카드 뒤의 INCLUDE 지시문과 삭제한 행 뒤 주석을 보존한다. 요소 생성·quad 분할·tri 결합 결과는 준비한 INCLUDE를 교체하는 경로로 저장·재열기·Starter 내보내기를 확인했다. 선택한 요소를 직접 생성하거나 변환하는 명령은 후속이다.
+
+D25는 분할 변의 양 끝점을 포함한 미선택 요소를 차단한다. 저장한 프로젝트에서 SH3N 부모별 자식 ID를 읽어 명시 재연결할 수 있다. 사용자가 버튼을 활성화하려면 새 미리보기를 확인한 뒤 검토 상자를 체크해야 한다.
+
+D19는 대상 탄성 카드의 기존 세 계수와 다중 INCLUDE의 재료 옵션을 검사한다. 확정은 준비한 카드 해시와 평가 출처를 함께 검증한다. 최근 만료된 계획은 최대 256개까지 추적한다. Windows Python 3.13에서 `document` 1,270 통과·11 건너뜀·11 제외, `qt-document` 516 통과·2 건너뜀, `live-automation` 109 통과·7 건너뜀을 확인했다. Qt 형상 검사는 첫 teardown 중단 뒤 별도 프로세스에서 25건을 통과했다. 마지막 주석 보존 교정 후 집중 75건과 영향 회귀 207건을 통과했다(1건 건너뜀). 같은 위치에 BeidPrep Qt offscreen 화면(780×640)을 다시 저장했다.
+
+### 세 번째 검토 수정
+
+`24137d60e24759708fe5b78148c3233ce49984ee` 재검토에서 찾은 문제를 수정했다. 루트와 중첩 INCLUDE에서 한 줄 또는 두 줄 지시문 뒤의 파일 관계를 유지한다. 카드 행을 모두 삭제할 때 현재 블록의 주석을 보존한다. Deck B의 `/GRSH3N/SH3N/32`는 `81 → 581, 582`, `82 → 583, 584`를 명시 재연결한다. Starter를 다시 열어 각 요소의 면적 25 mm²와 집합의 합계 100 mm²를 확인했다.
+
+D25 요소 재연결에는 자원 범위가 있는 요소 참조를 사용한다. 자식 목록의 정수 ID는 해당 부모의 저장된 자식 ID와 일치할 때 허용한다. D19는 공백이 채워진 재료 옵션 ID를 인식하고, LAW1의 비어 있거나 0인 `rho_0`를 보존한다. 평가 출처를 보내면 필수 7개 문자열과 해시 형식을 검증한 뒤 확정 요청에서 같은 값을 요구한다.
+
+Windows Python 3.13에서 집중 pytest 109건을 통과했다. 로컬 `document`는 1,305 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 527 통과·2 건너뜀, `live-automation`은 133 통과·7 건너뜀이다.
+
+### 네 번째 검토 수정
+
+`8fe6609b241f7440f39da4331d3cd57c72355204` 재검토를 반영했다. 중첩 INCLUDE는 Starter 루트에서 먼저 찾고 해당 경로가 없을 때 현재 INCLUDE 디렉터리에서 찾는다. 두 경로가 모두 존재하는 입력과 같은 디렉터리에서만 찾을 수 있는 입력을 한 줄·두 줄 지시문으로 구성해 네이티브 열기, 독립 소스 가져오기, 프로젝트 재열기, Starter 내보내기에서 확인했다. `24137d60`으로 저장한 충돌 재현용 프로젝트가 `8fe6609`에서 `invalid_project`를 반환했고, 수정 후에는 두 INCLUDE의 절점 소유권과 셸 연결을 유지한 채 다시 열렸다.
+
+D19 준비와 확정 요청은 모두 평가 출처 7개 필드를 요구한다. 출처가 빠진 준비 요청은 `invalid_request`, 준비 때의 출처와 일치하지 않거나 출처가 빠진 확정 요청은 `hash_mismatch`를 반환한다. LAW1의 `rho_0`는 비어 있거나 정확한 0일 때 허용한다. 밑줄 표기와 부동소수점에서 0으로 언더플로되는 0이 아닌 값은 거부한다.
+
+Gmsh 4.15.2에서 같은 평면 BREP에 최대 크기 10 mm와 2.5 mm를 적용했다. 절점은 24개에서 221개, 삼각형은 32개에서 388개로 늘었고 최대 변 길이는 12.479 mm에서 2.891 mm로 줄었다.
+
+Windows Python 3.13.5에서 집중 pytest 121건을 통과했다. 로컬 `document`는 1,317 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 531 통과·2 건너뜀, `live-automation`은 141 통과·7 건너뜀이다.
+
+### 다섯 번째 검토 수정
+
+`987c52b8` 재검토를 반영했다. 같은 이름의 루트·형제 INCLUDE 파일이 모두 있으면 먼저 Starter의 직접 참조와 디렉터리가 명시된 참조를 해석한다. 이 참조에서 루트 파일을 이미 사용했고 형제 파일을 명시하지 않았다면 중첩 지시문은 형제 파일에 바인딩한다. 루트의 디렉터리는 파일 후보에서 제외한다. 정확한 대소문자가 없으면 유일한 일치 경로를 사용한다. Starter나 Engine 출력 이름 또는 기존 출력 디렉터리의 파일이 중첩 INCLUDE를 가릴 때 내보낸 지시문에 루트 기준 경로를 쓴다.
+
+`24137d60`과 `8fe6609`에서 각각 저장한 충돌 프로젝트를 다시 열어 절점 소유권과 셸 연결을 확인했다. `8fe6609`에서 저장한 14절점 독립 소스 프로젝트도 따옴표가 있는 두 줄 INCLUDE를 유지한 채 열고 Starter로 내보냈다. 새 독립 소스 가져오기는 두 줄 지시문의 파일명을 매핑하고 따옴표를 보존한다. D25에서 같은 분할 변의 양 끝점을 포함한 `/QUAD`, `/SH4N`, `/TETRA` 이웃은 `EDGE_HAS_UNSELECTED_NEIGHBORS`로 거부한다.
+
+Windows Python 3.13.5에서 집중 pytest 134건을 통과했다. 로컬 `document`는 1,330 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 544 통과·2 건너뜀, `live-automation`은 141 통과·7 건너뜀이다.
+
+### 여섯 번째 검토 수정
+
+`ac0a255` 재검토를 반영했다. 중첩 INCLUDE는 `sets/nodes.inc`처럼 디렉터리를 포함한 경로에도 루트·형제 후보를 비교한다. 모호한 지시문은 해석 전에 확정된 참조를 기준으로 각각 처리한다. 대상 폴더의 기존 형제 파일이 루트에 바인딩된 지시문을 가릴 수 있으면 Starter 및 Starter/Engine 내보내기가 `include_output_collision`으로 중단된다.
+
+`8fe6609`에서 저장한 두 종류의 디렉터리 경로 프로젝트와 한 줄·두 줄 지시문이 섞인 독립 소스 프로젝트를 다시 열고 내보내 15절점과 셸 연결을 확인했다. `/QUAD`는 2D 솔리드로서 `/GRQUAD/QUAD` 집합을 사용한다. 이전 독립 소스 아카이브의 절점·요소 대응은 원본으로 검증한다. OpenRadioss ALE2D 덱에서 `/QUAD` 요소 1의 집합을 내보내고 다시 열어 확인했다. D25 분할 미리보기는 양 끝점에 닿는 미선택 `/QUAD`, `/SH4N`, `/TETRA`를 여전히 거부한다.
+
+Windows Python 3.13.5에서 지정 pytest 177건을 통과했다. 로컬 `document`는 1,347 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 559 통과·2 건너뜀, `live-automation`은 141 통과·7 건너뜀이다.
+
+### 일곱 번째 검토 수정
+
+`bde82a5` 재검토를 반영했다. Starter를 작성하기 전에 내보낼 바이트와 대상 폴더를 합쳐 INCLUDE를 다시 해석한다. 파일 또는 지시문 바인딩이 달라지면 `include_output_collision`으로 중단한다. 활성 바인딩은 프로젝트에 보존하고, 다음 차수의 모호한 지시문을 처리할 때 앞서 확정된 참조를 반영한다.
+
+`8fe6609`에서 직접 생성한 한 줄 전용 및 혼합 독립 소스 아카이브를 열고 다시 저장한 뒤 Starter로 내보냈다. 두 입력에서 15절점·7셸과 INCLUDE 소유권을 확인했다. `ac0a255`의 2절점 아카이브도 같은 경로를 통과했다. 독립 소스의 바이트는 실제 과거 작성 방식으로 검증한다.
+
+`/QUAD` 파트는 2D 솔리드 속성을 받는다. `/GRQUAD/QUAD`는 해당 요소군에서 ID를 찾고 음수 항목을 제외 목록으로 적용한다. 해석 케이스 출력은 그룹 검사와 같은 진단을 사용한다. OpenRadioss ALE2D 입력에서 `/PROP/TYPE14` 할당, 셸 속성 거부 및 `/GRQUAD/QUAD` 출력 재열기를 확인했다.
+
+Windows Python 3.13.5에서 지정 pytest 187건을 통과했다. 로컬 `document`는 1,357 통과·11 건너뜀·11 제외, Qt offscreen `qt-document`는 566 통과·2 건너뜀, `live-automation`은 141 통과·7 건너뜀이다.
+
+### 여덟 번째 검토 수정
+
+`8e85a66` 재검토를 반영했다. 기존 INCLUDE 경로가 내보낸 트리에서도 같은 대상을 가리키면 그 경로를 보존한다. 독립 소스 가져오기는 네이티브 열기에서 확정한 바인딩을 저장한다. 과거 아카이브의 매핑은 해당 작성 규칙으로 재현한 바이트와 대조한다. `ac0a255`가 작성한 아카이브의 세 지시문과 `8fe6609`가 작성한 한 줄 지시문 반복 사례의 형제 파일 바인딩을 재열기와 내보내기로 확인했다.
+
+`/QUAD`의 속성 할당에는 Type 14 이름만 사용한다. OpenRadioss ALE2D 입력에서 기존 `LAW3`를 유지하며 검사기와 속성 할당 작업으로 단면을 바꿨다. 같은 파일에서 동일한 ID를 쓰는 셸과 2D 솔리드는 native 요소군으로 구분해 VTK 선택 강조와 맞춤을 확인했다. 반복·음수 그룹 항목은 원문을 보존하며 유효 멤버를 계산한다.
+
+Windows Python 3.13.5에서 영향 범위 pytest 334건을 통과했다. 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
+### 아홉 번째 검토 수정
+
+`eaeceb5` 재검토를 반영했다. 내보내기는 Starter의 INCLUDE 해석 순서와 대소문자를 무시한 파일 조회를 사용해 필요한 지시문만 바꾼다. `8fe6609`로 생성한 반복 지시문 아카이브 두 건(각 15절점·7요소)과 `#enddata` 뒤에 지시문이 있는 아카이브(14절점·7요소)를 재열기·다시 저장·Starter 내보내기로 확인했다.
+
+해석 케이스 내보내기는 요소가 있는 PART의 속성·재료를 할당 작업과 같은 검사로 확인한다. 요소 집합 편집기는 같은 파일에 같은 ID가 있는 SHELL과 QUAD를 native 요소군 이름으로 표시한다. Windows Python 3.13.5에서 관련 pytest 176건을 통과했다. 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
+### 열 번째 검토 수정
+
+`45883d1` 재검토에서 확인한 9파일 모델은 상위 INCLUDE 지시문 하나를 수정하면 모든 바인딩을 유지한다. 수정 후보를 제한된 범위에서 개별·조합으로 시험하고, 바인딩 전부가 일치할 때 Starter를 내보낸다. 해석 케이스를 포함한 두 내보내기 경로를 작업 문서 재열기 전후에 확인했다.
+
+소스 아카이브는 기록된 파일 순서와 매핑 바이트를 함께 확인한다. `8fe6609`가 작성한 반복 지시문의 형제 파일 바인딩과 `#enddata` 뒤의 `#include"nodes.inc"` 원문을 복원했다. `24137d6`, `987c52b`, `ac0a255`, `8e85a66` 작성본과 `8e85a66`으로 다시 저장한 `ac0a255` 작성본은 두 지시문의 기존 루트 파일 바인딩을 유지했다.
+
+해석 케이스는 표시에서 제외된 요소의 PART 참조와 속성도 검사한다. 같은 native 요소 집합에 동일 ID가 두 개 있으면 생성 전에 거부한다. Windows에서 지정된 pytest 4개 모듈은 155건을 통과했고 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
+### 열한 번째 검토 수정
+
+`a4b9059` 재검토에서 확인한 73파일·18절점 모델을 작업 문서 재열기 전후에 Starter와 해석 케이스로 내보냈다. 내보내기는 일치하는 INCLUDE 바인딩의 앞부분을 늘리는 개별 수정을 우선하고, 개별 수정으로 진행할 수 없으면 최대 256개 조합을 시험한다. 네이티브 재열기에서 전체 바인딩을 비교했다.
+
+파일 순서와 매핑 바이트가 일치하는 과거 작성 규칙이 서로 다른 바인딩을 가리키면, 명시 바인딩이 없는 아카이브는 `invalid_project`로 거부한다. `8fe6609`, `987c52b`, `ac0a255` 작성본에서 거부를 확인했고 `8e85a66`으로 다시 저장한 작성본의 명시 바인딩은 유지했다. `8fe6609`와 `ac0a255`에서 생성한 공백 없는 활성 INCLUDE의 두 경로 형식도 재열기·내보내기로 확인했다.
+
+공백으로 채운 PART ID를 읽을 수 있으며, 형식이 잘못된 절점·요소 행은 해석 케이스 내보내기 전에 거부한다. PART 할당과 요소 집합 검사는 화면에서 빠진 요소도 포함한다. Windows Python 3.13.5에서 지정된 pytest 4개 모듈은 164건을 통과했고 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
+### 열두 번째 검토 수정
+
+`a0e9839` 재검토를 반영했다. `24137d6`의 루트 기준 INCLUDE 탐색과 `987c52b`의 형제 파일 탐색·경로 재작성을 각각 재현한다. `8fe6609`가 작성한 형제 파일 전용 INCLUDE의 네 조합에서 15절점·7요소와 바인딩을 재열기·내보내기로 확인했다. 동일 바이트에서 서로 다른 바인딩이 가능한 아카이브는 명시 바인딩이 없으면 거부한다.
+
+25파일 모델에서 상위 지시문 아홉 개를 함께 수정해 Starter·해석 케이스 내보내기와 작업 문서 재열기 전후의 바인딩을 확인했다. PART 할당은 요소 행 전체를 읽을 수 없는 경우에도 카드 헤더의 요소 종류를 사용한다. 해석 케이스는 모든 절점·요소 집합을 검사한다. SHELL과 QUAD가 같은 ID를 쓰고 한 요소만 표시되는 두 Qt/VTK 사례에서 해당 요소의 강조와 맞춤을 확인했다.
+
+Windows Python 3.13.5에서 지정된 pytest 4개 모듈은 172건을 통과했고 별도 EGL 렌더링 검사 1건은 건너뛰었다. 해석 케이스 추가 검사 20건을 통과했다.
+
+### 열세 번째 검토 수정
+
+`24ff5f2` 재검토를 반영했다. 덱 상태의 원래 버전을 검증 후 보존한다. `24137d6`가 작성한 두 v4 아카이브는 15절점·7요소와 루트 INCLUDE 바인딩을 유지했다. `8fe6609`, `987c52b`, `ac0a255`가 작성한 여섯 v5 모호 사례는 거부했다.
+
+29파일 모델에서 한 파일에 이르는 두 INCLUDE 경로를 모두 보정했다. Starter, Starter/Engine, 해석 케이스를 작업 문서 재열기 전후에 내보내고 모든 바인딩을 비교했다. 가져온 `/GRNOD/NODE`의 중복 ID와 0 패딩은 멤버 계산 시 정리하며 원문을 보존한다. 직접 그룹 편집은 중복과 0을 거부한다. 20,000절점·96그룹 검사에서 검증 두 번에 원문 절점 ID를 한 번씩만 읽었고 메시 변경·Undo 후 캐시를 다시 계산했다.
+
+Windows Python 3.13.5에서 영향 범위 pytest 8개 모듈은 326건을 통과했고 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
+### 열네 번째 검토 수정
+
+`acd8a18` 재검토를 반영했다. 덱 상태 버전은 정수만 받고, v5에서 추가한 보존 주석 레코드는 이전 상태에서 거부한다. `24137d6` 작성본 두 개는 15절점·7요소와 루트 INCLUDE 바인딩을 유지했고, 모호한 v5 아카이브 여섯 개는 계속 거부했다.
+
+`/GRNOD/NODE`의 0 패딩을 보존하면서 독립 소스 가져오기·그룹 편집 미리보기·절점 이동 미리보기를 확인했다. 빈 노드 그룹을 참조하는 BCS는 검사기에 `unverified: empty_node_group`으로 표시한다. `24ff5f2` 작성본에 기록된 과거 중복 멤버는 실제 노드별로 정리하며, 서로 다른 두 절점의 동일 대상 매핑에는 명시 승인이 필요하다.
+
+덱 상태 토큰으로 원문 절점 ID 캐시를 확인한다. 자원 직접 복원과 필드 변경 이벤트 후 기존 ID가 거부됨을 검증했다. 20,000절점·96그룹 사례의 Windows 웜 검증 중앙값은 단일 파일 1.026 ms, 절점 INCLUDE 1.056 ms였다(각 55회, 전체 검증 성공). 집중 검사 29건과 전체 영향 범위 pytest 11개 모듈 389건을 통과했고, 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
+### 열다섯 번째 검토 수정
+
+`2a82798` 재검토를 반영했다. 작업 문서 열기와 재연결에서 저장된 대상 종류를 실제 카드 키워드와 비교한다. `acd8a18` 작성본에서 삭제된 빈 노드 그룹이 원본에만 남아 있는 사례를 다시 열어 해석 케이스의 16절점·4요소를 재출력했다. 0만 있는 그룹과 밑줄이 포함된 정수 필드는 계속 거부한다.
+
+덱 구조 토큰이 바뀌면 기존 메시 표시와 절점 소유권을 갱신한다. 자원 직접 복원과 기본 필드 변경 이벤트에서 절점·요소 연결·그룹의 새 ID를 확인했다. 재료 스칼라 편집의 표시 리비전은 유지한다. 20,000절점·96그룹 웜 검증은 단일 파일 중앙값 1.259 ms, 절점 INCLUDE 1.285 ms였다(각 81회 성공). 집중 검사 27건과 전체 영향 범위 pytest 13개 모듈 408건을 통과했고, 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
+### 열여섯 번째 검토 수정
+
+`24c8a2e` 재검토를 반영했다. `2a82798`로 작성한 원본 노드 그룹의 밑줄 정수 사례 세 개를 다시 열어 16절점·4요소와 각 활성 그룹 상태를 내보냈다. `acd8a18`로 작성한 제목만 있는 원본 그룹 사례도 재출력했다. 새 가져오기와 메시 편집 미리보기는 빈 그룹과 밑줄 정수 필드를 거부한다.
+
+자원 직접 복원과 기본 필드 변경 이벤트에서 이전 절점 선택을 제거한다. 다른 INCLUDE의 메시 좌표를 바꾼 뒤 첫 번째 이전 선택 요청을 거부했다. 교체된 20,000절점 덱의 재료 스칼라 편집 41회에서 구조 JSON 직렬화와 해시 호출은 각각 0회였고 표시 리비전은 유지됐다. 집중 검사 23건과 전체 영향 범위 pytest 13개 모듈 418건을 통과했고, 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
+### 열일곱 번째 검토 수정
+
+`042d5e8` 재검토를 반영했다. `2a82798` 작성본의 절점 정의와 셸 연결에 밑줄 정수가 들어간 두 사례를 재열어 각각 16절점·4요소의 정수 ID를 내보냈다. 새 가져오기는 같은 입력을 거부한다. `acd8a18`으로 작성한 제목만 있는 그룹은 재열었고 동일한 원본·매핑에 0만 채운 사례는 거부했다.
+
+기본 필드 변경 이벤트로 절점을 100 mm 옮기면 Qt/VTK 표시가 갱신되어 새 선택을 승인한다. 중복 절점 소유권과 같은 자원의 중복 요소 ID는 모호한 선택을 해제한다. 활성 PART의 요소 ID가 바뀌면 강조를 다시 계산한다. 직접 복원으로 그룹 또는 재료를 삭제한 뒤 요약과 선택 조회 결과가 일치한다. 교체된 20,000절점 덱의 스칼라 편집 41회에서 구조 직렬화·해시는 각각 0회였으며 표시 리비전은 유지됐다.
+
+Windows Python 3.13에서 집중 검사 37건과 영향 범위 pytest 22개 모듈 555건을 통과했다. 별도 EGL 렌더링 검사 1건은 건너뛰었다.
+
+### 열여덟 번째 검토 수정
+
+`eb11392` 재검토를 반영했다. SH3N을 선택해 변을 분할하면 자식 요소를 선택하고 유일한 소유 PART를 활성 상태로 유지한다. PART 자체를 선택한 경우 기존 요소와 자식 요소를 함께 강조한다. 셸을 선택할 때 명시한 요소 형식을 유지하므로 같은 ID의 QUAD를 추가한 뒤에도 셸이 강조된다. 같은 형식과 ID의 요소가 추가되어 선택이 모호해지면 선택을 해제한다.
+
+독립 원본 아카이브는 각 세대의 정수 표기와 절점 그룹 규칙을 원본 전체에 적용해 저장한 매핑 바이트와 대조한다. Pass 13–15 작성본 네 개를 다시 열고 케이스를 내보내 각각 16절점·4요소를 확인했다. 밑줄 정수와 0 패딩을 혼합한 아카이브는 거부했다. 새 가져오기에는 현재 규칙을 적용한다.
+
+Windows Python 3.13과 Qt offscreen에서 영향 범위 25개 모듈 627건과 요소 편집 창 3개 모듈 64건을 통과했다. 별도 EGL 렌더링 검사 1건은 건너뛰었다. 교체된 20,000절점 덱의 스칼라 편집 41회에서 구조 직렬화와 해시 호출은 각각 0회였으며 표시 리비전은 유지됐다.
+
+### 열아홉 번째 검토 수정
+
+`611bf10` 재검토를 반영했다. 요소 형식을 명시한 화면 선택으로 요소 그룹을 만들고, 같은 선택 참조를 SH3N 변 분할·요소 삭제·셸 방향 반전·PART 재할당 미리보기에 전달할 수 있다. 분할한 자식 요소를 재할당하면 선택을 유지하고 새 소유 PART를 활성화한다. 요소가 절점 누락으로 화면에 표시되지 않더라도 원본 요소 ID의 중복을 검사해 선택의 모호성을 판단한다.
+
+독립 원본 아카이브 검증에서 INCLUDE 작성 방식과 해당 세대의 정수·절점 그룹 규칙을 함께 적용한다. `2a82798`로 생성한 밑줄 절점 ID와 0 패딩 그룹이 함께 있는 아카이브를 포함해 Pass 13–15 작성본 다섯 개를 다시 열어 각각 16절점·4요소를 내보냈다. 0 패딩과 이전 세대의 따옴표 없는 두 줄 INCLUDE를 섞거나, 밑줄 정수와 0 패딩 및 제목만 있는 그룹을 섞은 아카이브는 거부했다.
+
+Windows Python 3.13과 Qt offscreen에서 집중 검사 23건과 영향 범위 30개 모듈 730건을 통과했다. 선택 실행 EGL 검사 1건과 OCP 미설치 검사 3건은 건너뛰었다. Windows VTK 오프스크린 렌더에서 SHELL 1을 선택한 뒤 Qt Apply로 멤버가 1인 `/GRSHEL/SHEL/1`을 만들었다. 20,000절점 덱에서 스칼라 편집 41회 동안 표시 리비전은 유지됐고 구조 직렬화와 해시는 각각 0회였다.
+
+### 스무 번째 검토 수정
+
+`cd0be79` 재검토를 반영했다. SH4N과 TETRA의 별칭을 요소 선택 및 편집 검증에 적용한다. 연결을 읽을 수 없는 요소도 유효한 원본 ID가 있으면 중복 검사에 포함한다. Windows VTK offscreen에서 SH4N 201을 선택해 강조하고 삭제·방향 반전·PART 재할당을 미리봤다. 셸 8,000개를 선택한 상태에서 그룹 폼에 필요한 항목을 만드는 데 다섯 번 측정한 중앙값은 17.7 ms였다(16.0–18.7 ms).
+
+원본 INCLUDE 연결 기록 유무와 덱 버전에 따라 해당 작성 세대의 규칙으로 아카이브를 검증한다. `ac0a255`의 QUAD 아카이브와 `2a82798`의 `0_0` 패딩 아카이브는 각각 케이스를 내보내고 다시 열어 16절점·4요소를 확인했다. 새 가져오기는 `0_0`을 거부하며, 이후 세대의 규칙을 덧붙인 이전 아카이브도 거부한다.
+
+Windows Python 3.13과 Qt offscreen에서 집중 검사 28건과 영향 범위 30개 모듈 740건을 통과했다. 선택 실행 EGL 검사 1건과 OCP 미설치 검사 3건은 건너뛰었다. 20,000절점 덱에서 스칼라 편집 41회 동안 표시 리비전은 유지됐고 구조 직렬화와 해시는 각각 0회였다.
+
+### 스물한 번째 검토 수정
+
+`633ec1d` 재검토를 반영했다. 원본 연결 기록, 아카이브에 속한 덱의 버전, 해당 작성 세대의 요소 규칙을 함께 검증한다. `24137d6`과 `987c52b` 작성본은 열리고 QUAD를 끼워 넣은 변형은 거부된다. `ac0a255`의 QUAD와 Pass 14의 `0_0` 패딩 아카이브에서 각각 케이스를 내보내 16절점·4요소를 확인했다. `0_0`은 검증된 Pass 14 아카이브의 매핑 덱에만 허용한다. 새 RAD와 같은 프로젝트의 호스트 덱은 거부한다.
+
+연결을 읽을 수 없는 TETRA10 행도 원본 ID 중복 검사에 포함한다. PART 선택은 표시에서 제외된 중복 요소를 확인하고, SURF/PART는 연결을 읽을 수 없는 QUAD가 포함된 PART를 거부한다. Deck A의 SH4N·TETRA가 케이스 출력 후 다시 열린다. Qt 요소 그룹 편집기는 모든 선택을 검증하며 명시적인 `formulation=None`도 올바른 선택 항목으로 처리한다. 셸 8,000개를 선택한 BeidPrep 폼을 열고 검증하는 시간은 다섯 번 측정한 중앙값 220.1 ms였다(213.4–247.0 ms).
+
+Windows Python 3.13과 Qt offscreen에서 영향 범위 31개 모듈 769건과 목록 편집기 검사 6건을 통과했다. 선택 실행 EGL 검사 1건과 OCP 미설치 검사 3건은 건너뛰었다. Windows VTK offscreen에서 SHELL 1을 선택한 뒤 Qt Apply로 멤버가 1인 요소 그룹을 만들었다. 20,000절점 덱의 스칼라 편집 41회에서 표시 리비전은 유지됐고 구조 직렬화와 해시는 각각 0회였다.
+
+### 스물두 번째 검토 수정
+
+`9bb4262` 재검토를 반영했다. 검증된 Pass 14 원본에서 온 정확한 그룹 행에만 `0_0`을 허용한다. 작업문서의 원본 텍스트를 유지하고 Starter와 케이스 출력에 표준 `0`을 쓴다. 실제 Pass 14 작성본에서 BCS 71을 포함한 케이스를 내보냈다. 다시 연 그룹 48의 멤버는 812와 813이었으며 케이스를 재출력했다. 이전 작성본에 SH4N을 넣거나 `ac0a255`의 QUAD 매핑을 바꾼 변형은 거부했다.
+
+TETRA10 연결 행이 누락돼도 다음 요소 ID부터 다시 읽고, 연결 행의 첫 절점을 요소로 색인하지 않는다. PART 선택은 동일한 원본 요소 번호 공간의 중복을 검사한다. SURF/PART도 같은 검사를 적용한다. 중첩 참조를 Qt 목록 편집기에서 선택하고 복원한다. 셸 8,000개를 선택한 BeidPrep 그룹 폼을 열고 검증하는 시간은 다섯 번 측정한 중앙값 284.1 ms였다(276.7–301.4 ms).
+
+Windows Python 3.13과 Qt offscreen에서 집중 검사 42건과 영향 범위 32개 모듈 783건을 통과했다. 선택 실행 EGL 검사 1건과 OCP 미설치 검사 3건은 건너뛰었다. Windows VTK offscreen에서 SHELL 1을 선택한 뒤 Qt Apply로 멤버가 1인 요소 그룹을 만들었다. 20,000절점 덱의 스칼라 편집 41회에서 표시 리비전은 유지됐고 구조 직렬화와 해시는 각각 0회였다.
+
+### 스물세 번째 검토 수정
+
+`57fe70e` 재검토를 반영했다. 실제 `bde82a5` 작성본의 13개 원본 파일과 `E:QUAD 9007 → 9008` 매핑을 복원해 16절점·4요소의 케이스를 내보냈다. 해당 매핑을 E:SHELL로 바꾸거나 `ac0a255` 작성본을 E:QUAD로 바꾼 변형은 거부했다. `24137d6`과 `987c52b` 작성본의 TETRA 별칭 변형도 거부했다. Pass 14의 `0_0` 허용 범위는 원본 카드 UUID, 데이터 행, 필드 위치, 토큰으로 고정했다. 실제 그룹 48의 멤버를 813에서 814로 바꾼 뒤 `[812, 0, 814]`를 출력했고, 같은 번호로 새로 만든 카드는 원본 패딩을 가져오지 못했다.
+
+PART와 SURF/PART는 표시되지 않는 요소까지 포함해 동일 자원의 원본 요소 번호 공간에서 중복을 확인한다. SURF/PART는 연결을 읽을 수 없는 요소가 포함된 PART도 거부한다. Qt 참조 목록은 해시로 후보를 찾고 값의 동등성을 확인한다. 셸 8,000개를 선택한 BeidPrep 그룹 폼을 열고 검증하는 데 다섯 번 측정한 중앙값은 303.2 ms였다(285.3–311.8 ms).
+
+Windows Python 3.13과 Qt offscreen에서 집중 검사 47건과 영향 범위 32개 모듈 794건을 통과했다. 선택 실행 EGL 검사 1건과 OCP 미설치 검사 3건은 건너뛰었다. Windows VTK offscreen에서 SHELL 1을 선택한 뒤 Qt Apply로 그룹을 만들었다. 20,000절점 덱의 스칼라 편집 41회 동안 표시 리비전은 유지됐고 구조 직렬화와 해시는 각각 0회였다.
+
+### 스물네 번째 검토 수정
+
+`95849bf` 재검토를 반영했다. 요소 ID가 비어 있거나 참조 절점이 누락된 PART는 선택, SURF/PART 작성, TYPE7 대상 해석 및 케이스 내보내기에서 오류를 보고한다. PART 속성 편집은 계속 사용할 수 있다. 음수 요소 제외는 이를 지원하는 작성본에서만 복원한다. 실제 `24137d60`과 `987c52b8` 작성본에 `-9007`과 대응 ID `-9009`를 삽입한 변형은 거부했고, 이를 지원하는 `8e85a669` 작성본은 복원했다.
+
+Qt 참조 목록은 Python 값 동등성으로 선택을 확인한다. Windows Qt offscreen에서 셸 8,000개를 선택한 폼의 열기와 검증은 중앙값 204.6 ms였다(5회, 202.5–217.4 ms). 20,000절점 덱의 스칼라 편집 41회에서 구조 직렬화와 해시는 각각 0회였고 표시 리비전은 유지됐다.
+
+Windows Python 3.13로 집중 검사 104건과 영향 범위 32개 모듈 812건을 통과했다. 전체 실행에서 건너뛴 선택 실행 렌더링·피킹 검사 1건은 별도로 활성화해 통과했다. OCP 미설치 검사 3건은 건너뛰었다.
+
+### 스물다섯 번째 검토 수정
+
+`b6f1c0c` 재검토를 반영했다. `8e85a669`의 순차 INCLUDE 재시도 규칙을 복원했다. 해당 작성기로 만든 원본 7파일 보관본을 두 번 저장·재열고 케이스로 내보냈다. 절점 16개와 요소 4개, 원문 셸 그룹 `[9008, 9009, -9009]`와 유효 멤버 `[9008]`를 확인했다. 음수 제외를 삽입한 `24137d60`과 `987c52b8` 보관본은 계속 거부한다.
+
+요소 ID나 참조 절점이 누락된 PART를 트리에서 클릭하면 진단과 재료·단면 편집을 표시한다. 표면·접촉·케이스 검증에서 오류를 반환하며 내보내기 파일과 리비전 변화는 없었다. Qt 참조 목록은 `set`·`frozenset`을 포함한 중첩 컨테이너의 Python 동등성을 적용한다. 셸 8,000개 폼을 열고 검증하는 시간은 Windows Qt offscreen에서 중앙값 252.5 ms였다(5회, 245.7–292.4 ms).
+
+Windows Python 3.13에서 집중 검사 111건과 영향 범위 32개 모듈 821건을 통과했다. 선택 실행 VTK 렌더링·피킹 검사는 별도로 활성화해 통과했고 OCP 미설치 검사 3건은 건너뛰었다. 20,000절점 덱의 스칼라 편집 41회에서 표시 리비전을 유지했으며 구조 직렬화와 해시는 각각 0회였다.
+
+### 스물여섯 번째 검토 수정
+
+`82622b1` 재검토를 반영했다. `8e85a669`의 INCLUDE 재시도는 두 원본 파일을 같은 파일의 반복 피연산자 하나로만 설명해야 하는 경우를 거부한다. 같은 디스크 입력에서 `ac0a255`는 원본 4개, `8e85a669`는 3개를 수집했다. 실제 `ac0a255` 보관본은 열렸고 `E:SHELL 9007 → 9009` 태그만 `E:QUAD`로 바꾼 보관본은 거부했다. 실제 `8e85a669` 7파일 보관본과 별도 경로로 반복 대상에 도달하는 11파일 보관본, `bde82a5` 13파일 보관본은 케이스 내보내기와 재열기를 확인했다.
+
+Qt 참조 목록은 읽기 전용 프록시를 포함한 표준 매핑과 집합에서 Python 동등성을 적용한다. 셸 8,000개 폼의 열기·검증 시간은 Windows Qt offscreen에서 중앙값 268.6 ms였다(5회, 257.9–298.4 ms).
+
+Windows Python 3.13에서 집중 검사 131건과 영향 범위 32개 모듈 841건을 통과했다. 선택 실행 VTK 피킹 검사는 별도로 통과했고 OCP 미설치 검사 3건은 건너뛰었다. 20,000절점 덱의 스칼라 편집 41회에서 표시 리비전을 유지했으며 구조 직렬화와 해시는 각각 0회였다.
+
+### 스물일곱 번째 검토 수정
+
+`526a0c3` 재검토를 반영했다. `8e85a669` 보관본 검증은 당시 디스크의 INCLUDE 탐색을 웨이브 단위로 재현한다. 보관되지 않은 형제 경로가 원본 선택을 지연시킬 수 있는 경우만 탐색하며, 그 경로를 실제로 읽는 경우는 거부한다. `ac0a255` 보관본의 대소문자, 같은 웨이브의 추가 참조, 누락 파일 뒤의 참조 변형에서 바꾼 요소 매핑 태그를 모두 거부했다. 실제 7·11파일 `8e85a669` 보관본과 13파일 `bde82a5` 보관본은 케이스 내보내기와 재열기를 확인했다.
+
+Qt 참조 목록은 매핑 프록시를 Python 동등성으로 비교하고, 해시가 같은 행 객체와 튜플을 같은 후보에서 찾는다. 셸 8,000개 폼의 열기·검증은 기존 0.5초 단언을 유지한 독립 실행 5회에서 중앙값 208.4 ms였다(190.0–224.7 ms). 모든 실행에서 선택된 참조 8,000개가 일치했다.
+
+Windows Python 3.13에서 집중 검사 146건과 영향 범위 32개 모듈 856건을 통과했다. 선택 실행 VTK 피킹 검사는 별도로 통과했고 OCP 미설치 검사 3건은 건너뛰었다. 20,000절점 덱의 스칼라 편집 41회에서 표시 리비전을 유지했으며 구조 직렬화와 해시는 각각 0회였다.
+
+### 스물여덟 번째 검토 수정
+
+`4ae3028` 재검토를 반영했다. 보관된 INCLUDE 방문 순서로 누락된 형제 파일을 추론한 뒤, 고정한 파일 배치에서 방문 순서와 원본 목록을 함께 검증한다. 보관본에서 확인되는 디렉터리와 파일 아래에 가상의 파일을 둘 수 없다. `ac0a255`의 디렉터리·순서 변형에서 바꾼 요소 매핑 태그를 거부했다. 실제 `8e85a669` 작성기로 만든 79파일 보관본은 저장·재열기와 케이스 내보내기 후에도 절점 16개, 요소 4개와 원본 그룹 `[9008, 9009, -9009]`를 유지했다.
+
+Qt 참조 목록은 반환하는 가변 값을 복사한다. 정렬한 뒤에도 선택한 행의 참조와 유효성을 유지한다. 일반 딕셔너리와 같은 동등성 규칙을 쓰는 읽기 전용 매핑은 같은 방식으로 후보를 찾는다. Windows Qt offscreen에서 8,000개 셸 폼은 중앙값 252.6 ms(232.4–271.9 ms), 8,000개 매핑 프록시 목록은 중앙값 194.5 ms(170.2–217.1 ms)였다. 각각 독립 실행 5회 모두 0.5초 미만이었다.
+
+Windows Python 3.13에서 집중 검사 153건과 영향 범위 32개 모듈 863건을 통과했다. 선택 실행 VTK 피킹 검사는 별도로 통과했고 OCP 미설치 검사 3건은 건너뛰었다. 20,000절점 덱의 스칼라 편집 41회에서 표시 리비전을 유지했으며 구조 직렬화와 해시는 각각 0회였다.
+
 ## D03 표시 갱신 원자화 (PREP:N17 부분 개선) — 2026-11-18
 
 코드 커밋 `64fa6115d37853b062cdd53cf78e5b667f8f8fd6`(브랜치 `feature/prep-d03-atomic-visibility`)에서 `MeshViewport.set_hidden_parts` 및 `_apply_visibility()` 대칭차(`_hidden_parts ^ _applied_hidden`) 단일 패스(`src/caelab_prep/ui/viewport.py`), `PrepController._apply_display_state`의 단일 `set_hidden_parts(hidden)` 호출(`src/caelab_prep/ui/prep_controller.py`), 무변화 no-op 조기 반환을 구현해 숨김·고립·전체 표시 전환 시 중간 전체 모델 노출(`show_all_parts` 후 `hide_parts`)과 중복 `render()` 호출을 제거했습니다(기존 4개 테스트 더블의 레거시 목업 호환 분기 유지, 프로덕션 `MeshViewport` 호출자는 모두 `set_hidden_parts` 사용).
@@ -79,8 +307,8 @@ Windows document 작업의 성공이 OS 실조작·새 설치·원제품 T1–T6
 | N15 | RAD·중립 CSV와 곡선 앱 완성 / G2 T3·P4 | **지원 범위 구현·병합.** PR17의 제품 코드는 `0aaada4`, 최종 검증은 `323954f`, 병합 main은 `8ff16c3`이다. 중립 curve_csv와 같은 표/plot 초안, 파일preview/import/export, drag release 한 Undo/Escape 취소. | 실제 X11 24검사: 두 host/8표현, 파일 chooser/overwrite취소, 2곡선 CSV+작업문서 왕복·RAD/VTK 없는 프로세스. HyperMesh/Naksha plot 잘림을 수정 후 실제 화면 재확인. | 정확한 최종 SHA의 CI를 통과해 구현을 병합했다. CSV는 두수치열/선택x,y헤더, 단위와 참조는 문서가 소유하며 자동 환산하지 않는다. 전문 GUI 전체 품질/원제품/Windows는 별도 행. |
 | N16 | 혼합 조립·다중 자원 관계 / P6b·B1–B4/B6 | **명시 범위 구현·병합.** PR #20 최종 `1cf604e`, main `a9e5cf0`. 다중 자원 단일 publish/Undo, source archive·명시 ID mapping, mixed DOF/좌표계, prepared 교체·stale 재연결, 참조 instance와 해당 PR 당시 v5(v1–v4 읽기)를 실제 GUI에 연결했다. 현재 codec은 [저장 계약](ARCHITECTURE.md#작업-파일과-native-덱)을 따른다. | [최종 CI 41374423889](https://github.com/pikachu444/caelab-prep/actions/runs/41374423889) 9 jobs 통과. 실제 X11 97 passed, Qt 283 passed/2 skipped, 실제 solver 8 passed는 서로 별도 실행이며 합산하지 않는다. 비작성자 검토·실제 두 mixed native·실패 원자 복원 근거를 확인했다. 초기 CI의 테스트 소유권/표현 혼동을 실제 Qt 수명·physical cell 출처 단언으로 고쳤다. | instance는 표현/조회/생성·삭제/저장이고 placement/geometry 복제는 아니며 미전개 instance는 native 출력 차단. N17 성능·일반 접합 동역학·N18 여섯 수정으로 확대하지 않는다. 공통 코어의 다음 편집자는 인수 측 한 명으로 지정한다. |
 | N17 | 대용량 배열·지연 UI·저장 / P6c·B5 | **동일 100만 요소 baseline/개선 측정 완료 및 D03 표시 갱신 원자화 구현, 전체 N17 미완료.** 100 part·20 source를 유지했다. 측정 snapshot과 실제 p95는 보존하며 immutable projection·owned payload·PART context 개선은 PR #20에 병합했다. [PR #26](https://github.com/pikachu444/caelab-prep/pull/26)에 고정 입력 생성기·측정 harness·원자료·당시 source ZIP을 보존한다. 이후 `64fa611`에서 `MeshViewport.set_hidden_parts`·`PrepController._apply_display_state` 단일 대칭차 갱신으로 중간 전체 표시·중복 렌더를 제거했다. | mesh_view의 전체 buffer 공유를 확인해 4.5/5.1초가 36/22µs로 줄었다. 이전 Qt 선택 p95 773ms, 값 변경 126ms, Undo 130ms, 숨김/표시 724/750ms는 예산을 넘었다. D03(`64fa611`) 적용 후 `QT_QPA_PLATFORM=offscreen` + 오프스크린 `vtkRenderWindow` (`SetOffScreenRendering(1)`) 100만 요소·515,100 절점·100 part·20 source·100회 전환 실측에서는 `renders=100` (`never_rendered=0`), `p50=55.432 ms`, `p95=97.601 ms`, `max=106.555 ms`를 기록했다(관련 Qt/VTK 테스트 101 passed, 1 EGL skipped). | Linux 8GiB/소프트웨어 렌더·오프스크린 측정과 실제 Windows 데스크톱 GPU 대화형 화면을 구분하며, 남은 UI 선택·열기/재열기(21.1/22.1초)·초기 index 비용을 `D24`/`D33`에서 분리 개선·인수한다. 요소 수나 기존 4절의 예산을 낮추지 않고 N17 전체 완료로 닫지 않는다. Windows/GPU·취소는 미확인이다. |
-| N18 | 일반 메시 수정·조건 재연결 / P7b | **이동·집합 검토·native merge/반전/삭제/PART 이동·참조된 CAD 후보 교체의 제한 구현·검증, 전체 P7b 미완료.** [PR61](https://github.com/pikachu444/caelab-prep/pull/61)·코드 `7ba062457fbfe79316bef0357b02d6c391f96a09`의 [CAD 교체·재연결 근거](#cad-replacement-progress)는 기존 root 소유/명시 stale 범위이며 전체 CAD topology 추적·물리 경계 복원이 아니다. 원본 CAD 경로 보호와 순수 상태 준비의 후속 [PR60](https://github.com/pikachu444/caelab-prep/pull/60) `43f4ef8a0e6b59f877d0ab1394ebd022f0a49b07`은 [별도 확인](#adoption-source-progress)에 연결한다. 아래 PR38 이력·보류 범위는 당시 기록으로 보존한다. PR29 최종 `89ef36b`·병합 `e929bcd`의 이동/희소 NODE/geometry review를 유지한다. [PR35](https://github.com/pikachu444/caelab-prep/pull/35) 최종 head `f6adc16b2c2a5d65bf94b314daf16dde4188c1e9`·병합 `36d1e71c4847421611a2e228b7bd9cfa432fbd74`의 API `64cdcc102e993777229e8ef78472d8f221354f9f`·GUI `22284aa2989a632be295cd86b43a6c056a6dea9e`·복구 안내 `6791da9e0fe50166702a87d503af1436b2ffc234`는 같은 editor의 선택적 Preview change와 명시 절점·요소 집합 멤버 검토를 기존 set_group_members/한 Undo/v6에 연결한다. closed-profile 밖 preview는 거부하되 기존 Apply/inspector는 유지한다. geometry generation/stale을 새로 만들지 않고 기존 stale을 차단한다. [PR36](https://github.com/pikachu444/caelab-prep/pull/36)의 guard `618f4f39c57980754080c951b8f5d67c19b71a52`는 main `45aeb80255ebdf2a3b75107cea7b3c11fcd798aa`에 병합했다. 명시 BEAM 방향절점이 끝점이 되어 조용히 default frame으로 전환되는 merge를 거부한다. 후속 native API `e32b62d538c83de600aa9a679447875cabbd64f6`·GUI `b7c5446a656c58f9f68d2ba5884f722a1cee3792`는 명시 pair·tolerance·PART/source/contact 허용, NODE 제거/연결·방향점 재배선, 전체 native inventory 대조·한 publish/Undo/v6와 8표현 공통 Action을 연결한다. 원 대상은 자동 변경하지 않고 stale로 보존한다. PR37 당시 many-to-one 축약은 거부했다. 후속 후보 `17c35d2f55e6422e5fc0d0c5f96fbf0fe0a386b3`는 merge의 trial 투영과 기존 재연결의 opt-in Preview/Apply를 연결한다. 최종 typed mapping 전체를 검증하고 old 링크·현재 선언·최종 집합과 CLOAD/INIVEL을 검토한 sealed states만 한 Undo/v6로 적용한다. 다른 stale 그룹과 기존 replacement 밖 layout의 제한은 유지하며 전체 P7b는 미완료다.  재개 코어 `25d4a9a5a1b74e7bef3aa1f4ae561c779f5d4f4f`는 유한 정수 좌표 거리의 overflow, BEAM 방향 외적의 overflow/underflow 판정, 미변경 연결 칸 정규화를 수정했다. source/keeper의 정확 거리≤공차와 기존 지원·명시 허용 경계를 유지한다.   추가 [PR51](https://github.com/pikachu444/caelab-prep/pull/51)의 셸 반전 API `c469122d21ec337ed7c7a832b58bf7703d24f9a8`·UI `062018e070193a1ca29fbc7f7f9316f06ec4e8cb`·잠금 표시 교정 `64c74c2d0703d9ab089fc2fa0e484e1fac9ca375`는 기존 순수 후보를 source-qualified 목록/Preview·한 Undo·v6·stale/export 경로에 연결했고, 정상 merge `9887a168a84e51d2777bf69174d892e568aa6ae7`로 소스 범위를 통합했다. SH3N·평면 SHELL의 닫힌 native 범위이며 전체 P7b는 미완료다.   최종 BCS/TYPE7 재연결 및 집합 검토의 무지지 절점 수용 보완은 [PR53](https://github.com/pikachu444/caelab-prep/pull/53)·코드 `5effcba52911411f1ee6f4dcf531b63160d79070`에 연결한다. BCS inactive_rotation-only 허용과 TYPE7 public not-applicable 표기는 유지하며 resolved 역할/secondary attachment를 따로 검사한다. 후속 [PR54](https://github.com/pikachu444/caelab-prep/pull/54)·코드 `90ddcc6`의 [명시 Drop](#mesh-target-drop-progress)은 절점·요소·SURF/PART의 제거를 sealed 검토/공용 UI에 연결하며 실제 메시 entity 삭제는 후속 [PR55](https://github.com/pikachu444/caelab-prep/pull/55)·API `6166269`·UI `6149401`의 [삭제 검증](#element-deletion-progress)으로 연결하며 전체 P7b는 남긴다. 추가 요소 PART 소유 이동은 [PR56](https://github.com/pikachu444/caelab-prep/pull/56)·API `d6f3f0f`·UI `80aaac4`/오류경계 `be45256`의 [검증](#part-ownership-progress)으로 연결하며 기존 part.assign과 구별한다. | 같은 beam_shell_tet/truss_shell_hex RAD+INCLUDE를 사용했다. 작성자 Qt 8표현×두 입력의 node16·cross-source element16, 차단/오래된 preview/기존 Apply3과 기존 group UI8을 통과했다. 독립 source API4(초기 API `823d4e8`)·GUI4(`22284aa`)는 원본 불변·취소/초안·적용/Undo·저장·새 프로세스 native 출력을 확인했다. lowercase family·잘못된 CLOAD 방향·solid main 접촉의 실제 결함을 고치고 원 지적자가 재확인했다. stale 복구 문구 수정은 영향1건과 원 지적자 읽기로 종결했다. 다음 BEAM merge guard는 작성자 새4+기존 후보17=21건과 독립4건을 통과했고 원 CAE 지적자가 재확인했다. 초기 endpoint mapping의 shell 품질 실패는 BEAM 행 분리 후 두 실제 default 전환 반례의 red로 구분했다. guard 입력/코드/원 실패·수정/독립 결과는 로컬 `C:\Users\pikac\.codex\visualizations\2026\11\03\prep-merge-orientation-618f4f3`에 보존한다. 명시 native merge는 실제 두 입력의6→8 방향점/9→4 TRUSS 연결, source 원본·선언 보존·Undo·v6/새 프로세스 출력을 확인했다. 최종 API17+관련node move1=18건, 앞선 직접 영향61건은 실행 범위를 구분한다. Qt22고유사례(8표현×두 입력16+여섯 경계)를 영향별로 확인했다. 독립 API4(`6764d4a`)+후속2(`e32b62d`), GUI4(`d8f1200`)+배치영향1(`b7c5446`)이 통과했다. 짧은 행의 실제 요소 유실, 외부source 접촉 의존성, foreign node의 DOF 누락을 red로 재현·수정하고 원 지적자가 재확인했다. native merge의 고정 입출력·DTO·원 실패/수정·독립 결과와 source 그림은 `C:\Users\pikac\.codex\visualizations\2026\11\03\prep-node-merge-e32b62d`의 acceptance/inventory/path-map에 보존한다. 고정 입력/출력/DTO/원 실패·수정 JUnit/그림은 로컬 보관처 `C:\Users\pikac\.codex\visualizations\2026\11\03\prep-group-review-22284aa`의 acceptance/inventory/path-map으로 재열 수 있다.  보강 입력은 같은 두 mixed RAD/INCLUDE의 native ID를101/8/909/4007/55/600001/3/8400/99로 바꾸고 NODE 행을 역순·연결 칸을 zero-pad한 것이다. 신규9(순수7/native2)를 포함한 직접 영향60 통과, 후속 출력 재파싱2는 같은 native2의 강화 확인이며 합산하지 않는다. 독립25d API6·test-only `82f8fa0a974e31750b4c3cefe329c322c3587db1`의 재파싱2가 통과했다. 원 거리/BEAM/원문 지적자는 수정과 red/green을 대조해 재확인했다. 실제 exported RAD를 별도 session으로 읽어 ID·연결/방향·BCS/CLOAD/INIVEL/TYPE7 keyword/순서/원문을 v6와 대조했다. `.out`이나 solver 실행은 확인하지 않았다. 입력·출력·원 실패·수정·hash/독립 결과는 `C:/Users/pikac/.codex/visualizations/2026/11/03/prep-pr38-core-25d4a9a/acceptance.json`과 inventory/path-map에 보존한다.   [셸 반전 검증 범위](#shell-normal-progress)는 같은 두 mixed SHELL 입력과 별도 copied SH3N을 구분하며, 원본·미변경 연결 칸·tail/행끝·좌표/ID/PART 보존과 명시 재연결을 확인했다. SDK·solver·VTK Render·OS 확인은 추가하지 않았다.   [attachment 보완 근거](#reconnection-attachment-progress)의 총43=신규8+Group16+Merge19, source/CAE 원 지적 종결과 실제 Qt 보류/교정 귀속을 구분한다. PR53 당시 요소 삭제/Drop은 미연결이었다. | [PR35 코드 head CI41530740968](https://github.com/pikachu444/caelab-prep/actions/runs/41530740968)의 10 jobs가 통과했다. [PR35 최종 문서 head CI41531508382](https://github.com/pikachu444/caelab-prep/actions/runs/41531508382)도 10 jobs 통과했으며 자동 반복 실행을 새 고유 검사로 더하지 않는다. 새 실제 X11 그룹 검토4건(두 표현×두 입력)과 같은 job의 기존 quad/hex4건·native97건을 구분한다. [900×680/640×480 상하단 그림](https://github.com/pikachu444/caelab-prep/actions/runs/41530740968/artifacts/13180814491)은 작성자·독립 검토자가 원문·스크롤·Apply/Cancel 접근성을 직접 확인했다. 시각 판정은 두 표현의 절점 그룹 장면에 한정한다. 로컬 그림은 source/offscreen(설치 글꼴을 QA process에만 등록)이다. [PR37 코드 head 7fa8c0f CI41541877284](https://github.com/pikachu444/caelab-prep/actions/runs/41541877284)는 10 jobs가 통과했다. 실제 Linux X11의 새 merge4건(두 표현×두 입력), 같은 step의 기존group/quad/hex8건, 별도기존native97건을 구분한다. physical VTK8points/3cells·source ID 제거·BEAM 방향 필드를 확인했고 [pairs/review 960×760/640×480 상하단 PNG32·본문4](https://github.com/pikachu444/caelab-prep/actions/runs/41541877284/artifacts/13185774255)를 작성자·독립 검토자가 직접 읽어 해당 장면의 시각적 차단 결함이 없음을 확인했다. 판정과 범위는 같은 acceptance.json에 기록한다. 기존 group/quad/hex 그림을 새 merge 화면 근거로 대신하지 않는다. 후속 coalescence `17c35d2`는 새 API13·Qt14 고유사례를 영향별 실행으로 확인했다. 기존 준비·그룹/merge 영향44·공유UI66·최종영향64·마지막표시수정4는 겹치는 실행이며 합산하지 않는다. 독립 API6·source/offscreen Qt3은 같은 제품 파일 hash에서 통과했다. 저장 old/current 선언 혼용과 조건 없는 그룹의 현재 선언 누락을 고치고 원 지적자가 각각 재확인했다. 입력·native 출력/v6·DTO·원 실패/수정·임시 INI·1020×760/680×500 그림8은 `C:\Users\pikac\.codex\visualizations\2026\11\03\prep-node-coalescence-17c35d2`의 acceptance/inventory/path-map에 보존한다. [PR38 초기 head bb33013 CI41548177115](https://github.com/pikachu444/caelab-prep/actions/runs/41548177115)는 10jobs를 통과했다. 실제 Linux X11 새 coalescence2건과 기존merge/group/quad/hex12건=14pass, 별도기존native97pass를 구분한다. [artifact13190575208](https://github.com/pikachu444/caelab-prep/actions/runs/41548177115/artifacts/13190575208)의 16PNG/본문2는 원 검토자가 직접 읽었다. 이 장면은 저장old/current 선언이 같고 remaining stale=None이며 다른 반례의 시각 근거로 확대하지 않는다. root가 compact 검토 checkbox 끝문자 잘림을 추가로 발견해 라벨을 짧게 하고 자연 너비 단언을 보강한 [교정 head9cf5241 CI41549559367](https://github.com/pikachu444/caelab-prep/actions/runs/41549559367)도 10jobs를 통과했다. 짧은 Mapping reviewed 라벨과 자연 최소너비 단언의 영향Qt2를 확인했으며 [교정 artifact13189564559](https://github.com/pikachu444/caelab-prep/actions/runs/41549559367/artifacts/13189564559)의 두 compact review 그림은 root가 직접 읽어 끝문자 잘림 해소를 확인했다. 이 자동 반복 실행은 새 고유 검사로 더하지 않는다. 최신 사용자 지시에 따라 PR38은 draft/미병합으로 인계하며 이후 통합 결정은 Gemini 총괄 배정에 따른다. 독립 API의 pytest 캐시 rename WinError5 경고는 검사·산출물 성공과 구분한다. native merge/coalescence의 새 Windows OS/VTK·frozen·solver 검증은 하지 않았다. 이전 이동의 Windows/솔버 한계는 [당시 기록](docs/native-windows-validation.md#node-move-20261102)을 유지한다. 접촉 secondary/main·평가 전 하중 계수·초기속도 중복은 물리 응답/유효 초기상태 판정이 아니다. PR38 당시 part 소유 변경·나머지 P7b 작업·CAD 재메시·N17 예산과 원제품 비교는 미완료였다. geometry 변경의 영향 집합은 기존 명시 재연결 전까지 export를 차단한다.  이번 코어 보강은 GUI/8원제품·Windows/새frozen·solver 수용/물리 동등성이나 전체 P7b의 완료가 아니다. PR38 최종 UI·통합은 Gemini 총괄 배정에 따른다. |
-| N19 | 열린 GUI IPC / P8c-IPC | **PR #21 `f9a3d55` 구현·실제 검사·최종 CI 통과 후 `df277a8`에 병합.** live transport를 Qt 주 스레드의 소유 Session에 연결하고 doc/epoch/revision/request_id, token, CAS, draft/busy 충돌과 replay를 검사한다. | 실제 X11 창에 별도 CLI로 연결해 수정·Undo·저장·재연결과 Gmsh 작업 취소를 검사했다. 독립 리뷰에서 GUI 후보 재생성 후 이전 job 상태가 남는 결함을 찾아 수정했으며, 원 검토자가 후속 Generate/Open/Adopt와 Stop 대기를 재확인했다. | 독립 집중 검사 57건을 통과한 소스의 [CI 41370219716](https://github.com/pikachu444/caelab-prep/actions/runs/41370219716) 8개 job을 확인했다. 실제 X11/SDK/MCP job은 teardown을 포함해 60 passed다. 문서 사본이나 새 CLI 세션을 live 제어로 대체하지 않는다. 이 IPC는 Android ChatGPT의 새 세션 생성 기능이 아니다. |
+| N18 | 일반 메시 수정·조건 재연결 / P7b | **이동·집합 검토·native merge/반전/삭제/PART 이동·참조된 CAD 후보 교체의 제한 구현·검증, 전체 P7b 미완료.** [PR61](https://github.com/pikachu444/caelab-prep/pull/61)·코드 `7ba062457fbfe79316bef0357b02d6c391f96a09`의 [CAD 교체·재연결 근거](#cad-replacement-progress)는 기존 root 소유/명시 stale 범위이며 전체 CAD topology 추적·물리 경계 복원이 아니다. 원본 CAD 경로 보호와 순수 상태 준비의 후속 [PR60](https://github.com/pikachu444/caelab-prep/pull/60) `43f4ef8a0e6b59f877d0ab1394ebd022f0a49b07`은 [별도 확인](#adoption-source-progress)에 연결한다. 아래 PR38 이력·보류 범위는 당시 기록으로 보존한다. PR29 최종 `89ef36b`·병합 `e929bcd`의 이동/희소 NODE/geometry review를 유지한다. [PR35](https://github.com/pikachu444/caelab-prep/pull/35) 최종 head `f6adc16b2c2a5d65bf94b314daf16dde4188c1e9`·병합 `36d1e71c4847421611a2e228b7bd9cfa432fbd74`의 API `64cdcc102e993777229e8ef78472d8f221354f9f`·GUI `22284aa2989a632be295cd86b43a6c056a6dea9e`·복구 안내 `6791da9e0fe50166702a87d503af1436b2ffc234`는 같은 editor의 선택적 Preview change와 명시 절점·요소 집합 멤버 검토를 기존 set_group_members/한 Undo/v6에 연결한다. closed-profile 밖 preview는 거부하되 기존 Apply/inspector는 유지한다. geometry generation/stale을 새로 만들지 않고 기존 stale을 차단한다. [PR36](https://github.com/pikachu444/caelab-prep/pull/36)의 guard `618f4f39c57980754080c951b8f5d67c19b71a52`는 main `45aeb80255ebdf2a3b75107cea7b3c11fcd798aa`에 병합했다. 명시 BEAM 방향절점이 끝점이 되어 조용히 default frame으로 전환되는 merge를 거부한다. 후속 native API `e32b62d538c83de600aa9a679447875cabbd64f6`·GUI `b7c5446a656c58f9f68d2ba5884f722a1cee3792`는 명시 pair·tolerance·PART/source/contact 허용, NODE 제거/연결·방향점 재배선, 전체 native inventory 대조·한 publish/Undo/v6와 8표현 공통 Action을 연결한다. 원 대상은 자동 변경하지 않고 stale로 보존한다. PR37 당시 many-to-one 축약은 거부했다. 후속 후보 `17c35d2f55e6422e5fc0d0c5f96fbf0fe0a386b3`는 merge의 trial 투영과 기존 재연결의 opt-in Preview/Apply를 연결한다. 최종 typed mapping 전체를 검증하고 old 링크·현재 선언·최종 집합과 CLOAD/INIVEL을 검토한 sealed states만 한 Undo/v6로 적용한다. 다른 stale 그룹과 기존 replacement 밖 layout의 제한은 유지하며 전체 P7b는 미완료다.  재개 코어 `25d4a9a5a1b74e7bef3aa1f4ae561c779f5d4f4f`는 유한 정수 좌표 거리의 overflow, BEAM 방향 외적의 overflow/underflow 판정, 미변경 연결 칸 정규화를 수정했다. source/keeper의 정확 거리≤공차와 기존 지원·명시 허용 경계를 유지한다.   추가 [PR51](https://github.com/pikachu444/caelab-prep/pull/51)의 셸 반전 API `c469122d21ec337ed7c7a832b58bf7703d24f9a8`·UI `062018e070193a1ca29fbc7f7f9316f06ec4e8cb`·잠금 표시 교정 `64c74c2d0703d9ab089fc2fa0e484e1fac9ca375`는 기존 순수 후보를 source-qualified 목록/Preview·한 Undo·v6·stale/export 경로에 연결했고, 정상 merge `9887a168a84e51d2777bf69174d892e568aa6ae7`로 소스 범위를 통합했다. SH3N·평면 SHELL의 닫힌 native 범위이며 전체 P7b는 미완료다.   최종 BCS/TYPE7 재연결 및 집합 검토의 무지지 절점 수용 보완은 [PR53](https://github.com/pikachu444/caelab-prep/pull/53)·코드 `5effcba52911411f1ee6f4dcf531b63160d79070`에 연결한다. BCS inactive_rotation-only 허용과 TYPE7 public not-applicable 표기는 유지하며 resolved 역할/secondary attachment를 따로 검사한다. 후속 [PR54](https://github.com/pikachu444/caelab-prep/pull/54)·코드 `90ddcc6`의 [명시 Drop](#mesh-target-drop-progress)은 절점·요소·SURF/PART의 제거를 sealed 검토/공용 UI에 연결하며 실제 메시 entity 삭제는 후속 [PR55](https://github.com/pikachu444/caelab-prep/pull/55)·API `6166269`·UI `6149401`의 [삭제 검증](#element-deletion-progress)으로 연결하며 전체 P7b는 남긴다. 추가 요소 PART 소유 이동은 [PR56](https://github.com/pikachu444/caelab-prep/pull/56)·API `d6f3f0f`·UI `80aaac4`/오류경계 `be45256`의 [검증](#part-ownership-progress)으로 연결하며 기존 part.assign과 구별한다. | [D23/D25 수정·입출력 확인](#track-3-corrections). 같은 beam_shell_tet/truss_shell_hex RAD+INCLUDE를 사용했다. 작성자 Qt 8표현×두 입력의 node16·cross-source element16, 차단/오래된 preview/기존 Apply3과 기존 group UI8을 통과했다. 독립 source API4(초기 API `823d4e8`)·GUI4(`22284aa`)는 원본 불변·취소/초안·적용/Undo·저장·새 프로세스 native 출력을 확인했다. lowercase family·잘못된 CLOAD 방향·solid main 접촉의 실제 결함을 고치고 원 지적자가 재확인했다. stale 복구 문구 수정은 영향1건과 원 지적자 읽기로 종결했다. 다음 BEAM merge guard는 작성자 새4+기존 후보17=21건과 독립4건을 통과했고 원 CAE 지적자가 재확인했다. 초기 endpoint mapping의 shell 품질 실패는 BEAM 행 분리 후 두 실제 default 전환 반례의 red로 구분했다. guard 입력/코드/원 실패·수정/독립 결과는 로컬 `C:\Users\pikac\.codex\visualizations\2026\11\03\prep-merge-orientation-618f4f3`에 보존한다. 명시 native merge는 실제 두 입력의6→8 방향점/9→4 TRUSS 연결, source 원본·선언 보존·Undo·v6/새 프로세스 출력을 확인했다. 최종 API17+관련node move1=18건, 앞선 직접 영향61건은 실행 범위를 구분한다. Qt22고유사례(8표현×두 입력16+여섯 경계)를 영향별로 확인했다. 독립 API4(`6764d4a`)+후속2(`e32b62d`), GUI4(`d8f1200`)+배치영향1(`b7c5446`)이 통과했다. 짧은 행의 실제 요소 유실, 외부source 접촉 의존성, foreign node의 DOF 누락을 red로 재현·수정하고 원 지적자가 재확인했다. native merge의 고정 입출력·DTO·원 실패/수정·독립 결과와 source 그림은 `C:\Users\pikac\.codex\visualizations\2026\11\03\prep-node-merge-e32b62d`의 acceptance/inventory/path-map에 보존한다. 고정 입력/출력/DTO/원 실패·수정 JUnit/그림은 로컬 보관처 `C:\Users\pikac\.codex\visualizations\2026\11\03\prep-group-review-22284aa`의 acceptance/inventory/path-map으로 재열 수 있다.  보강 입력은 같은 두 mixed RAD/INCLUDE의 native ID를101/8/909/4007/55/600001/3/8400/99로 바꾸고 NODE 행을 역순·연결 칸을 zero-pad한 것이다. 신규9(순수7/native2)를 포함한 직접 영향60 통과, 후속 출력 재파싱2는 같은 native2의 강화 확인이며 합산하지 않는다. 독립25d API6·test-only `82f8fa0a974e31750b4c3cefe329c322c3587db1`의 재파싱2가 통과했다. 원 거리/BEAM/원문 지적자는 수정과 red/green을 대조해 재확인했다. 실제 exported RAD를 별도 session으로 읽어 ID·연결/방향·BCS/CLOAD/INIVEL/TYPE7 keyword/순서/원문을 v6와 대조했다. `.out`이나 solver 실행은 확인하지 않았다. 입력·출력·원 실패·수정·hash/독립 결과는 `C:/Users/pikac/.codex/visualizations/2026/11/03/prep-pr38-core-25d4a9a/acceptance.json`과 inventory/path-map에 보존한다.   [셸 반전 검증 범위](#shell-normal-progress)는 같은 두 mixed SHELL 입력과 별도 copied SH3N을 구분하며, 원본·미변경 연결 칸·tail/행끝·좌표/ID/PART 보존과 명시 재연결을 확인했다. SDK·solver·VTK Render·OS 확인은 추가하지 않았다.   [attachment 보완 근거](#reconnection-attachment-progress)의 총43=신규8+Group16+Merge19, source/CAE 원 지적 종결과 실제 Qt 보류/교정 귀속을 구분한다. PR53 당시 요소 삭제/Drop은 미연결이었다. | [PR35 코드 head CI41530740968](https://github.com/pikachu444/caelab-prep/actions/runs/41530740968)의 10 jobs가 통과했다. [PR35 최종 문서 head CI41531508382](https://github.com/pikachu444/caelab-prep/actions/runs/41531508382)도 10 jobs 통과했으며 자동 반복 실행을 새 고유 검사로 더하지 않는다. 새 실제 X11 그룹 검토4건(두 표현×두 입력)과 같은 job의 기존 quad/hex4건·native97건을 구분한다. [900×680/640×480 상하단 그림](https://github.com/pikachu444/caelab-prep/actions/runs/41530740968/artifacts/13180814491)은 작성자·독립 검토자가 원문·스크롤·Apply/Cancel 접근성을 직접 확인했다. 시각 판정은 두 표현의 절점 그룹 장면에 한정한다. 로컬 그림은 source/offscreen(설치 글꼴을 QA process에만 등록)이다. [PR37 코드 head 7fa8c0f CI41541877284](https://github.com/pikachu444/caelab-prep/actions/runs/41541877284)는 10 jobs가 통과했다. 실제 Linux X11의 새 merge4건(두 표현×두 입력), 같은 step의 기존group/quad/hex8건, 별도기존native97건을 구분한다. physical VTK8points/3cells·source ID 제거·BEAM 방향 필드를 확인했고 [pairs/review 960×760/640×480 상하단 PNG32·본문4](https://github.com/pikachu444/caelab-prep/actions/runs/41541877284/artifacts/13185774255)를 작성자·독립 검토자가 직접 읽어 해당 장면의 시각적 차단 결함이 없음을 확인했다. 판정과 범위는 같은 acceptance.json에 기록한다. 기존 group/quad/hex 그림을 새 merge 화면 근거로 대신하지 않는다. 후속 coalescence `17c35d2`는 새 API13·Qt14 고유사례를 영향별 실행으로 확인했다. 기존 준비·그룹/merge 영향44·공유UI66·최종영향64·마지막표시수정4는 겹치는 실행이며 합산하지 않는다. 독립 API6·source/offscreen Qt3은 같은 제품 파일 hash에서 통과했다. 저장 old/current 선언 혼용과 조건 없는 그룹의 현재 선언 누락을 고치고 원 지적자가 각각 재확인했다. 입력·native 출력/v6·DTO·원 실패/수정·임시 INI·1020×760/680×500 그림8은 `C:\Users\pikac\.codex\visualizations\2026\11\03\prep-node-coalescence-17c35d2`의 acceptance/inventory/path-map에 보존한다. [PR38 초기 head bb33013 CI41548177115](https://github.com/pikachu444/caelab-prep/actions/runs/41548177115)는 10jobs를 통과했다. 실제 Linux X11 새 coalescence2건과 기존merge/group/quad/hex12건=14pass, 별도기존native97pass를 구분한다. [artifact13190575208](https://github.com/pikachu444/caelab-prep/actions/runs/41548177115/artifacts/13190575208)의 16PNG/본문2는 원 검토자가 직접 읽었다. 이 장면은 저장old/current 선언이 같고 remaining stale=None이며 다른 반례의 시각 근거로 확대하지 않는다. root가 compact 검토 checkbox 끝문자 잘림을 추가로 발견해 라벨을 짧게 하고 자연 너비 단언을 보강한 [교정 head9cf5241 CI41549559367](https://github.com/pikachu444/caelab-prep/actions/runs/41549559367)도 10jobs를 통과했다. 짧은 Mapping reviewed 라벨과 자연 최소너비 단언의 영향Qt2를 확인했으며 [교정 artifact13189564559](https://github.com/pikachu444/caelab-prep/actions/runs/41549559367/artifacts/13189564559)의 두 compact review 그림은 root가 직접 읽어 끝문자 잘림 해소를 확인했다. 이 자동 반복 실행은 새 고유 검사로 더하지 않는다. 최신 사용자 지시에 따라 PR38은 draft/미병합으로 인계하며 이후 통합 결정은 Gemini 총괄 배정에 따른다. 독립 API의 pytest 캐시 rename WinError5 경고는 검사·산출물 성공과 구분한다. native merge/coalescence의 새 Windows OS/VTK·frozen·solver 검증은 하지 않았다. 이전 이동의 Windows/솔버 한계는 [당시 기록](docs/native-windows-validation.md#node-move-20261102)을 유지한다. 접촉 secondary/main·평가 전 하중 계수·초기속도 중복은 물리 응답/유효 초기상태 판정이 아니다. PR38 당시 part 소유 변경·나머지 P7b 작업·CAD 재메시·N17 예산과 원제품 비교는 미완료였다. geometry 변경의 영향 집합은 기존 명시 재연결 전까지 export를 차단한다.  이번 코어 보강은 GUI/8원제품·Windows/새frozen·solver 수용/물리 동등성이나 전체 P7b의 완료가 아니다. PR38 최종 UI·통합은 Gemini 총괄 배정에 따른다. |
+| N19 | 열린 GUI IPC / P8c-IPC | **PR #21 `f9a3d55` 구현·실제 검사·최종 CI 통과 후 `df277a8`에 병합.** live transport를 Qt 주 스레드의 소유 Session에 연결하고 doc/epoch/revision/request_id, token, CAS, draft/busy 충돌과 replay를 검사한다. | [D19 C10 탄성 계수 적용 확인](#track-3-corrections). 실제 X11 창에 별도 CLI로 연결해 수정·Undo·저장·재연결과 Gmsh 작업 취소를 검사했다. 독립 리뷰에서 GUI 후보 재생성 후 이전 job 상태가 남는 결함을 찾아 수정했으며, 원 검토자가 후속 Generate/Open/Adopt와 Stop 대기를 재확인했다. | 독립 집중 검사 57건을 통과한 소스의 [CI 41370219716](https://github.com/pikachu444/caelab-prep/actions/runs/41370219716) 8개 job을 확인했다. 실제 X11/SDK/MCP job은 teardown을 포함해 60 passed다. 문서 사본이나 새 CLI 세션을 live 제어로 대체하지 않는다. 이 IPC는 Android ChatGPT의 새 세션 생성 기능이 아니다. |
 | N20 | 실제 MCP 클라이언트 연결 / P8c-MCP | **PR #21 `f9a3d55`의 실제 client 및 최종 CI 통과 후 병합.** N19에서 검증한 명령을 얇은 adapter로 노출한다. | 공개 MCP CLI @apify/mcpc 0.7.0을 설치했으나 이 환경의 Unix socket EPERM 때문에 handshake 전에 막혔다. 공개 FastMCP CLI 3.4.11로 수정·저장·실제 worker 취소·화면 반영과 오류 3개 과업을 확인했다. 서버 SDK 2.3.0은 별도 환경이며 LLM 키가 필요 없는 실제 stdio client 호출이다. | N19의 검증된 API를 사용한다. mock·Inspector·도구 등록만으로 닫지 않으며 클라이언트를 변조해 성공으로 만들지 않는다. 실제 CLI 상호운용과 자연어 LLM agent 검증을 구분한다. 종료 시 descriptor 부재 검사는 통과했으나 후속 실행에서 비활성 파일이 다시 관찰된 원인은 미확인이다. [관찰 기록](docs/automation/2026-11-02/cleanup-observations.json)은 원인 미확인으로 유지한다. 원격 CI에서는 종료·worker/descriptor 부재 단언을 통과했으며 공개 [산출물](https://github.com/pikachu444/caelab-prep/actions/runs/41370219716/artifacts/13108818638)의 capability 제거를 확인했다. Linux 구현 범위의 병합이며 원인 규명·Windows ACL·자연어 LLM 검증 완료로 확대하지 않는다. |
 | N21 | Workbench RAD 실행 입력·계산 / W3 | **지원 경로 구현·병합.** WB PR #55 최종 `a328253`, main `865ee15`. RAD basename·상대 INCLUDE·Starter/Engine의 불변 snapshot과 두 단계 실행·실패·취소·재실행을 기존 JobManager가 소유한다. | 비작성자 검토와 수정 재확인, [CI 41368317991](https://github.com/pikachu444/caelab-workbench/actions/runs/41368317991)의 공식 solver 두 입력 서비스/X11 GUI·전체 Python 3.11/3.12·실제 CalculiX가 모두 통과했다. 로컬 shell ERROR760 기록은 해당 환경의 실패로 보존한다. | binary reader의 partial 상태를 유지하고 Prep에 두 번째 실행 관리자를 만들지 않는다. 이 지원 경로의 구현을 닫되 Windows 후속·전체 물리 정확성·완전한 native animation 판독을 완료로 확대하지 않는다. |
 | N22 | 선/beam/truss·준비 shell면 / P7c-S | **명시 선/짧은 원호의 고정 F2 통과, 제품 미연결.** PR #23의 [영향 입력 재검증](docs/mesher-evidence/2026-11-02/structured/F2-OCC-addendum.md)에서 같은 입력·공차를 유지하고 OCC 원호 경로로 세 실패를 해결했다. 다섯 지원 입력·한 거부 입력의 최종 근거를 확보했다. CAD curve/frame과 준비 shell면, 단면·orientation/native 연결은 별도 남는다. | line/beam/truss와 준비 shell의 family·단면·orientation·node order·두께/offset 계약을 고정한다. F0–F2 실증 후 공통 채택·Undo·저장·실제 reader로 연결한다. line의 품질 근거로 SICN을 사용하지 않는다. | 자동 중립면을 기다리지 않는다. 공식 Gmsh/OCP와 고정 solver를 사용한다. 미지원 formulation은 거부하고, 외부에서 준비한 선·면을 쓰는 대안도 같은 native 품질 검사를 거친다. |

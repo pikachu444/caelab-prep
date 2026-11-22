@@ -46,8 +46,9 @@ class ModelRelationsResource:
     def snapshot(self):
         # Large explicit memberships are immutable tuples shared by history.
         return {**self._state, "mesh_revisions": dict(self._state["mesh_revisions"]),
-                "stale_targets": {key: {**value, **({"mesh_dependencies": dict(value["mesh_dependencies"])} if "mesh_dependencies" in value else {})}
-                                  for key,value in self._state["stale_targets"].items()},
+                "stale_targets": {key: {**value, **{field: deepcopy(value[field])
+                    for field in ("mesh_dependencies", "parent_to_children") if field in value}}
+                    for key, value in self._state["stale_targets"].items()},
                 "replacement_sources": {key: dict(value) for key,value in self._state["replacement_sources"].items()},
                 "instances": {key: dict(value) for key,value in self._state["instances"].items()}}
     def state_token(self):
@@ -65,10 +66,12 @@ class ModelRelationsResource:
         for rid, revision in state["mesh_revisions"].items():
             UUID(rid)
             if type(revision) is not int or revision < 1: raise PrepError("invalid_project", "Invalid mesh generation.")
+        stale_targets = {}
         for card_id, item in state["stale_targets"].items():
             UUID(card_id)
             keys = {"resource_id", "mesh_resource_id", "mesh_revision", "family", "members"}
-            if not isinstance(item, dict) or set(item) not in (keys, keys | {"reason", "mesh_dependencies"}):
+            geometry_keys = keys | {"reason", "mesh_dependencies"}
+            if not isinstance(item, dict) or set(item) not in (keys, geometry_keys, geometry_keys | {"parent_to_children"}):
                 raise PrepError("invalid_project", "Invalid stale target record.")
             UUID(item["resource_id"]); UUID(item["mesh_resource_id"])
             if item["family"] not in GROUPS or type(item["mesh_revision"]) is not int or item["mesh_revision"] < 1 or not isinstance(item["members"], (list,tuple)) or any(type(value) is not int or value < 1 for value in item["members"]):
@@ -82,6 +85,30 @@ class ModelRelationsResource:
                     UUID(rid)
                     if type(generation) is not int or generation < 1 or state["mesh_revisions"].get(rid) != generation:
                         raise PrepError("invalid_project", "Invalid dependent mesh generation.")
+            members = item["members"]
+            if item["family"] == "GRNOD/NODE":
+                members = dict.fromkeys(members)
+            record = {**item, "members": tuple(members)}
+            if "parent_to_children" in item:
+                replacements = item["parent_to_children"]
+                if item["family"] != "GRSH3N/SH3N" or not isinstance(replacements, dict) or not replacements:
+                    raise PrepError("invalid_project", "Invalid stored SH3N split mapping.")
+                mapping = {}
+                for parent in item["members"]:
+                    key = parent if parent in replacements else str(parent)
+                    if key not in replacements:
+                        continue
+                    children = replacements[key]
+                    if (not isinstance(children, (list, tuple)) or len(children) != 2
+                            or any(type(child) is not int or not 1 <= child <= 2**31 - 1 for child in children)
+                            or children[0] == children[1] or parent in children):
+                        raise PrepError("invalid_project", "Invalid stored SH3N split children.")
+                    mapping[parent] = list(children)
+                all_children = [child for children in mapping.values() for child in children]
+                if len(mapping) != len(replacements) or len(all_children) != len(set(all_children)):
+                    raise PrepError("invalid_project", "Invalid stored SH3N split parents or duplicate children.")
+                record["parent_to_children"] = mapping
+            stale_targets[card_id] = record
         for rid, record in state["replacement_sources"].items():
             UUID(rid)
             if not isinstance(record, dict) or set(record) != {"sha256", "name"} or not isinstance(record["name"], str) or not isinstance(record["sha256"], str) or len(record["sha256"]) != 64:
@@ -98,7 +125,7 @@ class ModelRelationsResource:
                 raise PrepError("invalid_project", "An instance reference must identify distinct source resources.")
             for rid in record["resource_ids"]: UUID(rid)
         return {**state, "mesh_revisions": dict(state["mesh_revisions"]),
-                "stale_targets": {key: {**value, "members": tuple(value["members"])} for key,value in state["stale_targets"].items()},
+                "stale_targets": stale_targets,
                 "replacement_sources": {key: dict(value) for key,value in state["replacement_sources"].items()},
                 "instances": {key: {**value, "resource_ids": tuple(value["resource_ids"])} for key,value in state["instances"].items()}}
     def restore(self, state):
@@ -165,6 +192,7 @@ class MeshRelationCommands:
         trial = copy(self); trial.document = copy(document)
         trial.document.resources = {**document.resources, resource_id: resource}
         trial._projection_cache = None; trial._projection_index = {}
+        trial._raw_node_counts_cache = None
         view = trial.mesh_view()
         if view["diagnostics"]:
             raise PrepError("invalid_mesh", "Replacement introduces duplicate nodes or unresolved connectivity.",
@@ -293,8 +321,8 @@ class MeshRelationCommands:
         """Explicit new member references; same numeric IDs still need this command.
 
         Map each stale group UUID to {mesh_revision, mapping:{old_id: target}}.
-        Targets are typed node/element SelectionRefs; a SURF/PART target is a
-        PART card UUID. Every old member must have an explicit correspondence.
+        Use a typed node reference, one or more typed element references, or a
+        PART card UUID for SURF/PART. Every old member needs a correspondence.
         The mesh generation and document revision must match current state.
         The whole requested batch and target-marker removal form one Undo.
         """
@@ -317,6 +345,8 @@ class MeshRelationCommands:
                 raise PrepError("invalid_reference", "The target is not marked stale.", {"card_id": card_id})
             resource = self._find_card(card_id); card = resource.card(card_id)
             stale = relations["stale_targets"][card_id]
+            if "/".join(card.keyword.upper().strip("/").split("/")[:2]) != stale["family"]:
+                raise PrepError("invalid_reference", "The stale target card family does not match its native keyword.")
             required = {"mesh_revision", "mapping"}
             permitted = required | ({"coalesce_duplicates"} if allow_coalescence else set()) | ({"drop_members"} if allow_drop else set())
             if (not isinstance(replacement, dict) or not required <= set(replacement) <= permitted
@@ -363,14 +393,38 @@ class MeshRelationCommands:
                     self._member_sequence(list(stale["members"]))
                     identifiers = list(dict.fromkeys(identifiers))
                 identifiers = self._node_members(identifiers)
-            else: identifiers, _, _ = self._element_members(members, family)
+            else:
+                element_members = []
+                for old in stale["members"]:
+                    if old in dropped:
+                        continue
+                    member = mapping[old]
+                    expanded = isinstance(member, (list, tuple))
+                    entries = member if expanded else (member,)
+                    if not entries:
+                        raise PrepError("invalid_reference", "Provide at least one current element per mapped member.")
+                    recorded = stale.get("parent_to_children", {}).get(old, ())
+                    for entry in entries:
+                        if type(entry) is int:
+                            if not expanded or entry not in recorded:
+                                raise PrepError("invalid_reference", "Use a scoped element reference or a recorded child ID for this parent.",
+                                                {"old_native_id": old, "child_id": entry})
+                            entry = self.resolve_entity_reference("element", entry)["reference"]
+                        elif isinstance(entry, dict) and entry.keys() == {"resource_id", "object_type", "id"}:
+                            entry = {"resource_id": entry["resource_id"], "entity_kind": entry["object_type"], "local_id": entry["id"]}
+                        element_members.append(entry)
+                members = element_members
+                identifiers, refs, _ = self._element_members(members, family)
+                verified = iter(ref.to_dict() for ref in refs)
+                mapping = {key: [next(verified) for _ in mapping[key]] if isinstance(mapping[key], (list, tuple)) else next(verified)
+                           for key in stale["members"] if key not in dropped}
             link = {"group_id": card_id, "family": family,
                 "old_native_ids": list(stale["members"]),
                 "current_declared_native_ids": self._integer_members(resource, card),
                 "proposed_native_ids": list(identifiers),
                 "mapping": [{"old_native_id": value, "target": deepcopy(mapping[value])} for value in stale["members"] if value not in dropped],
                 "old_link_count": len(stale["members"]), "unique_target_count": len(identifiers),
-                "collapsed_count": len(stale["members"]) - len(identifiers), "coalescence_requested": coalesce}
+                "collapsed_count": len(members) - len(identifiers), "coalescence_requested": coalesce}
             if dropped:
                 link.update(dropped_old_native_ids=[value for value in stale["members"] if value in dropped],
                             dropped_count=len(dropped), coalesced_count=len(members) - len(identifiers))
@@ -404,8 +458,10 @@ class MeshRelationCommands:
         with self._lock:
             self._check_model_edit(expected_revision, expected_document_id)
             states, objects, trial, links = self._prepare_mesh_reconnection(targets, allow_coalescence=True, allow_drop=True)
-            if any(row["family"] != "GRNOD/NODE" for row in links) and not any(row.get("dropped_old_native_ids") for row in links):
-                raise PrepError("unsupported_reconnection_review", "This reviewed path supports explicit node groups; use the existing direct path for other families.")
+            if any(row["family"] != "GRNOD/NODE" for row in links) and not any(
+                    row.get("dropped_old_native_ids") or row["unique_target_count"] > row["old_link_count"]
+                    for row in links):
+                raise PrepError("unsupported_reconnection_review", "Use this review for node groups, member removals or element expansions.")
             report = reconnection_review(self, trial, links)
             plan_id = str(uuid4())
             self._mesh_reconnection_plan = (plan_id, self._mesh_edit_stamp(), deepcopy(states), objects)

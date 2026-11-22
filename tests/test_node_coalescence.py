@@ -1,11 +1,13 @@
 """Review final many-to-one mappings; old links are not live-node counts."""
 import json
 from uuid import uuid4
+from zipfile import ZipFile
 
 import pytest
 
 from caelab_prep.application import PrepSession
 from caelab_prep.cae_core import PrepError
+from test_condition_workflow import _base_model, _card, _i
 from test_group_member_review import related, state
 from test_node_merges import plan
 from test_node_moves import opened
@@ -152,3 +154,63 @@ def test_reviewed_reconnection_cas_rejects_changed_inputs(change):
     before = state(session)
     with pytest.raises(PrepError) as error: session.apply_mesh_reconnection(review["plan_id"])
     assert error.value.code == "stale_reference_mapping" and state(session) == before
+
+
+@pytest.fixture
+def historical_duplicate_group(tmp_path):
+    source = _base_model(tmp_path / "source")
+    group_text = f"/GRNOD/NODE/47\nRepeated historical member\n{_i(101, 101, 205)}\n".encode()
+    source.write_bytes(source.read_bytes().replace(b"/END", group_text + b"/END"))
+    session = PrepSession()
+    session.open_rad(source)
+    group = _card(session, "/GRNOD/NODE/47")["id"]
+    reference = session.resolve_entity_reference("node", 101)["reference"]
+    preview = session.plan_node_move([{"reference": reference, "position": [-.1, 0, 0]}], length_unit="mm")
+    session.apply_node_move(preview["plan_id"])
+    archive = tmp_path / "saved.caeprep"
+    session.save_project(archive)
+    with ZipFile(archive) as project:
+        members = {member: project.read(member) for member in project.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    manifest["model_relations"]["stale_targets"][group]["members"] = [101, 101, 205]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    legacy = tmp_path / "pass12.caeprep"
+    with ZipFile(legacy, "w") as project:
+        for member, raw in members.items():
+            project.writestr(member, raw)
+    session.open_project(legacy)
+    assert session.card_text(group).encode() == group_text
+    return session, group
+
+
+@pytest.mark.parametrize("mode", ("full", "coalesce", "drop", "unreviewed-collision"))
+def test_reconnect_historical_duplicate_node_members(historical_duplicate_group, tmp_path, mode):
+    session, group = historical_duplicate_group
+    model = session.mesh_relationships()["stale_targets"][group]
+    first = session.resolve_entity_reference("node", 101)["reference"]
+    second = session.resolve_entity_reference("node", 205)["reference"]
+    target = {"mesh_revision": model["mesh_revision"], "mapping": {101: first, 205: second}}
+    if mode in ("coalesce", "unreviewed-collision"):
+        target["mapping"][205] = first
+    if mode == "coalesce":
+        target["coalesce_duplicates"] = True
+    if mode == "drop":
+        target["drop_members"] = [101]
+        del target["mapping"][101]
+    if mode == "unreviewed-collision":
+        before = state(session)
+        with pytest.raises(PrepError) as error:
+            session.plan_mesh_reconnection({group: target})
+        assert error.value.code == "invalid_reference" and state(session) == before
+        return
+    review = session.plan_mesh_reconnection({group: target})
+    link, = review["links"]
+    assert link["old_native_ids"] == [101, 205] and link["old_link_count"] == 2
+    assert link["collapsed_count"] == int(mode == "coalesce")
+    if mode == "drop":
+        assert link["dropped_old_native_ids"] == [101]
+    session.apply_mesh_reconnection(review["plan_id"])
+    expected = {"full": [101, 205], "coalesce": [101], "drop": [205]}[mode]
+    assert session.group_members(group)["member_ids"] == expected
+    assert not session.mesh_relationships()["stale_targets"]
+    session.export_rad(tmp_path / "out/reconnected_0000.rad")

@@ -15,7 +15,8 @@ import pytest
 vtk = pytest.importorskip("vtk")
 
 from caelab_prep.application.contracts import ObjectRef
-from caelab_prep.ui.viewport import MeshViewport, cell_part_key, part_key
+from caelab_prep.cae_core import PrepError
+from caelab_prep.ui.viewport import MeshViewport, cell_part_key, part_key, pick_candidate
 
 pytestmark = pytest.mark.usefixtures("qt_widgets")
 
@@ -61,6 +62,100 @@ def selection(view, *, kind="element", ids=(11, 12)):
     return {**view._projection_stamp, "kind": kind, "ids": list(ids), "refs": [
         {"resource_id": "elements" if kind == "element" else "nodes",
          "entity_kind": kind, "local_id": identifier} for identifier in ids]}
+
+
+def test_same_file_quad_group_and_viewport_pick_highlight_only_the_native_family(tmp_path):
+    from caelab_prep.application.session import PrepSession
+
+    path = tmp_path / "quad_0000.rad"
+    nodes = "".join(f"{i:10d}{x:20g}{y:20g}{0:20g}\n" for i, (x, y) in enumerate(
+        [(0, 0), (1, 0), (1, 1), (0, 1), (100, 0), (101, 0), (101, 1), (100, 1)], 1))
+    path.write_text("/BEGIN\nFamily selection\n/NODE\n" + nodes
+                    + "/SHELL/1\n" + "".join(f"{i:10d}" for i in (201, 1, 2, 3, 4))
+                    + "\n/QUAD/2\n" + "".join(f"{i:10d}" for i in (201, 5, 6, 7, 8))
+                    + "\n/GRQUAD/QUAD/987\nQuads\n       201\n/END\n")
+    session = PrepSession()
+    session.open_rad(path)
+    group = next(item for item in session.list_cards() if item["keyword"] == "/GRQUAD/QUAD/987")
+    active = ObjectRef(session.document.id, group["resource_id"], group["id"], "rad-card", group["keyword"])
+    view = viewport(session.mesh_view())
+    for family, row in (("QUAD", 1), ("SHELL", 0), ("QUAD", 1)):
+        if family == "QUAD" and row == 1 and not session.selection()["refs"]:
+            chosen = session.activate_object(active)
+        else:
+            picked = pick_candidate(view._projection_stamp, "element", 201, group["resource_id"])
+            chosen = session.select_pick({**picked, "formulation": family})
+        assert chosen["refs"][0]["formulation"] == family
+        view.set_selection(chosen)
+        assert view._highlight.GetVisibility()
+        assert view._selection_cell_indices(chosen) == [row]
+        assert view.fit_selection()
+
+
+@pytest.mark.parametrize("selection_source", ("entity", "pick"))
+def test_qualified_shell_selection_survives_same_id_quad(tmp_path, selection_source):
+    from caelab_prep.application.session import PrepSession
+    from test_condition_workflow import _base_model, _card, _i
+
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "input"))
+    shell = _card(session, "/SHELL/902")
+    mesh = session.document.resources[shell["resource_id"]]
+    view = viewport(session.mesh_view())
+    try:
+        if selection_source == "pick":
+            pick = pick_candidate(view._projection_stamp, "element", 7001, mesh.id)
+            session.select_pick({**pick, "formulation": "SHELL"})
+        else:
+            session.select_entity("element", 7001, resource_id=mesh.id, formulation="SHELL")
+
+        state, _ = mesh.inserted_state(f"/QUAD/903\n{_i(7001, 501, 605, 709, 811)}\n")
+        session.dispatcher.execute(mesh.id, state, "Add same-ID quad")
+        mesh_view = session.mesh_view()
+        view.set_mesh(mesh_view, reset_camera=False)
+        selected = session.selection()
+        assert selected["ids"] == [7001]
+        assert selected["refs"][0]["formulation"] == "SHELL"
+        view.set_selection(selected)
+        row, = view._selection_cell_indices(selected)
+        assert mesh_view["cells"][row]["formulation"] == "SHELL"
+        assert view._highlight.GetVisibility() and view.fit_selection()
+
+        repeated = _i(7001, 101, 205, 309, 411)
+        state = mesh.replaced_state(shell["id"], f"/SHELL/902\n{repeated}\n{repeated}\n")
+        session.dispatcher.execute(mesh.id, state, "Duplicate shell ID in the same family")
+        assert session.selection()["ids"] == []
+    finally:
+        view.close()
+
+
+@pytest.mark.parametrize("visible", ("SHELL", "QUAD"))
+def test_viewport_highlights_family_qualified_selection_with_hidden_same_id(tmp_path, visible):
+    from caelab_prep.application.session import PrepSession
+
+    path = tmp_path / "one_visible_0000.rad"
+    nodes = "".join(f"{i:10d}{x:20g}{y:20g}{0:20g}\n" for i, (x, y) in enumerate(
+        [(0, 0), (1, 0), (1, 1), (0, 1)], 1))
+    rows = "".join(f"/{family}/{part}\n" + "".join(f"{i:10d}" for i in
+                   (201, 1, 2, 3, 4 if family == visible else 999)) + "\n"
+                   for part, family in enumerate(("SHELL", "QUAD"), 1))
+    path.write_text("/BEGIN\nOne visible family\n/NODE\n" + nodes + rows + "/END\n")
+    session = PrepSession()
+    session.open_rad(path)
+    projection = session.mesh_view()
+    cell, = projection["cells"]
+    assert cell["formulation"] == visible
+    view = viewport(projection)
+    pick = pick_candidate(view._projection_stamp, "element", 201, cell["resource_id"])
+    with pytest.raises(PrepError) as error:
+        session.select_pick(pick)
+    assert error.value.code == "ambiguous_selection"
+    chosen = session.select_pick({**pick, "formulation": cell["formulation"]})
+    assert chosen["refs"][0]["formulation"] == visible
+    view.set_selection(chosen)
+    assert view._highlight.GetVisibility()
+    assert view._selection_cell_indices(chosen) == [0]
+    assert view.fit_selection()
 
 
 def test_part_identity_requires_resource_and_resolved_owner():
@@ -432,6 +527,48 @@ def test_set_hidden_parts_applies_symmetric_difference_deltas_atomically(with_se
     assert view.visible_cell_indices() == [0, 1, 2]
     assert view._offscreen_window.GetNeverRendered() == 0
     assert not view._render_failed
+
+
+def test_controller_refreshes_vtk_on_geometry_changing_field_commit(qt_widgets, tmp_path, monkeypatch):
+    from caelab_prep.application import PrepSession
+    from caelab_prep.ui import viewport as viewport_module
+    from caelab_prep.ui.main_window import MainWindow
+    from test_condition_workflow import _base_model, _card, _i
+
+    session = PrepSession()
+    session.open_rad(_base_model(tmp_path / "source"))
+    monkeypatch.setattr(viewport_module, "MeshViewport", _SpyDatasetViewport)
+    window = MainWindow(session, enable_viewport=True)
+    window._allow_close = True
+    window.show()
+    qt_widgets.processEvents()
+    view = window.viewport
+    before = session.mesh_view()
+    old_x = view._grid.GetPoint(0)[0]
+    node_owner = session.document.resources[before["node_resources"][101][0]]
+    moved = {str(node_id): (x + 100, y, z) for node_id, (x, y, z) in zip(before["node_ids"], before["points"])}
+    events = []
+    session.subscribe(events.append)
+    change = session.dispatcher.execute(node_owner.id, node_owner.node_positions_state(moved), "Move nodes")
+    assert change.kind == "field"
+    qt_widgets.processEvents()
+    assert view._projection_stamp["projection_revision"] == before["projection_revision"] + 1
+    assert view._grid.GetPoint(0)[0] == old_x + 100
+    assert events[0]["kind"] == "structure" and events[0]["projection_revision"] == view._projection_stamp["projection_revision"]
+    element = session.mesh_view()["cells"][0]
+    view.entityPicked.emit(pick_candidate(view._projection_stamp, "element", element["id"], element["resource_id"]))
+    qt_widgets.processEvents()
+    assert session.selection()["ids"] == [element["id"]]
+
+    part = window.provider.ref_for_card(_card(session, "/PART/902"))
+    session.activate_object(part)
+    shell = _card(session, "/SHELL/902")
+    node_owner.restore(node_owner.replaced_state(shell["id"], f"/SHELL/902\n{_i(99, 101, 205, 309, 411)}\n"))
+    window.refresh_document()
+    selection = session.selection()
+    assert selection["ids"] == [99] and session.active_object() == part
+    assert view._projection_stamp["projection_revision"] == selection["projection_revision"]
+    assert view._selection_cell_indices(selection) == [0] and view._highlight.GetVisibility()
 
 
 def test_prep_controller_atomic_visibility_preserves_selection_history_and_avoids_show_all_hide(

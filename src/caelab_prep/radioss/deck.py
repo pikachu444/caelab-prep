@@ -5,20 +5,83 @@ line endings, ordering, and unedited fields are never reformatted.
 """
 from __future__ import annotations
 
+from bisect import bisect_right
 from dataclasses import dataclass
 from copy import copy
 import hashlib
+from itertools import accumulate
 import json
 import math
 import re
 from uuid import UUID, uuid4, uuid5
 
 from ..cae_core.errors import PrepError
-from .modeling import condition_scalar_default, reject_default_zero
+from .modeling import ELEMENT_ALIASES, condition_scalar_default, reject_default_zero
 
 
 def number(value: str) -> float:
     return float(value.replace("D", "E").replace("d", "e"))
+
+
+_INCLUDE = re.compile(r"^\s*#include\b(.*)$", re.I)
+_FILE_DIRECTIVE = re.compile(r"^\s*#(?:include|enddata)\b", re.I)
+
+
+@dataclass(frozen=True)
+class IncludeDirective:
+    path: str
+    header_row: int
+    filename_row: int
+
+    def replace_path(self, lines, path, *, preserve_quotes=True):
+        row = self.filename_row
+        line = lines[row]
+        body = line.rstrip("\r\n")
+        ending = line[len(body):]
+        start = _INCLUDE.match(body).start(1) if row == self.header_row else 0
+        rest = body[start:]
+        prefix = rest[:len(rest) - len(rest.lstrip())]
+        token = rest.strip()
+        if preserve_quotes and len(token) >= 2 and token[0] in ('"', "'") and token[-1] == token[0]:
+            path = token[0] + path + token[0]
+        if row == self.header_row and not prefix:
+            prefix = " "
+        lines[row] = body[:start] + prefix + path + ending
+
+
+def _include_layout(lines, stop):
+    references = []
+    for index in range(stop):
+        line = lines[index]
+        if not line.lstrip().startswith("#") or not (match := _INCLUDE.match(line)):
+            continue
+        path = match[1].strip()
+        filename_row = index
+        if not path:
+            for cursor in range(index + 1, stop):
+                candidate = lines[cursor].strip()
+                if candidate.startswith("/") or _FILE_DIRECTIVE.match(candidate):
+                    break
+                if candidate and not candidate.startswith("#"):
+                    path = candidate
+                    filename_row = cursor
+                    break
+        references.append(IncludeDirective(path.strip('"\''), index, filename_row))
+    return tuple(references)
+
+
+def _is_comment(line):
+    return line.lstrip().startswith("#") and not _FILE_DIRECTIVE.match(line)
+
+
+def _valid_retained_comments(text):
+    if not isinstance(text, str):
+        return False
+    try:
+        text.encode("latin1")
+    except UnicodeError:
+        return False
+    return not text or (text.endswith(("\r", "\n")) and all(_is_comment(line) for line in text.splitlines()))
 
 
 @dataclass(frozen=True)
@@ -59,12 +122,15 @@ class DeckResource:
         self._raw_digest = hashlib.sha256(self.raw).digest()
         self.name = name
         self.is_include = is_include
+        self._restored_state_version = 5
         self._patches: dict[str, dict[str, object]] = {}
         self._created: list[dict[str, str]] = []
         self._deleted: set[str] = set()
         self._replaced: dict[str, str] = {}
+        self._retained_comments: dict[str, str] = {}
         self._node_positions: dict[str, list[float]] = {}
         self._state_token_cache = None
+        self._structure_token_cache = None
         self._source_lines = self.raw.decode("latin1").splitlines(keepends=True)
         self._parse_layout(self._source_lines)
         self._source_cards = tuple(self.cards)
@@ -72,21 +138,33 @@ class DeckResource:
         if not self.cards and not is_include:
             raise PrepError("invalid_deck", "Radioss 블록 카드가 없는 파일입니다.", {"name": name})
 
-    def _parse_layout(self, lines, card_ids=None):
+    def _parse_layout(self, lines, card_ids=None, *, comment_boundaries=()):
         """Build the editing projection; explicit identities survive structural edits."""
         self.lines = list(lines)
         self.active_stop = next((i for i, line in enumerate(self.lines)
                                  if self.is_include and re.match(r"^\s*#enddata\b", line, re.I)), len(self.lines))
+        self.include_directives = _include_layout(self.lines, self.active_stop)
+        include_starts = [item.header_row for item in self.include_directives]
+        filename_rows = {item.filename_row for item in self.include_directives}
         starts = [i for i, line in enumerate(self.lines[:self.active_stop]) if line.startswith("/")]
         if card_ids is not None and len(card_ids) != len(starts):
             raise PrepError("invalid_project", "Card identity count does not match the deck layout.")
         self.cards, self.diagnostics = [], []
         for ordinal, start in enumerate(starts):
             stop = starts[ordinal + 1] if ordinal + 1 < len(starts) else self.active_stop
+            if comment_boundaries:
+                boundary = bisect_right(comment_boundaries, start)
+                if boundary < len(comment_boundaries):
+                    stop = min(stop, comment_boundaries[boundary])
             keyword = self.lines[start].strip()
             data = tuple(i for i in range(start + 1, stop)
-                         if self.lines[i].strip() and not self.lines[i].lstrip().startswith("#"))
+                         if i not in filename_rows and self.lines[i].strip() and not self.lines[i].lstrip().startswith("#"))
             category = self._category(keyword)
+            if include_starts and category in ("Nodes", "Elements"):
+                # A directive following the last mesh row belongs to the file.
+                boundary = bisect_right(include_starts, data[-1] if data else start)
+                if boundary < len(include_starts):
+                    stop = min(stop, include_starts[boundary])
             title = self.lines[data[0]].strip() if data and category not in ("Nodes", "Elements") else ""
             try:
                 title = title.encode("latin1").decode("utf-8")
@@ -115,33 +193,62 @@ class DeckResource:
         """Retain original spans, inserting new blocks before /END or #enddata."""
         first = self._source_cards[0].start if self._source_cards else self._source_active_stop
         chunks = ["".join(self._source_lines[:first])]
+        detached_comments = []
         identities, inserted = [], False
+        def retain(text):
+            if text:
+                detached_comments.append(len(chunks))
+                chunks.append(text)
+
         def insert():
             nonlocal inserted
             if self._created and chunks and chunks[-1] and not chunks[-1].endswith(("\n", "\r")):
                 chunks.append(self.newline)
             for item in self._created:
-                chunks.append(item["text"])
-                identities.append(item["id"])
+                if "comments" in item:
+                    retain(item["comments"])
+                else:
+                    chunks.append(item["text"])
+                    identities.append(item["id"])
             inserted = True
-        for card in self._source_cards:
+        for ordinal, card in enumerate(self._source_cards):
             if card.keyword.upper() == "/END" and not inserted:
                 insert()
             if card.id not in self._deleted:
                 chunks.append(self._replaced.get(card.id, "".join(self._source_lines[card.start:card.stop])))
                 identities.append(card.id)
+            elif card.id in self._retained_comments:
+                retain(self._retained_comments[card.id])
+            elif not self.is_include or card.category in ("Nodes", "Elements"):
+                retain(self._comment_text(self._source_lines[card.start + 1:card.stop]))
+            next_start = self._source_cards[ordinal + 1].start if ordinal + 1 < len(self._source_cards) else self._source_active_stop
+            if card.stop < next_start:
+                chunks.append("".join(self._source_lines[card.stop:next_start]))
         if not inserted: insert()
         chunks.append("".join(self._source_lines[self._source_active_stop:]))
-        self._parse_layout("".join(chunks).splitlines(keepends=True), identities)
+        lines = "".join(chunks).splitlines(keepends=True)
+        boundaries = ()
+        if detached_comments:
+            offsets = list(accumulate(map(len, chunks), initial=0))
+            comment_offsets = {offsets[index] for index in detached_comments}
+            # Retained comments belong to the file and must not enter adjacent card edits.
+            boundaries = tuple(row for row, offset in enumerate(accumulate(map(len, lines), initial=0))
+                               if offset in comment_offsets)
+        self._parse_layout(lines, identities, comment_boundaries=boundaries)
+
+    def _comment_text(self, lines):
+        return "".join(line if line.endswith(("\r", "\n")) else line + self.newline
+                       for line in lines if _is_comment(line))
 
     @staticmethod
     def _category(keyword: str) -> str:
         root = keyword.upper().split("/")[1]
         return {"NODE": "Nodes", "SHELL": "Elements", "SH3N": "Elements", "BRICK": "Elements",
+                "QUAD": "Elements", "SH4N": "Elements",
                 "TETRA4": "Elements", "TETRA": "Elements", "TETRA10": "Elements", "BEAM": "Elements", "TRUSS": "Elements",
                 "MAT": "Materials", "PROP": "Properties", "PART": "Parts", "BCS": "Constraints",
                 "INTER": "Contacts", "FUNCT": "Curves", "GRNOD": "Groups", "SURF": "Groups",
-                "GRSH3N": "Groups", "GRSHEL": "Groups", "GRBRIC": "Groups", "GRBEAM": "Groups", "GRTRUS": "Groups", "SKEW": "Coordinate systems",
+                "GRSH3N": "Groups", "GRSHEL": "Groups", "GRQUAD": "Groups", "GRBRIC": "Groups", "GRBEAM": "Groups", "GRTRUS": "Groups", "SKEW": "Coordinate systems",
                 "PLOAD": "Loads", "CLOAD": "Loads", "INIVEL": "Initial conditions"}.get(root, "Other cards")
 
     def card(self, card_id: str) -> Card:
@@ -150,7 +257,7 @@ class DeckResource:
         except KeyError:
             raise PrepError("card_not_found", "카드를 찾을 수 없습니다.", {"card_id": card_id}) from None
 
-    def _schema(self, card: Card) -> list[Field]:
+    def _schema(self, card: Card, *, strict=False) -> list[Field]:
         key = card.keyword.upper().split("/")
         data = card.data
         fields: list[Field] = []
@@ -204,6 +311,8 @@ class DeckResource:
         elif len(key) > 2 and key[1] == "PROP" and key[2] in ("TRUSS", "TYPE2") and len(data) >= 2:
             fields = [Field("area", "Truss area", "float", data[1], 0, 20, 0, strict_minimum=True),
                       Field("initial_gap", "Initial truss gap", "float", data[1], 20, 40, 0, blank_default=0.)]
+        if strict:
+            return fields
         valid = []
         for field in fields:
             try:
@@ -212,6 +321,23 @@ class DeckResource:
             except (ValueError, IndexError):
                 continue
         return valid
+
+    def validate_elastic_slots(self, card_id):
+        """Require valid stored and effective values for every elastic slot."""
+        card = self.card(card_id)
+        fields = self._schema(card, strict=True)
+        if len(fields) != 3:
+            raise PrepError("invalid_target_card", "The material card needs complete density, modulus and Poisson ratio rows.")
+        patches = self._patches.get(card_id, {})
+        for field in fields:
+            try:
+                stored = self._read_field(field)
+                self._validated_value(field, stored)
+                if field.name in patches:
+                    self._validated_value(field, patches[field.name])
+            except (ValueError, IndexError, PrepError):
+                raise PrepError("invalid_target_card", "An existing elastic material slot is invalid.",
+                                {"card_id": card_id, "field": field.name}) from None
 
     def _read_field(self, field: Field) -> object:
         text = self.lines[field.line].rstrip("\r\n")[field.start:field.stop].strip()
@@ -303,9 +429,9 @@ class DeckResource:
         return result
 
     def snapshot(self) -> dict:
-        return {"state_version": 4, "patches": {key: dict(value) for key, value in self._patches.items()},
+        return {"state_version": 5, "patches": {key: dict(value) for key, value in self._patches.items()},
                 "created": [dict(item) for item in self._created], "deleted": sorted(self._deleted),
-                "replaced": dict(self._replaced),
+                "replaced": dict(self._replaced), "retained_comments": dict(self._retained_comments),
                 "node_positions": {key: list(value) for key, value in self._node_positions.items()}}
 
     def _position_rows(self, positions):
@@ -358,30 +484,47 @@ class DeckResource:
         """Validate a candidate before replacing live state; legacy patch dictionaries still read."""
         if not isinstance(state, dict):
             raise PrepError("invalid_project", "편집 패치 형식이 잘못됐습니다.")
+        if "state_version" in state and type(state["state_version"]) is not int:
+            raise PrepError("invalid_project", "Unsupported structural deck state.")
+        original_version = state.get("state_version", 1)
         if "state_version" not in state:
             state = {"state_version": 2, "patches": state, "created": [], "deleted": []}
         if state.get("state_version") == 2 and set(state) == {"state_version", "patches", "created", "deleted"}:
             state = {**state, "state_version": 3, "replaced": {}}
         if state.get("state_version") == 3 and set(state) == {"state_version", "patches", "created", "deleted", "replaced"}:
             state = {**state, "state_version": 4, "node_positions": {}}
-        if (type(state.get("state_version")) is not int or state["state_version"] != 4
-                or set(state) != {"state_version", "patches", "created", "deleted", "replaced", "node_positions"}
+        fields_v4 = {"state_version", "patches", "created", "deleted", "replaced", "node_positions"}
+        if state.get("state_version") == 4 and set(state) == fields_v4:
+            state = {**state, "state_version": 5, "retained_comments": {}}
+        if (type(state.get("state_version")) is not int or state["state_version"] != 5
+                or set(state) != fields_v4 | {"retained_comments"}
                 or not isinstance(state["patches"], dict) or not isinstance(state["created"], list)
                 or not isinstance(state["deleted"], list) or not isinstance(state["replaced"], dict)
-                or not isinstance(state["node_positions"], dict)):
+                or not isinstance(state["node_positions"], dict) or not isinstance(state["retained_comments"], dict)):
             raise PrepError("invalid_project", "Unsupported structural deck state.")
         source_ids = {card.id for card in self._source_cards}
         created, used = [], set(source_ids)
+        allowed_created_keys = ({"id", "text"}, {"id", "comments"}) if original_version >= 5 else ({"id", "text"},)
         for item in state["created"]:
-            if not isinstance(item, dict) or set(item) != {"id", "text"} or not all(isinstance(value, str) for value in item.values()):
+            if (not isinstance(item, dict) or set(item) not in allowed_created_keys
+                    or not all(isinstance(value, str) for value in item.values())):
                 raise PrepError("invalid_project", "Invalid created card block.")
             try:
                 UUID(item["id"])
-                item["text"].encode("latin1")
+                if "text" in item:
+                    item["text"].encode("latin1")
             except (ValueError, UnicodeError):
                 raise PrepError("invalid_project", "Invalid created card identity or encoding.") from None
+            if item["id"] in used:
+                raise PrepError("invalid_project", "Duplicate created card identity.")
+            if "comments" in item:
+                if not item["comments"] or not _valid_retained_comments(item["comments"]):
+                    raise PrepError("invalid_project", "Invalid retained comments for a deleted created card.")
+                created.append(dict(item))
+                used.add(item["id"])
+                continue
             lines = item["text"].splitlines()
-            if (item["id"] in used or not lines or not lines[0].startswith("/")
+            if (not lines or not lines[0].startswith("/")
                     or len([line for line in lines if line.startswith("/")]) != 1
                     or lines[0].upper().strip() in ("/BEGIN", "/END")
                     or any(re.match(r"^\s*#(?:include|enddata)\b", line, re.I) for line in lines)
@@ -393,6 +536,9 @@ class DeckResource:
                 or len(state["deleted"]) != len(set(state["deleted"]))):
             raise PrepError("invalid_project", "Invalid deleted card identities.")
         deleted = set(state["deleted"])
+        retained_comments = state["retained_comments"]
+        if any(card_id not in deleted or not _valid_retained_comments(text) for card_id, text in retained_comments.items()):
+            raise PrepError("invalid_project", "Invalid retained comments for a deleted source card.")
         for card in self._source_cards:
             if card.id in deleted:
                 text = "".join(self._source_lines[card.start:card.stop])
@@ -407,9 +553,13 @@ class DeckResource:
             replaced[card_id] = text
         candidate = copy(self)
         candidate._created, candidate._deleted, candidate._patches, candidate._replaced = created, deleted, {}, replaced
+        candidate._retained_comments = dict(retained_comments)
         candidate._state_token_cache = None
-        if (created != self._created or deleted != self._deleted or replaced != self._replaced
-                or state["node_positions"] != self._node_positions):
+        structural_changed = (created != self._created or deleted != self._deleted or replaced != self._replaced
+                              or state["node_positions"] != self._node_positions)
+        if structural_changed:
+            candidate._structure_token_cache = None
+        if structural_changed or retained_comments != self._retained_comments:
             candidate._rebuild_layout()
         positions = candidate._position_rows(state["node_positions"])
         candidate.lines = list(candidate.lines)
@@ -420,6 +570,7 @@ class DeckResource:
             if not isinstance(values, dict):
                 raise PrepError("invalid_project", "필드 패치 형식이 잘못됐습니다.")
             candidate._patches = candidate.fields_state(card_id, values, _restore_default_zero=True)["patches"]
+        candidate._restored_state_version = original_version
         self.__dict__.update(candidate.__dict__)
 
     def inserted_states(self, texts, *, card_ids=None):
@@ -440,13 +591,19 @@ class DeckResource:
     def deleted_state(self, card_id):
         card = self.card(card_id)
         state = self.snapshot()
+        comments = self._comment_text(self.lines[card.start + 1:card.stop])
         if card.keyword.upper() == "/NODE":
             identifiers = {str(int(self.lines[row][:10])) for row in card.data}
             state["node_positions"] = {key: value for key, value in state["node_positions"].items() if key not in identifiers}
-        if any(item["id"] == card_id for item in state["created"]):
-            state["created"] = [item for item in state["created"] if item["id"] != card_id]
+        created_index = next((index for index, item in enumerate(state["created"]) if item["id"] == card_id), None)
+        if created_index is not None:
+            if comments:
+                state["created"][created_index] = {"id": card_id, "comments": comments}
+            else:
+                del state["created"][created_index]
         else:
             state["deleted"].append(card_id)
+            state["retained_comments"][card_id] = comments
         state["patches"].pop(card_id, None)
         state["replaced"].pop(card_id, None)
         candidate = copy(self)
@@ -490,6 +647,14 @@ class DeckResource:
             self._state_token_cache = hashlib.sha256(self._raw_digest + json.dumps(self.snapshot(), sort_keys=True).encode()).hexdigest()
         return self._state_token_cache
 
+    def structure_token(self) -> str:
+        if self._structure_token_cache is None:
+            structure = {"created": self._created, "deleted": sorted(self._deleted),
+                         "replaced": self._replaced, "node_positions": self._node_positions}
+            self._structure_token_cache = hashlib.sha256(
+                self._raw_digest + json.dumps(structure, sort_keys=True).encode()).hexdigest()
+        return self._structure_token_cache
+
     def render(self) -> bytes:
         if not self._patches and not self._created and not self._deleted and not self._replaced and not self._node_positions:
             return self.raw
@@ -512,25 +677,16 @@ class DeckResource:
                  "writable": bool(self._schema(c)), "units": self.unit_context(c)} for c in self.cards]
 
     def includes(self) -> list[dict]:
-        references = []
-        for index, line in enumerate(self.lines[:self.active_stop]):
-            match = re.match(r"^\s*#include\b(.*)$", line, re.I)
-            if not match:
-                continue
-            value = match.group(1).strip()
-            if not value:
-                cursor = index + 1
-                while cursor < self.active_stop and (not self.lines[cursor].strip() or self.lines[cursor].lstrip().startswith("#")):
-                    cursor += 1
-                value = self.lines[cursor].strip() if cursor < self.active_stop else ""
-            references.append({"path": value.strip('"\''), "line": index + 1})
-        return references
+        return [{"path": item.path, "line": item.header_row + 1} for item in self.include_directives]
 
     def mesh_projection(self) -> dict:
         # Sparse coordinate edits retain native node IDs and original raw bytes.
         nodes: dict[int, list[float]] = {}
         cells = []
         diagnostics = []
+        part_element_kinds: dict[int, set[str]] = {}
+        shapes = {"SHELL": ("quad", 4), "QUAD": ("quad", 4), "SH3N": ("triangle", 3), "BRICK": ("hexahedron", 8),
+                  "TETRA4": ("tetra", 4), "TETRA10": ("tetra10", 10), "BEAM": ("line", 2), "TRUSS": ("line", 2)}
         for card in self.cards:
             key = card.keyword.upper().split("/")
             if key[1] == "NODE":
@@ -546,33 +702,70 @@ class DeckResource:
                             nodes[identifier] = xyz
                     except ValueError:
                         diagnostics.append({"severity": "warning", "code": "node_display_parse", "message": "일부 절점 행을 표시하지 못했습니다.", "line": index + 1})
-            elif key[1] == "TETRA10":
+                continue
+            formulation = ELEMENT_ALIASES.get(key[1], key[1])
+            if formulation not in shapes or not card.data:
+                continue
+            kind, count = shapes[formulation]
+            token = key[2].strip() if len(key) > 2 else ""
+            part = int(token) if token.isdecimal() else None
+            if part is not None:
+                # These formulations need distinct property checks despite
+                # sharing their viewport shape with other elements.
+                part_kind = formulation if formulation in ("QUAD", "BEAM", "TRUSS") else kind
+                part_element_kinds.setdefault(part, set()).add(part_kind)
+            if formulation == "TETRA10":
                 from .tetra10 import records
-                part = int(key[2]) if len(key) > 2 and key[2].isdigit() else None
-                try:
-                    parsed = records(self.lines, card.data)
-                except PrepError as exc:
-                    diagnostics.append({"severity": "warning", "code": "element_display_parse",
-                                        "message": str(exc), "line": card.start + 1})
-                    continue
-                cells.extend({"id": identifier, "type": "tetra10", "formulation": "TETRA10",
-                              "nodes": list(connectivity), "part_id": part,
-                              "card_id": card.id, "resource_id": self.id}
-                             for identifier, connectivity, _, _ in parsed)
-            elif key[1] in ("SHELL", "SH3N", "BRICK", "TETRA4", "TETRA", "BEAM", "TRUSS"):
-                kind, count = {"SHELL": ("quad", 4), "SH3N": ("triangle", 3), "BRICK": ("hexahedron", 8),
-                               "TETRA4": ("tetra", 4), "TETRA": ("tetra", 4), "BEAM": ("line", 2), "TRUSS": ("line", 2)}[key[1]]
-                part = int(key[2]) if len(key) > 2 and key[2].isdigit() else None
+                offset = 0
+                while offset < len(card.data):
+                    index = card.data[offset]
+                    line = self.lines[index]
+                    offset += 1
+                    if line[10:].strip():
+                        diagnostics.append({"severity": "warning", "code": "element_display_parse",
+                                            "message": "TETRA10 connectivity row has no element ID.",
+                                            "line": index + 1, "part_id": part, "card_id": card.id, "resource_id": self.id})
+                        continue
+                    pair = (index,)
+                    if offset < len(card.data) and self.lines[card.data[offset]][10:].strip():
+                        pair += (card.data[offset],)
+                        offset += 1
+                    try:
+                        (identifier, connectivity, _, _), = records(self.lines, pair)
+                        cells.append({"id": identifier, "type": kind, "formulation": formulation,
+                                      "nodes": list(connectivity), "part_id": part,
+                                      "card_id": card.id, "resource_id": self.id})
+                    except PrepError as exc:
+                        diagnostics.append({"severity": "warning", "code": "element_display_parse",
+                                            "message": str(exc), "line": index + 1, "part_id": part,
+                                            "card_id": card.id, "resource_id": self.id})
+                        token = line[:10].strip()
+                        if re.fullmatch(r"[+-]?\d+", token) and (identifier := int(token)) > 0:
+                            cells.append({"id": identifier, "type": kind, "formulation": formulation, "nodes": [],
+                                          "part_id": part, "card_id": card.id, "resource_id": self.id, "parse_error": True})
+            else:
                 for index in card.data:
                     line = self.lines[index].rstrip("\r\n")
+                    identifier = 0
                     try:
-                        values = [int(line[p:p + 10]) for p in range(0, (count + 1) * 10, 10)]
-                        cells.append({"id": values[0], "type": kind, "formulation": key[1], "nodes": values[1:], "part_id": part,
+                        field = line[:10]
+                        if "_" in field:
+                            raise ValueError("Element ID must be a positive integer.")
+                        identifier = int(field)
+                        if identifier <= 0:
+                            raise ValueError("Element ID must be a positive integer.")
+                        connectivity = [int(line[p:p + 10]) for p in range(10, (count + 1) * 10, 10)]
+                        cells.append({"id": identifier, "type": kind, "formulation": key[1], "nodes": connectivity, "part_id": part,
                                       "card_id": card.id, "resource_id": self.id})
                     except ValueError:
-                        diagnostics.append({"severity": "warning", "code": "element_display_parse", "message": "일부 요소 행을 표시하지 못했습니다.", "line": index + 1})
+                        diagnostics.append({"severity": "warning", "code": "element_display_parse",
+                                            "message": "Invalid element connectivity." if identifier > 0 else "Invalid or missing element ID.",
+                                            "line": index + 1, "part_id": part, "card_id": card.id, "resource_id": self.id})
+                        if identifier > 0:
+                            cells.append({"id": identifier, "type": kind, "formulation": key[1], "nodes": [],
+                                          "part_id": part, "card_id": card.id, "resource_id": self.id, "parse_error": True})
         identifiers = sorted(nodes)
         # An element resource may refer to nodes in another INCLUDE resource.
         # Validate connectivity only after the document has assembled all resources.
         return {"points": [nodes[i] for i in identifiers], "node_ids": identifiers, "cells": cells,
-                "diagnostics": diagnostics}
+                "diagnostics": diagnostics, "part_element_kinds": part_element_kinds}
