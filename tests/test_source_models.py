@@ -1082,6 +1082,124 @@ def test_archive_preserves_root_operand_case_miss(tmp_path, monkeypatch, sibling
     assert error.value.code == "invalid_project"
 
 
+@pytest.mark.parametrize("root_operand", ("qualified", "qualified-with-sibling", "starter"))
+def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_operand):
+    starter = model(tmp_path / "source")
+    source = starter.parent
+    (source / "a").mkdir()
+    (source / "a/mesh.inc").write_bytes(b"# sibling mesh\n")
+    aliases = {"a/Mesh.inc": "mesh.inc"}
+    operands = ["mesh.inc"]
+    bindings = {starter.name: ["mesh.inc"]}
+    paths = {starter.name, "mesh.inc", "a/mesh.inc"}
+    if root_operand == "starter":
+        operands.extend(("a/mesh.inc", "a/Mesh.inc"))
+        bindings[starter.name].extend(("a/mesh.inc", "mesh.inc"))
+    else:
+        (source / "a/first.inc").write_bytes(b"#include MESH.INC\n")
+        (source / "b").mkdir()
+        (source / "b/second.inc").write_bytes(b"#include a/Mesh.inc\n")
+        paths.update(("a/first.inc", "b/second.inc"))
+        operands.extend(("a/first.inc", "b/second.inc"))
+        bindings[starter.name].extend(("a/first.inc", "b/second.inc"))
+        aliases["a/MESH.INC"] = "a/mesh.inc"
+        bindings["a/first.inc"] = ["a/mesh.inc"]
+        bindings["b/second.inc"] = ["mesh.inc"]
+        if root_operand == "qualified-with-sibling":
+            (source / "b/a").mkdir()
+            (source / "b/a/mesh.inc").write_bytes(b"# qualified sibling mesh\n")
+            paths.add("b/a/mesh.inc")
+            bindings["b/second.inc"] = ["b/a/mesh.inc"]
+    include_lines = "".join(f"#include {operand}\n" for operand in operands).encode()
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n", include_lines))
+
+    lookup_name = includes.include_lookup(paths | aliases.keys())
+    disk_lookup = includes.disk_include_lookup
+
+    def case_sensitive_tree(base, **kwargs):
+        if base != source:
+            return disk_lookup(base, **kwargs)
+
+        def lookup(path):
+            name = lookup_name(path)
+            return aliases.get(name, name)
+
+        return lookup
+
+    with monkeypatch.context() as filesystem:
+        filesystem.setattr(includes, "disk_include_lookup", case_sensitive_tree)
+        filesystem.setattr(prep_session, "disk_include_lookup", case_sensitive_tree)
+        session = PrepSession()
+        session.open_rad(model(tmp_path / "host"))
+        plan = session.plan_import_source(starter)
+        session.import_source(plan["plan_id"])
+        assert not session.diagnostics()
+        project = tmp_path / "root-operand-alias.caeprep"
+        session.save_project(project)
+
+    reopened = PrepSession()
+    reopened.open_project(project)
+    assert not reopened.diagnostics()
+    archived, = reopened.source_models()
+    assert archived["include_sibling_aliases"] == aliases
+    mapped_ids = {item["original_path"]: item["resource_id"] for item in archived["files"]}
+    assert mapped_ids.keys() == paths
+    assert {key: target for key, target in reopened._include_bindings.items() if key[0] in mapped_ids.values()} == {
+        (mapped_ids[owner], ordinal): mapped_ids[target]
+        for owner, targets in bindings.items()
+        for ordinal, target in enumerate(targets)
+    }
+
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    recorded, = manifest["source_models"]
+    wrong_targets = {"a/MESH.INC": "mesh.inc", "a/Mesh.inc": bindings.get("b/second.inc", ["mesh.inc"])[0]}
+    if wrong_targets["a/Mesh.inc"] == "mesh.inc":
+        wrong_targets["a/Mesh.inc"] = "a/mesh.inc"
+    for index, path in enumerate(aliases):
+        removed = {name: target for name, target in aliases.items() if name != path}
+        for action, changed in (("removed", removed), ("retargeted", aliases | {path: wrong_targets[path]})):
+            if changed:
+                recorded["include_sibling_aliases"] = changed
+            else:
+                recorded.pop("include_sibling_aliases")
+            members["manifest.json"] = json.dumps(manifest).encode()
+            altered = tmp_path / f"alias-{index}-{action}.caeprep"
+            with zipfile.ZipFile(altered, "w") as saved:
+                for name, data in members.items():
+                    saved.writestr(name, data)
+            with pytest.raises(PrepError) as error:
+                PrepSession().open_project(altered)
+            assert error.value.code == "invalid_project", (path, action)
+
+
+def test_archive_omits_multiple_case_spellings_of_the_same_file(tmp_path):
+    starter = model(tmp_path / "source")
+    (starter.parent / "a").mkdir()
+    (starter.parent / "a/first.inc").write_bytes(b"#include MESH.INC\n#include Mesh.inc\n")
+    (starter.parent / "a/mesh.inc").write_bytes(b"# sibling mesh\n")
+    starter.write_bytes(starter.read_bytes().replace(
+        b"#include mesh.inc\n", b"#include a/first.inc\n#include mesh.inc\n#include MESH.INC\n#include Mesh.inc\n"))
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    plan = session.plan_import_source(starter)
+    assert "include_sibling_aliases" not in plan["source"]
+    session.import_source(plan["plan_id"])
+    project = tmp_path / "ordinary-case-spellings.caeprep"
+    session.save_project(project)
+
+    reopened = PrepSession()
+    reopened.open_project(project)
+    assert not reopened.diagnostics()
+    archived, = reopened.source_models()
+    assert "include_sibling_aliases" not in archived
+    mapped_ids = {item["original_path"]: item["resource_id"] for item in archived["files"]}
+    assert [reopened._include_bindings[mapped_ids["a/first.inc"], ordinal] for ordinal in (0, 1)] == [
+        mapped_ids["a/mesh.inc"], mapped_ids["a/mesh.inc"],
+    ]
+
+
 @pytest.mark.parametrize("ungrounded", (False, True), ids=("observed", "ungrounded"))
 def test_archive_replays_legacy_case_insensitive_self_alias(tmp_path, ungrounded):
     starter = model(tmp_path / "source")
