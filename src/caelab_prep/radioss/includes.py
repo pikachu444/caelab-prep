@@ -158,13 +158,17 @@ def _sibling_evidence(inventory, load, lookup, scope="", *, path_name=None):
     """Find alternate disk paths absent from the collected inventory."""
     files, directories = _archived_path_types(inventory, exact=True)
     siblings, raw_aliases = set(), {}
+    observed_targets = defaultdict(set)
     for owner in inventory:
         directory = PurePosixPath(owner).parent
         for directive in load(owner).include_directives:
             _, root_path, sibling_path = _include_paths(directory, directive.path, scope)
+            if root_path == sibling_path:
+                continue
+            target = lookup(sibling_path)
+            observed_targets[sibling_path.casefold()].add(target)
             candidate = sibling_path if path_name is None else path_name(sibling_path)
-            if root_path != sibling_path and candidate is not None and _legal_phantom(candidate, files, directories):
-                target = lookup(sibling_path)
+            if candidate is not None and _legal_phantom(candidate, files, directories):
                 root_target = lookup(root_path)
                 if target is not None and root_target in inventory and target != root_target:
                     if target in inventory:
@@ -175,9 +179,8 @@ def _sibling_evidence(inventory, load, lookup, scope="", *, path_name=None):
     required_aliases, optional_self_aliases = {}, {}
     for path, target in raw_aliases.items():
         folded = path.casefold()
-        # Removing the alias leaves a unique case-folded match only when
-        # its collected target is the sole other spelling in the inventory.
-        if target.casefold() == folded and folded_counts[folded] == 2:
+        # The fallback must preserve every observed spelling, including misses.
+        if target.casefold() == folded and folded_counts[folded] == 2 and len(observed_targets[folded]) == 1:
             optional_self_aliases[path] = target
         else:
             required_aliases[path] = target

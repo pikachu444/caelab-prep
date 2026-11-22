@@ -933,8 +933,9 @@ def test_archive_replays_distinct_case_sensitive_sibling_aliases(tmp_path, monke
     assert error.value.code == "invalid_project"
 
 
-@pytest.mark.parametrize("direct_sibling", (True, False), ids=("already-collected", "selected-by-alias"))
-def test_archive_keeps_self_alias_when_case_variants_collide(tmp_path, monkeypatch, direct_sibling):
+@pytest.mark.parametrize(("direct_sibling", "second_alias"), ((True, True), (False, True), (False, False)),
+                         ids=("already-collected", "selected-by-alias", "missing-case-variant"))
+def test_archive_keeps_self_alias_when_case_variants_collide(tmp_path, monkeypatch, direct_sibling, second_alias):
     starter = model(tmp_path / "source")
     source = starter.parent
     (source / "a").mkdir()
@@ -948,8 +949,12 @@ def test_archive_keeps_self_alias_when_case_variants_collide(tmp_path, monkeypat
     starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n", includes_text))
 
     paths = {starter.name, "mesh.inc", "a/first.inc", "a/mesh.inc", "b/y.inc"}
-    aliases = {"a/MESH.INC": "a/mesh.inc", "a/Mesh.inc": "b/y.inc"}
+    aliases = {"a/MESH.INC": "a/mesh.inc"}
+    if second_alias:
+        aliases["a/Mesh.inc"] = "b/y.inc"
     lookup_name = includes.include_lookup(paths | aliases.keys())
+    if not second_alias:
+        assert lookup_name("a/Mesh.inc") is None
     disk_lookup = includes.disk_include_lookup
 
     def case_sensitive_tree(base, **kwargs):
@@ -978,7 +983,14 @@ def test_archive_keeps_self_alias_when_case_variants_collide(tmp_path, monkeypat
     assert archived["include_sibling_aliases"] == aliases
     assert {item["original_path"] for item in archived["files"]} == paths
     assert reopened.describe()["element_count"] == 2
-    if not direct_sibling:
+    assert not reopened.diagnostics()
+    if not second_alias:
+        mapped_ids = {item["original_path"]: item["resource_id"] for item in archived["files"]}
+        owner = mapped_ids["a/first.inc"]
+        assert [reopened._include_bindings[owner, ordinal] for ordinal in (0, 1)] == [
+            mapped_ids["a/mesh.inc"], mapped_ids["mesh.inc"],
+        ]
+    if not direct_sibling and second_alias:
         # With no direct Starter include, this alias is the only route to a/mesh.inc.
         with zipfile.ZipFile(project) as saved:
             members = {name: saved.read(name) for name in saved.namelist()}
