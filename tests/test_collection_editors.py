@@ -948,6 +948,100 @@ def test_reference_apply_refreshes_values_view_from_dict_to_ordered_dict():
     assert list(submitted[0][0]["ref"]) == [[101]]
 
 
+@pytest.mark.parametrize("masked", (False, True), ids=("ndarray", "masked-array"))
+def test_reference_apply_rejects_array_subclass_equality_error(masked):
+    np = pytest.importorskip("numpy")
+    base = np.ma.MaskedArray if masked else np.ndarray
+
+    class OwnedArray(base):
+        def __eq__(self, other):
+            if self.owner != other.owner:
+                raise ValueError("array owners differ")
+            return super().__eq__(other)
+
+    make_array = np.ma.array if masked else np.array
+    choice, selected = (make_array([101]).view(OwnedArray) for _ in range(2))
+    choice.owner, selected.owner = "A", "B"
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    panel.apply_button.click()
+    assert not submitted and "no longer available" in panel.error.text()
+
+
+def test_reference_apply_matches_mixed_sets_by_element_hash():
+    class Member:
+        def __init__(self, number):
+            self.number = number
+
+        def __hash__(self):
+            return hash(self.number)
+
+        def __eq__(self, other):
+            return self.number == other.number
+
+    choice, selected = ({1, Member(2)} for _ in range(2))
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    assert panel.editor.editors["members"].list.count() == 1
+    panel.apply_button.click()
+    assert submitted == [(choice,)]
+
+
+@pytest.mark.parametrize("zero_on_choice", (False, True), ids=("selected-zero", "choice-zero"))
+def test_reference_apply_matches_counter_array_counts_and_missing_zeros(zero_on_choice):
+    np = pytest.importorskip("numpy")
+    choice = Counter(a=np.array([1, 2]))
+    selected = Counter(a=np.array([1, 2]))
+    (choice if zero_on_choice else selected)["missing"] = 0
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    editor = panel.editor.editors["members"]
+    assert editor.list.count() == 1
+    panel.apply_button.click()
+    restored, = submitted[0]
+    assert isinstance(restored, Counter) and restored["a"].tolist() == [1, 2]
+    editor.set_raw_value((Counter(a=np.array([1, 3])),))
+    panel.apply_button.click()
+    assert len(submitted) == 1 and "no longer available" in panel.error.text()
+
+
+def test_reference_apply_ignores_backing_order_for_dict_items():
+    choice = dict.items(OrderedDict(a=1, b=2))
+    selected = dict.items(OrderedDict(b=2, a=1))
+    panel, submitted = _reference_apply_panel((
+        PropertySpec("members", "Members", (selected,), kind="references", choices=(choice,)),
+    ))
+    assert panel.editor.editors["members"].list.count() == 1
+    panel.apply_button.click()
+    assert submitted == [(choice,)]
+
+
+def test_reference_editor_matches_nested_values_views_in_hashed_sets():
+    view = {"id": [101]}.values()
+    choice = {(frozenset((view,)),)}
+    editor = ReferenceListEdit((choice,), choices=(choice,))
+    editor.set_raw_value(editor.raw_value())
+    assert editor.list.count() == 1
+    values, = editor.value()
+    (views,), = values
+    restored, = views
+    assert list(restored) == [[101]]
+
+
+def test_reference_editor_matches_512_tuple_set_items_quickly():
+    choice = {("shell", index) for index in range(512)}
+    selected = {("shell", index) for index in reversed(range(512))}
+    start = perf_counter()
+    editor = ReferenceListEdit((selected,), choices=(choice,))
+    result = editor.value()
+    elapsed = perf_counter() - start
+    assert result == (choice,) and editor.list.count() == 1
+    assert elapsed < .05, f"Opening and validating the 512-element set took {elapsed * 1000:.1f} ms"
+
+
 def test_reference_apply_preserves_array_subclass_equality():
     class OwnedArray(array):
         def __eq__(self, other):

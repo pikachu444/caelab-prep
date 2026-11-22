@@ -161,7 +161,8 @@ def _uncollected_siblings(inventory, load, lookup, scope=""):
             candidate = sibling_path.casefold()
             if root_path != sibling_path and _legal_phantom(candidate, files, directories):
                 target = lookup(sibling_path)
-                if target is not None and target not in inventory and lookup(root_path) in inventory:
+                root_target = lookup(root_path)
+                if target is not None and root_target in inventory and target != root_target:
                     siblings.add(candidate)
     return siblings
 

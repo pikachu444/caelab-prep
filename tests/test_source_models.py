@@ -754,7 +754,9 @@ def test_archive_rejects_binding_that_contradicts_native_resolution(tmp_path):
     assert error.value.code == "invalid_project"
 
 
-def test_archive_records_uncollected_sibling_with_in_tree_symlink(tmp_path, monkeypatch):
+@pytest.mark.parametrize("label_target, link_mesh", (("unused.inc", False), ("other.inc", True), ("label.inc", True)),
+                         ids=("uncollected-target", "collected-target", "same-as-root"))
+def test_archive_records_uncollected_sibling_with_in_tree_symlink(tmp_path, monkeypatch, label_target, link_mesh):
     starter = model(tmp_path / "source")
     starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n",
                          b"#include a/chooser.inc\n#include other.inc\n"))
@@ -764,28 +766,38 @@ def test_archive_records_uncollected_sibling_with_in_tree_symlink(tmp_path, monk
     (sibling / "mesh.inc").write_text("# uncollected sibling\n")
     for name in ("label.inc", "other.inc", "unused.inc"):
         starter.with_name(name).write_text("# " + name + "\n")
-    alias = sibling / "label.inc"
-    alias.write_bytes(starter.with_name("unused.inc").read_bytes())
+    aliases = {sibling / "label.inc": starter.with_name(label_target)}
+    if link_mesh:
+        aliases[sibling / "mesh.inc"] = starter.with_name("unused.inc")
+    for alias, target in aliases.items():
+        alias.write_bytes(target.read_bytes())
     resolve = Path.resolve
 
     def resolve_alias(path, *args, **kwargs):
-        return resolve(starter.with_name("unused.inc") if path == alias else path, *args, **kwargs)
+        return resolve(aliases.get(path, path), *args, **kwargs)
 
+    same_target = label_target == "label.inc"
+    siblings = ["a/mesh.inc"] if same_target else ["a/label.inc", "a/mesh.inc"]
     with monkeypatch.context() as simulated_link:
         simulated_link.setattr(Path, "resolve", resolve_alias)
         session = PrepSession()
         session.open_rad(model(tmp_path / "host"))
         plan = session.plan_import_source(starter)
-        assert plan["source"]["uncollected_include_siblings"] == ["a/label.inc", "a/mesh.inc"]
+        assert plan["source"]["uncollected_include_siblings"] == siblings
         session.import_source(plan["plan_id"])
         archive = tmp_path / "linked.caeprep"
         session.save_project(archive)
+    with zipfile.ZipFile(archive) as saved:
+        source, = json.loads(saved.read("manifest.json"))["source_models"]
+        assert source["uncollected_include_siblings"] == siblings
+        other = next(entry for entry in source["files"] if entry["original_path"] == "other.inc")
+        member = f'sources/{source["id"]}/{other["original_resource_id"]}.rad'
+        assert saved.read(member) == starter.with_name("other.inc").read_bytes()
     reopened = PrepSession()
     reopened.open_project(archive)
     source, = reopened.source_models()
-    assert [entry["original_path"] for entry in source["files"]] == [
-        starter.name, "a/chooser.inc", "other.inc", "mesh.inc", "label.inc",
-    ]
+    tail = ["label.inc", "other.inc", "mesh.inc"] if same_target else ["other.inc", "mesh.inc", "label.inc"]
+    assert [entry["original_path"] for entry in source["files"]] == [starter.name, "a/chooser.inc", *tail]
 
 
 def test_current_import_reopens_exact_recorded_chooser_bindings_in_one_walk(tmp_path, monkeypatch):

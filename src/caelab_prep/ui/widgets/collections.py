@@ -6,7 +6,7 @@ validated value and retain ``raw_value()`` when an incomplete draft must survive
 from __future__ import annotations
 
 from array import array
-from collections import OrderedDict, deque
+from collections import Counter, OrderedDict, defaultdict, deque
 from collections.abc import Mapping, MutableMapping
 from copy import copy
 from dataclasses import fields, is_dataclass
@@ -646,9 +646,10 @@ def _bucket_key(value):
     if kind is dict or kind is list:
         return _plain_key(value)
     if isinstance(value, Mapping):
+        # Counters use the fallback because an explicit zero can equal a missing key.
         return _plain_key(value)
-    # Arbitrary record classes can compare equal to a structured mapping even
-    # when they provide a hash. Compare those values against all buckets.
+    # Items views can compare equal to unordered sets. Arbitrary records can
+    # compare equal to mappings. Keep both eligible for cross-bucket matching.
     if not _shares_hash_bucket(value):
         return None
     try:
@@ -660,7 +661,8 @@ def _bucket_key(value):
 def _same_dict_values(left, right, compared):
     return (type(left) is type(right) is _DICT_VALUES
             and _view_origin(left) is _view_origin(right)
-            and _equal_mappings(_proxy_target(left.mapping), _proxy_target(right.mapping), compared))
+            and _equal_mappings(_proxy_target(left.mapping), _proxy_target(right.mapping), compared,
+                                mapping_rules=False))
 
 
 def _equality_target(value):
@@ -669,14 +671,16 @@ def _equality_target(value):
     return value
 
 
-_MAPPING_EQUALITY = (dict.__eq__, OrderedDict.__eq__, Mapping.__eq__)
+_MAPPING_EQUALITY = (dict.__eq__, OrderedDict.__eq__, Counter.__eq__, Mapping.__eq__)
 _SEQUENCE_EQUALITY = (list.__eq__, tuple.__eq__, deque.__eq__)
 _SET_EQUALITY = (set.__eq__, frozenset.__eq__)
 
 
-def _equal_mappings(left, right, compared):
+def _equal_mappings(left, right, compared, *, mapping_rules=True):
+    if mapping_rules and isinstance(left, Counter) and isinstance(right, Counter):
+        return all(_safe_equal(left[key], right[key], compared) for key in left.keys() | right.keys())
     if isinstance(left, dict) and isinstance(right, dict):
-        if type(left).__eq__ is type(right).__eq__ is OrderedDict.__eq__:
+        if mapping_rules and type(left).__eq__ is type(right).__eq__ is OrderedDict.__eq__:
             if tuple(OrderedDict.keys(left)) != tuple(OrderedDict.keys(right)):
                 return False
         return dict.__len__(left) == dict.__len__(right) and all(
@@ -686,13 +690,20 @@ def _equal_mappings(left, right, compared):
     return len(left) == len(right) and all(key in right and _safe_equal(left[key], right[key], compared) for key in left)
 
 
-def _equal_sets(left, right, compared):
-    if len(left) != len(right):
-        return False
-    if _HASH_SCALARS.issuperset(map(type, left)) and _HASH_SCALARS.issuperset(map(type, right)):
-        return left == right
-    choices = tuple(right)
-    edges = [tuple(i for i, candidate in enumerate(choices) if _safe_equal(value, candidate, compared))
+def _set_item_bucket(value):
+    # Detached values views compare by origin even though Python hashes them by identity.
+    kind = type(value)
+    if kind is _DICT_VALUES:
+        return (_DICT_VALUES, id(_view_origin(value)))
+    if kind.__eq__ is tuple.__eq__ or kind.__eq__ is frozenset.__eq__:
+        parts = tuple(_set_item_bucket(item) for item in value)
+        if any(isinstance(part, tuple) for part in parts):
+            return (tuple, parts) if kind.__eq__ is tuple.__eq__ else (frozenset, frozenset(parts))
+    return hash(value)
+
+
+def _match_colliding_set_items(left, right, compared):
+    edges = [tuple(i for i, candidate in enumerate(right) if _safe_equal(value, candidate, compared))
              for value in left]
     matched = {}
 
@@ -709,6 +720,30 @@ def _equal_sets(left, right, compared):
     return all(assign(row, set()) for row in sorted(range(len(edges)), key=lambda row: len(edges[row])))
 
 
+def _equal_sets(left, right, compared):
+    if len(left) != len(right):
+        return False
+    if _HASH_SCALARS.issuperset(map(type, left)) and _HASH_SCALARS.issuperset(map(type, right)):
+        return left == right
+    left_by_hash, right_by_hash = defaultdict(list), defaultdict(list)
+    for value in left:
+        left_by_hash[_set_item_bucket(value)].append(value)
+    for value in right:
+        right_by_hash[_set_item_bucket(value)].append(value)
+    if left_by_hash.keys() != right_by_hash.keys():
+        return False
+    for key, left_items in left_by_hash.items():
+        right_items = right_by_hash[key]
+        if len(left_items) != len(right_items):
+            return False
+        if len(left_items) == 1:
+            if not _safe_equal(left_items[0], right_items[0], compared):
+                return False
+        elif not _match_colliding_set_items(left_items, right_items, compared):
+            return False
+    return True
+
+
 def _equal_array_data(left, right, numpy, compared):
     if not left.dtype.hasobject:
         return bool(numpy.array_equal(left, right))
@@ -721,34 +756,27 @@ def _equal_arrays(left, right, numpy, compared):
     kind = type(left)
     if kind is not type(right) or left.shape != right.shape or left.dtype != right.dtype:
         return False
-    if kind is numpy.ndarray:
-        return _equal_array_data(left, right, numpy, compared)
     masked = isinstance(left, numpy.ma.MaskedArray)
+    if not masked and kind.__eq__ in (numpy.ndarray.__eq__, numpy.recarray.__eq__):
+        return _equal_array_data(left, right, numpy, compared)
     if kind is not numpy.ma.MaskedArray:
         try:
             equal = left == right
-        except ValueError:
-            if not masked:
-                return _equal_array_data(left, right, numpy, compared)
-        except RecursionError:
+        except (ValueError, RecursionError):
             return False
+        if isinstance(equal, (bool, numpy.bool_)):
+            matches = bool(equal)
         else:
-            if isinstance(equal, (bool, numpy.bool_)):
-                if not masked or not bool(equal):
-                    return bool(equal)
-            elif not (isinstance(equal, numpy.ndarray) and equal.dtype.kind == "b"
-                      and bool(numpy.ma.filled(equal, True).all())):
-                return False
-            elif not masked:
-                return True
-    if masked:
-        mask = numpy.ma.getmaskarray(left)
-        if not numpy.array_equal(mask, numpy.ma.getmaskarray(right)):
-            return False
-        if mask.dtype.names:
-            return all(_safe_equal(left[name], right[name], compared) for name in mask.dtype.names)
-        return _equal_array_data(numpy.ma.getdata(left)[~mask], numpy.ma.getdata(right)[~mask], numpy, compared)
-    return False
+            matches = (isinstance(equal, numpy.ndarray) and equal.dtype.kind == "b"
+                       and bool(numpy.ma.filled(equal, True).all()))
+        if not masked or not matches:
+            return matches
+    mask = numpy.ma.getmaskarray(left)
+    if not numpy.array_equal(mask, numpy.ma.getmaskarray(right)):
+        return False
+    if mask.dtype.names:
+        return all(_safe_equal(left[name], right[name], compared) for name in mask.dtype.names)
+    return _equal_array_data(numpy.ma.getdata(left)[~mask], numpy.ma.getdata(right)[~mask], numpy, compared)
 
 
 def _safe_equal(left, right, compared=None):
@@ -786,7 +814,8 @@ def _safe_equal(left, right, compared=None):
         if array_value:
             return _equal_arrays(left, right, numpy, compared)
         if items_view:
-            return _equal_mappings(_proxy_target(left.mapping), _proxy_target(right.mapping), compared)
+            return _equal_mappings(_proxy_target(left.mapping), _proxy_target(right.mapping), compared,
+                                   mapping_rules=False)
         if mapping:
             return _equal_mappings(left_target, right_target, compared)
         if unordered:
@@ -807,6 +836,16 @@ def _contains(buckets, item, key):
                    if other is not None for existing in bucket)
     fallback = buckets.get(None)
     return bool(fallback and any(_safe_equal(existing, item) for existing in fallback))
+
+
+def _reference_text(label):
+    try:
+        return str(label)
+    except ValueError:
+        if not isinstance(label, Counter):
+            raise
+        # Counter sorts counts for display, which can fail for array counts.
+        return f"{type(label).__name__}({dict.__repr__(label)})"
 
 
 class ReferenceListEdit(QWidget):
@@ -919,12 +958,12 @@ class ReferenceListEdit(QWidget):
                     selected_row = index in checked_rows
                 label = (self.choice_labels[index] if index < len(self.choice_labels)
                          else getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
-                add_row(ref, str(label), selected_row, True)
+                add_row(ref, _reference_text(label), selected_row, True)
             if checked_rows is None:
                 for key, ref in zip(selected_keys, selected):
                     if not _contains(displayed_buckets, ref, key):
-                        label = str(getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref))
-                        add_row(ref, "Unavailable: " + label, True, False)
+                        label = getattr(ref, "native_scope", None) or getattr(ref, "object_id", ref)
+                        add_row(ref, "Unavailable: " + _reference_text(label), True, False)
                         displayed_buckets.setdefault(key, []).append(ref)
         finally:
             self.list.setUpdatesEnabled(True)
