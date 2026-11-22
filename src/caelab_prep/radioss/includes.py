@@ -73,6 +73,7 @@ def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, se
         expected_bindings = {(owner, load(owner).include_directives[ordinal].header_row): target
                              for (owner, ordinal), target in selected.items()}
         has_disk_evidence = any(value is not None for value in (uncollected_siblings, sibling_aliases, unresolved_paths))
+        inventory_lookup = lookup
         if has_disk_evidence:
             lookup = _include_lookup_with_siblings(archive_inventory, load, lookup, uncollected_siblings or set(),
                                                    sibling_aliases or {}, unresolved_paths or set(), scope, selected)
@@ -84,9 +85,25 @@ def resolve_includes(root, lookup, load, *, scope="", archive_inventory=None, se
             return load(path)
 
         if uncollected_siblings:
-            return _replay_competing_includes(root, lookup, load_collected, scope, selected, recovered, historical,
-                                              archive_inventory, archived_order, expected_bindings,
-                                              uncollected_siblings, load_order)
+            def replay(disk_lookup, competitors):
+                return _walk_recorded_includes(root, disk_lookup, load_collected, scope, selected, recovered,
+                                               historical, archive_inventory, archived_order, expected_bindings,
+                                               competitors)
+
+            matched = replay(lookup, uncollected_siblings)
+            if matched is None:
+                raise PrepError("invalid_project", "Uncollected INCLUDE paths cannot explain the recorded bindings and order.")
+            result, order, deferred = matched
+            for path in uncollected_siblings - deferred:
+                # An immediate choice can still matter if it suppresses an explicit claim.
+                remaining = uncollected_siblings - {path}
+                _, without_path = _include_evidence_lookup(archive_inventory, inventory_lookup, remaining,
+                                                            sibling_aliases or {}, unresolved_paths or set())
+                if replay(without_path, remaining) is not None:
+                    raise PrepError("invalid_project", "An uncollected INCLUDE path has no effect on the recorded walk.")
+            if load_order is not None:
+                load_order[:] = order
+            return result
         result = _walk_includes(root, lookup, load_collected, scope, selected, recovered, historical, load_order=order,
                                 verify_disk=True)
         if result != (archive_inventory, expected_bindings, []) or order != archived_order:
@@ -163,6 +180,7 @@ def _sibling_evidence(inventory, load, lookup, selected, scope="", *, path_name=
     """Capture bound aliases, competing paths, and significant case-variant misses."""
     files, directories = _archived_path_types(inventory, exact=True)
     file_folded_counts = Counter(path.casefold() for path in files)
+    lookup_archived = include_lookup(files)
     alternatives, bound_aliases = {}, set()
     independent_aliases = set()
     observed_misses = set()
@@ -193,11 +211,10 @@ def _sibling_evidence(inventory, load, lookup, selected, scope="", *, path_name=
                 if target == bound_target:
                     alternatives[candidate] = target
                     bound_aliases.add(candidate)
-                    if other_path != target or other_target != target:
+                    if other_target != target or lookup_archived(other_path) != target:
                         independent_aliases.add(candidate)
                 elif other_target == bound_target:
                     alternatives[candidate] = target
-    alternate_folded_counts = Counter(path.casefold() for path in alternatives)
     conflicting_folded = {path.casefold() for path, target in alternatives.items()
                           if target not in files or path.casefold() != target.casefold()}
     siblings = set()
@@ -207,13 +224,11 @@ def _sibling_evidence(inventory, load, lookup, selected, scope="", *, path_name=
         # The fallback must preserve every observed spelling, including misses.
         equivalent_spelling = (target.casefold() == folded and file_folded_counts[folded] == 1
                                and folded not in conflicting_folded and len(observed_targets[folded]) == 1)
-        # With no competing spelling, the other operand can supply the same file.
-        redundant_alternate = (path in bound_aliases and path not in independent_aliases
-                               and file_folded_counts[folded] == 0 and alternate_folded_counts[folded] == 1)
-        if equivalent_spelling or redundant_alternate:
+        if equivalent_spelling:
             optional_aliases[path] = target
         elif path in bound_aliases:
-            required_aliases[path] = target
+            if path in independent_aliases:
+                required_aliases[path] = target
         else:
             siblings.add(path)
     replay_name = include_lookup(files | siblings | required_aliases.keys())
@@ -224,15 +239,42 @@ def _sibling_evidence(inventory, load, lookup, selected, scope="", *, path_name=
 def source_disk_siblings(base, resources, selected):
     """Capture disk evidence while the original source files are available."""
     by_path = {resource.name: resource for resource in resources}
+    lookup = disk_include_lookup(base)
     siblings, required_aliases, _, unresolved = _sibling_evidence(
-        by_path.keys(), by_path.__getitem__, disk_include_lookup(base), selected)
+        by_path.keys(), by_path.__getitem__, lookup, selected)
+    if siblings:
+        root = next(resource.name for resource in resources if not resource.is_include)
+        inventory, order = set(by_path), list(by_path)
+        lookup_archived = include_lookup(inventory)
+        expected_bindings = {(owner, by_path[owner].include_directives[ordinal].header_row): target
+                             for (owner, ordinal), target in selected.items()}
+
+        def load_collected(path):
+            if path not in inventory:
+                raise PrepError("source_changed", "Source INCLUDE resolution changed during import.")
+            return by_path[path]
+
+        deferred, disk_order = set(), []
+        result = _walk_includes(root, lookup, load_collected, "", {}, {}, None, load_order=disk_order,
+                                deferred_paths=deferred)
+        if result != (inventory, expected_bindings, []) or disk_order != order:
+            raise PrepError("source_changed", "Source INCLUDE resolution changed during import.")
+        while True:
+            for path in sorted(siblings - deferred):
+                remaining = siblings - {path}
+                _, without_path = _include_evidence_lookup(inventory, lookup_archived, remaining,
+                                                            required_aliases, unresolved)
+                if _walk_recorded_includes(root, without_path, by_path.__getitem__, "", selected, {}, None,
+                                            inventory, order, expected_bindings, remaining) is not None:
+                    siblings = remaining
+                    break
+            else:
+                break
     return sorted(siblings), dict(sorted(required_aliases.items())), sorted(unresolved)
 
 
-def _include_lookup_with_siblings(inventory, load, lookup, siblings, aliases, unresolved, scope, selected):
-    """Check that the archived disk evidence could coexist with the inventory."""
-    alternate_paths = siblings | aliases.keys()
-    path_name = include_lookup(inventory | alternate_paths)
+def _include_evidence_lookup(inventory, lookup, siblings, aliases, unresolved):
+    path_name = include_lookup(inventory | siblings | aliases.keys())
 
     def disk_lookup(path):
         if path in unresolved:
@@ -242,6 +284,12 @@ def _include_lookup_with_siblings(inventory, load, lookup, siblings, aliases, un
             return lookup(name)
         return aliases.get(name, name)
 
+    return path_name, disk_lookup
+
+
+def _include_lookup_with_siblings(inventory, load, lookup, siblings, aliases, unresolved, scope, selected):
+    """Check that the archived disk evidence could coexist with the inventory."""
+    alternate_paths = siblings | aliases.keys()
     files, directories = _archived_path_types(inventory, exact=True)
     if (siblings & aliases.keys() or unresolved & alternate_paths
             or any(target not in inventory for target in aliases.values())
@@ -249,6 +297,7 @@ def _include_lookup_with_siblings(inventory, load, lookup, siblings, aliases, un
                    or any(parent.as_posix() in alternate_paths for parent in PurePosixPath(path).parents)
                    for path in alternate_paths | unresolved)):
         raise PrepError("invalid_project", "Invalid INCLUDE sibling evidence.")
+    path_name, disk_lookup = _include_evidence_lookup(inventory, lookup, siblings, aliases, unresolved)
     computed_siblings, required_aliases, optional_aliases, computed_unresolved = _sibling_evidence(
         inventory, load, disk_lookup, selected, scope, path_name=path_name)
     if (siblings != computed_siblings or computed_unresolved != unresolved
@@ -412,13 +461,13 @@ def _can_collect_from_disk(root, lookup, load, scope, archive_inventory, histori
     return None
 
 
-def _replay_competing_includes(root, lookup, load, scope, selected, recovered, historical, inventory, archived_order,
-                               expected_bindings, competing_paths, load_order):
+def _walk_recorded_includes(root, lookup, load, scope, selected, recovered, historical, inventory, archived_order,
+                            expected_bindings, competing_paths):
     """Validate path-only evidence against the recorded walk and its wave boundaries."""
     alternatives = [()]
     while alternatives:
         choices = alternatives.pop()
-        order, phases = [], []
+        order, phases, deferred = [], [], set()
 
         def load_in_order(path):
             if len(order) == len(archived_order) or archived_order[len(order)] != path:
@@ -445,24 +494,25 @@ def _replay_competing_includes(root, lookup, load, scope, selected, recovered, h
         try:
             result = _walk_includes(root, lookup, load_in_order, scope, selected, recovered, historical,
                                     load_order=order, verify_disk=True, competing_paths=competing_paths,
-                                    archive_inventory=inventory, choose_ancestor=choose_ancestor)
+                                    archive_inventory=inventory, choose_ancestor=choose_ancestor,
+                                    deferred_competitors=deferred)
         except _DiskOrderMismatch:
             continue
         if result == (inventory, expected_bindings, []) and order == archived_order:
-            if load_order is not None:
-                load_order[:] = order
-            return result
-    raise PrepError("invalid_project", "Uncollected INCLUDE paths cannot explain the recorded bindings and order.")
+            return result, order, deferred
+    return None
 
 
 def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *, load_order=None, deduce_sibling=None,
-                   wave_pairs=None, verify_disk=False, competing_paths=(), archive_inventory=None, choose_ancestor=None):
+                   wave_pairs=None, verify_disk=False, competing_paths=(), archive_inventory=None, choose_ancestor=None,
+                   deferred_paths=None, deferred_competitors=None):
     reached, explicit = set(), set()
     bindings, problems = {}, []
     outgoing = defaultdict(set)
     pending = deque()
     competing_targets = {}
     immediate_candidates = {}
+    deferred_targets = defaultdict(set)
 
     def leads_to(start, owner):
         todo, visited = [start], set()
@@ -555,6 +605,8 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
                         follow(owner, directive, sibling if root_file in chain else root_file, chain)
                     else:
                         pending.append((owner, directive, root_file, sibling, chain, None))
+                        if deferred_paths is not None:
+                            deferred_paths.update((root_path, sibling_path))
                         if wave_pairs is not None:
                             wave_pairs.add((root_file, sibling))
                 else:
@@ -594,6 +646,8 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
                         wave_targets.intersection_update(unambiguous_reached)
                 elif winner in unambiguous_reached:
                     wave_targets.intersection_update(unambiguous_explicit)
+                if deferred_competitors is not None:
+                    deferred_targets[competitor].update(wave_targets)
                 possible.intersection_update(immediate | wave_targets)
                 if not possible:
                     raise _DiskOrderMismatch()
@@ -602,4 +656,7 @@ def _walk_includes(root, lookup, load, scope, selected, recovered, historical, *
             target = recorded_target or (sibling if root_file in unambiguous_reached
                                          and sibling not in unambiguous_explicit else root_file)
             follow(owner, directive, target, chain)
+    if deferred_competitors is not None:
+        deferred_competitors.update(path for path, targets in deferred_targets.items()
+                                    if targets & competing_targets[path])
     return reached, bindings, problems

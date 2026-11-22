@@ -1088,16 +1088,24 @@ def test_archive_preserves_root_operand_case_miss(tmp_path, monkeypatch, sibling
     assert error.value.code == "invalid_project"
 
 
-@pytest.mark.parametrize("root_operand", ("qualified", "qualified-with-sibling", "qualified-reversed",
-                                          "ancestor-competitor", "unreferenced-case-variant", "starter"))
-def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_operand):
+@pytest.mark.parametrize(("root_operand", "reverse", "sibling_name"), (
+    pytest.param("qualified", False, "mesh.inc", id="qualified"),
+    pytest.param("qualified-with-sibling", False, "mesh.inc", id="qualified-with-sibling"),
+    pytest.param("qualified-with-sibling", True, "mesh.inc", id="qualified-reversed"),
+    pytest.param("ancestor-competitor", False, "mesh.inc", id="ancestor-competitor"),
+    pytest.param("ancestor-competitor", True, "mesh.inc", id="ancestor-competitor-reversed"),
+    pytest.param("ancestor-competitor", False, "Mesh.inc", id="ancestor-competitor-mixed-case"),
+    pytest.param("ancestor-competitor", True, "Mesh.inc", id="ancestor-competitor-reversed-mixed-case"),
+    pytest.param("unreferenced-case-variant", False, "mesh.inc", id="unreferenced-case-variant"),
+    pytest.param("starter", False, "mesh.inc", id="starter"),
+))
+def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_operand, reverse, sibling_name):
     starter = model(tmp_path / "source")
     source = starter.parent
     (source / "a").mkdir()
     (source / "a/mesh.inc").write_bytes(b"# sibling mesh\n")
     aliases = {"a/Mesh.inc": "mesh.inc"}
-    has_sibling = root_operand in ("qualified-with-sibling", "qualified-reversed", "ancestor-competitor",
-                                   "unreferenced-case-variant")
+    has_sibling = root_operand in ("qualified-with-sibling", "ancestor-competitor", "unreferenced-case-variant")
     has_case_miss = root_operand == "unreferenced-case-variant"
     operands = ["mesh.inc"]
     bindings = {starter.name: ["mesh.inc"]}
@@ -1110,8 +1118,9 @@ def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_oper
         (source / "b").mkdir()
         (source / "b/second.inc").write_bytes(b"#include a/Mesh.inc\n")
         paths.update(("a/first.inc", "b/second.inc"))
-        owners = ("b/second.inc", "a/first.inc") if root_operand == "qualified-reversed" else (
-            "a/first.inc", "b/second.inc")
+        owners = ("a/first.inc", "b/second.inc")
+        if reverse:
+            owners = owners[::-1]
         operands.extend(owners)
         bindings[starter.name].extend(owners)
         aliases["a/MESH.INC"] = "a/mesh.inc"
@@ -1121,9 +1130,10 @@ def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_oper
         bindings["b/second.inc"] = ["mesh.inc"]
         if has_sibling:
             (source / "b/a").mkdir()
-            (source / "b/a/mesh.inc").write_bytes(b"# qualified sibling mesh\n")
-            paths.add("b/a/mesh.inc")
-            bindings["b/second.inc"] = ["b/a/mesh.inc"]
+            sibling_path = f"b/a/{sibling_name}"
+            (source / sibling_path).write_bytes(b"# qualified sibling mesh\n")
+            paths.add(sibling_path)
+            bindings["b/second.inc"] = [sibling_path]
         if has_case_miss:
             del aliases["a/Mesh.inc"]
     include_lines = "".join(f"#include {operand}\n" for operand in operands).encode()
@@ -1198,14 +1208,17 @@ def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_oper
         reject_change("case-evidence-without-bindings", **{"include_bindings": None})
         return
     if has_sibling:
-        # An unbound competing path contributes its existence, without an unchecked target.
-        injected_targets = ["a/first.inc"] if root_operand == "ancestor-competitor" else sorted(paths)
-        for index, target in enumerate(injected_targets):
+        for index, target in enumerate(sorted(paths)):
             forged = recorded_aliases | {"a/Mesh.inc": target}
             reject_change(f"unbound-alias-injected-{index}", **{sibling_field: None, alias_field: forged})
-        assert baseline[sibling_field] == ["a/Mesh.inc"]
+            reject_change(f"overlapping-path-and-alias-{index}",
+                          **{sibling_field: ["a/Mesh.inc"], alias_field: forged})
         assert recorded_aliases == {"a/MESH.INC": "a/mesh.inc"}
-        if root_operand != "ancestor-competitor":
+        if root_operand == "ancestor-competitor":
+            reject_change("unneeded-ancestor-competitor", **{sibling_field: ["a/Mesh.inc"]})
+            assert sibling_field not in baseline
+        else:
+            assert baseline[sibling_field] == ["a/Mesh.inc"]
             reject_change("missing-competitor", **{sibling_field: None})
         reject_change("wrong-competitor", **{sibling_field: ["a/Other.inc"]})
     else:
@@ -1217,6 +1230,59 @@ def test_archive_preserves_root_operand_aliases(tmp_path, monkeypatch, root_oper
         removed = {name: target for name, target in recorded_aliases.items() if name != path}
         reject_change(f"alias-{index}-removed", **{alias_field: removed or None})
         reject_change(f"alias-{index}-retargeted", **{alias_field: recorded_aliases | {path: wrong_targets[path]}})
+
+
+def test_archive_preserves_ancestor_competitor_that_changes_a_later_choice(tmp_path, monkeypatch):
+    starter = model(tmp_path / "source")
+    source = starter.parent
+    (source / "a").mkdir()
+    (source / "b/a").mkdir(parents=True)
+    (source / "a/mesh.inc").write_bytes(b"# root mesh candidate\n")
+    (source / "b/a/mesh.inc").write_bytes(b"# sibling mesh candidate\n")
+    (source / "b/second.inc").write_bytes(b"#include a/selected.inc\n")
+    (source / "b/third.inc").write_bytes(b"#include a/mesh.inc\n")
+    starter.write_bytes(starter.read_bytes().replace(b"#include mesh.inc\n", (
+        b"#include mesh.inc\n#include a/mesh.inc\n#include b/second.inc\n#include b/third.inc\n")))
+
+    aliases = {source / "a/selected.inc": source / "b/second.inc",
+               source / "b/a/selected.inc": source / "b/a/mesh.inc"}
+    for alias, target in aliases.items():
+        alias.write_bytes(target.read_bytes())
+    resolve = Path.resolve
+
+    def resolve_alias(path, *args, **kwargs):
+        return resolve(aliases.get(path, path), *args, **kwargs)
+
+    session = PrepSession()
+    session.open_rad(model(tmp_path / "host"))
+    with monkeypatch.context() as filesystem:
+        filesystem.setattr(Path, "resolve", resolve_alias)
+        plan = session.plan_import_source(starter)
+        assert plan["source"]["uncollected_include_siblings"] == ["a/selected.inc"]
+        session.import_source(plan["plan_id"])
+        project = tmp_path / "explicit-claim.caeprep"
+        session.save_project(project)
+
+    reopened = PrepSession()
+    reopened.open_project(project)
+    assert not reopened.diagnostics()
+    archived, = reopened.source_models()
+    files = {item["original_path"]: item["resource_id"] for item in archived["files"]}
+    assert reopened._include_bindings[files["b/second.inc"], 0] == files["b/a/mesh.inc"]
+    assert reopened._include_bindings[files["b/third.inc"], 0] == files["b/a/mesh.inc"]
+
+    with zipfile.ZipFile(project) as saved:
+        members = {name: saved.read(name) for name in saved.namelist()}
+    manifest = json.loads(members["manifest.json"])
+    del manifest["source_models"][0]["uncollected_include_siblings"]
+    members["manifest.json"] = json.dumps(manifest).encode()
+    altered = tmp_path / "missing-explicit-claim-evidence.caeprep"
+    with zipfile.ZipFile(altered, "w") as saved:
+        for name, data in members.items():
+            saved.writestr(name, data)
+    with pytest.raises(PrepError) as error:
+        PrepSession().open_project(altered)
+    assert error.value.code == "invalid_project"
 
 
 def test_archive_omits_multiple_case_spellings_of_the_same_file(tmp_path):
