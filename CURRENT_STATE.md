@@ -2,6 +2,12 @@
 
 실행 순서는 [단계 계획 앞부분](docs/execution-stages.md#execution-order)을 따릅니다. 첫 코드는 D03 표시 갱신이며 D23/D38의 기존 과업 확인, D24/D25 성능·편집 확대, D26–D31 메시·8제품 후속, D19 재료 적용, D33/D34/D36 실제 환경·전체 인수까지 이어갑니다. 이 문서의 N01–N26 상태와 7/16/3 분류는 유지합니다.
 
+## P0 Track A2 소스 모델 표시와 Windows 실행 — 2026-11-23
+
+- Source Models에서 소스·인스턴스·리소스의 내부 ID 전용 열과 괄호 접미사를 제거했습니다. 참조 선택, 생성·삭제 및 Undo/Redo에는 기존 내부 ID를 사용합니다. 리소스 이름과 보관된 작업 파일 경로는 기존 값을 표시합니다. [대화상자 코드](src/caelab_prep/ui/source_models.py)
+- Windows 실행 배치는 체크아웃에 `.venv`를 설치하고 `pyproject.toml` 스탬프와 import 검사로 재사용 여부를 결정합니다. N13의 Windows 배포 묶음과 N14의 Workbench 연동 검증은 후속입니다. [실행 배치](CAELab_Prep_Install_And_Run.bat), [시작 안내](README.md#windows에서-시작하기)
+- Windows의 Python 3.13·Qt offscreen에서 참조 동작과 PowerShell `-DryRun`을 확인했습니다. 실제 `.bat`로 `uv`와 Python/pip 설치, 스탬프 재사용, 손상 환경 복구, 분리 실행을 확인했습니다. [집중 회귀 검사](tests/test_source_models_ux_and_launcher.py)
+
 <a id="track-3-corrections"></a>
 
 ## Track 3 검토 수정 (D23, D25, D19) — 2026-11-18
