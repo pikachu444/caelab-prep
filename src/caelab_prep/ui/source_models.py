@@ -10,6 +10,9 @@ from ..cae_core import PrepError
 from .shell import FileTask
 
 
+_INSTANCE_RESOURCE_PROMPT = "Select a reference to inspect its linked resources."
+
+
 class _TableModel(QAbstractTableModel):
     """Keep large correspondence tables virtual; do not allocate cell widgets."""
 
@@ -233,7 +236,7 @@ class SourceModelsDialog(QDialog):
         heading = QLabel("Imported sources — the base model is not an imported-source archive. Original bytes and each native ID correspondence are saved with the work document.")
         heading.setWordWrap(True)
         column.addWidget(heading)
-        self.sources_model = _TableModel(("Source name", "Files", "Native IDs", "Shared nodes", "Source identity"), self)
+        self.sources_model = _TableModel(("Source name", "Files", "Native IDs", "Shared nodes"), self)
         self.sources_table = _table(self.sources_model, "importedSources")
         self.sources_table.setMaximumHeight(180)
         column.addWidget(self.sources_table)
@@ -255,16 +258,16 @@ class SourceModelsDialog(QDialog):
         notice = QLabel("Instance references are metadata only: no placement, geometry duplication or native expansion is performed. Imported source archives remain separate records. Any not-expanded reference blocks native export until it is removed.")
         notice.setWordWrap(True)
         column.addWidget(notice)
-        self.instances_model = _TableModel(("Reference name", "Referenced source", "Status", "Resources", "Instance identity"), self)
+        self.instances_model = _TableModel(("Reference name", "Referenced source", "Status", "Resources"), self)
         self.instances_table = _table(self.instances_model, "instanceReferences")
         for index, width in enumerate((200, 300, 120, 80)):
             self.instances_table.setColumnWidth(index, width)
         self.instances_table.setMaximumHeight(180)
         column.addWidget(self.instances_table)
-        self.instance_root = QLabel("Select a reference to inspect its resource identities.")
+        self.instance_root = QLabel(_INSTANCE_RESOURCE_PROMPT)
         self.instance_root.setWordWrap(True)
         column.addWidget(self.instance_root)
-        self.instance_resources_model = _TableModel(("Referenced resource", "Resource identity"), self)
+        self.instance_resources_model = _TableModel(("Referenced resource",), self)
         resources = _table(self.instance_resources_model, "instanceReferencedResources")
         resources.setColumnWidth(0, 450)
         column.addWidget(resources, 1)
@@ -312,7 +315,7 @@ class SourceModelsDialog(QDialog):
         if identifier is None:
             return "Base model"
         source = next((item for item in self._sources if item["id"] == identifier), None)
-        return f"Imported source: {source['name']} ({identifier})" if source else f"Unresolved source ({identifier})"
+        return f"Imported source: {source['name']}" if source else "Unresolved source"
 
     def _instance_input_changed(self):
         self._instance_review = None
@@ -353,10 +356,10 @@ class SourceModelsDialog(QDialog):
         self._instance_query_stamp = stamp
         self._instances = self.session.instance_references()
         self.instances_model.replace([(item["name"], self._instance_source_label(item["source_id"]), item["status"],
-            len(item["resource_ids"]), item["id"]) for item in self._instances])
+            len(item["resource_ids"])) for item in self._instances])
         self._instance_selected_review = None
         self.instance_resources_model.replace([])
-        self.instance_root.setText("Select a reference to inspect its resource identities.")
+        self.instance_root.setText(_INSTANCE_RESOURCE_PROMPT)
         if selected:
             index = next((index for index, item in enumerate(self._instances) if item["id"] == selected), None)
             if index is not None:
@@ -369,8 +372,7 @@ class SourceModelsDialog(QDialog):
             record = self._instances[current.row()]
             self._instance_selected_review = (self._instance_query_stamp, record["id"])
             self.instance_root.setText(f"Root resource: {self._resource_label(record['root_resource_id'])}")
-            self.instance_resources_model.replace([(getattr(self.session.document.resources.get(rid), "name", rid), rid)
-                                                   for rid in record["resource_ids"]])
+            self.instance_resources_model.replace([(self._resource_label(rid),) for rid in record["resource_ids"]])
         self._sync_instance_actions()
 
     def _check_instance_review(self, stamp):
@@ -480,7 +482,7 @@ class SourceModelsDialog(QDialog):
 
     def _resource_label(self, resource_id):
         resource = self.session.document.resources.get(resource_id)
-        return f"{getattr(resource, 'name', resource_id)} ({resource_id})"
+        return str(getattr(resource, "name", None) or "Unnamed resource")
 
     def _offer_node(self, reference):
         projection = self.session.mesh_view()
@@ -647,7 +649,7 @@ class SourceModelsDialog(QDialog):
         """Reload the actual archived-source query without committing a draft."""
         self._sources = self.session.source_models()
         self.sources_model.replace([(item["name"], len(item["files"]), len(item["id_map"]),
-            len(item["shared_nodes"]), item["id"]) for item in self._sources])
+            len(item["shared_nodes"])) for item in self._sources])
         if self._sources:
             self.sources_table.selectRow(len(self._sources) - 1)
         else:

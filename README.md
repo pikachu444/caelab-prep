@@ -43,6 +43,12 @@ main에는 **절대좌표 절점 이동의 첫 구현**도 있습니다. 요소 
 
 ## Windows에서 시작하기
 
+저장소 폴더에서 **`CAELab_Prep_Install_And_Run.bat`를 더블클릭**하세요. 처음 실행할 때 `uv` 또는 Python 3.11~3.13으로 `.venv`를 만들고 GUI·CAD 의존성을 설치한 뒤 Prep을 엽니다. 다음 실행부터는 설치 설정이 같고 환경이 정상이면 기존 환경을 사용합니다. [Python 다운로드](https://www.python.org/downloads/)
+
+PowerShell에서 `./CAELab_Prep_Install_And_Run.bat -CreateShortcut`을 실행하면 바탕 화면에 **CAELab Prep** 바로가기도 생깁니다. `-InstallOnly`는 설치만, `-DryRun`은 실행 계획 확인만 합니다. `-ForceReinstall`은 의존성을 다시 설치하고 `-Console`은 실행 출력을 볼 수 있는 콘솔을 엽니다.
+
+### 수동/개발자 설치
+
 Python 3.11 이상과 Git을 설치한 뒤 저장소를 엽니다. PowerShell에서 실행합니다. 기존 가상환경이 있다면 새로 만들지 말고 [설치 가이드](docs/usage.md#install-windows)에 따라 환경을 선택하세요.
 
 ```powershell
