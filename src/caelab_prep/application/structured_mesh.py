@@ -136,6 +136,17 @@ def _write_json(path, value):
         stream.write('\n')
 
 
+def _write_recipe_fork(destination, edited):
+    validate_recipe(edited)
+    raw = (json.dumps(edited, ensure_ascii=False, indent=2, allow_nan=False) + '\n').encode('utf-8')
+    if len(raw) > MAX_RECIPE_BYTES:
+        raise PrepError('invalid_recipe', 'The serialized new recipe exceeds the 1 MiB input limit.')
+    target = Path(destination).expanduser().resolve()
+    with target.open('xb') as stream:
+        stream.write(raw)
+    return str(target)
+
+
 def fork_geometry_recipe(base, source, destination, *, corners, vector=None):
     """Save an explicit single-patch input; do not claim same-geometry lineage."""
     _validate_source_recipe(base, source)
@@ -147,13 +158,35 @@ def fork_geometry_recipe(base, source, destination, *, corners, vector=None):
         if vector is None: raise PrepError('invalid_recipe', 'Provide the new sweep vector explicitly.')
         edited['vector'] = list(vector)
     elif vector is not None: raise PrepError('invalid_recipe', 'A quad recipe has no sweep vector.')
-    validate_recipe(edited)
-    raw = (json.dumps(edited, ensure_ascii=False, indent=2, allow_nan=False) + '\n').encode('utf-8')
-    if len(raw) > MAX_RECIPE_BYTES:
-        raise PrepError('invalid_recipe', 'The serialized new recipe exceeds the 1 MiB input limit.')
-    target = Path(destination).expanduser().resolve()
-    with target.open('xb') as stream: stream.write(raw)
-    return str(target)
+    return _write_recipe_fork(destination, edited)
+
+
+def fork_vertex_recipe(base, source, destination, *, vertex_edits, vector=None):
+    """Save a two-patch recipe with shared vertices edited by ID."""
+    _validate_source_recipe(base, source)
+    if 'patches' not in base:
+        raise PrepError('invalid_recipe', 'Use fork_geometry_recipe for single-patch recipes.')
+    if not isinstance(vertex_edits, dict) or not vertex_edits:
+        raise PrepError('invalid_recipe', 'Expected a nonempty vertex edit mapping.')
+    if vertex_edits.keys() - base['vertices'].keys():
+        raise PrepError('invalid_recipe', 'Unknown vertex ID in vertex edits.')
+
+    edited = deepcopy(base)
+    for vertex_id, point in vertex_edits.items():
+        if not isinstance(point, (list, tuple)):
+            raise PrepError('invalid_recipe', 'Expected a vertex coordinate triple.')
+        edited['vertices'][vertex_id] = list(point)
+    if vector is not None:
+        if edited['mode'] != 'hex':
+            raise PrepError('invalid_recipe', 'A quad recipe has no sweep vector.')
+        try:
+            edited['vector'] = list(vector)
+        except TypeError as exc:
+            raise PrepError('invalid_recipe', 'Expected a finite sweep vector.') from exc
+    try:
+        return _write_recipe_fork(destination, edited)
+    except FileExistsError as exc:
+        raise PrepError('destination_exists', 'The destination recipe already exists.') from exc
 
 
 def _child(module, arguments, *, cancel_event=None, timeout=30):
