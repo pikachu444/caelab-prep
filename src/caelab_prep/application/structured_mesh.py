@@ -162,7 +162,7 @@ def fork_geometry_recipe(base, source, destination, *, corners, vector=None):
 
 
 def fork_vertex_recipe(base, source, destination, *, vertex_edits, vector=None):
-    """Save a two-patch recipe with shared vertices edited by ID."""
+    """Save a multi-patch recipe with shared vertices edited by ID."""
     _validate_source_recipe(base, source)
     if 'patches' not in base:
         raise PrepError('invalid_recipe', 'Use fork_geometry_recipe for single-patch recipes.')
