@@ -139,7 +139,18 @@ QLabel#inputError, QLabel[invalid="true"] { color: $error; font-size: 9px; }
 QLineEdit[invalid="true"] { background: $error_surface; border-color: $error; }
 QLabel#viewportHint { color: $muted; background: transparent; font-size: ${title_size}px; }
 QFrame#viewportFrame { background: $surface; border: 1px solid $divider; }
-QFrame#viewportBar, QFrame#curveCommands, QFrame#inspectorCommands { background: $subtle; border-bottom: 1px solid $divider; }
+QFrame#viewportBar, QFrame#viewportInspectionBar, QFrame#curveCommands, QFrame#inspectorCommands { background: $subtle; border-bottom: 1px solid $divider; }
+QFrame#viewportInspectionBar QToolButton { min-height: 18px; padding: 1px 6px; border: 1px solid $button_border; background: $button; border-radius: 2px; font-size: 10px; }
+QFrame#viewportInspectionBar QToolButton:hover { background: $hover; border-color: $button_hover_border; }
+QFrame#viewportInspectionBar QToolButton:checked { background: $checked; border-color: $checked_border; color: $selection_text; font-weight: 600; }
+QFrame#viewportInspectionBar QToolButton:disabled { color: $disabled_text; background: $disabled; border-color: $disabled_border; }
+QFrame#familyLegendChip { background: $surface; border: 1px solid $divider; border-radius: 2px; }
+QFrame#candidateMetricsReadout { background: $subtle; border: 1px solid $divider; border-radius: 2px; }
+QSlider::groove:horizontal { height: 4px; background: $divider; border-radius: 2px; }
+QSlider::sub-page:horizontal { background: $accent; border-radius: 2px; }
+QSlider::handle:horizontal { width: 10px; height: 10px; margin: -4px 0; background: $accent; border: 1px solid $surface; border-radius: 5px; }
+QSlider::handle:horizontal:disabled { background: $disabled_border; }
+QSlider::sub-page:horizontal:disabled { background: $disabled_border; }
 QLabel#applicationBrand { color: $on_accent; background: $accent; font-weight: 700; font-size: 10px; letter-spacing: 0.8px; padding: 2px 7px; border-radius: 2px; }
 QLabel#documentState { color: $accent; background: $subtle; border: 1px solid $hover_border; font-weight: 600; font-size: 9px; padding: 1px 5px; border-radius: 2px; }
 QStatusBar { background: $subtle; border-top: 1px solid $divider; }

@@ -216,6 +216,8 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
             button.setIcon(primary.icon())
         if self.viewport is not None and hasattr(self.viewport, "set_theme_mode"):
             self.viewport.set_theme_mode(target)
+        if hasattr(self, "viewport_inspection_bar"):
+            self.viewport_inspection_bar.apply_theme_mode(target)
         active_dialog = getattr(self.mesh_workflow, "dialog", None)
         if active_dialog is not None and hasattr(active_dialog, "apply_theme_mode"):
             active_dialog.apply_theme_mode(target)
@@ -346,7 +348,11 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
             else:
                 self._viewport_placeholder.setText("3D viewer unavailable" if failure else "3D viewer disabled for this session")
 
+        if hasattr(self, "viewport_inspection_bar"):
+            self.viewport_inspection_bar.apply_ui_language(target)
         self._present_document(self._summary())
+        if getattr(self, "_candidate_preview", None) and hasattr(self, "_present_candidate_preview"):
+            self._present_candidate_preview(reset_camera=False)
         self._refresh_tree()
         self._refresh_tree_appearances()
         self._refresh_fields()

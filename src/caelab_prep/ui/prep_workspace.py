@@ -9,6 +9,7 @@ projection is newly expressed here from the existing schema-binding behavior
 timing follows the retained controller.
 """
 
+from collections.abc import Mapping
 from dataclasses import replace
 
 from PySide6.QtCore import QEvent, QObject, QSize, Qt
@@ -230,7 +231,10 @@ class PrepWorkspace:
         self.document_state.setContentsMargins(8, 0, 12, 0)
 
     def _install_model_view(self, enabled):
+        from .viewport import ViewportInspectionBar
+
         self.viewport = None
+        self._candidate_preview = None
         failure = ""
         if enabled:
             try:
@@ -249,11 +253,60 @@ class PrepWorkspace:
             content.setToolTip(failure)
             self._viewport_placeholder = content
 
+        self.viewport_inspection_bar = ViewportInspectionBar(
+            self.viewport,
+            self,
+            language=getattr(self, "ui_language", "en"),
+            theme_mode=getattr(self, "theme_mode", "light"),
+        )
         self.viewport_frame = ViewportFrame(content, "Model")
         self.viewport_frame.title.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         self.viewport_frame.context.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         self.viewport_frame.header.addWidget(self._view_commands())
+        self.viewport_frame.layout().insertWidget(1, self.viewport_inspection_bar)
         self.setCentralWidget(self.viewport_frame)
+
+    def preview_candidate_mesh(self, candidate, *, title: str | None = None, reset_camera: bool = True) -> dict:
+        """Display an unapplied hybrid/revolved/structured candidate in the workspace 3D view."""
+        if isinstance(candidate, Mapping) and "points" in candidate and "cells" in candidate:
+            projection = dict(candidate)
+        else:
+            from .mesh_workflow import candidate_projection
+            projection = candidate_projection(candidate)
+        self._candidate_preview = {"projection": projection, "title": title}
+        self._present_candidate_preview(reset_camera=reset_camera)
+        return projection
+
+    def clear_candidate_preview(self) -> None:
+        self._candidate_preview = None
+        self.refresh_document(rebuild_viewport=True)
+
+    def _present_candidate_preview(self, *, reset_camera: bool = False) -> None:
+        preview = getattr(self, "_candidate_preview", None)
+        if not preview:
+            return
+        projection = preview["projection"]
+        ko = getattr(self, "ui_language", "en") == "ko"
+        title = preview.get("title") or ("후보 메시 미리보기" if ko else "Candidate mesh preview")
+        self.viewport_frame.title.setText(str(title))
+        self.viewport_frame.title.setToolTip(str(title))
+        self.viewport_frame.context.setText(
+            "미리보기 전용 — 모델 미변경" if ko else "Preview only — model unchanged"
+        )
+        node_count = len(projection.get("node_ids", ()))
+        elem_count = len(projection.get("cells", ()))
+        if ko:
+            self._counts.setText(f"절점 {node_count:,}개  ·  요소 {elem_count:,}개")
+        else:
+            self._counts.setText(f"{node_count:,} nodes  ·  {elem_count:,} elements")
+        if self.viewport is not None:
+            self.viewport.setEnabled(True)
+            self.viewport.set_mesh(projection, reset_camera=reset_camera)
+            for action in (self.fit_action, self.iso_action, self.edges_action, *self.standard_view_actions):
+                action.setEnabled(True)
+            self.pick_mode.setEnabled(True)
+        if hasattr(self, "viewport_inspection_bar"):
+            self.viewport_inspection_bar.bind_viewport(self.viewport)
 
     def _view_commands(self):
         bar = QToolBar("Model view", self)

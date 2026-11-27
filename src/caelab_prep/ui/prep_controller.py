@@ -270,6 +270,8 @@ class PrepController:
         if self._busy or self._replacement_conflict:
             return
         summary = self._summary()
+        if rebuild_viewport and summary.get("document_id"):
+            self._candidate_preview = None
         self._display_state.reset(summary.get("document_epoch"))
         self._project_path = Path(summary["project_path"]) if summary.get("project_path") else None
         self._source_path = Path(summary["source_path"]) if summary.get("source_path") else None
@@ -294,6 +296,8 @@ class PrepController:
                     self._last_presented_projection_revision = projection.get("projection_revision")
             if self.viewport is not None and summary.get("document_id"):
                 self.viewport.set_selection(self.session.selection())
+            elif getattr(self, "_candidate_preview", None) and hasattr(self, "_present_candidate_preview"):
+                self._present_candidate_preview(reset_camera=False)
             self._refresh_tree_appearances()
             self._last_presented_document = summary.get("document_id")
             self._last_presented_epoch = summary.get("document_epoch")
@@ -319,11 +323,15 @@ class PrepController:
         self.curve_plot.setEnabled(form_enabled)
         self.model_tree.setEnabled(loaded and not self._busy)
         self.model_filter.setEnabled(loaded and not self._busy)
+        has_preview = bool(getattr(self, "_candidate_preview", None))
+        view_ready = (loaded or has_preview) and editable
         if self.viewport:
-            self.viewport.setEnabled(loaded and editable)
-        self.pick_mode.setEnabled(loaded and self.viewport is not None and editable)
+            self.viewport.setEnabled(view_ready)
+        self.pick_mode.setEnabled(view_ready and self.viewport is not None)
         for action in [self.fit_action, self.iso_action, self.edges_action, *self.standard_view_actions]:
-            action.setEnabled(action.isEnabled() and editable)
+            action.setEnabled((action.isEnabled() or (has_preview and self.viewport is not None)) and editable)
+        if hasattr(self, "viewport_inspection_bar"):
+            self.viewport_inspection_bar.bind_viewport(self.viewport)
         self._present_command_priority(open_primary=not loaded and not self._busy,
                                        save_primary=loaded and editable and bool(summary.get("dirty")))
         self.modeling.refresh()
