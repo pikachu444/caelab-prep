@@ -18,6 +18,8 @@
 
 ## 현재 사용할 수 있는 기능
 
+Python 백엔드에서는 STEP/BREP의 곡률 적응 tet, 준비된 곡선 블록의 Hex8/Hex20, 회전형 단차 하우징의 자동 분할, 실제 Pyramid5 전이를 갖는 단일·조립체 hex-core를 생성할 수 있습니다. 지원 CAD 조건과 실제 솔버의 요소별 판정은 [메셔 API 사용법](docs/usage.md#cad-mesher-backend)에 있습니다.
+
 | 작업 | 지원 범위 |
 |---|---|
 | RAD 편집 | INCLUDE 원문 보존, LAW1 재료·shell/solid 단면·PART 관계의 지원 필드 생성·수정 |

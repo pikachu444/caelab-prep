@@ -7,6 +7,7 @@
 | Qt / PySide6 | 데스크톱 위젯·Action·작업 신호 | [Qt for Python 라이선스](https://doc.qt.io/qtforpython-6/licenses.html) |
 | VTK | 실제 메시 렌더링·선택·원 ID 역매핑. 실행 환경 검사는 9.7.1 사용 | [VTK 라이선스](https://vtk.org/about/) |
 | Gmsh 4.15.2 / 내장 OCC 경로 | 선택 설치한 SDK를 별도 프로세스로 호출해 CAD·메시 자산 생성 | [Gmsh 조건](https://gmsh.info/doc/texinfo/#Copying-conditions), [공식 소스](https://gitlab.onelab.info/gmsh/gmsh) |
+| NumPy | CAD 선택 설치의 요소 품질·행렬 계산. 바이너리 재배포 시 해당 배포본의 저작권·조건·면책 고지와 포함 라이브러리 고지를 보존 | [NumPy 라이선스](https://numpy.org/doc/stable/license.html) |
 | SolidCraft `27951f4` | 외부 saved-design/STEP CLI 계약만 참고해 독립 Python 준비 adapter 작성. Rust 코드·바이너리·브랜드·의존성을 복사하거나 동봉하지 않음 | [MIT 원문](https://github.com/tangency-labs/solidcraft/blob/27951f40c374b2495c1cf4648a87410179fa76cf/LICENSE-MIT), [NOTICE](https://github.com/tangency-labs/solidcraft/blob/27951f40c374b2495c1cf4648a87410179fa76cf/NOTICE) |
 | CADCraft `2034d68` | entity/format/기하·명령 구조 조사. 현재 코드 반입 없음 | [MIT 원문](https://github.com/storytold/cadcraft/blob/2034d6899eba72363028723ec75d4c36eacfceac/LICENSE-MIT), [NOTICE](https://github.com/storytold/cadcraft/blob/2034d6899eba72363028723ec75d4c36eacfceac/NOTICE) |
 

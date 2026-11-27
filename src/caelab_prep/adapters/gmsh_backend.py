@@ -159,7 +159,9 @@ class GmshBackend:
 
     def generate(self, source_path, output_dir, mesh_size, *, dimension=3, cancel_event=None,
                  interface_policy="preserve", local_sizes=None, minimum_mesh_size=None,
-                 expected_coordinate_length_unit=None) -> dict:
+                 expected_coordinate_length_unit=None, curvature_points=0, size_gradient=None,
+                 structured_blocks=False, edge_seeds=None, element_order=1,
+                 quality_diagnostics=False, prismatic_layers=None, block_partition=None) -> dict:
         """Import generic CAD and produce immutable, candidate geometry/mesh assets.
 
         ``mesh_size`` is in millimetres for STEP/IGES input (SDK normalization),
@@ -217,6 +219,15 @@ class GmshBackend:
                     raise GmshBackendError("invalid_request", "Duplicate local sizing entity")
                 sizes[key] = value
         minimum = _cad_minimum_size(size, minimum_mesh_size, sizes)
+        from .cad_mesh_controls import validate_controls
+        advanced = dict(curvature_points=curvature_points, size_gradient=size_gradient,
+                        structured_blocks=structured_blocks, edge_seeds={} if edge_seeds is None else edge_seeds,
+                        element_order=element_order, quality_diagnostics=quality_diagnostics,
+                        prismatic_layers=prismatic_layers, block_partition=block_partition)
+        try:
+            validate_controls(advanced, size, minimum, dimension, sizes, source.suffix.lower())
+        except (ValueError, TypeError, OverflowError) as exc:
+            raise GmshBackendError("invalid_request", str(exc)) from exc
         if expected_coordinate_length_unit is not None and expected_coordinate_length_unit not in ("mm", "cm", "m"):
             raise GmshBackendError("invalid_request", "Expected coordinate length unit must be mm, cm or m")
         workdir, captured, digest = self._capture(source, output_dir, cancel_event)
@@ -224,6 +235,9 @@ class GmshBackend:
                    "output_dir": str(workdir), "mesh_size": size, "dimension": int(dimension),
                    "interface_policy": interface_policy, "local_sizes": sizes,
                    "minimum_mesh_size": minimum}
+        if (curvature_points or structured_blocks or element_order == 2
+                or quality_diagnostics or prismatic_layers is not None):
+            request["advanced"] = advanced
         if expected_coordinate_length_unit is not None:
             request["expected_coordinate_length_unit"] = expected_coordinate_length_unit
         return self._run(request, workdir, cancel_event)

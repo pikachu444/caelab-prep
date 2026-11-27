@@ -12,7 +12,7 @@ dependencies = []
 [project.optional-dependencies]
 widgets = ["PySide6>=6.6,<6.12; python_version < '3.12'", "PySide6>=6.6,<6.13; python_version >= '3.12'"]
 gui = ["PySide6>=6.6,<6.12; python_version < '3.12'", "PySide6>=6.6,<6.13; python_version >= '3.12'", "vtk>=9.4,<10"]
-cad = ["gmsh==4.15.2"]
+cad = ["gmsh==4.15.2", "numpy>=1.26"]
 mcp = ["mcp>=2.3,<3"]
 dev = ["pytest>=8", "jsonschema>=4.18,<5"]
 
