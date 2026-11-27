@@ -403,3 +403,34 @@ CAD 메시·MSH·케이스의 정확한 인수는 도움말에서 조회합니�
 | Engine 출력의 `invalid_units` | `/BEGIN`의 두 번째 작업 단위 행을 확인합니다. 입력 단위만 있는 RAD에서 시간을 추정하지 않습니다. |
 
 OCP fixture 생성용 개발 환경은 GUI 환경과 분리합니다. CI의 `cadquery-ocp==7.8.1.1.post1`은 VTK 9.3.1을 요구하므로 GUI의 VTK 9.4 이상과 강제로 맞추지 않습니다. 제품 실행에 OCP를 추가할 필요는 없습니다. 배포 조건은 [THIRD_PARTY](../THIRD_PARTY.md), 실제 확인과 미확인은 [Windows 기록](native-windows-validation.md)을 따릅니다.
+
+<a id="cad-mesher-backend"></a>
+
+## CAD 메시 생성용 Python API
+
+`pip install -e ".[cad]"`로 Gmsh와 NumPy를 설치합니다. STEP 길이는 mm로 정규화됩니다. BREP 기반 hybrid 호출에는 모델 좌표의 실제 단위를 지정합니다. 각 호출은 원본 CAD를 읽고 새 작업 폴더에 메시를 만듭니다.
+
+```python
+from caelab_prep.adapters.gmsh_backend import GmshBackend
+from caelab_prep.application.hybrid_hex_core import generate_hybrid_hex_core
+from caelab_prep.application.hybrid_assembly import generate_hybrid_assembly
+
+backend = GmshBackend(timeout=180)
+tet = backend.generate("bracket.step", "runs", 3.0, minimum_mesh_size=0.8,
+                       curvature_points=24, size_gradient=0.4, quality_diagnostics=True)
+housing = backend.generate("housing.step", "runs", 2.0, structured_blocks=True,
+                           block_partition="revolved", element_order=2)
+hybrid = generate_hybrid_hex_core("bracket.step", "runs", length_unit="mm",
+                                  core_size=2.0, boundary_size=1.5)
+assembly = generate_hybrid_assembly("bolted.step", "runs", length_unit="mm",
+                                    core_size=2.0, boundary_size=1.5,
+                                    allow_tet_fallback=True)
+```
+
+- **곡률과 요소 품질.** `curvature_points`는 한 바퀴당 목표 분할 수입니다. `size_gradient`는 곡면에서 멀어질 때 크기장 목표값이 증가하는 기울기입니다. `quality.by_volume`에 각 OCC 솔리드와 적분 체적의 오차가 있습니다. `quality.by_type`에는 전체 요소의 최소 corner scaled Jacobian, SDK minSJ/minSICN·최소 determinant, 최대 edge 비율·각도 skewness와 솔리드 최소 이면각이 있습니다. 각도는 꼭짓점 사이 현을 사용하며 고차 체적은 중간 절점을 포함해 적분합니다. 실제 인접 요소의 크기비는 `quality.observed_gradation`에서 확인합니다. Python 결과는 사전이므로 예를 들어 `tet["quality"]["by_type"]["tet4"]`로 읽습니다.
+- **층 메시.** 일정 단면의 단일 솔리드에서 `prismatic_layers={"face": face_tag, "vector": [0, 0, thickness], "heights": [0.08, 0.28, 0.58, 1.0]}`를 넘깁니다. 벡터는 선택한 평면 벽에서 반대 벽까지의 실제 법선 방향입니다. 누적 두께 분율대로 삼각 단면을 밀어 Wedge6를 만들고 OCC 겹침 체적과 면 대응을 확인합니다. 단면이 바뀌거나 면 분할을 보존할 수 없으면 거부합니다.
+- **Sweep와 구역 분할.** 준비된 공유 CAD 블록에는 `structured_blocks=True`를 사용합니다. 각 블록에 네 모서리 면 6개가 필요합니다. 곡선 가이드와 비틀린·테이퍼 단면은 CAD가 정의합니다. `edge_seeds={tag: (8, "Progression", 1.2)}` 또는 `"Bump"`로 호 간격을 지정합니다. 공유·대향 모서리의 방향과 분할이 맞아야 합니다. `block_partition="revolved"`는 Z축과 평행한 동축 원통·원뿔과 수평 단차로 이루어진 관통 환형 솔리드를 직접 분할합니다. `recipe.advanced.applied.partition`에서 원래 솔리드와 면의 대응을 확인합니다. 2차로 승격하면 tet는 Tet10, mapped hex는 Hex20입니다.
+- **조립체.** tet의 `interface_policy="conformal"`은 원래 각 부품의 소유권을 확인하며 접촉면을 분할합니다. `"independent"`는 CAD와 메시가 이미 별개인지 검사합니다. hybrid 조립체는 한 번 삼각화한 공유 CAD 면의 절점과 facet ID 대응을 보존합니다. 작은 두께·코어 여유·요소 품질로 hybrid가 성립하지 않는 부품을 Tet4로 채우려면 `allow_tet_fallback=True`를 지정합니다. 부품별 이유와 실제 요소 수가 보고서에 있습니다.
+- **후보와 솔버 전달.** hybrid의 `.mesh_path`, `.report_path`에는 재열 수 있는 MSH와 검사 결과가 있습니다. `.to_native_mesh()`는 연결성과 부품을 제공합니다. `application.mesher_solver_gate.write_calculix_mesh_include(candidate, destination, version="2.21")`는 지원 후보의 절점·요소를 새 include에 쓰고 부품별 ELSET 이름을 반환합니다. 재료·단면·하중·경계조건은 해석 덱에서 지정합니다. 다섯 절점 Pyramid5가 들어 있으면 파일 생성 전에 거부합니다. CalculiX 2.21, OpenCourant 20261011, 시험한 OpenRadioss 빌드에서 이 요소 기반 혼합 해석은 불가능했습니다. GUI에서의 후보 검토·채택·Undo 연결은 후속입니다.
+
+원자료, 입력 형상과 수치 결과는 [메셔 설계](mesher-architecture-v2.md)와 [복잡 형상 검산 기록](mesher-debate-and-qa-log.md)에 있습니다.

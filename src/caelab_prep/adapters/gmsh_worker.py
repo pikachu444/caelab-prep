@@ -12,7 +12,6 @@ import argparse
 import contextlib
 from dataclasses import asdict
 import hashlib
-from itertools import combinations
 import json
 import math
 import os
@@ -223,11 +222,15 @@ def _check_mesh_interfaces(gmsh, closures, blocks, identities, policy):
                       and block["entity_uuid"] in shared_surfaces for conn in block["connectivity"]}
             if facets:
                 for volume in (left, right):
-                    faces = {tuple(sorted(face)) for block in blocks if block["dimension"] == 3
-                             and block["entity_uuid"] == identities[(3, volume)]
-                             for conn in block["connectivity"] for face in combinations(conn, 3)}
+                    faces = set()
+                    widths = {len(facet) for facet in facets}
+                    for typ in gmsh.model.mesh.getElementTypes(3, volume):
+                        for width in widths:
+                            corners = 3 if width in (3, 6) else 4
+                            flat = gmsh.model.mesh.getElementFaceNodes(int(typ), corners, volume)
+                            faces.update(tuple(sorted(map(int, nodes))) for nodes in flat.reshape(-1, width))
                     if not facets <= faces:
-                        raise WorkerFailure("interface_mesh", "A shared surface facet is not a tetrahedron face on both adjacent parts")
+                        raise WorkerFailure("interface_mesh", "A shared surface facet is absent from an adjacent volume mesh")
             checks.append({"volume_uuids": [identities[(3, left)], identities[(3, right)]],
                            "shared_node_count": len(common),
                            "shared_surface_uuids": shared_surfaces,
@@ -962,6 +965,8 @@ def _inspect_geometry(request):
 
 
 def generate(request):
+    if "advanced" in request and request.get("source_kind") not in (None, "cad"):
+        raise WorkerFailure("unsupported_criteria", "Advanced CAD controls require a CAD source")
     if request.get("source_kind") != "cad_geometry_inspection" and {"probe_cylinder_material_side", "probe_cylindrical_blends", "probe_conical_blends"} & request.keys():
         raise WorkerFailure("unsupported_criteria", "Geometry material-side probes require geometry inspection")
     unimplemented = sorted({"washer_rim_divisions", "washer_width", "washer_layers",
@@ -980,7 +985,7 @@ def generate(request):
         raise WorkerFailure("invalid_request", "Unknown source kind")
     supported = {"source_kind", "source", "original_source", "source_sha256", "output_dir",
                  "mesh_size", "minimum_mesh_size", "dimension", "interface_policy", "local_sizes",
-                 "expected_coordinate_length_unit"}
+                 "expected_coordinate_length_unit", "advanced"}
     unknown = sorted(request.keys() - supported)
     if unknown:
         raise WorkerFailure("unsupported_criteria", "CAD criteria are not implemented", criteria=unknown)
@@ -1010,6 +1015,12 @@ def generate(request):
         minimum = _cad_minimum_size(size, request.get("minimum_mesh_size"), local_sizes)
     except GmshBackendError as exc:
         raise WorkerFailure(exc.code, str(exc)) from exc
+    advanced = request.get("advanced", {})
+    from .cad_mesh_controls import validate_controls
+    try:
+        validate_controls(advanced, size, minimum, dimension, local_sizes, source.suffix.lower())
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise WorkerFailure("invalid_request", str(exc)) from exc
     if not source.is_file():
         raise WorkerFailure("invalid_request", "CAD input does not exist")
     if source.suffix.lower() not in {".step", ".stp", ".brep", ".brp", ".iges", ".igs", ".xao"}:
@@ -1041,7 +1052,17 @@ def generate(request):
         gmsh.option.setNumber("Mesh.Binary", 1)
         gmsh.option.setNumber("Mesh.MshFileVersion", 4.1)
         _import_cad(gmsh, source)
-        preparation, closures = _prepare_interfaces(gmsh, policy, source.suffix.lower())
+        controls_used = {}
+        if advanced.get("block_partition") == "revolved":
+            from .axisymmetric_blocks import partition_revolved_solid
+            if policy == "independent":
+                raise WorkerFailure("invalid_request", "Mapped CAD zones require shared interfaces")
+            controls_used["partition"] = partition_revolved_solid(gmsh)
+        if advanced.get("prismatic_layers"):
+            from .gmsh_sweep import configure_prismatic_layers
+            controls_used["layers"] = configure_prismatic_layers(gmsh, advanced["prismatic_layers"])
+        prepared_policy = "preserve" if "partition" in controls_used else policy
+        preparation, closures = _prepare_interfaces(gmsh, prepared_policy, source.suffix.lower())
         surface_tags = [int(tag) for _, tag in gmsh.model.getEntities(2)]
         volume_tags = [int(tag) for _, tag in gmsh.model.getEntities(3)]
         if not surface_tags or dimension == 3 and not volume_tags:
@@ -1049,7 +1070,22 @@ def generate(request):
         resource_uuid, revision, unit, entity_uuids = _checked_cad_identity(
             gmsh, surface_tags, volume_tags, source.suffix.lower(), expected_unit)
         applied_sizes = _apply_local_sizes(gmsh, local_sizes, entity_uuids, size, minimum_mesh_size=minimum)
+        if advanced.get("curvature_points"):
+            from .gmsh_sweep import configure_curvature
+            controls_used["curved_surfaces"] = configure_curvature(gmsh, advanced["curvature_points"],
+                advanced.get("size_gradient"), minimum, size)
+        if advanced.get("structured_blocks"):
+            from .gmsh_sweep import configure_blocks
+            seeds = {int(tag): seed for tag, seed in advanced.get("edge_seeds", {}).items()}
+            controls_used["edge_seeds"] = configure_blocks(gmsh, size, seeds)
         gmsh.model.mesh.generate(dimension)
+        if advanced.get("element_order") == 2:
+            gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
+            gmsh.model.mesh.setOrder(2)
+        if advanced.get("structured_blocks") or advanced.get("prismatic_layers"):
+            wanted = 6 if advanced.get("prismatic_layers") else (17 if advanced.get("element_order") == 2 else 5)
+            if any(set(gmsh.model.mesh.getElementTypes(3, tag)) != {wanted} for tag in volume_tags):
+                raise WorkerFailure("mesh_family", "A CAD block produced an unexpected volume family")
         node_ids, xyz, _ = gmsh.model.mesh.getNodes()
         if not len(node_ids):
             raise WorkerFailure("mesh_error", "Gmsh produced no nodes")
@@ -1143,6 +1179,16 @@ def generate(request):
             "identity_policy": "XAO named groups preserve geometry/entity UUIDs within this resource; backend tags and node IDs are session/mesh-local. New external CAD imports get new identities. No automatic cross-revision remapping is performed.",
         }
         temporary = metadata.with_suffix(".json.tmp")
+        if advanced:
+            from .gmsh_quality import inspect_mesh_quality
+            result["recipe"]["advanced"] = {**advanced, "applied": controls_used}
+            masses = {v["backend_tag"]: v["volume"] for v in volumes} if dimension == 3 else {}
+            result["quality"] = inspect_mesh_quality(gmsh, cad_volumes=masses,
+                                                     measure_gradation=advanced.get("size_gradient") is not None)
+            for name, metrics in result["quality"]["by_type"].items():
+                if metrics["invalid_element_ids"]:
+                    raise WorkerFailure("mesh_quality", f"Nonpositive Jacobian or measure in {name}",
+                                        element_ids=metrics["invalid_element_ids"])
         temporary.write_text(json.dumps(result, ensure_ascii=False, allow_nan=False), encoding="utf-8")
         temporary.replace(metadata)
         return result
