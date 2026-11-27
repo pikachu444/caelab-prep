@@ -9,6 +9,8 @@ projection is newly expressed here from the existing schema-binding behavior
 timing follows the retained controller.
 """
 
+from dataclasses import replace
+
 from PySide6.QtCore import QEvent, QObject, QSize, Qt
 from PySide6.QtGui import QActionGroup
 from PySide6.QtWidgets import (
@@ -23,6 +25,89 @@ from .widgets import CurvePlot, CurveTable, ModelTree, PropertyEditor, VectorEdi
 from .widgets.card_source import CardSourceEditor
 from .native_commands import menu_sections
 from ..application.rad_provider import display_title
+
+
+_EN_TREE_HEADERS = ["Name", "Type", "Card", "Visible", "Color"]
+_KO_TREE_HEADERS = ["이름", "유형", "카드", "표시", "색상"]
+
+_KO_TREE_GROUPS = {
+    "Parts": "파트",
+    "Materials": "재료",
+    "Properties": "단면 속성",
+    "Groups": "집합",
+    "Constraints": "경계 조건",
+    "Contacts": "접촉",
+    "Loads": "하중",
+    "Initial conditions": "초기 조건",
+    "Curves": "곡선",
+    "Nodes": "절점",
+    "Elements": "요소",
+    "Other cards": "기타 카드",
+}
+
+_KO_PROPERTY_GROUPS = {
+    "Properties": "속성",
+    "Part assignment": "파트 할당",
+}
+
+_KO_PROPERTY_LABELS = {
+    "Native part ID": "파트 ID",
+    "Displayed elements": "표시 요소 수",
+    "Mesh status": "메시 상태",
+    "Material": "재료",
+    "Section": "단면 속성",
+    "Density": "밀도",
+    "Young's modulus": "탄성계수",
+    "Poisson's ratio": "푸아송 비",
+    "Friction coefficient": "마찰 계수",
+    "Friction function scale": "마찰 함수 배율",
+    "Shell thickness": "셸 두께",
+    "Initial velocity": "초기 속도",
+    "Curve points": "곡선 데이터 점",
+    "Node group": "절점 집합",
+    "Secondary node group": "종속 절점 집합",
+    "Main shell surface": "주 셸 표면",
+    "Coordinate system": "좌표계",
+    "Direction": "방향",
+    "Load curve": "하중 곡선",
+    "Load scale at each node": "절점당 하중 배율",
+    "Fixed translations": "병진 구속",
+    "Fixed rotations": "회전 구속",
+    "Translation X fixed": "X 병진 구속",
+    "Translation Y fixed": "Y 병진 구속",
+    "Translation Z fixed": "Z 병진 구속",
+    "Rotation X fixed": "X 회전 구속",
+    "Rotation Y fixed": "Y 회전 구속",
+    "Rotation Z fixed": "Z 회전 구속",
+    "Origin": "원점",
+    "Local Y direction": "국소 Y축 방향",
+    "Local Z direction": "국소 Z축 방향",
+    "Native node IDs": "절점 ID 목록",
+    "Element members": "요소 멤버",
+    "Target relationship": "대상 연결 상태",
+    "Target mechanical fields": "대상 역학 필드",
+}
+
+_KO_UNIT_KEYS = {
+    "mass": "질량",
+    "length": "길이",
+    "time": "시간",
+}
+
+
+def _localize_property_spec_ko(spec):
+    label = _KO_PROPERTY_LABELS.get(spec.label, spec.label)
+    group = _KO_PROPERTY_GROUPS.get(spec.group, spec.group)
+    unit = "입력 덱" if spec.unit == "input deck" else spec.unit
+    choice_labels = spec.choice_labels
+    if choice_labels:
+        translated = list(choice_labels)
+        if translated[0] == "Select an object":
+            translated[0] = "객체 선택"
+        elif translated[0] == "Global Cartesian":
+            translated[0] = "전역 직교 좌표계"
+        choice_labels = tuple(translated)
+    return replace(spec, label=label, group=group, unit=unit, choice_labels=choice_labels)
 
 
 class _SelectionTypeMenu(QObject):
@@ -90,6 +175,7 @@ class PrepWorkspace:
 
     def _install_command_surfaces(self):
         self.command_menus = {}
+        self._command_menu_buttons = {}
         for name, sections in menu_sections(self):
             if name in ("&Model", "&Conditions") and self.presentation not in (None, "beidprep"):
                 continue
@@ -134,6 +220,7 @@ class PrepWorkspace:
                 button.setToolTip(title + " commands")
                 button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
                 button.setMenu(self.command_menus[title])
+                self._command_menu_buttons[title] = (button, primary)
                 bar.addWidget(button)
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -160,6 +247,7 @@ class PrepWorkspace:
             content.setAlignment(Qt.AlignmentFlag.AlignCenter)
             content.setWordWrap(True)
             content.setToolTip(failure)
+            self._viewport_placeholder = content
 
         self.viewport_frame = ViewportFrame(content, "Model")
         self.viewport_frame.title.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
@@ -169,6 +257,7 @@ class PrepWorkspace:
 
     def _view_commands(self):
         bar = QToolBar("Model view", self)
+        self._model_view_toolbar = bar
         bar.setObjectName("modelViewCommands")
         bar.setIconSize(QSize(16, 16))
         bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
@@ -197,6 +286,20 @@ class PrepWorkspace:
         self.selection_type_menu = self._view_menu.addMenu("Selection type")
         self.selection_type_menu.setObjectName("selectionTypeMenu")
         self._selection_type_menu = _SelectionTypeMenu(self.pick_mode, self.selection_type_menu)
+        self._view_menu.addSeparator()
+        self.dark_theme_action = self._view_menu.addAction("Dark theme")
+        self.dark_theme_action.setObjectName("view.dark_theme")
+        self.dark_theme_action.setCheckable(True)
+        self.dark_theme_action.toggled.connect(
+            lambda checked: getattr(self, "apply_theme_mode", lambda *_: None)("dark" if checked else "light")
+        )
+        self.korean_ui_action = self._view_menu.addAction("Korean UI")
+        self.korean_ui_action.setObjectName("view.korean_ui")
+        self.korean_ui_action.setCheckable(True)
+        self.korean_ui_action.toggled.connect(
+            lambda checked: getattr(self, "apply_ui_language", lambda *_: None)("ko" if checked else "en")
+        )
+        self._view_menu.addSeparator()
         return bar
 
     def _install_navigation(self):
@@ -213,7 +316,7 @@ class PrepWorkspace:
         self.model_filter.textChanged.connect(self._filter_model)
         self.model_tree = ModelTree()
         self.model_tree.setSelectionMode(ModelTree.SelectionMode.ExtendedSelection)
-        self.model_tree.model().setHorizontalHeaderLabels(["Name", "Type", "Card"])
+        self.model_tree.model().setHorizontalHeaderLabels(list(_EN_TREE_HEADERS))
         self.model_tree.setColumnHidden(1, True)
         self.model_tree.setColumnHidden(2, False)
         self.model_tree.nodeSelected.connect(self._card_selected)
@@ -326,15 +429,20 @@ class PrepWorkspace:
         self.statusBar().addPermanentWidget(self._counts)
 
     def _present_document(self, summary):
-        name = str(summary.get("name") or "Untitled")
+        self._last_document_summary = dict(summary)
+        ko = getattr(self, "ui_language", "en") == "ko"
+        name = str(summary.get("name") or ("제목 없음" if ko else "Untitled"))
         self.setWindowTitle(f"CourantPrep 2026 — {name}{' *' if summary.get('dirty') else ''}")
-        self.viewport_frame.title.setText(name if summary.get("document_id") else "Model")
+        self.viewport_frame.title.setText(name if summary.get("document_id") else ("모델" if ko else "Model"))
         self.viewport_frame.title.setToolTip(name)
-        self.viewport_frame.context.setText("" if summary.get("document_id") else "Open a deck or project")
-        self.document_state.setText("Unsaved changes" if summary.get("dirty") else "")
+        self.viewport_frame.context.setText("" if summary.get("document_id") else ("덱 또는 프로젝트 열기" if ko else "Open a deck or project"))
+        self.document_state.setText(("저장되지 않은 변경" if ko else "Unsaved changes") if summary.get("dirty") else "")
         self.document_state.setVisible(bool(summary.get("dirty")))
         self._counts.setToolTip("OpenRadioss model" if summary.get("document_id") else "")
-        self._counts.setText(f"{summary.get('node_count', 0):,} nodes  ·  {summary.get('element_count', 0):,} elements")
+        if ko:
+            self._counts.setText(f"절점 {summary.get('node_count', 0):,}개  ·  요소 {summary.get('element_count', 0):,}개")
+        else:
+            self._counts.setText(f"{summary.get('node_count', 0):,} nodes  ·  {summary.get('element_count', 0):,} elements")
         self.messages.clear()
         for diagnostic in summary.get("diagnostics", ()):
             if isinstance(diagnostic, dict):
@@ -358,6 +466,12 @@ class PrepWorkspace:
 
     def _size_initial_sidebar(self):
         if hasattr(self, "reference_adapter"):
+            if getattr(self, "ui_language", "en") == "ko" and (self.presentation or "beidprep") == "beidprep":
+                width = max(800, self.width())
+                tree_width = max(240, round(width * 0.175))
+                prop_width = max(260, round(width * 0.185))
+                self.resizeDocks([self.model_dock, self.properties_dock], [tree_width, prop_width], Qt.Orientation.Horizontal)
+                return
             self.reference_adapter.resize(self.reference_bindings)
             return
         width = max(350, min(420, round(self.width() * .20)))
@@ -365,17 +479,32 @@ class PrepWorkspace:
 
     def _refresh_tree(self):
         nodes = self.provider.tree_nodes()
-        if nodes == self._tree_nodes:
+        lang = getattr(self, "ui_language", "en")
+        ko = lang == "ko"
+        if nodes == self._tree_nodes and getattr(self, "_tree_language", "en") == lang:
             return
         self._tree_nodes = nodes
+        self._tree_language = lang
         self._card_refs = {node.ref.object_id: node.ref for node in nodes}
         order = {name: index for index, name in enumerate(("Parts", "Materials", "Properties", "Groups",
                  "Constraints", "Contacts", "Loads", "Initial conditions", "Curves", "Nodes", "Elements", "Other cards"))}
+        ordered = sorted(nodes, key=lambda node: order.get(node.group, len(order)))
+        display_nodes = (
+            [replace(node, group=_KO_TREE_GROUPS.get(node.group, node.group)) for node in ordered]
+            if ko
+            else ordered
+        )
         self.model_tree.blockSignals(True)
         try:
-            self.model_tree.set_nodes(sorted(nodes, key=lambda node: order.get(node.group, len(order))))
+            self.model_tree.set_nodes(display_nodes)
             self.model_tree.setColumnHidden(1, True)
-            self.model_tree.model().setHeaderData(2, Qt.Orientation.Horizontal, "Card")
+            headers = _KO_TREE_HEADERS if ko else _EN_TREE_HEADERS
+            for col, title in enumerate(headers):
+                self.model_tree.model().setHeaderData(col, Qt.Orientation.Horizontal, title)
+            if ko:
+                self.model_tree.setColumnWidth(2, max(68, self.model_tree.columnWidth(2)))
+                self.model_tree.setColumnWidth(3, max(46, self.model_tree.columnWidth(3)))
+                self.model_tree.setColumnWidth(4, max(46, self.model_tree.columnWidth(4)))
             if self._selected_card_id not in self._card_refs:
                 self._selected_card_id = None
             self._restore_approved_selection()
@@ -423,13 +552,15 @@ class PrepWorkspace:
         target_key = (self._summary().get("document_epoch"), self._selected_card_id)
         retain_units = getattr(self, "_property_target_key", None) == target_key
         self._clear_form()
+        ko = getattr(self, "ui_language", "en") == "ko"
         cards = {card["id"]: card for card in self.session.list_cards()} if self._selected_card_id else {}
         card = cards.get(self._selected_card_id)
         if card is None:
             self._selected_card_id = None
-            self.property_title.setText("No object selected")
+            self.property_title.setText("선택된 객체 없음" if ko else "No object selected")
             self.property_subtitle.clear()
             self._present_card_source()
+            self._localize_card_source(ko)
             self.modeling.refresh()
             return
         ref = self._card_refs[self._selected_card_id]
@@ -439,9 +570,23 @@ class PrepWorkspace:
         self._field_specs = {field["name"]: field for field in fields}
         self._field_specs.update({spec.name: {"name": spec.name, "label": spec.label,
                                             "value": spec.value, "type": spec.kind} for spec in specs})
-        self.property_editor.set_fields(tuple(spec for spec in specs if spec.kind != "table"),
-                                        title=display_title(card.get("title") or "Properties"),
+        non_table_specs = tuple(spec for spec in specs if spec.kind != "table")
+        display_specs = tuple(_localize_property_spec_ko(s) for s in non_table_specs) if ko else non_table_specs
+        default_title = "속성" if ko else "Properties"
+        self.property_editor.set_fields(display_specs,
+                                        title=display_title(card.get("title") or default_title),
                                         subtitle=str(card.get("keyword") or ""))
+        if ko:
+            state_text = self.property_editor.edit_state.text()
+            if state_text == "Values":
+                self.property_editor.edit_state.setText("입력 값")
+            elif state_text == "Read-only":
+                self.property_editor.edit_state.setText("읽기 전용")
+            col_count = self.property_editor._header_model.columnCount()
+            if col_count == 2:
+                self.property_editor._header_model.setHorizontalHeaderLabels(["이름", "값"])
+            elif col_count == 3:
+                self.property_editor._header_model.setHorizontalHeaderLabels(["이름", "값", "단위"])
         if retain_units:
             for name, unit in previous_units.items():
                 selector = self.property_editor.unit_selectors.get(name)
@@ -454,19 +599,45 @@ class PrepWorkspace:
         self._connect_property_inputs()
         self._refresh_target_roles()
         self._present_card_source(ref)
+        self._localize_card_source(ko)
         units = self.provider.unit_context(ref)
-        self.units_note.setText(self._unit_caption(units))
+        self.units_note.setText(self._unit_caption(units, ko=ko))
         table = next((spec for spec in specs if spec.kind == "table"), None)
         if table:
             self._present_curve(table)
         if not specs or not any(spec.editable for spec in specs):
-            self.property_subtitle.setText(str(card.get("keyword") or "") + "  /  Read-only")
+            self.property_subtitle.setText(str(card.get("keyword") or "") + ("  /  읽기 전용" if ko else "  /  Read-only"))
             if specs:
                 self.units_note.clear()
         self.modeling.refresh()
 
+    def _localize_card_source(self, ko: bool) -> None:
+        if not hasattr(self, "card_source"):
+            return
+        if ko:
+            self.card_source.edit_button.setText("지원 필드 편집")
+            self.card_source.apply_button.setText("카드 원본 적용")
+            self.card_source.cancel_button.setText("편집 취소")
+            msg = self.card_source.message.text()
+            if msg == "This card is preserved read-only.":
+                self.card_source.message.setText("이 카드는 읽기 전용으로 보존됩니다.")
+            elif msg.startswith("Edit supported fixed-width values"):
+                self.card_source.message.setText("입력 덱 단위로 고정 폭 지원 필드를 편집합니다. 헤더·ID·주석은 보존됩니다.")
+        else:
+            self.card_source.edit_button.setText("Edit supported values")
+            self.card_source.apply_button.setText("Apply TEXT")
+            self.card_source.cancel_button.setText("Cancel TEXT")
+            msg = self.card_source.message.text()
+            if msg == "이 카드는 읽기 전용으로 보존됩니다.":
+                self.card_source.message.setText("This card is preserved read-only.")
+            elif msg.startswith("입력 덱 단위로 고정 폭"):
+                self.card_source.message.setText(
+                    "Edit supported fixed-width values in the input deck units. Headers, IDs and other source remain preserved."
+                )
+
     def _connect_property_inputs(self):
         deferred = self._deferred_property_drafts()
+        ko = getattr(self, "ui_language", "en") == "ko"
         for name, editor in self.property_editor.editors.items():
             if not editor.isEnabled():
                 continue
@@ -478,7 +649,7 @@ class PrepWorkspace:
                     if not deferred:
                         child.returnPressed.connect(lambda n=component, e=child: self._commit_text(n, e))
                 self.apply_vector_button.setToolTip("Apply all three velocity components together (Enter)")
-                self.apply_vector_button.setText("Apply velocity")
+                self.apply_vector_button.setText("속도 적용" if ko else "Apply velocity")
                 self.apply_vector_button.setVisible(not deferred)
             elif isinstance(editor, QCheckBox):
                 if not deferred:
@@ -493,7 +664,7 @@ class PrepWorkspace:
                 if not deferred:
                     editor.editingFinished.connect(lambda n=name, e=editor: self._commit_text(n, e))
         if deferred and not getattr(getattr(self, "reference_adapter", None), "defer_scalars", False):
-            self.apply_vector_button.setText("Apply properties")
+            self.apply_vector_button.setText("속성 적용" if ko else "Apply properties")
             self.apply_vector_button.setToolTip("Apply the complete property draft as one transaction")
             self.apply_vector_button.show()
 
@@ -529,9 +700,11 @@ class PrepWorkspace:
                                  Qt.Orientation.Horizontal)
 
     @staticmethod
-    def _unit_caption(units):
+    def _unit_caption(units, *, ko: bool = False):
         if units.get("unit_id") is not None:
-            return f"Material unit system: {units['unit_id']}"
+            return (f"재료 단위계: {units['unit_id']}" if ko else f"Material unit system: {units['unit_id']}")
         if units.get("global"):
+            if ko:
+                return "단위: " + ", ".join(f"{_KO_UNIT_KEYS.get(key, key)}: {value}" for key, value in units["global"].items())
             return "Units: " + ", ".join(f"{key}: {value}" for key, value in units["global"].items())
-        return "Units: input deck"
+        return "단위: 입력 덱" if ko else "Units: input deck"
