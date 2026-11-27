@@ -60,3 +60,81 @@ The linear-static deck fixed all translations on 833 base-plane nodes and distri
 Install the CAD and dev extras and run `python -B -m pytest -q -s tests/test_mesher_complex_3d_benchmarks.py`. The native control detects CCX on PATH or in WSL Ubuntu and leaves the generated mesh include, INP and DAT in the pytest case directory. The reported CAD and mesh runs used Windows Gmsh SDK 4.15.2.
 
 **Verification verdict.** Fourteen complex-benchmark cases passed in one Windows run (81.39 s), including automatic source STEP partition, reopened neutral files, actual rejected hybrid export and the supported WSL CCX solve. The independent rerun of `python -B -m pytest -q tests/test_hybrid_hex_core.py` passed all five cases (4.07 s). After introducing deterministic core add-back and the common quality implementation, the three affected B1/B2/B3 hybrid end-to-end tests passed together in 32.96 s; the B2 table reports this final run. These results admit the observed backend cases. No native mixed Pyramid5 structural response was obtained. The review ran on the feature worktree based on `a4f0c3216f9fcae88dd8283b0f1db6b1b5cd6cd2` with the mesher changes present.
+
+## Local integration verification
+
+The verified Prep implementation is `14c05dd8d3691a0e0b781aebe4d26cf115a3e1f4`. The companion Workbench solver matrix and native test inputs are in `4a24145d60e498b8adb1157908fd098d6f78a613` on `feature/wb-mesher-f0`, under `docs/mesher-solver-f0-matrix.md` and `tests/test_mesher_solver_f0_gate.py`. Both revisions belong to local feature branches. N25 and N26 remain open for product integration.
+
+The final Tet4 annuli had minimum dihedrals of 11.127°, 11.732° and 11.789° on B1, B2 and B3 respectively. The matching hex–pyramid / pyramid–tet face counts were 350 / 1,400, 668 / 2,672 and 156 / 624. Each case passed the duplicate-node, duplicate-cell, ordered-face and prescribed-skin audits. B3 retained one CAD triangulation per shared face.
+
+From the **Prep** worktree, the final three test modules ran 28 cases with zero skips using the supplied Python 3.13 interpreter and Gmsh 4.15.2.
+
+```powershell
+$prepPython = 'C:/SourceCodes/caelab-prep/.venv/Scripts/python.exe'
+$env:PYTHONPATH = "$PWD/src;$PWD/tests"
+$env:PYTHONDONTWRITEBYTECODE = '1'
+$env:TEMP = (New-Item -ItemType Directory -Force .test-tmp).FullName
+$env:TMP = $env:TEMP
+& $prepPython -B -m pytest -q --tb=short --basetemp=.test-tmp/final-mesher tests/test_mesher_complex_3d_benchmarks.py tests/test_cad_sweep_controls.py tests/test_hybrid_hex_core.py
+```
+
+From the **Workbench** worktree, all 35 native gate cases ran. The Ubuntu WSL distribution supplied CalculiX 2.21 and the GNU OpenRadioss build. The OpenCourant release ran on Windows.
+
+```powershell
+$wbPython = 'C:/Program Files/Python313/python.exe'
+$env:PYTHONPATH = $PWD.Path
+$env:PYTHONDONTWRITEBYTECODE = '1'
+$env:TEMP = (New-Item -ItemType Directory -Force scratch/mesher-f0).FullName
+$env:TMP = $env:TEMP
+$env:CAELAB_OPENCOURANT = 'C:/SourceCodes/.tools/opencourant-20261011/win64/OpenCourant'
+$env:CAELAB_F0_OPENRADIOSS = 'C:/SourceCodes/OpenRadioss'
+& $wbPython -B -m pytest -q --basetemp=scratch/mesher-f0/final-mixed tests/test_mesher_solver_f0_gate.py
+```
+
+<details>
+<summary>Broader Windows regression commands</summary>
+
+Tests requiring the protected GUI sources and frozen contracts were outside the regression selection. Use the respective worktree and interpreter settings above. The additional Prep CAD fixture dependencies used here were cadquery-ocp 8.0.1.1.0, its matching proxy, and VTK 9.6.2 in the isolated scratch dependency directory.
+
+The final Prep selection comprised 64 pre-existing test modules and finished with **1,604 passed and 13 skipped**. The following lists reproduce the module selection separately from the new mesher campaigns.
+
+```powershell
+$env:PYTHONPATH = "$PWD/src;$PWD/tests;$PWD/.test-tmp/deps"
+$prepModules = @'
+analysis_cases analysis_cases_solver blend_backend cad_mesh_replacement card_text cli_workflow
+condition_workflow conical_backend conical_blends curve_csv cylindrical_blends document_core
+element_deletion external_mesh external_mesh_sdk external_mesh_solver geometry_features
+geometry_inspection geometry_inspection_reader geometry_volume gmsh_adapter gmsh_criteria
+gmsh_topology group_member_review instance_references mesh_adoption mesh_edit_candidates
+mesh_target_drop meshing_criteria minimum_size_audit mixed_relations modeling_commands
+modeling_workflow multiresource_commands node_merge_orientation node_merges node_moves
+part_property_refresh part_reassignment planar_trapezoid prepared_replacement prepared_tet10
+project_roundtrip projection_contract rad_display_units rad_provider radioss_defaults
+radioss_editing radioss_modeling recipe_archives reconnection_attachment representative_native
+shell_normals solidcraft_source solver_generation source_models structured_adoption
+structured_geometry structured_hex8 structured_hex_adoption structured_mesh surface_tet
+surface_tet_backend tet10_geometry
+'@ -split '\s+' | ForEach-Object { "tests/test_$_.py" }
+& $prepPython -B -m pytest -q --tb=short --basetemp=.test-tmp/final-regression @prepModules
+```
+
+```powershell
+$env:TEMP = (New-Item -ItemType Directory -Force scratch/mesher-check).FullName
+$env:TMP = $env:TEMP
+$wbModules = @'
+solver_smoke solver_adapters result_delivery radioss_runs radioss_connections project_resume
+preprocessor_routing postprocessing_readers pde_scipy_solver pde_line openscience_provider
+native_results native_project native_jobs native_evidence native_discussions msh_c3d10
+model_run_persistence model_execution model_and_validate mdo_variables mdo_surrogate
+mdo_sensitivity mdo_pipeline mdo_pde_closed_loop mdo_pareto mdo_optimize mdo_objectives
+mdo_imports mdo_doe mdo_constraints mdo_calculix_evaluator material_prony_trs lsdyna_native
+job_batch jobs desktop_entry connections_summary code_aster_native calculix_converter
+calculix_c3d10_deck cad_program_connections auxiliary_owner
+'@ -split '\s+' | ForEach-Object { "tests/test_$_.py" }
+& $wbPython -B -m pytest -q --tb=short --basetemp=scratch/mesher-check/base @wbModules
+& $wbPython -B -m pytest -q --tb=short --basetemp=scratch/mesher-check/additional tests/test_doc_sync.py tests/test_installer.py tests/test_assist_rag.py tests/test_rag_evaluation.py tests/test_assist_experts.py tests/test_native_frame_view.py tests/test_bundle_external_launch.py
+```
+
+The first Workbench run passed 990 cases with 21 skips. Its Windows process-stop test emitted a subprocess text-decoding warning. The additional seven modules passed 65 cases and failed three installer cases on Windows. Those three produced identical assertions on the Workbench baseline `636532f`. They passed in Ubuntu WSL when run with `python3 -B -m pytest -q -s tests/test_installer.py -k 'manual_entry or archive_install'`. The installer expectations exercise Linux manual registration and archive installation.
+
+</details>
