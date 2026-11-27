@@ -89,17 +89,27 @@ def test_geometry_draft_blocks_generation_cancel_preserves_then_fork_retargets(m
     dialog.reject()
 
 
-def test_two_patch_divisions_remain_editable_but_geometry_fork_is_unavailable(tmp_path,qt_widgets):
+def test_two_patch_divisions_and_shared_vertex_geometry_fork_work_together(tmp_path,monkeypatch,qt_widgets):
     path=Path(__file__).parents[1]/'scripts/evaluation/structured_f2/holdout-inputs.json'
     spec=next(case['input'] for case in json.loads(path.read_text()) if case['id']=='Q-D2')
     source=tmp_path/'two.json';source.write_text(json.dumps(spec))
+    raw=source.read_bytes()
     session=PrepSession();session.new_document('Patches',{'mass':'Mg','length':'mm','time':'s'})
     dialog=MeshCandidateDialog(session,enable_viewport=False)
     choose(dialog.source_kind,'structured_recipe');dialog.source.setText(str(source));assert dialog.load_divisions()
-    assert len(dialog.division_edits)==2 and dialog.geometry_edits==[]
-    assert not dialog.geometry_toggle.isEnabled() and not dialog.fork_geometry()
+    assert len(dialog.division_edits)==2 and len(dialog.geometry_edits)==len(spec['vertices'])
+    assert dialog.geometry_toggle.isEnabled()
     edit(dialog.division_edits[0][0],dialog.division_edits[0][0].numeric_value()+1)
     assert not dialog._geometry_dirty and dialog.generate_button.isEnabled()
+    dialog.geometry_toggle.setChecked(True)
+    y_edit=dialog.geometry_edits[1].editors[1]
+    edit(y_edit,y_edit.numeric_value()-1.5)
+    assert dialog._geometry_dirty and not dialog.generate_button.isEnabled()
+    target=tmp_path/'two_fork.json'
+    monkeypatch.setattr(QFileDialog,'getSaveFileName',lambda *args:(str(target),''))
+    assert dialog.fork_geometry(),dialog.error.text()
+    assert not dialog._geometry_dirty and dialog.generate_button.isEnabled()
+    assert dialog.source.text()==str(target.resolve()) and source.read_bytes()==raw
     dialog.reject()
 
 

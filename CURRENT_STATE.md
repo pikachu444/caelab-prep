@@ -2,6 +2,13 @@
 
 실행 순서는 [단계 계획 앞부분](docs/execution-stages.md#execution-order)을 따릅니다. 첫 코드는 D03 표시 갱신이며 D23/D38의 기존 과업 확인, D24/D25 성능·편집 확대, D26–D31 메시·8제품 후속, D19 재료 적용, D33/D34/D36 실제 환경·전체 인수까지 이어갑니다. 이 문서의 N01–N26 상태와 7/16/3 분류는 유지합니다.
 
+## Wave 1 D28/D29 다중 패치 구조화 메시 생성기·공유 절점 포크 GUI 및 다크 테마·한국어 UI — 2026-11-27
+
+- **다중 패치 공유 절점 형상 편집·포크 (`MeshCandidateDialog`)**: 2–32개 공평면 Quad4 / 스윕 Hex8 레시피에서 공유 절점 ID별 좌표(`VectorEdit`)와 스윕 벡터 편집을 활성화하고, `validate_recipe` 사전 검증 후 `fork_vertex_recipe`로 새 레시피 JSON을 생성·재적재합니다(원본 레시피 바이트 불변 보존). [메시 워크플로](src/caelab_prep/ui/mesh_workflow.py)
+- **대화형 다중 패치 레시피 생성기 (`StructuredRecipeBuilderDialog` & `&Mesh` 메뉴)**: 단일 패치, 2패치 플랜지, 3패치 L-브래킷, 4패치 T-거셋, 4패치 중공 프레임(8개 명시 절점·4개 마이터 사다리꼴 패치) 프리셋과 `quad`/`hex` 모드·단위·분할 수(`nx`, `ny`, `layers`, `sweep_dz`) 실시간 검증 요약 및 JSON 저장·즉시 불러오기를 연결했습니다. [네이티브 메뉴](src/caelab_prep/ui/native_commands.py), [메시 워크플로](src/caelab_prep/ui/mesh_workflow.py)
+- **다크/라이트 테마, 한국어/영어 UI 전환 및 3D 선택 강조 Z-fighting 보정 (`MainWindow`, `PrepWorkspace`, `MeshViewport`)**: `DARK_TOKENS`·`build_stylesheet(mode)`·`icon(name, theme)`·`MeshViewport.set_theme_mode(mode)` 및 선택 요소 강조 폴리곤 오프셋(`SetResolveCoincidentTopologyToPolygonOffset` / `(-1, -1)`)을 적용했습니다. `CAELAB_THEME_MODE=dark` / `CAELAB_UI_LANGUAGE=ko` 환경변수 자동 초기화(Workbench `ProjectWindow` 실행 연동), `&View` 메뉴 실시간 전환, 모델 트리 5개 열 헤더(`이름·유형·카드·표시·색상`)·카테고리 그룹(`파트·재료·단면 속성` 등)·`속성 검사기` 필드 표시 번역을 지원하며, 미지정 시 기본값은 기존 8개 참조 프로파일 호환을 위해 `light` + `en`을 유지합니다. [디자인 토큰](src/caelab_prep/ui/design/tokens.py), [메인 창](src/caelab_prep/ui/main_window.py), [뷰포트](src/caelab_prep/ui/viewport.py)
+- **검증 (`QT_QPA_PLATFORM=offscreen`, Python 3.13.5 + Gmsh 4.15.2 + VTK)**: [신규 통합 UI 검사](tests/test_prep_theme_and_hex_builder_ui.py)를 포함한 Wave 1 구조화 메시·뷰포트·참조 프로파일·트리 10개 모듈 통합 검사에서 **220 passed, 1 skipped, 0 failed**(추가 모델링·워크스페이스 회귀 4개 모듈 **53 passed, 0 failed**) 통과를 확인했습니다(실제 Windows 데스크톱 대화형 화면 검증은 후속 구분 유지).
+
 ## P0 Track A2 소스 모델 표시와 Windows 실행 — 2026-11-23
 
 - Source Models에서 소스·인스턴스·리소스의 내부 ID 전용 열과 괄호 접미사를 제거했습니다. 참조 선택, 생성·삭제 및 Undo/Redo에는 기존 내부 ID를 사용합니다. 리소스 이름과 보관된 작업 파일 경로는 기존 값을 표시합니다. [대화상자 코드](src/caelab_prep/ui/source_models.py)

@@ -5,7 +5,8 @@ _SPACING = (2, 4, 6, 10, 16)
 TOKENS = {
     "surface": "#ffffff", "workspace": "#dbe1e7", "text": "#243343",
     "muted": "#536575", "border": "#b7c2cd", "accent": "#246a9c",
-    "accent_hover": "#195780", "selection": "#d9e9f6", "selection_text": "#143e61",
+    "accent_hover": "#195780", "on_accent": "#ffffff",
+    "selection": "#d9e9f6", "selection_text": "#143e61",
     "error": "#b23838", "error_surface": "#fff5f3", "focus": "#3788c4",
     "subtle": "#f4f6f8", "alternate": "#f7f9fb", "raised": "#e9eef3",
     "divider": "#ccd5de", "hover": "#e6eef5", "hover_border": "#adc6dc",
@@ -35,3 +36,47 @@ TOKENS = {
     "plot_left": 64, "plot_top": 30, "plot_right": 24, "plot_bottom": 54,
     "plot_line_width": 2, "plot_marker_radius": 3,
 }
+
+DARK_TOKENS = {
+    **TOKENS,
+    "workspace": "#141920",
+    "surface": "#1d242e",
+    "text": "#e6edf3",
+    "muted": "#9bb0c6",
+    "border": "#344254",
+    "divider": "#2a3644",
+    "subtle": "#18202a",
+    "alternate": "#212a36",
+    "raised": "#232d3a",
+    "accent": "#4ea1f3",
+    "accent_hover": "#6bb3f8",
+    "on_accent": "#ffffff",
+    "selection": "#1f3d5c",
+    "selection_text": "#f0f6fc",
+    "button": "#25303e",
+    "button_border": "#3b4b5f",
+    "button_hover_border": "#5c84ad",
+    "hover": "#2a3848",
+    "hover_border": "#4e6a88",
+    "checked": "#223b54",
+    "checked_border": "#4ea1f3",
+    "pressed": "#1b3147",
+    "focus": "#58a6ff",
+    "disabled": "#192029",
+    "disabled_text": "#637587",
+    "disabled_border": "#283341",
+    "disabled_accent": "#253545",
+    "heading": "#eaf2fa",
+    "group_heading": "#cfe0f2",
+    "icon_stroke": "#d3e0ee",
+    "error": "#f47067",
+    "error_surface": "#3a1e20",
+    "plot_text": "#9bb0c6",
+    "plot_grid": "#283442",
+    "plot_border": "#3d4f63",
+    "font_family": "'Malgun Gothic', 'Segoe UI'",
+}
+
+
+def tokens_for_theme(mode: str = "light") -> dict:
+    return DARK_TOKENS if str(mode).strip().lower() == "dark" else TOKENS

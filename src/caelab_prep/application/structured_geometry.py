@@ -113,17 +113,18 @@ def _validate(spec):
     return dict(measure=measure, expected=expected)
 
 def _normalize(spec):
-    """Two patches share topology only through explicit vertex IDs."""
+    """Patches share topology only through explicit vertex IDs."""
     if not isinstance(spec, dict):
         raise ValueError('recipe must be a JSON object')
     if 'patches' not in spec:
-        return ([spec], _validate(spec), None)
+        _validate(spec)
+        return [spec], {}, []
     if spec.get('mode') not in ('quad', 'hex'):
         raise ValueError('shared patches require quad or hex mode')
     exact_keys(spec, ('mode', 'unit', 'vertices', 'patches', *(('vector', 'layers') if spec['mode'] == 'hex' else ())), ('name',))
     patches = spec['patches']
-    if len(patches) != 2:
-        raise ValueError('this experiment supports exactly two adjacent patches')
+    if not 2 <= len(patches) <= 32:
+        raise ValueError('multi-patch structured recipes require 2 to 32 patches')
     vertices = {key: vec(value) for key, value in spec['vertices'].items()}
     if any((not isinstance(key, str) or not key for key in vertices)):
         raise ValueError('explicit nonempty vertex IDs required')
@@ -131,45 +132,64 @@ def _normalize(spec):
         exact_keys(patch, ('id', 'corners', 'divisions'))
         if not isinstance(patch['id'], str) or not patch['id']:
             raise ValueError('explicit nonempty patch IDs required')
-    if len({patch['id'] for patch in patches}) != 2:
+    if len({patch['id'] for patch in patches}) != len(patches):
         raise ValueError('distinct patch IDs required')
-    singles, expectations, edges = ([], [], {})
-    for patch in patches:
+    singles, edges = [], defaultdict(list)
+    edge_patches = defaultdict(list)
+    for patch_index, patch in enumerate(patches):
         ids = patch['corners']
         if len(ids) != 4 or len(set(ids)) != 4:
             raise ValueError('four distinct explicit vertex IDs required')
         single = {key: value for key, value in spec.items() if key not in ('vertices', 'patches')}
         single.update(corners=[vertices[key] for key in ids], divisions=patch['divisions'])
-        expectations.append(_validate(single))
+        _validate(single)
         singles.append(single)
         for i in range(4):
-            edge = frozenset((ids[i], ids[(i + 1) % 4]))
-            edges.setdefault(edge, []).append(patch['divisions'][i % 2])
+            edge = tuple(sorted((ids[i], ids[(i + 1) % 4])))
+            edges[edge].append(patch['divisions'][i % 2])
+            edge_patches[edge].append(patch_index)
+            if len(edge_patches[edge]) > 2:
+                raise ValueError('non-manifold shared edge')
     shared = [edge for edge, counts in edges.items() if len(counts) == 2]
-    if len(shared) != 1:
+    if len(patches) == 2 and len(shared) != 1:
         raise ValueError('exactly one explicit shared edge required; coordinates are not merged')
-    edge = shared[0]
-    if set(patches[0]['corners']) & set(patches[1]['corners']) != edge:
-        raise ValueError('patches may share only the declared edge vertices')
-    if len(set(edges[edge])) != 1:
-        raise ValueError('shared-edge division counts must agree')
+    corners = [set(patch['corners']) for patch in patches]
+    for (i, first), (j, second) in itertools.combinations(enumerate(corners), 2):
+        common = first & second
+        if len(common) >= 2 and (len(common) != 2 or edge_patches.get(tuple(sorted(common))) != [i, j]):
+            raise ValueError('patches may share only the declared edge vertices')
+    neighbors = [set() for _ in patches]
+    for edge in shared:
+        if len(set(edges[edge])) != 1:
+            raise ValueError('shared-edge division counts must agree')
+        i, j = edge_patches[edge]
+        neighbors[i].add(j)
+        neighbors[j].add(i)
+    reached, pending = {0}, [0]
+    while pending:
+        adjacent = neighbors[pending.pop()] - reached
+        reached.update(adjacent)
+        pending.extend(adjacent)
+    if len(reached) != len(patches):
+        raise ValueError('patches must form one connected component through explicit shared edges')
     p = singles[0]['corners']
     normal = cross(sub(p[1], p[0]), sub(p[3], p[0]))
     scale = max((norm(sub(v, p[0])) for single in singles for v in single['corners']))
-    if any((abs(dot(sub(v, p[0]), normal)) > norm(normal) * scale * 1e-10 for v in singles[1]['corners'])):
-        raise ValueError('the two source patches must be coplanar')
-    q = singles[1]['corners']
-    if dot(normal, cross(sub(q[1], q[0]), sub(q[3], q[0]))) <= 0:
-        raise ValueError('patch normals must have the same orientation')
-    a, b = [vertices[key] for key in sorted(edge)]
-    side = []
-    for single in singles:
-        center = tuple((sum((v[i] for v in single['corners'])) / 4 for i in range(3)))
-        side.append(dot(cross(sub(b, a), sub(center, a)), normal))
-    if side[0] * side[1] >= 0:
-        raise ValueError('patch interiors must lie on opposite sides of the shared edge')
-    expected = dict(measure=sum((e['measure'] for e in expectations)), expected=sum((e['expected'] for e in expectations)))
-    return (singles, expected, edges[edge][0])
+    plane_tolerance = norm(normal) * scale * 1e-10
+    for single in singles[1:]:
+        q = single['corners']
+        if any(abs(dot(sub(v, p[0]), normal)) > plane_tolerance for v in q):
+            raise ValueError('the two source patches must be coplanar' if len(patches) == 2
+                             else 'all source patches must be coplanar')
+        if dot(normal, cross(sub(q[1], q[0]), sub(q[3], q[0]))) <= 0:
+            raise ValueError('patch normals must have the same orientation')
+    centers = [tuple(sum(axis) / 4 for axis in zip(*single['corners'])) for single in singles]
+    for edge in shared:
+        a, b = (vertices[key] for key in edge)
+        side0, side1 = (dot(cross(sub(b, a), sub(centers[i], a)), normal) for i in edge_patches[edge])
+        if side0 * side1 >= 0:
+            raise ValueError('patch interiors must lie on opposite sides of the shared edge')
+    return singles, edges, shared
 
 def add(a, b):
     return tuple((x + y for x, y in zip(a, b)))
@@ -369,9 +389,8 @@ def _verify_records(case, nodes, elements, contract):
         group_ids.append(ids)
     if not set().union(*group_ids) == set(top):
         raise PrepError('invalid_structured_mesh', str('physical sources not exhaustive'))
-    if len(group_ids) == 2:
-        if not not group_ids[0] & group_ids[1]:
-            raise PrepError('invalid_structured_mesh', str('Structured mesh invariant failed.'))
+    if sum(map(len, group_ids)) != len(top):
+        raise PrepError('invalid_structured_mesh', str('Structured mesh invariant failed.'))
     report = dict(elements=len(top), active_nodes=len(active), all_msh_nodes=len(nodes), max_lattice_coordinate_error=deviation, coordinate_tolerance=delta, physical_group_cells=[len(s) for s in group_ids], hanging_nodes=0, connected_components=1)
     measure = 0.0
     min_jac = math.inf
@@ -405,14 +424,17 @@ def _verify_records(case, nodes, elements, contract):
         sides = SIDES_Q if dim == 2 else SIDES_H
         incidence = topology(top, sides)
         report.update(boundary_sides=sum((len(rows) == 1 for rows in incidence.values())), interior_sides=sum((len(rows) == 2 for rows in incidence.values())))
-        if len(group_ids) == 2:
-            shared = [face for face, rows in incidence.items() if len(rows) == 2 and (rows[0][0] in group_ids[0]) != (rows[1][0] in group_ids[0])]
-            shared_nodes = set((n for face in shared for n in face))
+        if len(group_ids) >= 2:
+            owner_patch = {eid: index for index, group in enumerate(group_ids) for eid in group}
+            shared = [face for face, rows in incidence.items()
+                      if len(rows) == 2 and owner_patch[rows[0][0]] != owner_patch[rows[1][0]]]
+            shared_nodes = {node for face in shared for node in face}
             if not len(shared) == expect['shared_boundary_cells']:
                 raise PrepError('invalid_structured_mesh', str('Structured mesh invariant failed.'))
             if not len(shared_nodes) == expect['shared_nodes']:
                 raise PrepError('invalid_structured_mesh', str('Structured mesh invariant failed.'))
-            if not set(lattice_ids[0]) & set(lattice_ids[1]) == shared_nodes:
+            lattice_uses = Counter(node for lattice in lattice_ids for node in lattice)
+            if {node for node, uses in lattice_uses.items() if uses >= 2} != shared_nodes:
                 raise PrepError('invalid_structured_mesh', str('Structured mesh invariant failed.'))
             report.update(shared_boundary_cells=len(shared), shared_nodes=len(shared_nodes))
         normal = expect['source_normal']
@@ -466,15 +488,21 @@ def validate_recipe(spec):
             raise ValueError('Only planar quad patches and positive straight hex sweeps are supported.')
         # Reject NaN/Infinity before hashing or passing JSON to a child process.
         spec = json.loads(json.dumps(spec, allow_nan=False))
-        singles, _, shared = _normalize(spec)
+        singles, edges, shared = _normalize(spec)
         if 'vertices' in spec and set(spec['vertices']) != {key for patch in spec['patches'] for key in patch['corners']}:
             raise ValueError('Unused source vertices are outside the recipe topology.')
         mode, dim = spec['mode'], 2 if spec['mode'] == 'quad' else 3
         counts = [single['divisions'] for single in singles]
         layers = spec['layers'] if dim == 3 else 1
         elements = sum(nx * ny for nx, ny in counts) * layers
-        nodes2 = sum((nx + 1) * (ny + 1) for nx, ny in counts) - ((shared + 1) if shared is not None else 0)
-        active_nodes = nodes2 * (layers + 1 if dim == 3 else 1)
+        if shared:
+            nodes2 = (len(spec['vertices']) + sum(divisions[0] - 1 for divisions in edges.values())
+                      + sum((nx - 1) * (ny - 1) for nx, ny in counts))
+        else:
+            nx, ny = counts[0]
+            nodes2 = (nx + 1) * (ny + 1)
+        planes = layers + 1 if dim == 3 else 1
+        active_nodes = nodes2 * planes
         if elements > MAX_ELEMENTS or active_nodes > MAX_NODES:
             raise PrepError('recipe_budget', 'The structured recipe exceeds the explicit generation budget.',
                             {'elements': elements, 'active_nodes': active_nodes,
@@ -493,9 +521,12 @@ def validate_recipe(spec):
             raise ValueError('Nonfinite or nonpositive analytic source measure.')
         expectation = dict(elements=elements, active_nodes=active_nodes, measure=measure,
                            source_normal=normal)
-        if shared is not None:
-            expectation.update(shared_boundary_cells=shared * layers,
-                               shared_nodes=(shared + 1) * (layers + 1 if dim == 3 else 1))
+        if shared:
+            shared_vertices = {vertex for edge in shared for vertex in edge}
+            shared_divisions = [edges[edge][0] for edge in shared]
+            shared_nodes2 = len(shared_vertices) + sum(divisions - 1 for divisions in shared_divisions)
+            expectation.update(shared_boundary_cells=sum(shared_divisions) * layers,
+                               shared_nodes=shared_nodes2 * planes)
         return dict(singles=tuple(singles), dimension=dim, expected_elements=elements,
                     expected_active_nodes=active_nodes, expected_measure=measure,
                     source_normal=normal, scale=scale, unit=spec['unit'],

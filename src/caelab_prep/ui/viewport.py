@@ -81,6 +81,7 @@ class MeshViewport(QWidget):
         self._visible_grid = vtk.vtkMultiBlockDataSet()
         self._render_failed = False
         self._pick_mode = "element"
+        self._theme_mode = "light"
         self._grid = vtk.vtkUnstructuredGrid()
         self._renderer = vtk.vtkRenderer()
         self._renderer.SetBackground(0.84, 0.87, 0.90)
@@ -103,8 +104,14 @@ class MeshViewport(QWidget):
         self._orientation.SetInteractor(self._widget)
         self._orientation.SetViewport(0.0, 0.0, 0.15, 0.19)
         self._widget.AddObserver("LeftButtonPressEvent", self._on_pick, 1.0)
+        if hasattr(vtk.vtkMapper, "SetResolveCoincidentTopologyToPolygonOffset"):
+            vtk.vtkMapper.SetResolveCoincidentTopologyToPolygonOffset()
         self._mapper = vtk.vtkCompositePolyDataMapper()
         self._mapper.SetInputDataObject(self._visible_grid)
+        if hasattr(self._mapper, "SetResolveCoincidentTopologyToPolygonOffset"):
+            self._mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        if hasattr(self._mapper, "SetRelativeCoincidentTopologyPolygonOffsetParameters"):
+            self._mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(1, 1)
         self._actor = vtk.vtkActor()
         self._actor.SetMapper(self._mapper)
         self._actor.GetProperty().EdgeVisibilityOn()
@@ -135,7 +142,11 @@ class MeshViewport(QWidget):
             return
         self._render_failed = True
         self._hint.setText("3D rendering failed. Check Messages for graphics errors.")
-        self._hint.setStyleSheet("color: #8c3030; background: #fff6f4; padding: 18px;")
+        self._hint.setStyleSheet(
+            "color: #f47067; background: #3a1e20; padding: 18px;"
+            if self._theme_mode == "dark"
+            else "color: #8c3030; background: #fff6f4; padding: 18px;"
+        )
         self._hint.show()
         self.diagnostic.emit("The 3D renderer reported an error. Check the graphics driver or rendering environment. The model document remains available.")
 
@@ -414,6 +425,35 @@ class MeshViewport(QWidget):
     def set_pick_mode(self, mode: str):
         self._pick_mode = mode
 
+    def set_theme_mode(self, mode: str):
+        dark = str(mode).strip().lower() == "dark"
+        self._theme_mode = "dark" if dark else "light"
+        if dark:
+            self._renderer.SetBackground(0.09, 0.12, 0.16)
+            self._renderer.SetBackground2(0.16, 0.21, 0.27)
+            caption_color = (0.86, 0.90, 0.95)
+            edge_color = (0.76, 0.84, 0.93)
+        else:
+            self._renderer.SetBackground(0.84, 0.87, 0.90)
+            self._renderer.SetBackground2(0.97, 0.98, 0.985)
+            caption_color = (0.16, 0.20, 0.24)
+            edge_color = (0.24, 0.32, 0.4)
+        self._renderer.GradientBackgroundOn()
+        for caption in (
+            self._axes.GetXAxisCaptionActor2D(),
+            self._axes.GetYAxisCaptionActor2D(),
+            self._axes.GetZAxisCaptionActor2D(),
+        ):
+            caption.GetCaptionTextProperty().SetColor(*caption_color)
+        self._actor.GetProperty().SetEdgeColor(*edge_color)
+        if self._render_failed:
+            self._hint.setStyleSheet(
+                "color: #f47067; background: #3a1e20; padding: 18px;"
+                if dark
+                else "color: #8c3030; background: #fff6f4; padding: 18px;"
+            )
+        self.render()
+
     def set_edges_visible(self, visible: bool):
         self._actor.GetProperty().SetEdgeVisibility(bool(visible))
         self.render()
@@ -586,6 +626,14 @@ class MeshViewport(QWidget):
         mapper = vtk.vtkDataSetMapper()
         mapper.SetInputData(highlight)
         mapper.ScalarVisibilityOff()
+        if hasattr(vtk.vtkMapper, "SetResolveCoincidentTopologyToPolygonOffset"):
+            vtk.vtkMapper.SetResolveCoincidentTopologyToPolygonOffset()
+        if hasattr(mapper, "SetResolveCoincidentTopologyToPolygonOffset"):
+            mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        if hasattr(mapper, "SetRelativeCoincidentTopologyPolygonOffsetParameters"):
+            mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(-1, -1)
+        if hasattr(mapper, "SetRelativeCoincidentTopologyLineOffsetParameters"):
+            mapper.SetRelativeCoincidentTopologyLineOffsetParameters(-2, -2)
         prop = self._highlight.GetProperty()
         prop.SetRepresentationToSurface()
         prop.SetColor(0.95, 0.52, 0.12)
