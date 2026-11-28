@@ -4,22 +4,48 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import math
+import os
+from pathlib import Path
 
-from PySide6.QtCore import QSignalBlocker, QSize, Qt, Signal
-from PySide6.QtGui import QGuiApplication, QImage, QPainter
+from PySide6.QtCore import QPoint, QRect, QSignalBlocker, QSize, Qt, Signal
+from PySide6.QtGui import QFontDatabase, QGuiApplication, QImage, QPainter
 from PySide6.QtWidgets import (
     QButtonGroup,
     QFrame,
     QHBoxLayout,
     QLabel,
+    QLayout,
+    QLayoutItem,
     QSizePolicy,
     QSlider,
     QStackedLayout,
     QToolButton,
+    QVBoxLayout,
     QWidget,
 )
 
 from .design import element_family_palette, tokens_for_theme
+
+
+_OFFSCREEN_FONTS_CHECKED = False
+
+
+def ensure_windows_offscreen_fonts() -> None:
+    """Register Windows UI fonts when running under QT_QPA_PLATFORM=offscreen."""
+    global _OFFSCREEN_FONTS_CHECKED
+    if _OFFSCREEN_FONTS_CHECKED or os.name != "nt":
+        return
+    if QGuiApplication.instance() is None or QGuiApplication.platformName() != "offscreen":
+        return
+    _OFFSCREEN_FONTS_CHECKED = True
+    existing = set(QFontDatabase.families())
+    if "Malgun Gothic" in existing and "Segoe UI" in existing:
+        return
+    fonts_dir = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
+    for fname in ("malgun.ttf", "malgunbd.ttf", "segoeui.ttf", "segoeuib.ttf"):
+        fpath = fonts_dir / fname
+        if fpath.is_file():
+            QFontDatabase.addApplicationFont(str(fpath))
 
 
 SOLID_ELEMENT_FAMILIES = (
@@ -1095,11 +1121,84 @@ class MeshViewport(QWidget):
             self._initialized = False
 
 
+class _ChipFlowLayout(QLayout):
+    """Left-aligned wrapping flow layout for element-family legend chips."""
+
+    def __init__(self, parent: QWidget | None = None, *, h_spacing: int = 5, v_spacing: int = 3):
+        super().__init__(parent)
+        self._items: list[QLayoutItem] = []
+        self._h_spacing = h_spacing
+        self._v_spacing = v_spacing
+
+    def addItem(self, item: QLayoutItem) -> None:
+        self._items.append(item)
+
+    def count(self) -> int:
+        return len(self._items)
+
+    def itemAt(self, index: int) -> QLayoutItem | None:
+        if 0 <= index < len(self._items):
+            return self._items[index]
+        return None
+
+    def takeAt(self, index: int) -> QLayoutItem | None:
+        if 0 <= index < len(self._items):
+            return self._items.pop(index)
+        return None
+
+    def expandingDirections(self) -> Qt.Orientation:
+        return Qt.Orientation(0)
+
+    def hasHeightForWidth(self) -> bool:
+        return True
+
+    def heightForWidth(self, width: int) -> int:
+        return self._do_layout(QRect(0, 0, max(0, width), 0), test_only=True)
+
+    def setGeometry(self, rect: QRect) -> None:
+        super().setGeometry(rect)
+        self._do_layout(rect, test_only=False)
+
+    def sizeHint(self) -> QSize:
+        return self.minimumSize()
+
+    def minimumSize(self) -> QSize:
+        max_h = 0
+        for item in self._items:
+            w = item.widget()
+            ih = w.minimumHeight() if w is not None else item.minimumSize().height()
+            max_h = max(max_h, ih)
+        m = self.contentsMargins()
+        return QSize(0, max_h + m.top() + m.bottom())
+
+    def _do_layout(self, rect: QRect, *, test_only: bool) -> int:
+        m = self.contentsMargins()
+        eff = rect.adjusted(m.left(), m.top(), -m.right(), -m.bottom())
+        x = eff.x()
+        y = eff.y()
+        line_height = 0
+        for item in self._items:
+            w = item.widget()
+            sz = w.minimumSize().expandedTo(w.sizeHint()).boundedTo(w.maximumSize()) if w is not None else item.sizeHint()
+            next_x = x + sz.width() + self._h_spacing
+            if line_height > 0 and x + sz.width() > eff.right() + 1:
+                x = eff.x()
+                y = y + line_height + self._v_spacing
+                next_x = x + sz.width() + self._h_spacing
+                line_height = 0
+            if not test_only:
+                item.setGeometry(QRect(QPoint(x, y), sz))
+            x = next_x
+            line_height = max(line_height, sz.height())
+        return (y + line_height - rect.y()) + m.bottom()
+
+
 class ViewportInspectionBar(QFrame):
     """Compact inline 3D inspection strip for crinkle-cut slicing and family colors."""
 
     def __init__(self, viewport: QWidget | None = None, parent: QWidget | None = None, *,
                  language: str = "en", theme_mode: str = "light"):
+        ensure_windows_offscreen_fonts()
         super().__init__(parent)
         self.setObjectName("viewportInspectionBar")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -1108,9 +1207,14 @@ class ViewportInspectionBar(QFrame):
         self.theme_mode = "dark" if str(theme_mode).strip().lower() == "dark" else "light"
         self._chips: list[tuple[str, QFrame, QFrame, QLabel]] = []
 
-        row = QHBoxLayout(self)
-        row.setContentsMargins(8, 2, 8, 2)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(8, 2, 8, 2)
+        outer.setSpacing(3)
+
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(5)
+        outer.addLayout(row)
 
         self.section_label = QLabel()
         self.section_label.setObjectName("propertyLabel")
@@ -1177,14 +1281,17 @@ class ViewportInspectionBar(QFrame):
             self.color_buttons[key] = btn
             row.addWidget(btn)
         self.color_buttons["part"].setChecked(True)
+        row.addStretch(1)
 
         self.legend_container = QWidget(self)
         self.legend_container.setObjectName("elementFamilyLegend")
-        self.legend_layout = QHBoxLayout(self.legend_container)
-        self.legend_layout.setContentsMargins(2, 0, 0, 0)
-        self.legend_layout.setSpacing(4)
-        row.addWidget(self.legend_container)
-        row.addStretch(1)
+        legend_sp = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        legend_sp.setHeightForWidth(True)
+        self.legend_container.setSizePolicy(legend_sp)
+        self.legend_layout = _ChipFlowLayout(self.legend_container, h_spacing=5, v_spacing=3)
+        self.legend_layout.setContentsMargins(0, 1, 0, 1)
+        self.legend_container.hide()
+        outer.addWidget(self.legend_container)
 
         self.axis_group.buttonClicked.connect(self._push_slice_to_viewport)
         self.slice_slider.valueChanged.connect(self._on_slider_changed)
@@ -1195,8 +1302,39 @@ class ViewportInspectionBar(QFrame):
         self.apply_theme_mode(self.theme_mode)
         self.bind_viewport(viewport)
 
+    def sizeHint(self) -> QSize:
+        sh = super().sizeHint()
+        mh = super().minimumSizeHint()
+        return QSize(sh.width(), max(sh.height(), mh.height()))
+
     def minimumSizeHint(self) -> QSize:
-        return QSize(0, super().minimumSizeHint().height())
+        sh = super().sizeHint()
+        mh = super().minimumSizeHint()
+        return QSize(0, max(sh.height(), mh.height()))
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._sync_legend_height()
+
+    def _invalidate_bar_geometry(self) -> None:
+        if self.layout() is not None:
+            self.layout().invalidate()
+        self.updateGeometry()
+        parent = self.parentWidget()
+        if parent is not None and parent.layout() is not None:
+            parent.layout().invalidate()
+            parent.layout().activate()
+
+    def _sync_legend_height(self) -> None:
+        if not self.legend_container.isVisible() or self.legend_layout.count() == 0:
+            return
+        outer_m = self.layout().contentsMargins()
+        avail_w = max(160, self.width() - outer_m.left() - outer_m.right())
+        needed_h = max(20, self.legend_layout.heightForWidth(avail_w))
+        if self.legend_container.height() != needed_h or self.legend_container.minimumHeight() != needed_h:
+            self.legend_container.setFixedHeight(needed_h)
+        self.legend_layout.invalidate()
+        self._invalidate_bar_geometry()
 
     def bind_viewport(self, viewport: QWidget | None) -> None:
         if self._viewport is viewport:
@@ -1286,7 +1424,9 @@ class ViewportInspectionBar(QFrame):
         vp = self._viewport
         if (vp is None or not hasattr(vp, "color_mode") or vp.color_mode() != "element_family"
                 or not hasattr(vp, "element_family_colors")):
-            self.legend_container.hide()
+            if not self.legend_container.isHidden():
+                self.legend_container.hide()
+                self._invalidate_bar_geometry()
             return
 
         has_counts = hasattr(vp, "element_family_counts")
@@ -1294,7 +1434,9 @@ class ViewportInspectionBar(QFrame):
         colors = vp.element_family_colors()
         shown = {fam: col for fam, col in colors.items() if (counts.get(fam, 0) > 0 if has_counts else True)}
         if not shown:
-            self.legend_container.hide()
+            if not self.legend_container.isHidden():
+                self.legend_container.hide()
+                self._invalidate_bar_geometry()
             return
 
         ko = self.ui_language == "ko"
@@ -1305,9 +1447,8 @@ class ViewportInspectionBar(QFrame):
             chip.setObjectName("familyLegendChip")
             chip.setProperty("elementFamily", fam)
             chip.setProperty("swatchHex", hex_color)
-            chip.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
             chip_row = QHBoxLayout(chip)
-            chip_row.setContentsMargins(5, 1, 5, 1)
+            chip_row.setContentsMargins(5, 2, 5, 2)
             chip_row.setSpacing(4)
             swatch = QFrame(chip)
             swatch.setFixedSize(10, 10)
@@ -1326,11 +1467,30 @@ class ViewportInspectionBar(QFrame):
                 chip.setToolTip(base_tip)
             chip_row.addWidget(swatch)
             chip_row.addWidget(lbl)
-            self.legend_layout.addWidget(chip)
+            chip.ensurePolished()
             lbl.ensurePolished()
-            lbl.setMinimumWidth(lbl.fontMetrics().horizontalAdvance(label_text) + 4)
+            text_w = lbl.fontMetrics().horizontalAdvance(label_text)
+            text_h = lbl.fontMetrics().height()
+            lbl.setMinimumWidth(text_w + 4)
+            chip_m = chip.contentsMargins()
+            row_m = chip_row.contentsMargins()
+            chip_w = (
+                chip_m.left()
+                + chip_m.right()
+                + row_m.left()
+                + row_m.right()
+                + swatch.width()
+                + chip_row.spacing()
+                + text_w
+                + 4
+            )
+            chip_h = max(20, text_h + chip_m.top() + chip_m.bottom() + row_m.top() + row_m.bottom() + 2)
+            chip.setFixedSize(chip_w, chip_h)
+            chip.show()
+            self.legend_layout.addWidget(chip)
             self._chips.append((fam, chip, swatch, lbl))
         self.legend_layout.activate()
+        self._sync_legend_height()
 
     def apply_theme_mode(self, mode: str) -> None:
         self.theme_mode = "dark" if str(mode).strip().lower() == "dark" else "light"

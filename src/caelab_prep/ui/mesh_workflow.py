@@ -21,8 +21,52 @@ from PySide6.QtWidgets import (
 
 from .design import build_stylesheet, tokens_for_theme
 from .shell import FileTask, default_asset_directory
-from .viewport import SOLID_ELEMENT_FAMILIES, ViewportInspectionBar
+from .viewport import ELEMENT_FAMILY_ORDER, SOLID_ELEMENT_FAMILIES, ViewportInspectionBar
 from .widgets.numeric import NumericEdit, VectorEdit
+
+
+_CANONICAL_FAMILY_NAMES = {
+    "hex8": "Hex8",
+    "hexahedron": "Hex8",
+    "brick8": "Hex8",
+    "wedge6": "Wedge6",
+    "wedge": "Wedge6",
+    "prism6": "Wedge6",
+    "pyramid5": "Pyramid5",
+    "pyramid": "Pyramid5",
+    "tet4": "Tet4",
+    "tetra4": "Tet4",
+    "tetra": "Tet4",
+    "tet10": "Tet10",
+    "tetra10": "Tet10",
+    "hex20": "Hex20",
+    "hexahedron20": "Hex20",
+    "wedge15": "Wedge15",
+    "prism15": "Wedge15",
+    "quad4": "Quad4",
+    "quad": "Quad4",
+    "shell4": "Quad4",
+    "tri3": "Tri3",
+    "triangle3": "Tri3",
+    "triangle": "Tri3",
+    "quad8": "Quad8",
+    "tri6": "Tri6",
+    "triangle6": "Tri6",
+    "line2": "Line2",
+}
+
+
+def _canonical_family_label(raw_key: str) -> str:
+    cleaned = str(raw_key).strip()
+    return _CANONICAL_FAMILY_NAMES.get(cleaned.lower(), cleaned[:1].upper() + cleaned[1:])
+
+
+def _family_sort_key(canonical_label: str) -> tuple[int, str]:
+    try:
+        idx = ELEMENT_FAMILY_ORDER.index(canonical_label)
+    except ValueError:
+        idx = len(ELEMENT_FAMILY_ORDER)
+    return (idx, canonical_label)
 
 
 _GMSH_HEX20_TO_VTK = (0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 9, 16, 18, 19, 17, 10, 12, 14, 15)
@@ -2261,18 +2305,55 @@ class MeshCandidateDialog(QDialog):
             return self._start(generate_recipe)
 
         if self._hybrid():
+            ko = self._ko()
             try:
                 source = self.source.text().strip()
                 output = self.output.text().strip()
+                if not source:
+                    raise ValueError(
+                        "메시를 생성할 CAD 솔리드 파일 경로를 지정하세요."
+                        if ko
+                        else "Choose a CAD solid file to mesh."
+                    )
                 if not output:
-                    raise ValueError("Choose a folder to keep candidate assets.")
-                core_sz = float(self.core_size.numeric_value())
-                bound_sz = float(self.boundary_size.numeric_value())
-                margin = float(self.safety_margin.numeric_value())
+                    raise ValueError(
+                        "후보 자산을 보관할 폴더를 지정하세요."
+                        if ko
+                        else "Choose a folder to keep candidate assets."
+                    )
+                try:
+                    core_sz = float(self.core_size.numeric_value())
+                    bound_sz = float(self.boundary_size.numeric_value())
+                except ValueError as exc:
+                    msg = (
+                        "코어 육면체 크기와 경계 표면 크기는 0보다 큰 유한 실수여야 합니다."
+                        if ko
+                        else str(exc)
+                    )
+                    raise ValueError(msg) from exc
                 if core_sz <= 0 or bound_sz <= 0:
-                    raise ValueError("Core size and boundary size must be strictly positive.")
+                    raise ValueError(
+                        "코어 육면체 크기와 경계 표면 크기는 0보다 커야 합니다."
+                        if ko
+                        else "Core size and boundary size must be strictly positive."
+                    )
+                try:
+                    margin = float(self.safety_margin.numeric_value())
+                except ValueError as exc:
+                    msg = (
+                        "코어 안전 여유 거리는 0 이상의 유한 실수여야 합니다."
+                        if ko
+                        else ("Safety margin must be non-negative." if "Minimum is 0" in str(exc) else str(exc))
+                    )
+                    if ko:
+                        self.safety_margin.set_error(msg)
+                    raise ValueError(msg) from exc
                 if margin < 0:
-                    raise ValueError("Safety margin must be non-negative.")
+                    raise ValueError(
+                        "코어 안전 여유 거리는 0 이상이어야 합니다."
+                        if ko
+                        else "Safety margin must be non-negative."
+                    )
                 unit = self.source_unit.currentData()
                 topo = self.hybrid_topology.currentData()
                 fallback = bool(self.allow_tet_fallback.isChecked())
@@ -2308,14 +2389,35 @@ class MeshCandidateDialog(QDialog):
 
         if self._revolved():
             from ..adapters.gmsh_backend import GmshBackend
+            ko = self._ko()
             try:
-                size = float(self.size.numeric_value())
+                try:
+                    size = float(self.size.numeric_value())
+                except ValueError as exc:
+                    msg = "전역 목표 요소 크기는 0보다 큰 유한 실수여야 합니다." if ko else str(exc)
+                    if ko:
+                        self.size.set_error(msg)
+                    raise ValueError(msg) from exc
                 if size <= 0:
-                    raise ValueError("Global target size must be strictly positive.")
+                    raise ValueError(
+                        "전역 목표 요소 크기는 0보다 커야 합니다."
+                        if ko
+                        else "Global target size must be strictly positive."
+                    )
                 source = self.source.text().strip()
                 output = self.output.text().strip()
+                if not source:
+                    raise ValueError(
+                        "축대칭 CAD 솔리드 파일 경로를 지정하세요."
+                        if ko
+                        else "Choose an axisymmetric CAD solid file to mesh."
+                    )
                 if not output:
-                    raise ValueError("Choose a folder to keep candidate assets.")
+                    raise ValueError(
+                        "후보 자산을 보관할 폴더를 지정하세요."
+                        if ko
+                        else "Choose a folder to keep candidate assets."
+                    )
                 ext = Path(source).suffix.lower()
                 expected_unit = "mm" if ext in (".step", ".stp", ".iges", ".igs") else self.source_unit.currentData()
             except Exception as exc:
@@ -2550,8 +2652,6 @@ class MeshCandidateDialog(QDialog):
             node_cnt = len(native.nodes)
             elem_cnt = len(native.elements)
             part_cnt = len(native.parts)
-            min_sj = metrics["min_scaled_jacobian"]
-            min_sj_text = "—" if min_sj is None else f"{min_sj:.4f}"
             fallback_note = ""
             if metrics["fallback_reason"]:
                 fallback_note = (
@@ -2563,13 +2663,13 @@ class MeshCandidateDialog(QDialog):
                 mode_tag = "하이브리드 육면체 코어 검증 완료" if hybrid else "회전 다중 블록 스윕(Hex8) 검증 완료"
                 self.summary.setText(
                     f"절점 {node_cnt:,}개 · 3D 요소 {elem_cnt:,}개 · 솔리드 영역 {part_cnt:,}개\n"
-                    f"최소 스케일드 야코비안 {min_sj_text} · {mode_tag} · 단위: {native.length_unit}.{fallback_note}"
+                    f"{mode_tag} · 단위: {native.length_unit}.{fallback_note}"
                 )
             else:
                 mode_tag = "Hybrid Hex-Core verified" if hybrid else "Revolved Multi-Block Sweep (Hex8) verified"
                 self.summary.setText(
                     f"{node_cnt:,} nodes · {elem_cnt:,} 3D elements · {part_cnt:,} solid regions\n"
-                    f"Minimum scaled Jacobian {min_sj_text} · {mode_tag} · Units: {native.length_unit}.{fallback_note}"
+                    f"{mode_tag} · Units: {native.length_unit}.{fallback_note}"
                 )
 
             self.local_entity.clear()
@@ -2585,9 +2685,9 @@ class MeshCandidateDialog(QDialog):
 
             rows = []
             if isinstance(candidate, HybridHexCoreCandidate):
-                for fam_key, qrow in sorted(candidate.quality.items()):
+                for fam_key, qrow in candidate.quality.items():
                     rows.append((
-                        fam_key,
+                        _canonical_family_label(fam_key),
                         f"{qrow['count']:,}",
                         f"{qrow['minimum_scaled_jacobian']:.4f}",
                         f"{qrow['max_edge_aspect_ratio']:.3f}",
@@ -2596,20 +2696,25 @@ class MeshCandidateDialog(QDialog):
                 agg = {}
                 for p in candidate.report.get("parts", {}).values():
                     for fam_key, qrow in p.get("quality", {}).items():
-                        cur = agg.setdefault(fam_key, {"count": 0, "sj": math.inf, "ar": 0.0})
+                        canon = _canonical_family_label(fam_key)
+                        cur = agg.setdefault(canon, {"count": 0, "sj": math.inf, "ar": 0.0})
                         cur["count"] += int(qrow["count"])
                         cur["sj"] = min(cur["sj"], float(qrow["minimum_scaled_jacobian"]))
                         cur["ar"] = max(cur["ar"], float(qrow["max_edge_aspect_ratio"]))
-                for fam_key, cur in sorted(agg.items()):
-                    rows.append((fam_key, f"{cur['count']:,}", f"{cur['sj']:.4f}", f"{cur['ar']:.3f}"))
+                for canon, cur in agg.items():
+                    rows.append((canon, f"{cur['count']:,}", f"{cur['sj']:.4f}", f"{cur['ar']:.3f}"))
             else:
-                for fam_key, qrow in sorted(candidate.quality.get("by_type", {}).items()):
+                for fam_key, qrow in candidate.quality.get("by_type", {}).items():
+                    canon = _canonical_family_label(fam_key)
+                    if canon not in SOLID_ELEMENT_FAMILIES:
+                        continue
                     rows.append((
-                        fam_key,
+                        canon,
                         f"{qrow['count']:,}",
                         f"{qrow['min_scaled_jacobian']:.4f}",
                         f"{qrow['max_edge_aspect_ratio']:.3f}",
                     ))
+            rows.sort(key=lambda item: _family_sort_key(item[0]))
             self.quality.setRowCount(len(rows))
             for r_idx, vals in enumerate(rows):
                 for c_idx, val in enumerate(vals):

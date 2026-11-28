@@ -13,6 +13,7 @@ from .prep_controller import PrepController
 from .prep_workspace import PrepWorkspace, _EN_TREE_HEADERS, _KO_TREE_HEADERS
 from .reference_components import reference_style
 from .shell import FileTask as _FileTask
+from .viewport import ensure_windows_offscreen_fonts
 
 
 def _resolve_theme_mode(theme_mode: str | None) -> str:
@@ -113,6 +114,7 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
 
     def __init__(self, session=None, *, enable_viewport: bool = True, presentation=None,
                  settings=None, theme_mode: str | None = None, ui_language: str | None = None):
+        ensure_windows_offscreen_fonts()
         super().__init__()
         self.presentation = presentation
         self.theme_mode = _resolve_theme_mode(theme_mode)

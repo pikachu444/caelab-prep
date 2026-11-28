@@ -9,10 +9,13 @@ from pathlib import Path
 import time
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+if os.name == "nt" and Path(r"C:\Windows\Fonts").is_dir():
+    os.environ.setdefault("QT_QPA_FONTDIR", r"C:\Windows\Fonts")
 
 import numpy as np
 import pytest
 from PySide6.QtCore import QCoreApplication, QEvent, Qt
+from PySide6.QtGui import QFontDatabase
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QLabel
 from vtkmodules.util.numpy_support import vtk_to_numpy
@@ -58,6 +61,45 @@ def _cleanup(widget) -> None:
 def _hex_to_rgb_tuple(hex_color: str) -> tuple[int, int, int]:
     s = hex_color.lstrip("#")
     return int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16)
+
+
+def _assert_inspection_bar_chips_unclipped(bar, *, context: str = "") -> None:
+    """Assert every element-family legend chip sits unclipped inside the 2nd row of ViewportInspectionBar."""
+    assert bar.legend_container.isVisible(), f"legend_container hidden ({context})"
+    ctrl_bottom = bar.section_label.mapTo(bar, bar.section_label.rect().bottomLeft()).y()
+    for fam, chip, swatch, lbl in bar._chips:
+        assert chip.isVisible(), f"chip hidden: {fam} ({context})"
+        chip_m = chip.contentsMargins()
+        row_m = chip.layout().contentsMargins()
+        margins = chip_m.left() + chip_m.right() + row_m.left() + row_m.right()
+        text_w = lbl.fontMetrics().horizontalAdvance(lbl.text())
+        assert lbl.width() >= text_w, (context, fam, lbl.text(), lbl.width(), text_w)
+        assert chip.width() >= swatch.width() + text_w + margins, (
+            context,
+            fam,
+            lbl.text(),
+            chip.width(),
+            swatch.width(),
+            text_w,
+            margins,
+        )
+        top_left = chip.mapTo(bar, chip.rect().topLeft())
+        bottom_right = chip.mapTo(bar, chip.rect().bottomRight())
+        assert top_left.x() >= 0 and bottom_right.x() <= bar.width(), (
+            context,
+            fam,
+            top_left.x(),
+            bottom_right.x(),
+            bar.width(),
+        )
+        assert top_left.y() >= ctrl_bottom and bottom_right.y() <= bar.height(), (
+            context,
+            fam,
+            top_left.y(),
+            bottom_right.y(),
+            ctrl_bottom,
+            bar.height(),
+        )
 
 
 def _create_session(unit: str = "mm") -> PrepSession:
@@ -268,17 +310,31 @@ def test_mesh_candidate_dialog_hybrid_hex_core_bracket_assembly_and_tet_fallback
         initial_source_kind="hybrid_hex_core",
     )
     try:
+        dialog.resize(1140, 780)
         dialog.show()
         QApplication.processEvents()
+        if os.name == "nt" and Path(r"C:\Windows\Fonts").is_dir():
+            assert "Malgun Gothic" in set(QFontDatabase.families())
         assert dialog.source_kind.currentData() == "hybrid_hex_core"
         assert dialog.core_size.isVisible()
         assert dialog.boundary_size.isVisible()
         assert dialog.safety_margin.isVisible()
 
-        # 1. Complex multi-feature bracket (Hex8 + Pyramid5 + Tet4)
+        # Korean input validation checks before generation
         dialog.source.setText(str(bracket_step))
+        dialog.output.setText("")
+        assert not dialog.generate()
+        assert "폴더" in dialog.error.text()
         dialog.output.setText(str(tmp_path / "bracket_hybrid_out"))
+        dialog.core_size.setText("0")
+        assert not dialog.generate()
+        assert "0보다 커야" in dialog.error.text()
         dialog.core_size.accept_value("2.0")
+        dialog.safety_margin.setText("-0.5")
+        assert not dialog.generate()
+        assert "0 이상" in dialog.error.text()
+
+        # 1. Complex multi-feature bracket (Hex8 + Pyramid5 + Tet4)
         dialog.boundary_size.accept_value("1.5")
         dialog.safety_margin.accept_value("0.1")
         assert dialog.generate()
@@ -286,9 +342,14 @@ def test_mesh_candidate_dialog_hybrid_hex_core_bracket_assembly_and_tet_fallback
 
         assert dialog.candidate is not None, dialog.error.text()
         assert dialog.readout_frame.isVisible()
+        # No duplicate min scaled Jacobian in summary (shown once in readout_frame)
+        assert "최소 스케일드 야코비안" not in dialog.summary.text()
         counts_text = dialog.family_counts_label.text()
         for fam in ("Hex8:", "Wedge6: 0", "Pyramid5:", "Tet4:"):
             assert fam in counts_text
+        # Canonical casing & ordering in quality table column 0
+        q_families = [dialog.quality.item(r, 0).text() for r in range(dialog.quality.rowCount())]
+        assert q_families == ["Hex8", "Pyramid5", "Tet4"]
         # Bracket hybrid must contain positive Hex8, Pyramid5, and Tet4 counts
         fam_counts = dialog.viewport.element_family_counts()
         assert fam_counts["Hex8"] > 0
@@ -304,21 +365,26 @@ def test_mesh_candidate_dialog_hybrid_hex_core_bracket_assembly_and_tet_fallback
         assert "Pyramid5" in dialog.ccx_gate_badge.text() and "부적합" in dialog.ccx_gate_badge.text()
         assert "Pyramid5" in dialog.radioss_gate_badge.text() and "부적합" in dialog.radioss_gate_badge.text()
 
-        # Switch language dynamically to EN and Light theme -> badges update cleanly
-        dialog.apply_ui_language("en")
-        dialog.apply_theme_mode("light")
-        assert "Pyramid5 transition elements" in dialog.ccx_gate_badge.text()
-        assert "Rejected" in dialog.ccx_gate_badge.text()
-        assert "Pyramid5 transition elements" in dialog.radioss_gate_badge.text()
-
-        # Slice inside MeshCandidateDialog's own inspection_bar
+        # Verify Korean element-family chips in MeshCandidateDialog (1140x780, bar ~640px) are 100% unclipped
         assert dialog.inspection_bar is not None
+        assert not dialog.inspection_bar.legend_container.isVisible()  # hidden in default "part" mode
         QTest.mouseClick(dialog.inspection_bar.color_buttons["element_family"], Qt.MouseButton.LeftButton)
         QTest.mouseClick(dialog.inspection_bar.axis_buttons["x"], Qt.MouseButton.LeftButton)
         QApplication.processEvents()
         assert dialog.viewport.color_mode() == "element_family"
         assert dialog.viewport.section_slice()["axis"] == "x"
         assert 0 < len(dialog.viewport.visible_cell_indices()) < sum(fam_counts.values())
+        _assert_inspection_bar_chips_unclipped(dialog.inspection_bar, context="dialog-ko-1140x780")
+
+        # Switch language dynamically to EN and Light theme -> badges, summary, and chips update cleanly
+        dialog.apply_ui_language("en")
+        dialog.apply_theme_mode("light")
+        QApplication.processEvents()
+        assert "Minimum scaled Jacobian" not in dialog.summary.text()
+        assert "Pyramid5 transition elements" in dialog.ccx_gate_badge.text()
+        assert "Rejected" in dialog.ccx_gate_badge.text()
+        assert "Pyramid5 transition elements" in dialog.radioss_gate_badge.text()
+        _assert_inspection_bar_chips_unclipped(dialog.inspection_bar, context="dialog-en-1140x780")
 
         # 2. 7-part bolted assembly via auto conformal hybrid assembly dispatch
         dialog.source.setText(str(assembly_step))
@@ -371,14 +437,21 @@ def test_mesh_candidate_dialog_revolved_sweep_housing_and_non_axisymmetric_guida
         QApplication.processEvents()
         assert dialog.source_kind.currentData() == "revolved_hex_sweep"
 
-        # 1. Stepped chamfered axisymmetric housing -> 28 sector blocks of pure Hex8
+        # Korean input validation checks for Revolved mode
         dialog.source.setText(str(housing_step))
         dialog.output.setText(str(tmp_path / "housing_revolved_out"))
+        dialog.size.setText("0")
+        assert not dialog.generate()
+        assert "0보다 커야" in dialog.error.text()
+
+        # 1. Stepped chamfered axisymmetric housing -> 28 sector blocks of pure Hex8
         dialog.size.accept_value("2.0")
         assert dialog.generate()
         _wait_dialog(dialog, timeout=90)
 
         assert dialog.candidate is not None, dialog.error.text()
+        assert "최소 스케일드 야코비안" not in dialog.summary.text()
+        assert [dialog.quality.item(r, 0).text() for r in range(dialog.quality.rowCount())] == ["Hex8"]
         assert len(dialog.candidate.native.parts) == 28
         assert dialog.candidate.cad_volume == pytest.approx(housing_vol, rel=1e-6)
         rev_counts = dialog.viewport.element_family_counts()
@@ -453,9 +526,9 @@ def test_prep_workspace_1440x900_sliced_hybrid_bracket_and_housing_dark_and_ligh
 
         for theme in ("dark", "light"):
             window.apply_theme_mode(theme)
-            for label_title, cand, axis in (
-                ("브래킷 하이브리드 육면체 코어", bracket_hybrid, "x"),
-                ("하우징 하이브리드 육면체 코어", housing_hybrid, "y"),
+            for label_title, cand, axis, camera_facing_flip in (
+                ("브래킷 하이브리드 육면체 코어", bracket_hybrid, "x", False),
+                ("하우징 하이브리드 육면체 코어", housing_hybrid, "y", True),
             ):
                 window.preview_candidate_mesh(cand, title=label_title)
                 QApplication.processEvents()
@@ -465,10 +538,17 @@ def test_prep_workspace_1440x900_sliced_hybrid_bracket_and_housing_dark_and_ligh
                 assert "미리보기 전용" in window.viewport_frame.context.text()
                 assert f"요소 {total_cells:,}개" in window._counts.text()
 
+                # Verify legend collapses in "part" mode
+                if not bar.color_buttons["part"].isChecked():
+                    QTest.mouseClick(bar.color_buttons["part"], Qt.MouseButton.LeftButton)
+                    QApplication.processEvents()
+                assert not bar.legend_container.isVisible()
+
                 # Activate Element Family coloring + section cut via actual toolbar buttons
-                if not bar.color_buttons["element_family"].isChecked():
-                    QTest.mouseClick(bar.color_buttons["element_family"], Qt.MouseButton.LeftButton)
+                QTest.mouseClick(bar.color_buttons["element_family"], Qt.MouseButton.LeftButton)
                 QTest.mouseClick(bar.axis_buttons[axis], Qt.MouseButton.LeftButton)
+                if bar.flip_button.isChecked():
+                    QTest.mouseClick(bar.flip_button, Qt.MouseButton.LeftButton)
                 bar.slice_slider.setValue(50)
                 QApplication.processEvents()
 
@@ -481,29 +561,18 @@ def test_prep_workspace_1440x900_sliced_hybrid_bracket_and_housing_dark_and_ligh
                 assert 0 < len(sliced_flipped) < total_cells
                 assert sliced_flipped != sliced_no_flip
 
-                # Reset flip back to False and verify legend swatches
-                QTest.mouseClick(bar.flip_button, Qt.MouseButton.LeftButton)
-                QApplication.processEvents()
-                assert bar.legend_container.isVisible()
+                # Set flip so the cut cross-section faces the isometric (1, -1, 0.8) camera
+                if bar.flip_button.isChecked() != camera_facing_flip:
+                    QTest.mouseClick(bar.flip_button, Qt.MouseButton.LeftButton)
+                    QApplication.processEvents()
+
                 active_map = window.viewport.element_family_colors()
                 assert set(active_map.keys()) == {"Hex8", "Pyramid5", "Tet4"}
                 chip_families = [fam for fam, _chip, _sw, _lbl in bar._chips]
                 assert chip_families == ["Hex8", "Pyramid5", "Tet4"]
-                for fam, chip, _sw, lbl in bar._chips:
+                for fam, chip, _sw, _lbl in bar._chips:
                     assert chip.property("swatchHex") == active_map[fam]
-                    assert chip.isVisible()
-                    # Unclipped label text check
-                    text_w = lbl.fontMetrics().horizontalAdvance(lbl.text())
-                    assert lbl.width() >= text_w - 2, (theme, fam, lbl.text(), lbl.width(), text_w)
-                    # Fits completely inside the inspection bar width
-                    top_left = chip.mapTo(bar, chip.rect().topLeft())
-                    bottom_right = chip.mapTo(bar, chip.rect().bottomRight())
-                    assert top_left.x() >= 0 and bottom_right.x() <= bar.width(), (
-                        theme,
-                        fam,
-                        bottom_right.x(),
-                        bar.width(),
-                    )
+                _assert_inspection_bar_chips_unclipped(bar, context=f"mainwindow-{theme}-ko-{axis}")
 
                 # Non-overlapping dock & central viewport geometry at 1440x900
                 model_geo = window.model_dock.geometry()
@@ -520,9 +589,16 @@ def test_prep_workspace_1440x900_sliced_hybrid_bracket_and_housing_dark_and_ligh
                         for bad in forbidden_jargon:
                             assert bad not in lowered, (qlabel.objectName(), qlabel.text())
 
-                # Grab offscreen window snapshot to confirm clean Qt + VTK composition
+                # Grab offscreen window snapshot and confirm interior Hex8 / Pyramid5 / Tet4 pixels render
                 pixmap = window.grab()
                 assert not pixmap.isNull()
                 assert pixmap.width() == 1440 and pixmap.height() == 900
+
+            # Also verify all 7 Korean solid family chips wrap & render unclipped at 1440x900 AND 640px width
+            window.viewport.set_mesh(_seven_family_projection(), reset_camera=True)
+            window.viewport.set_color_mode("element_family")
+            QApplication.processEvents()
+            assert [fam for fam, *_ in bar._chips] == list(SOLID_ELEMENT_FAMILIES)
+            _assert_inspection_bar_chips_unclipped(bar, context=f"mainwindow-7fam-{theme}-ko")
     finally:
         _cleanup(window)
