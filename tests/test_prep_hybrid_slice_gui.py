@@ -602,3 +602,73 @@ def test_prep_workspace_1440x900_sliced_hybrid_bracket_and_housing_dark_and_ligh
             _assert_inspection_bar_chips_unclipped(bar, context=f"mainwindow-7fam-{theme}-ko")
     finally:
         _cleanup(window)
+
+
+def test_code_qa_regressions_preview_pick_revolved_2d_and_mean_ratio(tmp_path):
+    """Verify fixes for #76: workspace preview pick no-op, revolved 2D toggle + highlight, and cad_gmsh mean-ratio."""
+    from caelab_prep.adapters.gmsh_backend import GmshBackend
+    from caelab_prep.application.mesh_candidates import read_mesh_candidate
+    from caelab_prep.ui.mesh_workflow import _format_revolved_failure, candidate_readout_metrics
+
+    housing_step, _ = _write_fixture("housing", tmp_path)
+    housing_hybrid = generate_hybrid_hex_core(
+        housing_step, tmp_path / "pick_noop_hybrid", length_unit="mm", core_size=1.5, boundary_size=1.5
+    )
+
+    session = _create_session("mm")
+    win = MainWindow(session, enable_viewport=True, theme_mode="light", ui_language="ko")
+    win._allow_close = True
+    try:
+        win.resize(1280, 800)
+        win.show()
+        QApplication.processEvents()
+        win.preview_candidate_mesh(housing_hybrid, title="Preview Noop")
+        win.messages_dock.hide()
+        QApplication.processEvents()
+        initial_msgs = win.messages.topLevelItemCount()
+        win._entity_picked({"kind": "element", "id": housing_hybrid.native.elements[0].id, "part_id": 1})
+        QApplication.processEvents()
+        assert win.messages.topLevelItemCount() == initial_msgs
+        assert not win.messages_dock.isVisible()
+    finally:
+        _cleanup(win)
+
+    dialog = MeshCandidateDialog(session, enable_viewport=True, language="ko", theme_mode="light")
+    try:
+        dialog.source_kind.setCurrentIndex(dialog.source_kind.findData("revolved_hex_sweep"))
+        dialog.source.setText(str(housing_step))
+        dialog.output.setText(str(tmp_path / "rev_2d_out"))
+        dialog.size.accept_value("2.5")
+        assert dialog.generate()
+        _wait_dialog(dialog, timeout=90)
+        assert dialog.candidate is not None, dialog.error.text()
+        assert dialog.preview_mode.isEnabled()
+        assert dialog.viewport.element_family_counts().get("Hex8", 0) > 0
+
+        dialog.preview_mode.setCurrentIndex(1)
+        QApplication.processEvents()
+        fam_2d = dialog.viewport.element_family_counts()
+        assert fam_2d.get("Quad4", 0) > 0 and fam_2d.get("Hex8", 0) == 0
+
+        idx_2d = next(i for i in range(dialog.local_entity.count()) if "(2D)" in dialog.local_entity.itemText(i))
+        dialog.local_entity.setCurrentIndex(idx_2d)
+        QApplication.processEvents()
+        hl_input = dialog.viewport._highlight.GetMapper().GetInput()
+        assert hl_input is not None and hl_input.GetNumberOfCells() > 0
+
+        raw = GmshBackend(timeout=90).generate(housing_step, tmp_path / "cad_gmsh_out", 2.5, expected_coordinate_length_unit="mm", dimension=3)
+        cand_gmsh = read_mesh_candidate(raw)
+        metrics_ko = candidate_readout_metrics(cand_gmsh, ko=True)
+        assert metrics_ko["min_mean_ratio"] is not None
+        assert metrics_ko["min_scaled_jacobian"] is None
+        assert metrics_ko["min_tet_sicn"] is None
+        dialog.present_candidate(cand_gmsh)
+        QApplication.processEvents()
+        assert "최소 평균비 (Mean ratio):" in dialog.jacobian_sicn_label.text()
+        assert "최소 스케일드 야코비안: —" in dialog.jacobian_sicn_label.text()
+    finally:
+        _cleanup(dialog)
+
+    for msg in ("no axial span", "no positive axial annulus", "preserve the complete source skin", "trimmed area of cad face"):
+        assert "비축대칭 형상 감지" in _format_revolved_failure(ValueError(msg), ko=True)
+        assert "Non-axisymmetric CAD geometry" in _format_revolved_failure(ValueError(msg), ko=False)

@@ -1095,7 +1095,9 @@ class PrepController:
         self._start_task("Export Radioss deck", lambda: self.session.export_rad(str(filename)), exported)
 
     def _entity_picked(self, entity):
-        if self._busy or self._replacement_conflict or not self._summary().get("document_id"):
+        if (self._busy or self._replacement_conflict
+                or not self._summary().get("document_id")
+                or getattr(self, "_candidate_preview", None)):
             return
         try:
             if self.modeling.active:

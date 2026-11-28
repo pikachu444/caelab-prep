@@ -329,6 +329,10 @@ def _format_revolved_failure(exc: BaseException, *, ko: bool = False) -> str:
             "annular material band",
             "sloped wall",
             "further face partitioning",
+            "no axial span",
+            "no positive axial annulus",
+            "preserve the complete source skin",
+            "trimmed area of cad face",
         )
     ):
         return (
@@ -487,6 +491,7 @@ def candidate_readout_metrics(candidate, *, ko: bool = False) -> dict:
     rel_vol_error = None
     min_sj = None
     min_tet_sicn = None
+    min_mean_ratio = None
     fallback_reason = None
 
     if isinstance(candidate, HybridHexCoreCandidate):
@@ -541,13 +546,14 @@ def candidate_readout_metrics(candidate, *, ko: bool = False) -> dict:
             rel_vol_error = abs(mesh_volume - cad_volume) / cad_volume
         min_sj = float(candidate.quality.minimum_scaled_jacobian)
     else:
-        # Standard Gmsh MeshCandidate (Tri3 / Tet4)
+        # Standard Gmsh MeshCandidate (Tri3 / Tet4) reports mean-ratio quality (q_rep.minimum),
+        # not Scaled Jacobian or Gmsh SICN.
         q_rep = getattr(candidate, "quality", None)
         if q_rep is not None and hasattr(q_rep, "cells"):
             dim = getattr(candidate, "dimension", 3)
             target_kind = "tetra4" if dim == 3 else "triangle3"
-            min_tet_sicn = q_rep.minimum("tetra4") if dim == 3 else None
-            min_sj = q_rep.minimum(target_kind)
+            mr = q_rep.minimum(target_kind)
+            min_mean_ratio = float(mr) if mr is not None else None
             if dim == 3:
                 mesh_volume = float(sum(c.signed_measure for c in q_rep.cells if c.kind == "tetra4"))
                 meta_asset = next((a for a in getattr(candidate, "assets", ()) if a.kind == "metadata"), None)
@@ -576,6 +582,7 @@ def candidate_readout_metrics(candidate, *, ko: bool = False) -> dict:
         "relative_volume_error": rel_vol_error,
         "min_scaled_jacobian": min_sj,
         "min_tet_sicn": min_tet_sicn,
+        "min_mean_ratio": min_mean_ratio,
         "fallback_reason": fallback_reason,
         "solver_gates": gates,
     }
@@ -608,7 +615,7 @@ def candidate_projection(candidate, *, dimension=None):
             "document_id": native.mesh_uuid,
             "document_epoch": native.mesh_uuid,
             "revision": 0,
-            "projection_revision": 0,
+            "projection_revision": int(target_dim),
             "resource_revisions": {resource: 0},
             "node_ids": [node.id for node in native.nodes],
             "points": [node.xyz for node in native.nodes],
@@ -641,7 +648,7 @@ def candidate_projection(candidate, *, dimension=None):
         "document_id": candidate.mesh_uuid,
         "document_epoch": candidate.mesh_uuid,
         "revision": 0,
-        "projection_revision": 0,
+        "projection_revision": int(dimension),
         "resource_revisions": {resource: 0},
         "node_ids": [node.id for node in candidate.nodes],
         "points": [node.xyz for node in candidate.nodes],
@@ -2587,12 +2594,19 @@ class MeshCandidateDialog(QDialog):
 
         sj = metrics["min_scaled_jacobian"]
         sicn = metrics["min_tet_sicn"]
-        sj_str = "—" if sj is None else f"{sj:.4f}"
-        sicn_str = "—" if sicn is None else f"{sicn:.4f}"
-        if ko:
-            self.jacobian_sicn_label.setText(f"최소 스케일드 야코비안: {sj_str}  ·  최소 사면체 SICN: {sicn_str}")
+        mr = metrics.get("min_mean_ratio")
+        if mr is not None and sj is None and sicn is None:
+            if ko:
+                self.jacobian_sicn_label.setText(f"최소 평균비 (Mean ratio): {mr:.4f}  ·  최소 스케일드 야코비안: —")
+            else:
+                self.jacobian_sicn_label.setText(f"Min mean ratio: {mr:.4f}  ·  Min scaled Jacobian: —")
         else:
-            self.jacobian_sicn_label.setText(f"Min scaled Jacobian: {sj_str}  ·  Min Tet SICN: {sicn_str}")
+            sj_str = "—" if sj is None else f"{sj:.4f}"
+            sicn_str = "—" if sicn is None else f"{sicn:.4f}"
+            if ko:
+                self.jacobian_sicn_label.setText(f"최소 스케일드 야코비안: {sj_str}  ·  최소 사면체 SICN: {sicn_str}")
+            else:
+                self.jacobian_sicn_label.setText(f"Min scaled Jacobian: {sj_str}  ·  Min Tet SICN: {sicn_str}")
 
         ccx_gate = metrics["solver_gates"]["calculix"]
         rad_gate = metrics["solver_gates"]["radioss"]
@@ -2832,10 +2846,12 @@ class MeshCandidateDialog(QDialog):
         native = _unwrap_native_mesh(self.candidate)
         mesh_uuid = native.mesh_uuid if native is not None else self.candidate.mesh_uuid
         geo_uuid = (native.geometry_resource_uuid if native is not None else self.candidate.geometry_resource_uuid) or mesh_uuid
+        cand_dim = getattr(self.candidate, "dimension", 3) if not self._hybrid() else 3
+        active_dim = int(self.preview_mode.currentData() or cand_dim)
         self.viewport.set_selection({
             "document_id": mesh_uuid,
             "document_epoch": mesh_uuid,
-            "projection_revision": 0,
+            "projection_revision": active_dim,
             "revision": 0,
             "kind": "element",
             "ids": ids,
