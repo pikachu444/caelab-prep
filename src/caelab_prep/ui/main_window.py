@@ -13,6 +13,7 @@ from .prep_controller import PrepController
 from .prep_workspace import PrepWorkspace, _EN_TREE_HEADERS, _KO_TREE_HEADERS
 from .reference_components import reference_style
 from .shell import FileTask as _FileTask
+from .viewport import ensure_windows_offscreen_fonts
 
 
 def _resolve_theme_mode(theme_mode: str | None) -> str:
@@ -113,6 +114,7 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
 
     def __init__(self, session=None, *, enable_viewport: bool = True, presentation=None,
                  settings=None, theme_mode: str | None = None, ui_language: str | None = None):
+        ensure_windows_offscreen_fonts()
         super().__init__()
         self.presentation = presentation
         self.theme_mode = _resolve_theme_mode(theme_mode)
@@ -216,6 +218,8 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
             button.setIcon(primary.icon())
         if self.viewport is not None and hasattr(self.viewport, "set_theme_mode"):
             self.viewport.set_theme_mode(target)
+        if hasattr(self, "viewport_inspection_bar"):
+            self.viewport_inspection_bar.apply_theme_mode(target)
         active_dialog = getattr(self.mesh_workflow, "dialog", None)
         if active_dialog is not None and hasattr(active_dialog, "apply_theme_mode"):
             active_dialog.apply_theme_mode(target)
@@ -346,7 +350,11 @@ class MainWindow(PrepController, PrepWorkspace, QMainWindow):
             else:
                 self._viewport_placeholder.setText("3D viewer unavailable" if failure else "3D viewer disabled for this session")
 
+        if hasattr(self, "viewport_inspection_bar"):
+            self.viewport_inspection_bar.apply_ui_language(target)
         self._present_document(self._summary())
+        if getattr(self, "_candidate_preview", None) and hasattr(self, "_present_candidate_preview"):
+            self._present_candidate_preview(reset_camera=False)
         self._refresh_tree()
         self._refresh_tree_appearances()
         self._refresh_fields()

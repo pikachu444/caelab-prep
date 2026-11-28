@@ -16,6 +16,9 @@ TOKENS = {
     "disabled_accent": "#e1e7ea", "heading": "#243c52", "group_heading": "#324d60",
     "icon_stroke": "#40556a", "plot_text": "#536574", "plot_grid": "#e5ebef",
     "plot_border": "#aab8c4",
+    "ok_text": "#1b653e", "ok_surface": "#ebf7f0", "ok_border": "#96cfb0",
+    "warn_text": "#7c5211", "warn_surface": "#fdf6e7", "warn_border": "#dfc082",
+    "bad_text": "#9e2a2b", "bad_surface": "#fff2f0", "bad_border": "#e0a3a0",
     "font_family": "'Segoe UI'",
     "font_size": 10, "title_size": 11, "heading_weight": 600, "header_weight": 600,
     "spacing": _SPACING, "space_xs": _SPACING[0], "space_sm": _SPACING[1],
@@ -71,12 +74,50 @@ DARK_TOKENS = {
     "icon_stroke": "#d3e0ee",
     "error": "#f47067",
     "error_surface": "#3a1e20",
+    "ok_text": "#6fdd9c", "ok_surface": "#183326", "ok_border": "#2d6a49",
+    "warn_text": "#f0c265", "warn_surface": "#362b17", "warn_border": "#735826",
+    "bad_text": "#ff8b82", "bad_surface": "#3a1e20", "bad_border": "#7a383c",
     "plot_text": "#9bb0c6",
     "plot_grid": "#283442",
     "plot_border": "#3d4f63",
     "font_family": "'Malgun Gothic', 'Segoe UI'",
 }
 
+ELEMENT_FAMILY_PALETTE_LIGHT = {
+    "Hex8": "#3b82c4",
+    "Wedge6": "#7c62b8",
+    "Pyramid5": "#d4822a",
+    "Tet4": "#2e9e7e",
+    "Tet10": "#c9566b",
+    "Hex20": "#2697b5",
+    "Wedge15": "#8c9638",
+    "Quad4": "#4d88b8",
+    "Tri3": "#4aa382",
+    "Quad8": "#3898ad",
+    "Tri6": "#c4687a",
+    "Line2": "#7b8794",
+}
+
+ELEMENT_FAMILY_PALETTE_DARK = {
+    "Hex8": "#4d96db",
+    "Wedge6": "#967ad6",
+    "Pyramid5": "#ea9c3e",
+    "Tet4": "#3eb895",
+    "Tet10": "#e06e84",
+    "Hex20": "#3cb6d6",
+    "Wedge15": "#aab64c",
+    "Quad4": "#5da0d6",
+    "Tri3": "#5ec09c",
+    "Quad8": "#4cb6cc",
+    "Tri6": "#db7d8f",
+    "Line2": "#95a3b3",
+}
+
 
 def tokens_for_theme(mode: str = "light") -> dict:
     return DARK_TOKENS if str(mode).strip().lower() == "dark" else TOKENS
+
+
+def element_family_palette(mode: str = "light") -> dict[str, str]:
+    source = ELEMENT_FAMILY_PALETTE_DARK if str(mode).strip().lower() == "dark" else ELEMENT_FAMILY_PALETTE_LIGHT
+    return dict(source)
