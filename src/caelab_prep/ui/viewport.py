@@ -255,7 +255,7 @@ class MeshViewport(QWidget):
         self._renderer.SetBackground2(0.97, 0.98, 0.985)
         self._renderer.GradientBackgroundOn()
         self._renderer.GetActiveCamera().ParallelProjectionOn()
-        self._offscreen_qpa = QGuiApplication.platformName() == "offscreen"
+        self._offscreen_qpa = os.name == "nt" and QGuiApplication.platformName() == "offscreen"
         if self._offscreen_qpa:
             class _OffscreenSafeInteractor(QVTKRenderWindowInteractor):
                 def paintEngine(self_w):
